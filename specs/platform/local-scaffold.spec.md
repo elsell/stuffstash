@@ -31,6 +31,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - The container image must run as the hardened runtime image's default user.
 - Local Compose must run the app and expose the configured HTTP port.
 - Tests must verify the real health endpoint behavior.
+- Pre-commit Go test hooks must use an absolute `GOCACHE` path so Go accepts the build cache location in hook execution.
 
 ## Environment
 
@@ -39,6 +40,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 ## Verification
 
 - `go test ./...` must pass.
+- `lefthook run pre-commit --all-files` should pass when Lefthook is installed.
 - `docker compose up --build` should start the app locally.
 - `curl http://localhost:8080/healthz` should return a healthy response.
 
