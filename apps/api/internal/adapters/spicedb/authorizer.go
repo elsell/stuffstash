@@ -1,0 +1,191 @@
+package spicedb
+
+import (
+	"context"
+	"crypto/tls"
+	"errors"
+	"strings"
+
+	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
+	authzed "github.com/authzed/authzed-go/v1"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+)
+
+const (
+	objectTypeUser      = "user"
+	objectTypeTenant    = "tenant"
+	objectTypeInventory = "inventory"
+
+	relationOwner  = "owner"
+	relationTenant = "tenant"
+)
+
+type Gateway interface {
+	CheckPermission(ctx context.Context, request *v1.CheckPermissionRequest) (*v1.CheckPermissionResponse, error)
+	WriteRelationships(ctx context.Context, request *v1.WriteRelationshipsRequest) (*v1.WriteRelationshipsResponse, error)
+	WriteSchema(ctx context.Context, request *v1.WriteSchemaRequest) (*v1.WriteSchemaResponse, error)
+}
+
+type Authorizer struct {
+	gateway Gateway
+}
+
+func NewAuthorizer(gateway Gateway) Authorizer {
+	return Authorizer{gateway: gateway}
+}
+
+type ClientGateway struct {
+	client *authzed.Client
+}
+
+func NewGateway(endpoint string, presharedKey string, tlsEnabled bool) (*ClientGateway, error) {
+	endpoint = strings.TrimSpace(endpoint)
+	presharedKey = strings.TrimSpace(presharedKey)
+	if endpoint == "" || presharedKey == "" {
+		return nil, errors.New("spicedb endpoint and preshared key are required")
+	}
+
+	transport := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12}))
+	if !tlsEnabled {
+		transport = grpc.WithTransportCredentials(insecure.NewCredentials())
+	}
+
+	client, err := authzed.NewClient(
+		endpoint,
+		transport,
+		grpc.WithPerRPCCredentials(bearerTokenCredentials{
+			token:                    presharedKey,
+			requireTransportSecurity: tlsEnabled,
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ClientGateway{client: client}, nil
+}
+
+func (g *ClientGateway) CheckPermission(ctx context.Context, request *v1.CheckPermissionRequest) (*v1.CheckPermissionResponse, error) {
+	return g.client.CheckPermission(ctx, request)
+}
+
+func (g *ClientGateway) WriteRelationships(ctx context.Context, request *v1.WriteRelationshipsRequest) (*v1.WriteRelationshipsResponse, error) {
+	return g.client.WriteRelationships(ctx, request)
+}
+
+func (g *ClientGateway) WriteSchema(ctx context.Context, request *v1.WriteSchemaRequest) (*v1.WriteSchemaResponse, error) {
+	return g.client.WriteSchema(ctx, request)
+}
+
+func (g *ClientGateway) Close() error {
+	return g.client.Close()
+}
+
+func (a Authorizer) CheckTenant(ctx context.Context, principal identity.Principal, permission ports.TenantPermission, tenantID tenant.ID) error {
+	return a.check(ctx, objectRef(objectTypeTenant, tenantID.String()), string(permission), userSubject(principal))
+}
+
+func (a Authorizer) CheckInventory(ctx context.Context, principal identity.Principal, permission ports.InventoryPermission, inventoryID inventory.InventoryID) error {
+	return a.check(ctx, objectRef(objectTypeInventory, inventoryID.String()), string(permission), userSubject(principal))
+}
+
+func (a Authorizer) GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error {
+	return a.touchRelationships(ctx, relationship(
+		objectRef(objectTypeTenant, tenantID.String()),
+		relationOwner,
+		userSubject(principal),
+	))
+}
+
+func (a Authorizer) GrantInventoryOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.touchRelationships(ctx,
+		relationship(
+			objectRef(objectTypeInventory, inventoryID.String()),
+			relationTenant,
+			objectSubject(objectTypeTenant, tenantID.String()),
+		),
+		relationship(
+			objectRef(objectTypeInventory, inventoryID.String()),
+			relationOwner,
+			userSubject(principal),
+		),
+	)
+}
+
+func (a Authorizer) BootstrapSchema(ctx context.Context, schema string) error {
+	_, err := a.gateway.WriteSchema(ctx, &v1.WriteSchemaRequest{Schema: schema})
+	return err
+}
+
+func (a Authorizer) check(ctx context.Context, resource *v1.ObjectReference, permission string, subject *v1.SubjectReference) error {
+	response, err := a.gateway.CheckPermission(ctx, &v1.CheckPermissionRequest{
+		Resource:   resource,
+		Permission: permission,
+		Subject:    subject,
+	})
+	if err != nil {
+		return err
+	}
+	if response.GetPermissionship() != v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION {
+		return ports.ErrForbidden
+	}
+
+	return nil
+}
+
+func (a Authorizer) touchRelationships(ctx context.Context, relationships ...*v1.Relationship) error {
+	updates := make([]*v1.RelationshipUpdate, 0, len(relationships))
+	for _, item := range relationships {
+		updates = append(updates, &v1.RelationshipUpdate{
+			Operation:    v1.RelationshipUpdate_OPERATION_TOUCH,
+			Relationship: item,
+		})
+	}
+
+	_, err := a.gateway.WriteRelationships(ctx, &v1.WriteRelationshipsRequest{Updates: updates})
+	return err
+}
+
+func relationship(resource *v1.ObjectReference, relation string, subject *v1.SubjectReference) *v1.Relationship {
+	return &v1.Relationship{
+		Resource: resource,
+		Relation: relation,
+		Subject:  subject,
+	}
+}
+
+func objectRef(objectType string, objectID string) *v1.ObjectReference {
+	return &v1.ObjectReference{
+		ObjectType: objectType,
+		ObjectId:   objectID,
+	}
+}
+
+func userSubject(principal identity.Principal) *v1.SubjectReference {
+	return objectSubject(objectTypeUser, principal.ID.String())
+}
+
+func objectSubject(objectType string, objectID string) *v1.SubjectReference {
+	return &v1.SubjectReference{
+		Object: objectRef(objectType, objectID),
+	}
+}
+
+type bearerTokenCredentials struct {
+	token                    string
+	requireTransportSecurity bool
+}
+
+func (c bearerTokenCredentials) GetRequestMetadata(_ context.Context, _ ...string) (map[string]string, error) {
+	return map[string]string{"authorization": "Bearer " + c.token}, nil
+}
+
+func (c bearerTokenCredentials) RequireTransportSecurity() bool {
+	return c.requireTransportSecurity
+}

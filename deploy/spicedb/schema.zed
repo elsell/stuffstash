@@ -1,0 +1,22 @@
+definition user {}
+
+definition tenant {
+  relation owner: user
+  relation admin: user
+
+  permission view = owner + admin
+  permission configure = owner + admin
+  permission create_inventory = owner + admin
+}
+
+definition inventory {
+  relation tenant: tenant
+  relation owner: user
+  relation editor: user
+  relation viewer: user
+
+  permission view = owner + editor + viewer + tenant->view
+  permission configure = owner + tenant->configure
+  permission share = owner + tenant->configure
+  permission edit = owner + editor + tenant->configure
+}

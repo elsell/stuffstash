@@ -10,10 +10,14 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 
 ## Pinned Go Dependencies
 
+- Go module version: `go 1.25.8`.
 - Huma: `github.com/danielgtaylor/huma/v2 v2.38.0`.
 - ULID: `github.com/oklog/ulid/v2 v2.1.1`.
+- Authzed Go client: `github.com/authzed/authzed-go v1.10.0`.
+- OIDC verifier: `github.com/coreos/go-oidc/v3 v3.19.0`.
+- OAuth2 support: `golang.org/x/oauth2 v0.36.0`.
+- gRPC: `google.golang.org/grpc v1.80.0`.
 - golang-migrate: `github.com/golang-migrate/migrate/v4 v4.19.1` when migration execution is implemented.
-- Authzed Go client: `github.com/authzed/authzed-go v1.10.0` when the SpiceDB adapter is implemented.
 
 ## Pinned Container Images
 

@@ -41,9 +41,9 @@ A tenant is the top-level security boundary.
 
 An inventory lives inside one tenant. Users can belong to more than one tenant and can have access to one or more inventories inside a tenant.
 
-Authorization is relationship-based and will use SpiceDB. The model should feel similar to Google Drive sharing: owners, editors, viewers, and direct sharing.
+Authorization is relationship-based and uses the same shape as SpiceDB. The model should feel similar to Google Drive sharing: owners, editors, viewers, and direct sharing.
 
-The first implemented API slice proves this boundary with local development auth, tenant creation, inventory creation, inventory listing, and Huma-generated OpenAPI. The production Google OIDC and SpiceDB adapters still sit behind the same ports and are not implemented yet.
+The current API slice proves this boundary with local development auth, OIDC token verification, SpiceDB authorization wiring, tenant creation, inventory creation, inventory listing, and Huma-generated OpenAPI.
 
 ## Assets And Locations
 

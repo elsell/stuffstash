@@ -39,6 +39,8 @@ definition inventory {
 }
 ```
 
+The schema must also exist as a checked-in `.zed` file so local and production bootstrapping do not depend on copying schema text from Markdown.
+
 ## Tracer Bullet Permissions
 
 The first API slice must check:
@@ -57,6 +59,20 @@ Creating an inventory grants the creating user the inventory `owner` relationshi
 - The first implementation may use an in-memory fake for tests and the initial tracer bullet.
 - The production adapter must use SpiceDB.
 - Application services must not import SpiceDB client types.
+- The SpiceDB adapter must be selected through environment configuration.
+- The SpiceDB adapter must fail closed when checks return anything other than `HAS_PERMISSION`.
+- Relationship writes must be idempotent enough for application retries. Already-existing relationships should not create privilege gaps or partial grants.
+- Schema bootstrap must be an explicit startup option for local development and deployment automation.
+- The default API process must not rewrite the production authorization schema unless explicitly configured to do so.
+
+## Authorization Modes
+
+The API supports these authorization modes:
+
+- `memory`: in-memory relationships for local development and tests.
+- `spicedb`: SpiceDB relationship checks and relationship writes.
+
+Any unknown mode must fail startup.
 
 ## Verification
 
@@ -64,3 +80,4 @@ Creating an inventory grants the creating user the inventory `owner` relationshi
 - Tests must prove cross-tenant denial.
 - Tests must prove unauthenticated requests never reach privileged behavior.
 - Tests must prove a user without a relationship cannot create or list inventory resources.
+- The SpiceDB adapter must have fake-backed tests for permission mapping, tenant owner grants, inventory owner grants, denied checks, and backend failures.

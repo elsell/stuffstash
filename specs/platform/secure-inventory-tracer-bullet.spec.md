@@ -20,6 +20,8 @@ This spec covers the first implemented secure API slice:
 
 This spec does not implement Google OIDC, a production SpiceDB adapter, assets, locations, persistence, migrations, or generated client SDKs.
 
+The next auth/authz tracer bullet extends this slice by adding production-shaped OIDC authentication and SpiceDB authorization adapters behind the same ports.
+
 ## Decisions
 
 - The first authentication implementation is a local development adapter behind the authentication port.

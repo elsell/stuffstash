@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
+  site: 'https://stuffstash.online',
   integrations: [
     starlight({
       title: 'Stuff Stash',

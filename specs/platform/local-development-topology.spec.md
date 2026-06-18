@@ -20,6 +20,8 @@ It does not define Kubernetes production deployment, Garage media storage, Googl
 - SQLite remains allowed for local-only or test fakes where a spec permits it.
 - SpiceDB is the production authorization service.
 - Local development may use a deterministic development authentication adapter behind the same authentication port used by OIDC.
+- Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
+- Local Compose must provide enough SpiceDB configuration for the API to connect to SpiceDB when `STUFF_STASH_AUTHZ_MODE=spicedb`.
 
 ## First Services
 
@@ -42,3 +44,4 @@ The first Compose topology includes:
 - Compose should be able to start the local service graph when Docker is available.
 - The API health endpoint must remain available without authentication.
 - Protected endpoints must require authentication even in local development.
+- Running with unknown auth or authz modes must fail startup.

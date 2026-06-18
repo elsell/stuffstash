@@ -5,11 +5,11 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, the runnable part is the Go API plus the first secure tenant and inventory endpoints.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, and test the first auth boundary.
 
 ## Requirements
 
-- Go 1.25.x.
+- Go 1.25.8 or newer.
 - Docker with Compose, for container-based local runs.
 - Lefthook, for pre-commit checks.
 - pnpm 11.0.7, for this documentation site.
@@ -102,16 +102,23 @@ make compose-down
 The docs site lives in `docs/`.
 
 ```sh
-cd docs
-pnpm install --frozen-lockfile
-pnpm dev
+make docs-install
+make docs-dev
 ```
 
-The lockfile is committed, so use frozen installs:
+## Auth Modes
 
-```sh
-pnpm install --frozen-lockfile
-```
+Local runs use safe defaults:
+
+- `STUFF_STASH_AUTH_MODE=local-dev`
+- `STUFF_STASH_AUTHZ_MODE=memory`
+
+You can switch to the production-shaped adapters with:
+
+- `STUFF_STASH_AUTH_MODE=oidc`
+- `STUFF_STASH_AUTHZ_MODE=spicedb`
+
+OIDC needs an issuer and client ID. SpiceDB needs an endpoint and preshared key. Local Compose already starts SpiceDB, but the API does not use it unless you choose the `spicedb` mode.
 
 ## Pre-Commit Checks
 

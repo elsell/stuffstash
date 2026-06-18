@@ -14,5 +14,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash ./cmd/stuff-stash
 FROM ${RUNTIME_IMAGE}
 
 COPY --from=builder /tmp/stuff-stash /app/stuff-stash
+COPY deploy /deploy
 EXPOSE 8080
 ENTRYPOINT ["/app/stuff-stash"]
