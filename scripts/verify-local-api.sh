@@ -38,7 +38,15 @@ extract_first_id() {
 }
 
 echo "checking health at ${base_url}"
-health="$(request GET /healthz)"
+health=""
+for attempt in $(seq 1 20); do
+  health="$(request GET /healthz 2>/dev/null || true)"
+  health_status="$(printf '%s\n' "$health" | head -n 1)"
+  if [ "$health_status" = "200" ]; then
+    break
+  fi
+  sleep 0.5
+done
 health_status="$(printf '%s\n' "$health" | head -n 1)"
 [ "$health_status" = "200" ] || fail "expected health status 200, got ${health_status}"
 
