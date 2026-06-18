@@ -148,7 +148,17 @@ These instructions are binding for all agents and contributors working in this r
   - Authentication must be behind ports and adapters.
   - Initially support Google.
   - Support arbitrary OIDC providers by design.
-- Mobile application technology is not yet decided and remains an explicit discussion point.
+- Web application:
+  - Use SvelteKit.
+  - Treat performance as a primary technology-selection and implementation concern.
+- Mobile applications:
+  - Use React Native with Expo.
+  - Target iOS and Android.
+- API contracts:
+  - REST endpoints must follow standard REST conventions.
+  - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.
+  - REST API documentation must be generated through OpenAPI tooling, not manually maintained Swagger files.
+  - Client API code should be generated from the OpenAPI contract where practical.
 
 ## Multi-Tenancy
 
@@ -215,7 +225,6 @@ Treat the following as code smells that require correction or explicit spec-leve
 The following are known open questions and should be resolved through specs and design discussion:
 
 - Final domain boundaries and bounded contexts.
-- Mobile application technology choice.
 - Monorepo layout.
 - Initial REST API shape.
 - MCP server capabilities and agent interaction model.
