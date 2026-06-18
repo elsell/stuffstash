@@ -1,2 +1,5 @@
 .cache/
 stuff-stash
+docs/node_modules/
+docs/dist/
+docs/.astro/

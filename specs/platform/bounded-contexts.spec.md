@@ -58,7 +58,7 @@ The identity and access context owns:
 
 The location context owns named places and containment paths inside an inventory.
 
-Locations are inventory-scoped and hierarchical. The final implementation may model locations and container assets through a shared containment abstraction, but the behavior must be specified before code.
+Locations are inventory-scoped and hierarchical. Locations and container assets are separate domain concepts that share containment behavior.
 
 The location context owns:
 
@@ -158,7 +158,6 @@ The data portability context owns:
 
 ## Open Questions
 
-- Should locations and container assets be implemented as one shared containment aggregate or as separate aggregates with a shared containment service?
 - Are consumables assets, quantities, lifecycle events, or a separate concept?
 - Should expiration be a first-class domain context or primarily a custom field and policy feature?
 - Should search be its own bounded context or remain an adapter/read-model concern at first?

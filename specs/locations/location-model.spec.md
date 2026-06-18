@@ -10,7 +10,7 @@ Locations must support ordinary household language such as garage, shelf, bin, c
 
 This spec covers the initial location model direction.
 
-This spec does not decide the final aggregate split between locations and assets, or the fuzzy matching implementation for natural language.
+This spec does not define persistence tables, REST endpoints, or the fuzzy matching implementation for natural language.
 
 ## Requirements
 
@@ -28,8 +28,8 @@ This spec does not decide the final aggregate split between locations and assets
 
 - Assets may be placed in locations.
 - Assets may be placed inside other assets when the parent asset behaves like a container.
-- Locations and container assets may share containment behavior.
-- The final implementation must decide whether locations and assets are the same model, separate models, or separate models with a shared containment abstraction.
+- Locations and container assets must share containment behavior.
+- Locations and assets are separate domain concepts with a shared containment abstraction.
 
 ## Testing
 
@@ -42,7 +42,6 @@ This spec does not decide the final aggregate split between locations and assets
 
 ## Open Questions
 
-- Are locations a special kind of asset or a separate aggregate?
 - Can a location be shared independently from its inventory?
 - What deletion or archive behavior should locations have?
 - How should duplicate location names be handled within different branches of the hierarchy?

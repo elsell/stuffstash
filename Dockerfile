@@ -6,9 +6,9 @@ ARG RUNTIME_IMAGE=registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha
 FROM ${GO_BUILDER_IMAGE} AS builder
 
 WORKDIR /src
-COPY go.mod ./
-COPY cmd ./cmd
-COPY internal ./internal
+COPY apps/api/go.mod ./
+COPY apps/api/cmd ./cmd
+COPY apps/api/internal ./internal
 RUN CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash ./cmd/stuff-stash
 
 FROM ${RUNTIME_IMAGE}

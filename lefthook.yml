@@ -7,4 +7,7 @@ pre-commit:
       stage_fixed: true
     go-test:
       glob: "*.go"
-      run: GOCACHE="$PWD/.cache/go-build" go test ./...
+      run: GOCACHE="$PWD/.cache/go-build" go test ./apps/api/...
+    go-structural-rules:
+      glob: "*.go"
+      run: scripts/check-go-structural-rules.sh {staged_files}

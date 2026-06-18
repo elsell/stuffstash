@@ -81,6 +81,8 @@ These instructions are binding for all agents and contributors working in this r
   - Media domain
   - Data portability domain
 - These boundaries must be changed through specs before implementation.
+- Assets and locations are separate domain concepts that share containment behavior.
+- The first asset lifecycle states are `active` and `archived`.
 
 ## Observability
 
@@ -142,6 +144,7 @@ These instructions are binding for all agents and contributors working in this r
   - Use PostgreSQL as the production backend.
   - SQLite may be used locally.
   - Use GORM as the ORM.
+  - Use `golang-migrate/migrate` for database migrations.
   - Do not use direct SQL in application code.
   - Direct SQL is a code smell and requires spec-level justification if ever considered.
 - Authorization:

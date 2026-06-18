@@ -24,27 +24,20 @@ This spec does not define the final persistence schema, full lifecycle model, co
   - Inventory ID.
   - Title.
   - Description.
-  - Containment or location reference once the containment model is finalized.
+  - Containment reference.
 - Assets must support custom field values.
 - Asset custom field values must be validated against tenant-scoped and inventory-scoped custom field definitions.
 - The asset domain must not be overfit to one product category.
 
 ## Containment
 
-- Assets may be nested or bundled.
+- Assets may be nested or bundled through the shared containment model.
 - Some assets may behave as containers.
 - The system must support placing assets inside other assets when the parent asset is a container-like thing.
 - The system must support hierarchical places inside an inventory.
 - The system must support moving assets and location-like containers without excessive friction.
 - The implementation must avoid duplicating hierarchy logic for locations and container assets.
-
-The final model must decide whether:
-
-- Locations and container assets are the same aggregate.
-- Locations and assets are separate aggregates with a shared containment abstraction.
-- Locations are a special kind of asset.
-
-This decision must be made before implementation of asset or location persistence.
+- Locations and assets are separate domain concepts with a shared containment abstraction.
 
 ## Consumables
 
@@ -61,14 +54,12 @@ The system must eventually support things that can be used up, such as medicine,
 ## Testing
 
 - Tests must verify asset creation, asset updates, custom field validation, tenant isolation, inventory isolation, and authorization.
-- Tests must verify containment behavior once the containment model is finalized.
+- Tests must verify containment behavior.
 - Tests must verify asset nesting or bundling once implemented.
 - Security-sensitive asset behavior must have adversarial end-to-end tests before public interaction points expose it.
 
 ## Open Questions
 
-- What is the final asset/location containment model?
-- What lifecycle states are needed first?
 - How should consumables be modeled?
 - Can assets move between inventories?
 - What asset fields should be first-class rather than custom fields?

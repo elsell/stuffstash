@@ -19,6 +19,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 ## Requirements
 
 - The service must be written in Go.
+- The API service must live under `apps/api`.
 - Runtime configuration must come from environment variables.
 - The service must expose `GET /healthz`.
 - `GET /healthz` must return HTTP `200` with a JSON body that identifies the service as healthy.
@@ -32,6 +33,8 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - Local Compose must run the app and expose the configured HTTP port.
 - Tests must verify the real health endpoint behavior.
 - Pre-commit Go test hooks must use an absolute `GOCACHE` path so Go accepts the build cache location in hook execution.
+- Pre-commit hooks must reject ad hoc Go print statements.
+- Pre-commit hooks must reject obvious raw SQL strings in Go application code.
 
 ## Environment
 
@@ -39,7 +42,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 
 ## Verification
 
-- `go test ./...` must pass.
+- `go test ./apps/api/...` must pass from the repository root.
 - `lefthook run pre-commit --all-files` should pass when Lefthook is installed.
 - `docker compose up --build` should start the app locally.
 - `curl http://localhost:8080/healthz` should return a healthy response.

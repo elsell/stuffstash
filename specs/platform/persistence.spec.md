@@ -35,12 +35,12 @@ This spec does not define the full database schema, migration tool choice, index
 
 ## Migrations
 
-- A Go-friendly migration tool must be selected before the first durable database schema is implemented.
+- The initial migration tool is `golang-migrate/migrate`.
 - The migration tool must be pinned to a known reviewed version.
 - Migration commands must be reproducible locally and in CI.
 - Migrations must be reviewed as code.
 - Migrations must preserve supply-chain rules for pinned tooling and dependencies.
-- The migration tool choice remains open until a spec compares the practical trade-offs.
+- Migration files must live under `apps/api/migrations`.
 
 ## Testing
 
@@ -51,7 +51,6 @@ This spec does not define the full database schema, migration tool choice, index
 
 ## Open Questions
 
-- Which Go migration tool should be used first?
 - Which tests must run against PostgreSQL instead of SQLite?
 - What indexing strategy is needed for JSONB custom fields?
 - How should repository contracts be split across asset, inventory, location, and identity contexts?
