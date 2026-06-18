@@ -16,13 +16,17 @@ This spec does not define the full asset aggregate, asset lifecycle, search mode
 
 - Assets must have a stable domain core for fields that are truly common to inventory items.
 - Assets must support custom fields.
-- Custom fields must be tenant-scoped.
+- Custom field definitions may be tenant-scoped or inventory-scoped.
+- Tenant-scoped custom field definitions must flow down into inventories.
+- Inventory-scoped custom field definitions must apply only inside that inventory.
 - Custom fields must be typed.
 - Custom field types must be represented with enumerations or typed value objects, not magic strings.
 - Custom field definitions must be separate from custom field values.
 - Custom field values must be validated against their definitions.
 - Custom fields must support future use in search, filtering, sorting, display, import, export, and conversational updates.
 - The system must avoid overfitting persistence schemas to the first set of asset examples.
+- In the PostgreSQL adapter, asset custom field values should be stored in a JSONB column.
+- Custom field definitions must live in separate persistence structures from asset custom field values.
 - The domain must not expose raw database JSON structures as the asset model.
 - Persistence choices must remain behind repositories and adapters.
 
@@ -49,8 +53,11 @@ Future specs may add richer field types such as money, quantity with units, expi
 ## Security And Tenancy
 
 - Custom field definitions and values must be tenant-isolated.
+- Inventory-scoped custom field definitions and values must be inventory-isolated.
 - Users must not infer another tenant's custom field names, definitions, or values.
+- Users must not infer custom field names, definitions, or values from inventories they cannot access.
 - Authorization checks must apply to creating, reading, updating, deleting, and using custom fields.
+- Custom field definitions do not need separate per-field permissions at first.
 - Error responses must not leak hidden field definitions or values.
 
 ## Testing

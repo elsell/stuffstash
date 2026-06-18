@@ -69,13 +69,14 @@ These instructions are binding for all agents and contributors working in this r
 - Model the domain explicitly with entities, value objects, aggregates, repositories, services, policies, and domain events where appropriate.
 - Use enumerations and typed domain concepts instead of hard-coded strings, magic numbers, or loosely defined values.
 - Keep domain language consistent across specs, code, tests, and observability.
-- Initial domain candidates for discussion:
+- Initial bounded contexts:
   - Asset domain
+  - Inventory domain
   - Location domain
   - Agent/model domain
   - Expiration domain
   - Identity and access management domain
-- These domain boundaries are not final until specified. Discuss and capture changes in specs before implementation.
+- These boundaries must be changed through specs before implementation.
 
 ## Observability
 
@@ -157,6 +158,7 @@ These instructions are binding for all agents and contributors working in this r
 - API contracts:
   - REST endpoints must follow standard REST conventions.
   - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.
+  - The first REST implementation must use Huma for code-first OpenAPI generation unless a future spec changes that before route implementation begins.
   - REST API documentation must be generated through OpenAPI tooling, not manually maintained Swagger files.
   - Client API code must be generated from the OpenAPI contract unless a spec explicitly justifies an exception.
   - Generated SDKs and DTOs are transport infrastructure and must sit behind frontend adapters or ports.
@@ -172,8 +174,10 @@ These instructions are binding for all agents and contributors working in this r
 ## Multi-Tenancy
 
 - Multi-tenancy is a native capability, not an afterthought.
-- Tenant identity and tenant boundaries must be represented explicitly in the domain and application layers where relevant.
-- Persistence, authorization, authentication, observability, and APIs must preserve tenant isolation.
+- Tenants are the top-level security boundary.
+- Inventories live inside tenants and are the primary unit for organizing, sharing, querying, and configuring assets.
+- Tenant identity, inventory identity, and tenant boundaries must be represented explicitly in the domain and application layers where relevant.
+- Persistence, authorization, authentication, observability, and APIs must preserve tenant and inventory isolation.
 - Tenant-specific behavior must be specified before implementation.
 
 ## Dependency And Integration Rules
