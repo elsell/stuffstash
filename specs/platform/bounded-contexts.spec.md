@@ -155,6 +155,9 @@ The data portability context owns:
 - Search must return only resources the user is authorized to view.
 - Media attachments are scoped by tenant and inventory through the resource they attach to.
 - Import and export must preserve tenant, inventory, authorization, and audit boundaries.
+- Domain packages must not import other domain packages directly.
+- Cross-domain coordination must happen through application services, ports, domain events, or other explicitly specified boundaries.
+- The repository must maintain a structural check for direct cross-domain imports once domain packages exist.
 
 ## Open Questions
 

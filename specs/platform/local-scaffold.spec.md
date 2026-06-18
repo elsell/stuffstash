@@ -35,6 +35,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - Pre-commit Go test hooks must use an absolute `GOCACHE` path so Go accepts the build cache location in hook execution.
 - Pre-commit hooks must reject ad hoc Go print statements.
 - Pre-commit hooks must reject obvious raw SQL strings in Go application code.
+- Pre-commit hooks must reject direct Go imports from one domain package into another domain package.
 
 ## Environment
 

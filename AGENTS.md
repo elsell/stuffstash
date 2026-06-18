@@ -244,6 +244,7 @@ Treat the following as code smells that require correction or explicit spec-leve
 - Coding before updating the relevant spec.
 - Direct SQL in application code.
 - Domain logic depending on framework, persistence, transport, auth, or observability details.
+- Direct imports from one domain package into another domain package.
 - Hard-coded environment-specific configuration.
 - Magic strings or numbers where enumerations or typed values belong.
 - Ad hoc print statements or unstructured logging.

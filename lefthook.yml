@@ -11,3 +11,6 @@ pre-commit:
     go-structural-rules:
       glob: "*.go"
       run: scripts/check-go-structural-rules.sh {staged_files}
+    go-domain-imports:
+      glob: "*.go"
+      run: scripts/check-go-domain-imports.sh {staged_files}
