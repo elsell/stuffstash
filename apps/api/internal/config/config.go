@@ -11,6 +11,8 @@ const (
 	envAuthzMode                = "STUFF_STASH_AUTHZ_MODE"
 	envOIDCIssuer               = "STUFF_STASH_OIDC_ISSUER"
 	envOIDCClientID             = "STUFF_STASH_OIDC_CLIENT_ID"
+	envRepositoryMode           = "STUFF_STASH_REPOSITORY_MODE"
+	envDatabaseDSN              = "STUFF_STASH_DATABASE_DSN"
 	envSpiceDBEndpoint          = "STUFF_STASH_SPICEDB_ENDPOINT"
 	envSpiceDBPresharedKey      = "STUFF_STASH_SPICEDB_PRESHARED_KEY"
 	envSpiceDBTLSEnabled        = "STUFF_STASH_SPICEDB_TLS_ENABLED"
@@ -19,6 +21,7 @@ const (
 	defaultHTTPAddr             = ":8080"
 	defaultAuthMode             = "local-dev"
 	defaultAuthzMode            = "memory"
+	defaultRepositoryMode       = "memory"
 	defaultSpiceDBSchemaPath    = "deploy/spicedb/schema.zed"
 	defaultSpiceDBTLSEnabled    = true
 	defaultSpiceDBBootstrapMode = false
@@ -30,6 +33,8 @@ type Config struct {
 	AuthzMode              string
 	OIDCIssuer             string
 	OIDCClientID           string
+	RepositoryMode         string
+	DatabaseDSN            string
 	SpiceDBEndpoint        string
 	SpiceDBPresharedKey    string
 	SpiceDBTLSEnabled      bool
@@ -44,6 +49,8 @@ func Load() Config {
 		AuthzMode:              envOrDefault(envAuthzMode, defaultAuthzMode),
 		OIDCIssuer:             os.Getenv(envOIDCIssuer),
 		OIDCClientID:           os.Getenv(envOIDCClientID),
+		RepositoryMode:         envOrDefault(envRepositoryMode, defaultRepositoryMode),
+		DatabaseDSN:            os.Getenv(envDatabaseDSN),
 		SpiceDBEndpoint:        os.Getenv(envSpiceDBEndpoint),
 		SpiceDBPresharedKey:    os.Getenv(envSpiceDBPresharedKey),
 		SpiceDBTLSEnabled:      boolEnvOrDefault(envSpiceDBTLSEnabled, defaultSpiceDBTLSEnabled),

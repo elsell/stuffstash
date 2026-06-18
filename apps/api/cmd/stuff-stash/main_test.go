@@ -54,6 +54,33 @@ func TestBuildAuthorizerRejectsUnknownMode(t *testing.T) {
 	}
 }
 
+func TestBuildRepositoriesAcceptsMemoryMode(t *testing.T) {
+	repositories, closeRepositories, err := buildRepositories(context.Background(), config.Config{RepositoryMode: "memory"})
+	if err != nil {
+		t.Fatalf("build repositories: %v", err)
+	}
+	if repositories.tenants == nil || repositories.inventories == nil {
+		t.Fatalf("expected repositories")
+	}
+	if err := closeRepositories(); err != nil {
+		t.Fatalf("close repositories: %v", err)
+	}
+}
+
+func TestBuildRepositoriesRejectsUnknownMode(t *testing.T) {
+	_, _, err := buildRepositories(context.Background(), config.Config{RepositoryMode: "unknown"})
+	if err == nil {
+		t.Fatalf("expected unsupported mode error")
+	}
+}
+
+func TestBuildRepositoriesRejectsPostgresWithoutDSN(t *testing.T) {
+	_, _, err := buildRepositories(context.Background(), config.Config{RepositoryMode: "postgres"})
+	if err == nil {
+		t.Fatalf("expected missing database dsn error")
+	}
+}
+
 func TestBootstrapSpiceDBSchemaReadsSchemaFile(t *testing.T) {
 	schemaPath := filepath.Join(t.TempDir(), "schema.zed")
 	if err := os.WriteFile(schemaPath, []byte("definition user {}"), 0o600); err != nil {

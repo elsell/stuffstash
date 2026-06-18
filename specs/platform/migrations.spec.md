@@ -8,7 +8,7 @@ Stuff Stash needs a pinned, reproducible migration workflow before durable persi
 
 This spec chooses the initial migration tool and workflow.
 
-This spec does not define the first schema, migration contents, or deployment automation.
+This spec does not define deployment automation.
 
 ## Decision
 
@@ -17,6 +17,7 @@ This spec does not define the first schema, migration contents, or deployment au
 - Migration files must live under `apps/api/migrations`.
 - Migration file names must be ordered and descriptive.
 - Migration commands must run from root `make` targets.
+- The first migration creates `tenants` and `inventories` for the secure tracer bullet.
 
 ## Requirements
 
@@ -37,6 +38,8 @@ The root Makefile should eventually expose:
 - `make migrate-status`
 
 These commands must require explicit database configuration through environment variables.
+
+Until the migration CLI is pinned in the repository, local Compose may use GORM's schema migration for the first tracer bullet only. Production deployments must use reviewed migration files.
 
 ## Testing
 

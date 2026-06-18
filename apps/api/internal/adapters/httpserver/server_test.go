@@ -48,7 +48,19 @@ func TestHealthEndpointReturnsHealthyStatus(t *testing.T) {
 func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T) {
 	server := NewServer(":0", newTestApp(&fakeObserver{}, "01ARZ3NDEKTSV4RRFFQ69G5FAV"))
 
-	tests := []struct {
+	endpoints := []struct {
+		name   string
+		method string
+		path   string
+		body   any
+	}{
+		{name: "current principal", method: http.MethodGet, path: "/me"},
+		{name: "create tenant", method: http.MethodPost, path: "/tenants", body: map[string]string{"name": "Home"}},
+		{name: "create inventory", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories", body: map[string]string{"name": "Tools"}},
+		{name: "list inventories", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories"},
+	}
+
+	authCases := []struct {
 		name          string
 		authorization string
 	}{
@@ -58,20 +70,22 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 		{name: "unsafe principal", authorization: "Bearer dev:user/one"},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			response := performRequest(server, http.MethodGet, "/me", test.authorization, nil)
+	for _, endpoint := range endpoints {
+		for _, authCase := range authCases {
+			t.Run(endpoint.name+" "+authCase.name, func(t *testing.T) {
+				response := performRequest(server, endpoint.method, endpoint.path, authCase.authorization, endpoint.body)
 
-			if response.Code != http.StatusUnauthorized {
-				t.Fatalf("expected status %d, got %d with body %s", http.StatusUnauthorized, response.Code, response.Body.String())
-			}
+				if response.Code != http.StatusUnauthorized {
+					t.Fatalf("expected status %d, got %d with body %s", http.StatusUnauthorized, response.Code, response.Body.String())
+				}
 
-			var body errorResponse
-			decodeBody(t, response, &body)
-			if body.Error.Code != "authentication_required" {
-				t.Fatalf("expected authentication_required, got %q", body.Error.Code)
-			}
-		})
+				var body errorResponse
+				decodeBody(t, response, &body)
+				if body.Error.Code != "authentication_required" {
+					t.Fatalf("expected authentication_required, got %q", body.Error.Code)
+				}
+			})
+		}
 	}
 }
 

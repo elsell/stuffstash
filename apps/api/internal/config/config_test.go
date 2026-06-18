@@ -6,6 +6,8 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envHTTPAddr, "")
 	t.Setenv(envAuthMode, "")
 	t.Setenv(envAuthzMode, "")
+	t.Setenv(envRepositoryMode, "")
+	t.Setenv(envDatabaseDSN, "")
 	t.Setenv(envSpiceDBTLSEnabled, "")
 	t.Setenv(envSpiceDBBootstrapSchema, "")
 	t.Setenv(envSpiceDBSchemaPath, "")
@@ -20,6 +22,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	}
 	if cfg.AuthzMode != defaultAuthzMode {
 		t.Fatalf("expected authz mode %q, got %q", defaultAuthzMode, cfg.AuthzMode)
+	}
+	if cfg.RepositoryMode != defaultRepositoryMode {
+		t.Fatalf("expected repository mode %q, got %q", defaultRepositoryMode, cfg.RepositoryMode)
+	}
+	if cfg.DatabaseDSN != "" {
+		t.Fatalf("expected empty database dsn, got %q", cfg.DatabaseDSN)
 	}
 	if !cfg.SpiceDBTLSEnabled {
 		t.Fatalf("expected SpiceDB TLS to default enabled")
@@ -37,6 +45,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthzMode, "spicedb")
 	t.Setenv(envOIDCIssuer, "https://accounts.google.com")
 	t.Setenv(envOIDCClientID, "client-id")
+	t.Setenv(envRepositoryMode, "postgres")
+	t.Setenv(envDatabaseDSN, "postgres://stuffstash:stuffstash-local@postgres:5432/stuffstash?sslmode=disable")
 	t.Setenv(envSpiceDBEndpoint, "spicedb:50051")
 	t.Setenv(envSpiceDBPresharedKey, "local-key")
 	t.Setenv(envSpiceDBTLSEnabled, "false")
@@ -53,6 +63,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.OIDCIssuer != "https://accounts.google.com" || cfg.OIDCClientID != "client-id" {
 		t.Fatalf("unexpected OIDC config: %+v", cfg)
+	}
+	if cfg.RepositoryMode != "postgres" || cfg.DatabaseDSN == "" {
+		t.Fatalf("unexpected repository config: %+v", cfg)
 	}
 	if cfg.SpiceDBEndpoint != "spicedb:50051" || cfg.SpiceDBPresharedKey != "local-key" {
 		t.Fatalf("unexpected SpiceDB config: %+v", cfg)

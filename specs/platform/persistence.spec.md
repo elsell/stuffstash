@@ -8,7 +8,7 @@ Stuff Stash needs persistence that supports flexible inventory data while keepin
 
 This spec covers initial persistence direction for PostgreSQL, SQLite, GORM, migrations, and custom field storage.
 
-This spec does not define the full database schema, migration tool choice, indexing strategy, backup strategy, or production deployment topology.
+This spec does not define the full asset schema, indexing strategy, backup strategy, or production deployment topology.
 
 ## Requirements
 
@@ -23,6 +23,26 @@ This spec does not define the full database schema, migration tool choice, index
 - Repository interfaces must be shaped around domain and application needs, not around database tables.
 - Tenant isolation and inventory isolation must be represented in persistence.
 - Persistence behavior must preserve authorization and tenancy assumptions from the application layer.
+- Repository adapter choice must come from `STUFF_STASH_REPOSITORY_MODE`.
+- `memory` repository mode is allowed for local tracer bullets and tests.
+- `postgres` repository mode must use GORM and `STUFF_STASH_DATABASE_DSN`.
+- Local Compose must run the API with `STUFF_STASH_REPOSITORY_MODE=postgres`.
+
+## Initial Schema
+
+The first durable schema covers the secure tenant/inventory tracer bullet:
+
+- `tenants`
+  - `id`
+  - `name`
+  - timestamps managed by GORM
+- `inventories`
+  - `id`
+  - `tenant_id`
+  - `name`
+  - timestamps managed by GORM
+
+The `inventories.tenant_id` value must reference `tenants.id`.
 
 ## Custom Fields
 
@@ -51,6 +71,5 @@ This spec does not define the full database schema, migration tool choice, index
 
 ## Open Questions
 
-- Which tests must run against PostgreSQL instead of SQLite?
 - What indexing strategy is needed for JSONB custom fields?
 - How should repository contracts be split across asset, inventory, location, and identity contexts?

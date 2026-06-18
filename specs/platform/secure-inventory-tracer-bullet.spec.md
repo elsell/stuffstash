@@ -18,9 +18,9 @@ This spec covers the first implemented secure API slice:
 - Current principal lookup.
 - Huma REST/OpenAPI wiring.
 
-This spec does not implement Google OIDC, a production SpiceDB adapter, assets, locations, persistence, migrations, or generated client SDKs.
+This spec does not implement Google OIDC, assets, locations, or generated client SDKs.
 
-The next auth/authz tracer bullet extends this slice by adding production-shaped OIDC authentication and SpiceDB authorization adapters behind the same ports.
+The next auth/authz tracer bullet extends this slice by adding production-shaped OIDC authentication, SpiceDB authorization, and GORM/Postgres persistence adapters behind the same ports.
 
 ## Decisions
 
@@ -29,7 +29,9 @@ The next auth/authz tracer bullet extends this slice by adding production-shaped
 - The first authorization implementation is an in-memory relationship adapter behind the authorization port.
 - A SpiceDB schema file must exist before the production SpiceDB adapter is implemented.
 - Huma must be used for the first REST endpoints and generated OpenAPI.
-- Persistence remains in-memory for this tracer bullet.
+- Persistence starts in-memory for fast tests and local runs.
+- Compose must use the GORM/Postgres repository adapter.
+- The repository contract must be verified with a real GORM-backed fake.
 
 ## Local Development Authentication
 

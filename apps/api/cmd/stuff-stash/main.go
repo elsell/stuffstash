@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
@@ -54,13 +55,27 @@ func main() {
 		}
 	}()
 
-	store := memory.NewStore()
+	repositories, closeRepositories, err := buildRepositories(ctx, cfg)
+	if err != nil {
+		recordStartupFailure(observer, err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := closeRepositories(); err != nil {
+			observer.Record(context.Background(), ports.Event{
+				Name:    ports.EventApplicationShutdownFailed,
+				Message: "application shutdown failed",
+				Fields:  map[string]string{"error": err.Error()},
+			})
+		}
+	}()
+
 	application := app.New(app.Dependencies{
 		Observer:    observer,
 		Auth:        authenticator,
 		Authorizer:  authorizer,
-		Tenants:     store,
-		Inventories: store,
+		Tenants:     repositories.tenants,
+		Inventories: repositories.inventories,
 		IDs:         idgen.NewULIDGenerator(),
 	})
 	server := httpserver.NewServer(cfg.HTTPAddr, application)
@@ -92,6 +107,78 @@ func main() {
 			os.Exit(1)
 		}
 	}
+}
+
+type repositories struct {
+	tenants     ports.TenantRepository
+	inventories ports.InventoryRepository
+}
+
+func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
+	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
+	case "memory":
+		store := memory.NewStore()
+		return repositories{tenants: store, inventories: store}, func() error { return nil }, nil
+	case "postgres":
+		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
+			return repositories{}, nil, errors.New("database dsn is required")
+		}
+		store, closeStore, err := openPostgresStore(ctx, cfg.DatabaseDSN)
+		if err != nil {
+			return repositories{}, nil, err
+		}
+		return repositories{tenants: store, inventories: store}, closeStore, nil
+	default:
+		return repositories{}, nil, errors.New("unsupported repository mode")
+	}
+}
+
+func openPostgresStore(ctx context.Context, dsn string) (gormstore.Store, func() error, error) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+	deadline := time.NewTimer(30 * time.Second)
+	defer deadline.Stop()
+
+	var lastErr error
+	for {
+		store, closeStore, err := tryOpenPostgresStore(ctx, dsn)
+		if err == nil {
+			return store, closeStore, nil
+		}
+		lastErr = err
+
+		select {
+		case <-ctx.Done():
+			return gormstore.Store{}, nil, ctx.Err()
+		case <-deadline.C:
+			return gormstore.Store{}, nil, fmt.Errorf("open postgres store: %w", lastErr)
+		case <-ticker.C:
+		}
+	}
+}
+
+func tryOpenPostgresStore(ctx context.Context, dsn string) (gormstore.Store, func() error, error) {
+	db, err := gormstore.OpenPostgres(dsn)
+	if err != nil {
+		return gormstore.Store{}, nil, err
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return gormstore.Store{}, nil, err
+	}
+	closeStore := sqlDB.Close
+
+	if err := sqlDB.PingContext(ctx); err != nil {
+		_ = closeStore()
+		return gormstore.Store{}, nil, err
+	}
+	if err := gormstore.Migrate(ctx, db); err != nil {
+		_ = closeStore()
+		return gormstore.Store{}, nil, err
+	}
+
+	return gormstore.NewStore(db), closeStore, nil
 }
 
 func buildAuthenticator(ctx context.Context, cfg config.Config) (ports.Authenticator, error) {

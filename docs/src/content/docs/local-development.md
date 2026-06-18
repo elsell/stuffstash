@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, and test the first auth boundary.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, persist them in Postgres through Compose, and test the first auth boundary.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ From the repository root:
 make run
 ```
 
-This uses local development auth and in-memory authorization.
+This uses local development auth, in-memory authorization, and in-memory persistence.
 
 Then check the health endpoint:
 
@@ -97,7 +97,7 @@ make verify-local-api
 make compose-up
 ```
 
-Compose starts the API, Postgres, and SpiceDB. By default, the API still uses in-memory authorization so local runs stay quick.
+Compose starts the API, Postgres, and SpiceDB. By default, the API uses Postgres persistence and in-memory authorization.
 
 To run the API against SpiceDB authorization:
 
@@ -105,7 +105,7 @@ To run the API against SpiceDB authorization:
 make compose-up-spicedb
 ```
 
-This starts the same local stack, switches authorization to SpiceDB, and bootstraps the checked-in schema.
+This starts the same local stack, keeps Postgres persistence, switches authorization to SpiceDB, and bootstraps the checked-in schema.
 Local SpiceDB uses `serve-testing`, so it does not need a preshared key.
 
 In another terminal, run:
@@ -164,13 +164,15 @@ Local runs use safe defaults:
 
 - `STUFF_STASH_AUTH_MODE=local-dev`
 - `STUFF_STASH_AUTHZ_MODE=memory`
+- `STUFF_STASH_REPOSITORY_MODE=memory`
 
 You can switch to the production-shaped adapters with:
 
 - `STUFF_STASH_AUTH_MODE=oidc`
 - `STUFF_STASH_AUTHZ_MODE=spicedb`
+- `STUFF_STASH_REPOSITORY_MODE=postgres`
 
-OIDC needs an issuer and client ID. A secured SpiceDB deployment needs an endpoint and preshared key. Local Compose already starts unauthenticated `serve-testing`, but the API does not use it unless you choose the `spicedb` mode.
+OIDC needs an issuer and client ID. A secured SpiceDB deployment needs an endpoint and preshared key. Postgres needs `STUFF_STASH_DATABASE_DSN`. Local Compose already starts Postgres and unauthenticated SpiceDB `serve-testing`, but the API does not use SpiceDB unless you choose the `spicedb` mode.
 
 ## Pre-Commit Checks
 
