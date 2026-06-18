@@ -22,6 +22,9 @@ It does not define Kubernetes production deployment, Garage media storage, Googl
 - Local development may use a deterministic development authentication adapter behind the same authentication port used by OIDC.
 - Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
 - Local Compose must provide enough SpiceDB configuration for the API to connect to SpiceDB when `STUFF_STASH_AUTHZ_MODE=spicedb`.
+- The repository must provide a single-command Compose path for local-dev authentication with SpiceDB authorization.
+- The repository must provide a non-Compose local SpiceDB path for developer machines where the Docker Compose plugin is unavailable.
+- The repository must provide a local verification script for the first secure API flow.
 
 ## First Services
 
@@ -45,3 +48,6 @@ The first Compose topology includes:
 - The API health endpoint must remain available without authentication.
 - Protected endpoints must require authentication even in local development.
 - Running with unknown auth or authz modes must fail startup.
+- The SpiceDB Compose path must bootstrap the checked-in schema automatically.
+- The non-Compose SpiceDB path must bootstrap the checked-in schema automatically.
+- The local verification script must cover health, unauthenticated rejection, authenticated identity, tenant creation, inventory creation, and inventory listing.

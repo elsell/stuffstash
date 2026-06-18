@@ -1,6 +1,10 @@
-.PHONY: test run compose-up compose-down docker-build docs-install docs-dev docs-build docs-preview
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
+SPICEDB_CONTAINER ?= stuff-stash-spicedb
+SPICEDB_GRPC_PORT ?= 50051
+SPICEDB_PRESHARED_KEY ?= stuffstash-local-spicedb-key
+SPICEDB_IMAGE ?= authzed/spicedb:v1.47.1@sha256:25c5499a43fdb206b7b1b72da4ba7ca911d92fd80d4d08ce2e95bf7ea0709788
 CODEX_RUNTIME_BIN ?= $(HOME)/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin
 CODEX_RUNTIME_NODE_BIN ?= $(HOME)/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin
 DOCS_PATH := $(CODEX_RUNTIME_NODE_BIN):$(PATH)
@@ -12,7 +16,40 @@ test:
 run:
 	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
 
+run-spicedb: spicedb-up
+	STUFF_STASH_AUTH_MODE=local-dev \
+	STUFF_STASH_AUTHZ_MODE=spicedb \
+	STUFF_STASH_SPICEDB_ENDPOINT=localhost:$(SPICEDB_GRPC_PORT) \
+	STUFF_STASH_SPICEDB_PRESHARED_KEY=$(SPICEDB_PRESHARED_KEY) \
+	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
+	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
+	STUFF_STASH_SPICEDB_SCHEMA_PATH=deploy/spicedb/schema.zed \
+	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
+
+spicedb-up:
+	docker rm -f $(SPICEDB_CONTAINER) >/dev/null 2>&1 || true
+	docker run --rm -d \
+		--name $(SPICEDB_CONTAINER) \
+		-p $(SPICEDB_GRPC_PORT):50051 \
+		$(SPICEDB_IMAGE) \
+		serve-testing \
+		--grpc-preshared-key $(SPICEDB_PRESHARED_KEY)
+
+spicedb-down:
+	docker rm -f $(SPICEDB_CONTAINER) >/dev/null 2>&1 || true
+
+verify-local-api:
+	scripts/verify-local-api.sh
+
 compose-up:
+	docker compose up --build
+
+compose-up-spicedb:
+	STUFF_STASH_AUTH_MODE=local-dev \
+	STUFF_STASH_AUTHZ_MODE=spicedb \
+	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
+	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
+	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
 	docker compose up --build
 
 compose-down:
