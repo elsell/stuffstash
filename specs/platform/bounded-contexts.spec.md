@@ -95,6 +95,50 @@ Expiration may become:
 
 This must be decided before expiration-specific behavior is implemented.
 
+### Audit And History
+
+The audit and history context owns durable records of what changed, who changed it, and how it changed.
+
+The audit and history context owns:
+
+- Audit records for state-changing actions.
+- Undo metadata and compensating action behavior once specified.
+- Safe audit views scoped by tenant and inventory authorization.
+
+### Search
+
+The search context owns user-facing lookup and discovery across authorized resources.
+
+The search context owns:
+
+- Exact search.
+- Fuzzy search.
+- Search result types.
+- Search filtering through tenant, inventory, and SpiceDB authorization.
+- Search read models and indexes once specified.
+
+### Media
+
+The media context owns inventory file and image attachments.
+
+The media context owns:
+
+- Attachment metadata.
+- Blob storage ports.
+- Attachment authorization.
+- Image and file access behavior.
+
+### Data Portability
+
+The data portability context owns import, export, and backup-style data movement.
+
+The data portability context owns:
+
+- JSON export.
+- CSV export.
+- Future import formats.
+- Future media export packaging.
+
 ## Cross-Context Rules
 
 - Tenants are the top-level security boundary.
@@ -107,6 +151,10 @@ This must be decided before expiration-specific behavior is implemented.
 - Tenant-scoped custom field definitions flow down into inventories.
 - Inventory-scoped custom field definitions apply only inside that inventory.
 - Conversational actions must execute through the same application operations and authorization checks as any other adapter.
+- Every state-changing action must produce audit history.
+- Search must return only resources the user is authorized to view.
+- Media attachments are scoped by tenant and inventory through the resource they attach to.
+- Import and export must preserve tenant, inventory, authorization, and audit boundaries.
 
 ## Open Questions
 
@@ -114,4 +162,3 @@ This must be decided before expiration-specific behavior is implemented.
 - Are consumables assets, quantities, lifecycle events, or a separate concept?
 - Should expiration be a first-class domain context or primarily a custom field and policy feature?
 - Should search be its own bounded context or remain an adapter/read-model concern at first?
-- Should audit/history be its own bounded context from the start?

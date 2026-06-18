@@ -55,6 +55,7 @@ Example command:
 - The system must support an agentic loop that can inspect current inventory state, plan actions, ask clarifying questions, request confirmation, and apply approved changes.
 - The system must support text-to-speech responses through a text-to-speech port where the client experience calls for it.
 - The system must support real-time voice and text interaction once the client interaction protocol is specified.
+- The initial realtime client transport should use WebSockets unless a future spec chooses a better fit before implementation.
 - The system must allow users to complete simple, low-risk updates with minimal taps after the original voice command.
 - The system must maintain feature parity between mobile and web for the underlying actions, even when the interaction mode differs.
 
@@ -66,7 +67,7 @@ Example command:
 - Provider and prompt details must not leak into asset, location, identity, expiration, or other product domain models.
 - Users or operators should be able to choose model providers through environment-backed configuration.
 - The design must support remote providers such as Gemini API.
-- Gemini is the first remote model provider candidate.
+- Gemini is the first remote model provider target.
 - The design must support OpenAI-compatible local endpoints.
 - The design must support local models where practical.
 - Provider selection must not require changing domain logic.
@@ -150,7 +151,6 @@ Domain specs must define the exact commands, entities, lifecycle states, and aut
 
 ## Open Questions
 
-- Which model provider should be the first remote adapter?
 - Which local speech-to-text, language model, and text-to-speech runtimes should be supported first?
 - Is an external agent-loop framework needed, or are direct application-level orchestration services enough?
 - Which actions are safe enough for one-tap confirmation?

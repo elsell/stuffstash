@@ -76,6 +76,10 @@ These instructions are binding for all agents and contributors working in this r
   - Agent/model domain
   - Expiration domain
   - Identity and access management domain
+  - Audit and history domain
+  - Search domain
+  - Media domain
+  - Data portability domain
 - These boundaries must be changed through specs before implementation.
 
 ## Observability
@@ -167,6 +171,9 @@ These instructions are binding for all agents and contributors working in this r
   - Mobile and web clients must support low-friction natural-language inventory interactions.
   - Conversational inventory is part of the core product experience, not the domain core.
   - Speech-to-text, language model, and text-to-speech integrations must be behind ports and adapters.
+  - Speech-to-text, language inference, and text-to-speech must each use common project-owned interfaces.
+  - Realtime conversational interaction should use WebSockets first unless a future spec changes that before implementation.
+  - Conversational flows must use structured action plans for approval, clarification, audit, and execution.
   - Model providers must be pluggable, including remote providers and local models where practical.
   - The domain core must not know or care whether an operation came from voice, typed chat, REST, MCP, mobile UI, web UI, CLI, import, or another adapter.
   - Model output must never bypass domain services, authorization, tenancy, validation, or audit behavior.
@@ -179,6 +186,19 @@ These instructions are binding for all agents and contributors working in this r
 - Tenant identity, inventory identity, and tenant boundaries must be represented explicitly in the domain and application layers where relevant.
 - Persistence, authorization, authentication, observability, and APIs must preserve tenant and inventory isolation.
 - Tenant-specific behavior must be specified before implementation.
+
+## Audit, Search, Media, And Portability
+
+- Every state-changing action must produce audit history.
+- Undo must be implemented through domain behavior or compensating application commands, not direct database reversal.
+- Search must support exact and fuzzy lookup over resources the user is authorized to view.
+- Search must preserve SpiceDB authorization, tenant isolation, and inventory isolation.
+- Images are first-class attachments.
+- Arbitrary file uploads should be supported behind media ports and adapters.
+- Production blob storage should use Garage as an S3-compatible storage system unless a future spec changes that before implementation.
+- Import and export must live behind ports and adapters.
+- JSON and CSV export are required initial export formats.
+- Offline support is not required initially, and clients must not queue offline actions until a future sync spec defines that behavior.
 
 ## Dependency And Integration Rules
 
