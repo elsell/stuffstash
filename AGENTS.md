@@ -36,6 +36,9 @@ These instructions are binding for all agents and contributors working in this r
 - Project-scoped Codex custom agents live under `.codex/agents/`.
 - Custom agents should be narrow, opinionated, and useful enough to justify their own identity.
 - The documentation agent owns human-facing documentation quality, structure, and synchronization with the codebase.
+- The code critic agent owns ruthless review feedback about code smells, repetition, weak boundaries, hard-coded values, poor tests, and architectural drift.
+- After each implementation pass, run the code critic agent before finalizing the work.
+- Treat code critic findings as review input: fix confirmed issues, or explicitly explain why a finding is deferred or not applicable.
 - Add or update custom agents when a durable role would improve review quality, implementation discipline, or project process.
 
 ## Architecture
@@ -146,7 +149,8 @@ These instructions are binding for all agents and contributors working in this r
   - Use GORM as the ORM.
   - Use `golang-migrate/migrate` for database migrations.
   - Do not use direct SQL in application code.
-  - Direct SQL is a code smell and requires spec-level justification if ever considered.
+  - Direct SQL in reviewed migration files is allowed because migrations define schema.
+  - Direct SQL outside reviewed migration files is a code smell and requires spec-level justification if ever considered.
 - Authorization:
   - Use SpiceDB.
   - Use relationship-based authorization.

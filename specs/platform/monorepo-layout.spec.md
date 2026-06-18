@@ -23,6 +23,16 @@ This spec does not define every future package, CI job, or deployment manifest.
 - Product and platform specs remain in the top-level `specs/` directory.
 - Project custom agents remain in `.codex/agents/`.
 
+## Project Custom Agents
+
+- Project-scoped Codex custom agents must live under `.codex/agents/`.
+- Each custom agent must have a narrow responsibility that improves repository quality or process discipline.
+- The documentation agent owns human-focused documentation review and synchronization.
+- The code critic agent owns ruthless review feedback for code smells, repeated code, weak boundaries, hard-coded values, poor tests, and architectural drift.
+- After each implementation pass, the main agent must run the code critic agent before finalizing the work.
+- Code critic findings must be handled explicitly: fix confirmed issues, or explain why a finding is deferred or not applicable.
+- Custom agents must not replace tests, hooks, specs, or human review.
+
 ## Initial Layout
 
 ```text
