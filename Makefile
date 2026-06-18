@@ -3,7 +3,7 @@
 GOCACHE ?= $(CURDIR)/.cache/go-build
 SPICEDB_CONTAINER ?= stuff-stash-spicedb
 SPICEDB_GRPC_PORT ?= 50051
-SPICEDB_PRESHARED_KEY ?= stuffstash-local-spicedb-key
+SPICEDB_PRESHARED_KEY ?=
 SPICEDB_IMAGE ?= authzed/spicedb:v1.47.1@sha256:25c5499a43fdb206b7b1b72da4ba7ca911d92fd80d4d08ce2e95bf7ea0709788
 CODEX_RUNTIME_BIN ?= $(HOME)/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin
 CODEX_RUNTIME_NODE_BIN ?= $(HOME)/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin
@@ -32,8 +32,7 @@ spicedb-up:
 		--name $(SPICEDB_CONTAINER) \
 		-p $(SPICEDB_GRPC_PORT):50051 \
 		$(SPICEDB_IMAGE) \
-		serve-testing \
-		--grpc-preshared-key $(SPICEDB_PRESHARED_KEY)
+		serve-testing
 
 spicedb-down:
 	docker rm -f $(SPICEDB_CONTAINER) >/dev/null 2>&1 || true

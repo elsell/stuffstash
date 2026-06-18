@@ -123,6 +123,28 @@ func TestAuthorizerBootstrapsSchema(t *testing.T) {
 	}
 }
 
+func TestNewGatewayRequiresEndpoint(t *testing.T) {
+	gateway, err := NewGateway("", "", false)
+	if err == nil {
+		t.Fatalf("expected missing endpoint error")
+	}
+	if gateway != nil {
+		t.Fatalf("expected no gateway on configuration error")
+	}
+}
+
+func TestNewGatewayAllowsUnauthenticatedLocalTesting(t *testing.T) {
+	gateway, err := NewGateway("localhost:50051", "", false)
+	if err != nil {
+		t.Fatalf("create unauthenticated local gateway: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := gateway.Close(); err != nil {
+			t.Fatalf("close gateway: %v", err)
+		}
+	})
+}
+
 func principal(id string) identity.Principal {
 	return identity.Principal{ID: identity.PrincipalID(id)}
 }

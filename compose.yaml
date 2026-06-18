@@ -15,7 +15,7 @@ services:
       STUFF_STASH_OIDC_CLIENT_ID: ${STUFF_STASH_OIDC_CLIENT_ID:-}
       STUFF_STASH_DATABASE_DSN: ${STUFF_STASH_DATABASE_DSN:-postgres://stuffstash:stuffstash-local@postgres:5432/stuffstash?sslmode=disable}
       STUFF_STASH_SPICEDB_ENDPOINT: ${STUFF_STASH_SPICEDB_ENDPOINT:-spicedb:50051}
-      STUFF_STASH_SPICEDB_PRESHARED_KEY: ${STUFF_STASH_SPICEDB_PRESHARED_KEY:-stuffstash-local-spicedb-key}
+      STUFF_STASH_SPICEDB_PRESHARED_KEY: ${STUFF_STASH_SPICEDB_PRESHARED_KEY:-}
       STUFF_STASH_SPICEDB_TLS_ENABLED: ${STUFF_STASH_SPICEDB_TLS_ENABLED:-false}
       STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA: ${STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA:-false}
       STUFF_STASH_SPICEDB_SCHEMA_PATH: ${STUFF_STASH_SPICEDB_SCHEMA_PATH:-deploy/spicedb/schema.zed}
@@ -40,8 +40,6 @@ services:
     image: authzed/spicedb:v1.47.1@sha256:25c5499a43fdb206b7b1b72da4ba7ca911d92fd80d4d08ce2e95bf7ea0709788
     command:
       - serve-testing
-      - --grpc-preshared-key
-      - ${STUFF_STASH_SPICEDB_PRESHARED_KEY:-stuffstash-local-spicedb-key}
     ports:
       - "${SPICEDB_GRPC_PORT:-50051}:50051"
 

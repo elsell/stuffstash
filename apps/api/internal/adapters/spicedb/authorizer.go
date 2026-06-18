@@ -47,8 +47,8 @@ type ClientGateway struct {
 func NewGateway(endpoint string, presharedKey string, tlsEnabled bool) (*ClientGateway, error) {
 	endpoint = strings.TrimSpace(endpoint)
 	presharedKey = strings.TrimSpace(presharedKey)
-	if endpoint == "" || presharedKey == "" {
-		return nil, errors.New("spicedb endpoint and preshared key are required")
+	if endpoint == "" {
+		return nil, errors.New("spicedb endpoint is required")
 	}
 
 	transport := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12}))
@@ -56,13 +56,17 @@ func NewGateway(endpoint string, presharedKey string, tlsEnabled bool) (*ClientG
 		transport = grpc.WithTransportCredentials(insecure.NewCredentials())
 	}
 
-	client, err := authzed.NewClient(
-		endpoint,
-		transport,
-		grpc.WithPerRPCCredentials(bearerTokenCredentials{
+	clientOptions := []grpc.DialOption{transport}
+	if presharedKey != "" {
+		clientOptions = append(clientOptions, grpc.WithPerRPCCredentials(bearerTokenCredentials{
 			token:                    presharedKey,
 			requireTransportSecurity: tlsEnabled,
-		}),
+		}))
+	}
+
+	client, err := authzed.NewClient(
+		endpoint,
+		clientOptions...,
 	)
 	if err != nil {
 		return nil, err

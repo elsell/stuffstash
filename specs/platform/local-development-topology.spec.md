@@ -22,6 +22,8 @@ It does not define Kubernetes production deployment, Garage media storage, Googl
 - Local development may use a deterministic development authentication adapter behind the same authentication port used by OIDC.
 - Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
 - Local Compose must provide enough SpiceDB configuration for the API to connect to SpiceDB when `STUFF_STASH_AUTHZ_MODE=spicedb`.
+- Local SpiceDB uses `serve-testing`; it must not require a preshared key.
+- The API's SpiceDB adapter may omit bearer credentials when no preshared key is configured, for local `serve-testing` only.
 - The repository must provide a single-command Compose path for local-dev authentication with SpiceDB authorization.
 - The repository must provide a non-Compose local SpiceDB path for developer machines where the Docker Compose plugin is unavailable.
 - The repository must provide a local verification script for the first secure API flow.
