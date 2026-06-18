@@ -51,5 +51,5 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 ## References
 
 - Red Hat Hardened Images docs describe using a separate Go builder image and core runtime image for multi-stage Go builds.
-- This scaffold pins the Go builder image to `registry.access.redhat.com/hi/go:1.25.10-builder-1780418048@sha256:76978661900fd99d3a3d033d736cb9894f317240f52997210ecf0a8e93ce3716`.
-- This scaffold pins the runtime image to `registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha256:50714a55cbfb83cbaaed7f94fffdee8e818cf5b11ac2379ce0ff848513636353`.
+- This scaffold pins the Go builder image to `registry.access.redhat.com/hi/go:1.25.10-builder-1780418048@sha256:1a99d42f555db97455998945faf3c797c1f65ce1b92e4d9952a589446d114d6c`.
+- This scaffold pins the runtime image to `registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha256:82ab1238082f405e19e1cc6e4950549371b6742ba6b649ca356c058249162540`.

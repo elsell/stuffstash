@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:-registry.access.redhat.com/hi/go:1.25.10-builder-1780418048@sha256:76978661900fd99d3a3d033d736cb9894f317240f52997210ecf0a8e93ce3716}
-        RUNTIME_IMAGE: ${RUNTIME_IMAGE:-registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha256:50714a55cbfb83cbaaed7f94fffdee8e818cf5b11ac2379ce0ff848513636353}
+        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:-registry.access.redhat.com/hi/go:1.25.10-builder-1780418048@sha256:1a99d42f555db97455998945faf3c797c1f65ce1b92e4d9952a589446d114d6c}
+        RUNTIME_IMAGE: ${RUNTIME_IMAGE:-registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha256:82ab1238082f405e19e1cc6e4950549371b6742ba6b649ca356c058249162540}
     image: stuff-stash:local
     environment:
       STUFF_STASH_HTTP_ADDR: ${STUFF_STASH_HTTP_ADDR:-:8080}
