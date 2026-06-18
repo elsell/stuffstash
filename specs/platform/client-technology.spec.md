@@ -27,7 +27,11 @@ This spec does not define user-facing screens, navigation, visual design, offlin
 
 - Client code must be organized so the web app, mobile app, and generated API clients can evolve independently.
 - Shared packages must be introduced only when they remove meaningful duplication without hiding platform-specific concerns.
-- API access from clients must be generated from the backend OpenAPI contract when practical.
+- API access from clients must use generated SDKs from the backend OpenAPI contract unless a spec explicitly justifies an exception.
+- Generated SDKs must be treated as infrastructure adapters, not as the client domain model.
+- Web and mobile clients must maintain separate client-side domain models where they need product behavior, validation, presentation state, or offline behavior.
+- Generated DTOs must be mapped into client domain models at adapter boundaries.
+- Client UI, state management, and product logic must not depend directly on generated DTOs.
 - Client applications must treat the backend API contract as the source of truth for endpoint shapes, response bodies, error bodies, pagination, and authentication behavior.
 - Client applications must not hard-code environment-specific service URLs, tenant identifiers, OAuth/OIDC settings, or other deployment configuration.
 - Runtime or build-time configuration must come from environment-backed configuration appropriate for each platform.
@@ -56,6 +60,7 @@ The exact monorepo layout remains open, but it must support these logical areas:
 - SvelteKit web application.
 - React Native and Expo mobile application.
 - Generated API clients or contract packages.
+- Client-side adapter packages that map generated DTOs to web and mobile domain models.
 - Shared design tokens or small shared client utilities, if justified.
 - Astro and Starlight documentation site.
 
@@ -65,3 +70,4 @@ The exact monorepo layout remains open, but it must support these logical areas:
 - The web app must have build, test, lint, and performance checks before user-facing web features are merged.
 - The mobile app must have build, test, lint, and platform smoke checks before user-facing mobile features are merged.
 - Generated API client code must be reproducible from pinned tools and the checked-in OpenAPI contract.
+- Tests must verify DTO-to-domain mapping at client adapter boundaries.

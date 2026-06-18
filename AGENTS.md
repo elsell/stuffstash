@@ -158,7 +158,9 @@ These instructions are binding for all agents and contributors working in this r
   - REST endpoints must follow standard REST conventions.
   - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.
   - REST API documentation must be generated through OpenAPI tooling, not manually maintained Swagger files.
-  - Client API code should be generated from the OpenAPI contract where practical.
+  - Client API code must be generated from the OpenAPI contract unless a spec explicitly justifies an exception.
+  - Generated SDKs and DTOs are transport infrastructure and must sit behind frontend adapters or ports.
+  - Web and mobile clients must keep separate frontend domain models where client-side product behavior needs them.
 - Conversational inventory:
   - Mobile and web clients must support low-friction natural-language inventory interactions.
   - Conversational inventory is part of the core product experience, not the domain core.
