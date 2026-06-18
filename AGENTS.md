@@ -159,6 +159,11 @@ These instructions are binding for all agents and contributors working in this r
   - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.
   - REST API documentation must be generated through OpenAPI tooling, not manually maintained Swagger files.
   - Client API code should be generated from the OpenAPI contract where practical.
+- Conversational inventory:
+  - Mobile and web clients must support low-friction natural-language inventory interactions.
+  - Speech-to-text, language model, and text-to-speech integrations must be behind ports and adapters.
+  - Model providers must be pluggable, including remote providers and local models where practical.
+  - Model output must never bypass domain services, authorization, tenancy, validation, or audit behavior.
 
 ## Multi-Tenancy
 
