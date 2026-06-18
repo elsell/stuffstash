@@ -161,8 +161,10 @@ These instructions are binding for all agents and contributors working in this r
   - Client API code should be generated from the OpenAPI contract where practical.
 - Conversational inventory:
   - Mobile and web clients must support low-friction natural-language inventory interactions.
+  - Conversational inventory is part of the core product experience, not the domain core.
   - Speech-to-text, language model, and text-to-speech integrations must be behind ports and adapters.
   - Model providers must be pluggable, including remote providers and local models where practical.
+  - The domain core must not know or care whether an operation came from voice, typed chat, REST, MCP, mobile UI, web UI, CLI, import, or another adapter.
   - Model output must never bypass domain services, authorization, tenancy, validation, or audit behavior.
 
 ## Multi-Tenancy

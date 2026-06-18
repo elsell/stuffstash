@@ -21,6 +21,17 @@ This spec covers the first product direction for language-model-assisted invento
 
 This spec does not define a specific model provider, prompt format, streaming protocol, mobile screen layout, or persistence schema.
 
+## Architectural Boundary
+
+- Conversational inventory is part of the core product experience, not the domain core.
+- Language model, speech-to-text, and text-to-speech integrations are interaction mechanisms.
+- The inventory domain must remain usable through non-model interfaces such as REST, MCP, CLI, tests, background jobs, imports, and future adapters.
+- The domain core must not know whether a command came from a spoken request, typed chat, REST call, MCP tool, mobile screen, or another adapter.
+- The domain core must expose clear application operations for inventory behavior.
+- Conversational flows must translate user language into those application operations.
+- The same domain rules, validation, authorization, tenancy checks, observability, and audit behavior must apply no matter which adapter initiated the operation.
+- The system must not create model-specific domain concepts unless those concepts are genuinely part of the business domain and are specified outside the provider integration layer.
+
 ## User Experience Goals
 
 - The mobile app must put the conversational inventory action front and center.
@@ -51,6 +62,7 @@ Example command:
 - Speech-to-text, language model, and text-to-speech capabilities must be represented as ports.
 - Provider implementations must be adapters.
 - The domain and application layers must not depend on provider SDKs, HTTP APIs, model-specific types, or prompt framework types.
+- Provider and prompt details must not leak into asset, location, identity, expiration, or other product domain models.
 - Users or operators should be able to choose model providers through environment-backed configuration.
 - The design must support remote providers such as Gemini API.
 - The design must support local models where practical.
@@ -61,6 +73,7 @@ Example command:
 ## Agent Boundary
 
 - The agent may propose actions, ask questions, and call application ports.
+- The agent is one adapter-facing orchestration path, not the owner of inventory behavior.
 - The agent must not bypass domain services, repositories, authorization, tenancy checks, validation, or audit behavior.
 - The agent must not write directly to persistence.
 - The agent must not trust model output as authoritative domain state.
