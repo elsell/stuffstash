@@ -43,6 +43,8 @@ An inventory lives inside one tenant. Users can belong to more than one tenant a
 
 Authorization is relationship-based and will use SpiceDB. The model should feel similar to Google Drive sharing: owners, editors, viewers, and direct sharing.
 
+The first implemented API slice proves this boundary with local development auth, tenant creation, inventory creation, inventory listing, and Huma-generated OpenAPI. The production Google OIDC and SpiceDB adapters still sit behind the same ports and are not implemented yet.
+
 ## Assets And Locations
 
 Assets and locations are separate concepts.
@@ -54,4 +56,3 @@ They share containment behavior. A garage shelf can contain an asset. A toolbox 
 Voice and text commands are part of the main product experience. They are not part of the domain core.
 
 Speech-to-text, language models, and text-to-speech all sit behind ports. Model output must never bypass authorization, tenancy checks, validation, audit history, or domain services.
-

@@ -1,0 +1,44 @@
+# Local Development Topology Spec
+
+## Purpose
+
+Stuff Stash needs a local stack that proves production-shaped boundaries without making early development slow.
+
+## Scope
+
+This spec covers the first local services used by the secure tracer bullet.
+
+It does not define Kubernetes production deployment, Garage media storage, Google OIDC, or model provider services.
+
+## Decisions
+
+- Local development must run the API, Postgres, and SpiceDB.
+- Container images must be pinned by immutable digest.
+- Compose is the local orchestration tool.
+- The API may use in-memory adapters for a tracer bullet only when a spec states the production adapter that will replace them.
+- Postgres is the production persistence target.
+- SQLite remains allowed for local-only or test fakes where a spec permits it.
+- SpiceDB is the production authorization service.
+- Local development may use a deterministic development authentication adapter behind the same authentication port used by OIDC.
+
+## First Services
+
+The first Compose topology includes:
+
+- `app`: Stuff Stash API.
+- `postgres`: local Postgres database.
+- `spicedb`: local SpiceDB service.
+
+## Configuration
+
+- All service configuration must come from environment variables.
+- Local defaults may be provided in Compose for developer ergonomics.
+- Secrets used in local Compose must be clearly local-only.
+- Production secrets must never be committed.
+
+## Verification
+
+- `make test` must pass without requiring Compose.
+- Compose should be able to start the local service graph when Docker is available.
+- The API health endpoint must remain available without authentication.
+- Protected endpoints must require authentication even in local development.

@@ -1,20 +1,168 @@
 package httpserver
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
 	"net/http"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
+
+func init() {
+	huma.NewError = func(status int, msg string, errs ...error) huma.StatusError {
+		details := make([]errorDetail, 0, len(errs))
+		for _, err := range errs {
+			if err == nil {
+				continue
+			}
+			details = append(details, errorDetail{Message: err.Error()})
+		}
+
+		return &errorEnvelope{
+			status: status,
+			BodyError: errorBody{
+				Code:    errorCode(status),
+				Message: safeErrorMessage(status, msg),
+				Details: details,
+			},
+			Meta: responseMeta{},
+		}
+	}
+}
 
 func NewServer(addr string, application app.App) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealth(application))
 
+	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")
+	config.DocsPath = "/docs"
+	config.OpenAPIPath = "/openapi"
+	config.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
+		"bearerAuth": {
+			Type:         "http",
+			Scheme:       "bearer",
+			BearerFormat: "dev",
+		},
+	}
+
+	api := humago.New(mux, config)
+	registerRoutes(api, application)
+
 	return &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
+}
+
+func registerRoutes(api huma.API, application app.App) {
+	huma.Get(api, "/me", func(ctx context.Context, input *meInput) (*meOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		return &meOutput{
+			Body: successEnvelope[principalResponse]{
+				Data: principalResponse{ID: principal.ID.String()},
+				Meta: responseMeta{},
+			},
+		}, nil
+	}, huma.OperationTags("identity"), securedOperation)
+
+	huma.Post(api, "/tenants", func(ctx context.Context, input *createTenantInput) (*createTenantOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		tenant, err := application.CreateTenant(ctx, app.CreateTenantInput{
+			Principal: principal,
+			Name:      input.Body.Name,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &createTenantOutput{
+			Body: successEnvelope[tenantResponse]{
+				Data: tenantResponse{
+					ID:   tenant.ID.String(),
+					Name: tenant.Name.String(),
+				},
+				Meta: responseMeta{TenantID: tenant.ID.String()},
+			},
+		}, nil
+	}, huma.OperationTags("tenants"), createdOperation, securedOperation)
+
+	huma.Post(api, "/tenants/{tenantId}/inventories", func(ctx context.Context, input *createInventoryInput) (*createInventoryOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		item, err := application.CreateInventory(ctx, app.CreateInventoryInput{
+			Principal: principal,
+			TenantID:  tenant.ID(input.TenantID),
+			Name:      input.Body.Name,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &createInventoryOutput{
+			Body: successEnvelope[inventoryResponse]{
+				Data: inventoryResponse{
+					ID:       item.ID.String(),
+					TenantID: item.TenantID.String(),
+					Name:     item.Name.String(),
+				},
+				Meta: responseMeta{TenantID: item.TenantID.String()},
+			},
+		}, nil
+	}, huma.OperationTags("inventories"), createdOperation, securedOperation)
+
+	huma.Get(api, "/tenants/{tenantId}/inventories", func(ctx context.Context, input *listInventoriesInput) (*listInventoriesOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		items, err := application.ListInventories(ctx, app.ListInventoriesInput{
+			Principal: principal,
+			TenantID:  tenant.ID(input.TenantID),
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		data := make([]inventoryResponse, 0, len(items))
+		for _, item := range items {
+			data = append(data, inventoryResponse{
+				ID:       item.ID.String(),
+				TenantID: item.TenantID.String(),
+				Name:     item.Name.String(),
+			})
+		}
+
+		return &listInventoriesOutput{
+			Body: successEnvelope[[]inventoryResponse]{
+				Data: data,
+				Meta: responseMeta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("inventories"), securedOperation)
+}
+
+func securedOperation(operation *huma.Operation) {
+	operation.Security = []map[string][]string{{"bearerAuth": {}}}
+}
+
+func createdOperation(operation *huma.Operation) {
+	operation.DefaultStatus = http.StatusCreated
 }
 
 func handleHealth(application app.App) http.HandlerFunc {
@@ -23,14 +171,150 @@ func handleHealth(application app.App) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(healthResponse{
-			Service: string(status.Service),
-			Status:  string(status.Status),
-		})
+		_, _ = w.Write([]byte(`{"service":"` + string(status.Service) + `","status":"` + string(status.Status) + `"}` + "\n"))
 	}
 }
 
-type healthResponse struct {
-	Service string `json:"service"`
-	Status  string `json:"status"`
+func authenticate(ctx context.Context, application app.App, authorization string) (identity.Principal, error) {
+	principal, err := application.Authenticate(ctx, authorization)
+	if err != nil {
+		return identity.Principal{}, toHumaError(err)
+	}
+	return principal, nil
+}
+
+func toHumaError(err error) error {
+	switch {
+	case errors.Is(err, app.ErrUnauthenticated):
+		return huma.Error401Unauthorized("Authentication required.")
+	case errors.Is(err, app.ErrUnauthorized):
+		return huma.Error403Forbidden("Forbidden.")
+	case errors.Is(err, app.ErrInvalidInput):
+		return huma.Error400BadRequest("Invalid request.")
+	case errors.Is(err, app.ErrNotFound):
+		return huma.Error404NotFound("Resource not found.")
+	default:
+		return huma.Error500InternalServerError("Internal server error.")
+	}
+}
+
+func errorCode(status int) string {
+	switch status {
+	case http.StatusBadRequest, http.StatusUnprocessableEntity:
+		return "invalid_request"
+	case http.StatusUnauthorized:
+		return "authentication_required"
+	case http.StatusForbidden:
+		return "forbidden"
+	case http.StatusNotFound:
+		return "resource_not_found"
+	default:
+		return "internal_error"
+	}
+}
+
+func safeErrorMessage(status int, fallback string) string {
+	switch status {
+	case http.StatusUnauthorized:
+		return "Authentication required."
+	case http.StatusForbidden:
+		return "Forbidden."
+	case http.StatusNotFound:
+		return "Resource not found."
+	case http.StatusInternalServerError:
+		return "Internal server error."
+	}
+	if fallback == "" {
+		return "Invalid request."
+	}
+	return fallback
+}
+
+type meInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+}
+
+type meOutput struct {
+	Body successEnvelope[principalResponse]
+}
+
+type createTenantInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	Body          struct {
+		Name string `json:"name" maxLength:"120" doc:"Tenant name"`
+	}
+}
+
+type createTenantOutput struct {
+	Body successEnvelope[tenantResponse]
+}
+
+type createInventoryInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	Body          struct {
+		Name string `json:"name" maxLength:"120" doc:"Inventory name"`
+	}
+}
+
+type createInventoryOutput struct {
+	Body successEnvelope[inventoryResponse]
+}
+
+type listInventoriesInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+}
+
+type listInventoriesOutput struct {
+	Body successEnvelope[[]inventoryResponse]
+}
+
+type successEnvelope[T any] struct {
+	Data T            `json:"data"`
+	Meta responseMeta `json:"meta"`
+}
+
+type responseMeta struct {
+	RequestID string `json:"requestId,omitempty"`
+	TenantID  string `json:"tenantId,omitempty"`
+}
+
+type errorEnvelope struct {
+	status    int
+	BodyError errorBody    `json:"error"`
+	Meta      responseMeta `json:"meta"`
+}
+
+func (e *errorEnvelope) Error() string {
+	return e.BodyError.Message
+}
+
+func (e *errorEnvelope) GetStatus() int {
+	return e.status
+}
+
+type errorBody struct {
+	Code    string        `json:"code"`
+	Message string        `json:"message"`
+	Details []errorDetail `json:"details"`
+}
+
+type errorDetail struct {
+	Message string `json:"message"`
+}
+
+type principalResponse struct {
+	ID string `json:"id"`
+}
+
+type tenantResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type inventoryResponse struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+	Name     string `json:"name"`
 }

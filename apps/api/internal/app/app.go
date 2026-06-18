@@ -3,15 +3,50 @@ package app
 import (
 	"context"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type App struct {
-	observer ports.Observer
+	observer    ports.Observer
+	auth        ports.Authenticator
+	authorizer  ports.Authorizer
+	tenants     ports.TenantRepository
+	inventories ports.InventoryRepository
+	ids         ports.IDGenerator
 }
 
-func New(observer ports.Observer) App {
-	return App{observer: observer}
+type Dependencies struct {
+	Observer    ports.Observer
+	Auth        ports.Authenticator
+	Authorizer  ports.Authorizer
+	Tenants     ports.TenantRepository
+	Inventories ports.InventoryRepository
+	IDs         ports.IDGenerator
+}
+
+func New(deps Dependencies) App {
+	return App{
+		observer:    deps.Observer,
+		auth:        deps.Auth,
+		authorizer:  deps.Authorizer,
+		tenants:     deps.Tenants,
+		inventories: deps.Inventories,
+		ids:         deps.IDs,
+	}
+}
+
+func (a App) Authenticate(ctx context.Context, authorizationHeader string) (identity.Principal, error) {
+	principal, err := a.auth.Authenticate(ctx, authorizationHeader)
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventAuthenticationFailed,
+			Message: "authentication failed",
+		})
+		return identity.Principal{}, err
+	}
+
+	return principal, nil
 }
 
 func (a App) Health(ctx context.Context) HealthStatus {

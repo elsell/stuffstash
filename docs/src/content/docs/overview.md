@@ -18,8 +18,11 @@ The system should understand the request, check permissions, ask for confirmatio
 The repository has a small Go API scaffold with:
 
 - A health endpoint.
+- Local development bearer auth for the first secure API slice.
+- Tenant creation and inventory creation/listing.
+- Huma-generated OpenAPI at `/openapi.json`.
 - Domain-oriented observability through ports.
-- Docker and Compose files for local work.
+- Docker and Compose files for local work, including Postgres and SpiceDB.
 - Specs that define the product and architecture direction.
 
 Most product behavior is still being specified before implementation.
@@ -30,7 +33,6 @@ Most product behavior is still being specified before implementation.
 - **Web:** SvelteKit, planned.
 - **Mobile:** React Native with Expo, planned for iOS and Android.
 - **Docs:** Astro and Starlight.
-- **Authorization:** SpiceDB, planned.
-- **Authentication:** OIDC and SSO, starting with Google, planned.
+- **Authorization:** SpiceDB, with an in-memory adapter used for the first tracer bullet.
+- **Authentication:** OIDC and SSO, starting with Google later; local dev auth exists now.
 - **Storage:** PostgreSQL in production, SQLite for local development where useful.
-
