@@ -1,0 +1,10 @@
+pre-commit:
+  parallel: true
+  commands:
+    gofmt:
+      glob: "*.go"
+      run: gofmt -w {staged_files}
+      stage_fixed: true
+    go-test:
+      glob: "*.go"
+      run: GOCACHE=.cache/go-build go test ./...

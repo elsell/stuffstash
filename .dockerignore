@@ -1,0 +1,7 @@
+.git
+.codex
+.cache
+docs/node_modules
+tmp
+dist
+coverage
