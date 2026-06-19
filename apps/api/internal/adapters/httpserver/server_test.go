@@ -49,6 +49,39 @@ func TestHealthEndpointReturnsHealthyStatus(t *testing.T) {
 	}
 }
 
+func TestIndexEndpointReturnsHelpfulLinks(t *testing.T) {
+	server := NewServer(":0", newTestApp(&fakeObserver{}, "unused-id"))
+
+	response := performRequest(server, http.MethodGet, "/", "", nil)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
+	}
+
+	var body struct {
+		Data indexResponse `json:"data"`
+		Meta responseMeta  `json:"meta"`
+	}
+	decodeBody(t, response, &body)
+
+	if body.Data.Service != "stuff-stash" {
+		t.Fatalf("expected service stuff-stash, got %q", body.Data.Service)
+	}
+	if body.Data.Links.Health != "/healthz" || body.Data.Links.OpenAPI != "/openapi.json" || body.Data.Links.Docs != "/docs" {
+		t.Fatalf("unexpected index links: %+v", body.Data.Links)
+	}
+}
+
+func TestUnknownGetPathStillReturnsNotFound(t *testing.T) {
+	server := NewServer(":0", newTestApp(&fakeObserver{}, "unused-id"))
+
+	response := performRequest(server, http.MethodGet, "/missing", "", nil)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status %d, got %d with body %s", http.StatusNotFound, response.Code, response.Body.String())
+	}
+}
+
 func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T) {
 	server := NewServer(":0", newTestApp(&fakeObserver{}, "01ARZ3NDEKTSV4RRFFQ69G5FAV"))
 
@@ -309,11 +342,22 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Fatalf("expected OpenAPI status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
 	}
-	if !bytes.Contains(response.Body.Bytes(), []byte(`"/tenants/{tenantId}/inventories"`)) {
+
+	var body struct {
+		Paths      map[string]any `json:"paths"`
+		Components struct {
+			SecuritySchemes map[string]any `json:"securitySchemes"`
+		} `json:"components"`
+	}
+	decodeBody(t, response, &body)
+	if _, ok := body.Paths["/tenants/{tenantId}/inventories"]; !ok {
 		t.Fatalf("expected OpenAPI to include inventory path, got %s", response.Body.String())
 	}
-	if !bytes.Contains(response.Body.Bytes(), []byte(`"bearerAuth"`)) {
-		t.Fatalf("expected OpenAPI to include bearer auth, got %s", response.Body.String())
+	if _, ok := body.Paths["/"]; ok {
+		t.Fatalf("expected OpenAPI to omit local API index path, got %s", response.Body.String())
+	}
+	if _, ok := body.Components.SecuritySchemes["bearerAuth"]; !ok {
+		t.Fatalf("expected OpenAPI to include bearer auth, got %+v", body.Components.SecuritySchemes)
 	}
 }
 

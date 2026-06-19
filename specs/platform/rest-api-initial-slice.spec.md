@@ -10,9 +10,16 @@ This spec covers the first protected REST endpoints.
 
 It does not cover asset, location, conversational, import/export, media, or search endpoints.
 
+## Local Convenience Endpoint
+
+- `GET /` is public and returns a small JSON API index for people who visit the base URL during local development.
+- The API index must use the project success envelope.
+- The API index includes links for health, generated OpenAPI JSON, and interactive local API docs.
+- The API index is a human convenience endpoint and must be omitted from generated OpenAPI and SDK contracts.
+
 ## Endpoints
 
-The first REST slice includes:
+The first protected REST slice includes:
 
 - `GET /healthz`
 - `GET /me`
@@ -44,7 +51,7 @@ The first REST slice includes:
 
 ## OpenAPI
 
-- Huma must generate OpenAPI for these endpoints.
+- Huma must generate OpenAPI for protected REST endpoints.
 - Generated docs must include bearer authentication for protected endpoints.
 - Generated docs must include request and response models.
 
@@ -58,4 +65,5 @@ The first REST slice includes:
 - Tests must verify tenant owners can list all inventories in their tenant.
 - Tests must verify inventory owners who are not tenant owners see only the inventories they can view.
 - Tests must verify unauthorized errors use the safe error envelope.
+- Tests must verify the API index route is available.
 - Tests must verify the OpenAPI route is available.

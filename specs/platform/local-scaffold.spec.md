@@ -10,6 +10,7 @@ This spec covers the first runnable scaffold only:
 
 - A minimal Go core service.
 - A health endpoint for local verification.
+- A small API index at the base URL so a browser visit does not look broken.
 - Docker-compatible container build files.
 - A local Compose file.
 - Environment-based runtime configuration.
@@ -21,6 +22,8 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - The service must be written in Go.
 - The API service must live under `apps/api`.
 - Runtime configuration must come from environment variables.
+- The service must expose `GET /`.
+- `GET /` must return HTTP `200` with a JSON body linking to health, OpenAPI JSON, and local API docs.
 - The service must expose `GET /healthz`.
 - `GET /healthz` must return HTTP `200` with a JSON body that identifies the service as healthy.
 - The service must not require a database until a persistence spec introduces one.
@@ -46,6 +49,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - `go test ./apps/api/...` must pass from the repository root.
 - `lefthook run pre-commit --all-files` should pass when Lefthook is installed.
 - `docker compose up --build` should start the app locally.
+- `curl http://localhost:8080/` should return the API index.
 - `curl http://localhost:8080/healthz` should return a healthy response.
 
 ## References

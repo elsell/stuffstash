@@ -54,7 +54,7 @@ The next auth/authz tracer bullet extends this slice by adding production-shaped
 
 ## Endpoints
 
-All endpoints except `GET /healthz` require authentication.
+All endpoints except `GET /` and `GET /healthz` require authentication.
 
 The first endpoints are:
 

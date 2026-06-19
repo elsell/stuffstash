@@ -34,6 +34,12 @@ make run
 
 This uses local development auth, in-memory authorization, and in-memory persistence.
 
+Visit the base URL to see a small API index:
+
+```sh
+curl http://localhost:8080/
+```
+
 Then check the health endpoint:
 
 ```sh

@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -36,6 +37,7 @@ func init() {
 
 func NewServer(addr string, application app.App) *http.Server {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("GET /healthz", handleHealth(application))
 
 	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")
@@ -56,6 +58,27 @@ func NewServer(addr string, application app.App) *http.Server {
 		Addr:    addr,
 		Handler: mux,
 	}
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(successEnvelope[indexResponse]{
+		Data: indexResponse{
+			Service: "stuff-stash",
+			Links: indexLinksResponse{
+				Health:  "/healthz",
+				OpenAPI: "/openapi.json",
+				Docs:    "/docs",
+			},
+		},
+		Meta: responseMeta{},
+	})
 }
 
 func registerRoutes(api huma.API, application app.App) {
@@ -302,6 +325,17 @@ type errorBody struct {
 
 type errorDetail struct {
 	Message string `json:"message"`
+}
+
+type indexResponse struct {
+	Service string             `json:"service"`
+	Links   indexLinksResponse `json:"links"`
+}
+
+type indexLinksResponse struct {
+	Health  string `json:"health"`
+	OpenAPI string `json:"openapi"`
+	Docs    string `json:"docs"`
 }
 
 type principalResponse struct {
