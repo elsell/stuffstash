@@ -65,6 +65,7 @@ These instructions are binding for all agents and contributors working in this r
 - `httpserver/server.go` must stay limited to server construction, public local convenience handlers, and Huma setup.
 - `httpserver/api.go` must stay limited to composing route registrations.
 - If a REST adapter domain grows large, split files by operation inside the relevant concern directory before adding more behavior.
+- HTTP adapter tests must mirror the adapter organization. Keep `httpserver/server_test.go` limited to platform-level behavior such as health, the local API index, unknown routes, and OpenAPI generation. Domain endpoint tests belong in focused files such as `assets_test.go`, `inventories_test.go`, `access_test.go`, `audit_test.go`, `customfields_test.go`, and `identity_test.go`. Cross-cutting test setup, request execution, generic envelopes, pagination metadata, and fakes belong in `helpers_test.go`; domain wire-contract helpers belong in focused `*_helpers_test.go` files.
 - The structural pre-commit check must guard these HTTP adapter boundaries mechanically where practical.
 
 ## Security
@@ -139,7 +140,7 @@ These instructions are binding for all agents and contributors working in this r
   - Use of mocks in tests.
   - Missing spec updates for code changes where this can be detected reliably.
 - Hook behavior must be documented in the relevant spec or repository guidance when introduced.
-- The Go structural hook must reject HTTP adapter drift that can be detected mechanically, including route registration in `httpserver/server.go` or `httpserver/api.go`, DTO or interface definitions in `routes/`, application/domain/port imports in `dto/`, and route registration in `mapper/`.
+- The Go structural hook must reject HTTP adapter drift that can be detected mechanically, including route registration in `httpserver/server.go` or `httpserver/api.go`, DTO or interface definitions in `routes/`, application/domain/port imports in `dto/`, route registration or envelope/app bleed in `mapper/`, domain endpoint tests accumulating in `httpserver/server_test.go`, and domain wire helpers accumulating in `httpserver/helpers_test.go`.
 - Do not rely on hooks as the only enforcement mechanism. CI and tests should also enforce important project guarantees.
 
 ## Continuous Improvement

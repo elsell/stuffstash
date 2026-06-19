@@ -118,6 +118,7 @@ The first protected REST slice includes:
 - DTO files must define transport request and response types only.
 - Mapper files must convert application or domain values to transport DTOs only.
 - Cross-domain HTTP primitives must live under `httpserver/shared/`.
+- HTTP adapter tests must be split by API/domain surface. `server_test.go` is reserved for platform-level behavior such as health, the local API index, unknown routes, and generated OpenAPI. Domain endpoint tests must live in focused files named for the relevant surface. Cross-cutting test setup and request helpers live in `helpers_test.go`; domain wire helpers live in focused `*_helpers_test.go` files.
 - `server.go` and `api.go` must compose the HTTP server and route registrations without accumulating domain route logic.
 - The Go structural pre-commit hook must mechanically guard this organization where practical, including route registration in composition files, DTO or interface definitions in route files, application/domain/port imports in DTO files, and route registration in mapper files.
 

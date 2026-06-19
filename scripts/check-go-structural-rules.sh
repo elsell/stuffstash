@@ -67,4 +67,20 @@ if [ "$httpserver_touched" = true ]; then
     echo "httpserver mapper files must only translate between domain and DTO shapes; envelopes, app services, and pagination metadata belong in routes" >&2
     exit 1
   fi
+
+  if [ -f apps/api/internal/adapters/httpserver/server_test.go ]; then
+    server_test_names="$(rg --only-matching --replace '$1' --regexp '^func (Test[A-Za-z0-9_]+)' apps/api/internal/adapters/httpserver/server_test.go || true)"
+    allowed_server_tests='^(TestHealthEndpointReturnsHealthyStatus|TestIndexEndpointReturnsHelpfulLinks|TestUnknownGetPathStillReturnsNotFound|TestOpenAPIIsGenerated)$'
+    unexpected_server_tests="$(printf '%s\n' "$server_test_names" | rg --invert-match --regexp "$allowed_server_tests" || true)"
+    if [ -n "$unexpected_server_tests" ]; then
+      printf '%s\n' "$unexpected_server_tests" >&2
+      echo "httpserver/server_test.go must stay limited to platform-level tests; domain endpoint tests belong in focused *_test.go files" >&2
+      exit 1
+    fi
+  fi
+
+  if [ -f apps/api/internal/adapters/httpserver/helpers_test.go ] && rg --line-number --regexp '^(type|func) (asset|auditRecord|customField|inventoryAccess|decodeAsset|decodeAuditRecord|decodeCustomField|decodeInventoryAccess|assertCustomField|assertInventoryAccess)' apps/api/internal/adapters/httpserver/helpers_test.go; then
+    echo "httpserver/helpers_test.go must stay limited to cross-cutting test helpers; domain wire helpers belong in focused *_helpers_test.go files" >&2
+    exit 1
+  fi
 fi
