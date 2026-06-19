@@ -28,6 +28,7 @@ const (
 	EventAssetArchived                   EventName = "asset.archived"
 	EventAssetRestored                   EventName = "asset.restored"
 	EventAssetsListed                    EventName = "asset.listed"
+	EventAssetsSearched                  EventName = "asset.searched"
 	EventAttachmentCreated               EventName = "attachment.created"
 	EventAttachmentsListed               EventName = "attachment.listed"
 	EventAttachmentContentDownloaded     EventName = "attachment_content.downloaded"

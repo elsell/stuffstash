@@ -178,6 +178,20 @@ printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${shelf_id
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "asset list did not include ${asset_id}"
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q '"pagination"' || fail "asset list did not include pagination metadata"
 
+echo "searching assets"
+custom_field_search_response="$(request GET "/tenants/${tenant_id}/search/assets?q=bag-1&mode=exact&limit=50" "$auth_header")"
+custom_field_search_status="$(printf '%s\n' "$custom_field_search_response" | head -n 1)"
+[ "$custom_field_search_status" = "200" ] || fail "expected custom field search status 200, got ${custom_field_search_status}"
+printf '%s\n' "$custom_field_search_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "custom field search did not include ${asset_id}"
+printf '%s\n' "$custom_field_search_response" | tail -n +2 | grep -q '"field":"custom_field"' || fail "custom field search did not include custom field match"
+printf '%s\n' "$custom_field_search_response" | tail -n +2 | grep -q '"pagination"' || fail "custom field search did not include pagination metadata"
+
+attachment_search_response="$(request GET "/tenants/${tenant_id}/search/assets?q=receipt&limit=50" "$auth_header")"
+attachment_search_status="$(printf '%s\n' "$attachment_search_response" | head -n 1)"
+[ "$attachment_search_status" = "200" ] || fail "expected attachment search status 200, got ${attachment_search_status}"
+printf '%s\n' "$attachment_search_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "attachment search did not include ${asset_id}"
+printf '%s\n' "$attachment_search_response" | tail -n +2 | grep -q '"field":"attachment_file_name"' || fail "attachment search did not include attachment file name match"
+
 viewer_auth_header="${STUFF_STASH_VERIFY_VIEWER_AUTH_HEADER:-}"
 viewer_principal="${STUFF_STASH_VERIFY_VIEWER_PRINCIPAL:-}"
 if [ -z "$viewer_auth_header" ]; then
@@ -209,6 +223,11 @@ echo "checking granted viewer can read but not mutate or share"
 viewer_asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$viewer_auth_header")"
 viewer_asset_list_status="$(printf '%s\n' "$viewer_asset_list_response" | head -n 1)"
 [ "$viewer_asset_list_status" = "200" ] || fail "expected viewer asset list status 200, got ${viewer_asset_list_status}"
+
+viewer_search_response="$(request GET "/tenants/${tenant_id}/search/assets?q=receipt&limit=50" "$viewer_auth_header")"
+viewer_search_status="$(printf '%s\n' "$viewer_search_response" | head -n 1)"
+[ "$viewer_search_status" = "200" ] || fail "expected viewer search status 200, got ${viewer_search_status}"
+printf '%s\n' "$viewer_search_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "viewer search did not include ${asset_id}"
 
 viewer_field_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions?limit=50" "$viewer_auth_header")"
 viewer_field_list_status="$(printf '%s\n' "$viewer_field_list_response" | head -n 1)"

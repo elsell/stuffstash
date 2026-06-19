@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom asset types and fields, create, list, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary with local tokens or Dex-issued OIDC tokens.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom asset types and fields, create, list, search, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary with local tokens or Dex-issued OIDC tokens.
 
 ## Requirements
 
@@ -251,6 +251,13 @@ List assets in the inventory:
 
 ```sh
 curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets?limit=50' \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
+Search assets across the inventories you can view:
+
+```sh
+curl -s 'http://localhost:8080/tenants/<tenant-id>/search/assets?q=receipt&limit=50' \
   -H 'Authorization: Bearer dev:user-one'
 ```
 

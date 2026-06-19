@@ -24,6 +24,7 @@ The repository has a small Go API scaffold with:
 - Custom asset types, such as medicine or tools, with type-specific custom fields.
 - Tenant and inventory custom field definitions with asset value validation.
 - Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.
+- Asset search across the inventories a user can view.
 - Durable audit history for the first state-changing actions.
 - Direct inventory sharing by known principal ID, with viewer and editor grants.
 - Huma-generated OpenAPI at `/openapi.json`.

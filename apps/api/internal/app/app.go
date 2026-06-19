@@ -17,6 +17,7 @@ type App struct {
 	customAssetTypes   ports.CustomAssetTypeRepository
 	customFields       ports.CustomFieldDefinitionRepository
 	assets             ports.AssetRepository
+	search             ports.AssetSearchRepository
 	attachments        ports.AttachmentRepository
 	blobs              ports.BlobStorage
 	audit              ports.AuditRepository
@@ -38,6 +39,7 @@ type Dependencies struct {
 	CustomAssetTypes              ports.CustomAssetTypeRepository
 	CustomFields                  ports.CustomFieldDefinitionRepository
 	Assets                        ports.AssetRepository
+	Search                        ports.AssetSearchRepository
 	Attachments                   ports.AttachmentRepository
 	Blobs                         ports.BlobStorage
 	Audit                         ports.AuditRepository
@@ -61,6 +63,7 @@ func New(deps Dependencies) App {
 		customAssetTypes:   deps.CustomAssetTypes,
 		customFields:       deps.CustomFields,
 		assets:             deps.Assets,
+		search:             deps.Search,
 		attachments:        deps.Attachments,
 		blobs:              deps.Blobs,
 		audit:              deps.Audit,

@@ -8,9 +8,9 @@ Search should support both exact lookup and fuzzy discovery.
 
 ## Scope
 
-This spec covers initial search requirements.
+This spec covers initial search requirements and the first asset search API slice.
 
-This spec does not define final indexes, ranking, query syntax, highlighting, or external search integrations.
+This spec does not define final indexes, ranking, advanced query syntax, highlighting, external search integrations, or conversational disambiguation behavior.
 
 ## Requirements
 
@@ -27,12 +27,33 @@ This spec does not define final indexes, ranking, query syntax, highlighting, or
 - Search must expose stable result types so clients can render assets, locations, inventories, and future result types safely.
 - Search implementation must live behind ports and adapters.
 
+## First API Slice
+
+The first API slice is asset search:
+
+- `GET /tenants/{tenantId}/search/assets`
+- Query parameter `q` is required, trimmed, and must be between 1 and 120 characters.
+- Query parameter `mode` supports `fuzzy` and `exact`. It defaults to `fuzzy`.
+- Query parameter `customAssetTypeId` filters to assets with that custom asset type when present.
+- Query parameter `lifecycleState` supports `active`, `archived`, and `all`. It defaults to `active`.
+- `limit` and `cursor` follow the standard collection pagination contract.
+- Results must be ordered deterministically by inventory ID and asset ID for the first slice.
+- Results must include a stable `type` field. The first value is `asset`.
+- Results must include the matching asset and simple match metadata so clients can explain why a result appeared.
+- Location-like assets are returned as assets with kind `location`.
+- The first slice searches asset title, description, custom field values, custom asset type key/display name/description, and attachment file name/content type.
+- Exact search uses case-insensitive whole-value equality for fields and metadata.
+- Fuzzy search uses case-insensitive substring matching.
+
 ## Initial Implementation Direction
 
 - PostgreSQL is the initial search backend.
 - External search systems should not be added until PostgreSQL is insufficient and a spec justifies the added operational cost.
 - Search adapters must not leak PostgreSQL-specific query details into domain logic.
-- Search indexes and JSONB search behavior must be specified before implementation.
+- The first PostgreSQL-backed implementation may scan tenant-scoped candidate rows through GORM and perform matching in adapter code to avoid raw SQL while the data model is small.
+- Before larger-scale search, define generated columns, indexes, JSONB search behavior, ranking, and authorization filtering strategy in this spec.
+- Before search is used at meaningful data volume, replace adapter-side candidate scanning with indexed PostgreSQL search behavior covered by PostgreSQL-backed tests.
+- Before tenants can have many inventories, add an authorization query port for listing viewable inventory IDs within a tenant so search does not perform one authorization check per inventory.
 
 ## Conversational Use
 
@@ -42,7 +63,7 @@ This spec does not define final indexes, ranking, query syntax, highlighting, or
 
 ## Testing
 
-- Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, pagination, tenant filtering, inventory filtering, and authorization filtering.
+- Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
 - PostgreSQL-backed tests are required for PostgreSQL-specific search behavior.
 
