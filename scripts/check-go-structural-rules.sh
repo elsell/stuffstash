@@ -20,6 +20,24 @@ if [ "${#go_files[@]}" -eq 0 ]; then
   exit 0
 fi
 
+max_go_file_lines=800
+oversized_files=()
+for file in "${go_files[@]}"; do
+  if head -n 1 "$file" | rg --quiet --regexp '^// Code generated .* DO NOT EDIT\.$'; then
+    continue
+  fi
+  line_count="$(wc -l < "$file" | tr -d '[:space:]')"
+  if [ "$line_count" -gt "$max_go_file_lines" ]; then
+    oversized_files+=("$file:$line_count lines")
+  fi
+done
+
+if [ "${#oversized_files[@]}" -gt 0 ]; then
+  printf '%s\n' "${oversized_files[@]}" >&2
+  echo "Go files over ${max_go_file_lines} lines are a structural smell; do serious organization refactoring before adding more code" >&2
+  exit 1
+fi
+
 print_pattern='fmt\.Print(f|ln)?\(|(^|[^[:alnum:]_])println?\('
 sql_pattern='"[^"]*(SELECT|INSERT[[:space:]]+INTO|UPDATE[[:space:]]+[^"]+[[:space:]]+SET|DELETE[[:space:]]+FROM|CREATE[[:space:]]+TABLE|ALTER[[:space:]]+TABLE|DROP[[:space:]]+TABLE)[[:space:]]+'
 

@@ -39,6 +39,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - Pre-commit hooks must reject ad hoc Go print statements.
 - Pre-commit hooks must reject obvious raw SQL strings in Go application code.
 - Pre-commit hooks must reject direct Go imports from one domain package into another domain package.
+- Pre-commit hooks must reject non-generated Go files over 800 lines and direct contributors toward serious organization refactoring. The generated-file exemption applies only when the first line is the standard `// Code generated ... DO NOT EDIT.` marker.
 
 ## Environment
 

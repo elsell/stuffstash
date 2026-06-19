@@ -139,6 +139,7 @@ These instructions are binding for all agents and contributors working in this r
 - Pre-commit hooks must run Go formatting and relevant tests.
 - Hooks should be fast enough for routine local use while preserving the project rules that matter most.
 - Add new hooks whenever a structural mistake can be detected automatically.
+- Go source files longer than 800 lines must be treated as a structural smell and rejected by the Go structural hook. Split by domain, adapter responsibility, operation, test surface, or helper role before adding more code.
 - Examples of structural mistakes that should become hooks when encountered:
   - Raw SQL usage.
   - Ad hoc print statements.
@@ -146,6 +147,7 @@ These instructions are binding for all agents and contributors working in this r
   - Use of mocks in tests.
   - Missing spec updates for code changes where this can be detected reliably.
 - Hook behavior must be documented in the relevant spec or repository guidance when introduced.
+- The Go structural hook must reject Go source files over 800 lines, except standard generated files whose first line is `// Code generated ... DO NOT EDIT.`.
 - The Go structural hook must reject HTTP adapter drift that can be detected mechanically, including route registration in `httpserver/server.go` or `httpserver/api.go`, DTO or interface definitions in `routes/`, application/domain/port imports in `dto/`, route registration or envelope/app bleed in `mapper/`, domain endpoint tests accumulating in `httpserver/server_test.go`, and domain wire helpers accumulating in `httpserver/helpers_test.go`.
 - Do not rely on hooks as the only enforcement mechanism. CI and tests should also enforce important project guarantees.
 
