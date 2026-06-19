@@ -15,6 +15,7 @@ import (
 type GrantInventoryAccessInput struct {
 	Principal    identity.Principal
 	Source       audit.Source
+	RequestID    string
 	TenantID     tenant.ID
 	InventoryID  inventory.InventoryID
 	TargetUserID string
@@ -66,6 +67,7 @@ func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAcces
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
+		RequestID:   input.RequestID,
 		Action:      audit.ActionInventoryAccessGranted,
 		TargetType:  audit.TargetInventoryAccessGrant,
 		TargetID:    grant.CursorKey(),

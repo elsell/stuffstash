@@ -2,7 +2,10 @@ package app
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -31,6 +34,7 @@ type auditRecordInput struct {
 	PrincipalID identity.PrincipalID
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
+	RequestID   string
 	Source      audit.Source
 	Action      audit.Action
 	TargetType  audit.TargetType
@@ -57,7 +61,7 @@ func (a App) newAuditRecord(input auditRecordInput) (audit.Record, error) {
 		input.TargetType,
 		input.TargetID,
 		time.Now(),
-		"",
+		input.RequestID,
 		input.Metadata,
 	)
 	if !ok {
@@ -76,13 +80,14 @@ func (a App) ListTenantAuditRecords(ctx context.Context, input ListAuditRecordsI
 	}
 
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
-	afterRecordID, err := decodeAuditRecordCursor(input.TenantID, input.InventoryID, input.Cursor)
+	afterOccurredAt, afterRecordID, err := decodeAuditRecordCursor(input.TenantID, input.InventoryID, input.Cursor)
 	if err != nil {
 		return ListAuditRecordsResult{}, ErrInvalidInput
 	}
 	items, err := a.audit.ListTenantAuditRecords(ctx, input.TenantID, ports.AuditRecordPageRequest{
-		AfterRecordID: afterRecordID,
-		Limit:         limit + 1,
+		AfterOccurredAt: afterOccurredAt,
+		AfterRecordID:   afterRecordID,
+		Limit:           limit + 1,
 	})
 	if err != nil {
 		return ListAuditRecordsResult{}, err
@@ -96,13 +101,14 @@ func (a App) ListInventoryAuditRecords(ctx context.Context, input ListAuditRecor
 	}
 
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
-	afterRecordID, err := decodeAuditRecordCursor(input.TenantID, input.InventoryID, input.Cursor)
+	afterOccurredAt, afterRecordID, err := decodeAuditRecordCursor(input.TenantID, input.InventoryID, input.Cursor)
 	if err != nil {
 		return ListAuditRecordsResult{}, ErrInvalidInput
 	}
 	items, err := a.audit.ListInventoryAuditRecords(ctx, input.TenantID, input.InventoryID, ports.AuditRecordPageRequest{
-		AfterRecordID: afterRecordID,
-		Limit:         limit + 1,
+		AfterOccurredAt: afterOccurredAt,
+		AfterRecordID:   afterRecordID,
+		Limit:           limit + 1,
 	})
 	if err != nil {
 		return ListAuditRecordsResult{}, err
@@ -115,7 +121,7 @@ func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsIn
 	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeAuditRecordCursor(input.TenantID, input.InventoryID, items[len(items)-1].ID)
+		nextCursor = encodeAuditRecordCursor(input.TenantID, input.InventoryID, items[len(items)-1])
 	}
 
 	a.observer.Record(ctx, ports.Event{
@@ -137,23 +143,54 @@ func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsIn
 	}
 }
 
-func encodeAuditRecordCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, id audit.ID) *string {
-	return encodePageCursor("audit_records", auditRecordCursorScope(tenantID, inventoryID), id.String())
+type auditRecordCursorPayload struct {
+	Version    int    `json:"v"`
+	Collection string `json:"collection"`
+	Scope      string `json:"scope"`
+	LastID     string `json:"lastId"`
+	OccurredAt string `json:"occurredAt"`
 }
 
-func decodeAuditRecordCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (audit.ID, error) {
-	decoded, err := decodePageCursor("audit_records", auditRecordCursorScope(tenantID, inventoryID), cursor)
+func encodeAuditRecordCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, record audit.Record) *string {
+	payload, err := json.Marshal(auditRecordCursorPayload{
+		Version:    paginationCursorVersion,
+		Collection: "audit_records",
+		Scope:      auditRecordCursorScope(tenantID, inventoryID),
+		LastID:     record.ID.String(),
+		OccurredAt: record.OccurredAt.UTC().Format(time.RFC3339Nano),
+	})
 	if err != nil {
-		return audit.ID(""), err
+		return nil
 	}
-	if decoded == "" {
-		return audit.ID(""), nil
+	cursor := base64.RawURLEncoding.EncodeToString(payload)
+	return &cursor
+}
+
+func decodeAuditRecordCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (time.Time, audit.ID, error) {
+	cursor = strings.TrimSpace(cursor)
+	if cursor == "" {
+		return time.Time{}, audit.ID(""), nil
 	}
-	id, ok := audit.NewID(decoded)
+	decoded, err := base64.RawURLEncoding.DecodeString(cursor)
+	if err != nil {
+		return time.Time{}, audit.ID(""), err
+	}
+	var payload auditRecordCursorPayload
+	if err := json.Unmarshal(decoded, &payload); err != nil {
+		return time.Time{}, audit.ID(""), err
+	}
+	if payload.Version != paginationCursorVersion || payload.Collection != "audit_records" || payload.Scope != auditRecordCursorScope(tenantID, inventoryID) || strings.TrimSpace(payload.LastID) == "" || strings.TrimSpace(payload.OccurredAt) == "" {
+		return time.Time{}, audit.ID(""), ErrInvalidInput
+	}
+	occurredAt, err := time.Parse(time.RFC3339Nano, payload.OccurredAt)
+	if err != nil {
+		return time.Time{}, audit.ID(""), err
+	}
+	id, ok := audit.NewID(payload.LastID)
 	if !ok {
-		return audit.ID(""), ErrInvalidInput
+		return time.Time{}, audit.ID(""), ErrInvalidInput
 	}
-	return id, nil
+	return occurredAt, id, nil
 }
 
 func auditRecordCursorScope(tenantID tenant.ID, inventoryID inventory.InventoryID) string {

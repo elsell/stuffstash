@@ -1392,7 +1392,7 @@ func (f *fakeAuditRepository) recordForAction(action audit.Action) (audit.Record
 func (f *fakeAuditRepository) ListTenantAuditRecords(_ context.Context, tenantID tenant.ID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
 	items := []audit.Record{}
 	for _, record := range f.items {
-		if record.TenantID.String() == tenantID.String() && record.ID.String() > page.AfterRecordID.String() {
+		if record.TenantID.String() == tenantID.String() && fakeAuditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
 			items = append(items, record)
 		}
 	}
@@ -1402,7 +1402,7 @@ func (f *fakeAuditRepository) ListTenantAuditRecords(_ context.Context, tenantID
 func (f *fakeAuditRepository) ListInventoryAuditRecords(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
 	items := []audit.Record{}
 	for _, record := range f.items {
-		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.ID.String() > page.AfterRecordID.String() {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && fakeAuditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
 			items = append(items, record)
 		}
 	}
@@ -1411,12 +1411,22 @@ func (f *fakeAuditRepository) ListInventoryAuditRecords(_ context.Context, tenan
 
 func pagedFakeAuditRecords(items []audit.Record, limit int) []audit.Record {
 	sort.Slice(items, func(left int, right int) bool {
-		return items[left].CursorKey() < items[right].CursorKey()
+		return items[left].Before(items[right])
 	})
 	if limit > 0 && len(items) > limit {
 		items = items[:limit]
 	}
 	return items
+}
+
+func fakeAuditRecordAfter(record audit.Record, occurredAt time.Time, id audit.ID) bool {
+	if occurredAt.IsZero() || id.String() == "" {
+		return true
+	}
+	if record.OccurredAt.After(occurredAt) {
+		return true
+	}
+	return record.OccurredAt.Equal(occurredAt) && record.ID.String() > id.String()
 }
 
 func auditRecord(id string, tenantID string, inventoryID string, action audit.Action) audit.Record {

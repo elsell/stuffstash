@@ -112,6 +112,7 @@ func registerRoutes(api huma.API, application app.App) {
 		tenant, err := application.CreateTenant(ctx, app.CreateTenantInput{
 			Principal: principal,
 			Source:    audit.SourceAPI,
+			RequestID: input.RequestID,
 			Name:      input.Body.Name,
 		})
 		if err != nil {
@@ -138,6 +139,7 @@ func registerRoutes(api huma.API, application app.App) {
 		item, err := application.CreateInventory(ctx, app.CreateInventoryInput{
 			Principal: principal,
 			Source:    audit.SourceAPI,
+			RequestID: input.RequestID,
 			TenantID:  tenant.ID(input.TenantID),
 			Name:      input.Body.Name,
 		})
@@ -206,6 +208,7 @@ func registerRoutes(api huma.API, application app.App) {
 		definition, err := application.CreateTenantCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
+			RequestID:   input.RequestID,
 			TenantID:    tenant.ID(input.TenantID),
 			Key:         input.Body.Key,
 			DisplayName: input.Body.DisplayName,
@@ -271,6 +274,7 @@ func registerRoutes(api huma.API, application app.App) {
 		item, err := application.CreateAsset(ctx, app.CreateAssetInput{
 			Principal:     principal,
 			Source:        audit.SourceAPI,
+			RequestID:     input.RequestID,
 			TenantID:      tenant.ID(input.TenantID),
 			InventoryID:   inventory.InventoryID(input.InventoryID),
 			Kind:          input.Body.Kind,
@@ -300,6 +304,7 @@ func registerRoutes(api huma.API, application app.App) {
 		item, err := application.UpdateAsset(ctx, app.UpdateAssetInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
+			RequestID:   input.RequestID,
 			TenantID:    tenant.ID(input.TenantID),
 			InventoryID: inventory.InventoryID(input.InventoryID),
 			AssetID:     asset.ID(input.AssetID),
@@ -390,6 +395,7 @@ func registerRoutes(api huma.API, application app.App) {
 		definition, err := application.CreateInventoryCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
+			RequestID:   input.RequestID,
 			TenantID:    tenant.ID(input.TenantID),
 			InventoryID: inventory.InventoryID(input.InventoryID),
 			Key:         input.Body.Key,
@@ -438,6 +444,7 @@ func registerRoutes(api huma.API, application app.App) {
 		grant, err := application.GrantInventoryAccess(ctx, app.GrantInventoryAccessInput{
 			Principal:    principal,
 			Source:       audit.SourceAPI,
+			RequestID:    input.RequestID,
 			TenantID:     tenant.ID(input.TenantID),
 			InventoryID:  inventory.InventoryID(input.InventoryID),
 			TargetUserID: input.Body.PrincipalID,
@@ -576,6 +583,7 @@ type meOutput struct {
 
 type createTenantInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	Body          struct {
 		Name string `json:"name" maxLength:"120" doc:"Tenant name"`
 	}
@@ -587,6 +595,7 @@ type createTenantOutput struct {
 
 type createInventoryInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	Body          struct {
 		Name string `json:"name" maxLength:"120" doc:"Inventory name"`
@@ -610,6 +619,7 @@ type listInventoriesOutput struct {
 
 type createTenantCustomFieldDefinitionInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	Body          struct {
 		Key         string   `json:"key" maxLength:"80" doc:"Stable custom field key"`
@@ -621,6 +631,7 @@ type createTenantCustomFieldDefinitionInput struct {
 
 type createInventoryCustomFieldDefinitionInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	Body          struct {
@@ -675,6 +686,7 @@ type listAuditRecordsOutput struct {
 
 type createAssetInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	Body          struct {
@@ -704,6 +716,7 @@ type listAssetsOutput struct {
 
 type updateAssetInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	AssetID       string `path:"assetId" doc:"Asset ID"`
@@ -747,6 +760,7 @@ func (s nullableString) Schema(huma.Registry) *huma.Schema {
 
 type grantInventoryAccessInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	Body          struct {

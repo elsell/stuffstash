@@ -16,6 +16,7 @@ import (
 type CreateCustomFieldDefinitionInput struct {
 	Principal   identity.Principal
 	Source      audit.Source
+	RequestID   string
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
 	Key         string
@@ -104,6 +105,7 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
+		RequestID:   input.RequestID,
 		Action:      audit.ActionCustomFieldDefinitionCreated,
 		TargetType:  audit.TargetCustomFieldDefinition,
 		TargetID:    definition.ID.String(),

@@ -141,6 +141,50 @@ func TestPostgresStorePersistsAssetCustomFieldsAsJSONB(t *testing.T) {
 	}
 }
 
+func TestPostgresStoreRestrictsInventoryDeleteWithAuditRecords(t *testing.T) {
+	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
+	if dsn == "" {
+		t.Skip("set STUFF_STASH_TEST_POSTGRES_DSN to run Postgres audit FK verification")
+	}
+
+	ctx := context.Background()
+	db, err := OpenPostgres(dsn)
+	if err != nil {
+		t.Fatalf("open postgres: %v", err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("postgres db handle: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := sqlDB.Close(); err != nil {
+			t.Fatalf("close postgres: %v", err)
+		}
+	})
+	if err := runEmbeddedPostgresMigrations(db); err != nil {
+		t.Fatalf("migrate postgres: %v", err)
+	}
+
+	store := NewStore(db)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FB8")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FB9")
+	cleanupAuditInventoryDeleteTestRows(t, ctx, store, tenantID, inventoryID)
+	saveTenant(t, ctx, store, tenantID, "Postgres Audit")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Audit Inventory")
+	if err := store.SaveAuditRecord(ctx, postgresAuditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FBA", tenantID, inventoryID, audit.ActionAssetCreated)); err != nil {
+		t.Fatalf("save audit record: %v", err)
+	}
+
+	err = store.db.WithContext(ctx).Delete(&inventoryModel{ID: inventoryID.String()}).Error
+	if err == nil {
+		t.Fatalf("expected inventory delete to be restricted by audit records")
+	}
+	var postgresError *pgconn.PgError
+	if !errors.As(err, &postgresError) || postgresError.Code != "23503" {
+		t.Fatalf("expected foreign key violation, got %v", err)
+	}
+}
+
 func TestPostgresStoreSerializesEffectiveCustomFieldKeysAcrossScopes(t *testing.T) {
 	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
 	if dsn == "" {
@@ -265,6 +309,20 @@ func cleanupCustomFieldDefinitionTestRows(t *testing.T, ctx context.Context, sto
 
 	if err := store.db.WithContext(ctx).Where(&customFieldDefinitionModel{TenantID: tenantID.String()}).Delete(&customFieldDefinitionModel{}).Error; err != nil {
 		t.Fatalf("clean custom field definition rows: %v", err)
+	}
+	if err := store.db.WithContext(ctx).Delete(&inventoryModel{ID: inventoryID.String()}).Error; err != nil {
+		t.Fatalf("clean inventory row: %v", err)
+	}
+	if err := store.db.WithContext(ctx).Delete(&tenantModel{ID: tenantID.String()}).Error; err != nil {
+		t.Fatalf("clean tenant row: %v", err)
+	}
+}
+
+func cleanupAuditInventoryDeleteTestRows(t *testing.T, ctx context.Context, store Store, tenantID tenant.ID, inventoryID inventory.InventoryID) {
+	t.Helper()
+
+	if err := store.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()}).Delete(&auditRecordModel{}).Error; err != nil {
+		t.Fatalf("clean audit record rows: %v", err)
 	}
 	if err := store.db.WithContext(ctx).Delete(&inventoryModel{ID: inventoryID.String()}).Error; err != nil {
 		t.Fatalf("clean inventory row: %v", err)

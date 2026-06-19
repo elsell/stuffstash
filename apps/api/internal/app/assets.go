@@ -18,6 +18,7 @@ import (
 type CreateAssetInput struct {
 	Principal     identity.Principal
 	Source        audit.Source
+	RequestID     string
 	TenantID      tenant.ID
 	InventoryID   inventory.InventoryID
 	Kind          string
@@ -44,6 +45,7 @@ type AssetParentUpdate struct {
 type UpdateAssetInput struct {
 	Principal     identity.Principal
 	Source        audit.Source
+	RequestID     string
 	TenantID      tenant.ID
 	InventoryID   inventory.InventoryID
 	AssetID       asset.ID
@@ -119,6 +121,7 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
+		RequestID:   input.RequestID,
 		Action:      audit.ActionAssetCreated,
 		TargetType:  audit.TargetAsset,
 		TargetID:    item.ID.String(),
@@ -218,6 +221,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			TenantID:    input.TenantID,
 			InventoryID: input.InventoryID,
 			Source:      input.Source,
+			RequestID:   input.RequestID,
 			Action:      audit.ActionAssetUpdated,
 			TargetType:  audit.TargetAsset,
 			TargetID:    updated.ID.String(),
@@ -236,6 +240,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			TenantID:    input.TenantID,
 			InventoryID: input.InventoryID,
 			Source:      input.Source,
+			RequestID:   input.RequestID,
 			Action:      audit.ActionAssetMoved,
 			TargetType:  audit.TargetAsset,
 			TargetID:    updated.ID.String(),

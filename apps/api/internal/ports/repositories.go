@@ -81,8 +81,9 @@ type AuditRepository interface {
 }
 
 type AuditRecordPageRequest struct {
-	AfterRecordID audit.ID
-	Limit         int
+	AfterOccurredAt time.Time
+	AfterRecordID   audit.ID
+	Limit           int
 }
 
 type AuthorizationOutboxEventKind string

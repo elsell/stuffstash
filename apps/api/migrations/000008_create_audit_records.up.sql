@@ -1,7 +1,7 @@
 CREATE TABLE audit_records (
   id varchar(26) PRIMARY KEY,
   tenant_id varchar(26) NOT NULL REFERENCES tenants(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-  inventory_id varchar(26) REFERENCES inventories(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  inventory_id varchar(26) REFERENCES inventories(id) ON UPDATE CASCADE ON DELETE RESTRICT,
   principal_id varchar(128) NOT NULL,
   action varchar(80) NOT NULL,
   source varchar(40) NOT NULL,
@@ -33,10 +33,10 @@ CREATE TABLE audit_records (
 );
 
 CREATE INDEX idx_audit_records_tenant_id
-  ON audit_records(tenant_id, id);
+  ON audit_records(tenant_id, occurred_at, id);
 
 CREATE INDEX idx_audit_records_inventory_id
-  ON audit_records(tenant_id, inventory_id, id)
+  ON audit_records(tenant_id, inventory_id, occurred_at, id)
   WHERE inventory_id IS NOT NULL;
 
 CREATE INDEX idx_audit_records_principal_id

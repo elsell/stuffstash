@@ -78,6 +78,9 @@ func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
 	s.tenants[item.ID] = item
 	s.auditRecords[auditRecord.ID] = auditRecord
 	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
@@ -94,6 +97,9 @@ func (s *Store) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID str
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
 	s.inventories[item.ID] = item
 	s.auditRecords[auditRecord.ID] = auditRecord
 	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
@@ -119,6 +125,9 @@ func (s *Store) SaveInventoryAccessGrantAndEnqueue(_ context.Context, eventID st
 	grantKey := inventoryAccessGrantStorageKey(grant)
 	if _, exists := s.accessGrants[grantKey]; exists {
 		return nil
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
 	}
 	s.accessGrants[grantKey] = grant
 	s.auditRecords[auditRecord.ID] = auditRecord
@@ -270,6 +279,9 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 			return ports.ErrConflict
 		}
 	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
 	s.customFields[definition.ID] = definition
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
@@ -337,6 +349,9 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord aud
 	if _, exists := s.assets[item.ID]; exists {
 		return errors.New("asset already exists")
 	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
 
 	if item.ParentAssetID.String() != "" {
 		parent, ok := s.assets[item.ParentAssetID]
@@ -398,6 +413,16 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []
 			current = next
 		}
 	}
+	seenAuditRecords := map[audit.ID]struct{}{}
+	for _, auditRecord := range auditRecords {
+		if _, exists := s.auditRecords[auditRecord.ID]; exists {
+			return ports.ErrConflict
+		}
+		if _, exists := seenAuditRecords[auditRecord.ID]; exists {
+			return ports.ErrConflict
+		}
+		seenAuditRecords[auditRecord.ID] = struct{}{}
+	}
 	s.assets[item.ID] = item
 	for _, auditRecord := range auditRecords {
 		s.auditRecords[auditRecord.ID] = auditRecord
@@ -448,6 +473,9 @@ func (s *Store) SaveAuditRecord(_ context.Context, record audit.Record) error {
 			return ports.ErrForbidden
 		}
 	}
+	if _, exists := s.auditRecords[record.ID]; exists {
+		return ports.ErrConflict
+	}
 	s.auditRecords[record.ID] = record
 	return nil
 }
@@ -458,7 +486,7 @@ func (s *Store) ListTenantAuditRecords(_ context.Context, tenantID tenant.ID, pa
 
 	items := []audit.Record{}
 	for _, record := range s.auditRecords {
-		if record.TenantID.String() == tenantID.String() && record.ID.String() > page.AfterRecordID.String() {
+		if record.TenantID.String() == tenantID.String() && auditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
 			items = append(items, record)
 		}
 	}
@@ -471,7 +499,7 @@ func (s *Store) ListInventoryAuditRecords(_ context.Context, tenantID tenant.ID,
 
 	items := []audit.Record{}
 	for _, record := range s.auditRecords {
-		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.ID.String() > page.AfterRecordID.String() {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && auditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
 			items = append(items, record)
 		}
 	}
@@ -480,12 +508,22 @@ func (s *Store) ListInventoryAuditRecords(_ context.Context, tenantID tenant.ID,
 
 func pagedAuditRecords(items []audit.Record, limit int) []audit.Record {
 	sort.Slice(items, func(left int, right int) bool {
-		return items[left].CursorKey() < items[right].CursorKey()
+		return items[left].Before(items[right])
 	})
 	if limit > 0 && len(items) > limit {
 		items = items[:limit]
 	}
 	return items
+}
+
+func auditRecordAfter(record audit.Record, occurredAt time.Time, id audit.ID) bool {
+	if occurredAt.IsZero() || id.String() == "" {
+		return true
+	}
+	if record.OccurredAt.After(occurredAt) {
+		return true
+	}
+	return record.OccurredAt.Equal(occurredAt) && record.ID.String() > id.String()
 }
 
 func inventoryAccessGrantStorageKey(grant ports.InventoryAccessGrant) string {

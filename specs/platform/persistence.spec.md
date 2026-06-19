@@ -118,7 +118,7 @@ PostgreSQL migrations must also enforce the effective-key invariant across scope
 That enforcement must include a database-level serialization point, such as a transaction-scoped advisory lock keyed by tenant and field key, not only a read-before-write trigger check.
 The database must validate persisted custom field definition key, display name, enum option, scope, and field type shape as a defense-in-depth guard around the domain model.
 
-Audit record persistence must be append-only through application ports in the first slice. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination.
+Audit record persistence must be append-only through application ports in the first slice. All repository adapters, including the in-memory adapter, must reject duplicate audit record IDs instead of overwriting existing records. State changes paired with audit writes must fail without partial domain writes when the audit write fails. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination ordered by `(occurred_at, id)`. Inventory references must not cascade-delete audit rows; until delete behavior is specified, inventory deletion must be blocked if audit rows still reference the inventory. Migration `000009_preserve_audit_records_and_ordering` must convert existing audit record inventory references from cascade delete to restrict delete and recreate audit list indexes for `(occurred_at, id)` ordering.
 
 ## Initial Asset Schema
 
@@ -210,6 +210,7 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Tests must cover that inventory access grants and their authorization outbox records are persisted atomically.
 - Tests must cover that duplicate inventory access grants do not enqueue duplicate authorization outbox events.
 - Tests must cover that inventory access grant keys are scoped to the inventory, not globally.
+- Tests must cover that duplicate audit record IDs are rejected and that paired domain writes roll back when an audit insert fails.
 - Tests must cover that authorization outbox processing retries failed relationship grants and marks successful grants processed.
 - Tests must cover rollback when a domain state write succeeds but the paired authorization outbox insert fails.
 - Tests must cover that claimed authorization outbox events are hidden from other claims until their lease expires.

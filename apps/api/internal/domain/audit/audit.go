@@ -172,7 +172,14 @@ func NewRecord(
 }
 
 func (r Record) CursorKey() string {
-	return r.ID.String()
+	return r.OccurredAt.UTC().Format(time.RFC3339Nano) + ":" + r.ID.String()
+}
+
+func (r Record) Before(other Record) bool {
+	if !r.OccurredAt.Equal(other.OccurredAt) {
+		return r.OccurredAt.Before(other.OccurredAt)
+	}
+	return r.ID.String() < other.ID.String()
 }
 
 func (r Record) MetadataValues() map[string]string {

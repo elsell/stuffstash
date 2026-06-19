@@ -90,9 +90,12 @@ Create a location-like asset:
 ```sh
 curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
   -H 'Authorization: Bearer dev:user-one' \
+  -H 'X-Request-ID: local-asset-create-1' \
   -H 'Content-Type: application/json' \
   -d '{"kind":"location","title":"Garage"}'
 ```
+
+State-changing REST requests may include `X-Request-ID`. When present, audit history stores it with the emitted audit record.
 
 Create an item inside that location:
 

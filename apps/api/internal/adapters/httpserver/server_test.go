@@ -597,7 +597,7 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 		},
 	}))
 
-	firstAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+	firstAsset := performRequestWithHeaders(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]string{"X-Request-ID": "request-audit-one"}, map[string]any{
 		"kind":  "item",
 		"title": "Drill",
 	})
@@ -644,6 +644,9 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 	}
 	if firstPage.Data[0].Action != "asset.created" || firstPage.Data[0].Source != "api" || firstPage.Data[0].TargetType != "asset" {
 		t.Fatalf("unexpected first audit record: %+v", firstPage.Data[0])
+	}
+	if firstPage.Data[0].RequestID != "request-audit-one" {
+		t.Fatalf("expected request ID on audit record, got %+v", firstPage.Data[0])
 	}
 
 	secondPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=1&cursor="+*firstPage.Meta.Pagination.NextCursor, "Bearer dev:viewer-user", nil)
@@ -722,9 +725,11 @@ func TestCustomFieldDefinitionFlowAndAssetValidation(t *testing.T) {
 			{id: hiddenInventoryID, tenantID: tenantID, name: "Hidden", owner: "hidden-owner"},
 		},
 		ids: []string{
-			"01ARZ3NDEKTSV4RRFFQ69G5FAY",
-			"01ARZ3NDEKTSV4RRFFQ69G5FAZ",
-			"01ARZ3NDEKTSV4RRFFQ69G5FB0",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAY", "audit-tenant-definition",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAZ", "audit-inventory-definition",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB0", "audit-duplicate-definition",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB2", "audit-tenant-conflict-definition",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB3", "audit-custom-field-asset",
 		},
 	}))
 
@@ -1014,6 +1019,11 @@ func TestInventorySharingEnforcesViewerEditorAndShareBoundaries(t *testing.T) {
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
 			{id: hiddenInventoryID, tenantID: tenantID, name: "Hidden", owner: "other-inventory-owner"},
+		},
+		ids: []string{
+			"audit-viewer-grant", "viewer-grant-event", "viewer-grant-claim",
+			"audit-duplicate-viewer-grant", "duplicate-viewer-grant-event",
+			"audit-editor-grant", "editor-grant-event", "editor-grant-claim",
 		},
 	}))
 
@@ -1521,6 +1531,10 @@ func (failingGrantAuthorizer) GrantInventoryEditor(context.Context, identity.Pri
 }
 
 func performRequest(server *http.Server, method string, path string, authorization string, body any) *httptest.ResponseRecorder {
+	return performRequestWithHeaders(server, method, path, authorization, nil, body)
+}
+
+func performRequestWithHeaders(server *http.Server, method string, path string, authorization string, headers map[string]string, body any) *httptest.ResponseRecorder {
 	var requestBody []byte
 	if body != nil {
 		requestBody, _ = json.Marshal(body)
@@ -1532,6 +1546,9 @@ func performRequest(server *http.Server, method string, path string, authorizati
 	}
 	if authorization != "" {
 		request.Header.Set("Authorization", authorization)
+	}
+	for key, value := range headers {
+		request.Header.Set(key, value)
 	}
 
 	response := httptest.NewRecorder()

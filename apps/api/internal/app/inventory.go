@@ -18,12 +18,14 @@ import (
 type CreateTenantInput struct {
 	Principal identity.Principal
 	Source    audit.Source
+	RequestID string
 	Name      string
 }
 
 type CreateInventoryInput struct {
 	Principal identity.Principal
 	Source    audit.Source
+	RequestID string
 	TenantID  tenant.ID
 	Name      string
 }
@@ -72,6 +74,7 @@ func (a App) CreateTenant(ctx context.Context, input CreateTenantInput) (tenant.
 		PrincipalID: input.Principal.ID,
 		TenantID:    item.ID,
 		Source:      input.Source,
+		RequestID:   input.RequestID,
 		Action:      audit.ActionTenantCreated,
 		TargetType:  audit.TargetTenant,
 		TargetID:    item.ID.String(),
@@ -139,6 +142,7 @@ func (a App) CreateInventory(ctx context.Context, input CreateInventoryInput) (i
 		TenantID:    input.TenantID,
 		InventoryID: item.ID,
 		Source:      input.Source,
+		RequestID:   input.RequestID,
 		Action:      audit.ActionInventoryCreated,
 		TargetType:  audit.TargetInventory,
 		TargetID:    item.ID.String(),

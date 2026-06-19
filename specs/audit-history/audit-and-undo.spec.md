@@ -25,10 +25,13 @@ The first implementation slice defines durable, read-only audit records. Undo is
 - Audit writing must be part of the application operation boundary.
 - Audit records must preserve tenant and inventory isolation.
 - Audit records must be append-only through application ports. The first slice must not expose update or delete behavior for audit records.
+- Append-only audit persistence must reject duplicate audit record IDs instead of overwriting existing records. This applies to durable adapters and in-memory adapters used for local runs and tests.
 - Audit records must be cursor paginated.
+- Audit pagination must be ordered by `(occurredAt, id)`, not by ID alone, so same-millisecond records remain deterministic without relying on monotonic ID generation.
 - Inventory audit reads must require `inventory.view` for the target inventory.
 - Tenant audit reads without an inventory scope must require `tenant.configure`.
 - Audit read responses must use the standard API success and error envelopes.
+- HTTP adapters must capture `X-Request-ID` for state-changing requests when the client supplies it and store it on emitted audit records.
 
 ## First Slice Record Shape
 
@@ -43,7 +46,7 @@ The first durable record must include:
 - `targetType`: typed target resource type.
 - `targetId`: target resource ID.
 - `occurredAt`: server timestamp.
-- `requestId`: optional request identifier when a transport provides one.
+- `requestId`: optional request identifier when a transport provides one, such as the REST `X-Request-ID` header.
 - `metadata`: safe JSON object for small, non-secret context.
 
 Metadata is for human context and filtering hints. It must not be treated as an authorization source.
@@ -112,7 +115,8 @@ The full audited action set should eventually include:
 
 - Tests must verify that every state-changing application operation writes audit history.
 - Tests must verify tenant and inventory isolation for audit reads.
-- Tests must verify pagination for audit reads.
+- Tests must verify pagination for audit reads, including `(occurredAt, id)` ordering.
+- Tests must verify duplicate audit record IDs are rejected instead of replacing existing records.
 - Tests must verify undo for supported commands once undo is implemented.
 - Tests must verify that unauthorized users cannot read audit records or undo actions they cannot perform.
 - Tests must use fakes, not mocks.

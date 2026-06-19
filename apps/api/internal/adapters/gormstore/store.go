@@ -670,13 +670,24 @@ func (s Store) ListInventoryAuditRecords(ctx context.Context, tenantID tenant.ID
 
 func (s Store) listAuditRecords(query *gorm.DB, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
 	var models []auditRecordModel
-	if page.AfterRecordID.String() != "" {
-		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterRecordID.String()})
+	if !page.AfterOccurredAt.IsZero() && page.AfterRecordID.String() != "" {
+		query = query.Where(clause.Or(
+			clause.Gt{Column: clause.Column{Name: "occurred_at"}, Value: page.AfterOccurredAt},
+			clause.And(
+				clause.Eq{Column: clause.Column{Name: "occurred_at"}, Value: page.AfterOccurredAt},
+				clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterRecordID.String()},
+			),
+		))
 	}
 	if page.Limit > 0 {
 		query = query.Limit(page.Limit)
 	}
-	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+	if err := query.Order(clause.OrderBy{
+		Columns: []clause.OrderByColumn{
+			{Column: clause.Column{Name: "occurred_at"}},
+			{Column: clause.Column{Name: "id"}},
+		},
+	}).Find(&models).Error; err != nil {
 		return nil, err
 	}
 
@@ -787,7 +798,7 @@ type auditRecordModel struct {
 	TenantID    string          `gorm:"not null;size:26;index:idx_audit_records_tenant_id"`
 	Tenant      tenantModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
 	InventoryID *string         `gorm:"size:26;index:idx_audit_records_inventory_id"`
-	Inventory   *inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	Inventory   *inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
 	PrincipalID string          `gorm:"not null;size:128;index"`
 	Action      string          `gorm:"not null;size:80;index"`
 	Source      string          `gorm:"not null;size:40"`

@@ -97,8 +97,10 @@ The first protected REST slice includes:
 - Tenant audit listing returns all records in the tenant, including inventory-scoped records.
 - Inventory audit listing returns records scoped to the inventory.
 - Audit listing must support cursor pagination with `limit` and `cursor` query parameters.
+- Audit listing cursors must preserve `(occurredAt, id)` ordering.
 - Audit listing must include pagination metadata in the response envelope.
 - Audit records must include typed action, source, target type, target ID, principal ID, occurred timestamp, and safe metadata.
+- State-changing REST endpoints must accept `X-Request-ID` and pass it through to emitted audit records when supplied.
 - Inventory viewers may read inventory-scoped audit records.
 - Inventory viewers must not read tenant-wide audit records unless they also have tenant configuration permission.
 
@@ -127,6 +129,7 @@ The first protected REST slice includes:
 - Tests must verify custom field definitions are authenticated, authorized, cursor-paginated, tenant/inventory isolated, and used for asset value validation.
 - Tests must verify audit records are written for state-changing operations.
 - Tests must verify tenant and inventory audit record listing is authenticated, authorized, cursor-paginated, and tenant/inventory isolated.
+- Tests must verify audit records capture `X-Request-ID` when supplied.
 - Tests must verify unauthorized errors use the safe error envelope.
 - Tests must verify the API index route is available.
 - Tests must verify the OpenAPI route is available.
