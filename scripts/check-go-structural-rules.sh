@@ -32,3 +32,39 @@ if rg --ignore-case --line-number --regexp "$sql_pattern" "${go_files[@]}"; then
   echo "raw SQL in Go application code is not allowed; use GORM behind repositories/adapters" >&2
   exit 1
 fi
+
+httpserver_touched=false
+for file in "${go_files[@]}"; do
+  case "$file" in
+    apps/api/internal/adapters/httpserver/*)
+      httpserver_touched=true
+      ;;
+  esac
+done
+
+if [ "$httpserver_touched" = true ]; then
+  if rg --line-number --regexp 'huma\.(Get|Post|Patch|Put|Delete)\(' apps/api/internal/adapters/httpserver/server.go apps/api/internal/adapters/httpserver/api.go; then
+    echo "httpserver server.go/api.go must compose only; domain route registration belongs under <domain>/routes/" >&2
+    exit 1
+  fi
+
+  if find apps/api/internal/adapters/httpserver -path '*/routes/*.go' -print0 | xargs -0 rg --line-number --regexp '^type [A-Za-z0-9_]+ (struct|interface)' ; then
+    echo "httpserver route files must not define DTOs or interfaces; use the domain dto/ or mapper/ package" >&2
+    exit 1
+  fi
+
+  if find apps/api/internal/adapters/httpserver -path '*/dto/*.go' -print0 | xargs -0 rg --line-number --regexp 'internal/(app|domain|ports)' ; then
+    echo "httpserver DTO files must not import app, domain, or port packages" >&2
+    exit 1
+  fi
+
+  if find apps/api/internal/adapters/httpserver -path '*/mapper/*.go' -print0 | xargs -0 rg --line-number --regexp 'huma\.(Get|Post|Patch|Put|Delete)\(' ; then
+    echo "httpserver mapper files must not register routes" >&2
+    exit 1
+  fi
+
+  if find apps/api/internal/adapters/httpserver -path '*/mapper/*.go' -print0 | xargs -0 rg --line-number --regexp 'internal/app|httpserver/shared|shared\.SuccessEnvelope|PaginatedMeta' ; then
+    echo "httpserver mapper files must only translate between domain and DTO shapes; envelopes, app services, and pagination metadata belong in routes" >&2
+    exit 1
+  fi
+fi

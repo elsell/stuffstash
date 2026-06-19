@@ -327,4 +327,4 @@ Run all configured hooks:
 lefthook run pre-commit --all-files
 ```
 
-The hook runs Go formatting, Go tests, and structural checks for ad hoc prints and raw SQL in Go code.
+The hook runs Go formatting, Go tests, and structural checks for ad hoc prints, raw SQL in Go code, and HTTP adapter organization drift. For the REST adapter, it checks that domain route registration stays out of `httpserver/server.go` and `httpserver/api.go`, route files do not define DTOs or interfaces, DTO files do not import application/domain/port packages, and mapper files do not register routes.

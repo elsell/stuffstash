@@ -53,6 +53,20 @@ These instructions are binding for all agents and contributors working in this r
 - Prefer dependency injection over global state or hard-wired implementations.
 - The core service must remain usable behind multiple adapters, including REST, MCP, mobile-facing APIs, workers, CLIs, or future interfaces.
 
+## Adapter Organization
+
+- Adapter code must be organized so one file does not mix unrelated domains or unrelated concerns.
+- REST adapter code must be organized domain-first under `apps/api/internal/adapters/httpserver/`.
+- Each REST adapter domain must split concerns into `routes/`, `dto/`, and `mapper/` directories when it owns more than trivial behavior.
+- Route files may register HTTP operations and call application services. They must not define DTOs or response mapping helpers.
+- DTO files may define transport request and response shapes. They must not call application services or contain domain behavior.
+- Mapper files may translate between application/domain values and transport DTOs. They must not register routes.
+- Shared transport primitives such as envelopes, pagination metadata, nullable JSON helpers, Huma operation helpers, authentication glue, and error mapping belong in `httpserver/shared/`.
+- `httpserver/server.go` must stay limited to server construction, public local convenience handlers, and Huma setup.
+- `httpserver/api.go` must stay limited to composing route registrations.
+- If a REST adapter domain grows large, split files by operation inside the relevant concern directory before adding more behavior.
+- The structural pre-commit check must guard these HTTP adapter boundaries mechanically where practical.
+
 ## Security
 
 - Security is a primary concern for this project.
@@ -125,6 +139,7 @@ These instructions are binding for all agents and contributors working in this r
   - Use of mocks in tests.
   - Missing spec updates for code changes where this can be detected reliably.
 - Hook behavior must be documented in the relevant spec or repository guidance when introduced.
+- The Go structural hook must reject HTTP adapter drift that can be detected mechanically, including route registration in `httpserver/server.go` or `httpserver/api.go`, DTO or interface definitions in `routes/`, application/domain/port imports in `dto/`, and route registration in `mapper/`.
 - Do not rely on hooks as the only enforcement mechanism. CI and tests should also enforce important project guarantees.
 
 ## Continuous Improvement

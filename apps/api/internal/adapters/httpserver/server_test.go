@@ -1573,13 +1573,71 @@ type errorResponse struct {
 	Meta responseMeta `json:"meta"`
 }
 
+type responseMeta struct {
+	RequestID  string          `json:"requestId,omitempty"`
+	TenantID   string          `json:"tenantId,omitempty"`
+	Pagination *paginationMeta `json:"pagination,omitempty"`
+}
+
+type paginationMeta struct {
+	Limit      int     `json:"limit"`
+	NextCursor *string `json:"nextCursor"`
+	HasMore    bool    `json:"hasMore"`
+}
+
+type inventoryResponse struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+	Name     string `json:"name"`
+}
+
+type assetResponse struct {
+	ID             string                 `json:"id"`
+	TenantID       string                 `json:"tenantId"`
+	InventoryID    string                 `json:"inventoryId"`
+	ParentAssetID  string                 `json:"parentAssetId,omitempty"`
+	Kind           string                 `json:"kind"`
+	Title          string                 `json:"title"`
+	Description    string                 `json:"description"`
+	CustomFields   map[string]interface{} `json:"customFields"`
+	LifecycleState string                 `json:"lifecycleState"`
+}
+
+type customFieldDefinitionResponse struct {
+	ID          string `json:"id"`
+	TenantID    string `json:"tenantId"`
+	InventoryID string `json:"inventoryId,omitempty"`
+	Scope       string `json:"scope"`
+	Key         string `json:"key"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Required    bool   `json:"required"`
+}
+
+type inventoryAccessGrantResponse struct {
+	TenantID     string `json:"tenantId"`
+	InventoryID  string `json:"inventoryId"`
+	PrincipalID  string `json:"principalId"`
+	Relationship string `json:"relationship"`
+}
+
+type auditRecordResponse struct {
+	ID          string            `json:"id"`
+	TenantID    string            `json:"tenantId"`
+	InventoryID string            `json:"inventoryId,omitempty"`
+	PrincipalID string            `json:"principalId"`
+	Action      string            `json:"action"`
+	Source      string            `json:"source"`
+	TargetType  string            `json:"targetType"`
+	TargetID    string            `json:"targetId"`
+	OccurredAt  string            `json:"occurredAt"`
+	RequestID   string            `json:"requestId,omitempty"`
+	Metadata    map[string]string `json:"metadata"`
+}
+
 type inventoryListResponse struct {
-	Data []struct {
-		ID       string `json:"id"`
-		TenantID string `json:"tenantId"`
-		Name     string `json:"name"`
-	} `json:"data"`
-	Meta responseMeta `json:"meta"`
+	Data []inventoryResponse `json:"data"`
+	Meta responseMeta        `json:"meta"`
 }
 
 type assetBody struct {
@@ -1675,11 +1733,7 @@ func auditRecordsContainTarget(records []auditRecordResponse, targetID string) b
 	return false
 }
 
-func decodeInventoryList(t *testing.T, response *httptest.ResponseRecorder) []struct {
-	ID       string `json:"id"`
-	TenantID string `json:"tenantId"`
-	Name     string `json:"name"`
-} {
+func decodeInventoryList(t *testing.T, response *httptest.ResponseRecorder) []inventoryResponse {
 	t.Helper()
 
 	var body inventoryListResponse
@@ -1743,11 +1797,7 @@ func assertCustomFieldDefinition(t *testing.T, definition customFieldDefinitionR
 	}
 }
 
-func assertInventories(t *testing.T, inventories []struct {
-	ID       string `json:"id"`
-	TenantID string `json:"tenantId"`
-	Name     string `json:"name"`
-}, expected ...expectedInventory) {
+func assertInventories(t *testing.T, inventories []inventoryResponse, expected ...expectedInventory) {
 	t.Helper()
 
 	if len(inventories) != len(expected) {

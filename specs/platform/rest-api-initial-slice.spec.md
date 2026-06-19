@@ -110,6 +110,17 @@ The first protected REST slice includes:
 - Generated docs must include bearer authentication for protected endpoints.
 - Generated docs must include request and response models.
 
+## HTTP Adapter Organization
+
+- REST adapter implementation must be organized domain-first under `apps/api/internal/adapters/httpserver/`.
+- Each HTTP domain owns separate `routes/`, `dto/`, and `mapper/` directories when it has non-trivial behavior.
+- Route files must register operations and call application services only.
+- DTO files must define transport request and response types only.
+- Mapper files must convert application or domain values to transport DTOs only.
+- Cross-domain HTTP primitives must live under `httpserver/shared/`.
+- `server.go` and `api.go` must compose the HTTP server and route registrations without accumulating domain route logic.
+- The Go structural pre-commit hook must mechanically guard this organization where practical, including route registration in composition files, DTO or interface definitions in route files, application/domain/port imports in DTO files, and route registration in mapper files.
+
 ## Verification
 
 - Tests must verify happy paths.
