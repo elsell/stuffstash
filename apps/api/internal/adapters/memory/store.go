@@ -2,22 +2,28 @@ package memory
 
 import (
 	"context"
+	"sort"
 	"sync"
+	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type Store struct {
 	mu          sync.RWMutex
 	tenants     map[tenant.ID]tenant.Tenant
 	inventories map[inventory.InventoryID]inventory.Inventory
+	outbox      map[string]ports.AuthorizationOutboxEvent
 }
 
 func NewStore() *Store {
 	return &Store{
 		tenants:     map[tenant.ID]tenant.Tenant{},
 		inventories: map[inventory.InventoryID]inventory.Inventory{},
+		outbox:      map[string]ports.AuthorizationOutboxEvent{},
 	}
 }
 
@@ -42,6 +48,82 @@ func (s *Store) SaveInventory(_ context.Context, item inventory.Inventory) error
 	defer s.mu.Unlock()
 
 	s.inventories[item.ID] = item
+	return nil
+}
+
+func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.tenants[item.ID] = item
+	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
+		ID:          eventID,
+		Kind:        ports.AuthorizationOutboxGrantTenantOwner,
+		PrincipalID: principal.ID,
+		TenantID:    item.ID,
+		CreatedAt:   time.Now(),
+	}
+	return nil
+}
+
+func (s *Store) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.inventories[item.ID] = item
+	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
+		ID:          eventID,
+		Kind:        ports.AuthorizationOutboxGrantInventoryOwner,
+		PrincipalID: principal.ID,
+		TenantID:    tenantID,
+		InventoryID: item.ID,
+		CreatedAt:   time.Now(),
+	}
+	return nil
+}
+
+func (s *Store) ListPendingAuthorizationOutboxEvents(_ context.Context, limit int) ([]ports.AuthorizationOutboxEvent, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if limit <= 0 {
+		limit = len(s.outbox)
+	}
+	events := []ports.AuthorizationOutboxEvent{}
+	for _, event := range s.outbox {
+		events = append(events, event)
+	}
+	sort.Slice(events, func(left int, right int) bool {
+		if events[left].CreatedAt.Equal(events[right].CreatedAt) {
+			return events[left].ID < events[right].ID
+		}
+		return events[left].CreatedAt.Before(events[right].CreatedAt)
+	})
+	if len(events) > limit {
+		events = events[:limit]
+	}
+	return events, nil
+}
+
+func (s *Store) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.outbox, eventID)
+	return nil
+}
+
+func (s *Store) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID string, reason string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.outbox[eventID]
+	if !ok {
+		return nil
+	}
+	event.Attempts++
+	event.LastError = reason
+	s.outbox[eventID] = event
 	return nil
 }
 

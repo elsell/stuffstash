@@ -6,9 +6,12 @@ import (
 	"sort"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Store struct {
@@ -20,7 +23,7 @@ func NewStore(db *gorm.DB) Store {
 }
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &authorizationOutboxEventModel{})
 }
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -52,6 +55,93 @@ func (s Store) SaveInventory(ctx context.Context, item inventory.Inventory) erro
 	}
 
 	return s.db.WithContext(ctx).Save(&model).Error
+}
+
+func (s Store) SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&tenantModel{
+			ID:   item.ID.String(),
+			Name: item.Name.String(),
+		}).Error; err != nil {
+			return err
+		}
+
+		return tx.Create(&authorizationOutboxEventModel{
+			ID:          eventID,
+			Kind:        string(ports.AuthorizationOutboxGrantTenantOwner),
+			PrincipalID: principal.ID.String(),
+			TenantID:    item.ID.String(),
+		}).Error
+	})
+}
+
+func (s Store) SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&inventoryModel{
+			ID:       item.ID.String(),
+			TenantID: item.TenantID.String(),
+			Name:     item.Name.String(),
+		}).Error; err != nil {
+			return err
+		}
+
+		inventoryID := item.ID.String()
+		return tx.Create(&authorizationOutboxEventModel{
+			ID:          eventID,
+			Kind:        string(ports.AuthorizationOutboxGrantInventoryOwner),
+			PrincipalID: principal.ID.String(),
+			TenantID:    tenantID.String(),
+			InventoryID: &inventoryID,
+		}).Error
+	})
+}
+
+func (s Store) ListPendingAuthorizationOutboxEvents(ctx context.Context, limit int) ([]ports.AuthorizationOutboxEvent, error) {
+	if limit <= 0 {
+		limit = 25
+	}
+
+	var models []authorizationOutboxEventModel
+	if err := s.db.WithContext(ctx).
+		Where(map[string]any{"processed_at": nil}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
+		Limit(limit).
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	events := make([]ports.AuthorizationOutboxEvent, 0, len(models))
+	for _, model := range models {
+		events = append(events, model.toPort())
+	}
+	return events, nil
+}
+
+func (s Store) MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string) error {
+	now := time.Now()
+	return s.db.WithContext(ctx).
+		Model(&authorizationOutboxEventModel{}).
+		Where(&authorizationOutboxEventModel{ID: eventID}).
+		Updates(map[string]any{
+			"processed_at": now,
+			"last_error":   "",
+		}).Error
+}
+
+func (s Store) MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID string, reason string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model authorizationOutboxEventModel
+		if err := tx.Where(&authorizationOutboxEventModel{ID: eventID}).First(&model).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil
+			}
+			return err
+		}
+
+		model.Attempts++
+		model.LastError = reason
+		return tx.Save(&model).Error
+	})
 }
 
 func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID) ([]inventory.Inventory, error) {
@@ -96,6 +186,25 @@ type inventoryModel struct {
 	UpdatedAt time.Time
 }
 
+type authorizationOutboxEventModel struct {
+	ID          string         `gorm:"primaryKey;size:26"`
+	Kind        string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner');check:chk_authorization_outbox_events_inventory_required,(kind = 'grant_inventory_owner' AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
+	PrincipalID string         `gorm:"not null;size:128;index"`
+	TenantID    string         `gorm:"not null;size:26;index"`
+	Tenant      tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID *string        `gorm:"size:26;index"`
+	Inventory   inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
+	Attempts    int            `gorm:"not null;default:0"`
+	LastError   string         `gorm:"not null;default:''"`
+	ProcessedAt *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+func (authorizationOutboxEventModel) TableName() string {
+	return "authorization_outbox_events"
+}
+
 func (inventoryModel) TableName() string {
 	return "inventories"
 }
@@ -115,4 +224,21 @@ func (m inventoryModel) toDomain() (inventory.Inventory, bool) {
 		TenantID: inventory.TenantID(m.TenantID),
 		Name:     name,
 	}, true
+}
+
+func (m authorizationOutboxEventModel) toPort() ports.AuthorizationOutboxEvent {
+	inventoryID := inventory.InventoryID("")
+	if m.InventoryID != nil {
+		inventoryID = inventory.InventoryID(*m.InventoryID)
+	}
+	return ports.AuthorizationOutboxEvent{
+		ID:          m.ID,
+		Kind:        ports.AuthorizationOutboxEventKind(m.Kind),
+		PrincipalID: identity.PrincipalID(m.PrincipalID),
+		TenantID:    tenant.ID(m.TenantID),
+		InventoryID: inventoryID,
+		Attempts:    m.Attempts,
+		LastError:   m.LastError,
+		CreatedAt:   m.CreatedAt,
+	}
 }

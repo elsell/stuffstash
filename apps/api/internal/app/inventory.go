@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -53,10 +54,7 @@ func (a App) CreateTenant(ctx context.Context, input CreateTenantInput) (tenant.
 		Name: tenantName,
 	}
 
-	if err := a.tenants.SaveTenant(ctx, item); err != nil {
-		return tenant.Tenant{}, err
-	}
-	if err := a.authorizer.GrantTenantOwner(ctx, input.Principal, item.ID); err != nil {
+	if err := a.outbox.SaveTenantAndEnqueueOwnerGrant(ctx, a.ids.NewID(), item, input.Principal); err != nil {
 		return tenant.Tenant{}, err
 	}
 
@@ -68,6 +66,7 @@ func (a App) CreateTenant(ctx context.Context, input CreateTenantInput) (tenant.
 			"principal_id": input.Principal.ID.String(),
 		},
 	})
+	a.drainAuthorizationOutboxBestEffort(ctx, a.authorizationOutboxDrainLimit())
 
 	return item, nil
 }
@@ -107,10 +106,7 @@ func (a App) CreateInventory(ctx context.Context, input CreateInventoryInput) (i
 		Name:     inventoryName,
 	}
 
-	if err := a.inventories.SaveInventory(ctx, item); err != nil {
-		return inventory.Inventory{}, err
-	}
-	if err := a.authorizer.GrantInventoryOwner(ctx, input.Principal, input.TenantID, item.ID); err != nil {
+	if err := a.outbox.SaveInventoryAndEnqueueOwnerGrant(ctx, a.ids.NewID(), item, input.TenantID, input.Principal); err != nil {
 		return inventory.Inventory{}, err
 	}
 
@@ -123,8 +119,101 @@ func (a App) CreateInventory(ctx context.Context, input CreateInventoryInput) (i
 			"principal_id": input.Principal.ID.String(),
 		},
 	})
+	a.drainAuthorizationOutboxBestEffort(ctx, a.authorizationOutboxDrainLimit())
 
 	return item, nil
+}
+
+func (a App) drainAuthorizationOutboxBestEffort(ctx context.Context, limit int) {
+	if err := a.DrainAuthorizationOutbox(ctx, limit); err != nil {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventAuthorizationOutboxFailed,
+			Message: "authorization outbox drain failed",
+			Fields:  map[string]string{"error": err.Error()},
+		})
+	}
+}
+
+func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
+	if limit <= 0 {
+		limit = a.authorizationOutboxDrainLimit()
+	}
+
+	events, err := a.outbox.ListPendingAuthorizationOutboxEvents(ctx, limit)
+	if err != nil {
+		return err
+	}
+
+	var drainErr error
+	processedCount := 0
+	failedCount := 0
+	for _, event := range events {
+		if err := a.applyAuthorizationOutboxEvent(ctx, event); err != nil {
+			failedCount++
+			if markErr := a.outbox.MarkAuthorizationOutboxEventFailed(ctx, event.ID, err.Error()); markErr != nil {
+				a.recordAuthorizationOutboxEventFailed(ctx, event, markErr)
+				drainErr = errors.Join(drainErr, markErr)
+				continue
+			}
+			a.recordAuthorizationOutboxEventFailed(ctx, event, err)
+			drainErr = errors.Join(drainErr, err)
+			continue
+		}
+		if err := a.outbox.MarkAuthorizationOutboxEventProcessed(ctx, event.ID); err != nil {
+			failedCount++
+			drainErr = errors.Join(drainErr, err)
+			continue
+		}
+		processedCount++
+	}
+
+	if len(events) > 0 {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventAuthorizationOutboxDrained,
+			Message: "authorization outbox drained",
+			Fields: map[string]string{
+				"event_count":     strconv.Itoa(len(events)),
+				"processed_count": strconv.Itoa(processedCount),
+				"failed_count":    strconv.Itoa(failedCount),
+			},
+		})
+	}
+
+	return drainErr
+}
+
+func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.AuthorizationOutboxEvent) error {
+	principal := identity.Principal{ID: event.PrincipalID}
+	switch event.Kind {
+	case ports.AuthorizationOutboxGrantTenantOwner:
+		return a.authorizer.GrantTenantOwner(ctx, principal, event.TenantID)
+	case ports.AuthorizationOutboxGrantInventoryOwner:
+		return a.authorizer.GrantInventoryOwner(ctx, principal, event.TenantID, event.InventoryID)
+	default:
+		return ErrInvalidInput
+	}
+}
+
+func (a App) recordAuthorizationOutboxEventFailed(ctx context.Context, event ports.AuthorizationOutboxEvent, err error) {
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAuthorizationOutboxFailed,
+		Message: "authorization outbox event failed",
+		Fields: map[string]string{
+			"event_id":     event.ID,
+			"event_kind":   string(event.Kind),
+			"tenant_id":    event.TenantID.String(),
+			"inventory_id": event.InventoryID.String(),
+			"attempts":     strconv.Itoa(event.Attempts + 1),
+			"error":        err.Error(),
+		},
+	})
+}
+
+func (a App) authorizationOutboxDrainLimit() int {
+	if a.outboxDrainLimit <= 0 {
+		return 25
+	}
+	return a.outboxDrainLimit
 }
 
 func (a App) ListInventories(ctx context.Context, input ListInventoriesInput) ([]inventory.Inventory, error) {

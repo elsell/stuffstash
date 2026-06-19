@@ -11,6 +11,8 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envSpiceDBTLSEnabled, "")
 	t.Setenv(envSpiceDBBootstrapSchema, "")
 	t.Setenv(envSpiceDBSchemaPath, "")
+	t.Setenv(envAuthorizationOutboxLimit, "")
+	t.Setenv(envAuthorizationOutboxEvery, "")
 
 	cfg := Load()
 
@@ -38,6 +40,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.SpiceDBSchemaPath != defaultSpiceDBSchemaPath {
 		t.Fatalf("expected schema path %q, got %q", defaultSpiceDBSchemaPath, cfg.SpiceDBSchemaPath)
 	}
+	if cfg.AuthorizationOutboxDrainLimit != defaultAuthorizationLimit {
+		t.Fatalf("expected authorization outbox limit %d, got %d", defaultAuthorizationLimit, cfg.AuthorizationOutboxDrainLimit)
+	}
+	if cfg.AuthorizationOutboxDrainInterval != defaultAuthorizationEvery {
+		t.Fatalf("expected authorization outbox interval %s, got %s", defaultAuthorizationEvery, cfg.AuthorizationOutboxDrainInterval)
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -52,6 +60,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envSpiceDBTLSEnabled, "false")
 	t.Setenv(envSpiceDBBootstrapSchema, "true")
 	t.Setenv(envSpiceDBSchemaPath, "custom/schema.zed")
+	t.Setenv(envAuthorizationOutboxLimit, "7")
+	t.Setenv(envAuthorizationOutboxEvery, "250ms")
 
 	cfg := Load()
 
@@ -78,5 +88,11 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.SpiceDBSchemaPath != "custom/schema.zed" {
 		t.Fatalf("expected custom schema path, got %q", cfg.SpiceDBSchemaPath)
+	}
+	if cfg.AuthorizationOutboxDrainLimit != 7 {
+		t.Fatalf("expected authorization outbox drain limit 7, got %d", cfg.AuthorizationOutboxDrainLimit)
+	}
+	if cfg.AuthorizationOutboxDrainInterval.String() != "250ms" {
+		t.Fatalf("expected authorization outbox drain interval 250ms, got %s", cfg.AuthorizationOutboxDrainInterval)
 	}
 }

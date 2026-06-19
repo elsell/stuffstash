@@ -68,6 +68,8 @@ Tenant `view_inventory` must stay separate from tenant `view`. Tenant owners and
 - The SpiceDB adapter must be selected through environment configuration.
 - The SpiceDB adapter must fail closed when checks return anything other than `HAS_PERMISSION`.
 - Relationship writes must be idempotent enough for application retries. Already-existing relationships should not create privilege gaps or partial grants.
+- Relationship writes that correspond to durable tenant or inventory state must be driven by the authorization outbox, not by a standalone inline call after persistence.
+- The application may attempt to drain the authorization outbox immediately after a write, but failed SpiceDB writes must remain retryable through the outbox.
 - Schema bootstrap must be an explicit startup option for local development and deployment automation.
 - The default API process must not rewrite the production authorization schema unless explicitly configured to do so.
 

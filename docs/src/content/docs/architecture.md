@@ -45,6 +45,8 @@ Authorization is relationship-based and uses the same shape as SpiceDB. The mode
 
 The current API slice proves this boundary with local development auth, OIDC token verification, SpiceDB authorization wiring, tenant creation, inventory creation, inventory listing, and Huma-generated OpenAPI.
 
+When the API creates data that needs a SpiceDB relationship, it saves the data and an authorization outbox event in the same database transaction. The API then tries to drain that outbox right away. If SpiceDB is down, the relationship write can be retried instead of being lost.
+
 ## Assets And Locations
 
 Assets and locations are separate concepts.

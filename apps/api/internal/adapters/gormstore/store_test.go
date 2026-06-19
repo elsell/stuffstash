@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -93,6 +95,173 @@ func TestTenantExistsReturnsFalseForMissingTenant(t *testing.T) {
 	}
 }
 
+func TestStoreSavesTenantAndOutboxEventAtomically(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	tenantName, ok := tenant.NewName("Home")
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+
+	err := store.SaveTenantAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenant.Tenant{
+		ID:   tenantID,
+		Name: tenantName,
+	}, identity.Principal{ID: identity.PrincipalID("user-one")})
+	if err != nil {
+		t.Fatalf("save tenant and enqueue owner grant: %v", err)
+	}
+
+	exists, err := store.TenantExists(ctx, tenantID)
+	if err != nil {
+		t.Fatalf("check tenant exists: %v", err)
+	}
+	if !exists {
+		t.Fatalf("expected tenant to exist")
+	}
+
+	events, err := store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	if err != nil {
+		t.Fatalf("list outbox events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("expected 1 outbox event, got %d", len(events))
+	}
+	if events[0].Kind != ports.AuthorizationOutboxGrantTenantOwner || events[0].TenantID != tenantID || events[0].PrincipalID != "user-one" {
+		t.Fatalf("unexpected outbox event: %+v", events[0])
+	}
+}
+
+func TestStoreRollsBackTenantWhenOutboxInsertFails(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	eventID := "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	existingTenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	newTenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	saveTenantWithOutbox(t, ctx, store, eventID, existingTenantID, "Home")
+
+	tenantName, ok := tenant.NewName("Cabin")
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+	err := store.SaveTenantAndEnqueueOwnerGrant(ctx, eventID, tenant.Tenant{
+		ID:   newTenantID,
+		Name: tenantName,
+	}, identity.Principal{ID: identity.PrincipalID("user-two")})
+	if err == nil {
+		t.Fatalf("expected duplicate outbox event to fail")
+	}
+
+	exists, err := store.TenantExists(ctx, newTenantID)
+	if err != nil {
+		t.Fatalf("check tenant exists: %v", err)
+	}
+	if exists {
+		t.Fatalf("expected tenant write to roll back when outbox insert fails")
+	}
+}
+
+func TestStoreSavesInventoryAndOutboxEventAtomically(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	saveTenant(t, ctx, store, tenantID, "Home")
+
+	inventoryName, ok := inventory.NewName("Tools")
+	if !ok {
+		t.Fatalf("expected valid inventory name")
+	}
+	item := inventory.Inventory{
+		ID:       inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW"),
+		TenantID: inventory.TenantID(tenantID.String()),
+		Name:     inventoryName,
+	}
+
+	err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAX", item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")})
+	if err != nil {
+		t.Fatalf("save inventory and enqueue owner grant: %v", err)
+	}
+
+	events, err := store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	if err != nil {
+		t.Fatalf("list outbox events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("expected 1 outbox event, got %d", len(events))
+	}
+	if events[0].Kind != ports.AuthorizationOutboxGrantInventoryOwner || events[0].TenantID != tenantID || events[0].InventoryID != item.ID || events[0].PrincipalID != "user-one" {
+		t.Fatalf("unexpected outbox event: %+v", events[0])
+	}
+}
+
+func TestStoreRollsBackInventoryWhenOutboxInsertFails(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	eventID := "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventoryWithOutbox(t, ctx, store, eventID, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Tools")
+
+	inventoryName, ok := inventory.NewName("Supplies")
+	if !ok {
+		t.Fatalf("expected valid inventory name")
+	}
+	err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, eventID, inventory.Inventory{
+		ID:       inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAY"),
+		TenantID: inventory.TenantID(tenantID.String()),
+		Name:     inventoryName,
+	}, tenantID, identity.Principal{ID: identity.PrincipalID("user-two")})
+	if err == nil {
+		t.Fatalf("expected duplicate outbox event to fail")
+	}
+
+	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()))
+	if err != nil {
+		t.Fatalf("list inventories: %v", err)
+	}
+	if len(items) != 1 || items[0].ID != inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW") {
+		t.Fatalf("expected inventory write to roll back when outbox insert fails, got %+v", items)
+	}
+}
+
+func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	tenantName, ok := tenant.NewName("Home")
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+	if err := store.SaveTenantAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenant.Tenant{
+		ID:   tenantID,
+		Name: tenantName,
+	}, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
+		t.Fatalf("save tenant and enqueue owner grant: %v", err)
+	}
+
+	if err := store.MarkAuthorizationOutboxEventFailed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "spicedb unavailable"); err != nil {
+		t.Fatalf("mark outbox failed: %v", err)
+	}
+	events, err := store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	if err != nil {
+		t.Fatalf("list outbox events: %v", err)
+	}
+	if len(events) != 1 || events[0].Attempts != 1 || events[0].LastError != "spicedb unavailable" {
+		t.Fatalf("expected failed event to remain pending, got %+v", events)
+	}
+
+	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW"); err != nil {
+		t.Fatalf("mark outbox processed: %v", err)
+	}
+	events, err = store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	if err != nil {
+		t.Fatalf("list outbox events: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected processed event hidden from pending list, got %+v", events)
+	}
+}
+
 func newTestStore(t *testing.T, ctx context.Context) Store {
 	t.Helper()
 
@@ -121,6 +290,21 @@ func saveTenant(t *testing.T, ctx context.Context, store Store, id tenant.ID, na
 	}
 }
 
+func saveTenantWithOutbox(t *testing.T, ctx context.Context, store Store, eventID string, id tenant.ID, name string) {
+	t.Helper()
+
+	tenantName, ok := tenant.NewName(name)
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+	if err := store.SaveTenantAndEnqueueOwnerGrant(ctx, eventID, tenant.Tenant{
+		ID:   id,
+		Name: tenantName,
+	}, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
+		t.Fatalf("save tenant with outbox: %v", err)
+	}
+}
+
 func saveInventory(t *testing.T, ctx context.Context, store Store, id string, tenantID tenant.ID, name string) {
 	t.Helper()
 
@@ -135,5 +319,22 @@ func saveInventory(t *testing.T, ctx context.Context, store Store, id string, te
 	}
 	if err := store.SaveInventory(ctx, item); err != nil {
 		t.Fatalf("save inventory: %v", err)
+	}
+}
+
+func saveInventoryWithOutbox(t *testing.T, ctx context.Context, store Store, eventID string, id string, tenantID tenant.ID, name string) {
+	t.Helper()
+
+	inventoryName, ok := inventory.NewName(name)
+	if !ok {
+		t.Fatalf("expected valid inventory name")
+	}
+	item := inventory.Inventory{
+		ID:       inventory.InventoryID(id),
+		TenantID: inventory.TenantID(tenantID.String()),
+		Name:     inventoryName,
+	}
+	if err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, eventID, item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
+		t.Fatalf("save inventory with outbox: %v", err)
 	}
 }

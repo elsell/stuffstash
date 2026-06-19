@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -93,7 +94,7 @@ func TestSecureTenantInventoryFlow(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
 
-	server := NewServer(":0", newTestApp(&fakeObserver{}, tenantID, inventoryID))
+	server := NewServer(":0", newTestApp(&fakeObserver{}, tenantID, "tenant-event", inventoryID, "inventory-event"))
 
 	me := performRequest(server, http.MethodGet, "/me", "Bearer dev:user-one", nil)
 	if me.Code != http.StatusOK {
@@ -259,6 +260,37 @@ func TestUnrelatedUserCannotCreateOrListTenantInventories(t *testing.T) {
 	assertSafeError(t, list, "forbidden", "Forbidden.")
 }
 
+func TestStateCreatedDuringAuthorizationGrantFailureStaysProtected(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	store := memory.NewStore()
+	server := NewServer(":0", app.New(app.Dependencies{
+		Observer:    &fakeObserver{},
+		Auth:        auth.NewLocalDevAuthenticator(),
+		Authorizer:  failingGrantAuthorizer{},
+		Tenants:     store,
+		Inventories: store,
+		Outbox:      store,
+		IDs:         &fakeIDGenerator{ids: []string{tenantID, "tenant-event"}},
+	}))
+
+	createTenant := performRequest(server, http.MethodPost, "/tenants", "Bearer dev:owner", map[string]string{"name": "Home"})
+	if createTenant.Code != http.StatusCreated {
+		t.Fatalf("expected create tenant status %d, got %d with body %s", http.StatusCreated, createTenant.Code, createTenant.Body.String())
+	}
+
+	createInventory := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories", "Bearer dev:owner", map[string]string{"name": "Tools"})
+	if createInventory.Code != http.StatusForbidden {
+		t.Fatalf("expected create inventory status %d, got %d with body %s", http.StatusForbidden, createInventory.Code, createInventory.Body.String())
+	}
+	assertSafeError(t, createInventory, "forbidden", "Forbidden.")
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories", "Bearer dev:owner", nil)
+	if list.Code != http.StatusForbidden {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, list.Code, list.Body.String())
+	}
+	assertSafeError(t, list, "forbidden", "Forbidden.")
+}
+
 func TestCreateInventoryForMissingTenantReturnsSafeNotFound(t *testing.T) {
 	server := NewServer(":0", newTestApp(&fakeObserver{}, "unused-id"))
 
@@ -293,6 +325,7 @@ func newTestApp(observer ports.Observer, ids ...string) app.App {
 		Authorizer:  memory.NewAuthorizer(),
 		Tenants:     store,
 		Inventories: store,
+		Outbox:      store,
 		IDs:         &fakeIDGenerator{ids: ids},
 	})
 }
@@ -347,12 +380,31 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 		Authorizer:  authorizer,
 		Tenants:     store,
 		Inventories: store,
+		Outbox:      store,
 		IDs:         &fakeIDGenerator{},
 	})
 }
 
 func principal(id string) identity.Principal {
 	return identity.Principal{ID: identity.PrincipalID(id)}
+}
+
+type failingGrantAuthorizer struct{}
+
+func (failingGrantAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
+	return ports.ErrForbidden
+}
+
+func (failingGrantAuthorizer) CheckInventory(context.Context, identity.Principal, ports.InventoryPermission, inventory.InventoryID) error {
+	return ports.ErrForbidden
+}
+
+func (failingGrantAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
+	return errors.New("spicedb unavailable")
+}
+
+func (failingGrantAuthorizer) GrantInventoryOwner(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return errors.New("spicedb unavailable")
 }
 
 func performRequest(server *http.Server, method string, path string, authorization string, body any) *httptest.ResponseRecorder {

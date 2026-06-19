@@ -8,31 +8,37 @@ import (
 )
 
 type App struct {
-	observer    ports.Observer
-	auth        ports.Authenticator
-	authorizer  ports.Authorizer
-	tenants     ports.TenantRepository
-	inventories ports.InventoryRepository
-	ids         ports.IDGenerator
+	observer         ports.Observer
+	auth             ports.Authenticator
+	authorizer       ports.Authorizer
+	tenants          ports.TenantRepository
+	inventories      ports.InventoryRepository
+	outbox           ports.AuthorizationOutbox
+	ids              ports.IDGenerator
+	outboxDrainLimit int
 }
 
 type Dependencies struct {
-	Observer    ports.Observer
-	Auth        ports.Authenticator
-	Authorizer  ports.Authorizer
-	Tenants     ports.TenantRepository
-	Inventories ports.InventoryRepository
-	IDs         ports.IDGenerator
+	Observer                      ports.Observer
+	Auth                          ports.Authenticator
+	Authorizer                    ports.Authorizer
+	Tenants                       ports.TenantRepository
+	Inventories                   ports.InventoryRepository
+	Outbox                        ports.AuthorizationOutbox
+	IDs                           ports.IDGenerator
+	AuthorizationOutboxDrainLimit int
 }
 
 func New(deps Dependencies) App {
 	return App{
-		observer:    deps.Observer,
-		auth:        deps.Auth,
-		authorizer:  deps.Authorizer,
-		tenants:     deps.Tenants,
-		inventories: deps.Inventories,
-		ids:         deps.IDs,
+		observer:         deps.Observer,
+		auth:             deps.Auth,
+		authorizer:       deps.Authorizer,
+		tenants:          deps.Tenants,
+		inventories:      deps.Inventories,
+		outbox:           deps.Outbox,
+		ids:              deps.IDs,
+		outboxDrainLimit: deps.AuthorizationOutboxDrainLimit,
 	}
 }
 

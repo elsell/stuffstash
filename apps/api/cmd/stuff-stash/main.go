@@ -71,14 +71,17 @@ func main() {
 	}()
 
 	application := app.New(app.Dependencies{
-		Observer:    observer,
-		Auth:        authenticator,
-		Authorizer:  authorizer,
-		Tenants:     repositories.tenants,
-		Inventories: repositories.inventories,
-		IDs:         idgen.NewULIDGenerator(),
+		Observer:                      observer,
+		Auth:                          authenticator,
+		Authorizer:                    authorizer,
+		Tenants:                       repositories.tenants,
+		Inventories:                   repositories.inventories,
+		Outbox:                        repositories.outbox,
+		IDs:                           idgen.NewULIDGenerator(),
+		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 	})
 	server := httpserver.NewServer(cfg.HTTPAddr, application)
+	go drainAuthorizationOutbox(ctx, application, observer, cfg.AuthorizationOutboxDrainLimit, cfg.AuthorizationOutboxDrainInterval)
 
 	errCh := make(chan error, 1)
 	go func() {
@@ -109,16 +112,42 @@ func main() {
 	}
 }
 
+func drainAuthorizationOutbox(ctx context.Context, application app.App, observer ports.Observer, limit int, interval time.Duration) {
+	drain := func() {
+		if err := application.DrainAuthorizationOutbox(ctx, limit); err != nil {
+			observer.Record(ctx, ports.Event{
+				Name:    ports.EventAuthorizationOutboxFailed,
+				Message: "authorization outbox background drain failed",
+				Fields:  map[string]string{"error": err.Error()},
+			})
+		}
+	}
+
+	drain()
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			drain()
+		}
+	}
+}
+
 type repositories struct {
 	tenants     ports.TenantRepository
 	inventories ports.InventoryRepository
+	outbox      ports.AuthorizationOutbox
 }
 
 func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, inventories: store}, func() error { return nil }, nil
+		return repositories{tenants: store, inventories: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -127,7 +156,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store}, closeStore, nil
+		return repositories{tenants: store, inventories: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}
