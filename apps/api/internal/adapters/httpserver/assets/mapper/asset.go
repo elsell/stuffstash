@@ -7,15 +7,16 @@ import (
 
 func AssetToResponse(item asset.Asset) dto.AssetResponse {
 	return dto.AssetResponse{
-		ID:             item.ID.String(),
-		TenantID:       item.TenantID.String(),
-		InventoryID:    item.InventoryID.String(),
-		ParentAssetID:  item.ParentAssetID.String(),
-		Kind:           item.Kind.String(),
-		Title:          item.Title.String(),
-		Description:    item.Description.String(),
-		CustomFields:   item.CustomFields.Values(),
-		LifecycleState: item.LifecycleState.String(),
+		ID:                item.ID.String(),
+		TenantID:          item.TenantID.String(),
+		InventoryID:       item.InventoryID.String(),
+		ParentAssetID:     item.ParentAssetID.String(),
+		CustomAssetTypeID: item.CustomAssetTypeID.String(),
+		Kind:              item.Kind.String(),
+		Title:             item.Title.String(),
+		Description:       item.Description.String(),
+		CustomFields:      item.CustomFields.Values(),
+		LifecycleState:    item.LifecycleState.String(),
 	}
 }
 

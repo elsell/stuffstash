@@ -16,16 +16,17 @@ import (
 )
 
 type CreateAssetInput struct {
-	Principal     identity.Principal
-	Source        audit.Source
-	RequestID     string
-	TenantID      tenant.ID
-	InventoryID   inventory.InventoryID
-	Kind          string
-	Title         string
-	Description   string
-	ParentAssetID string
-	CustomFields  map[string]any
+	Principal         identity.Principal
+	Source            audit.Source
+	RequestID         string
+	TenantID          tenant.ID
+	InventoryID       inventory.InventoryID
+	Kind              string
+	Title             string
+	Description       string
+	ParentAssetID     string
+	CustomAssetTypeID string
+	CustomFields      map[string]any
 }
 
 type ListAssetsInput struct {
@@ -75,7 +76,11 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 	if !ok {
 		return asset.Asset{}, ErrInvalidInput
 	}
-	customFields, err := a.validatedCustomFields(ctx, input.TenantID, input.InventoryID, input.CustomFields)
+	customAssetTypeID, err := a.validatedAssetCustomAssetTypeID(ctx, input.TenantID, input.InventoryID, input.CustomAssetTypeID)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	customFields, err := a.validatedCustomFields(ctx, input.TenantID, input.InventoryID, customAssetTypeID, input.CustomFields)
 	if err != nil {
 		return asset.Asset{}, err
 	}
@@ -105,15 +110,16 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 	}
 
 	item := asset.Asset{
-		ID:             id,
-		TenantID:       asset.TenantID(input.TenantID.String()),
-		InventoryID:    asset.InventoryID(input.InventoryID.String()),
-		ParentAssetID:  parentAssetID,
-		Kind:           kind,
-		Title:          title,
-		Description:    asset.NewDescription(input.Description),
-		CustomFields:   customFields,
-		LifecycleState: asset.LifecycleStateActive,
+		ID:                id,
+		TenantID:          asset.TenantID(input.TenantID.String()),
+		InventoryID:       asset.InventoryID(input.InventoryID.String()),
+		ParentAssetID:     parentAssetID,
+		CustomAssetTypeID: customAssetTypeID,
+		Kind:              kind,
+		Title:             title,
+		Description:       asset.NewDescription(input.Description),
+		CustomFields:      customFields,
+		LifecycleState:    asset.LifecycleStateActive,
 	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
@@ -192,7 +198,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 		}
 	}
 	if input.CustomFields != nil {
-		customFields, err := a.validatedCustomFields(ctx, input.TenantID, input.InventoryID, input.CustomFields)
+		customFields, err := a.validatedCustomFields(ctx, input.TenantID, input.InventoryID, current.CustomAssetTypeID, input.CustomFields)
 		if err != nil {
 			return asset.Asset{}, err
 		}
@@ -278,7 +284,28 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 	return updated, nil
 }
 
-func (a App) validatedCustomFields(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, values map[string]any) (asset.CustomFields, error) {
+func (a App) validatedAssetCustomAssetTypeID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, rawCustomAssetTypeID string) (asset.CustomAssetTypeID, error) {
+	if strings.TrimSpace(rawCustomAssetTypeID) == "" {
+		return "", nil
+	}
+	customAssetTypeID, ok := customfield.NewAssetTypeID(rawCustomAssetTypeID)
+	if !ok {
+		return "", ErrInvalidInput
+	}
+	if a.customAssetTypes == nil {
+		return "", ErrInvalidInput
+	}
+	types, err := a.customAssetTypes.CustomAssetTypesByID(ctx, tenantID, inventoryID, []customfield.AssetTypeID{customAssetTypeID})
+	if err != nil {
+		return "", err
+	}
+	if len(types) != 1 {
+		return "", ErrNotFound
+	}
+	return asset.CustomAssetTypeID(customAssetTypeID.String()), nil
+}
+
+func (a App) validatedCustomFields(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, customAssetTypeID asset.CustomAssetTypeID, values map[string]any) (asset.CustomFields, error) {
 	customFields, ok := asset.NewCustomFields(normalizeCustomFieldValues(values))
 	if !ok {
 		return asset.CustomFields{}, ErrInvalidInput
@@ -293,7 +320,7 @@ func (a App) validatedCustomFields(ctx context.Context, tenantID tenant.ID, inve
 	if err != nil {
 		return asset.CustomFields{}, err
 	}
-	if !customfield.DefinitionSet(definitions).ValidateValues(customFields.Values()) {
+	if !customfield.DefinitionSet(definitions).ValidateValuesForAssetType(customFields.Values(), customfield.AssetTypeID(customAssetTypeID.String())) {
 		return asset.CustomFields{}, ErrInvalidInput
 	}
 	return customFields, nil

@@ -97,7 +97,6 @@ Response item:
 {
   "id": "01ARZ3NDEKTSV4RRFFQ69G5FAV",
   "tenantId": "01ARZ3NDEKTSV4RRFFQ69G5FAW",
-  "inventoryId": null,
   "scope": "tenant",
   "key": "medicine",
   "displayName": "Medicine",

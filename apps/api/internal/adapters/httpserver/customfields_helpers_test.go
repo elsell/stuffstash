@@ -6,14 +6,16 @@ import (
 )
 
 type customFieldDefinitionResponse struct {
-	ID          string `json:"id"`
-	TenantID    string `json:"tenantId"`
-	InventoryID string `json:"inventoryId,omitempty"`
-	Scope       string `json:"scope"`
-	Key         string `json:"key"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Required    bool   `json:"required"`
+	ID                 string   `json:"id"`
+	TenantID           string   `json:"tenantId"`
+	InventoryID        string   `json:"inventoryId,omitempty"`
+	Scope              string   `json:"scope"`
+	Key                string   `json:"key"`
+	DisplayName        string   `json:"displayName"`
+	Type               string   `json:"type"`
+	EnumOptions        []string `json:"enumOptions"`
+	Applicability      string   `json:"applicability"`
+	CustomAssetTypeIDs []string `json:"customAssetTypeIds"`
 }
 
 type customFieldDefinitionBody struct {

@@ -790,6 +790,51 @@ func TestStoreRejectsRootAssetsOutsideInventoryTenant(t *testing.T) {
 	}
 }
 
+func TestStoreRejectsAssetCustomAssetTypesOutsideVisibleScope(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantOneID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	tenantTwoID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	inventoryOneID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	inventoryTwoID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAY")
+	inventoryThreeID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAZ")
+	saveTenant(t, ctx, store, tenantOneID, "Home")
+	saveTenant(t, ctx, store, tenantTwoID, "Cabin")
+	saveInventory(t, ctx, store, inventoryOneID.String(), tenantOneID, "Tools")
+	saveInventory(t, ctx, store, inventoryTwoID.String(), tenantOneID, "Medicine")
+	saveInventory(t, ctx, store, inventoryThreeID.String(), tenantTwoID, "Other")
+
+	tenantType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantOneID.String(), "", customfield.ScopeTenant, "medicine")
+	if err := saveCustomAssetType(t, ctx, store, tenantType); err != nil {
+		t.Fatalf("save tenant custom asset type: %v", err)
+	}
+	visibleAsset := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantOneID.String(), inventoryOneID.String(), asset.KindItem, "")
+	visibleAsset.CustomAssetTypeID = asset.CustomAssetTypeID(tenantType.ID.String())
+	if err := createAsset(t, ctx, store, visibleAsset); err != nil {
+		t.Fatalf("expected tenant-scoped type to be visible: %v", err)
+	}
+
+	siblingType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantOneID.String(), inventoryTwoID.String(), customfield.ScopeInventory, "medicine-inventory")
+	if err := saveCustomAssetType(t, ctx, store, siblingType); err != nil {
+		t.Fatalf("save sibling inventory custom asset type: %v", err)
+	}
+	siblingAsset := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB3", tenantOneID.String(), inventoryOneID.String(), asset.KindItem, "")
+	siblingAsset.CustomAssetTypeID = asset.CustomAssetTypeID(siblingType.ID.String())
+	if err := createAsset(t, ctx, store, siblingAsset); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected sibling inventory custom asset type rejection, got %v", err)
+	}
+
+	otherTenantType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FB4", tenantTwoID.String(), inventoryThreeID.String(), customfield.ScopeInventory, "other-medicine")
+	if err := saveCustomAssetType(t, ctx, store, otherTenantType); err != nil {
+		t.Fatalf("save other tenant custom asset type: %v", err)
+	}
+	otherTenantAsset := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB5", tenantOneID.String(), inventoryOneID.String(), asset.KindItem, "")
+	otherTenantAsset.CustomAssetTypeID = asset.CustomAssetTypeID(otherTenantType.ID.String())
+	if err := createAsset(t, ctx, store, otherTenantAsset); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected cross-tenant custom asset type rejection, got %v", err)
+	}
+}
+
 func TestStoreRejectsAssetContainmentCycles(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)
@@ -1190,6 +1235,12 @@ func saveCustomFieldDefinition(t *testing.T, ctx context.Context, store Store, d
 	return store.SaveCustomFieldDefinition(ctx, definition, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenant.ID(definition.TenantID.String()), inventory.InventoryID(definition.InventoryID.String()), audit.ActionCustomFieldDefinitionCreated))
 }
 
+func saveCustomAssetType(t *testing.T, ctx context.Context, store Store, assetType customfield.AssetType) error {
+	t.Helper()
+
+	return store.SaveCustomAssetType(ctx, assetType, auditRecord(t, auditIDWithSuffix(assetType.ID.String(), "T"), tenant.ID(assetType.TenantID.String()), inventory.InventoryID(assetType.InventoryID.String()), audit.ActionCustomAssetTypeCreated))
+}
+
 func saveInventoryAccessGrantAndEnqueue(t *testing.T, ctx context.Context, store Store, eventID string, grant ports.InventoryAccessGrant) error {
 	t.Helper()
 
@@ -1260,11 +1311,39 @@ func customFieldDefinition(t *testing.T, id string, tenantID tenant.ID, inventor
 		displayName,
 		fieldType,
 		options,
+		customfield.ApplicabilityAllAssets,
+		nil,
 	)
 	if !ok {
 		t.Fatalf("expected valid custom field definition")
 	}
 	return definition
+}
+
+func customAssetType(t *testing.T, id string, tenantID string, inventoryID string, scope customfield.Scope, keyValue string) customfield.AssetType {
+	t.Helper()
+
+	assetTypeID, ok := customfield.NewAssetTypeID(id)
+	if !ok {
+		t.Fatalf("expected valid custom asset type id")
+	}
+	key, ok := customfield.NewKey(keyValue)
+	if !ok {
+		t.Fatalf("expected valid custom asset type key")
+	}
+	displayName, ok := customfield.NewDisplayName("Type " + keyValue)
+	if !ok {
+		t.Fatalf("expected valid custom asset type display name")
+	}
+	description, ok := customfield.NewDescription("")
+	if !ok {
+		t.Fatalf("expected valid custom asset type description")
+	}
+	assetType, ok := customfield.NewAssetType(assetTypeID, customfield.TenantID(tenantID), customfield.InventoryID(inventoryID), scope, key, displayName, description)
+	if !ok {
+		t.Fatalf("expected valid custom asset type")
+	}
+	return assetType
 }
 
 func assetItem(id string, tenantID string, inventoryID string, kind asset.Kind, parentID string) asset.Asset {

@@ -24,16 +24,17 @@ func newTestApp(observer ports.Observer, ids ...string) app.App {
 func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authorizer, ids ...string) app.App {
 	store := memory.NewStore()
 	return app.New(app.Dependencies{
-		Observer:     observer,
-		Auth:         auth.NewLocalDevAuthenticator(),
-		Authorizer:   authorizer,
-		Tenants:      store,
-		Inventories:  store,
-		CustomFields: store,
-		Assets:       store,
-		Audit:        store,
-		Outbox:       store,
-		IDs:          &fakeIDGenerator{ids: ids},
+		Observer:         observer,
+		Auth:             auth.NewLocalDevAuthenticator(),
+		Authorizer:       authorizer,
+		Tenants:          store,
+		Inventories:      store,
+		CustomAssetTypes: store,
+		CustomFields:     store,
+		Assets:           store,
+		Audit:            store,
+		Outbox:           store,
+		IDs:              &fakeIDGenerator{ids: ids},
 	})
 }
 
@@ -82,16 +83,17 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 	}
 
 	return app.New(app.Dependencies{
-		Observer:     &fakeObserver{},
-		Auth:         auth.NewLocalDevAuthenticator(),
-		Authorizer:   authorizer,
-		Tenants:      store,
-		Inventories:  store,
-		CustomFields: store,
-		Assets:       store,
-		Audit:        store,
-		Outbox:       store,
-		IDs:          &fakeIDGenerator{ids: state.ids},
+		Observer:         &fakeObserver{},
+		Auth:             auth.NewLocalDevAuthenticator(),
+		Authorizer:       authorizer,
+		Tenants:          store,
+		Inventories:      store,
+		CustomAssetTypes: store,
+		CustomFields:     store,
+		Assets:           store,
+		Audit:            store,
+		Outbox:           store,
+		IDs:              &fakeIDGenerator{ids: state.ids},
 	})
 }
 

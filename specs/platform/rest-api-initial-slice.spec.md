@@ -33,9 +33,13 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `POST /tenants/{tenantId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/custom-field-definitions`
+- `POST /tenants/{tenantId}/custom-asset-types`
+- `GET /tenants/{tenantId}/custom-asset-types`
 - `GET /tenants/{tenantId}/audit-records`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records`
 
 ## Authentication
@@ -59,9 +63,13 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
+- `POST /tenants/{tenantId}/custom-asset-types` requires `tenant.configure`.
+- `GET /tenants/{tenantId}/custom-asset-types` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/audit-records` requires `tenant.configure`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.view`.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.configure`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.view`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records` requires `inventory.view`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
 
@@ -82,7 +90,7 @@ The first protected REST slice includes:
 - Asset update must allow moving an asset to the inventory root by sending `parentAssetId: null`.
 - Asset update must prevent self-parenting, containment cycles, item parents, archived parents, cross-tenant parents, and cross-inventory parents.
 - Asset update must validate custom field values against effective custom field definitions.
-- Custom asset type definitions and custom-field applicability to custom asset types are not part of the initial REST slice. Their implementation contract is specified separately in `specs/assets/custom-asset-types.spec.md`.
+- Custom asset type definitions and custom-field applicability to custom asset types are part of the current REST surface. Their detailed implementation contract is specified separately in `specs/assets/custom-asset-types.spec.md`.
 
 ## Responses
 

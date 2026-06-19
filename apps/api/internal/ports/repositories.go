@@ -62,6 +62,18 @@ type CustomFieldDefinitionPageRequest struct {
 	Limit              int
 }
 
+type CustomAssetTypeRepository interface {
+	SaveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error
+	ListTenantCustomAssetTypes(ctx context.Context, tenantID tenant.ID, page CustomAssetTypePageRequest) ([]customfield.AssetType, error)
+	ListInventoryCustomAssetTypes(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page CustomAssetTypePageRequest) ([]customfield.AssetType, error)
+	CustomAssetTypesByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, ids []customfield.AssetTypeID) ([]customfield.AssetType, error)
+}
+
+type CustomAssetTypePageRequest struct {
+	AfterAssetTypeKey string
+	Limit             int
+}
+
 type AssetRepository interface {
 	CreateAsset(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
 	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record) error

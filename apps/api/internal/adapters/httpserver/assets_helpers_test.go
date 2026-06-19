@@ -6,15 +6,16 @@ import (
 )
 
 type assetResponse struct {
-	ID             string                 `json:"id"`
-	TenantID       string                 `json:"tenantId"`
-	InventoryID    string                 `json:"inventoryId"`
-	ParentAssetID  string                 `json:"parentAssetId,omitempty"`
-	Kind           string                 `json:"kind"`
-	Title          string                 `json:"title"`
-	Description    string                 `json:"description"`
-	CustomFields   map[string]interface{} `json:"customFields"`
-	LifecycleState string                 `json:"lifecycleState"`
+	ID                string                 `json:"id"`
+	TenantID          string                 `json:"tenantId"`
+	InventoryID       string                 `json:"inventoryId"`
+	ParentAssetID     string                 `json:"parentAssetId,omitempty"`
+	CustomAssetTypeID string                 `json:"customAssetTypeId,omitempty"`
+	Kind              string                 `json:"kind"`
+	Title             string                 `json:"title"`
+	Description       string                 `json:"description"`
+	CustomFields      map[string]interface{} `json:"customFields"`
+	LifecycleState    string                 `json:"lifecycleState"`
 }
 
 type assetBody struct {

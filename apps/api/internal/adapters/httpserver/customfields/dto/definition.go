@@ -18,10 +18,12 @@ type CreateInventoryDefinitionInput struct {
 }
 
 type CreateDefinitionBody struct {
-	Key         string   `json:"key" maxLength:"80" doc:"Stable custom field key"`
-	DisplayName string   `json:"displayName" maxLength:"120" doc:"User-facing field label"`
-	Type        string   `json:"type" enum:"text,number,boolean,date,url,enum" doc:"Custom field type"`
-	EnumOptions []string `json:"enumOptions,omitempty" doc:"Allowed enum option keys"`
+	Key                string   `json:"key" maxLength:"80" doc:"Stable custom field key"`
+	DisplayName        string   `json:"displayName" maxLength:"120" doc:"User-facing field label"`
+	Type               string   `json:"type" enum:"text,number,boolean,date,url,enum" doc:"Custom field type"`
+	EnumOptions        []string `json:"enumOptions,omitempty" doc:"Allowed enum option keys"`
+	Applicability      string   `json:"applicability,omitempty" enum:"all_assets,custom_asset_types" doc:"Assets this field applies to"`
+	CustomAssetTypeIDs []string `json:"customAssetTypeIds,omitempty" doc:"Custom asset type IDs this field targets"`
 }
 
 type CreateDefinitionOutput struct {
@@ -48,12 +50,14 @@ type ListDefinitionsOutput struct {
 }
 
 type DefinitionResponse struct {
-	ID          string   `json:"id"`
-	TenantID    string   `json:"tenantId"`
-	InventoryID string   `json:"inventoryId,omitempty"`
-	Scope       string   `json:"scope"`
-	Key         string   `json:"key"`
-	DisplayName string   `json:"displayName"`
-	Type        string   `json:"type"`
-	EnumOptions []string `json:"enumOptions"`
+	ID                 string   `json:"id"`
+	TenantID           string   `json:"tenantId"`
+	InventoryID        string   `json:"inventoryId,omitempty"`
+	Scope              string   `json:"scope"`
+	Key                string   `json:"key"`
+	DisplayName        string   `json:"displayName"`
+	Type               string   `json:"type"`
+	EnumOptions        []string `json:"enumOptions"`
+	Applicability      string   `json:"applicability"`
+	CustomAssetTypeIDs []string `json:"customAssetTypeIds"`
 }

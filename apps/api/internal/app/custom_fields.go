@@ -14,15 +14,17 @@ import (
 )
 
 type CreateCustomFieldDefinitionInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Key         string
-	DisplayName string
-	Type        string
-	EnumOptions []string
+	Principal          identity.Principal
+	Source             audit.Source
+	RequestID          string
+	TenantID           tenant.ID
+	InventoryID        inventory.InventoryID
+	Key                string
+	DisplayName        string
+	Type               string
+	EnumOptions        []string
+	Applicability      string
+	CustomAssetTypeIDs []string
 }
 
 type ListCustomFieldDefinitionsInput struct {
@@ -81,6 +83,14 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 	if !ok {
 		return customfield.Definition{}, ErrInvalidInput
 	}
+	applicability, ok := customfield.NewApplicability(input.Applicability)
+	if !ok {
+		return customfield.Definition{}, ErrInvalidInput
+	}
+	customAssetTypeIDs, err := a.validatedCustomFieldTargetIDs(ctx, input, scope, applicability)
+	if err != nil {
+		return customfield.Definition{}, err
+	}
 
 	inventoryID := customfield.InventoryID("")
 	if scope == customfield.ScopeInventory {
@@ -95,6 +105,8 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 		displayName,
 		fieldType,
 		enumOptions,
+		applicability,
+		customAssetTypeIDs,
 	)
 	if !ok {
 		return customfield.Definition{}, ErrInvalidInput
@@ -110,8 +122,10 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 		TargetType:  audit.TargetCustomFieldDefinition,
 		TargetID:    definition.ID.String(),
 		Metadata: map[string]string{
-			"field_key": definition.Key.String(),
-			"scope":     definition.Scope.String(),
+			"field_key":     definition.Key.String(),
+			"scope":         definition.Scope.String(),
+			"applicability": definition.Applicability.String(),
+			"target_count":  strconv.Itoa(len(definition.CustomAssetTypeIDs)),
 		},
 	})
 	if err != nil {
@@ -224,6 +238,61 @@ func customFieldEnumOptions(values []string) ([]customfield.Key, bool) {
 		options = append(options, option)
 	}
 	return options, true
+}
+
+func (a App) validatedCustomFieldTargetIDs(ctx context.Context, input CreateCustomFieldDefinitionInput, scope customfield.Scope, applicability customfield.Applicability) ([]customfield.AssetTypeID, error) {
+	if applicability == customfield.ApplicabilityAllAssets {
+		if len(input.CustomAssetTypeIDs) != 0 {
+			return nil, ErrInvalidInput
+		}
+		return nil, nil
+	}
+	targetIDs := make([]customfield.AssetTypeID, 0, len(input.CustomAssetTypeIDs))
+	seen := map[customfield.AssetTypeID]struct{}{}
+	for _, raw := range input.CustomAssetTypeIDs {
+		id, ok := customfield.NewAssetTypeID(raw)
+		if !ok {
+			return nil, ErrInvalidInput
+		}
+		if _, exists := seen[id]; exists {
+			return nil, ErrInvalidInput
+		}
+		seen[id] = struct{}{}
+		targetIDs = append(targetIDs, id)
+	}
+	if len(targetIDs) == 0 {
+		return nil, ErrInvalidInput
+	}
+	if a.customAssetTypes == nil {
+		return nil, ErrInvalidInput
+	}
+	targets, err := a.customAssetTypes.CustomAssetTypesByID(ctx, input.TenantID, input.InventoryID, targetIDs)
+	if err != nil {
+		return nil, err
+	}
+	if len(targets) != len(targetIDs) {
+		return nil, ErrNotFound
+	}
+	targetByID := map[customfield.AssetTypeID]customfield.AssetType{}
+	for _, target := range targets {
+		targetByID[target.ID] = target
+	}
+	for _, id := range targetIDs {
+		target, found := targetByID[id]
+		if !found {
+			return nil, ErrNotFound
+		}
+		if target.TenantID.String() != input.TenantID.String() {
+			return nil, ErrNotFound
+		}
+		if scope == customfield.ScopeInventory && target.Scope == customfield.ScopeInventory && target.InventoryID.String() != input.InventoryID.String() {
+			return nil, ErrNotFound
+		}
+		if scope == customfield.ScopeTenant && target.Scope != customfield.ScopeTenant {
+			return nil, ErrInvalidInput
+		}
+	}
+	return targetIDs, nil
 }
 
 func encodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, key string) *string {

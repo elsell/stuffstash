@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom fields, create, list, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom asset types and fields, create, list, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
 
 ## Requirements
 
@@ -138,6 +138,25 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
   -H 'Authorization: Bearer dev:user-one' \
   -H 'Content-Type: application/json' \
   -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>","customFields":{"serial":"bag-1","condition":"new"}}'
+```
+
+Custom asset types let you add fields for a specific kind of asset without changing the base asset model:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-asset-types \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"medicine","displayName":"Medicine"}'
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"expiration-date","displayName":"Expiration Date","type":"date","applicability":"custom_asset_types","customAssetTypeIds":["<medicine-type-id>"]}'
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"kind":"item","title":"Aspirin","customAssetTypeId":"<medicine-type-id>","customFields":{"expiration-date":"2027-01-01"}}'
 ```
 
 Move or edit an asset:

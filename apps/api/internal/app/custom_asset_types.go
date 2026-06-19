@@ -1,0 +1,220 @@
+package app
+
+import (
+	"context"
+	"errors"
+	"strconv"
+
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+type CreateCustomAssetTypeInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Key         string
+	DisplayName string
+	Description string
+}
+
+type ListCustomAssetTypesInput struct {
+	Principal   identity.Principal
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Limit       int
+	Cursor      string
+}
+
+type ListCustomAssetTypesResult struct {
+	Items      []customfield.AssetType
+	Limit      int
+	NextCursor *string
+	HasMore    bool
+}
+
+func (a App) CreateTenantCustomAssetType(ctx context.Context, input CreateCustomAssetTypeInput) (customfield.AssetType, error) {
+	if err := a.ensureTenantExists(ctx, input.TenantID); err != nil {
+		return customfield.AssetType{}, err
+	}
+	if err := a.authorizer.CheckTenant(ctx, input.Principal, ports.TenantPermissionConfigure, input.TenantID); err != nil {
+		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
+		return customfield.AssetType{}, err
+	}
+	return a.createCustomAssetType(ctx, input, customfield.ScopeTenant)
+}
+
+func (a App) CreateInventoryCustomAssetType(ctx context.Context, input CreateCustomAssetTypeInput) (customfield.AssetType, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+		return customfield.AssetType{}, err
+	}
+	return a.createCustomAssetType(ctx, input, customfield.ScopeInventory)
+}
+
+func (a App) createCustomAssetType(ctx context.Context, input CreateCustomAssetTypeInput, scope customfield.Scope) (customfield.AssetType, error) {
+	id, ok := customfield.NewAssetTypeID(a.ids.NewID())
+	if !ok {
+		return customfield.AssetType{}, ErrInvalidInput
+	}
+	key, ok := customfield.NewKey(input.Key)
+	if !ok {
+		return customfield.AssetType{}, ErrInvalidInput
+	}
+	displayName, ok := customfield.NewDisplayName(input.DisplayName)
+	if !ok {
+		return customfield.AssetType{}, ErrInvalidInput
+	}
+	description, ok := customfield.NewDescription(input.Description)
+	if !ok {
+		return customfield.AssetType{}, ErrInvalidInput
+	}
+
+	inventoryID := customfield.InventoryID("")
+	if scope == customfield.ScopeInventory {
+		inventoryID = customfield.InventoryID(input.InventoryID.String())
+	}
+	assetType, ok := customfield.NewAssetType(
+		id,
+		customfield.TenantID(input.TenantID.String()),
+		inventoryID,
+		scope,
+		key,
+		displayName,
+		description,
+	)
+	if !ok {
+		return customfield.AssetType{}, ErrInvalidInput
+	}
+
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionCustomAssetTypeCreated,
+		TargetType:  audit.TargetCustomAssetType,
+		TargetID:    assetType.ID.String(),
+		Metadata: map[string]string{
+			"type_key": assetType.Key.String(),
+			"scope":    assetType.Scope.String(),
+		},
+	})
+	if err != nil {
+		return customfield.AssetType{}, err
+	}
+
+	if err := a.customAssetTypes.SaveCustomAssetType(ctx, assetType, auditRecord); err != nil {
+		if errors.Is(err, ports.ErrConflict) {
+			return customfield.AssetType{}, ErrInvalidInput
+		}
+		return customfield.AssetType{}, err
+	}
+
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventCustomAssetTypeCreated,
+		Message: "custom asset type created",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"principal_id":  input.Principal.ID.String(),
+			"asset_type_id": assetType.ID.String(),
+			"type_key":      assetType.Key.String(),
+			"scope":         assetType.Scope.String(),
+		},
+	})
+
+	return assetType, nil
+}
+
+func (a App) ListTenantCustomAssetTypes(ctx context.Context, input ListCustomAssetTypesInput) (ListCustomAssetTypesResult, error) {
+	if err := a.ensureTenantExists(ctx, input.TenantID); err != nil {
+		return ListCustomAssetTypesResult{}, err
+	}
+	if err := a.authorizer.CheckTenant(ctx, input.Principal, ports.TenantPermissionConfigure, input.TenantID); err != nil {
+		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
+		return ListCustomAssetTypesResult{}, err
+	}
+
+	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
+	afterAssetTypeKey, err := decodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, input.Cursor)
+	if err != nil {
+		return ListCustomAssetTypesResult{}, ErrInvalidInput
+	}
+	items, err := a.customAssetTypes.ListTenantCustomAssetTypes(ctx, input.TenantID, ports.CustomAssetTypePageRequest{
+		AfterAssetTypeKey: afterAssetTypeKey,
+		Limit:             limit + 1,
+	})
+	if err != nil {
+		return ListCustomAssetTypesResult{}, err
+	}
+	return a.customAssetTypeListResult(ctx, input, items, limit), nil
+}
+
+func (a App) ListInventoryCustomAssetTypes(ctx context.Context, input ListCustomAssetTypesInput) (ListCustomAssetTypesResult, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+		return ListCustomAssetTypesResult{}, err
+	}
+
+	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
+	afterAssetTypeKey, err := decodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, input.Cursor)
+	if err != nil {
+		return ListCustomAssetTypesResult{}, ErrInvalidInput
+	}
+	items, err := a.customAssetTypes.ListInventoryCustomAssetTypes(ctx, input.TenantID, input.InventoryID, ports.CustomAssetTypePageRequest{
+		AfterAssetTypeKey: afterAssetTypeKey,
+		Limit:             limit + 1,
+	})
+	if err != nil {
+		return ListCustomAssetTypesResult{}, err
+	}
+	return a.customAssetTypeListResult(ctx, input, items, limit), nil
+}
+
+func (a App) customAssetTypeListResult(ctx context.Context, input ListCustomAssetTypesInput, items []customfield.AssetType, limit int) ListCustomAssetTypesResult {
+	hasMore := len(items) > limit
+	var nextCursor *string
+	if hasMore {
+		items = items[:limit]
+		nextCursor = encodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, items[len(items)-1].CursorKey())
+	}
+
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventCustomAssetTypesListed,
+		Message: "custom asset types listed",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"principal_id": input.Principal.ID.String(),
+			"limit":        strconv.Itoa(limit),
+		},
+	})
+
+	return ListCustomAssetTypesResult{
+		Items:      items,
+		Limit:      limit,
+		NextCursor: nextCursor,
+		HasMore:    hasMore,
+	}
+}
+
+func encodeCustomAssetTypeCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, key string) *string {
+	return encodePageCursor("custom_asset_types", customFieldDefinitionCursorScope(tenantID, inventoryID), key)
+}
+
+func decodeCustomAssetTypeCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (string, error) {
+	decoded, err := decodePageCursor("custom_asset_types", customFieldDefinitionCursorScope(tenantID, inventoryID), cursor)
+	if err != nil {
+		return "", err
+	}
+	if decoded == "" {
+		return "", nil
+	}
+	return decoded, nil
+}

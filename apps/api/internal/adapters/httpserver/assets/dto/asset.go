@@ -11,11 +11,12 @@ type CreateAssetInput struct {
 }
 
 type CreateAssetBody struct {
-	Kind          string         `json:"kind" enum:"item,container,location" doc:"Asset kind"`
-	Title         string         `json:"title" maxLength:"160" doc:"Asset title"`
-	Description   string         `json:"description,omitempty" doc:"Asset description"`
-	ParentAssetID string         `json:"parentAssetId,omitempty" doc:"Parent asset ID"`
-	CustomFields  map[string]any `json:"customFields,omitempty" doc:"Custom field values"`
+	Kind              string         `json:"kind" enum:"item,container,location" doc:"Asset kind"`
+	Title             string         `json:"title" maxLength:"160" doc:"Asset title"`
+	Description       string         `json:"description,omitempty" doc:"Asset description"`
+	ParentAssetID     string         `json:"parentAssetId,omitempty" doc:"Parent asset ID"`
+	CustomAssetTypeID string         `json:"customAssetTypeId,omitempty" doc:"Custom asset type ID"`
+	CustomFields      map[string]any `json:"customFields,omitempty" doc:"Custom field values"`
 }
 
 type CreateAssetOutput struct {
@@ -55,13 +56,14 @@ type ListAssetsOutput struct {
 }
 
 type AssetResponse struct {
-	ID             string         `json:"id"`
-	TenantID       string         `json:"tenantId"`
-	InventoryID    string         `json:"inventoryId"`
-	ParentAssetID  string         `json:"parentAssetId,omitempty"`
-	Kind           string         `json:"kind"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	CustomFields   map[string]any `json:"customFields"`
-	LifecycleState string         `json:"lifecycleState"`
+	ID                string         `json:"id"`
+	TenantID          string         `json:"tenantId"`
+	InventoryID       string         `json:"inventoryId"`
+	ParentAssetID     string         `json:"parentAssetId,omitempty"`
+	CustomAssetTypeID string         `json:"customAssetTypeId,omitempty"`
+	Kind              string         `json:"kind"`
+	Title             string         `json:"title"`
+	Description       string         `json:"description"`
+	CustomFields      map[string]any `json:"customFields"`
+	LifecycleState    string         `json:"lifecycleState"`
 }

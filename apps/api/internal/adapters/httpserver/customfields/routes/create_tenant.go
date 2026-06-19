@@ -20,14 +20,16 @@ func RegisterCreateTenant(api huma.API, application app.App) {
 		}
 
 		definition, err := application.CreateTenantCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
-			Principal:   principal,
-			Source:      audit.SourceAPI,
-			RequestID:   input.RequestID,
-			TenantID:    tenant.ID(input.TenantID),
-			Key:         input.Body.Key,
-			DisplayName: input.Body.DisplayName,
-			Type:        input.Body.Type,
-			EnumOptions: input.Body.EnumOptions,
+			Principal:          principal,
+			Source:             audit.SourceAPI,
+			RequestID:          input.RequestID,
+			TenantID:           tenant.ID(input.TenantID),
+			Key:                input.Body.Key,
+			DisplayName:        input.Body.DisplayName,
+			Type:               input.Body.Type,
+			EnumOptions:        input.Body.EnumOptions,
+			Applicability:      input.Body.Applicability,
+			CustomAssetTypeIDs: input.Body.CustomAssetTypeIDs,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

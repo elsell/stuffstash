@@ -1841,6 +1841,8 @@ func customFieldDefinition(id string, tenantID string, inventoryID string, scope
 		displayName,
 		fieldType,
 		options,
+		customfield.ApplicabilityAllAssets,
+		nil,
 	)
 	if !ok {
 		panic("invalid custom field definition")

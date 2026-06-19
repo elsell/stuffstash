@@ -28,6 +28,20 @@ func (id InventoryID) String() string {
 	return string(id)
 }
 
+type CustomAssetTypeID string
+
+func NewCustomAssetTypeID(value string) (CustomAssetTypeID, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "", false
+	}
+	return CustomAssetTypeID(value), true
+}
+
+func (id CustomAssetTypeID) String() string {
+	return string(id)
+}
+
 type Kind string
 
 const (
@@ -134,13 +148,14 @@ func NewEmptyOnlyCustomFields(values map[string]any) (CustomFields, bool) {
 }
 
 type Asset struct {
-	ID             ID
-	TenantID       TenantID
-	InventoryID    InventoryID
-	ParentAssetID  ID
-	Kind           Kind
-	Title          Title
-	Description    Description
-	CustomFields   CustomFields
-	LifecycleState LifecycleState
+	ID                ID
+	TenantID          TenantID
+	InventoryID       InventoryID
+	ParentAssetID     ID
+	CustomAssetTypeID CustomAssetTypeID
+	Kind              Kind
+	Title             Title
+	Description       Description
+	CustomFields      CustomFields
+	LifecycleState    LifecycleState
 }

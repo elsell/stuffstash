@@ -14,6 +14,7 @@ type App struct {
 	authorizer       ports.Authorizer
 	tenants          ports.TenantRepository
 	inventories      ports.InventoryRepository
+	customAssetTypes ports.CustomAssetTypeRepository
 	customFields     ports.CustomFieldDefinitionRepository
 	assets           ports.AssetRepository
 	audit            ports.AuditRepository
@@ -31,6 +32,7 @@ type Dependencies struct {
 	Authorizer                    ports.Authorizer
 	Tenants                       ports.TenantRepository
 	Inventories                   ports.InventoryRepository
+	CustomAssetTypes              ports.CustomAssetTypeRepository
 	CustomFields                  ports.CustomFieldDefinitionRepository
 	Assets                        ports.AssetRepository
 	Audit                         ports.AuditRepository
@@ -50,6 +52,7 @@ func New(deps Dependencies) App {
 		authorizer:       deps.Authorizer,
 		tenants:          deps.Tenants,
 		inventories:      deps.Inventories,
+		customAssetTypes: deps.CustomAssetTypes,
 		customFields:     deps.CustomFields,
 		assets:           deps.Assets,
 		audit:            deps.Audit,

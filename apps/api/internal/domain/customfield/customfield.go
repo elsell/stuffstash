@@ -22,6 +22,20 @@ func (id ID) String() string {
 	return string(id)
 }
 
+type AssetTypeID string
+
+func NewAssetTypeID(value string) (AssetTypeID, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "", false
+	}
+	return AssetTypeID(value), true
+}
+
+func (id AssetTypeID) String() string {
+	return string(id)
+}
+
 type TenantID string
 
 func (id TenantID) String() string {
@@ -113,15 +127,112 @@ func (n DisplayName) String() string {
 	return string(n)
 }
 
-type Definition struct {
-	ID          ID
+type Description string
+
+const maxDescriptionLength = 1000
+
+func NewDescription(value string) (Description, bool) {
+	value = strings.TrimSpace(value)
+	if len(value) > maxDescriptionLength {
+		return "", false
+	}
+	return Description(value), true
+}
+
+func (d Description) String() string {
+	return string(d)
+}
+
+type Applicability string
+
+const (
+	ApplicabilityAllAssets        Applicability = "all_assets"
+	ApplicabilityCustomAssetTypes Applicability = "custom_asset_types"
+)
+
+func NewApplicability(value string) (Applicability, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ApplicabilityAllAssets, true
+	}
+	switch Applicability(value) {
+	case ApplicabilityAllAssets:
+		return ApplicabilityAllAssets, true
+	case ApplicabilityCustomAssetTypes:
+		return ApplicabilityCustomAssetTypes, true
+	default:
+		return "", false
+	}
+}
+
+func (a Applicability) String() string {
+	return string(a)
+}
+
+type AssetType struct {
+	ID          AssetTypeID
 	TenantID    TenantID
 	InventoryID InventoryID
 	Scope       Scope
 	Key         Key
 	DisplayName DisplayName
-	Type        FieldType
-	EnumOptions []Key
+	Description Description
+}
+
+func NewAssetType(id AssetTypeID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, description Description) (AssetType, bool) {
+	switch scope {
+	case ScopeTenant:
+		if inventoryID.String() != "" {
+			return AssetType{}, false
+		}
+	case ScopeInventory:
+		if inventoryID.String() == "" {
+			return AssetType{}, false
+		}
+	default:
+		return AssetType{}, false
+	}
+	return AssetType{
+		ID:          id,
+		TenantID:    tenantID,
+		InventoryID: inventoryID,
+		Scope:       scope,
+		Key:         key,
+		DisplayName: displayName,
+		Description: description,
+	}, true
+}
+
+func (t AssetType) CursorKey() string {
+	switch t.Scope {
+	case ScopeTenant:
+		return "0:" + t.ID.String()
+	default:
+		return "1:" + t.ID.String()
+	}
+}
+
+func AssetTypesConflict(left AssetType, right AssetType) bool {
+	if left.TenantID != right.TenantID || left.Key != right.Key {
+		return false
+	}
+	if left.Scope == ScopeTenant || right.Scope == ScopeTenant {
+		return true
+	}
+	return left.InventoryID == right.InventoryID
+}
+
+type Definition struct {
+	ID                 ID
+	TenantID           TenantID
+	InventoryID        InventoryID
+	Scope              Scope
+	Key                Key
+	DisplayName        DisplayName
+	Type               FieldType
+	EnumOptions        []Key
+	Applicability      Applicability
+	CustomAssetTypeIDs []AssetTypeID
 }
 
 func (d Definition) CursorKey() string {
@@ -146,9 +257,15 @@ func DefinitionsConflict(left Definition, right Definition) bool {
 type DefinitionSet []Definition
 
 func (set DefinitionSet) ValidateValues(values map[string]any) bool {
+	return set.ValidateValuesForAssetType(values, "")
+}
+
+func (set DefinitionSet) ValidateValuesForAssetType(values map[string]any, customAssetTypeID AssetTypeID) bool {
 	byKey := map[Key]Definition{}
 	for _, definition := range set {
-		byKey[definition.Key] = definition
+		if definition.AppliesTo(customAssetTypeID) {
+			byKey[definition.Key] = definition
+		}
 	}
 
 	for rawKey, value := range values {
@@ -164,7 +281,7 @@ func (set DefinitionSet) ValidateValues(values map[string]any) bool {
 	return true
 }
 
-func NewDefinition(id ID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, fieldType FieldType, enumOptions []Key) (Definition, bool) {
+func NewDefinition(id ID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, fieldType FieldType, enumOptions []Key, applicability Applicability, customAssetTypeIDs []AssetTypeID) (Definition, bool) {
 	switch scope {
 	case ScopeTenant:
 		if inventoryID.String() != "" {
@@ -187,16 +304,47 @@ func NewDefinition(id ID, tenantID TenantID, inventoryID InventoryID, scope Scop
 		return Definition{}, false
 	}
 
+	targets := append([]AssetTypeID(nil), customAssetTypeIDs...)
+	switch applicability {
+	case ApplicabilityAllAssets:
+		if len(targets) != 0 {
+			return Definition{}, false
+		}
+	case ApplicabilityCustomAssetTypes:
+		if len(targets) == 0 || hasDuplicateAssetTypeIDs(targets) {
+			return Definition{}, false
+		}
+	default:
+		return Definition{}, false
+	}
+
 	return Definition{
-		ID:          id,
-		TenantID:    tenantID,
-		InventoryID: inventoryID,
-		Scope:       scope,
-		Key:         key,
-		DisplayName: displayName,
-		Type:        fieldType,
-		EnumOptions: options,
+		ID:                 id,
+		TenantID:           tenantID,
+		InventoryID:        inventoryID,
+		Scope:              scope,
+		Key:                key,
+		DisplayName:        displayName,
+		Type:               fieldType,
+		EnumOptions:        options,
+		Applicability:      applicability,
+		CustomAssetTypeIDs: targets,
 	}, true
+}
+
+func (d Definition) AppliesTo(customAssetTypeID AssetTypeID) bool {
+	if d.Applicability == ApplicabilityAllAssets {
+		return true
+	}
+	if customAssetTypeID.String() == "" {
+		return false
+	}
+	for _, id := range d.CustomAssetTypeIDs {
+		if id == customAssetTypeID {
+			return true
+		}
+	}
+	return false
 }
 
 func (d Definition) ValidValue(value any) bool {
@@ -261,6 +409,20 @@ func hasDuplicateKeys(keys []Key) bool {
 			return true
 		}
 		seen[key] = struct{}{}
+	}
+	return false
+}
+
+func hasDuplicateAssetTypeIDs(ids []AssetTypeID) bool {
+	seen := map[AssetTypeID]struct{}{}
+	for _, id := range ids {
+		if id.String() == "" {
+			return true
+		}
+		if _, exists := seen[id]; exists {
+			return true
+		}
+		seen[id] = struct{}{}
 	}
 	return false
 }

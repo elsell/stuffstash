@@ -21,16 +21,17 @@ func RegisterCreate(api huma.API, application app.App) {
 		}
 
 		item, err := application.CreateAsset(ctx, app.CreateAssetInput{
-			Principal:     principal,
-			Source:        audit.SourceAPI,
-			RequestID:     input.RequestID,
-			TenantID:      tenant.ID(input.TenantID),
-			InventoryID:   inventory.InventoryID(input.InventoryID),
-			Kind:          input.Body.Kind,
-			Title:         input.Body.Title,
-			Description:   input.Body.Description,
-			ParentAssetID: input.Body.ParentAssetID,
-			CustomFields:  input.Body.CustomFields,
+			Principal:         principal,
+			Source:            audit.SourceAPI,
+			RequestID:         input.RequestID,
+			TenantID:          tenant.ID(input.TenantID),
+			InventoryID:       inventory.InventoryID(input.InventoryID),
+			Kind:              input.Body.Kind,
+			Title:             input.Body.Title,
+			Description:       input.Body.Description,
+			ParentAssetID:     input.Body.ParentAssetID,
+			CustomAssetTypeID: input.Body.CustomAssetTypeID,
+			CustomFields:      input.Body.CustomFields,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

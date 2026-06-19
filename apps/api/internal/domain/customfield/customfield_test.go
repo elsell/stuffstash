@@ -54,15 +54,35 @@ func TestDefinitionSetRejectsUnknownAndInvalidValues(t *testing.T) {
 	}
 }
 
+func TestDefinitionSetValidatesValuesByCustomAssetType(t *testing.T) {
+	serial := definition(t, "serial", FieldTypeText, nil)
+	dose := targetedDefinition(t, "dose", FieldTypeText, "medicine-type")
+
+	if !(DefinitionSet{serial, dose}).ValidateValuesForAssetType(map[string]any{
+		"serial": "abc",
+		"dose":   "20mg",
+	}, "medicine-type") {
+		t.Fatalf("expected field targeted to matching custom asset type to be valid")
+	}
+	if (DefinitionSet{serial, dose}).ValidateValuesForAssetType(map[string]any{
+		"dose": "20mg",
+	}, "tool-type") {
+		t.Fatalf("expected field targeted to a different custom asset type to be rejected")
+	}
+	if (DefinitionSet{serial, dose}).ValidateValues(map[string]any{"dose": "20mg"}) {
+		t.Fatalf("expected targeted field to be rejected without an asset type")
+	}
+}
+
 func TestDefinitionRequiresEnumOptionsOnlyForEnumFields(t *testing.T) {
-	if _, ok := NewDefinition("definition-one", "tenant-one", "", ScopeTenant, "status", "Status", FieldTypeEnum, nil); ok {
+	if _, ok := NewDefinition("definition-one", "tenant-one", "", ScopeTenant, "status", "Status", FieldTypeEnum, nil, ApplicabilityAllAssets, nil); ok {
 		t.Fatalf("expected enum without options to be invalid")
 	}
 	option, ok := NewKey("new")
 	if !ok {
 		t.Fatalf("expected valid option")
 	}
-	if _, ok := NewDefinition("definition-one", "tenant-one", "", ScopeTenant, "serial", "Serial", FieldTypeText, []Key{option}); ok {
+	if _, ok := NewDefinition("definition-one", "tenant-one", "", ScopeTenant, "serial", "Serial", FieldTypeText, []Key{option}, ApplicabilityAllAssets, nil); ok {
 		t.Fatalf("expected non-enum with options to be invalid")
 	}
 }
@@ -90,9 +110,22 @@ func definition(t *testing.T, keyValue string, fieldType FieldType, rawOptions [
 		}
 		options = append(options, option)
 	}
-	definition, ok := NewDefinition(id, "tenant-one", "", ScopeTenant, key, displayName, fieldType, options)
+	definition, ok := NewDefinition(id, "tenant-one", "", ScopeTenant, key, displayName, fieldType, options, ApplicabilityAllAssets, nil)
 	if !ok {
 		t.Fatalf("expected valid definition")
 	}
+	return definition
+}
+
+func targetedDefinition(t *testing.T, keyValue string, fieldType FieldType, customAssetTypeID string) Definition {
+	t.Helper()
+
+	definition := definition(t, keyValue, fieldType, nil)
+	targetID, ok := NewAssetTypeID(customAssetTypeID)
+	if !ok {
+		t.Fatalf("expected valid custom asset type id")
+	}
+	definition.Applicability = ApplicabilityCustomAssetTypes
+	definition.CustomAssetTypeIDs = []AssetTypeID{targetID}
 	return definition
 }

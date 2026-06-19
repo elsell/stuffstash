@@ -17,25 +17,27 @@ import (
 )
 
 type Store struct {
-	mu           sync.RWMutex
-	tenants      map[tenant.ID]tenant.Tenant
-	inventories  map[inventory.InventoryID]inventory.Inventory
-	accessGrants map[string]ports.InventoryAccessGrant
-	customFields map[customfield.ID]customfield.Definition
-	assets       map[asset.ID]asset.Asset
-	auditRecords map[audit.ID]audit.Record
-	outbox       map[string]ports.AuthorizationOutboxEvent
+	mu               sync.RWMutex
+	tenants          map[tenant.ID]tenant.Tenant
+	inventories      map[inventory.InventoryID]inventory.Inventory
+	accessGrants     map[string]ports.InventoryAccessGrant
+	customAssetTypes map[customfield.AssetTypeID]customfield.AssetType
+	customFields     map[customfield.ID]customfield.Definition
+	assets           map[asset.ID]asset.Asset
+	auditRecords     map[audit.ID]audit.Record
+	outbox           map[string]ports.AuthorizationOutboxEvent
 }
 
 func NewStore() *Store {
 	return &Store{
-		tenants:      map[tenant.ID]tenant.Tenant{},
-		inventories:  map[inventory.InventoryID]inventory.Inventory{},
-		accessGrants: map[string]ports.InventoryAccessGrant{},
-		customFields: map[customfield.ID]customfield.Definition{},
-		assets:       map[asset.ID]asset.Asset{},
-		auditRecords: map[audit.ID]audit.Record{},
-		outbox:       map[string]ports.AuthorizationOutboxEvent{},
+		tenants:          map[tenant.ID]tenant.Tenant{},
+		inventories:      map[inventory.InventoryID]inventory.Inventory{},
+		accessGrants:     map[string]ports.InventoryAccessGrant{},
+		customAssetTypes: map[customfield.AssetTypeID]customfield.AssetType{},
+		customFields:     map[customfield.ID]customfield.Definition{},
+		assets:           map[asset.ID]asset.Asset{},
+		auditRecords:     map[audit.ID]audit.Record{},
+		outbox:           map[string]ports.AuthorizationOutboxEvent{},
 	}
 }
 
@@ -265,12 +267,12 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, exists := s.tenants[tenant.ID(definition.TenantID.String())]; !exists {
-		return ports.ErrForbidden
+	if err := s.customFieldDefinitionParentIsValid(definition); err != nil {
+		return err
 	}
-	if definition.Scope == customfield.ScopeInventory {
-		item, ok := s.inventories[inventory.InventoryID(definition.InventoryID.String())]
-		if !ok || item.TenantID.String() != definition.TenantID.String() {
+	for _, targetID := range definition.CustomAssetTypeIDs {
+		target, ok := s.customAssetTypes[targetID]
+		if !ok || !customFieldTargetInScope(definition, target) {
 			return ports.ErrForbidden
 		}
 	}
@@ -285,6 +287,73 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 	s.customFields[definition.ID] = definition
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
+}
+
+func (s *Store) SaveCustomAssetType(_ context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.customAssetTypeParentIsValid(assetType); err != nil {
+		return err
+	}
+	for _, existing := range s.customAssetTypes {
+		if customfield.AssetTypesConflict(existing, assetType) {
+			return ports.ErrConflict
+		}
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.customAssetTypes[assetType.ID] = assetType
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) ListTenantCustomAssetTypes(_ context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []customfield.AssetType{}
+	for _, assetType := range s.customAssetTypes {
+		if assetType.TenantID.String() == tenantID.String() && assetType.Scope == customfield.ScopeTenant && assetType.CursorKey() > page.AfterAssetTypeKey {
+			items = append(items, assetType)
+		}
+	}
+	return pagedCustomAssetTypes(items, page.Limit), nil
+}
+
+func (s *Store) ListInventoryCustomAssetTypes(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []customfield.AssetType{}
+	for _, assetType := range s.customAssetTypes {
+		if assetType.TenantID.String() != tenantID.String() || assetType.CursorKey() <= page.AfterAssetTypeKey {
+			continue
+		}
+		if assetType.Scope == customfield.ScopeTenant || assetType.InventoryID.String() == inventoryID.String() {
+			items = append(items, assetType)
+		}
+	}
+	return pagedCustomAssetTypes(items, page.Limit), nil
+}
+
+func (s *Store) CustomAssetTypesByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, ids []customfield.AssetTypeID) ([]customfield.AssetType, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []customfield.AssetType{}
+	for _, id := range ids {
+		assetType, ok := s.customAssetTypes[id]
+		if !ok || assetType.TenantID.String() != tenantID.String() {
+			continue
+		}
+		if assetType.Scope == customfield.ScopeInventory && assetType.InventoryID.String() != inventoryID.String() {
+			continue
+		}
+		items = append(items, assetType)
+	}
+	return items, nil
 }
 
 func (s *Store) ListTenantCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
@@ -352,6 +421,12 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord aud
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
 	}
+	if item.CustomAssetTypeID.String() != "" {
+		assetType, ok := s.customAssetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())]
+		if !ok || assetType.TenantID.String() != item.TenantID.String() || (assetType.Scope == customfield.ScopeInventory && assetType.InventoryID.String() != item.InventoryID.String()) {
+			return ports.ErrForbidden
+		}
+	}
 
 	if item.ParentAssetID.String() != "" {
 		parent, ok := s.assets[item.ParentAssetID]
@@ -389,6 +464,9 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []
 		return ports.ErrForbidden
 	}
 	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState {
+		return ports.ErrForbidden
+	}
+	if existing.CustomAssetTypeID != item.CustomAssetTypeID {
 		return ports.ErrForbidden
 	}
 	if item.ParentAssetID.String() != "" {
@@ -547,4 +625,50 @@ func pagedCustomFieldDefinitions(items []customfield.Definition, limit int) []cu
 		return items[:limit]
 	}
 	return items
+}
+
+func pagedCustomAssetTypes(items []customfield.AssetType, limit int) []customfield.AssetType {
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if limit > 0 && len(items) > limit {
+		items = items[:limit]
+	}
+	return items
+}
+
+func (s *Store) customAssetTypeParentIsValid(assetType customfield.AssetType) error {
+	if _, exists := s.tenants[tenant.ID(assetType.TenantID.String())]; !exists {
+		return ports.ErrForbidden
+	}
+	if assetType.Scope == customfield.ScopeInventory {
+		item, ok := s.inventories[inventory.InventoryID(assetType.InventoryID.String())]
+		if !ok || item.TenantID.String() != assetType.TenantID.String() {
+			return ports.ErrForbidden
+		}
+	}
+	return nil
+}
+
+func (s *Store) customFieldDefinitionParentIsValid(definition customfield.Definition) error {
+	if _, exists := s.tenants[tenant.ID(definition.TenantID.String())]; !exists {
+		return ports.ErrForbidden
+	}
+	if definition.Scope == customfield.ScopeInventory {
+		item, ok := s.inventories[inventory.InventoryID(definition.InventoryID.String())]
+		if !ok || item.TenantID.String() != definition.TenantID.String() {
+			return ports.ErrForbidden
+		}
+	}
+	return nil
+}
+
+func customFieldTargetInScope(definition customfield.Definition, target customfield.AssetType) bool {
+	if target.TenantID != definition.TenantID {
+		return false
+	}
+	if definition.Scope == customfield.ScopeTenant {
+		return target.Scope == customfield.ScopeTenant
+	}
+	return target.Scope == customfield.ScopeTenant || target.InventoryID == definition.InventoryID
 }

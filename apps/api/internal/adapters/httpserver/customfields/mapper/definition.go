@@ -10,15 +10,21 @@ func DefinitionToResponse(definition customfield.Definition) dto.DefinitionRespo
 	for _, option := range definition.EnumOptions {
 		options = append(options, option.String())
 	}
+	targets := make([]string, 0, len(definition.CustomAssetTypeIDs))
+	for _, id := range definition.CustomAssetTypeIDs {
+		targets = append(targets, id.String())
+	}
 	return dto.DefinitionResponse{
-		ID:          definition.ID.String(),
-		TenantID:    definition.TenantID.String(),
-		InventoryID: definition.InventoryID.String(),
-		Scope:       definition.Scope.String(),
-		Key:         definition.Key.String(),
-		DisplayName: definition.DisplayName.String(),
-		Type:        definition.Type.String(),
-		EnumOptions: options,
+		ID:                 definition.ID.String(),
+		TenantID:           definition.TenantID.String(),
+		InventoryID:        definition.InventoryID.String(),
+		Scope:              definition.Scope.String(),
+		Key:                definition.Key.String(),
+		DisplayName:        definition.DisplayName.String(),
+		Type:               definition.Type.String(),
+		EnumOptions:        options,
+		Applicability:      definition.Applicability.String(),
+		CustomAssetTypeIDs: targets,
 	}
 }
 

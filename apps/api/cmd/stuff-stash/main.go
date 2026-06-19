@@ -87,6 +87,7 @@ func main() {
 		Authorizer:                    authorizer,
 		Tenants:                       repositories.tenants,
 		Inventories:                   repositories.inventories,
+		CustomAssetTypes:              repositories.customAssetTypes,
 		CustomFields:                  repositories.customFields,
 		Assets:                        repositories.assets,
 		Audit:                         repositories.audit,
@@ -155,19 +156,20 @@ func drainAuthorizationOutbox(ctx context.Context, application app.App, observer
 }
 
 type repositories struct {
-	tenants      ports.TenantRepository
-	inventories  ports.InventoryRepository
-	customFields ports.CustomFieldDefinitionRepository
-	assets       ports.AssetRepository
-	audit        ports.AuditRepository
-	outbox       ports.AuthorizationOutbox
+	tenants          ports.TenantRepository
+	inventories      ports.InventoryRepository
+	customAssetTypes ports.CustomAssetTypeRepository
+	customFields     ports.CustomFieldDefinitionRepository
+	assets           ports.AssetRepository
+	audit            ports.AuditRepository
+	outbox           ports.AuthorizationOutbox
 }
 
 func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, inventories: store, customFields: store, assets: store, audit: store, outbox: store}, func() error { return nil }, nil
+		return repositories{tenants: store, inventories: store, customAssetTypes: store, customFields: store, assets: store, audit: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -176,7 +178,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store, customFields: store, assets: store, audit: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, inventories: store, customAssetTypes: store, customFields: store, assets: store, audit: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}
