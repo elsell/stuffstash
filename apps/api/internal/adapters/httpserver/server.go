@@ -9,7 +9,9 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
@@ -178,6 +180,71 @@ func registerRoutes(api huma.API, application app.App) {
 			},
 		}, nil
 	}, huma.OperationTags("inventories"), securedOperation)
+
+	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets", func(ctx context.Context, input *createAssetInput) (*createAssetOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		item, err := application.CreateAsset(ctx, app.CreateAssetInput{
+			Principal:     principal,
+			TenantID:      tenant.ID(input.TenantID),
+			InventoryID:   inventory.InventoryID(input.InventoryID),
+			Kind:          input.Body.Kind,
+			Title:         input.Body.Title,
+			Description:   input.Body.Description,
+			ParentAssetID: input.Body.ParentAssetID,
+			CustomFields:  input.Body.CustomFields,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &createAssetOutput{
+			Body: successEnvelope[assetResponse]{
+				Data: assetToResponse(item),
+				Meta: responseMeta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("assets"), createdOperation, securedOperation)
+
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets", func(ctx context.Context, input *listAssetsInput) (*listAssetsOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListAssets(ctx, app.ListAssetsInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			Limit:       input.Limit,
+			Cursor:      input.Cursor,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		data := make([]assetResponse, 0, len(result.Items))
+		for _, item := range result.Items {
+			data = append(data, assetToResponse(item))
+		}
+
+		return &listAssetsOutput{
+			Body: successEnvelope[[]assetResponse]{
+				Data: data,
+				Meta: responseMeta{
+					TenantID: input.TenantID,
+					Pagination: &paginationMeta{
+						Limit:      result.Limit,
+						NextCursor: result.NextCursor,
+						HasMore:    result.HasMore,
+					},
+				},
+			},
+		}, nil
+	}, huma.OperationTags("assets"), securedOperation)
 }
 
 func securedOperation(operation *huma.Operation) {
@@ -293,14 +360,50 @@ type listInventoriesOutput struct {
 	Body successEnvelope[[]inventoryResponse]
 }
 
+type createAssetInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Body          struct {
+		Kind          string         `json:"kind" enum:"item,container,location" doc:"Asset kind"`
+		Title         string         `json:"title" maxLength:"160" doc:"Asset title"`
+		Description   string         `json:"description,omitempty" doc:"Asset description"`
+		ParentAssetID string         `json:"parentAssetId,omitempty" doc:"Parent asset ID"`
+		CustomFields  map[string]any `json:"customFields,omitempty" doc:"Custom field values"`
+	}
+}
+
+type createAssetOutput struct {
+	Body successEnvelope[assetResponse]
+}
+
+type listAssetsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type listAssetsOutput struct {
+	Body successEnvelope[[]assetResponse]
+}
+
 type successEnvelope[T any] struct {
 	Data T            `json:"data"`
 	Meta responseMeta `json:"meta"`
 }
 
 type responseMeta struct {
-	RequestID string `json:"requestId,omitempty"`
-	TenantID  string `json:"tenantId,omitempty"`
+	RequestID  string          `json:"requestId,omitempty"`
+	TenantID   string          `json:"tenantId,omitempty"`
+	Pagination *paginationMeta `json:"pagination,omitempty"`
+}
+
+type paginationMeta struct {
+	Limit      int    `json:"limit"`
+	NextCursor string `json:"nextCursor,omitempty"`
+	HasMore    bool   `json:"hasMore"`
 }
 
 type errorEnvelope struct {
@@ -351,4 +454,30 @@ type inventoryResponse struct {
 	ID       string `json:"id"`
 	TenantID string `json:"tenantId"`
 	Name     string `json:"name"`
+}
+
+type assetResponse struct {
+	ID             string         `json:"id"`
+	TenantID       string         `json:"tenantId"`
+	InventoryID    string         `json:"inventoryId"`
+	ParentAssetID  string         `json:"parentAssetId,omitempty"`
+	Kind           string         `json:"kind"`
+	Title          string         `json:"title"`
+	Description    string         `json:"description"`
+	CustomFields   map[string]any `json:"customFields"`
+	LifecycleState string         `json:"lifecycleState"`
+}
+
+func assetToResponse(item asset.Asset) assetResponse {
+	return assetResponse{
+		ID:             item.ID.String(),
+		TenantID:       item.TenantID.String(),
+		InventoryID:    item.InventoryID.String(),
+		ParentAssetID:  item.ParentAssetID.String(),
+		Kind:           item.Kind.String(),
+		Title:          item.Title.String(),
+		Description:    item.Description.String(),
+		CustomFields:   item.CustomFields.Values(),
+		LifecycleState: item.LifecycleState.String(),
+	}
 }

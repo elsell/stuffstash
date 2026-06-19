@@ -104,7 +104,8 @@ The table must preserve these invariants:
 - Containment cycles must not be persisted.
 - Only container-capable asset kinds may be used as parents.
 - Custom field values must be stored as JSONB in PostgreSQL and must default to an empty object.
-- The first asset slice may only persist empty custom field objects until custom field definitions are implemented.
+- The repository adapter must be able to round-trip validated custom field values so future custom-field APIs do not require a persistence rewrite.
+- The first public asset create endpoint may only accept empty custom field objects until custom field definitions are implemented.
 
 The initial asset kind enumeration is:
 

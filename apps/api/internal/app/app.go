@@ -14,10 +14,13 @@ type App struct {
 	authorizer       ports.Authorizer
 	tenants          ports.TenantRepository
 	inventories      ports.InventoryRepository
+	assets           ports.AssetRepository
 	outbox           ports.AuthorizationOutbox
 	ids              ports.IDGenerator
 	outboxDrainLimit int
 	outboxClaimLease time.Duration
+	defaultPageLimit int
+	maxPageLimit     int
 }
 
 type Dependencies struct {
@@ -26,10 +29,13 @@ type Dependencies struct {
 	Authorizer                    ports.Authorizer
 	Tenants                       ports.TenantRepository
 	Inventories                   ports.InventoryRepository
+	Assets                        ports.AssetRepository
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
 	AuthorizationOutboxDrainLimit int
 	AuthorizationOutboxClaimLease time.Duration
+	DefaultPageLimit              int
+	MaxPageLimit                  int
 }
 
 func New(deps Dependencies) App {
@@ -39,11 +45,32 @@ func New(deps Dependencies) App {
 		authorizer:       deps.Authorizer,
 		tenants:          deps.Tenants,
 		inventories:      deps.Inventories,
+		assets:           deps.Assets,
 		outbox:           deps.Outbox,
 		ids:              deps.IDs,
 		outboxDrainLimit: deps.AuthorizationOutboxDrainLimit,
 		outboxClaimLease: deps.AuthorizationOutboxClaimLease,
+		defaultPageLimit: normalizeDefaultPageLimit(deps.DefaultPageLimit, deps.MaxPageLimit),
+		maxPageLimit:     normalizeMaxPageLimit(deps.MaxPageLimit),
 	}
+}
+
+func normalizeDefaultPageLimit(defaultLimit int, maxLimit int) int {
+	maxLimit = normalizeMaxPageLimit(maxLimit)
+	if defaultLimit <= 0 {
+		return 50
+	}
+	if defaultLimit > maxLimit {
+		return maxLimit
+	}
+	return defaultLimit
+}
+
+func normalizeMaxPageLimit(maxLimit int) int {
+	if maxLimit <= 0 {
+		return 100
+	}
+	return maxLimit
 }
 
 func (a App) Authenticate(ctx context.Context, authorizationHeader string) (identity.Principal, error) {

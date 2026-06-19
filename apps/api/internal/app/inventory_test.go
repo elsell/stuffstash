@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -311,6 +313,127 @@ func TestListInventoriesSkipsForbiddenInventories(t *testing.T) {
 	}
 }
 
+func TestCreateAndListAssets(t *testing.T) {
+	assets := &fakeAssetRepository{}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &fakeAuthorizer{},
+		Tenants: &fakeTenantRepository{
+			exists: true,
+		},
+		Inventories: &fakeInventoryRepository{
+			items: []inventory.Inventory{
+				inventoryItem("inventory-one", "tenant-one", "Tools"),
+			},
+		},
+		Assets:           assets,
+		Outbox:           &fakeOutbox{},
+		IDs:              &fakeIDGenerator{ids: []string{"asset-one", "asset-two"}},
+		DefaultPageLimit: 1,
+		MaxPageLimit:     2,
+	})
+
+	location, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "location",
+		Title:       "Garage",
+	})
+	if err != nil {
+		t.Fatalf("create location asset: %v", err)
+	}
+	if location.Kind != asset.KindLocation || location.LifecycleState != asset.LifecycleStateActive {
+		t.Fatalf("unexpected location asset: %+v", location)
+	}
+
+	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:     identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:      tenant.ID("tenant-one"),
+		InventoryID:   inventory.InventoryID("inventory-one"),
+		Kind:          "item",
+		Title:         "Drill",
+		Description:   "Cordless",
+		ParentAssetID: location.ID.String(),
+	})
+	if err != nil {
+		t.Fatalf("create item asset: %v", err)
+	}
+	if item.ParentAssetID != location.ID {
+		t.Fatalf("expected parent %q, got %q", location.ID, item.ParentAssetID)
+	}
+
+	result, err := application.ListAssets(context.Background(), ListAssetsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+	})
+	if err != nil {
+		t.Fatalf("list assets: %v", err)
+	}
+	if len(result.Items) != 1 || !result.HasMore || result.NextCursor == "" || result.Limit != 1 {
+		t.Fatalf("expected paginated first page, got %+v", result)
+	}
+
+	nextPage, err := application.ListAssets(context.Background(), ListAssetsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Cursor:      result.NextCursor,
+	})
+	if err != nil {
+		t.Fatalf("list next assets page: %v", err)
+	}
+	if len(nextPage.Items) != 1 || nextPage.HasMore || nextPage.Items[0].ID != item.ID {
+		t.Fatalf("expected second page with item, got %+v", nextPage)
+	}
+}
+
+func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
+	itemParent := assetItem("asset-parent", "tenant-one", "inventory-one", asset.KindItem, "")
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &fakeAuthorizer{},
+		Tenants: &fakeTenantRepository{
+			exists: true,
+		},
+		Inventories: &fakeInventoryRepository{
+			items: []inventory.Inventory{
+				inventoryItem("inventory-one", "tenant-one", "Tools"),
+			},
+		},
+		Assets: &fakeAssetRepository{
+			items: map[asset.ID]asset.Asset{itemParent.ID: itemParent},
+		},
+		Outbox: &fakeOutbox{},
+		IDs:    &fakeIDGenerator{ids: []string{"asset-one"}},
+	})
+
+	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:     identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:      tenant.ID("tenant-one"),
+		InventoryID:   inventory.InventoryID("inventory-one"),
+		Kind:          "item",
+		Title:         "Bit set",
+		ParentAssetID: itemParent.ID.String(),
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid input for item parent, got %v", err)
+	}
+
+	_, err = application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		Kind:         "item",
+		Title:        "Bit set",
+		CustomFields: map[string]any{"serial": "abc"},
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid input for custom fields, got %v", err)
+	}
+}
+
 type fakeAuthorizer struct {
 	checkInventoryErr    error
 	grantTenantOwnerErr  error
@@ -353,6 +476,19 @@ func (f *fakeTenantRepository) TenantExists(context.Context, tenant.ID) (bool, e
 
 type fakeInventoryRepository struct {
 	items []inventory.Inventory
+}
+
+func (f *fakeInventoryRepository) InventoryByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error) {
+	for _, item := range f.items {
+		if item.ID == inventoryID && item.TenantID == inventory.TenantID(tenantID.String()) {
+			return item, true, nil
+		}
+	}
+	return inventory.Inventory{}, false, nil
+}
+
+type fakeAssetRepository struct {
+	items map[asset.ID]asset.Asset
 }
 
 type fakeOutbox struct {
@@ -454,6 +590,47 @@ func (f *fakeInventoryRepository) ListInventoriesByTenant(context.Context, inven
 	return f.items, nil
 }
 
+func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset) error {
+	if f.items == nil {
+		f.items = map[asset.ID]asset.Asset{}
+	}
+	if _, exists := f.items[item.ID]; exists {
+		return errors.New("asset already exists")
+	}
+	if item.ParentAssetID.String() != "" {
+		parent, ok := f.items[item.ParentAssetID]
+		if !ok || parent.TenantID != item.TenantID || parent.InventoryID != item.InventoryID || !parent.Kind.CanContainChildren() {
+			return ports.ErrForbidden
+		}
+	}
+	f.items[item.ID] = item
+	return nil
+}
+
+func (f *fakeAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
+	item, ok := f.items[assetID]
+	if !ok || item.TenantID != asset.TenantID(tenantID.String()) || item.InventoryID != asset.InventoryID(inventoryID.String()) {
+		return asset.Asset{}, false, nil
+	}
+	return item, true, nil
+}
+
+func (f *fakeAssetRepository) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetListPageRequest) ([]asset.Asset, error) {
+	items := []asset.Asset{}
+	for _, item := range f.items {
+		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && item.ID.String() > page.AfterAssetID.String() {
+			items = append(items, item)
+		}
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].ID.String() < items[right].ID.String()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
 type fakeObserver struct {
 	events []ports.Event
 }
@@ -518,5 +695,30 @@ func inventoryItem(id string, tenantID string, name string) inventory.Inventory 
 		ID:       inventory.InventoryID(id),
 		TenantID: inventory.TenantID(tenantID),
 		Name:     inventoryName,
+	}
+}
+
+func assetItem(id string, tenantID string, inventoryID string, kind asset.Kind, parentID string) asset.Asset {
+	title, ok := asset.NewTitle("Asset " + id)
+	if !ok {
+		panic("invalid test asset title")
+	}
+	parent := asset.ID("")
+	if parentID != "" {
+		var parentOK bool
+		parent, parentOK = asset.NewID(parentID)
+		if !parentOK {
+			panic("invalid parent id")
+		}
+	}
+	return asset.Asset{
+		ID:             asset.ID(id),
+		TenantID:       asset.TenantID(tenantID),
+		InventoryID:    asset.InventoryID(inventoryID),
+		ParentAssetID:  parent,
+		Kind:           kind,
+		Title:          title,
+		CustomFields:   asset.NewEmptyCustomFields(),
+		LifecycleState: asset.LifecycleStateActive,
 	}
 }

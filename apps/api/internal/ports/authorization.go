@@ -21,7 +21,8 @@ const (
 type InventoryPermission string
 
 const (
-	InventoryPermissionView InventoryPermission = "view"
+	InventoryPermissionView        InventoryPermission = "view"
+	InventoryPermissionCreateAsset InventoryPermission = "create_asset"
 )
 
 type Authorizer interface {

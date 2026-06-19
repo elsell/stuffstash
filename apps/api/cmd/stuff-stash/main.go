@@ -87,10 +87,13 @@ func main() {
 		Authorizer:                    authorizer,
 		Tenants:                       repositories.tenants,
 		Inventories:                   repositories.inventories,
+		Assets:                        repositories.assets,
 		Outbox:                        repositories.outbox,
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,
+		DefaultPageLimit:              cfg.DefaultPageLimit,
+		MaxPageLimit:                  cfg.MaxPageLimit,
 	})
 	server := httpserver.NewServer(cfg.HTTPAddr, application)
 	go drainAuthorizationOutbox(ctx, application, observer, cfg.AuthorizationOutboxDrainLimit, cfg.AuthorizationOutboxDrainInterval)
@@ -152,6 +155,7 @@ func drainAuthorizationOutbox(ctx context.Context, application app.App, observer
 type repositories struct {
 	tenants     ports.TenantRepository
 	inventories ports.InventoryRepository
+	assets      ports.AssetRepository
 	outbox      ports.AuthorizationOutbox
 }
 
@@ -159,7 +163,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, inventories: store, outbox: store}, func() error { return nil }, nil
+		return repositories{tenants: store, inventories: store, assets: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -168,7 +172,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, inventories: store, assets: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}

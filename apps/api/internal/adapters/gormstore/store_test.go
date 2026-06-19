@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -367,6 +368,166 @@ func TestStoreReclaimsEventsAfterLeaseExpires(t *testing.T) {
 	}
 }
 
+func TestStorePersistsAssetsAndLocationParents(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	location := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	if err := store.CreateAsset(ctx, location); err != nil {
+		t.Fatalf("save location asset: %v", err)
+	}
+	item := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindItem, location.ID.String())
+	if err := store.CreateAsset(ctx, item); err != nil {
+		t.Fatalf("save child asset: %v", err)
+	}
+
+	items, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list assets: %v", err)
+	}
+	if len(items) != 2 {
+		t.Fatalf("expected 2 assets, got %+v", items)
+	}
+	if items[0].Kind != asset.KindLocation || items[1].ParentAssetID != location.ID {
+		t.Fatalf("unexpected assets: %+v", items)
+	}
+}
+
+func TestStoreRejectsInvalidAssetParents(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryOneID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	inventoryTwoID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryOneID.String(), tenantID, "Tools")
+	saveInventory(t, ctx, store, inventoryTwoID.String(), tenantID, "Supplies")
+
+	itemParent := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryOneID.String(), asset.KindItem, "")
+	if err := store.CreateAsset(ctx, itemParent); err != nil {
+		t.Fatalf("save item parent: %v", err)
+	}
+	child := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID.String(), inventoryOneID.String(), asset.KindItem, itemParent.ID.String())
+	if err := store.CreateAsset(ctx, child); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected item parent rejection, got %v", err)
+	}
+
+	location := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID.String(), inventoryOneID.String(), asset.KindLocation, "")
+	if err := store.CreateAsset(ctx, location); err != nil {
+		t.Fatalf("save location parent: %v", err)
+	}
+	crossInventoryChild := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID.String(), inventoryTwoID.String(), asset.KindItem, location.ID.String())
+	if err := store.CreateAsset(ctx, crossInventoryChild); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected cross-inventory parent rejection, got %v", err)
+	}
+}
+
+func TestStoreRejectsRootAssetsOutsideInventoryTenant(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantOneID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	tenantTwoID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	saveTenant(t, ctx, store, tenantOneID, "Home")
+	saveTenant(t, ctx, store, tenantTwoID, "Cabin")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantTwoID, "Supplies")
+
+	item := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantOneID.String(), inventoryID.String(), asset.KindLocation, "")
+	if err := store.CreateAsset(ctx, item); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected tenant/inventory mismatch rejection, got %v", err)
+	}
+}
+
+func TestStoreRejectsAssetContainmentCycles(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	parent := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	if err := store.CreateAsset(ctx, parent); err != nil {
+		t.Fatalf("save parent: %v", err)
+	}
+	child := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindContainer, parent.ID.String())
+	if err := store.CreateAsset(ctx, child); err != nil {
+		t.Fatalf("save child: %v", err)
+	}
+
+	parent.ParentAssetID = child.ID
+	if err := store.CreateAsset(ctx, parent); err == nil {
+		t.Fatalf("expected duplicate asset rejection")
+	}
+}
+
+func TestStorePaginatesAssetsAndRejectsDuplicateCreate(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	first := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	second := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	if err := store.CreateAsset(ctx, first); err != nil {
+		t.Fatalf("create first asset: %v", err)
+	}
+	if err := store.CreateAsset(ctx, second); err != nil {
+		t.Fatalf("create second asset: %v", err)
+	}
+
+	page, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{Limit: 1})
+	if err != nil {
+		t.Fatalf("list first page: %v", err)
+	}
+	if len(page) != 1 || page[0].ID != first.ID {
+		t.Fatalf("expected first page with first asset, got %+v", page)
+	}
+	nextPage, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{AfterAssetID: first.ID, Limit: 1})
+	if err != nil {
+		t.Fatalf("list next page: %v", err)
+	}
+	if len(nextPage) != 1 || nextPage[0].ID != second.ID {
+		t.Fatalf("expected next page with second asset, got %+v", nextPage)
+	}
+	if err := store.CreateAsset(ctx, first); err == nil {
+		t.Fatalf("expected duplicate asset create to fail")
+	}
+}
+
+func TestStoreRoundTripsAssetCustomFields(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	item := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	customFields, ok := asset.NewCustomFields(map[string]any{"serial": "abc"})
+	if !ok {
+		t.Fatalf("expected valid custom fields")
+	}
+	item.CustomFields = customFields
+
+	if err := store.CreateAsset(ctx, item); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+	found, ok, err := store.AssetByID(ctx, tenantID, inventoryID, item.ID)
+	if err != nil {
+		t.Fatalf("find asset: %v", err)
+	}
+	if !ok || found.CustomFields.Values()["serial"] != "abc" {
+		t.Fatalf("expected custom fields to round-trip, got found=%t %+v", ok, found.CustomFields.Values())
+	}
+}
+
 func newTestStore(t *testing.T, ctx context.Context) Store {
 	t.Helper()
 
@@ -441,5 +602,30 @@ func saveInventoryWithOutbox(t *testing.T, ctx context.Context, store Store, eve
 	}
 	if err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, eventID, item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
 		t.Fatalf("save inventory with outbox: %v", err)
+	}
+}
+
+func assetItem(id string, tenantID string, inventoryID string, kind asset.Kind, parentID string) asset.Asset {
+	title, ok := asset.NewTitle("Asset " + id)
+	if !ok {
+		panic("invalid test asset title")
+	}
+	parent := asset.ID("")
+	if parentID != "" {
+		var parentOK bool
+		parent, parentOK = asset.NewID(parentID)
+		if !parentOK {
+			panic("invalid parent id")
+		}
+	}
+	return asset.Asset{
+		ID:             asset.ID(id),
+		TenantID:       asset.TenantID(tenantID),
+		InventoryID:    asset.InventoryID(inventoryID),
+		ParentAssetID:  parent,
+		Kind:           kind,
+		Title:          title,
+		CustomFields:   asset.NewEmptyCustomFields(),
+		LifecycleState: asset.LifecycleStateActive,
 	}
 }

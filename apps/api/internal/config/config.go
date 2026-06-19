@@ -23,6 +23,8 @@ const (
 	envAuthorizationOutboxLimit = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
 	envAuthorizationOutboxEvery = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
 	envAuthorizationOutboxLease = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
+	envDefaultPageLimit         = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
+	envMaxPageLimit             = "STUFF_STASH_MAX_PAGE_LIMIT"
 	defaultHTTPAddr             = ":8080"
 	defaultAuthMode             = "local-dev"
 	defaultAuthzMode            = "memory"
@@ -31,6 +33,8 @@ const (
 	defaultAuthorizationLimit   = 25
 	defaultAuthorizationEvery   = 10 * time.Second
 	defaultAuthorizationLease   = 30 * time.Second
+	defaultDefaultPageLimit     = 50
+	defaultMaxPageLimit         = 100
 	defaultSpiceDBTLSEnabled    = true
 	defaultSpiceDBBootstrapMode = false
 )
@@ -51,6 +55,8 @@ type Config struct {
 	AuthorizationOutboxDrainLimit    int
 	AuthorizationOutboxDrainInterval time.Duration
 	AuthorizationOutboxClaimLease    time.Duration
+	DefaultPageLimit                 int
+	MaxPageLimit                     int
 }
 
 func Load() Config {
@@ -70,6 +76,8 @@ func Load() Config {
 		AuthorizationOutboxDrainLimit:    intEnvOrDefault(envAuthorizationOutboxLimit, defaultAuthorizationLimit),
 		AuthorizationOutboxDrainInterval: durationEnvOrDefault(envAuthorizationOutboxEvery, defaultAuthorizationEvery),
 		AuthorizationOutboxClaimLease:    durationEnvOrDefault(envAuthorizationOutboxLease, defaultAuthorizationLease),
+		DefaultPageLimit:                 intEnvOrDefault(envDefaultPageLimit, defaultDefaultPageLimit),
+		MaxPageLimit:                     intEnvOrDefault(envMaxPageLimit, defaultMaxPageLimit),
 	}
 }
 

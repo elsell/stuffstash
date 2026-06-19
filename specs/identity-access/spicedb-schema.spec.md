@@ -38,6 +38,7 @@ definition inventory {
   permission configure = owner + tenant->configure
   permission share = owner + tenant->configure
   permission edit = owner + editor + tenant->configure
+  permission create_asset = edit
 }
 ```
 
@@ -49,6 +50,7 @@ The first API slice must check:
 
 - `tenant.create_inventory` before creating an inventory inside a tenant.
 - `inventory.view` before returning an inventory.
+- `inventory.create_asset` before creating an asset inside an inventory.
 
 Creating a tenant grants the creating user the tenant `owner` relationship.
 

@@ -14,6 +14,8 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLimit, "")
 	t.Setenv(envAuthorizationOutboxEvery, "")
 	t.Setenv(envAuthorizationOutboxLease, "")
+	t.Setenv(envDefaultPageLimit, "")
+	t.Setenv(envMaxPageLimit, "")
 
 	cfg := Load()
 
@@ -50,6 +52,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.AuthorizationOutboxClaimLease != defaultAuthorizationLease {
 		t.Fatalf("expected authorization outbox claim lease %s, got %s", defaultAuthorizationLease, cfg.AuthorizationOutboxClaimLease)
 	}
+	if cfg.DefaultPageLimit != defaultDefaultPageLimit {
+		t.Fatalf("expected default page limit %d, got %d", defaultDefaultPageLimit, cfg.DefaultPageLimit)
+	}
+	if cfg.MaxPageLimit != defaultMaxPageLimit {
+		t.Fatalf("expected max page limit %d, got %d", defaultMaxPageLimit, cfg.MaxPageLimit)
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -67,6 +75,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLimit, "7")
 	t.Setenv(envAuthorizationOutboxEvery, "250ms")
 	t.Setenv(envAuthorizationOutboxLease, "45s")
+	t.Setenv(envDefaultPageLimit, "13")
+	t.Setenv(envMaxPageLimit, "27")
 
 	cfg := Load()
 
@@ -102,5 +112,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.AuthorizationOutboxClaimLease.String() != "45s" {
 		t.Fatalf("expected authorization outbox claim lease 45s, got %s", cfg.AuthorizationOutboxClaimLease)
+	}
+	if cfg.DefaultPageLimit != 13 || cfg.MaxPageLimit != 27 {
+		t.Fatalf("unexpected page limits: %+v", cfg)
 	}
 }

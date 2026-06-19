@@ -95,6 +95,8 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 		{name: "create tenant", method: http.MethodPost, path: "/tenants", body: map[string]string{"name": "Home"}},
 		{name: "create inventory", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories", body: map[string]string{"name": "Tools"}},
 		{name: "list inventories", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories"},
+		{name: "create asset", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets", body: map[string]string{"kind": "item", "title": "Drill"}},
+		{name: "list assets", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets"},
 	}
 
 	authCases := []struct {
@@ -127,7 +129,7 @@ func TestSecureTenantInventoryFlow(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
 
-	server := NewServer(":0", newTestApp(&fakeObserver{}, tenantID, "tenant-event", "tenant-claim", inventoryID, "inventory-event", "inventory-claim"))
+	server := NewServer(":0", newTestApp(&fakeObserver{}, tenantID, "tenant-event", "tenant-claim", inventoryID, "inventory-event", "inventory-claim", "location-one", "asset-one"))
 
 	me := performRequest(server, http.MethodGet, "/me", "Bearer dev:user-one", nil)
 	if me.Code != http.StatusOK {
@@ -173,6 +175,55 @@ func TestSecureTenantInventoryFlow(t *testing.T) {
 	}
 	if listBody.Data[0].ID != inventoryID {
 		t.Fatalf("expected inventory ID %q, got %q", inventoryID, listBody.Data[0].ID)
+	}
+
+	createLocation := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:user-one", map[string]string{
+		"kind":  "location",
+		"title": "Garage",
+	})
+	if createLocation.Code != http.StatusCreated {
+		t.Fatalf("expected create location status %d, got %d with body %s", http.StatusCreated, createLocation.Code, createLocation.Body.String())
+	}
+	locationBody := decodeAsset(t, createLocation)
+	if locationBody.Data.Kind != "location" || locationBody.Data.LifecycleState != "active" {
+		t.Fatalf("unexpected location response: %+v", locationBody.Data)
+	}
+
+	createAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:user-one", map[string]string{
+		"kind":          "item",
+		"title":         "Drill",
+		"description":   "Cordless",
+		"parentAssetId": locationBody.Data.ID,
+	})
+	if createAsset.Code != http.StatusCreated {
+		t.Fatalf("expected create asset status %d, got %d with body %s", http.StatusCreated, createAsset.Code, createAsset.Body.String())
+	}
+
+	assets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:user-one", nil)
+	if assets.Code != http.StatusOK {
+		t.Fatalf("expected list assets status %d, got %d with body %s", http.StatusOK, assets.Code, assets.Body.String())
+	}
+	assetList := decodeAssetList(t, assets)
+	if len(assetList.Data) != 2 {
+		t.Fatalf("expected 2 assets, got %+v", assetList.Data)
+	}
+
+	firstAssetPage := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=1", "Bearer dev:user-one", nil)
+	if firstAssetPage.Code != http.StatusOK {
+		t.Fatalf("expected first asset page status %d, got %d with body %s", http.StatusOK, firstAssetPage.Code, firstAssetPage.Body.String())
+	}
+	firstPage := decodeAssetList(t, firstAssetPage)
+	if len(firstPage.Data) != 1 || firstPage.Meta.Pagination == nil || firstPage.Meta.Pagination.Limit != 1 || !firstPage.Meta.Pagination.HasMore || firstPage.Meta.Pagination.NextCursor == "" {
+		t.Fatalf("expected first paginated asset page, got %+v", firstPage)
+	}
+
+	secondAssetPage := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=1&cursor="+firstPage.Meta.Pagination.NextCursor, "Bearer dev:user-one", nil)
+	if secondAssetPage.Code != http.StatusOK {
+		t.Fatalf("expected second asset page status %d, got %d with body %s", http.StatusOK, secondAssetPage.Code, secondAssetPage.Body.String())
+	}
+	secondPage := decodeAssetList(t, secondAssetPage)
+	if len(secondPage.Data) != 1 || secondPage.Meta.Pagination == nil || secondPage.Meta.Pagination.Limit != 1 || secondPage.Meta.Pagination.HasMore {
+		t.Fatalf("expected final paginated asset page, got %+v", secondPage)
 	}
 }
 
@@ -222,6 +273,77 @@ func TestAuthorizedUserCannotCrossTenantBoundaries(t *testing.T) {
 		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, list.Code, list.Body.String())
 	}
 	assertSafeError(t, list, "forbidden", "Forbidden.")
+}
+
+func TestAssetEndpointsRejectCrossInventoryAndInvalidCustomFields(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryOneID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const inventoryTwoID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryOneID, tenantID: tenantID, name: "Tools", owner: "owner"},
+			{id: inventoryTwoID, tenantID: tenantID, name: "Supplies", owner: "owner"},
+		},
+	}))
+
+	createParent := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryOneID+"/assets", "Bearer dev:owner", map[string]string{
+		"kind":  "location",
+		"title": "Garage",
+	})
+	if createParent.Code != http.StatusCreated {
+		t.Fatalf("expected parent status %d, got %d with body %s", http.StatusCreated, createParent.Code, createParent.Body.String())
+	}
+	parent := decodeAsset(t, createParent)
+
+	crossInventory := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryTwoID+"/assets", "Bearer dev:owner", map[string]string{
+		"kind":          "item",
+		"title":         "Fertilizer",
+		"parentAssetId": parent.Data.ID,
+	})
+	if crossInventory.Code != http.StatusNotFound {
+		t.Fatalf("expected cross-inventory parent status %d, got %d with body %s", http.StatusNotFound, crossInventory.Code, crossInventory.Body.String())
+	}
+
+	customFields := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryOneID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":         "item",
+		"title":        "Drill",
+		"customFields": map[string]any{"serial": "abc"},
+	})
+	if customFields.Code != http.StatusBadRequest {
+		t.Fatalf("expected custom fields status %d, got %d with body %s", http.StatusBadRequest, customFields.Code, customFields.Body.String())
+	}
+	assertSafeError(t, customFields, "invalid_request", "Invalid request.")
+}
+
+func TestUnrelatedUserCannotCreateOrListAssets(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+	}))
+
+	createAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:intruder", map[string]string{
+		"kind":  "item",
+		"title": "Drill",
+	})
+	if createAsset.Code != http.StatusForbidden {
+		t.Fatalf("expected create status %d, got %d with body %s", http.StatusForbidden, createAsset.Code, createAsset.Body.String())
+	}
+	assertSafeError(t, createAsset, "forbidden", "Forbidden.")
+
+	listAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:intruder", nil)
+	if listAssets.Code != http.StatusForbidden {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, listAssets.Code, listAssets.Body.String())
+	}
+	assertSafeError(t, listAssets, "forbidden", "Forbidden.")
 }
 
 func TestTenantOwnerListsAllInventoriesInTenant(t *testing.T) {
@@ -302,6 +424,7 @@ func TestStateCreatedDuringAuthorizationGrantFailureStaysProtected(t *testing.T)
 		Authorizer:  failingGrantAuthorizer{},
 		Tenants:     store,
 		Inventories: store,
+		Assets:      store,
 		Outbox:      store,
 		IDs:         &fakeIDGenerator{ids: []string{tenantID, "tenant-event"}},
 	}))
@@ -353,6 +476,9 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	if _, ok := body.Paths["/tenants/{tenantId}/inventories"]; !ok {
 		t.Fatalf("expected OpenAPI to include inventory path, got %s", response.Body.String())
 	}
+	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/assets"]; !ok {
+		t.Fatalf("expected OpenAPI to include asset path, got %s", response.Body.String())
+	}
 	if _, ok := body.Paths["/"]; ok {
 		t.Fatalf("expected OpenAPI to omit local API index path, got %s", response.Body.String())
 	}
@@ -369,6 +495,7 @@ func newTestApp(observer ports.Observer, ids ...string) app.App {
 		Authorizer:  memory.NewAuthorizer(),
 		Tenants:     store,
 		Inventories: store,
+		Assets:      store,
 		Outbox:      store,
 		IDs:         &fakeIDGenerator{ids: ids},
 	})
@@ -424,6 +551,7 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 		Authorizer:  authorizer,
 		Tenants:     store,
 		Inventories: store,
+		Assets:      store,
 		Outbox:      store,
 		IDs:         &fakeIDGenerator{},
 	})
@@ -495,6 +623,16 @@ type inventoryListResponse struct {
 	} `json:"data"`
 }
 
+type assetBody struct {
+	Data assetResponse `json:"data"`
+	Meta responseMeta  `json:"meta"`
+}
+
+type assetListBody struct {
+	Data []assetResponse `json:"data"`
+	Meta responseMeta    `json:"meta"`
+}
+
 type seededState struct {
 	tenants     []seedTenant
 	inventories []seedInventory
@@ -517,6 +655,22 @@ type expectedInventory struct {
 	id       string
 	tenantID string
 	name     string
+}
+
+func decodeAsset(t *testing.T, response *httptest.ResponseRecorder) assetBody {
+	t.Helper()
+
+	var body assetBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeAssetList(t *testing.T, response *httptest.ResponseRecorder) assetListBody {
+	t.Helper()
+
+	var body assetListBody
+	decodeBody(t, response, &body)
+	return body
 }
 
 func decodeInventoryList(t *testing.T, response *httptest.ResponseRecorder) []struct {

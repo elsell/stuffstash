@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -19,7 +20,19 @@ type TenantRepository interface {
 
 type InventoryRepository interface {
 	SaveInventory(ctx context.Context, inventory inventory.Inventory) error
+	InventoryByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error)
 	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID) ([]inventory.Inventory, error)
+}
+
+type AssetRepository interface {
+	CreateAsset(ctx context.Context, asset asset.Asset) error
+	AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error)
+	ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AssetListPageRequest) ([]asset.Asset, error)
+}
+
+type AssetListPageRequest struct {
+	AfterAssetID asset.ID
+	Limit        int
 }
 
 type AuthorizationOutboxEventKind string

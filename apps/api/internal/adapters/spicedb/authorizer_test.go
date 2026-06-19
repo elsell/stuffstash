@@ -50,6 +50,29 @@ func TestAuthorizerDeniesMissingPermission(t *testing.T) {
 	}
 }
 
+func TestAuthorizerChecksCreateAssetPermission(t *testing.T) {
+	gateway := &fakeGateway{
+		permissionship: v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION,
+	}
+	authorizer := NewAuthorizer(gateway)
+
+	err := authorizer.CheckInventory(context.Background(), principal("user-one"), ports.InventoryPermissionCreateAsset, inventory.InventoryID("inventory-one"))
+	if err != nil {
+		t.Fatalf("check create asset: %v", err)
+	}
+
+	request := gateway.checks[0]
+	if request.Resource.ObjectType != "inventory" || request.Resource.ObjectId != "inventory-one" {
+		t.Fatalf("unexpected resource: %+v", request.Resource)
+	}
+	if request.Permission != "create_asset" {
+		t.Fatalf("unexpected permission: %q", request.Permission)
+	}
+	if request.Subject.Object.ObjectType != "user" || request.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected subject: %+v", request.Subject.Object)
+	}
+}
+
 func TestAuthorizerPropagatesBackendFailure(t *testing.T) {
 	expected := errors.New("backend unavailable")
 	gateway := &fakeGateway{checkErr: expected}

@@ -2,13 +2,13 @@
 
 ## Purpose
 
-The first API slice should prove the security boundary, Huma/OpenAPI generation, response contracts, and tenant/inventory behavior before assets are added.
+The first API slice should prove the security boundary, Huma/OpenAPI generation, response contracts, tenant/inventory behavior, and the first asset create/list flow.
 
 ## Scope
 
 This spec covers the first protected REST endpoints.
 
-It does not cover asset, location, conversational, import/export, media, or search endpoints.
+It does not cover asset movement, custom field definition APIs, location-specific APIs, conversational, import/export, media, or search endpoints.
 
 ## Local Convenience Endpoint
 
@@ -26,6 +26,8 @@ The first protected REST slice includes:
 - `POST /tenants`
 - `POST /tenants/{tenantId}/inventories`
 - `GET /tenants/{tenantId}/inventories`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/assets`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets`
 
 ## Authentication
 
@@ -39,7 +41,21 @@ The first protected REST slice includes:
 - `POST /tenants` grants the caller ownership of the new tenant.
 - `POST /tenants/{tenantId}/inventories` requires `tenant.create_inventory`.
 - `GET /tenants/{tenantId}/inventories` returns only inventories visible to the caller.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.create_asset`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.view`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
+
+## First Asset REST Slice
+
+- Asset creation must support `item`, `container`, and `location` asset kinds.
+- Asset creation must support root assets and child assets through `parentAssetId`.
+- Parent assets must be in the same tenant and inventory as the child.
+- Parent assets must have kind `container` or `location`.
+- Non-empty custom field values must be rejected until custom field definitions are implemented.
+- New assets must be created with lifecycle state `active`.
+- Asset listing returns assets scoped to one inventory.
+- Asset listing must support cursor pagination with `limit` and `cursor` query parameters.
+- Asset listing must include pagination metadata in the response envelope.
 
 ## Responses
 
@@ -64,6 +80,11 @@ The first protected REST slice includes:
 - Tests must verify cross-tenant attempts fail.
 - Tests must verify tenant owners can list all inventories in their tenant.
 - Tests must verify inventory owners who are not tenant owners see only the inventories they can view.
+- Tests must verify asset creation and listing.
+- Tests must verify asset endpoint authentication and authorization failures.
+- Tests must verify cross-tenant and cross-inventory asset containment attempts fail.
+- Tests must verify item assets cannot be parents.
+- Tests must verify non-empty custom field values are rejected.
 - Tests must verify unauthorized errors use the safe error envelope.
 - Tests must verify the API index route is available.
 - Tests must verify the OpenAPI route is available.

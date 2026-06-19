@@ -2,10 +2,13 @@ package gormstore
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -23,7 +26,7 @@ func NewStore(db *gorm.DB) Store {
 }
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &authorizationOutboxEventModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &assetModel{}, &authorizationOutboxEventModel{})
 }
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -55,6 +58,22 @@ func (s Store) SaveInventory(ctx context.Context, item inventory.Inventory) erro
 	}
 
 	return s.db.WithContext(ctx).Save(&model).Error
+}
+
+func (s Store) InventoryByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error) {
+	var model inventoryModel
+	err := s.db.WithContext(ctx).Where(&inventoryModel{
+		ID:       inventoryID.String(),
+		TenantID: tenantID.String(),
+	}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return inventory.Inventory{}, false, nil
+	}
+	if err != nil {
+		return inventory.Inventory{}, false, err
+	}
+	item, ok := model.toDomain()
+	return item, ok, nil
 }
 
 func (s Store) SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
@@ -236,6 +255,132 @@ func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.T
 	return items, nil
 }
 
+func (s Store) CreateAsset(ctx context.Context, item asset.Asset) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var containingInventory inventoryModel
+		err := tx.Where(&inventoryModel{
+			ID:       item.InventoryID.String(),
+			TenantID: item.TenantID.String(),
+		}).First(&containingInventory).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+
+		if item.ParentAssetID.String() != "" {
+			var parent assetModel
+			err = tx.Where(&assetModel{
+				ID:          item.ParentAssetID.String(),
+				TenantID:    item.TenantID.String(),
+				InventoryID: item.InventoryID.String(),
+			}).First(&parent).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ports.ErrForbidden
+			}
+			if err != nil {
+				return err
+			}
+			parentKind, ok := asset.NewKind(parent.Kind)
+			if !ok || !parentKind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive.String() || parent.ID == item.ID.String() {
+				return ports.ErrForbidden
+			}
+			if err := rejectAssetContainmentCycle(tx, item.ID, parent); err != nil {
+				return err
+			}
+		}
+
+		parentAssetID := stringPtrFromAssetID(item.ParentAssetID)
+		customFields, err := json.Marshal(item.CustomFields.Values())
+		if err != nil {
+			return err
+		}
+		return tx.Create(&assetModel{
+			ID:             item.ID.String(),
+			TenantID:       item.TenantID.String(),
+			InventoryID:    item.InventoryID.String(),
+			ParentAssetID:  parentAssetID,
+			Kind:           item.Kind.String(),
+			Title:          item.Title.String(),
+			Description:    item.Description.String(),
+			CustomFields:   string(customFields),
+			LifecycleState: item.LifecycleState.String(),
+		}).Error
+	})
+}
+
+func (s Store) AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
+	var model assetModel
+	err := s.db.WithContext(ctx).Where(&assetModel{
+		ID:          assetID.String(),
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+	}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return asset.Asset{}, false, nil
+	}
+	if err != nil {
+		return asset.Asset{}, false, err
+	}
+	item, ok := model.toDomain()
+	if !ok {
+		return asset.Asset{}, false, fmt.Errorf("invalid asset row %q", model.ID)
+	}
+	return item, true, nil
+}
+
+func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetListPageRequest) ([]asset.Asset, error) {
+	var models []assetModel
+	query := s.db.WithContext(ctx).Where(&assetModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+	})
+	if page.AfterAssetID.String() != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterAssetID.String()})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]asset.Asset, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid asset row %q", model.ID)
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func rejectAssetContainmentCycle(tx *gorm.DB, assetID asset.ID, parent assetModel) error {
+	for current := parent; ; {
+		if current.ID == assetID.String() {
+			return ports.ErrForbidden
+		}
+		if current.ParentAssetID == nil {
+			return nil
+		}
+
+		nextID := *current.ParentAssetID
+		err := tx.Where(&assetModel{
+			ID:          nextID,
+			TenantID:    current.TenantID,
+			InventoryID: current.InventoryID,
+		}).First(&current).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+	}
+}
+
 type tenantModel struct {
 	ID        string `gorm:"primaryKey;size:26"`
 	Name      string `gorm:"not null;size:120"`
@@ -254,6 +399,23 @@ type inventoryModel struct {
 	Name      string      `gorm:"not null;size:120"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type assetModel struct {
+	ID             string         `gorm:"primaryKey;size:26"`
+	TenantID       string         `gorm:"not null;size:26;index:idx_assets_tenant_inventory"`
+	Tenant         tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID    string         `gorm:"not null;size:26;index:idx_assets_tenant_inventory;index:idx_assets_inventory_parent;index:idx_assets_inventory_kind"`
+	Inventory      inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
+	ParentAssetID  *string        `gorm:"size:26;index;index:idx_assets_inventory_parent"`
+	ParentAsset    *assetModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:ParentAssetID;references:ID"`
+	Kind           string         `gorm:"not null;size:32;index:idx_assets_inventory_kind;check:chk_assets_kind,kind IN ('item','container','location')"`
+	Title          string         `gorm:"not null;size:160"`
+	Description    string         `gorm:"not null;default:''"`
+	CustomFields   string         `gorm:"type:jsonb;not null;default:'{}'"`
+	LifecycleState string         `gorm:"not null;size:32;check:chk_assets_lifecycle_state,lifecycle_state IN ('active','archived')"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type authorizationOutboxEventModel struct {
@@ -281,6 +443,10 @@ func (authorizationOutboxEventModel) TableName() string {
 
 func (inventoryModel) TableName() string {
 	return "inventories"
+}
+
+func (assetModel) TableName() string {
+	return "assets"
 }
 
 func (m inventoryModel) toDomain() (inventory.Inventory, bool) {
@@ -324,4 +490,59 @@ func (m authorizationOutboxEventModel) toPort() ports.AuthorizationOutboxEvent {
 	}
 	event.DeadLetterReason = m.DeadLetterReason
 	return event
+}
+
+func (m assetModel) toDomain() (asset.Asset, bool) {
+	id, ok := asset.NewID(m.ID)
+	if !ok {
+		return asset.Asset{}, false
+	}
+	kind, ok := asset.NewKind(m.Kind)
+	if !ok {
+		return asset.Asset{}, false
+	}
+	title, ok := asset.NewTitle(m.Title)
+	if !ok {
+		return asset.Asset{}, false
+	}
+	var customFieldValues map[string]any
+	if err := json.Unmarshal([]byte(m.CustomFields), &customFieldValues); err != nil {
+		return asset.Asset{}, false
+	}
+	customFields, ok := asset.NewCustomFields(customFieldValues)
+	if !ok {
+		return asset.Asset{}, false
+	}
+	lifecycleState := asset.LifecycleState(m.LifecycleState)
+	switch lifecycleState {
+	case asset.LifecycleStateActive, asset.LifecycleStateArchived:
+	default:
+		return asset.Asset{}, false
+	}
+	parentID := asset.ID("")
+	if m.ParentAssetID != nil {
+		parentID, ok = asset.NewID(*m.ParentAssetID)
+		if !ok {
+			return asset.Asset{}, false
+		}
+	}
+	return asset.Asset{
+		ID:             id,
+		TenantID:       asset.TenantID(m.TenantID),
+		InventoryID:    asset.InventoryID(m.InventoryID),
+		ParentAssetID:  parentID,
+		Kind:           kind,
+		Title:          title,
+		Description:    asset.NewDescription(m.Description),
+		CustomFields:   customFields,
+		LifecycleState: lifecycleState,
+	}, true
+}
+
+func stringPtrFromAssetID(id asset.ID) *string {
+	if id.String() == "" {
+		return nil
+	}
+	value := id.String()
+	return &value
 }

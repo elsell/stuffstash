@@ -52,18 +52,19 @@ The goal is to prove a production-shaped path through:
 - Authorization outbox events now use claim IDs and lease deadlines so multiple API replicas do not update the same event at the same time.
 - The pinned migration library is wired into the `stuff-stash` binary, and the same image can run `migrate up` or `migrate status`.
 - Authorization outbox events now support a terminal dead-letter state for unrecoverable event data problems while keeping transient SpiceDB failures retryable.
+- The first asset REST slice implements asset creation, unified `item`/`container`/`location` kinds, same-inventory containment, cursor-paginated asset listing, and adversarial asset authorization tests.
 
 ## Known Gaps
 
-- Asset and containment behavior is specified but not implemented.
+- Asset movement, update, delete/archive, search, custom field definition APIs, and media attachments are not implemented.
+- Custom field values are modeled and round-trip through persistence, but non-empty values are rejected by the first asset create endpoint until custom field definitions are implemented.
 
 ## Next Work
 
-1. Start the first asset and containment implementation slice.
-   - Update the asset and containment specs first.
-   - Implement the smallest useful asset model inside an inventory.
-   - Preserve tenant and inventory isolation.
-   - Keep containment behavior explicit and testable.
+1. Specify and implement custom field definitions for tenants and inventories.
+   - Update the asset/custom-field specs first.
+   - Define validation, inheritance, and response behavior for custom field values.
+   - Keep custom field definitions tenant/inventory scoped and authorization checked.
 
 ## Later Work
 

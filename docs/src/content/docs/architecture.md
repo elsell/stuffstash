@@ -49,9 +49,9 @@ When the API creates data that needs a SpiceDB relationship, it saves the data a
 
 ## Assets And Locations
 
-Assets and locations are separate concepts.
+Locations are represented as assets with kind `location`.
 
-They share containment behavior. A garage shelf can contain an asset. A toolbox can also contain assets. The system should support this without turning every place into an item.
+This gives the app one containment model. A garage shelf can contain an asset. A toolbox can also contain assets. The system can still say "location" to users without keeping a second hierarchy in the code.
 
 ## Conversational Inventory
 
