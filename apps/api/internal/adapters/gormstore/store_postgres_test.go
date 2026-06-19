@@ -180,7 +180,7 @@ func TestPostgresStoreRestrictsInventoryDeleteWithAuditRecords(t *testing.T) {
 		t.Fatalf("expected inventory delete to be restricted by audit records")
 	}
 	var postgresError *pgconn.PgError
-	if !errors.As(err, &postgresError) || postgresError.Code != "23503" {
+	if !errors.As(err, &postgresError) || postgresError.Code != "23001" {
 		t.Fatalf("expected foreign key violation, got %v", err)
 	}
 }
@@ -285,6 +285,9 @@ func cleanupAuthorizationOutboxTestRows(t *testing.T, ctx context.Context, store
 	if err := store.db.WithContext(ctx).Delete(&authorizationOutboxEventModel{ID: eventID}).Error; err != nil {
 		t.Fatalf("clean outbox row: %v", err)
 	}
+	if err := store.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()}).Delete(&auditRecordModel{}).Error; err != nil {
+		t.Fatalf("clean audit record rows: %v", err)
+	}
 	if err := store.db.WithContext(ctx).Delete(&tenantModel{ID: tenantID.String()}).Error; err != nil {
 		t.Fatalf("clean tenant row: %v", err)
 	}
@@ -295,6 +298,9 @@ func cleanupAssetTestRows(t *testing.T, ctx context.Context, store Store, tenant
 
 	if err := store.db.WithContext(ctx).Delete(&assetModel{ID: assetID}).Error; err != nil {
 		t.Fatalf("clean asset row: %v", err)
+	}
+	if err := store.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()}).Delete(&auditRecordModel{}).Error; err != nil {
+		t.Fatalf("clean audit record rows: %v", err)
 	}
 	if err := store.db.WithContext(ctx).Delete(&inventoryModel{ID: inventoryID.String()}).Error; err != nil {
 		t.Fatalf("clean inventory row: %v", err)
@@ -309,6 +315,9 @@ func cleanupCustomFieldDefinitionTestRows(t *testing.T, ctx context.Context, sto
 
 	if err := store.db.WithContext(ctx).Where(&customFieldDefinitionModel{TenantID: tenantID.String()}).Delete(&customFieldDefinitionModel{}).Error; err != nil {
 		t.Fatalf("clean custom field definition rows: %v", err)
+	}
+	if err := store.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()}).Delete(&auditRecordModel{}).Error; err != nil {
+		t.Fatalf("clean audit record rows: %v", err)
 	}
 	if err := store.db.WithContext(ctx).Delete(&inventoryModel{ID: inventoryID.String()}).Error; err != nil {
 		t.Fatalf("clean inventory row: %v", err)
