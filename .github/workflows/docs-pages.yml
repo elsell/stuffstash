@@ -1,0 +1,165 @@
+name: Docs Pages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+  NODE_VERSION: "24.17.0"
+  STUFF_STASH_DOCS_SITE: "https://elsell.github.io"
+
+jobs:
+  build:
+    name: Build docs
+    if: github.event_name == 'push' || github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.0.7 --activate
+
+      - name: Install docs dependencies
+        run: pnpm --dir docs install --frozen-lockfile
+
+      - name: Configure production base path
+        if: github.event_name == 'push'
+        run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/" >> "$GITHUB_ENV"
+
+      - name: Configure pull request preview base path
+        if: github.event_name == 'pull_request'
+        run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_ENV"
+
+      - name: Build docs
+        run: pnpm --dir docs build
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: docs-dist
+          path: docs/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: Deploy docs
+    needs: build
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Pages branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: gh-pages
+          path: pages
+          fetch-depth: 0
+        continue-on-error: true
+
+      - name: Initialize Pages branch
+        run: |
+          if [ ! -d pages/.git ]; then
+            mkdir -p pages
+            cd pages
+            git init
+            git checkout -b gh-pages
+            git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Download docs artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: docs-dist
+          path: built-docs
+
+      - name: Publish production docs
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p pages
+          find pages -mindepth 1 -maxdepth 1 ! -name .git ! -name 'pr-*' -exec rm -rf {} +
+          cp -R built-docs/. pages/
+          touch pages/.nojekyll
+
+      - name: Publish pull request preview
+        if: github.event_name == 'pull_request'
+        run: |
+          preview_dir="pages/pr-${{ github.event.pull_request.number }}"
+          rm -rf "$preview_dir"
+          mkdir -p "$preview_dir"
+          cp -R built-docs/. "$preview_dir/"
+          rm -f pages/CNAME
+          touch pages/.nojekyll
+
+      - name: Commit and push Pages branch
+        run: |
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No Pages changes to publish."
+            exit 0
+          fi
+          git commit -m "Deploy documentation site"
+          git push origin HEAD:gh-pages
+
+      - name: Report preview URL
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Preview URL: https://elsell.github.io/stuffstash/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_STEP_SUMMARY"
+
+  cleanup-preview:
+    name: Clean up docs preview
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Pages branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: gh-pages
+          path: pages
+          fetch-depth: 0
+
+      - name: Remove pull request preview
+        run: |
+          cd pages
+          rm -rf "pr-${{ github.event.pull_request.number }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No preview content to remove."
+            exit 0
+          fi
+          git commit -m "Remove documentation preview for PR ${{ github.event.pull_request.number }}"
+          git push origin HEAD:gh-pages

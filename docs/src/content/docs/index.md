@@ -6,9 +6,9 @@ hero:
   tagline: A home inventory system built for real life, not perfect habits.
   actions:
     - text: Read the overview
-      link: /overview/
+      link: overview/
     - text: Run it locally
-      link: /local-development/
+      link: local-development/
 ---
 
 Stuff Stash helps people track what they own, where it is, and what changed.
