@@ -49,12 +49,12 @@ The goal is to prove a production-shaped path through:
 - The real SpiceDB verifier found and drove fixes for tenant viewer relationships and fully consistent permission checks.
 - Tenant and inventory creation now write durable state and authorization grant intent through a transactional outbox before SpiceDB relationship writes are drained.
 - Authorization outbox retries now run on startup and on an environment-configured interval, not only after create requests.
+- Authorization outbox events now use claim IDs and lease deadlines so multiple API replicas do not update the same event at the same time.
 
 ## Known Gaps
 
 - `golang-migrate/migrate` is specified in `tooling-versions.spec.md`, but the CLI is not wired into root commands yet.
 - The app still relies on GORM schema migration for the local tracer bullet. Production migration execution must use reviewed migration files.
-- Authorization outbox events are not yet claimed with row-level locking, so multi-replica processing still needs production hardening.
 - Unrecoverable authorization outbox events do not yet have a dead-letter state.
 - Asset and containment behavior is specified but not implemented.
 
@@ -66,10 +66,10 @@ The goal is to prove a production-shaped path through:
    - Verify migrations against Postgres.
    - Stop relying on GORM schema migration beyond the local tracer bullet allowance.
 
-2. Harden authorization outbox processing for production concurrency.
-   - Add event claiming or row-level locking for multi-replica drains.
-   - Add a dead-letter state for unrecoverable events.
-   - Verify failed events can be retried after SpiceDB becomes available.
+2. Add dead-letter handling for unrecoverable authorization outbox events.
+   - Add an explicit terminal state for malformed or permanently invalid events.
+   - Keep retryable SpiceDB outages separate from unrecoverable event data problems.
+   - Preserve observability for operators to inspect and recover dead-lettered events.
 
 3. Start the first asset and containment implementation slice.
    - Update the asset and containment specs first.

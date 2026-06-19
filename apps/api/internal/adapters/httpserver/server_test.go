@@ -94,7 +94,7 @@ func TestSecureTenantInventoryFlow(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
 
-	server := NewServer(":0", newTestApp(&fakeObserver{}, tenantID, "tenant-event", inventoryID, "inventory-event"))
+	server := NewServer(":0", newTestApp(&fakeObserver{}, tenantID, "tenant-event", "tenant-claim", inventoryID, "inventory-event", "inventory-claim"))
 
 	me := performRequest(server, http.MethodGet, "/me", "Bearer dev:user-one", nil)
 	if me.Code != http.StatusOK {

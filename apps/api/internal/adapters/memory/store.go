@@ -82,15 +82,19 @@ func (s *Store) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID str
 	return nil
 }
 
-func (s *Store) ListPendingAuthorizationOutboxEvents(_ context.Context, limit int) ([]ports.AuthorizationOutboxEvent, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *Store) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	if limit <= 0 {
 		limit = len(s.outbox)
 	}
+	now := time.Now()
 	events := []ports.AuthorizationOutboxEvent{}
 	for _, event := range s.outbox {
+		if !event.ClaimedUntil.IsZero() && event.ClaimedUntil.After(now) {
+			continue
+		}
 		events = append(events, event)
 	}
 	sort.Slice(events, func(left int, right int) bool {
@@ -102,27 +106,39 @@ func (s *Store) ListPendingAuthorizationOutboxEvents(_ context.Context, limit in
 	if len(events) > limit {
 		events = events[:limit]
 	}
+	for index, event := range events {
+		event.ClaimID = claimID
+		event.ClaimedUntil = leaseUntil
+		s.outbox[event.ID] = event
+		events[index] = event
+	}
 	return events, nil
 }
 
-func (s *Store) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	delete(s.outbox, eventID)
-	return nil
-}
-
-func (s *Store) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID string, reason string) error {
+func (s *Store) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string, claimID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	event, ok := s.outbox[eventID]
-	if !ok {
-		return nil
+	if !ok || event.ClaimID != claimID {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	delete(s.outbox, eventID)
+	return nil
+}
+
+func (s *Store) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID string, claimID string, reason string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.outbox[eventID]
+	if !ok || event.ClaimID != claimID {
+		return ports.ErrAuthorizationOutboxClaimLost
 	}
 	event.Attempts++
 	event.LastError = reason
+	event.ClaimID = ""
+	event.ClaimedUntil = time.Time{}
 	s.outbox[eventID] = event
 	return nil
 }

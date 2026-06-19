@@ -22,6 +22,7 @@ const (
 	envSpiceDBSchemaPath        = "STUFF_STASH_SPICEDB_SCHEMA_PATH"
 	envAuthorizationOutboxLimit = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
 	envAuthorizationOutboxEvery = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
+	envAuthorizationOutboxLease = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
 	defaultHTTPAddr             = ":8080"
 	defaultAuthMode             = "local-dev"
 	defaultAuthzMode            = "memory"
@@ -29,6 +30,7 @@ const (
 	defaultSpiceDBSchemaPath    = "deploy/spicedb/schema.zed"
 	defaultAuthorizationLimit   = 25
 	defaultAuthorizationEvery   = 10 * time.Second
+	defaultAuthorizationLease   = 30 * time.Second
 	defaultSpiceDBTLSEnabled    = true
 	defaultSpiceDBBootstrapMode = false
 )
@@ -48,6 +50,7 @@ type Config struct {
 	SpiceDBSchemaPath                string
 	AuthorizationOutboxDrainLimit    int
 	AuthorizationOutboxDrainInterval time.Duration
+	AuthorizationOutboxClaimLease    time.Duration
 }
 
 func Load() Config {
@@ -66,6 +69,7 @@ func Load() Config {
 		SpiceDBSchemaPath:                envOrDefault(envSpiceDBSchemaPath, defaultSpiceDBSchemaPath),
 		AuthorizationOutboxDrainLimit:    intEnvOrDefault(envAuthorizationOutboxLimit, defaultAuthorizationLimit),
 		AuthorizationOutboxDrainInterval: durationEnvOrDefault(envAuthorizationOutboxEvery, defaultAuthorizationEvery),
+		AuthorizationOutboxClaimLease:    durationEnvOrDefault(envAuthorizationOutboxLease, defaultAuthorizationLease),
 	}
 }
 

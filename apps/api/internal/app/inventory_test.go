@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -278,24 +279,39 @@ func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventI
 	return nil
 }
 
-func (f *fakeOutbox) ListPendingAuthorizationOutboxEvents(context.Context, int) ([]ports.AuthorizationOutboxEvent, error) {
-	return f.events, nil
+func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, _ int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+	events := make([]ports.AuthorizationOutboxEvent, 0, len(f.events))
+	for index, event := range f.events {
+		event.ClaimID = claimID
+		event.ClaimedUntil = leaseUntil
+		f.events[index] = event
+		events = append(events, event)
+	}
+	return events, nil
 }
 
-func (f *fakeOutbox) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string) error {
-	f.processed = append(f.processed, eventID)
+func (f *fakeOutbox) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string, claimID string) error {
 	for index, event := range f.events {
-		if event.ID == eventID {
+		if event.ID == eventID && event.ClaimID == claimID {
+			f.processed = append(f.processed, eventID)
 			f.events = append(f.events[:index], f.events[index+1:]...)
-			break
+			return nil
 		}
 	}
-	return nil
+	return ports.ErrAuthorizationOutboxClaimLost
 }
 
-func (f *fakeOutbox) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID string, _ string) error {
-	f.failed = append(f.failed, eventID)
-	return nil
+func (f *fakeOutbox) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID string, claimID string, _ string) error {
+	for index, event := range f.events {
+		if event.ID == eventID && event.ClaimID == claimID {
+			f.failed = append(f.failed, eventID)
+			event.ClaimID = ""
+			event.ClaimedUntil = time.Time{}
+			f.events[index] = event
+			return nil
+		}
+	}
+	return ports.ErrAuthorizationOutboxClaimLost
 }
 
 func (f *fakeInventoryRepository) SaveInventory(context.Context, inventory.Inventory) error {

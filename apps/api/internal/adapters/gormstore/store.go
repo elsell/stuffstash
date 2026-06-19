@@ -96,50 +96,99 @@ func (s Store) SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID st
 	})
 }
 
-func (s Store) ListPendingAuthorizationOutboxEvents(ctx context.Context, limit int) ([]ports.AuthorizationOutboxEvent, error) {
+func (s Store) ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
 	if limit <= 0 {
 		limit = 25
 	}
 
-	var models []authorizationOutboxEventModel
-	if err := s.db.WithContext(ctx).
-		Where(map[string]any{"processed_at": nil}).
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
-		Limit(limit).
-		Find(&models).Error; err != nil {
-		return nil, err
-	}
+	events := []ports.AuthorizationOutboxEvent{}
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var models []authorizationOutboxEventModel
+		now := time.Now()
+		if err := tx.
+			Clauses(skipLockedForUpdate()).
+			Where(claimableAuthorizationOutboxEvent(now)).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
+			Limit(limit).
+			Find(&models).Error; err != nil {
+			return err
+		}
 
-	events := make([]ports.AuthorizationOutboxEvent, 0, len(models))
-	for _, model := range models {
-		events = append(events, model.toPort())
+		claimed := make([]authorizationOutboxEventModel, 0, len(models))
+		for _, model := range models {
+			model.ClaimID = claimID
+			model.ClaimedUntil = &leaseUntil
+			claimed = append(claimed, model)
+		}
+
+		for _, model := range claimed {
+			if err := tx.
+				Model(&authorizationOutboxEventModel{}).
+				Where(&authorizationOutboxEventModel{ID: model.ID}).
+				Updates(map[string]any{
+					"claim_id":      model.ClaimID,
+					"claimed_until": model.ClaimedUntil,
+				}).Error; err != nil {
+				return err
+			}
+			events = append(events, model.toPort())
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	return events, nil
 }
 
-func (s Store) MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string) error {
-	now := time.Now()
-	return s.db.WithContext(ctx).
-		Model(&authorizationOutboxEventModel{}).
-		Where(&authorizationOutboxEventModel{ID: eventID}).
-		Updates(map[string]any{
-			"processed_at": now,
-			"last_error":   "",
-		}).Error
+func skipLockedForUpdate() clause.Locking {
+	return clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}
 }
 
-func (s Store) MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID string, reason string) error {
+func claimableAuthorizationOutboxEvent(now time.Time) clause.Expression {
+	return clause.And(
+		clause.Eq{Column: clause.Column{Name: "processed_at"}, Value: nil},
+		clause.Or(
+			clause.Eq{Column: clause.Column{Name: "claim_id"}, Value: ""},
+			clause.Lte{Column: clause.Column{Name: "claimed_until"}, Value: now},
+		),
+	)
+}
+
+func (s Store) MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string, claimID string) error {
+	now := time.Now()
+	result := s.db.WithContext(ctx).
+		Model(&authorizationOutboxEventModel{}).
+		Where(&authorizationOutboxEventModel{ID: eventID, ClaimID: claimID}).
+		Updates(map[string]any{
+			"processed_at":  now,
+			"last_error":    "",
+			"claim_id":      "",
+			"claimed_until": nil,
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	return nil
+}
+
+func (s Store) MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID string, claimID string, reason string) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var model authorizationOutboxEventModel
-		if err := tx.Where(&authorizationOutboxEventModel{ID: eventID}).First(&model).Error; err != nil {
+		if err := tx.Where(&authorizationOutboxEventModel{ID: eventID, ClaimID: claimID}).First(&model).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil
+				return ports.ErrAuthorizationOutboxClaimLost
 			}
 			return err
 		}
 
 		model.Attempts++
 		model.LastError = reason
+		model.ClaimID = ""
+		model.ClaimedUntil = nil
 		return tx.Save(&model).Error
 	})
 }
@@ -187,18 +236,20 @@ type inventoryModel struct {
 }
 
 type authorizationOutboxEventModel struct {
-	ID          string         `gorm:"primaryKey;size:26"`
-	Kind        string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner');check:chk_authorization_outbox_events_inventory_required,(kind = 'grant_inventory_owner' AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
-	PrincipalID string         `gorm:"not null;size:128;index"`
-	TenantID    string         `gorm:"not null;size:26;index"`
-	Tenant      tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	InventoryID *string        `gorm:"size:26;index"`
-	Inventory   inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
-	Attempts    int            `gorm:"not null;default:0"`
-	LastError   string         `gorm:"not null;default:''"`
-	ProcessedAt *time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID           string         `gorm:"primaryKey;size:26"`
+	Kind         string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner');check:chk_authorization_outbox_events_inventory_required,(kind = 'grant_inventory_owner' AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
+	PrincipalID  string         `gorm:"not null;size:128;index"`
+	TenantID     string         `gorm:"not null;size:26;index"`
+	Tenant       tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID  *string        `gorm:"size:26;index"`
+	Inventory    inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
+	Attempts     int            `gorm:"not null;default:0"`
+	LastError    string         `gorm:"not null;default:''"`
+	ClaimID      string         `gorm:"not null;default:'';size:26;index"`
+	ClaimedUntil *time.Time     `gorm:"index"`
+	ProcessedAt  *time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 func (authorizationOutboxEventModel) TableName() string {
@@ -231,7 +282,7 @@ func (m authorizationOutboxEventModel) toPort() ports.AuthorizationOutboxEvent {
 	if m.InventoryID != nil {
 		inventoryID = inventory.InventoryID(*m.InventoryID)
 	}
-	return ports.AuthorizationOutboxEvent{
+	event := ports.AuthorizationOutboxEvent{
 		ID:          m.ID,
 		Kind:        ports.AuthorizationOutboxEventKind(m.Kind),
 		PrincipalID: identity.PrincipalID(m.PrincipalID),
@@ -239,6 +290,11 @@ func (m authorizationOutboxEventModel) toPort() ports.AuthorizationOutboxEvent {
 		InventoryID: inventoryID,
 		Attempts:    m.Attempts,
 		LastError:   m.LastError,
+		ClaimID:     m.ClaimID,
 		CreatedAt:   m.CreatedAt,
 	}
+	if m.ClaimedUntil != nil {
+		event.ClaimedUntil = *m.ClaimedUntil
+	}
+	return event
 }

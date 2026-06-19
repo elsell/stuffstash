@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -16,6 +17,7 @@ type App struct {
 	outbox           ports.AuthorizationOutbox
 	ids              ports.IDGenerator
 	outboxDrainLimit int
+	outboxClaimLease time.Duration
 }
 
 type Dependencies struct {
@@ -27,6 +29,7 @@ type Dependencies struct {
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
 	AuthorizationOutboxDrainLimit int
+	AuthorizationOutboxClaimLease time.Duration
 }
 
 func New(deps Dependencies) App {
@@ -39,6 +42,7 @@ func New(deps Dependencies) App {
 		outbox:           deps.Outbox,
 		ids:              deps.IDs,
 		outboxDrainLimit: deps.AuthorizationOutboxDrainLimit,
+		outboxClaimLease: deps.AuthorizationOutboxClaimLease,
 	}
 }
 

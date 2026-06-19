@@ -13,6 +13,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envSpiceDBSchemaPath, "")
 	t.Setenv(envAuthorizationOutboxLimit, "")
 	t.Setenv(envAuthorizationOutboxEvery, "")
+	t.Setenv(envAuthorizationOutboxLease, "")
 
 	cfg := Load()
 
@@ -46,6 +47,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.AuthorizationOutboxDrainInterval != defaultAuthorizationEvery {
 		t.Fatalf("expected authorization outbox interval %s, got %s", defaultAuthorizationEvery, cfg.AuthorizationOutboxDrainInterval)
 	}
+	if cfg.AuthorizationOutboxClaimLease != defaultAuthorizationLease {
+		t.Fatalf("expected authorization outbox claim lease %s, got %s", defaultAuthorizationLease, cfg.AuthorizationOutboxClaimLease)
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -62,6 +66,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envSpiceDBSchemaPath, "custom/schema.zed")
 	t.Setenv(envAuthorizationOutboxLimit, "7")
 	t.Setenv(envAuthorizationOutboxEvery, "250ms")
+	t.Setenv(envAuthorizationOutboxLease, "45s")
 
 	cfg := Load()
 
@@ -94,5 +99,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.AuthorizationOutboxDrainInterval.String() != "250ms" {
 		t.Fatalf("expected authorization outbox drain interval 250ms, got %s", cfg.AuthorizationOutboxDrainInterval)
+	}
+	if cfg.AuthorizationOutboxClaimLease.String() != "45s" {
+		t.Fatalf("expected authorization outbox claim lease 45s, got %s", cfg.AuthorizationOutboxClaimLease)
 	}
 }

@@ -34,6 +34,10 @@ This spec does not define the full asset schema, indexing strategy, backup strat
 - Outbox processing may run synchronously after writes for low-latency local behavior, but the durable outbox is the consistency mechanism.
 - Outbox processing must also have a retry path that does not depend on a future write request.
 - Outbox batch size and retry interval must come from environment-backed configuration.
+- Outbox claim lease duration must come from environment-backed configuration.
+- Outbox workers must claim events before processing them so multiple API replicas do not process and update the same event at the same time.
+- Claimed outbox events must use a lease deadline so a crashed worker does not strand events forever.
+- Processing completion or failure must only update an event when the caller still owns the event claim.
 - A failed outbox event must not prevent later events in the same batch from being attempted.
 - Outbox observability must include event ID, event kind, tenant ID, inventory ID when present, attempt count, and failure details when an event fails.
 
@@ -57,6 +61,8 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - tenant ID
   - inventory ID when applicable
   - attempts and last error
+  - claim ID
+  - claimed until timestamp
   - processed timestamp
   - timestamps managed by GORM
 
@@ -90,6 +96,8 @@ Authorization outbox records represent pending relationship grants that must be 
 - Tests must cover that tenant and inventory state are persisted with authorization outbox records atomically.
 - Tests must cover that authorization outbox processing retries failed relationship grants and marks successful grants processed.
 - Tests must cover rollback when a domain state write succeeds but the paired authorization outbox insert fails.
+- Tests must cover that claimed authorization outbox events are hidden from other claims until their lease expires.
+- Tests must cover that processed and failed updates require ownership of the active claim.
 - Security tests must cover that state created while authorization grants fail remains protected until the outbox grant succeeds.
 
 ## Open Questions

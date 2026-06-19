@@ -79,6 +79,7 @@ func main() {
 		Outbox:                        repositories.outbox,
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
+		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,
 	})
 	server := httpserver.NewServer(cfg.HTTPAddr, application)
 	go drainAuthorizationOutbox(ctx, application, observer, cfg.AuthorizationOutboxDrainLimit, cfg.AuthorizationOutboxDrainInterval)

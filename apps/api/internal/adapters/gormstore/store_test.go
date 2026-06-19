@@ -2,7 +2,9 @@ package gormstore
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -120,9 +122,9 @@ func TestStoreSavesTenantAndOutboxEventAtomically(t *testing.T) {
 		t.Fatalf("expected tenant to exist")
 	}
 
-	events, err := store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
 	if err != nil {
-		t.Fatalf("list outbox events: %v", err)
+		t.Fatalf("claim outbox events: %v", err)
 	}
 	if len(events) != 1 {
 		t.Fatalf("expected 1 outbox event, got %d", len(events))
@@ -182,9 +184,9 @@ func TestStoreSavesInventoryAndOutboxEventAtomically(t *testing.T) {
 		t.Fatalf("save inventory and enqueue owner grant: %v", err)
 	}
 
-	events, err := store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
 	if err != nil {
-		t.Fatalf("list outbox events: %v", err)
+		t.Fatalf("claim outbox events: %v", err)
 	}
 	if len(events) != 1 {
 		t.Fatalf("expected 1 outbox event, got %d", len(events))
@@ -239,26 +241,91 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 		t.Fatalf("save tenant and enqueue owner grant: %v", err)
 	}
 
-	if err := store.MarkAuthorizationOutboxEventFailed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "spicedb unavailable"); err != nil {
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("expected 1 claimed event, got %+v", events)
+	}
+
+	if err := store.MarkAuthorizationOutboxEventFailed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "claim-one", "spicedb unavailable"); err != nil {
 		t.Fatalf("mark outbox failed: %v", err)
 	}
-	events, err := store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
 	if err != nil {
-		t.Fatalf("list outbox events: %v", err)
+		t.Fatalf("claim outbox events: %v", err)
 	}
 	if len(events) != 1 || events[0].Attempts != 1 || events[0].LastError != "spicedb unavailable" {
 		t.Fatalf("expected failed event to remain pending, got %+v", events)
 	}
 
-	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW"); err != nil {
+	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "wrong-claim"); !errors.Is(err, ports.ErrAuthorizationOutboxClaimLost) {
+		t.Fatalf("expected claim lost error, got %v", err)
+	}
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected active claim to hide event from wrong processor, got %+v", events)
+	}
+
+	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "claim-two"); err != nil {
 		t.Fatalf("mark outbox processed: %v", err)
 	}
-	events, err = store.ListPendingAuthorizationOutboxEvents(ctx, 10)
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 10, time.Now().Add(time.Minute))
 	if err != nil {
-		t.Fatalf("list outbox events: %v", err)
+		t.Fatalf("claim outbox events: %v", err)
 	}
 	if len(events) != 0 {
 		t.Fatalf("expected processed event hidden from pending list, got %+v", events)
+	}
+}
+
+func TestStoreClaimsHideEventsUntilLeaseExpires(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	saveTenantWithOutbox(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Home")
+
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 1 || events[0].ClaimID != "claim-one" {
+		t.Fatalf("expected claim-one to own event, got %+v", events)
+	}
+
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected active lease to hide event, got %+v", events)
+	}
+}
+
+func TestStoreReclaimsEventsAfterLeaseExpires(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	saveTenantWithOutbox(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Home")
+
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(-time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("expected claim-one to claim event, got %+v", events)
+	}
+
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 1 || events[0].ClaimID != "claim-two" {
+		t.Fatalf("expected expired lease to be reclaimed, got %+v", events)
 	}
 }
 

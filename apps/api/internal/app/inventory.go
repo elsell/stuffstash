@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -139,7 +140,8 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 		limit = a.authorizationOutboxDrainLimit()
 	}
 
-	events, err := a.outbox.ListPendingAuthorizationOutboxEvents(ctx, limit)
+	claimID := a.ids.NewID()
+	events, err := a.outbox.ClaimPendingAuthorizationOutboxEvents(ctx, claimID, limit, time.Now().Add(a.authorizationOutboxClaimLease()))
 	if err != nil {
 		return err
 	}
@@ -150,7 +152,7 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 	for _, event := range events {
 		if err := a.applyAuthorizationOutboxEvent(ctx, event); err != nil {
 			failedCount++
-			if markErr := a.outbox.MarkAuthorizationOutboxEventFailed(ctx, event.ID, err.Error()); markErr != nil {
+			if markErr := a.outbox.MarkAuthorizationOutboxEventFailed(ctx, event.ID, claimID, err.Error()); markErr != nil {
 				a.recordAuthorizationOutboxEventFailed(ctx, event, markErr)
 				drainErr = errors.Join(drainErr, markErr)
 				continue
@@ -159,7 +161,7 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 			drainErr = errors.Join(drainErr, err)
 			continue
 		}
-		if err := a.outbox.MarkAuthorizationOutboxEventProcessed(ctx, event.ID); err != nil {
+		if err := a.outbox.MarkAuthorizationOutboxEventProcessed(ctx, event.ID, claimID); err != nil {
 			failedCount++
 			drainErr = errors.Join(drainErr, err)
 			continue
@@ -214,6 +216,13 @@ func (a App) authorizationOutboxDrainLimit() int {
 		return 25
 	}
 	return a.outboxDrainLimit
+}
+
+func (a App) authorizationOutboxClaimLease() time.Duration {
+	if a.outboxClaimLease <= 0 {
+		return 30 * time.Second
+	}
+	return a.outboxClaimLease
 }
 
 func (a App) ListInventories(ctx context.Context, input ListInventoriesInput) ([]inventory.Inventory, error) {

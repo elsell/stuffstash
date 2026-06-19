@@ -2,12 +2,15 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
+
+var ErrAuthorizationOutboxClaimLost = errors.New("authorization outbox claim lost")
 
 type TenantRepository interface {
 	SaveTenant(ctx context.Context, tenant tenant.Tenant) error
@@ -27,20 +30,22 @@ const (
 )
 
 type AuthorizationOutboxEvent struct {
-	ID          string
-	Kind        AuthorizationOutboxEventKind
-	PrincipalID identity.PrincipalID
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Attempts    int
-	LastError   string
-	CreatedAt   time.Time
+	ID           string
+	Kind         AuthorizationOutboxEventKind
+	PrincipalID  identity.PrincipalID
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	Attempts     int
+	LastError    string
+	ClaimID      string
+	ClaimedUntil time.Time
+	CreatedAt    time.Time
 }
 
 type AuthorizationOutbox interface {
 	SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID string, tenant tenant.Tenant, principal identity.Principal) error
 	SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID string, inventory inventory.Inventory, tenantID tenant.ID, principal identity.Principal) error
-	ListPendingAuthorizationOutboxEvents(ctx context.Context, limit int) ([]AuthorizationOutboxEvent, error)
-	MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string) error
-	MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID string, reason string) error
+	ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimID string, limit int, leaseUntil time.Time) ([]AuthorizationOutboxEvent, error)
+	MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string, claimID string) error
+	MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID string, claimID string, reason string) error
 }
