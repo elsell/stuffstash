@@ -159,6 +159,16 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
   -d '{"kind":"item","title":"Aspirin","customAssetTypeId":"<medicine-type-id>","customFields":{"expiration-date":"2027-01-01"}}'
 ```
 
+Rename that custom asset type later without changing the stable key:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-asset-types/<medicine-type-id> \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"displayName":"Medicine and Vitamins"}'
+```
+
 Move or edit an asset:
 
 ```sh

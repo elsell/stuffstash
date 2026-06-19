@@ -309,6 +309,45 @@ func (s *Store) SaveCustomAssetType(_ context.Context, assetType customfield.Ass
 	return nil
 }
 
+func (s *Store) UpdateCustomAssetType(_ context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, exists := s.customAssetTypes[assetType.ID]
+	if !exists || existing.TenantID != assetType.TenantID || existing.InventoryID != assetType.InventoryID || existing.Scope != assetType.Scope {
+		return ports.ErrForbidden
+	}
+	if existing.Key != assetType.Key {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.customAssetTypes[assetType.ID] = assetType
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) CustomAssetTypeByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	assetType, ok := s.customAssetTypes[assetTypeID]
+	if !ok || assetType.TenantID.String() != tenantID.String() {
+		return customfield.AssetType{}, false, nil
+	}
+	if inventoryID.String() == "" {
+		if assetType.Scope != customfield.ScopeTenant {
+			return customfield.AssetType{}, false, nil
+		}
+		return assetType, true, nil
+	}
+	if assetType.Scope == customfield.ScopeInventory && assetType.InventoryID.String() != inventoryID.String() {
+		return customfield.AssetType{}, false, nil
+	}
+	return assetType, true, nil
+}
+
 func (s *Store) ListTenantCustomAssetTypes(_ context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

@@ -10,7 +10,7 @@ An asset with a custom asset type is still a normal asset. Base `kind` controls 
 
 This spec covers the first custom asset type API and the changes needed for custom field definitions and asset custom field validation.
 
-This spec does not implement multiple custom asset types per asset, custom type inheritance, icons, display ordering, update/delete APIs, import/export, search indexing, or UI editing flows.
+This spec does not implement multiple custom asset types per asset, custom type inheritance, icons, display ordering, delete/archive APIs, import/export, search indexing, or UI editing flows.
 
 ## Model
 
@@ -46,6 +46,25 @@ Descriptions are optional:
 - Maximum length 1000.
 - Trimmed before persistence.
 
+## Lifecycle And Mutability
+
+Custom asset type definitions start as active records.
+
+The first update slice may change only human-facing metadata:
+
+- Display name.
+- Description.
+
+These fields are immutable after creation:
+
+- ID.
+- Tenant ID.
+- Inventory ID.
+- Scope.
+- Key.
+
+Changing keys, scope, tenant, inventory, delete/archive behavior, display ordering, and icon/media metadata are separate slices. They need their own compatibility rules because assets, field definitions, imports, exports, audit records, and generated clients may already refer to the existing custom asset type.
+
 ## Effective Scope
 
 Tenant-scoped custom asset types flow down into all inventories in the tenant.
@@ -60,16 +79,22 @@ The first custom asset type endpoints are:
 
 - `POST /tenants/{tenantId}/custom-asset-types`
 - `GET /tenants/{tenantId}/custom-asset-types`
+- `PATCH /tenants/{tenantId}/custom-asset-types/{customAssetTypeId}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}`
 
 All endpoints require bearer authentication.
 
 Tenant-scoped create and list require `tenant.configure`.
 
+Tenant-scoped update requires `tenant.configure`.
+
 Inventory-scoped create requires `inventory.configure`.
 
 Inventory-scoped list requires `inventory.view` and returns the effective custom asset types available to that inventory.
+
+Inventory-scoped update requires `inventory.configure` and may update only custom asset types owned by that inventory. Tenant-scoped types inherited by an inventory must be updated through the tenant endpoint.
 
 Collection endpoints must use cursor pagination with `limit` and `cursor`.
 
@@ -78,6 +103,8 @@ Successful responses must use the standard success envelope.
 Error responses must use the standard safe error envelope.
 
 Create endpoints must return `201 Created`.
+
+Update endpoints must return the updated custom asset type using the standard success envelope.
 
 ## API Shapes
 
@@ -105,6 +132,17 @@ Response item:
 ```
 
 Inventory-scoped response items include the inventory ID.
+
+Update request:
+
+```json
+{
+  "displayName": "Medicine and Vitamins",
+  "description": "Medication, vitamins, and supplement supplies"
+}
+```
+
+Both fields are optional in the request, but at least one field must be present. Present fields must pass the same validation as create.
 
 ## Custom Field Definition Changes
 
@@ -214,18 +252,21 @@ Assigning a custom asset type to an asset uses the same permission as creating o
 
 Creating a custom asset type must emit an audit record.
 
+Updating a custom asset type must emit an audit record with safe metadata for changed fields only.
+
 Creating a custom field definition targeted to custom asset types must emit an audit record that includes safe metadata about applicability and target count.
 
-Assigning a custom asset type to an asset must be included in the asset create audit metadata once supported.
+Assigning a custom asset type to an asset must be included in the asset create audit metadata.
 
 ## OpenAPI
 
 The generated OpenAPI contract must include:
 
 - Custom asset type create/list endpoints.
+- Custom asset type update endpoints.
 - Custom asset type DTOs.
 - Custom field applicability and `customAssetTypeIds` request fields.
-- Asset `customAssetTypeId` request/response fields once asset assignment is implemented.
+- Asset `customAssetTypeId` request/response fields.
 
 ## Testing
 
@@ -236,6 +277,9 @@ Domain and application tests must cover:
 - Custom asset type key validation.
 - Tenant-scoped custom asset type creation.
 - Inventory-scoped custom asset type creation.
+- Tenant-scoped custom asset type metadata update.
+- Inventory-scoped custom asset type metadata update.
+- Rejection when an inventory update attempts to update an inherited tenant-scoped custom asset type.
 - Effective inventory listing.
 - Duplicate effective keys.
 - Field applicability `all_assets`.
@@ -250,6 +294,7 @@ Adversarial API tests must cover:
 - Missing and malformed authentication.
 - Unrelated users.
 - Viewers attempting custom asset type creation.
+- Viewers attempting custom asset type updates.
 - Wrong tenant.
 - Wrong inventory.
 - Target custom asset types from another tenant.

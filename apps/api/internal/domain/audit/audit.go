@@ -44,6 +44,7 @@ const (
 	ActionInventoryCreated             Action = "inventory.created"
 	ActionInventoryAccessGranted       Action = "inventory_access.granted"
 	ActionCustomAssetTypeCreated       Action = "custom_asset_type.created"
+	ActionCustomAssetTypeUpdated       Action = "custom_asset_type.updated"
 	ActionCustomFieldDefinitionCreated Action = "custom_field_definition.created"
 	ActionAssetCreated                 Action = "asset.created"
 	ActionAssetUpdated                 Action = "asset.updated"
@@ -57,6 +58,7 @@ func NewAction(value string) (Action, bool) {
 		ActionInventoryCreated,
 		ActionInventoryAccessGranted,
 		ActionCustomAssetTypeCreated,
+		ActionCustomAssetTypeUpdated,
 		ActionCustomFieldDefinitionCreated,
 		ActionAssetCreated,
 		ActionAssetUpdated,

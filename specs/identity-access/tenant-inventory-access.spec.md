@@ -107,7 +107,7 @@ Neither `viewer` nor `editor` allows sharing access onward.
 - Custom field definitions do not need separate per-field permissions at first.
 - A user who can configure an inventory may configure that inventory's custom field definitions.
 - A user who can edit assets in an inventory may set values for custom fields available to that inventory.
-- A user who can edit assets in an inventory may assign available custom asset types to assets in that inventory once custom asset type assignment is implemented.
+- A user who can edit assets in an inventory may assign available custom asset types to assets in that inventory.
 
 ## Security Tests
 

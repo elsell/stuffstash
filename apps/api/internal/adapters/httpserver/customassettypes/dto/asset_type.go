@@ -27,6 +27,32 @@ type CreateAssetTypeOutput struct {
 	Body shared.SuccessEnvelope[AssetTypeResponse]
 }
 
+type UpdateTenantAssetTypeInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	CustomAssetTypeID string `path:"customAssetTypeId" doc:"Custom asset type ID"`
+	Body              UpdateAssetTypeBody
+}
+
+type UpdateInventoryAssetTypeInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID       string `path:"inventoryId" doc:"Inventory ID"`
+	CustomAssetTypeID string `path:"customAssetTypeId" doc:"Custom asset type ID"`
+	Body              UpdateAssetTypeBody
+}
+
+type UpdateAssetTypeBody struct {
+	DisplayName *string `json:"displayName,omitempty" maxLength:"120" doc:"User-facing custom asset type label"`
+	Description *string `json:"description,omitempty" maxLength:"1000" doc:"Custom asset type description"`
+}
+
+type UpdateAssetTypeOutput struct {
+	Body shared.SuccessEnvelope[AssetTypeResponse]
+}
+
 type ListTenantAssetTypesInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`

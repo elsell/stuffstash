@@ -185,3 +185,161 @@ func TestCustomAssetTypeEndpointsRejectUnauthorizedUsers(t *testing.T) {
 		t.Fatalf("expected viewer list type status %d, got %d with body %s", http.StatusOK, viewerListTypes.Code, viewerListTypes.Body.String())
 	}
 }
+
+func TestCustomAssetTypeUpdateFlowAndAuthorization(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const hiddenInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAZ"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FB0"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Medicine", owner: "inventory-owner"},
+			{id: hiddenInventoryID, tenantID: tenantID, name: "Hidden", owner: "hidden-owner"},
+		},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FAX", "audit-tenant-type",
+			"audit-tenant-type-update",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAY", "audit-inventory-type",
+			"audit-inventory-type-update",
+			"audit-viewer-grant", "viewer-grant-event", "viewer-grant-claim",
+		},
+	}))
+
+	createTenantType := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/custom-asset-types", "Bearer dev:tenant-owner", map[string]any{
+		"key":         "medicine",
+		"displayName": "Medicine",
+		"description": "Old description",
+	})
+	if createTenantType.Code != http.StatusCreated {
+		t.Fatalf("expected tenant type create status %d, got %d with body %s", http.StatusCreated, createTenantType.Code, createTenantType.Body.String())
+	}
+	tenantType := decodeCustomAssetType(t, createTenantType)
+	updateTenantType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-asset-types/"+tenantType.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"displayName": "Medicine and Vitamins",
+		"description": "Medication and supplement supplies",
+	})
+	if updateTenantType.Code != http.StatusOK {
+		t.Fatalf("expected tenant type update status %d, got %d with body %s", http.StatusOK, updateTenantType.Code, updateTenantType.Body.String())
+	}
+	updatedTenantType := decodeCustomAssetType(t, updateTenantType)
+	if updatedTenantType.Data.ID != tenantType.Data.ID || updatedTenantType.Data.Key != "medicine" || updatedTenantType.Data.DisplayName != "Medicine and Vitamins" || updatedTenantType.Data.Description != "Medication and supplement supplies" {
+		t.Fatalf("expected updated tenant type metadata, got %+v", updatedTenantType.Data)
+	}
+
+	crossTenantTypeUpdate := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/custom-asset-types/"+tenantType.Data.ID, "Bearer dev:other-owner", map[string]any{
+		"displayName": "Cabin Medicine",
+	})
+	if crossTenantTypeUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected cross-tenant type update status %d, got %d with body %s", http.StatusNotFound, crossTenantTypeUpdate.Code, crossTenantTypeUpdate.Body.String())
+	}
+	assertSafeError(t, crossTenantTypeUpdate, "resource_not_found", "Resource not found.")
+
+	createInventoryType := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "supplement",
+		"displayName": "Supplement",
+	})
+	if createInventoryType.Code != http.StatusCreated {
+		t.Fatalf("expected inventory type create status %d, got %d with body %s", http.StatusCreated, createInventoryType.Code, createInventoryType.Body.String())
+	}
+	inventoryType := decodeCustomAssetType(t, createInventoryType)
+	updateInventoryType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Supplements",
+		"description": "",
+	})
+	if updateInventoryType.Code != http.StatusOK {
+		t.Fatalf("expected inventory type update status %d, got %d with body %s", http.StatusOK, updateInventoryType.Code, updateInventoryType.Body.String())
+	}
+	updatedInventoryType := decodeCustomAssetType(t, updateInventoryType)
+	if updatedInventoryType.Data.ID != inventoryType.Data.ID || updatedInventoryType.Data.Key != "supplement" || updatedInventoryType.Data.DisplayName != "Supplements" || updatedInventoryType.Data.Description != "" {
+		t.Fatalf("expected updated inventory type metadata, got %+v", updatedInventoryType.Data)
+	}
+
+	updateInventoryTypeThroughTenantRoute := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"displayName": "Tenant Route Rename",
+	})
+	if updateInventoryTypeThroughTenantRoute.Code != http.StatusNotFound {
+		t.Fatalf("expected inventory type through tenant route status %d, got %d with body %s", http.StatusNotFound, updateInventoryTypeThroughTenantRoute.Code, updateInventoryTypeThroughTenantRoute.Body.String())
+	}
+	assertSafeError(t, updateInventoryTypeThroughTenantRoute, "resource_not_found", "Resource not found.")
+
+	updateInheritedType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+tenantType.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Inventory Rename",
+	})
+	if updateInheritedType.Code != http.StatusNotFound {
+		t.Fatalf("expected inherited type update status %d, got %d with body %s", http.StatusNotFound, updateInheritedType.Code, updateInheritedType.Body.String())
+	}
+	assertSafeError(t, updateInheritedType, "resource_not_found", "Resource not found.")
+
+	intruderUpdateType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:intruder", map[string]any{
+		"displayName": "Intruder Rename",
+	})
+	if intruderUpdateType.Code != http.StatusForbidden {
+		t.Fatalf("expected intruder update type status %d, got %d with body %s", http.StatusForbidden, intruderUpdateType.Code, intruderUpdateType.Body.String())
+	}
+	assertSafeError(t, intruderUpdateType, "forbidden", "Forbidden.")
+
+	hiddenInventoryUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+hiddenInventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Hidden Rename",
+	})
+	if hiddenInventoryUpdate.Code != http.StatusForbidden {
+		t.Fatalf("expected hidden inventory update status %d, got %d with body %s", http.StatusForbidden, hiddenInventoryUpdate.Code, hiddenInventoryUpdate.Body.String())
+	}
+	assertSafeError(t, hiddenInventoryUpdate, "forbidden", "Forbidden.")
+
+	hiddenOwnerUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+hiddenInventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:hidden-owner", map[string]any{
+		"displayName": "Hidden Owner Rename",
+	})
+	if hiddenOwnerUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected hidden owner update status %d, got %d with body %s", http.StatusNotFound, hiddenOwnerUpdate.Code, hiddenOwnerUpdate.Body.String())
+	}
+	assertSafeError(t, hiddenOwnerUpdate, "resource_not_found", "Resource not found.")
+
+	wrongTenantUpdate := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Wrong Tenant Rename",
+	})
+	if wrongTenantUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong tenant update status %d, got %d with body %s", http.StatusNotFound, wrongTenantUpdate.Code, wrongTenantUpdate.Body.String())
+	}
+	assertSafeError(t, wrongTenantUpdate, "resource_not_found", "Resource not found.")
+
+	missingInventoryUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB1/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Missing Inventory Rename",
+	})
+	if missingInventoryUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected missing inventory update status %d, got %d with body %s", http.StatusNotFound, missingInventoryUpdate.Code, missingInventoryUpdate.Body.String())
+	}
+	assertSafeError(t, missingInventoryUpdate, "resource_not_found", "Resource not found.")
+
+	grantViewer := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]any{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if grantViewer.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, grantViewer.Code, grantViewer.Body.String())
+	}
+	viewerUpdateType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "Bearer dev:viewer-user", map[string]any{
+		"displayName": "Viewer Rename",
+	})
+	if viewerUpdateType.Code != http.StatusForbidden {
+		t.Fatalf("expected viewer update type status %d, got %d with body %s", http.StatusForbidden, viewerUpdateType.Code, viewerUpdateType.Body.String())
+	}
+	assertSafeError(t, viewerUpdateType, "forbidden", "Forbidden.")
+
+	emptyUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-asset-types/"+tenantType.Data.ID, "Bearer dev:tenant-owner", map[string]any{})
+	if emptyUpdate.Code != http.StatusBadRequest {
+		t.Fatalf("expected empty update status %d, got %d with body %s", http.StatusBadRequest, emptyUpdate.Code, emptyUpdate.Body.String())
+	}
+	assertSafeError(t, emptyUpdate, "invalid_request", "Invalid request.")
+
+	missingAuthenticationUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID, "", map[string]any{
+		"displayName": "No Auth Rename",
+	})
+	if missingAuthenticationUpdate.Code != http.StatusUnauthorized {
+		t.Fatalf("expected missing authentication update status %d, got %d with body %s", http.StatusUnauthorized, missingAuthenticationUpdate.Code, missingAuthenticationUpdate.Body.String())
+	}
+	assertSafeError(t, missingAuthenticationUpdate, "authentication_required", "Authentication required.")
+}

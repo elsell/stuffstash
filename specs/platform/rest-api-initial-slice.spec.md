@@ -35,11 +35,13 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/custom-field-definitions`
 - `POST /tenants/{tenantId}/custom-asset-types`
 - `GET /tenants/{tenantId}/custom-asset-types`
+- `PATCH /tenants/{tenantId}/custom-asset-types/{customAssetTypeId}`
 - `GET /tenants/{tenantId}/audit-records`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records`
 
 ## Authentication
@@ -65,11 +67,13 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `POST /tenants/{tenantId}/custom-asset-types` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-asset-types` requires `tenant.configure`.
+- `PATCH /tenants/{tenantId}/custom-asset-types/{customAssetTypeId}` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/audit-records` requires `tenant.configure`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.view`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.view`.
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records` requires `inventory.view`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
 

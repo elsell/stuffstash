@@ -18,6 +18,7 @@ const (
 	EventInventoryAccessGranted          EventName = "inventory_access.granted"
 	EventInventoryAccessListed           EventName = "inventory_access.listed"
 	EventCustomAssetTypeCreated          EventName = "custom_asset_type.created"
+	EventCustomAssetTypeUpdated          EventName = "custom_asset_type.updated"
 	EventCustomAssetTypesListed          EventName = "custom_asset_type.listed"
 	EventCustomFieldDefinitionCreated    EventName = "custom_field_definition.created"
 	EventCustomFieldDefinitionsListed    EventName = "custom_field_definition.listed"

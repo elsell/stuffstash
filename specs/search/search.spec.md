@@ -20,7 +20,7 @@ This spec does not define final indexes, ranking, query syntax, highlighting, or
 - Search must support exact search.
 - Search must support fuzzy search.
 - Search should search all relevant fields, including asset title, asset description, location names, and custom field values.
-- Search should support filtering or matching by custom asset type once custom asset types are implemented.
+- Search should support filtering or matching by custom asset type.
 - Search must support custom fields when the user can access the inventory and field definition.
 - Search must preserve tenant isolation and inventory isolation.
 - Search must support pagination.

@@ -154,7 +154,7 @@ The `assets` table must include:
 - `inventory_id`
 - `parent_asset_id`
 - asset kind
-- custom asset type ID once custom asset types are implemented
+- custom asset type ID
 - title
 - description
 - custom field values

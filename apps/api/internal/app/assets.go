@@ -139,6 +139,9 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 	if err != nil {
 		return asset.Asset{}, err
 	}
+	if item.CustomAssetTypeID.String() != "" {
+		auditRecord.Metadata["custom_asset_type_id"] = item.CustomAssetTypeID.String()
+	}
 
 	if err := a.assets.CreateAsset(ctx, item, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {

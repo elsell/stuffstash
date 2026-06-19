@@ -443,12 +443,68 @@ func (s Store) SaveCustomAssetType(ctx context.Context, assetType customfield.As
 	})
 }
 
+func (s Store) UpdateCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing customAssetTypeModel
+		err := tx.Where(&customAssetTypeModel{
+			ID:       assetType.ID.String(),
+			TenantID: assetType.TenantID.String(),
+		}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Scope != assetType.Scope.String() || existing.TypeKey != assetType.Key.String() || stringFromPtr(existing.InventoryID) != assetType.InventoryID.String() {
+			return ports.ErrForbidden
+		}
+
+		updates := map[string]any{
+			"display_name": assetType.DisplayName.String(),
+			"description":  assetType.Description.String(),
+		}
+		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
+			return customFieldDefinitionWriteError(err)
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
 func (s Store) ListTenantCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	query := s.db.WithContext(ctx).Where(&customFieldDefinitionModel{
 		TenantID: tenantID.String(),
 		Scope:    customfield.ScopeTenant.String(),
 	})
 	return s.listCustomFieldDefinitions(ctx, query, page)
+}
+
+func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
+	query := s.db.WithContext(ctx).Where(&customAssetTypeModel{
+		ID:       assetTypeID.String(),
+		TenantID: tenantID.String(),
+	})
+	if inventoryID.String() == "" {
+		query = query.Where(&customAssetTypeModel{Scope: customfield.ScopeTenant.String()})
+	} else {
+		query = query.Where(clause.Or(
+			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
+		))
+	}
+	var model customAssetTypeModel
+	err := query.First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return customfield.AssetType{}, false, nil
+	}
+	if err != nil {
+		return customfield.AssetType{}, false, err
+	}
+	assetType, ok := model.toDomain()
+	if !ok {
+		return customfield.AssetType{}, false, fmt.Errorf("invalid custom asset type row %q", model.ID)
+	}
+	return assetType, true, nil
 }
 
 func (s Store) ListTenantCustomAssetTypes(ctx context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {

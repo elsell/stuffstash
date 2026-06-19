@@ -31,7 +31,7 @@ This spec does not define the full lifecycle model, consumable model, search beh
   - Custom field values.
   - Lifecycle state.
 - Assets must support custom field values.
-- Assets must support an optional custom asset type once the custom asset type slice is implemented.
+- Assets may have an optional custom asset type.
 - Custom asset types are user-defined metadata/classification overlays on normal assets. They must not replace the base asset kind enumeration.
 - Asset kind controls base containment behavior. Custom asset type controls user-facing classification and which type-specific custom field definitions apply.
 - Asset custom field values must be validated against tenant-scoped and inventory-scoped custom field definitions.
@@ -66,7 +66,7 @@ The table must include:
 - `inventory_id`: inventory that owns the asset.
 - `parent_asset_id`: nullable self-reference for containment.
 - `kind`: domain asset kind enumeration.
-- `custom_asset_type_id`: optional reference to a custom asset type once custom asset types are implemented.
+- `custom_asset_type_id`: optional reference to a custom asset type.
 - `title`: short display name.
 - `description`: optional longer text.
 - `custom_fields`: PostgreSQL JSONB values for validated custom field data.
