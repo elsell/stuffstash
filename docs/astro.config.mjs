@@ -1,8 +1,12 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+const site = process.env.STUFF_STASH_DOCS_SITE ?? 'https://elsell.github.io';
+const base = process.env.STUFF_STASH_DOCS_BASE ?? '/stuffstash/';
+
 export default defineConfig({
-  site: 'https://stuffstash.online',
+  site,
+  base,
   integrations: [
     starlight({
       title: 'Stuff Stash',

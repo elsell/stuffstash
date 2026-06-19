@@ -8,6 +8,13 @@ Stuff Stash pins build, runtime, and API tooling to reduce supply-chain risk and
 
 This spec tracks the first tooling versions used by the secure tracer bullet.
 
+## Pinned Documentation Tooling
+
+- Node.js for documentation CI: `24.17.0`.
+- pnpm for documentation CI: `11.0.7`.
+- Astro: `astro 6.4.8`.
+- Starlight: `@astrojs/starlight 0.40.0`.
+
 ## Pinned Go Dependencies
 
 - Go module version: `go 1.25.8`.
@@ -36,7 +43,15 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 ## Requirements
 
 - Versions must not float.
+- GitHub Actions must be pinned to immutable commit SHAs in workflow files.
 - Container image overrides must still be pinned with `@sha256:`.
 - New tools must be added here before use.
 - Tooling changes must be atomic conventional commits.
 - Generated artifacts must include drift checks once generation is introduced.
+
+## Pinned GitHub Actions
+
+- `actions/checkout` `v6.0.1`: `8e8c483db84b4bee98b60c0593521ed34d9990e8`.
+- `actions/setup-node` `v6`: `48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e`.
+- `actions/upload-artifact` `v4.6.2`: `ea165f8d65b6e75b540449e92b4886f43607fa02`.
+- `actions/download-artifact` `v5.0.0`: `634f93cb2916e3fdff6788551b99b062d0335ce0`.
