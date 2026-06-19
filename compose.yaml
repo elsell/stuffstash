@@ -42,8 +42,12 @@ services:
       STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE: ${STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE:-30s}
       STUFF_STASH_DEFAULT_PAGE_LIMIT: ${STUFF_STASH_DEFAULT_PAGE_LIMIT:-50}
       STUFF_STASH_MAX_PAGE_LIMIT: ${STUFF_STASH_MAX_PAGE_LIMIT:-100}
+      STUFF_STASH_BLOB_STORAGE_PATH: ${STUFF_STASH_BLOB_STORAGE_PATH:-/var/lib/stuffstash/blobs}
+      STUFF_STASH_MAX_ATTACHMENT_BYTES: ${STUFF_STASH_MAX_ATTACHMENT_BYTES:-5242880}
     ports:
       - "${STUFF_STASH_HTTP_PORT:-8080}:8080"
+    volumes:
+      - blob-data:/var/lib/stuffstash/blobs
     depends_on:
       postgres:
         condition: service_started
@@ -79,3 +83,4 @@ services:
 
 volumes:
   postgres-data:
+  blob-data:

@@ -2,13 +2,13 @@
 
 ## Purpose
 
-The first API slice should prove the security boundary, Huma/OpenAPI generation, response contracts, tenant/inventory behavior, and the first asset create/list/update flow.
+The first API slice should prove the security boundary, Huma/OpenAPI generation, response contracts, tenant/inventory behavior, asset operations, and asset-scoped media attachment operations.
 
 ## Scope
 
 This spec covers the first protected REST endpoints.
 
-It does not cover cross-inventory asset movement, location-specific APIs, conversational, import/export, media, or search endpoints.
+It does not cover cross-inventory asset movement, location-specific APIs, conversational, import/export, delete endpoints, or search endpoints.
 
 ## Local Convenience Endpoint
 
@@ -31,6 +31,9 @@ The first protected REST slice includes:
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `POST /tenants/{tenantId}/custom-field-definitions`
@@ -67,6 +70,9 @@ The first protected REST slice includes:
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` requires `inventory.edit_asset`.
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive` requires `inventory.edit_asset`.
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore` requires `inventory.edit_asset`.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments` requires `inventory.edit_asset`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments` requires `inventory.view`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content` requires `inventory.view`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
@@ -106,6 +112,19 @@ The first protected REST slice includes:
 - Asset archive must change lifecycle state from `active` to `archived`, reject assets with active children, emit audit history, and return the archived asset.
 - Asset restore must change lifecycle state from `archived` to `active`, reject assets whose parent is archived, emit audit history, and return the restored asset.
 - Custom asset type definitions and custom-field applicability to custom asset types are part of the current REST surface. Their detailed implementation contract is specified separately in `specs/assets/custom-asset-types.spec.md`.
+
+## First Media REST Slice
+
+- Asset attachments must support JSON base64 upload for the first slice.
+- Attachment upload must store metadata separately from blob content.
+- Attachment upload must enforce a JSON HTTP body limit derived from the configured application attachment size limit.
+- Attachment upload must reject unsupported content types, unsafe file names, empty content, oversized content, and invalid base64.
+- Attachment list returns attachments scoped to one asset.
+- Attachment list must support cursor pagination with `limit` and `cursor` query parameters.
+- Attachment list must include pagination metadata in the response envelope.
+- Attachment content download must return stored bytes with the stored content type.
+- Attachment routes must not expose storage keys, bucket names, local filesystem paths, or provider internals.
+- Attachment behavior is specified in `specs/media/media-attachments.spec.md`.
 
 ## Responses
 
@@ -158,6 +177,7 @@ The first protected REST slice includes:
 - Tests must verify asset creation and listing.
 - Tests must verify asset update and movement.
 - Tests must verify asset endpoint authentication and authorization failures.
+- Tests must verify attachment upload, list, download, pagination, authentication, authorization, tenant isolation, inventory isolation, invalid base64 rejection, unsupported content type rejection, unsafe file name rejection, and oversize rejection.
 - Tests must verify cross-tenant and cross-inventory asset containment attempts fail.
 - Tests must verify item assets cannot be parents.
 - Tests must verify movement to root, moving containers or locations with descendants, self-parent rejection, and cycle rejection.

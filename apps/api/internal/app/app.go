@@ -9,21 +9,24 @@ import (
 )
 
 type App struct {
-	observer         ports.Observer
-	auth             ports.Authenticator
-	authorizer       ports.Authorizer
-	tenants          ports.TenantRepository
-	inventories      ports.InventoryRepository
-	customAssetTypes ports.CustomAssetTypeRepository
-	customFields     ports.CustomFieldDefinitionRepository
-	assets           ports.AssetRepository
-	audit            ports.AuditRepository
-	outbox           ports.AuthorizationOutbox
-	ids              ports.IDGenerator
-	outboxDrainLimit int
-	outboxClaimLease time.Duration
-	defaultPageLimit int
-	maxPageLimit     int
+	observer           ports.Observer
+	auth               ports.Authenticator
+	authorizer         ports.Authorizer
+	tenants            ports.TenantRepository
+	inventories        ports.InventoryRepository
+	customAssetTypes   ports.CustomAssetTypeRepository
+	customFields       ports.CustomFieldDefinitionRepository
+	assets             ports.AssetRepository
+	attachments        ports.AttachmentRepository
+	blobs              ports.BlobStorage
+	audit              ports.AuditRepository
+	outbox             ports.AuthorizationOutbox
+	ids                ports.IDGenerator
+	outboxDrainLimit   int
+	outboxClaimLease   time.Duration
+	defaultPageLimit   int
+	maxPageLimit       int
+	maxAttachmentBytes int
 }
 
 type Dependencies struct {
@@ -35,6 +38,8 @@ type Dependencies struct {
 	CustomAssetTypes              ports.CustomAssetTypeRepository
 	CustomFields                  ports.CustomFieldDefinitionRepository
 	Assets                        ports.AssetRepository
+	Attachments                   ports.AttachmentRepository
+	Blobs                         ports.BlobStorage
 	Audit                         ports.AuditRepository
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
@@ -42,27 +47,42 @@ type Dependencies struct {
 	AuthorizationOutboxClaimLease time.Duration
 	DefaultPageLimit              int
 	MaxPageLimit                  int
+	MaxAttachmentBytes            int
 }
 
 func New(deps Dependencies) App {
 	maxPageLimit := normalizeMaxPageLimit(deps.MaxPageLimit)
 	return App{
-		observer:         deps.Observer,
-		auth:             deps.Auth,
-		authorizer:       deps.Authorizer,
-		tenants:          deps.Tenants,
-		inventories:      deps.Inventories,
-		customAssetTypes: deps.CustomAssetTypes,
-		customFields:     deps.CustomFields,
-		assets:           deps.Assets,
-		audit:            deps.Audit,
-		outbox:           deps.Outbox,
-		ids:              deps.IDs,
-		outboxDrainLimit: deps.AuthorizationOutboxDrainLimit,
-		outboxClaimLease: deps.AuthorizationOutboxClaimLease,
-		defaultPageLimit: normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
-		maxPageLimit:     maxPageLimit,
+		observer:           deps.Observer,
+		auth:               deps.Auth,
+		authorizer:         deps.Authorizer,
+		tenants:            deps.Tenants,
+		inventories:        deps.Inventories,
+		customAssetTypes:   deps.CustomAssetTypes,
+		customFields:       deps.CustomFields,
+		assets:             deps.Assets,
+		attachments:        deps.Attachments,
+		blobs:              deps.Blobs,
+		audit:              deps.Audit,
+		outbox:             deps.Outbox,
+		ids:                deps.IDs,
+		outboxDrainLimit:   deps.AuthorizationOutboxDrainLimit,
+		outboxClaimLease:   deps.AuthorizationOutboxClaimLease,
+		defaultPageLimit:   normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
+		maxPageLimit:       maxPageLimit,
+		maxAttachmentBytes: normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
 	}
+}
+
+func (a App) MaxAttachmentJSONBodyBytes() int64 {
+	return int64(a.maxAttachmentBytes*2 + 4096)
+}
+
+func normalizeMaxAttachmentBytes(maxBytes int) int {
+	if maxBytes <= 0 {
+		return 5 * 1024 * 1024
+	}
+	return maxBytes
 }
 
 func normalizeDefaultPageLimit(defaultLimit int, maxLimit int) int {

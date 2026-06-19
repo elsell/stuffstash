@@ -52,6 +52,7 @@ const (
 	ActionAssetMoved                   Action = "asset.moved"
 	ActionAssetArchived                Action = "asset.archived"
 	ActionAssetRestored                Action = "asset.restored"
+	ActionAttachmentCreated            Action = "attachment.created"
 )
 
 func NewAction(value string) (Action, bool) {
@@ -68,7 +69,8 @@ func NewAction(value string) (Action, bool) {
 		ActionAssetUpdated,
 		ActionAssetMoved,
 		ActionAssetArchived,
-		ActionAssetRestored:
+		ActionAssetRestored,
+		ActionAttachmentCreated:
 		return action, true
 	default:
 		return "", false

@@ -61,19 +61,20 @@ The goal is to prove a production-shaped path through:
 - Custom asset types now exist for tenant and inventory scopes, can be assigned to assets, can be renamed with metadata updates, and custom fields can target all assets or specific custom asset types.
 - Custom field definitions can now be renamed without changing their keys, types, enum options, applicability, or targets.
 - Asset lifecycle now supports archive and restore operations with audit history, active-only default listing, and authorization checks.
+- Asset media attachments now support JSON base64 upload, cursor-paginated listing, raw content download, local filesystem blob storage, audit history, generated OpenAPI, and adversarial API tests.
 
 ## Known Gaps
 
-- User invitation flows, access revocation, custom asset type delete/archive, search, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, and media attachments are not implemented.
+- User invitation flows, access revocation, custom asset type delete/archive, search, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and S3-compatible Garage storage are not implemented.
 - Undo is not yet implemented for audit history.
 - Custom field definitions cannot yet change schema shape, be deleted, reordered, searched, imported, exported, or managed through conversational flows.
 
 ## Next Work
 
-1. Specify and implement media attachments.
-   - Start with image/file metadata and local development storage.
-   - Keep blob storage behind ports and adapters.
-   - Preserve tenant and inventory authorization boundaries.
+1. Specify and implement search with authorization-aware filtering.
+   - Start with Postgres-backed exact and fuzzy search scoped by tenant and SpiceDB-visible inventories.
+   - Search assets, custom field values, and attachment metadata where useful.
+   - Preserve pagination and safe response contracts.
 
 ## Later Work
 
@@ -83,5 +84,4 @@ The goal is to prove a production-shaped path through:
 - Mobile app scaffold with React Native and Expo.
 - Audit history and undo.
 - Conversational inventory ports and action plan execution.
-- Search with authorization-aware filtering.
 - Import and export.

@@ -37,6 +37,10 @@ extract_first_id() {
   sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -n 1
 }
 
+base64_one_line() {
+  base64 | tr -d '\n'
+}
+
 echo "checking health at ${base_url}"
 health=""
 for attempt in $(seq 1 20); do
@@ -130,6 +134,31 @@ printf '%s\n' "$asset_update_response" | tail -n +2 | grep -q "\"parentAssetId\"
 printf '%s\n' "$asset_update_response" | tail -n +2 | grep -q '"title":"Fertilizer Bag"' || fail "item asset update response did not include updated title"
 printf '%s\n' "$asset_update_response" | tail -n +2 | grep -q '"condition":"used"' || fail "item asset update response did not include updated condition"
 
+echo "uploading attachment for item asset ${asset_id}"
+attachment_content_base64="iVBORw0KGgo="
+attachment_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}/attachments" "$auth_header" "{\"fileName\":\"receipt.png\",\"contentType\":\"image/png\",\"contentBase64\":\"${attachment_content_base64}\"}")"
+attachment_status="$(printf '%s\n' "$attachment_response" | head -n 1)"
+[ "$attachment_status" = "201" ] || fail "expected attachment create status 201, got ${attachment_status}"
+attachment_id="$(printf '%s\n' "$attachment_response" | tail -n +2 | extract_first_id)"
+[ -n "$attachment_id" ] || fail "attachment create response did not include an id"
+printf '%s\n' "$attachment_response" | tail -n +2 | grep -q '"fileName":"receipt.png"' || fail "attachment response did not include file name"
+printf '%s\n' "$attachment_response" | tail -n +2 | grep -q '"contentType":"image/png"' || fail "attachment response did not include content type"
+
+echo "listing attachments"
+attachment_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}/attachments?limit=50" "$auth_header")"
+attachment_list_status="$(printf '%s\n' "$attachment_list_response" | head -n 1)"
+[ "$attachment_list_status" = "200" ] || fail "expected attachment list status 200, got ${attachment_list_status}"
+printf '%s\n' "$attachment_list_response" | tail -n +2 | grep -q "\"id\":\"${attachment_id}\"" || fail "attachment list did not include ${attachment_id}"
+printf '%s\n' "$attachment_list_response" | tail -n +2 | grep -q '"pagination"' || fail "attachment list did not include pagination metadata"
+
+echo "downloading attachment"
+download_file="$(mktemp)"
+download_status="$(curl -sS -o "$download_file" -w "%{http_code}" -H "$auth_header" "${base_url}/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}/attachments/${attachment_id}/content")"
+[ "$download_status" = "200" ] || fail "expected attachment download status 200, got ${download_status}"
+download_base64="$(base64_one_line < "$download_file")"
+[ "$download_base64" = "$attachment_content_base64" ] || fail "attachment download content did not match upload"
+rm -f "$download_file"
+
 echo "listing inventory audit records"
 audit_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/audit-records?limit=50" "$auth_header")"
 audit_status="$(printf '%s\n' "$audit_response" | head -n 1)"
@@ -137,6 +166,7 @@ audit_status="$(printf '%s\n' "$audit_response" | head -n 1)"
 printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"asset.created"' || fail "audit list did not include asset.created"
 printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"asset.updated"' || fail "audit list did not include asset.updated"
 printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"asset.moved"' || fail "audit list did not include asset.moved"
+printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"attachment.created"' || fail "audit list did not include attachment.created"
 printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"pagination"' || fail "audit list did not include pagination metadata"
 
 echo "listing assets"
@@ -179,6 +209,17 @@ viewer_audit_status="$(printf '%s\n' "$viewer_audit_response" | head -n 1)"
 [ "$viewer_audit_status" = "200" ] || fail "expected viewer inventory audit list status 200, got ${viewer_audit_status}"
 printf '%s\n' "$viewer_audit_response" | tail -n +2 | grep -q '"action":"inventory_access.granted"' || fail "viewer audit list did not include inventory access grant"
 
+viewer_attachment_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}/attachments?limit=50" "$viewer_auth_header")"
+viewer_attachment_list_status="$(printf '%s\n' "$viewer_attachment_list_response" | head -n 1)"
+[ "$viewer_attachment_list_status" = "200" ] || fail "expected viewer attachment list status 200, got ${viewer_attachment_list_status}"
+
+viewer_download_file="$(mktemp)"
+viewer_download_status="$(curl -sS -o "$viewer_download_file" -w "%{http_code}" -H "$viewer_auth_header" "${base_url}/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}/attachments/${attachment_id}/content")"
+[ "$viewer_download_status" = "200" ] || fail "expected viewer attachment download status 200, got ${viewer_download_status}"
+viewer_download_base64="$(base64_one_line < "$viewer_download_file")"
+[ "$viewer_download_base64" = "$attachment_content_base64" ] || fail "viewer attachment download content did not match upload"
+rm -f "$viewer_download_file"
+
 viewer_tenant_audit_response="$(request GET "/tenants/${tenant_id}/audit-records?limit=50" "$viewer_auth_header")"
 viewer_tenant_audit_status="$(printf '%s\n' "$viewer_tenant_audit_response" | head -n 1)"
 [ "$viewer_tenant_audit_status" = "403" ] || fail "expected viewer tenant audit list status 403, got ${viewer_tenant_audit_status}"
@@ -190,6 +231,10 @@ viewer_asset_create_status="$(printf '%s\n' "$viewer_asset_create_response" | he
 viewer_asset_update_response="$(request PATCH "/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}" "$viewer_auth_header" '{"title":"Unauthorized"}')"
 viewer_asset_update_status="$(printf '%s\n' "$viewer_asset_update_response" | head -n 1)"
 [ "$viewer_asset_update_status" = "403" ] || fail "expected viewer asset update status 403, got ${viewer_asset_update_status}"
+
+viewer_attachment_upload_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets/${asset_id}/attachments" "$viewer_auth_header" "{\"fileName\":\"blocked.png\",\"contentType\":\"image/png\",\"contentBase64\":\"${attachment_content_base64}\"}")"
+viewer_attachment_upload_status="$(printf '%s\n' "$viewer_attachment_upload_response" | head -n 1)"
+[ "$viewer_attachment_upload_status" = "403" ] || fail "expected viewer attachment upload status 403, got ${viewer_attachment_upload_status}"
 
 viewer_field_create_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions" "$viewer_auth_header" '{"key":"viewer-field","displayName":"Viewer Field","type":"text"}')"
 viewer_field_create_status="$(printf '%s\n' "$viewer_field_create_response" | head -n 1)"

@@ -1,0 +1,213 @@
+package app
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+func TestCreateAttachmentDeletesBlobWhenMetadataSaveFails(t *testing.T) {
+	blobStore := &recordingBlobStorage{}
+	application := New(Dependencies{
+		Observer:           noopObserver{},
+		Authorizer:         allowInventoryAuthorizer{},
+		Tenants:            attachmentTenantRepository{},
+		Inventories:        attachmentInventoryRepository{},
+		Assets:             attachmentAssetRepository{},
+		Attachments:        failingAttachmentRepository{},
+		Blobs:              blobStore,
+		IDs:                &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
+		MaxAttachmentBytes: 32,
+	})
+
+	_, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		FileName:    "receipt.png",
+		ContentType: "image/png",
+		Content:     []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'},
+	})
+	if !errors.Is(err, ports.ErrConflict) {
+		t.Fatalf("expected repository conflict, got %v", err)
+	}
+	if !blobStore.put || !blobStore.deleted {
+		t.Fatalf("expected blob put and compensating delete, got put=%t deleted=%t", blobStore.put, blobStore.deleted)
+	}
+}
+
+func TestCreateAttachmentRejectsContentTypeMismatch(t *testing.T) {
+	application := New(Dependencies{
+		Observer:           noopObserver{},
+		Authorizer:         allowInventoryAuthorizer{},
+		Tenants:            attachmentTenantRepository{},
+		Inventories:        attachmentInventoryRepository{},
+		Assets:             attachmentAssetRepository{},
+		Attachments:        failingAttachmentRepository{},
+		Blobs:              &recordingBlobStorage{},
+		IDs:                &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
+		MaxAttachmentBytes: 32,
+	})
+
+	_, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		FileName:    "receipt.png",
+		ContentType: "image/png",
+		Content:     []byte("not a png"),
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid input, got %v", err)
+	}
+}
+
+type noopObserver struct{}
+
+func (noopObserver) Record(context.Context, ports.Event) {}
+
+type allowInventoryAuthorizer struct{}
+
+func (allowInventoryAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
+	return nil
+}
+
+func (allowInventoryAuthorizer) CheckInventory(context.Context, identity.Principal, ports.InventoryPermission, inventory.InventoryID) error {
+	return nil
+}
+
+func (allowInventoryAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
+	return nil
+}
+
+func (allowInventoryAuthorizer) GrantInventoryOwner(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (allowInventoryAuthorizer) GrantInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (allowInventoryAuthorizer) GrantInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+type attachmentAssetRepository struct{}
+
+type attachmentTenantRepository struct{}
+
+func (attachmentTenantRepository) SaveTenant(context.Context, tenant.Tenant) error {
+	return nil
+}
+
+func (attachmentTenantRepository) TenantExists(context.Context, tenant.ID) (bool, error) {
+	return true, nil
+}
+
+type attachmentInventoryRepository struct{}
+
+func (attachmentInventoryRepository) SaveInventory(context.Context, inventory.Inventory) error {
+	return nil
+}
+
+func (attachmentInventoryRepository) InventoryByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error) {
+	return inventory.Inventory{
+		ID:       inventoryID,
+		TenantID: inventory.TenantID(tenantID.String()),
+	}, true, nil
+}
+
+func (attachmentInventoryRepository) ListInventoriesByTenant(context.Context, inventory.TenantID, ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
+	return nil, nil
+}
+
+func (attachmentInventoryRepository) SaveInventoryAccessGrantAndEnqueue(context.Context, string, ports.InventoryAccessGrant, audit.Record) error {
+	return nil
+}
+
+func (attachmentInventoryRepository) ListInventoryAccessGrants(context.Context, tenant.ID, inventory.InventoryID, ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {
+	return nil, nil
+}
+
+func (attachmentAssetRepository) CreateAsset(context.Context, asset.Asset, audit.Record) error {
+	return nil
+}
+
+func (attachmentAssetRepository) UpdateAsset(context.Context, asset.Asset, []audit.Record) error {
+	return nil
+}
+
+func (attachmentAssetRepository) UpdateAssetLifecycle(context.Context, asset.Asset, audit.Record) error {
+	return nil
+}
+
+func (attachmentAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
+	return asset.Asset{
+		ID:          assetID,
+		TenantID:    asset.TenantID(tenantID.String()),
+		InventoryID: asset.InventoryID(inventoryID.String()),
+	}, true, nil
+}
+
+func (attachmentAssetRepository) AssetHasActiveChildren(context.Context, tenant.ID, inventory.InventoryID, asset.ID) (bool, error) {
+	return false, nil
+}
+
+func (attachmentAssetRepository) ListAssetsByInventory(context.Context, tenant.ID, inventory.InventoryID, ports.AssetListPageRequest) ([]asset.Asset, error) {
+	return nil, nil
+}
+
+type failingAttachmentRepository struct{}
+
+func (failingAttachmentRepository) SaveAttachment(context.Context, media.Attachment, audit.Record) error {
+	return ports.ErrConflict
+}
+
+func (failingAttachmentRepository) AttachmentByID(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID) (media.Attachment, bool, error) {
+	return media.Attachment{}, false, nil
+}
+
+func (failingAttachmentRepository) ListAttachmentsByAsset(context.Context, tenant.ID, inventory.InventoryID, asset.ID, ports.AttachmentListPageRequest) ([]media.Attachment, error) {
+	return nil, nil
+}
+
+type recordingBlobStorage struct {
+	put     bool
+	deleted bool
+}
+
+func (r *recordingBlobStorage) PutBlob(context.Context, media.StorageKey, media.ContentType, []byte) error {
+	r.put = true
+	return nil
+}
+
+func (r *recordingBlobStorage) GetBlob(context.Context, media.StorageKey) ([]byte, error) {
+	return nil, ports.ErrBlobNotFound
+}
+
+func (r *recordingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
+	r.deleted = true
+	return nil
+}
+
+type attachmentIDGenerator struct {
+	ids []string
+}
+
+func (g *attachmentIDGenerator) NewID() string {
+	id := g.ids[0]
+	g.ids = g.ids[1:]
+	return id
+}

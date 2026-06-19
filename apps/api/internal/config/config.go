@@ -25,6 +25,8 @@ const (
 	envAuthorizationOutboxLease = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
 	envDefaultPageLimit         = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
 	envMaxPageLimit             = "STUFF_STASH_MAX_PAGE_LIMIT"
+	envBlobStoragePath          = "STUFF_STASH_BLOB_STORAGE_PATH"
+	envMaxAttachmentBytes       = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
 	defaultHTTPAddr             = ":8080"
 	defaultAuthMode             = "local-dev"
 	defaultAuthzMode            = "memory"
@@ -35,6 +37,8 @@ const (
 	defaultAuthorizationLease   = 30 * time.Second
 	defaultDefaultPageLimit     = 50
 	defaultMaxPageLimit         = 100
+	defaultBlobStoragePath      = ".stuffstash/blobs"
+	defaultMaxAttachmentBytes   = 5 * 1024 * 1024
 	defaultSpiceDBTLSEnabled    = true
 	defaultSpiceDBBootstrapMode = false
 )
@@ -57,6 +61,8 @@ type Config struct {
 	AuthorizationOutboxClaimLease    time.Duration
 	DefaultPageLimit                 int
 	MaxPageLimit                     int
+	BlobStoragePath                  string
+	MaxAttachmentBytes               int
 }
 
 func Load() Config {
@@ -78,6 +84,8 @@ func Load() Config {
 		AuthorizationOutboxClaimLease:    durationEnvOrDefault(envAuthorizationOutboxLease, defaultAuthorizationLease),
 		DefaultPageLimit:                 intEnvOrDefault(envDefaultPageLimit, defaultDefaultPageLimit),
 		MaxPageLimit:                     intEnvOrDefault(envMaxPageLimit, defaultMaxPageLimit),
+		BlobStoragePath:                  envOrDefault(envBlobStoragePath, defaultBlobStoragePath),
+		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 	}
 }
 

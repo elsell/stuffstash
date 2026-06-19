@@ -4,6 +4,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	accessroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/access/routes"
 	assetroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/routes"
+	attachmentroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/attachments/routes"
 	auditroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/audit/routes"
 	customassettyperoutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/customassettypes/routes"
 	customfieldroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/customfields/routes"
@@ -20,6 +21,7 @@ func registerRoutes(api huma.API, application app.App) {
 	customassettyperoutes.Register(api, application)
 	customfieldroutes.Register(api, application)
 	assetroutes.Register(api, application)
+	attachmentroutes.Register(api, application)
 	auditroutes.Register(api, application)
 	accessroutes.Register(api, application)
 }

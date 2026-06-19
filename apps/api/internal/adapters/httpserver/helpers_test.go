@@ -32,6 +32,8 @@ func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authoriz
 		CustomAssetTypes: store,
 		CustomFields:     store,
 		Assets:           store,
+		Attachments:      store,
+		Blobs:            store,
 		Audit:            store,
 		Outbox:           store,
 		IDs:              &fakeIDGenerator{ids: ids},
@@ -39,6 +41,10 @@ func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authoriz
 }
 
 func newSeededTestApp(t *testing.T, state seededState) app.App {
+	return newSeededTestAppWithBlob(t, state, nil)
+}
+
+func newSeededTestAppWithBlob(t *testing.T, state seededState, blobStorage ports.BlobStorage) app.App {
 	t.Helper()
 
 	ctx := context.Background()
@@ -82,6 +88,10 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 		}
 	}
 
+	if blobStorage == nil {
+		blobStorage = store
+	}
+
 	return app.New(app.Dependencies{
 		Observer:         &fakeObserver{},
 		Auth:             auth.NewLocalDevAuthenticator(),
@@ -91,6 +101,8 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 		CustomAssetTypes: store,
 		CustomFields:     store,
 		Assets:           store,
+		Attachments:      store,
+		Blobs:            blobStorage,
 		Audit:            store,
 		Outbox:           store,
 		IDs:              &fakeIDGenerator{ids: state.ids},

@@ -16,6 +16,8 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLease, "")
 	t.Setenv(envDefaultPageLimit, "")
 	t.Setenv(envMaxPageLimit, "")
+	t.Setenv(envBlobStoragePath, "")
+	t.Setenv(envMaxAttachmentBytes, "")
 
 	cfg := Load()
 
@@ -58,6 +60,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.MaxPageLimit != defaultMaxPageLimit {
 		t.Fatalf("expected max page limit %d, got %d", defaultMaxPageLimit, cfg.MaxPageLimit)
 	}
+	if cfg.BlobStoragePath != defaultBlobStoragePath {
+		t.Fatalf("expected blob storage path %q, got %q", defaultBlobStoragePath, cfg.BlobStoragePath)
+	}
+	if cfg.MaxAttachmentBytes != defaultMaxAttachmentBytes {
+		t.Fatalf("expected max attachment bytes %d, got %d", defaultMaxAttachmentBytes, cfg.MaxAttachmentBytes)
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -77,6 +85,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLease, "45s")
 	t.Setenv(envDefaultPageLimit, "13")
 	t.Setenv(envMaxPageLimit, "27")
+	t.Setenv(envBlobStoragePath, "/data/blobs")
+	t.Setenv(envMaxAttachmentBytes, "12345")
 
 	cfg := Load()
 
@@ -115,5 +125,11 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.DefaultPageLimit != 13 || cfg.MaxPageLimit != 27 {
 		t.Fatalf("unexpected page limits: %+v", cfg)
+	}
+	if cfg.BlobStoragePath != "/data/blobs" {
+		t.Fatalf("expected custom blob storage path, got %q", cfg.BlobStoragePath)
+	}
+	if cfg.MaxAttachmentBytes != 12345 {
+		t.Fatalf("expected max attachment bytes 12345, got %d", cfg.MaxAttachmentBytes)
 	}
 }

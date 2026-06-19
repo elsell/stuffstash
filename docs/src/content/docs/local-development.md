@@ -208,6 +208,30 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
 
 Normal asset lists show active assets. Use `lifecycleState=archived` for archived assets or `lifecycleState=all` for both.
 
+Add a small attachment to an asset:
+
+```sh
+CONTENT_BASE64="iVBORw0KGgo="
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d "{\"fileName\":\"receipt.png\",\"contentType\":\"image/png\",\"contentBase64\":\"${CONTENT_BASE64}\"}"
+```
+
+List and download attachments:
+
+```sh
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments?limit=50' \
+  -H 'Authorization: Bearer dev:user-one'
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/<attachment-id>/content \
+  -H 'Authorization: Bearer dev:user-one' \
+  --output attachment.bin
+```
+
+Local Postgres runs store blobs under `.stuffstash/blobs` by default. Compose uses a `blob-data` volume mounted at `/var/lib/stuffstash/blobs`. Set `STUFF_STASH_BLOB_STORAGE_PATH` to choose a different local path.
+
 Inventory custom field lists include tenant fields and inventory fields:
 
 ```sh
@@ -259,7 +283,7 @@ The interactive local API docs are also available at:
 open http://localhost:8080/docs
 ```
 
-You can run the same tenant, inventory, asset, and sharing flow as a check:
+You can run the same tenant, inventory, asset, attachment, and sharing flow as a check:
 
 ```sh
 make verify-local-api

@@ -15,6 +15,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
@@ -30,7 +31,7 @@ func NewStore(db *gorm.DB) Store {
 }
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &customAssetTypeModel{}, &customFieldDefinitionModel{}, &customFieldDefinitionAssetTypeModel{}, &assetModel{}, &auditRecordModel{}, &authorizationOutboxEventModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &customAssetTypeModel{}, &customFieldDefinitionModel{}, &customFieldDefinitionAssetTypeModel{}, &assetModel{}, &attachmentModel{}, &auditRecordModel{}, &authorizationOutboxEventModel{})
 }
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -1001,6 +1002,86 @@ func (s Store) SaveAuditRecord(ctx context.Context, record audit.Record) error {
 	return createAuditRecord(s.db.WithContext(ctx), record)
 }
 
+func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var item assetModel
+		err := tx.Where(&assetModel{
+			ID:          attachment.AssetID.String(),
+			TenantID:    attachment.TenantID.String(),
+			InventoryID: attachment.InventoryID.String(),
+		}).First(&item).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if err := tx.Create(&attachmentModel{
+			ID:          attachment.ID.String(),
+			TenantID:    attachment.TenantID.String(),
+			InventoryID: attachment.InventoryID.String(),
+			AssetID:     attachment.AssetID.String(),
+			StorageKey:  attachment.StorageKey.String(),
+			FileName:    attachment.FileName.String(),
+			ContentType: attachment.ContentType.String(),
+			SizeBytes:   attachment.SizeBytes,
+			SHA256:      attachment.SHA256.String(),
+			CreatedAt:   attachment.CreatedAt,
+		}).Error; err != nil {
+			return err
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
+func (s Store) AttachmentByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, bool, error) {
+	var model attachmentModel
+	err := s.db.WithContext(ctx).Where(&attachmentModel{
+		ID:          attachmentID.String(),
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		AssetID:     assetID.String(),
+	}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return media.Attachment{}, false, nil
+	}
+	if err != nil {
+		return media.Attachment{}, false, err
+	}
+	attachment, ok := model.toDomain()
+	if !ok {
+		return media.Attachment{}, false, fmt.Errorf("invalid attachment row %q", model.ID)
+	}
+	return attachment, true, nil
+}
+
+func (s Store) ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page ports.AttachmentListPageRequest) ([]media.Attachment, error) {
+	var models []attachmentModel
+	query := s.db.WithContext(ctx).Where(&attachmentModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		AssetID:     assetID.String(),
+	})
+	if page.AfterAttachmentID.String() != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterAttachmentID.String()})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+	items := make([]media.Attachment, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid attachment row %q", model.ID)
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
 func createAuditRecord(tx *gorm.DB, record audit.Record) error {
 	metadata, err := json.Marshal(record.MetadataValues())
 	if err != nil {
@@ -1193,6 +1274,23 @@ type assetModel struct {
 	UpdatedAt         time.Time
 }
 
+type attachmentModel struct {
+	ID          string         `gorm:"primaryKey;size:26"`
+	TenantID    string         `gorm:"not null;size:26;index"`
+	Tenant      tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID string         `gorm:"not null;size:26;index"`
+	Inventory   inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	AssetID     string         `gorm:"not null;size:26;index"`
+	Asset       assetModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AssetID;references:ID"`
+	StorageKey  string         `gorm:"not null;size:512;uniqueIndex"`
+	FileName    string         `gorm:"not null;size:255"`
+	ContentType string         `gorm:"not null;size:128"`
+	SizeBytes   int64          `gorm:"not null"`
+	SHA256      string         `gorm:"not null;size:64"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
 type auditRecordModel struct {
 	ID          string          `gorm:"primaryKey;size:26"`
 	TenantID    string          `gorm:"not null;size:26;index:idx_audit_records_tenant_id"`
@@ -1284,6 +1382,10 @@ func (m *inventoryAccessGrantModel) BeforeSave(*gorm.DB) error {
 
 func (assetModel) TableName() string {
 	return "assets"
+}
+
+func (attachmentModel) TableName() string {
+	return "attachments"
 }
 
 func (auditRecordModel) TableName() string {
@@ -1490,6 +1592,41 @@ func (m assetModel) toDomain() (asset.Asset, bool) {
 		CustomFields:      customFields,
 		LifecycleState:    lifecycleState,
 	}, true
+}
+
+func (m attachmentModel) toDomain() (media.Attachment, bool) {
+	id, ok := media.NewID(m.ID)
+	if !ok {
+		return media.Attachment{}, false
+	}
+	storageKey, ok := media.NewStorageKey(m.StorageKey)
+	if !ok {
+		return media.Attachment{}, false
+	}
+	fileName, ok := media.NewFileName(m.FileName)
+	if !ok {
+		return media.Attachment{}, false
+	}
+	contentType, ok := media.NewContentType(m.ContentType)
+	if !ok {
+		return media.Attachment{}, false
+	}
+	hash, ok := media.NewSHA256(m.SHA256)
+	if !ok {
+		return media.Attachment{}, false
+	}
+	return media.NewAttachment(
+		id,
+		media.TenantID(m.TenantID),
+		media.InventoryID(m.InventoryID),
+		media.AssetID(m.AssetID),
+		storageKey,
+		fileName,
+		contentType,
+		m.SizeBytes,
+		hash,
+		m.CreatedAt,
+	)
 }
 
 func (m auditRecordModel) toDomain() (audit.Record, bool) {

@@ -10,11 +10,13 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
 var ErrAuthorizationOutboxClaimLost = errors.New("authorization outbox claim lost")
 var ErrConflict = errors.New("conflict")
+var ErrBlobNotFound = errors.New("blob not found")
 
 type TenantRepository interface {
 	SaveTenant(ctx context.Context, tenant tenant.Tenant) error
@@ -111,6 +113,23 @@ type AuditRecordPageRequest struct {
 	AfterOccurredAt time.Time
 	AfterRecordID   audit.ID
 	Limit           int
+}
+
+type AttachmentRepository interface {
+	SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
+	AttachmentByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, bool, error)
+	ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page AttachmentListPageRequest) ([]media.Attachment, error)
+}
+
+type AttachmentListPageRequest struct {
+	AfterAttachmentID media.ID
+	Limit             int
+}
+
+type BlobStorage interface {
+	PutBlob(ctx context.Context, key media.StorageKey, contentType media.ContentType, data []byte) error
+	GetBlob(ctx context.Context, key media.StorageKey) ([]byte, error)
+	DeleteBlob(ctx context.Context, key media.StorageKey) error
 }
 
 type AuthorizationOutboxEventKind string
