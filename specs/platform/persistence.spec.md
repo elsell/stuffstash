@@ -139,6 +139,8 @@ Custom asset type definitions must be scoped by tenant and optionally by invento
 
 Custom field definitions that target custom asset types must use `custom_field_definition_asset_types` join rows. A field with applicability `all_assets` must have no join rows. A field with applicability `custom_asset_types` must have at least one join row. Join rows must reference custom asset types available to the field definition's effective scope.
 
+The detailed persistence contract for custom asset types and field applicability is defined in `specs/assets/custom-asset-types.spec.md`.
+
 Audit record persistence must be append-only through application ports in the first slice. All repository adapters, including the in-memory adapter, must reject duplicate audit record IDs instead of overwriting existing records. State changes paired with audit writes must fail without partial domain writes when the audit write fails. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination ordered by `(occurred_at, id)`. Inventory references must not cascade-delete audit rows; until delete behavior is specified, inventory deletion must be blocked if audit rows still reference the inventory. Migration `000009_preserve_audit_records_and_ordering` must convert existing audit record inventory references from cascade delete to restrict delete and recreate audit list indexes for `(occurred_at, id)` ordering.
 
 ## Initial Asset Schema

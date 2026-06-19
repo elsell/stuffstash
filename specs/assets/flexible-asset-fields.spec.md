@@ -12,6 +12,8 @@ This spec covers flexible asset metadata requirements, custom asset types, and h
 
 This spec does not define the full asset aggregate, asset lifecycle, search model, UI editor, or import/export behavior.
 
+The detailed implementation contract for custom asset type APIs, field applicability, and asset assignment is defined in `specs/assets/custom-asset-types.spec.md`.
+
 The first asset slice stores validated custom field values once definitions exist for the target inventory.
 
 Custom asset types are user-defined classifications layered onto normal base assets. They do not replace the base asset model.
@@ -26,8 +28,8 @@ Custom asset types are user-defined classifications layered onto normal base ass
 - Custom field definitions may be tenant-scoped or inventory-scoped.
 - Tenant-scoped custom field definitions must flow down into inventories.
 - Inventory-scoped custom field definitions must apply only inside that inventory.
-- Custom field definitions must declare whether they apply to all assets or only to assets with a specific custom asset type.
-- A custom field definition scoped to a custom asset type must not apply to assets without that custom asset type.
+- Custom field definitions must declare whether they apply to all assets or only to assets with one or more specific custom asset types.
+- A custom field definition scoped to custom asset types must not apply to assets without one of those custom asset types.
 - A custom field definition scoped to all assets must apply regardless of custom asset type.
 - Custom fields must be typed.
 - Custom field types must be represented with enumerations or typed value objects, not magic strings.
@@ -162,7 +164,7 @@ The first custom field endpoints are:
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 
-The first custom asset type endpoints are not yet specified. They must be specified before implementation.
+The first custom asset type endpoints are specified in `specs/assets/custom-asset-types.spec.md`.
 
 Create endpoints:
 
