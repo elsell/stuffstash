@@ -3,6 +3,8 @@ package httpserver
 import (
 	"net/http"
 	"testing"
+
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 )
 
 func TestInventorySharingEnforcesViewerEditorAndShareBoundaries(t *testing.T) {
@@ -24,6 +26,9 @@ func TestInventorySharingEnforcesViewerEditorAndShareBoundaries(t *testing.T) {
 			"audit-duplicate-viewer-grant", "duplicate-viewer-grant-event", "duplicate-viewer-grant-claim",
 			"audit-editor-grant", "editor-grant-event", "editor-grant-claim",
 			"editor-created-asset", "audit-editor-created-asset",
+			"audit-viewer-revoke", "viewer-revoke-event", "viewer-revoke-claim",
+			"audit-missing-viewer-revoke", "missing-viewer-revoke-event", "missing-viewer-revoke-claim",
+			"audit-editor-revoke", "editor-revoke-event", "editor-revoke-claim",
 		},
 	}))
 
@@ -80,6 +85,36 @@ func TestInventorySharingEnforcesViewerEditorAndShareBoundaries(t *testing.T) {
 		t.Fatalf("expected wrong inventory grant status %d, got %d with body %s", http.StatusNotFound, wrongInventoryGrant.Code, wrongInventoryGrant.Body.String())
 	}
 	assertSafeError(t, wrongInventoryGrant, "resource_not_found", "Resource not found.")
+
+	unauthenticatedRevoke := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "", nil)
+	if unauthenticatedRevoke.Code != http.StatusUnauthorized {
+		t.Fatalf("expected unauthenticated revoke status %d, got %d with body %s", http.StatusUnauthorized, unauthenticatedRevoke.Code, unauthenticatedRevoke.Body.String())
+	}
+	assertSafeError(t, unauthenticatedRevoke, "authentication_required", "Authentication required.")
+
+	malformedAuthRevoke := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer not-local-dev", nil)
+	if malformedAuthRevoke.Code != http.StatusUnauthorized {
+		t.Fatalf("expected malformed-auth revoke status %d, got %d with body %s", http.StatusUnauthorized, malformedAuthRevoke.Code, malformedAuthRevoke.Body.String())
+	}
+	assertSafeError(t, malformedAuthRevoke, "authentication_required", "Authentication required.")
+
+	invalidRelationshipRevoke := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/owner", "Bearer dev:inventory-owner", nil)
+	if invalidRelationshipRevoke.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected invalid relationship revoke status %d, got %d with body %s", http.StatusUnprocessableEntity, invalidRelationshipRevoke.Code, invalidRelationshipRevoke.Body.String())
+	}
+	assertErrorCode(t, invalidRelationshipRevoke, "invalid_request")
+
+	wrongTenantRevoke := performRequest(server, http.MethodDelete, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer dev:inventory-owner", nil)
+	if wrongTenantRevoke.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong tenant revoke status %d, got %d with body %s", http.StatusNotFound, wrongTenantRevoke.Code, wrongTenantRevoke.Body.String())
+	}
+	assertSafeError(t, wrongTenantRevoke, "resource_not_found", "Resource not found.")
+
+	wrongInventoryRevoke := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB0/access-grants/viewer-user/viewer", "Bearer dev:inventory-owner", nil)
+	if wrongInventoryRevoke.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong inventory revoke status %d, got %d with body %s", http.StatusNotFound, wrongInventoryRevoke.Code, wrongInventoryRevoke.Body.String())
+	}
+	assertSafeError(t, wrongInventoryRevoke, "resource_not_found", "Resource not found.")
 
 	firstGrantPage := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants?limit=1", "Bearer dev:inventory-owner", nil)
 	if firstGrantPage.Code != http.StatusOK {
@@ -193,7 +228,141 @@ func TestInventorySharingEnforcesViewerEditorAndShareBoundaries(t *testing.T) {
 			}
 			assertSafeError(t, response, "forbidden", "Forbidden.")
 		})
+
+		t.Run(item.name+" cannot revoke grants", func(t *testing.T) {
+			response := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer dev:"+item.principal, nil)
+			if response.Code != http.StatusForbidden {
+				t.Fatalf("expected grant revoke status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, "forbidden", "Forbidden.")
+		})
 	}
+
+	revokeViewer := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer dev:inventory-owner", nil)
+	if revokeViewer.Code != http.StatusNoContent {
+		t.Fatalf("expected revoke status %d, got %d with body %s", http.StatusNoContent, revokeViewer.Code, revokeViewer.Body.String())
+	}
+
+	revokeViewerAgain := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer dev:inventory-owner", nil)
+	if revokeViewerAgain.Code != http.StatusNoContent {
+		t.Fatalf("expected idempotent revoke status %d, got %d with body %s", http.StatusNoContent, revokeViewerAgain.Code, revokeViewerAgain.Body.String())
+	}
+
+	remainingGrants := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants?limit=50", "Bearer dev:inventory-owner", nil)
+	if remainingGrants.Code != http.StatusOK {
+		t.Fatalf("expected remaining grant list status %d, got %d with body %s", http.StatusOK, remainingGrants.Code, remainingGrants.Body.String())
+	}
+	remainingGrantBody := decodeInventoryAccessGrantList(t, remainingGrants)
+	if len(remainingGrantBody.Data) != 1 || remainingGrantBody.Data[0].PrincipalID != "editor-user" {
+		t.Fatalf("expected only editor grant after viewer revoke, got %+v", remainingGrantBody.Data)
+	}
+
+	revokedViewerListAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:viewer-user", nil)
+	if revokedViewerListAssets.Code != http.StatusForbidden {
+		t.Fatalf("expected revoked viewer list status %d, got %d with body %s", http.StatusForbidden, revokedViewerListAssets.Code, revokedViewerListAssets.Body.String())
+	}
+	assertSafeError(t, revokedViewerListAssets, "forbidden", "Forbidden.")
+
+	revokeEditor := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/editor-user/editor", "Bearer dev:inventory-owner", nil)
+	if revokeEditor.Code != http.StatusNoContent {
+		t.Fatalf("expected editor revoke status %d, got %d with body %s", http.StatusNoContent, revokeEditor.Code, revokeEditor.Body.String())
+	}
+
+	noRemainingGrants := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants?limit=50", "Bearer dev:inventory-owner", nil)
+	if noRemainingGrants.Code != http.StatusOK {
+		t.Fatalf("expected empty grant list status %d, got %d with body %s", http.StatusOK, noRemainingGrants.Code, noRemainingGrants.Body.String())
+	}
+	noRemainingGrantBody := decodeInventoryAccessGrantList(t, noRemainingGrants)
+	if len(noRemainingGrantBody.Data) != 0 {
+		t.Fatalf("expected no grants after editor revoke, got %+v", noRemainingGrantBody.Data)
+	}
+
+	revokedEditorListAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:editor-user", nil)
+	if revokedEditorListAssets.Code != http.StatusForbidden {
+		t.Fatalf("expected revoked editor list status %d, got %d with body %s", http.StatusForbidden, revokedEditorListAssets.Code, revokedEditorListAssets.Body.String())
+	}
+	assertSafeError(t, revokedEditorListAssets, "forbidden", "Forbidden.")
+
+	revokedEditorCreateAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:editor-user", map[string]string{
+		"kind":  "item",
+		"title": "Saw",
+	})
+	if revokedEditorCreateAsset.Code != http.StatusForbidden {
+		t.Fatalf("expected revoked editor create status %d, got %d with body %s", http.StatusForbidden, revokedEditorCreateAsset.Code, revokedEditorCreateAsset.Body.String())
+	}
+	assertSafeError(t, revokedEditorCreateAsset, "forbidden", "Forbidden.")
+}
+
+func TestInventoryAccessRevocationFailsClosedWhenAuthorizerRevokeFails(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	authorizer := memory.NewAuthorizer()
+	server := NewServer(":0", newSeededTestAppWithAuthorizer(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+		},
+		ids: []string{
+			"audit-viewer-grant", "viewer-grant-event", "viewer-grant-claim",
+			"audit-viewer-revoke", "viewer-revoke-event", "viewer-revoke-claim",
+		},
+	}, failingRevokeAuthorizer{delegate: authorizer}))
+
+	viewerGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if viewerGrant.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+
+	revokeViewer := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer dev:inventory-owner", nil)
+	if revokeViewer.Code != http.StatusInternalServerError {
+		t.Fatalf("expected revoke failure status %d, got %d with body %s", http.StatusInternalServerError, revokeViewer.Code, revokeViewer.Body.String())
+	}
+	assertSafeError(t, revokeViewer, "internal_error", "Internal server error.")
+}
+
+func TestInventoryAccessRevocationIgnoresUnrelatedOutboxFailures(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const poisonTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	store := memory.NewStore()
+	enqueuePoisonTenantOwnerOutboxEvent(t, store, "older-poison-event", poisonTenantID)
+	authorizer := memory.NewAuthorizer()
+	server := NewServer(":0", newSeededTestAppWithStoreAndAuthorizer(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+		},
+		ids: []string{
+			"audit-viewer-grant", "viewer-grant-event", "viewer-grant-claim",
+			"audit-viewer-revoke", "viewer-revoke-event", "viewer-revoke-claim",
+		},
+	}, store, failingTenantGrantAuthorizer{delegate: authorizer}))
+
+	viewerGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if viewerGrant.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+
+	revokeViewer := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants/viewer-user/viewer", "Bearer dev:inventory-owner", nil)
+	if revokeViewer.Code != http.StatusNoContent {
+		t.Fatalf("expected revoke status %d despite unrelated outbox failure, got %d with body %s", http.StatusNoContent, revokeViewer.Code, revokeViewer.Body.String())
+	}
+
+	revokedViewerListAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:viewer-user", nil)
+	if revokedViewerListAssets.Code != http.StatusForbidden {
+		t.Fatalf("expected revoked viewer list status %d, got %d with body %s", http.StatusForbidden, revokedViewerListAssets.Code, revokedViewerListAssets.Body.String())
+	}
+	assertSafeError(t, revokedViewerListAssets, "forbidden", "Forbidden.")
 }
 
 func TestStateCreatedDuringAuthorizationGrantFailureStaysProtected(t *testing.T) {

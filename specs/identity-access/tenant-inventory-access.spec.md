@@ -10,7 +10,7 @@ The access model should feel familiar to users: tenants contain inventories, inv
 
 This spec covers the initial identity, tenant, inventory, authentication, and authorization model.
 
-This spec does not define every SpiceDB relationship, invitation flow, UI screen, or billing concept.
+This spec does not define every SpiceDB relationship, email invitation acceptance flow, UI screen, or billing concept.
 
 ## Model
 
@@ -60,12 +60,13 @@ The first relationship model should include these concepts:
 
 The first user-management slice supports direct inventory sharing with known principal IDs.
 
-It does not implement email invitations, invite acceptance, user search, access removal, tenant membership management, groups, or ownership transfer.
+It does not implement email invitations, invite acceptance, user search, tenant membership management, groups, or ownership transfer.
 
 The first endpoints are:
 
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
 
 `POST /access-grants`:
 
@@ -88,7 +89,24 @@ The first endpoints are:
 - Must use cursor pagination with `limit` and `cursor`.
 - Must not list inherited tenant-owner or tenant-admin access as direct grants.
 
+`DELETE /access-grants/{principalId}/{relationship}`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Supports only direct `viewer` and `editor` relationships in the first slice.
+- Must remove only the requested direct grant row.
+- Must not remove inherited tenant-owner, tenant-admin, or inventory-owner access.
+- Must persist the grant removal, matching authorization outbox event, and request-owned outbox claim in the same database transaction.
+- Must be idempotent for a missing direct grant.
+- Must still enqueue a matching authorization outbox event for a missing direct grant so stale direct SpiceDB relationships can self-heal.
+- Must produce audit history only when a direct grant actually existed and was removed.
+- Must process the claimed revoke authorization outbox event after the durable transaction commits.
+- Must not return the standard successful deletion response when the immediate revoke drain fails, because a caller must not receive success while the direct authorization relationship may still be active.
+- Must use the standard no-content response for successful deletion.
+
 Granting direct inventory access must also grant tenant `viewer` to the target principal so the user can resolve the containing tenant without receiving tenant configuration or sibling-inventory access.
+
+Revoking direct inventory access removes the inventory relationship. Tenant viewer cleanup is deferred until tenant membership and invitation semantics are specified, because a user may still need tenant view through another inventory.
 
 Granting `viewer` allows inventory viewing and asset listing.
 
@@ -114,10 +132,10 @@ Neither `viewer` nor `editor` allows sharing access onward.
 - Every authenticated and authorized interaction point must have adversarial end-to-end tests.
 - Tests must cover unauthenticated access, wrong-tenant access, wrong-inventory access, viewer attempting edits, editor attempting admin operations, malformed tokens, expired tokens, and privilege escalation attempts.
 - Tests must verify that conversational actions cannot exceed the initiating user's permissions.
-- Sharing API tests must prove owners can grant access, unrelated users cannot grant or list grants, viewers cannot share, editors cannot share, and granted viewers/editors receive only their intended permissions.
+- Sharing API tests must prove owners can grant and revoke direct access, unrelated users cannot grant, revoke, or list grants, viewers cannot share or revoke, editors cannot share or revoke, granted viewers/editors receive only their intended permissions, and revoked users lose the revoked inventory permissions.
 
 ## Open Questions
 
-- How are invitations created, accepted, revoked, and audited?
+- How are email invitations created, accepted, revoked, and audited?
 - What is the first mobile-friendly OIDC flow?
 - How should users switch between tenants and inventories?

@@ -121,6 +121,24 @@ func (a *Authorizer) GrantInventoryEditor(_ context.Context, principal identity.
 	return nil
 }
 
+func (a *Authorizer) RevokeInventoryViewer(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	delete(a.inventoryViewers[inventoryID], principal.ID)
+	a.inventoryTenants[inventoryID] = tenantID
+	return nil
+}
+
+func (a *Authorizer) RevokeInventoryEditor(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	delete(a.inventoryEditors[inventoryID], principal.ID)
+	a.inventoryTenants[inventoryID] = tenantID
+	return nil
+}
+
 func hasPrincipal(principals map[identity.PrincipalID]struct{}, principalID identity.PrincipalID) bool {
 	if principals == nil {
 		return false

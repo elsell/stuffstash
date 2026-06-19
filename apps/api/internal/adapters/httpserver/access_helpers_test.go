@@ -38,6 +38,86 @@ func (failingGrantAuthorizer) GrantInventoryEditor(context.Context, identity.Pri
 	return errors.New("spicedb unavailable")
 }
 
+func (failingGrantAuthorizer) RevokeInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return errors.New("spicedb unavailable")
+}
+
+func (failingGrantAuthorizer) RevokeInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return errors.New("spicedb unavailable")
+}
+
+type failingRevokeAuthorizer struct {
+	delegate ports.Authorizer
+}
+
+func (f failingRevokeAuthorizer) CheckTenant(ctx context.Context, principal identity.Principal, permission ports.TenantPermission, tenantID tenant.ID) error {
+	return f.delegate.CheckTenant(ctx, principal, permission, tenantID)
+}
+
+func (f failingRevokeAuthorizer) CheckInventory(ctx context.Context, principal identity.Principal, permission ports.InventoryPermission, inventoryID inventory.InventoryID) error {
+	return f.delegate.CheckInventory(ctx, principal, permission, inventoryID)
+}
+
+func (f failingRevokeAuthorizer) GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error {
+	return f.delegate.GrantTenantOwner(ctx, principal, tenantID)
+}
+
+func (f failingRevokeAuthorizer) GrantInventoryOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.GrantInventoryOwner(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingRevokeAuthorizer) GrantInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.GrantInventoryViewer(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingRevokeAuthorizer) GrantInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.GrantInventoryEditor(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingRevokeAuthorizer) RevokeInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return errors.New("spicedb unavailable")
+}
+
+func (f failingRevokeAuthorizer) RevokeInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return errors.New("spicedb unavailable")
+}
+
+type failingTenantGrantAuthorizer struct {
+	delegate ports.Authorizer
+}
+
+func (f failingTenantGrantAuthorizer) CheckTenant(ctx context.Context, principal identity.Principal, permission ports.TenantPermission, tenantID tenant.ID) error {
+	return f.delegate.CheckTenant(ctx, principal, permission, tenantID)
+}
+
+func (f failingTenantGrantAuthorizer) CheckInventory(ctx context.Context, principal identity.Principal, permission ports.InventoryPermission, inventoryID inventory.InventoryID) error {
+	return f.delegate.CheckInventory(ctx, principal, permission, inventoryID)
+}
+
+func (f failingTenantGrantAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
+	return errors.New("spicedb unavailable")
+}
+
+func (f failingTenantGrantAuthorizer) GrantInventoryOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.GrantInventoryOwner(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingTenantGrantAuthorizer) GrantInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.GrantInventoryViewer(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingTenantGrantAuthorizer) GrantInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.GrantInventoryEditor(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingTenantGrantAuthorizer) RevokeInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.RevokeInventoryViewer(ctx, principal, tenantID, inventoryID)
+}
+
+func (f failingTenantGrantAuthorizer) RevokeInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return f.delegate.RevokeInventoryEditor(ctx, principal, tenantID, inventoryID)
+}
+
 type inventoryAccessGrantResponse struct {
 	TenantID     string `json:"tenantId"`
 	InventoryID  string `json:"inventoryId"`

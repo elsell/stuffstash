@@ -43,6 +43,23 @@ func (s *Store) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID
 	return events, nil
 }
 
+func (s *Store) ClaimAuthorizationOutboxEvent(_ context.Context, eventID string, claimID string, leaseUntil time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.outbox[eventID]
+	if !ok || !event.DeadLetteredAt.IsZero() {
+		return ports.AuthorizationOutboxEvent{}, false, nil
+	}
+	if !event.ClaimedUntil.IsZero() && event.ClaimedUntil.After(time.Now()) {
+		return ports.AuthorizationOutboxEvent{}, false, nil
+	}
+	event.ClaimID = claimID
+	event.ClaimedUntil = leaseUntil
+	s.outbox[event.ID] = event
+	return event, true, nil
+}
+
 func (s *Store) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string, claimID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

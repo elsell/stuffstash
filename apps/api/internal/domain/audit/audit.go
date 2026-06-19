@@ -43,6 +43,7 @@ const (
 	ActionTenantCreated                Action = "tenant.created"
 	ActionInventoryCreated             Action = "inventory.created"
 	ActionInventoryAccessGranted       Action = "inventory_access.granted"
+	ActionInventoryAccessRevoked       Action = "inventory_access.revoked"
 	ActionCustomAssetTypeCreated       Action = "custom_asset_type.created"
 	ActionCustomAssetTypeUpdated       Action = "custom_asset_type.updated"
 	ActionCustomFieldDefinitionCreated Action = "custom_field_definition.created"
@@ -61,6 +62,7 @@ func NewAction(value string) (Action, bool) {
 	case ActionTenantCreated,
 		ActionInventoryCreated,
 		ActionInventoryAccessGranted,
+		ActionInventoryAccessRevoked,
 		ActionCustomAssetTypeCreated,
 		ActionCustomAssetTypeUpdated,
 		ActionCustomFieldDefinitionCreated,

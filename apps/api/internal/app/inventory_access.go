@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -35,6 +36,16 @@ type ListInventoryAccessGrantsResult struct {
 	Limit      int
 	NextCursor *string
 	HasMore    bool
+}
+
+type RevokeInventoryAccessInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	TargetUserID string
+	Relationship string
 }
 
 func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAccessInput) (ports.InventoryAccessGrant, error) {
@@ -101,6 +112,74 @@ func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAcces
 	a.drainAuthorizationOutboxBestEffort(ctx, a.authorizationOutboxDrainLimit())
 
 	return grant, nil
+}
+
+func (a App) RevokeInventoryAccess(ctx context.Context, input RevokeInventoryAccessInput) (bool, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return false, err
+	}
+
+	targetPrincipalID, ok := identity.NewPrincipalID(input.TargetUserID)
+	if !ok {
+		return false, ErrInvalidInput
+	}
+	relationship, ok := inventoryAccessRelationship(input.Relationship)
+	if !ok {
+		return false, ErrInvalidInput
+	}
+
+	grant := ports.InventoryAccessGrant{
+		TenantID:     input.TenantID,
+		InventoryID:  input.InventoryID,
+		PrincipalID:  targetPrincipalID,
+		Relationship: relationship,
+	}
+
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryAccessRevoked,
+		TargetType:  audit.TargetInventoryAccessGrant,
+		TargetID:    grant.CursorKey(),
+		Metadata: map[string]string{
+			"target_principal_id": targetPrincipalID.String(),
+			"relationship":        string(relationship),
+		},
+	})
+	if err != nil {
+		return false, err
+	}
+
+	eventID := a.ids.NewID()
+	claimID := a.ids.NewID()
+	event, removed, err := a.inventories.DeleteInventoryAccessGrantAndClaimRevoke(ctx, eventID, claimID, time.Now().Add(a.authorizationOutboxClaimLease()), grant, auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return false, ErrInvalidInput
+		}
+		return false, err
+	}
+	if removed {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventInventoryAccessRevoked,
+			Message: "inventory access revoked",
+			Fields: map[string]string{
+				"tenant_id":    input.TenantID.String(),
+				"inventory_id": input.InventoryID.String(),
+				"principal_id": input.Principal.ID.String(),
+				"target_id":    targetPrincipalID.String(),
+				"relationship": string(relationship),
+			},
+		})
+	}
+	if err := a.processClaimedAuthorizationOutboxEvent(ctx, event, claimID); err != nil {
+		return removed, err
+	}
+
+	return removed, nil
 }
 
 func (a App) ListInventoryAccessGrants(ctx context.Context, input ListInventoryAccessGrantsInput) (ListInventoryAccessGrantsResult, error) {

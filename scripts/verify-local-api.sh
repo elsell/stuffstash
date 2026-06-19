@@ -273,4 +273,21 @@ viewer_share_response="$(request POST "/tenants/${tenant_id}/inventories/${inven
 viewer_share_status="$(printf '%s\n' "$viewer_share_response" | head -n 1)"
 [ "$viewer_share_status" = "403" ] || fail "expected viewer share status 403, got ${viewer_share_status}"
 
+viewer_revoke_response="$(request DELETE "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants/${viewer_principal}/viewer" "$viewer_auth_header")"
+viewer_revoke_status="$(printf '%s\n' "$viewer_revoke_response" | head -n 1)"
+[ "$viewer_revoke_status" = "403" ] || fail "expected viewer revoke status 403, got ${viewer_revoke_status}"
+
+echo "revoking viewer access from ${viewer_principal}"
+revoke_response="$(request DELETE "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants/${viewer_principal}/viewer" "$auth_header")"
+revoke_status="$(printf '%s\n' "$revoke_response" | head -n 1)"
+[ "$revoke_status" = "204" ] || fail "expected revoke status 204, got ${revoke_status}"
+
+revoke_again_response="$(request DELETE "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants/${viewer_principal}/viewer" "$auth_header")"
+revoke_again_status="$(printf '%s\n' "$revoke_again_response" | head -n 1)"
+[ "$revoke_again_status" = "204" ] || fail "expected idempotent revoke status 204, got ${revoke_again_status}"
+
+revoked_viewer_asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$viewer_auth_header")"
+revoked_viewer_asset_list_status="$(printf '%s\n' "$revoked_viewer_asset_list_response" | head -n 1)"
+[ "$revoked_viewer_asset_list_status" = "403" ] || fail "expected revoked viewer asset list status 403, got ${revoked_viewer_asset_list_status}"
+
 echo "local API verification passed"

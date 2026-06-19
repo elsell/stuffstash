@@ -64,20 +64,21 @@ The goal is to prove a production-shaped path through:
 - Asset media attachments now support JSON base64 upload, cursor-paginated listing, raw content download, local filesystem blob storage, Garage S3-compatible blob storage, audit history, generated OpenAPI, and adversarial API tests.
 - Local Dex OIDC verification now runs the full API user flow with two Dex-issued ID tokens and SpiceDB authorization.
 - Authorized asset search now supports exact and fuzzy lookup across asset title, description, custom fields, custom asset type metadata, and attachment metadata, with tenant scoping, inventory authorization filtering, lifecycle filtering, cursor pagination, generated OpenAPI, adapter tests, and adversarial API tests.
+- Direct inventory access revocation now removes persisted viewer/editor grants, enqueues SpiceDB revoke events through the authorization outbox, records audit history, exposes a no-content REST endpoint, and has adversarial API tests.
 
 ## Known Gaps
 
-- User invitation flows, access revocation, custom asset type delete/archive, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
+- User invitation flows, custom asset type delete/archive, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
 - Undo is not yet implemented for audit history.
 - Custom field definitions cannot yet change schema shape, be deleted, reordered, imported, exported, or managed through conversational flows.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
 
 ## Next Work
 
-1. Implement user invitation and access revocation flows.
+1. Implement user invitation flows.
    - Keep the Google Drive-style sharing model.
    - Preserve outbox-backed SpiceDB consistency.
-   - Add adversarial tests for invite acceptance, revoked access, and wrong-tenant attempts.
+   - Add adversarial tests for invite creation, invite acceptance, revoked invite access, and wrong-tenant attempts.
 
 ## Later Work
 

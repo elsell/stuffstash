@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func newTestApp(observer ports.Observer, ids ...string) app.App {
@@ -46,11 +48,67 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 }
 
 func newSeededTestAppWithBlob(t *testing.T, state seededState, blobStorage ports.BlobStorage) app.App {
+	return newSeededTestAppWithBlobAndAuthorizer(t, state, blobStorage, memory.NewAuthorizer())
+}
+
+func newSeededTestAppWithAuthorizer(t *testing.T, state seededState, authorizer ports.Authorizer) app.App {
+	return newSeededTestAppWithBlobAndAuthorizer(t, state, nil, authorizer)
+}
+
+func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blobStorage ports.BlobStorage, authorizer ports.Authorizer) app.App {
 	t.Helper()
 
 	ctx := context.Background()
 	store := memory.NewStore()
-	authorizer := memory.NewAuthorizer()
+	seedMemoryStore(t, ctx, store, authorizer, state)
+
+	if blobStorage == nil {
+		blobStorage = store
+	}
+
+	return app.New(app.Dependencies{
+		Observer:         &fakeObserver{},
+		Auth:             auth.NewLocalDevAuthenticator(),
+		Authorizer:       authorizer,
+		Tenants:          store,
+		Inventories:      store,
+		CustomAssetTypes: store,
+		CustomFields:     store,
+		Assets:           store,
+		Search:           store,
+		Attachments:      store,
+		Blobs:            blobStorage,
+		Audit:            store,
+		Outbox:           store,
+		IDs:              &fakeIDGenerator{ids: state.ids},
+	})
+}
+
+func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, store *memory.Store, authorizer ports.Authorizer) app.App {
+	t.Helper()
+
+	seedMemoryStore(t, context.Background(), store, authorizer, state)
+
+	return app.New(app.Dependencies{
+		Observer:         &fakeObserver{},
+		Auth:             auth.NewLocalDevAuthenticator(),
+		Authorizer:       authorizer,
+		Tenants:          store,
+		Inventories:      store,
+		CustomAssetTypes: store,
+		CustomFields:     store,
+		Assets:           store,
+		Search:           store,
+		Attachments:      store,
+		Blobs:            store,
+		Audit:            store,
+		Outbox:           store,
+		IDs:              &fakeIDGenerator{ids: state.ids},
+	})
+}
+
+func seedMemoryStore(t *testing.T, ctx context.Context, store *memory.Store, authorizer ports.Authorizer, state seededState) {
+	t.Helper()
 
 	for _, item := range state.tenants {
 		tenantID := tenant.ID(item.id)
@@ -88,27 +146,38 @@ func newSeededTestAppWithBlob(t *testing.T, state seededState, blobStorage ports
 			}
 		}
 	}
+}
 
-	if blobStorage == nil {
-		blobStorage = store
+func enqueuePoisonTenantOwnerOutboxEvent(t *testing.T, store *memory.Store, eventID string, tenantID string) {
+	t.Helper()
+
+	name, ok := tenant.NewName("Poison")
+	if !ok {
+		t.Fatalf("invalid poison tenant name")
 	}
-
-	return app.New(app.Dependencies{
-		Observer:         &fakeObserver{},
-		Auth:             auth.NewLocalDevAuthenticator(),
-		Authorizer:       authorizer,
-		Tenants:          store,
-		Inventories:      store,
-		CustomAssetTypes: store,
-		CustomFields:     store,
-		Assets:           store,
-		Search:           store,
-		Attachments:      store,
-		Blobs:            blobStorage,
-		Audit:            store,
-		Outbox:           store,
-		IDs:              &fakeIDGenerator{ids: state.ids},
-	})
+	auditID, ok := audit.NewID(eventID + "-audit")
+	if !ok {
+		t.Fatalf("invalid poison audit id")
+	}
+	record, ok := audit.NewRecord(
+		auditID,
+		audit.TenantID(tenantID),
+		"",
+		audit.PrincipalID("poison-user"),
+		audit.ActionTenantCreated,
+		audit.SourceAPI,
+		audit.TargetTenant,
+		tenantID,
+		time.Now(),
+		"",
+		map[string]string{},
+	)
+	if !ok {
+		t.Fatalf("invalid poison audit record")
+	}
+	if err := store.SaveTenantAndEnqueueOwnerGrant(context.Background(), eventID, tenant.Tenant{ID: tenant.ID(tenantID), Name: name}, identity.Principal{ID: identity.PrincipalID("poison-user")}, record); err != nil {
+		t.Fatalf("enqueue poison outbox event: %v", err)
+	}
 }
 
 func principal(id string) identity.Principal {

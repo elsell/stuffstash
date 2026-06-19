@@ -5,7 +5,7 @@ description: What Stuff Stash is and what problem it solves.
 
 Stuff Stash is a home inventory system.
 
-It is meant to track items, places, containers, photos, files, and history across one or more inventories. Today, the API handles tenants, inventories, assets, custom asset types, custom fields, asset attachments, audit history, and direct inventory sharing. A tenant is the top-level security boundary. A tenant can have many inventories, such as household, tools, or medicine.
+It is meant to track items, places, containers, photos, files, and history across one or more inventories. Today, the API handles tenants, inventories, assets, custom asset types, custom fields, asset attachments, audit history, and direct inventory sharing and revocation. A tenant is the top-level security boundary. A tenant can have many inventories, such as household, tools, or medicine.
 
 The main goal is low-friction updates. A user should be able to say something like:
 
@@ -26,7 +26,7 @@ The repository has a small Go API scaffold with:
 - Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.
 - Asset search across the inventories a user can view.
 - Durable audit history for the first state-changing actions.
-- Direct inventory sharing by known principal ID, with viewer and editor grants.
+- Direct inventory sharing by known principal ID, with viewer and editor grants and revocation.
 - Huma-generated OpenAPI at `/openapi.json`.
 - Domain-oriented observability through ports.
 - Docker and Compose files for local work, including Postgres, SpiceDB, and an optional Dex OIDC override.

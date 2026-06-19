@@ -31,6 +31,17 @@ type ListInventoryAccessOutput struct {
 	Body shared.SuccessEnvelope[[]GrantResponse]
 }
 
+type RevokeInventoryAccessInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	PrincipalID   string `path:"principalId" doc:"User principal ID to revoke access from"`
+	Relationship  string `path:"relationship" enum:"viewer,editor" doc:"Direct inventory relationship"`
+}
+
+type RevokeInventoryAccessOutput struct{}
+
 type GrantResponse struct {
 	TenantID     string `json:"tenantId"`
 	InventoryID  string `json:"inventoryId"`

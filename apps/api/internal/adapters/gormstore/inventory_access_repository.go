@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -50,10 +52,14 @@ func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID s
 			return err
 		}
 
+		eventKind, ok := grant.Relationship.GrantOutboxKind()
+		if !ok {
+			return fmt.Errorf("invalid inventory access relationship %q", grant.Relationship)
+		}
 		inventoryID := grant.InventoryID.String()
 		if err := tx.Create(&authorizationOutboxEventModel{
 			ID:          eventID,
-			Kind:        string(outboxKindForInventoryAccess(grant.Relationship)),
+			Kind:        string(eventKind),
 			PrincipalID: grant.PrincipalID.String(),
 			TenantID:    grant.TenantID.String(),
 			InventoryID: &inventoryID,
@@ -63,6 +69,61 @@ func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID s
 
 		return createAuditRecord(tx, auditRecord)
 	})
+}
+
+func (s Store) DeleteInventoryAccessGrantAndClaimRevoke(ctx context.Context, eventID string, claimID string, leaseUntil time.Time, grant ports.InventoryAccessGrant, auditRecord audit.Record) (ports.AuthorizationOutboxEvent, bool, error) {
+	removed := false
+	var outboxEvent ports.AuthorizationOutboxEvent
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var containingInventory inventoryModel
+		err := tx.Where(&inventoryModel{
+			ID:       grant.InventoryID.String(),
+			TenantID: grant.TenantID.String(),
+		}).First(&containingInventory).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+
+		eventKind, ok := grant.Relationship.RevokeOutboxKind()
+		if !ok {
+			return fmt.Errorf("invalid inventory access relationship %q", grant.Relationship)
+		}
+
+		grantKey := grant.CursorKey()
+		result := tx.Where(&inventoryAccessGrantModel{
+			TenantID:    grant.TenantID.String(),
+			InventoryID: grant.InventoryID.String(),
+			GrantKey:    grantKey,
+		}).Delete(&inventoryAccessGrantModel{})
+		if result.Error != nil {
+			return result.Error
+		}
+		removed = result.RowsAffected > 0
+
+		inventoryID := grant.InventoryID.String()
+		model := authorizationOutboxEventModel{
+			ID:           eventID,
+			Kind:         string(eventKind),
+			PrincipalID:  grant.PrincipalID.String(),
+			TenantID:     grant.TenantID.String(),
+			InventoryID:  &inventoryID,
+			ClaimID:      claimID,
+			ClaimedUntil: &leaseUntil,
+		}
+		if err := tx.Create(&model).Error; err != nil {
+			return err
+		}
+		outboxEvent = model.toPort()
+
+		if !removed {
+			return nil
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+	return outboxEvent, removed, err
 }
 
 func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {
@@ -90,13 +151,4 @@ func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID
 		items = append(items, item)
 	}
 	return items, nil
-}
-
-func outboxKindForInventoryAccess(relationship ports.InventoryAccessRelationship) ports.AuthorizationOutboxEventKind {
-	switch relationship {
-	case ports.InventoryAccessEditor:
-		return ports.AuthorizationOutboxGrantInventoryEditor
-	default:
-		return ports.AuthorizationOutboxGrantInventoryViewer
-	}
 }

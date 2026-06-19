@@ -203,6 +203,48 @@ func TestAuthorizerGrantsInventoryEditorAndTenantLink(t *testing.T) {
 	}, "editor")
 }
 
+func TestAuthorizerRevokesDirectInventoryAccess(t *testing.T) {
+	for _, item := range []struct {
+		name         string
+		revoke       func(Authorizer) error
+		relationship string
+	}{
+		{name: "viewer", relationship: "viewer", revoke: func(authorizer Authorizer) error {
+			return authorizer.RevokeInventoryViewer(context.Background(), principal("user-one"), tenant.ID("tenant-one"), inventory.InventoryID("inventory-one"))
+		}},
+		{name: "editor", relationship: "editor", revoke: func(authorizer Authorizer) error {
+			return authorizer.RevokeInventoryEditor(context.Background(), principal("user-one"), tenant.ID("tenant-one"), inventory.InventoryID("inventory-one"))
+		}},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			gateway := &fakeGateway{}
+			authorizer := NewAuthorizer(gateway)
+
+			if err := item.revoke(authorizer); err != nil {
+				t.Fatalf("revoke direct inventory access: %v", err)
+			}
+
+			updates := gateway.relationshipWrites[0].Updates
+			if len(updates) != 1 {
+				t.Fatalf("expected one relationship delete, got %d", len(updates))
+			}
+			if updates[0].Operation != v1.RelationshipUpdate_OPERATION_DELETE {
+				t.Fatalf("expected delete operation, got %s", updates[0].Operation)
+			}
+			relationship := updates[0].Relationship
+			if relationship.Resource.ObjectType != "inventory" || relationship.Resource.ObjectId != "inventory-one" {
+				t.Fatalf("unexpected inventory resource: %+v", relationship.Resource)
+			}
+			if relationship.Relation != item.relationship {
+				t.Fatalf("expected %q relationship, got %q", item.relationship, relationship.Relation)
+			}
+			if relationship.Subject.Object.ObjectType != "user" || relationship.Subject.Object.ObjectId != "user-one" {
+				t.Fatalf("unexpected subject: %+v", relationship.Subject.Object)
+			}
+		})
+	}
+}
+
 func TestAuthorizerBootstrapsSchema(t *testing.T) {
 	gateway := &fakeGateway{}
 	authorizer := NewAuthorizer(gateway)

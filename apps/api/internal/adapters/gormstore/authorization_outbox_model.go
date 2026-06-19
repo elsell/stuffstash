@@ -10,7 +10,7 @@ import (
 
 type authorizationOutboxEventModel struct {
 	ID               string         `gorm:"primaryKey;size:26"`
-	Kind             string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor');check:chk_authorization_outbox_events_inventory_required,(kind IN ('grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor') AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
+	Kind             string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor','revoke_inventory_viewer','revoke_inventory_editor');check:chk_authorization_outbox_events_inventory_required,(kind IN ('grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor','revoke_inventory_viewer','revoke_inventory_editor') AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
 	PrincipalID      string         `gorm:"not null;size:128;index"`
 	TenantID         string         `gorm:"not null;size:26;index"`
 	Tenant           tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`

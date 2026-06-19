@@ -26,12 +26,15 @@ These instructions are binding for all agents and contributors working in this r
 - The documentation site must use Astro and Starlight.
 - Documentation should help a technically adept newcomer understand what Stuff Stash is, how it is structured, and how to run it locally.
 - Documentation should feel like documentation for a polished open source project: user-focused, beautiful, easy to use, concise, and clear.
+- Documentation should present Stuff Stash as a real product and project, not as a rendered copy of the specs.
+- The public docs should prioritize a delightful first read, clear navigation, quick setup, common workflows, and a concise explanation of the product.
 - Prefer concise, high-signal writing. If there were more time, write less.
 - Documentation should sound human, plain, and direct. Aim for roughly an eighth-grade reading level unless the topic requires precise technical language.
 - Do not write documentation for documentation's sake.
 - Document concepts, workflows, setup steps, operating procedures, and architectural decisions that are useful to humans.
 - Do not duplicate information that is self-evident from code, tests, or specs unless the human explanation adds meaningful context.
 - Do not mirror every spec into documentation. Specs are the source of truth; documentation is curated communication for users, contributors, operators, and integrators.
+- Not all specs need public documentation. Keep detailed internal traceability in specs unless it helps a reader use, run, operate, extend, or understand Stuff Stash.
 - Public docs should explain what helps readers use, run, operate, extend, or understand the product. Leave internal detail in specs unless it improves the reader experience.
 - Setup and local development instructions must be verified by running them when possible. If they cannot be verified, mark that explicitly.
 - Documentation must stay consistent with specs. If documentation and specs disagree, update the spec first, then update the documentation.

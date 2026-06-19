@@ -243,6 +243,52 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 	return drainErr
 }
 
+func (a App) DrainAuthorizationOutboxEvent(ctx context.Context, eventID string) error {
+	claimID := a.ids.NewID()
+	event, found, err := a.outbox.ClaimAuthorizationOutboxEvent(ctx, eventID, claimID, time.Now().Add(a.authorizationOutboxClaimLease()))
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("%w: authorization outbox event %q is not claimable", ports.ErrAuthorizationOutboxClaimLost, eventID)
+	}
+	return a.processClaimedAuthorizationOutboxEvent(ctx, event, claimID)
+}
+
+func (a App) processClaimedAuthorizationOutboxEvent(ctx context.Context, event ports.AuthorizationOutboxEvent, claimID string) error {
+	if err := a.applyAuthorizationOutboxEvent(ctx, event); err != nil {
+		if isUnrecoverableAuthorizationOutboxError(err) {
+			if markErr := a.outbox.MarkAuthorizationOutboxEventDeadLettered(ctx, event.ID, claimID, err.Error()); markErr != nil {
+				a.recordAuthorizationOutboxEventFailed(ctx, event, markErr)
+				return markErr
+			}
+			a.recordAuthorizationOutboxEventDeadLettered(ctx, event, err)
+			return err
+		}
+		if markErr := a.outbox.MarkAuthorizationOutboxEventFailed(ctx, event.ID, claimID, err.Error()); markErr != nil {
+			a.recordAuthorizationOutboxEventFailed(ctx, event, markErr)
+			return markErr
+		}
+		a.recordAuthorizationOutboxEventFailed(ctx, event, err)
+		return err
+	}
+	if err := a.outbox.MarkAuthorizationOutboxEventProcessed(ctx, event.ID, claimID); err != nil {
+		return err
+	}
+
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAuthorizationOutboxDrained,
+		Message: "authorization outbox event drained",
+		Fields: map[string]string{
+			"event_count":         "1",
+			"processed_count":     "1",
+			"failed_count":        "0",
+			"dead_lettered_count": "0",
+		},
+	})
+	return nil
+}
+
 func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.AuthorizationOutboxEvent) error {
 	if err := validateAuthorizationOutboxEvent(event); err != nil {
 		return err
@@ -258,6 +304,10 @@ func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.Auth
 		return a.authorizer.GrantInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
 	case ports.AuthorizationOutboxGrantInventoryEditor:
 		return a.authorizer.GrantInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
+	case ports.AuthorizationOutboxRevokeInventoryViewer:
+		return a.authorizer.RevokeInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
+	case ports.AuthorizationOutboxRevokeInventoryEditor:
+		return a.authorizer.RevokeInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
 	default:
 		return ErrInvalidInput
 	}
@@ -276,7 +326,7 @@ func validateAuthorizationOutboxEvent(event ports.AuthorizationOutboxEvent) erro
 		if event.InventoryID.String() != "" {
 			return fmt.Errorf("%w: tenant owner grant must not include inventory id", ErrInvalidInput)
 		}
-	case ports.AuthorizationOutboxGrantInventoryOwner, ports.AuthorizationOutboxGrantInventoryViewer, ports.AuthorizationOutboxGrantInventoryEditor:
+	case ports.AuthorizationOutboxGrantInventoryOwner, ports.AuthorizationOutboxGrantInventoryViewer, ports.AuthorizationOutboxGrantInventoryEditor, ports.AuthorizationOutboxRevokeInventoryViewer, ports.AuthorizationOutboxRevokeInventoryEditor:
 		if _, ok := inventory.NewID(event.InventoryID.String()); !ok {
 			return fmt.Errorf("%w: inventory grant inventory id is invalid", ErrInvalidInput)
 		}

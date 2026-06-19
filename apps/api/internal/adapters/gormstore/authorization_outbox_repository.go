@@ -54,6 +54,45 @@ func (s Store) ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimI
 	return events, nil
 }
 
+func (s Store) ClaimAuthorizationOutboxEvent(ctx context.Context, eventID string, claimID string, leaseUntil time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
+	var event ports.AuthorizationOutboxEvent
+	found := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model authorizationOutboxEventModel
+		err := tx.
+			Clauses(skipLockedForUpdate()).
+			Where(&authorizationOutboxEventModel{ID: eventID}).
+			Where(claimableAuthorizationOutboxEvent(time.Now())).
+			First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		model.ClaimID = claimID
+		model.ClaimedUntil = &leaseUntil
+		if err := tx.
+			Model(&authorizationOutboxEventModel{}).
+			Where(&authorizationOutboxEventModel{ID: model.ID}).
+			Updates(map[string]any{
+				"claim_id":      model.ClaimID,
+				"claimed_until": model.ClaimedUntil,
+			}).Error; err != nil {
+			return err
+		}
+
+		event = model.toPort()
+		found = true
+		return nil
+	})
+	if err != nil {
+		return ports.AuthorizationOutboxEvent{}, false, err
+	}
+	return event, found, nil
+}
+
 func skipLockedForUpdate() clause.Locking {
 	return clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}
 }

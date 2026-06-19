@@ -21,13 +21,15 @@ import (
 )
 
 type fakeAuthorizer struct {
-	checkInventoryErr     error
-	checkTenantErr        error
-	grantTenantOwnerErr   error
-	tenantOwnerGrants     []string
-	inventoryOwnerGrants  []string
-	inventoryViewerGrants []string
-	inventoryEditorGrants []string
+	checkInventoryErr      error
+	checkTenantErr         error
+	grantTenantOwnerErr    error
+	tenantOwnerGrants      []string
+	inventoryOwnerGrants   []string
+	inventoryViewerGrants  []string
+	inventoryEditorGrants  []string
+	inventoryViewerRevokes []string
+	inventoryEditorRevokes []string
 }
 
 func (f *fakeAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
@@ -64,6 +66,16 @@ func (f *fakeAuthorizer) GrantInventoryEditor(_ context.Context, principal ident
 	return nil
 }
 
+func (f *fakeAuthorizer) RevokeInventoryViewer(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	f.inventoryViewerRevokes = append(f.inventoryViewerRevokes, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
+	return nil
+}
+
+func (f *fakeAuthorizer) RevokeInventoryEditor(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	f.inventoryEditorRevokes = append(f.inventoryEditorRevokes, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
+	return nil
+}
+
 type fakeTenantRepository struct {
 	exists bool
 }
@@ -80,6 +92,7 @@ type fakeInventoryRepository struct {
 	items        []inventory.Inventory
 	accessGrants []ports.InventoryAccessGrant
 	auditRecords []audit.Record
+	outbox       *fakeOutbox
 	calls        int
 	limits       []int
 }
@@ -217,6 +230,26 @@ func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventI
 	return nil
 }
 
+func (f *fakeOutbox) ClaimAuthorizationOutboxEvent(_ context.Context, eventID string, claimID string, leaseUntil time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
+	now := time.Now()
+	for index, event := range f.events {
+		if event.ID != eventID {
+			continue
+		}
+		if !event.DeadLetteredAt.IsZero() {
+			return ports.AuthorizationOutboxEvent{}, false, nil
+		}
+		if !event.ClaimedUntil.IsZero() && event.ClaimedUntil.After(now) {
+			return ports.AuthorizationOutboxEvent{}, false, nil
+		}
+		event.ClaimID = claimID
+		event.ClaimedUntil = leaseUntil
+		f.events[index] = event
+		return event, true, nil
+	}
+	return ports.AuthorizationOutboxEvent{}, false, nil
+}
+
 func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
 	if limit <= 0 {
 		limit = 25
@@ -293,6 +326,33 @@ func (f *fakeInventoryRepository) SaveInventoryAccessGrantAndEnqueue(_ context.C
 	f.accessGrants = append(f.accessGrants, grant)
 	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
+}
+
+func (f *fakeInventoryRepository) DeleteInventoryAccessGrantAndClaimRevoke(_ context.Context, eventID string, claimID string, leaseUntil time.Time, grant ports.InventoryAccessGrant, auditRecord audit.Record) (ports.AuthorizationOutboxEvent, bool, error) {
+	eventKind, ok := grant.Relationship.RevokeOutboxKind()
+	if !ok {
+		return ports.AuthorizationOutboxEvent{}, false, ports.ErrConflict
+	}
+	event := ports.AuthorizationOutboxEvent{
+		ID:           eventID,
+		Kind:         eventKind,
+		PrincipalID:  grant.PrincipalID,
+		TenantID:     grant.TenantID,
+		InventoryID:  grant.InventoryID,
+		ClaimID:      claimID,
+		ClaimedUntil: leaseUntil,
+	}
+	if f.outbox != nil {
+		f.outbox.events = append(f.outbox.events, event)
+	}
+	for index, existing := range f.accessGrants {
+		if existing.TenantID == grant.TenantID && existing.InventoryID == grant.InventoryID && existing.CursorKey() == grant.CursorKey() {
+			f.accessGrants = append(f.accessGrants[:index], f.accessGrants[index+1:]...)
+			f.auditRecords = append(f.auditRecords, auditRecord)
+			return event, true, nil
+		}
+	}
+	return event, false, nil
 }
 
 func (f *fakeInventoryRepository) ListInventoryAccessGrants(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {
@@ -442,6 +502,14 @@ func (s *selectiveInventoryAuthorizer) GrantInventoryViewer(context.Context, ide
 }
 
 func (s *selectiveInventoryAuthorizer) GrantInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) RevokeInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) RevokeInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
 	return nil
 }
 

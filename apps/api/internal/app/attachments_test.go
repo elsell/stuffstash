@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -104,6 +105,14 @@ func (allowInventoryAuthorizer) GrantInventoryEditor(context.Context, identity.P
 	return nil
 }
 
+func (allowInventoryAuthorizer) RevokeInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (allowInventoryAuthorizer) RevokeInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
 type attachmentAssetRepository struct{}
 
 type attachmentTenantRepository struct{}
@@ -135,6 +144,10 @@ func (attachmentInventoryRepository) ListInventoriesByTenant(context.Context, in
 
 func (attachmentInventoryRepository) SaveInventoryAccessGrantAndEnqueue(context.Context, string, ports.InventoryAccessGrant, audit.Record) error {
 	return nil
+}
+
+func (attachmentInventoryRepository) DeleteInventoryAccessGrantAndClaimRevoke(context.Context, string, string, time.Time, ports.InventoryAccessGrant, audit.Record) (ports.AuthorizationOutboxEvent, bool, error) {
+	return ports.AuthorizationOutboxEvent{}, false, nil
 }
 
 func (attachmentInventoryRepository) ListInventoryAccessGrants(context.Context, tenant.ID, inventory.InventoryID, ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {

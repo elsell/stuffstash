@@ -53,7 +53,7 @@ The first API slice must check:
 - `inventory.view` before returning an inventory.
 - `inventory.create_asset` before creating an asset inside an inventory.
 - `inventory.edit_asset` before updating or moving an asset inside an inventory.
-- `inventory.share` before creating or listing direct inventory access grants.
+- `inventory.share` before creating, listing, or revoking direct inventory access grants.
 - `inventory.view` before listing inventory-scoped audit records.
 - `tenant.configure` before listing tenant-wide audit records.
 
@@ -79,6 +79,8 @@ Tenant `view_inventory` must stay separate from tenant `view`. Tenant owners and
 - Relationship writes must be idempotent enough for application retries. Already-existing relationships should not create privilege gaps or partial grants.
 - Relationship writes that correspond to durable tenant or inventory state must be driven by the authorization outbox, not by a standalone inline call after persistence.
 - Direct inventory access grant relationship writes must be driven by the authorization outbox after the durable access grant record is saved.
+- Direct inventory access revocation relationship removals must be driven by a request-claimed authorization outbox event after the durable access grant record is removed.
+- Idempotent direct inventory access revocation must enqueue a relationship removal even when the local grant row is already missing, so stale SpiceDB relationships can self-heal.
 - The application may attempt to drain the authorization outbox immediately after a write, but failed SpiceDB writes must remain retryable through the outbox.
 - Schema bootstrap must be an explicit startup option for local development and deployment automation.
 - The default API process must not rewrite the production authorization schema unless explicitly configured to do so.

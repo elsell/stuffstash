@@ -129,11 +129,15 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - timestamps managed by GORM
 
 The `inventories.tenant_id` value must reference `tenants.id`.
-Authorization outbox records represent pending relationship grants that must be applied to SpiceDB.
+Authorization outbox records represent pending relationship changes that must be applied to SpiceDB.
 Inventory access grant rows represent direct inventory viewer/editor grants. The primary key must be scoped by tenant ID, inventory ID, and grant key so the same principal can receive the same relationship in more than one inventory.
 
 Inventory access grant writes must be committed with a matching authorization outbox event in one transaction. Viewer grants must enqueue `grant_inventory_viewer`; editor grants must enqueue `grant_inventory_editor`.
 Repeated writes for the same tenant, inventory, principal, and relationship must be no-ops and must not enqueue another authorization outbox event.
+Inventory access grant deletes must be committed with a matching claimed authorization outbox event in one transaction. Viewer revokes must enqueue `revoke_inventory_viewer`; editor revokes must enqueue `revoke_inventory_editor`.
+The request that creates a revoke event must own that event's first claim before the transaction commits so a background outbox worker cannot race the request-local revoke drain.
+Revoking a missing direct grant must still enqueue the matching revoke event so stale SpiceDB direct relationships can self-heal.
+Revocation audit history must be written only when a direct grant row existed and was removed.
 
 Custom field definitions must be scoped by tenant and optionally by inventory. The first persistence shape must prevent duplicate tenant-scoped keys inside one tenant and duplicate inventory-scoped keys inside one inventory.
 PostgreSQL migrations must also enforce the effective-key invariant across scopes so concurrent API replicas cannot create an inventory-scoped definition and a tenant-scoped definition with the same key in one tenant.

@@ -8,7 +8,7 @@ The first API slice should prove the security boundary, Huma/OpenAPI generation,
 
 This spec covers the first protected REST endpoints.
 
-It does not cover cross-inventory asset movement, location-specific APIs, conversational, import/export, delete endpoints, or search endpoints.
+It does not cover cross-inventory asset movement, location-specific APIs, conversational, import/export, general delete endpoints outside direct inventory access revocation, or search endpoints.
 
 ## Local Convenience Endpoint
 
@@ -36,6 +36,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
 - `POST /tenants/{tenantId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/custom-field-definitions`
 - `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}`
@@ -75,6 +76,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content` requires `inventory.view`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}` requires `tenant.configure`.

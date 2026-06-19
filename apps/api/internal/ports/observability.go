@@ -16,6 +16,7 @@ const (
 	EventInventoryCreated                EventName = "inventory.created"
 	EventInventoriesListed               EventName = "inventory.listed"
 	EventInventoryAccessGranted          EventName = "inventory_access.granted"
+	EventInventoryAccessRevoked          EventName = "inventory_access.revoked"
 	EventInventoryAccessListed           EventName = "inventory_access.listed"
 	EventCustomAssetTypeCreated          EventName = "custom_asset_type.created"
 	EventCustomAssetTypeUpdated          EventName = "custom_asset_type.updated"

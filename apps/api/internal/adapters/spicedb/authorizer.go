@@ -137,6 +137,22 @@ func (a Authorizer) GrantInventoryEditor(ctx context.Context, principal identity
 	return a.grantDirectInventoryAccess(ctx, principal, tenantID, inventoryID, relationEditor)
 }
 
+func (a Authorizer) RevokeInventoryViewer(ctx context.Context, principal identity.Principal, _ tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.deleteRelationships(ctx, relationship(
+		objectRef(objectTypeInventory, inventoryID.String()),
+		relationViewer,
+		userSubject(principal),
+	))
+}
+
+func (a Authorizer) RevokeInventoryEditor(ctx context.Context, principal identity.Principal, _ tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.deleteRelationships(ctx, relationship(
+		objectRef(objectTypeInventory, inventoryID.String()),
+		relationEditor,
+		userSubject(principal),
+	))
+}
+
 func (a Authorizer) grantDirectInventoryAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, relation string) error {
 	return a.touchRelationships(ctx,
 		relationship(
@@ -186,6 +202,19 @@ func (a Authorizer) touchRelationships(ctx context.Context, relationships ...*v1
 	for _, item := range relationships {
 		updates = append(updates, &v1.RelationshipUpdate{
 			Operation:    v1.RelationshipUpdate_OPERATION_TOUCH,
+			Relationship: item,
+		})
+	}
+
+	_, err := a.gateway.WriteRelationships(ctx, &v1.WriteRelationshipsRequest{Updates: updates})
+	return err
+}
+
+func (a Authorizer) deleteRelationships(ctx context.Context, relationships ...*v1.Relationship) error {
+	updates := make([]*v1.RelationshipUpdate, 0, len(relationships))
+	for _, item := range relationships {
+		updates = append(updates, &v1.RelationshipUpdate{
+			Operation:    v1.RelationshipUpdate_OPERATION_DELETE,
 			Relationship: item,
 		})
 	}

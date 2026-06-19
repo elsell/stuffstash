@@ -3,6 +3,7 @@ package gormstore
 import (
 	"context"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -84,6 +85,82 @@ func TestStoreInventoryAccessGrantIsIdempotentWithoutDuplicateOutboxEvent(t *tes
 	}
 	if len(events) != 1 || events[0].ID != "01ARZ3NDEKTSV4RRFFQ69G5FAX" {
 		t.Fatalf("expected one outbox event from first grant, got %+v", events)
+	}
+}
+
+func TestStoreDeletesInventoryAccessGrantAndEnqueuesRevoke(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	grant := ports.InventoryAccessGrant{
+		TenantID:     tenantID,
+		InventoryID:  inventoryID,
+		PrincipalID:  identity.PrincipalID("viewer-user"),
+		Relationship: ports.InventoryAccessViewer,
+	}
+	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", grant); err != nil {
+		t.Fatalf("save initial grant: %v", err)
+	}
+	if _, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "grant-claim", 10, time.Now().Add(time.Minute)); err != nil {
+		t.Fatalf("claim initial grant event: %v", err)
+	}
+
+	event, removed, err := store.DeleteInventoryAccessGrantAndClaimRevoke(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAY", "revoke-claim", time.Now().Add(time.Minute), grant, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventoryID, audit.ActionInventoryAccessRevoked))
+	if err != nil {
+		t.Fatalf("delete grant: %v", err)
+	}
+	if !removed {
+		t.Fatalf("expected grant removal")
+	}
+	if event.Kind != ports.AuthorizationOutboxRevokeInventoryViewer || event.ClaimID != "revoke-claim" || event.ClaimedUntil.IsZero() {
+		t.Fatalf("expected claimed revoke viewer outbox event, got %+v", event)
+	}
+	grants, err := store.ListInventoryAccessGrants(ctx, tenantID, inventoryID, ports.InventoryAccessGrantPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list grants after delete: %v", err)
+	}
+	if len(grants) != 0 {
+		t.Fatalf("expected no grants after revoke, got %+v", grants)
+	}
+
+	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, event.ID, event.ClaimID); err != nil {
+		t.Fatalf("mark revoke processed: %v", err)
+	}
+
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "revoke-claim-after-process", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim pending after revoke processed: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected claimed revoke event not to be generally claimable after processing, got %+v", events)
+	}
+
+	event, removed, err = store.DeleteInventoryAccessGrantAndClaimRevoke(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FB0", "missing-revoke-claim", time.Now().Add(time.Minute), grant, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryAccessRevoked))
+	if err != nil {
+		t.Fatalf("idempotent delete: %v", err)
+	}
+	if removed {
+		t.Fatalf("expected missing grant delete to be idempotent")
+	}
+	if event.Kind != ports.AuthorizationOutboxRevokeInventoryViewer || event.ClaimID != "missing-revoke-claim" || event.PrincipalID != grant.PrincipalID {
+		t.Fatalf("expected claimed idempotent revoke to enqueue stale-relationship cleanup, got %+v", event)
+	}
+	records, err := store.ListInventoryAuditRecords(ctx, tenantID, inventoryID, ports.AuditRecordPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list audit records: %v", err)
+	}
+	revocationRecords := 0
+	for _, record := range records {
+		if record.Action == audit.ActionInventoryAccessRevoked {
+			revocationRecords++
+		}
+	}
+	if revocationRecords != 1 {
+		t.Fatalf("expected only existing direct grant revoke to write audit, got %d records in %+v", revocationRecords, records)
 	}
 }
 

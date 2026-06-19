@@ -13,3 +13,7 @@ func SecuredOperation(operation *huma.Operation) {
 func CreatedOperation(operation *huma.Operation) {
 	operation.DefaultStatus = http.StatusCreated
 }
+
+func NoContentOperation(operation *huma.Operation) {
+	operation.DefaultStatus = http.StatusNoContent
+}

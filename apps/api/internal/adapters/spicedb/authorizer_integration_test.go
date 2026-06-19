@@ -113,6 +113,17 @@ func TestSpiceDBIntegrationEnforcesTenantAndInventoryRelationships(t *testing.T)
 	assertForbidden(t, authorizer.CheckInventory(ctx, ownerTwo, ports.InventoryPermissionView, inventoryOneID), "other tenant owner cannot view inventory across tenant")
 	assertForbidden(t, authorizer.CheckInventory(ctx, ownerTwo, ports.InventoryPermissionCreateAsset, inventoryOneID), "other tenant owner cannot create assets across tenant")
 	assertForbidden(t, authorizer.CheckInventory(ctx, ownerTwo, ports.InventoryPermissionEditAsset, inventoryOneID), "other tenant owner cannot edit assets across tenant")
+
+	if err := authorizer.RevokeInventoryViewer(ctx, inventoryViewer, tenantOneID, inventoryOneID); err != nil {
+		t.Fatalf("revoke inventory viewer: %v", err)
+	}
+	if err := authorizer.RevokeInventoryEditor(ctx, inventoryEditor, tenantOneID, inventoryOneID); err != nil {
+		t.Fatalf("revoke inventory editor: %v", err)
+	}
+	assertForbidden(t, authorizer.CheckInventory(ctx, inventoryViewer, ports.InventoryPermissionView, inventoryOneID), "revoked inventory viewer cannot view inventory")
+	assertAllowed(t, authorizer.CheckTenant(ctx, inventoryViewer, ports.TenantPermissionView, tenantOneID), "revoked inventory viewer keeps tenant viewer relationship")
+	assertForbidden(t, authorizer.CheckInventory(ctx, inventoryEditor, ports.InventoryPermissionView, inventoryOneID), "revoked inventory editor cannot view inventory")
+	assertForbidden(t, authorizer.CheckInventory(ctx, inventoryEditor, ports.InventoryPermissionCreateAsset, inventoryOneID), "revoked inventory editor cannot create assets")
 }
 
 func bootstrapIntegrationSchema(ctx context.Context, authorizer Authorizer) error {

@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom asset types and fields, create, list, search, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary with local tokens or Dex-issued OIDC tokens.
+The app is still early. Today, the local API can create tenants and inventories; define custom asset types and fields; manage assets, attachments, search, and audit history; share or revoke direct inventory access; and run against Postgres, SpiceDB, and Dex through Compose.
 
 ## Requirements
 
@@ -279,6 +279,14 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/acc
   -d '{"principalId":"user-two","relationship":"viewer"}'
 ```
 
+Remove that direct grant:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-grants/user-two/viewer \
+  -X DELETE \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
 List direct inventory access grants:
 
 ```sh
@@ -298,7 +306,7 @@ The interactive local API docs are also available at:
 open http://localhost:8080/docs
 ```
 
-You can run the same tenant, inventory, asset, attachment, and sharing flow as a check:
+You can run the same tenant, inventory, asset, attachment, and access-management flow as a check:
 
 ```sh
 make verify-local-api
