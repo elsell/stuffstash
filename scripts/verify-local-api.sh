@@ -88,12 +88,32 @@ location_status="$(printf '%s\n' "$location_response" | head -n 1)"
 location_id="$(printf '%s\n' "$location_response" | tail -n +2 | extract_first_id)"
 [ -n "$location_id" ] || fail "location asset create response did not include an id"
 
+echo "creating custom field definitions"
+tenant_field_response="$(request POST "/tenants/${tenant_id}/custom-field-definitions" "$auth_header" '{"key":"serial","displayName":"Serial","type":"text"}')"
+tenant_field_status="$(printf '%s\n' "$tenant_field_response" | head -n 1)"
+[ "$tenant_field_status" = "201" ] || fail "expected tenant custom field create status 201, got ${tenant_field_status}"
+printf '%s\n' "$tenant_field_response" | tail -n +2 | grep -q '"key":"serial"' || fail "tenant custom field response did not include serial key"
+
+inventory_field_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions" "$auth_header" '{"key":"condition","displayName":"Condition","type":"enum","enumOptions":["new","used"]}')"
+inventory_field_status="$(printf '%s\n' "$inventory_field_response" | head -n 1)"
+[ "$inventory_field_status" = "201" ] || fail "expected inventory custom field create status 201, got ${inventory_field_status}"
+printf '%s\n' "$inventory_field_response" | tail -n +2 | grep -q '"key":"condition"' || fail "inventory custom field response did not include condition key"
+
+echo "listing effective custom field definitions"
+field_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions?limit=50" "$auth_header")"
+field_list_status="$(printf '%s\n' "$field_list_response" | head -n 1)"
+[ "$field_list_status" = "200" ] || fail "expected custom field list status 200, got ${field_list_status}"
+printf '%s\n' "$field_list_response" | tail -n +2 | grep -q '"key":"serial"' || fail "custom field list did not include serial"
+printf '%s\n' "$field_list_response" | tail -n +2 | grep -q '"key":"condition"' || fail "custom field list did not include condition"
+printf '%s\n' "$field_list_response" | tail -n +2 | grep -q '"pagination"' || fail "custom field list did not include pagination metadata"
+
 echo "creating item asset under location ${location_id}"
-asset_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$auth_header" "{\"kind\":\"item\",\"title\":\"Fertilizer\",\"parentAssetId\":\"${location_id}\"}")"
+asset_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$auth_header" "{\"kind\":\"item\",\"title\":\"Fertilizer\",\"parentAssetId\":\"${location_id}\",\"customFields\":{\"serial\":\"bag-1\",\"condition\":\"new\"}}")"
 asset_status="$(printf '%s\n' "$asset_response" | head -n 1)"
 [ "$asset_status" = "201" ] || fail "expected item asset create status 201, got ${asset_status}"
 asset_id="$(printf '%s\n' "$asset_response" | tail -n +2 | extract_first_id)"
 [ -n "$asset_id" ] || fail "item asset create response did not include an id"
+printf '%s\n' "$asset_response" | tail -n +2 | grep -q '"serial":"bag-1"' || fail "item asset response did not include serial custom field"
 
 echo "listing assets"
 asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$auth_header")"
@@ -125,9 +145,17 @@ viewer_asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${i
 viewer_asset_list_status="$(printf '%s\n' "$viewer_asset_list_response" | head -n 1)"
 [ "$viewer_asset_list_status" = "200" ] || fail "expected viewer asset list status 200, got ${viewer_asset_list_status}"
 
+viewer_field_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions?limit=50" "$viewer_auth_header")"
+viewer_field_list_status="$(printf '%s\n' "$viewer_field_list_response" | head -n 1)"
+[ "$viewer_field_list_status" = "200" ] || fail "expected viewer custom field list status 200, got ${viewer_field_list_status}"
+
 viewer_asset_create_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$viewer_auth_header" '{"kind":"item","title":"Unauthorized"}')"
 viewer_asset_create_status="$(printf '%s\n' "$viewer_asset_create_response" | head -n 1)"
 [ "$viewer_asset_create_status" = "403" ] || fail "expected viewer asset create status 403, got ${viewer_asset_create_status}"
+
+viewer_field_create_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions" "$viewer_auth_header" '{"key":"viewer-field","displayName":"Viewer Field","type":"text"}')"
+viewer_field_create_status="$(printf '%s\n' "$viewer_field_create_response" | head -n 1)"
+[ "$viewer_field_create_status" = "403" ] || fail "expected viewer custom field create status 403, got ${viewer_field_create_status}"
 
 viewer_share_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants" "$viewer_auth_header" '{"principalId":"user-three","relationship":"viewer"}')"
 viewer_share_status="$(printf '%s\n' "$viewer_share_response" | head -n 1)"

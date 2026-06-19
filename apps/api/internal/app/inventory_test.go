@@ -11,6 +11,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -677,8 +678,196 @@ func TestGrantAndListInventoryAccessGrants(t *testing.T) {
 	}
 }
 
+func TestCreateAndListCustomFieldDefinitions(t *testing.T) {
+	observer := &fakeObserver{}
+	customFields := &fakeCustomFieldRepository{}
+	application := New(Dependencies{
+		Observer:     observer,
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: customFields,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{ids: []string{"tenant-definition", "inventory-definition"}},
+		MaxPageLimit: 1,
+	})
+
+	tenantDefinition, err := application.CreateTenantCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		Key:         "serial",
+		DisplayName: "Serial",
+		Type:        "text",
+	})
+	if err != nil {
+		t.Fatalf("create tenant definition: %v", err)
+	}
+	if tenantDefinition.Scope != customfield.ScopeTenant || tenantDefinition.Key != customfield.Key("serial") {
+		t.Fatalf("unexpected tenant definition: %+v", tenantDefinition)
+	}
+
+	inventoryDefinition, err := application.CreateInventoryCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Key:         "condition",
+		DisplayName: "Condition",
+		Type:        "enum",
+		EnumOptions: []string{"new", "used"},
+	})
+	if err != nil {
+		t.Fatalf("create inventory definition: %v", err)
+	}
+	if inventoryDefinition.Scope != customfield.ScopeInventory || len(inventoryDefinition.EnumOptions) != 2 {
+		t.Fatalf("unexpected inventory definition: %+v", inventoryDefinition)
+	}
+
+	firstPage, err := application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       1,
+	})
+	if err != nil {
+		t.Fatalf("list first page: %v", err)
+	}
+	if len(firstPage.Items) != 1 || firstPage.Items[0].ID != tenantDefinition.ID || !firstPage.HasMore || firstPage.NextCursor == nil {
+		t.Fatalf("expected first page with inherited tenant definition, got %+v", firstPage)
+	}
+
+	secondPage, err := application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       1,
+		Cursor:      *firstPage.NextCursor,
+	})
+	if err != nil {
+		t.Fatalf("list second page: %v", err)
+	}
+	if len(secondPage.Items) != 1 || secondPage.Items[0].ID != inventoryDefinition.ID || secondPage.HasMore {
+		t.Fatalf("expected second page with inventory definition, got %+v", secondPage)
+	}
+	if !observer.hasEvent(ports.EventCustomFieldDefinitionCreated) || !observer.hasEvent(ports.EventCustomFieldDefinitionsListed) {
+		t.Fatalf("expected custom field observability events, got %+v", observer.events)
+	}
+}
+
+func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) {
+	customFields := &fakeCustomFieldRepository{}
+	application := New(Dependencies{
+		Observer: &fakeObserver{},
+		Authorizer: &fakeAuthorizer{
+			checkTenantErr: ports.ErrForbidden,
+		},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: customFields,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{ids: []string{"definition-one"}},
+	})
+
+	_, err := application.CreateTenantCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		Key:         "serial",
+		DisplayName: "Serial",
+		Type:        "text",
+	})
+	if !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected unauthorized tenant definition create, got %v", err)
+	}
+
+	allowed := New(Dependencies{
+		Observer:     &fakeObserver{},
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: customFields,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{ids: []string{"definition-two", "definition-three"}},
+	})
+	_, err = allowed.CreateTenantCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		Key:         "serial",
+		DisplayName: "Serial",
+		Type:        "text",
+	})
+	if err != nil {
+		t.Fatalf("create first definition: %v", err)
+	}
+	_, err = allowed.CreateInventoryCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Key:         "serial",
+		DisplayName: "Serial",
+		Type:        "text",
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected duplicate effective key rejection, got %v", err)
+	}
+}
+
+func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
+	customFields := &fakeCustomFieldRepository{}
+	serialDefinition := customFieldDefinition("serial-definition", "tenant-one", "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
+	conditionDefinition := customFieldDefinition("condition-definition", "tenant-one", "inventory-one", customfield.ScopeInventory, "condition", customfield.FieldTypeEnum, []string{"new", "used"})
+	if err := customFields.SaveCustomFieldDefinition(context.Background(), serialDefinition); err != nil {
+		t.Fatalf("save serial definition: %v", err)
+	}
+	if err := customFields.SaveCustomFieldDefinition(context.Background(), conditionDefinition); err != nil {
+		t.Fatalf("save condition definition: %v", err)
+	}
+	assets := &fakeAssetRepository{}
+	application := New(Dependencies{
+		Observer:     &fakeObserver{},
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: customFields,
+		Assets:       assets,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{ids: []string{"asset-one"}},
+	})
+
+	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "item",
+		Title:       "Drill",
+		CustomFields: map[string]any{
+			"serial":    "abc",
+			"condition": "used",
+		},
+	})
+	if err != nil {
+		t.Fatalf("create asset with custom fields: %v", err)
+	}
+	if item.CustomFields.Values()["serial"] != "abc" || item.CustomFields.Values()["condition"] != "used" {
+		t.Fatalf("expected custom fields to be saved, got %+v", item.CustomFields.Values())
+	}
+
+	_, err = application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "item",
+		Title:       "Bad Drill",
+		CustomFields: map[string]any{
+			"condition": "broken",
+		},
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid enum value rejection, got %v", err)
+	}
+}
+
 type fakeAuthorizer struct {
 	checkInventoryErr     error
+	checkTenantErr        error
 	grantTenantOwnerErr   error
 	tenantOwnerGrants     []string
 	inventoryOwnerGrants  []string
@@ -687,6 +876,9 @@ type fakeAuthorizer struct {
 }
 
 func (f *fakeAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
+	if f.checkTenantErr != nil {
+		return f.checkTenantErr
+	}
 	return nil
 }
 
@@ -747,6 +939,10 @@ func (f *fakeInventoryRepository) InventoryByID(_ context.Context, tenantID tena
 
 type fakeAssetRepository struct {
 	items map[asset.ID]asset.Asset
+}
+
+type fakeCustomFieldRepository struct {
+	items []customfield.Definition
 }
 
 type fakeOutbox struct {
@@ -889,6 +1085,56 @@ func (f *fakeInventoryRepository) ListInventoriesByTenant(_ context.Context, ten
 	return items, nil
 }
 
+func (f *fakeCustomFieldRepository) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition) error {
+	for _, existing := range f.items {
+		if customfield.DefinitionsConflict(existing, definition) {
+			return ports.ErrConflict
+		}
+	}
+	f.items = append(f.items, definition)
+	return nil
+}
+
+func (f *fakeCustomFieldRepository) ListTenantCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	items := []customfield.Definition{}
+	for _, item := range f.items {
+		if item.TenantID.String() == tenantID.String() && item.Scope == customfield.ScopeTenant && item.CursorKey() > page.AfterDefinitionKey {
+			items = append(items, item)
+		}
+	}
+	return pagedFakeCustomFieldDefinitions(items, page.Limit), nil
+}
+
+func (f *fakeCustomFieldRepository) ListInventoryCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	items := []customfield.Definition{}
+	for _, item := range f.items {
+		if item.TenantID.String() != tenantID.String() || item.CursorKey() <= page.AfterDefinitionKey {
+			continue
+		}
+		if item.Scope == customfield.ScopeTenant || item.InventoryID.String() == inventoryID.String() {
+			items = append(items, item)
+		}
+	}
+	return pagedFakeCustomFieldDefinitions(items, page.Limit), nil
+}
+
+func (f *fakeCustomFieldRepository) ListEffectiveCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) ([]customfield.Definition, error) {
+	if inventoryID.String() == "" {
+		return f.ListTenantCustomFieldDefinitions(ctx, tenantID, ports.CustomFieldDefinitionPageRequest{})
+	}
+	return f.ListInventoryCustomFieldDefinitions(ctx, tenantID, inventoryID, ports.CustomFieldDefinitionPageRequest{})
+}
+
+func pagedFakeCustomFieldDefinitions(items []customfield.Definition, limit int) []customfield.Definition {
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if limit > 0 && len(items) > limit {
+		return items[:limit]
+	}
+	return items
+}
+
 type selectiveInventoryAuthorizer struct {
 	forbidden map[inventory.InventoryID]struct{}
 }
@@ -1026,6 +1272,43 @@ func inventoryItem(id string, tenantID string, name string) inventory.Inventory 
 		TenantID: inventory.TenantID(tenantID),
 		Name:     inventoryName,
 	}
+}
+
+func customFieldDefinition(id string, tenantID string, inventoryID string, scope customfield.Scope, keyValue string, fieldType customfield.FieldType, rawOptions []string) customfield.Definition {
+	definitionID, ok := customfield.NewID(id)
+	if !ok {
+		panic("invalid custom field definition id")
+	}
+	key, ok := customfield.NewKey(keyValue)
+	if !ok {
+		panic("invalid custom field key")
+	}
+	displayName, ok := customfield.NewDisplayName("Field " + keyValue)
+	if !ok {
+		panic("invalid custom field display name")
+	}
+	options := make([]customfield.Key, 0, len(rawOptions))
+	for _, raw := range rawOptions {
+		option, ok := customfield.NewKey(raw)
+		if !ok {
+			panic("invalid custom field enum option")
+		}
+		options = append(options, option)
+	}
+	definition, ok := customfield.NewDefinition(
+		definitionID,
+		customfield.TenantID(tenantID),
+		customfield.InventoryID(inventoryID),
+		scope,
+		key,
+		displayName,
+		fieldType,
+		options,
+	)
+	if !ok {
+		panic("invalid custom field definition")
+	}
+	return definition
 }
 
 func assetItem(id string, tenantID string, inventoryID string, kind asset.Kind, parentID string) asset.Asset {

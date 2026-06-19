@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
 var ErrAuthorizationOutboxClaimLost = errors.New("authorization outbox claim lost")
+var ErrConflict = errors.New("conflict")
 
 type TenantRepository interface {
 	SaveTenant(ctx context.Context, tenant tenant.Tenant) error
@@ -45,6 +47,18 @@ func (g InventoryAccessGrant) CursorKey() string {
 type InventoryAccessGrantPageRequest struct {
 	AfterGrantKey string
 	Limit         int
+}
+
+type CustomFieldDefinitionRepository interface {
+	SaveCustomFieldDefinition(ctx context.Context, definition customfield.Definition) error
+	ListTenantCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, page CustomFieldDefinitionPageRequest) ([]customfield.Definition, error)
+	ListInventoryCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page CustomFieldDefinitionPageRequest) ([]customfield.Definition, error)
+	ListEffectiveCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) ([]customfield.Definition, error)
+}
+
+type CustomFieldDefinitionPageRequest struct {
+	AfterDefinitionKey string
+	Limit              int
 }
 
 type AssetRepository interface {

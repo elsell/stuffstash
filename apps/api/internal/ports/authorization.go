@@ -16,6 +16,7 @@ type TenantPermission string
 const (
 	TenantPermissionView            TenantPermission = "view"
 	TenantPermissionCreateInventory TenantPermission = "create_inventory"
+	TenantPermissionConfigure       TenantPermission = "configure"
 )
 
 type InventoryPermission string
@@ -24,6 +25,7 @@ const (
 	InventoryPermissionView        InventoryPermission = "view"
 	InventoryPermissionCreateAsset InventoryPermission = "create_asset"
 	InventoryPermissionShare       InventoryPermission = "share"
+	InventoryPermissionConfigure   InventoryPermission = "configure"
 )
 
 type InventoryAccessRelationship string

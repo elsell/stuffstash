@@ -78,6 +78,17 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - principal ID
   - relationship
   - timestamps managed by GORM
+- `custom_field_definitions`
+  - `id`
+  - `tenant_id`
+  - `inventory_id` when scoped to one inventory
+  - scope
+  - cursor key
+  - field key
+  - display name
+  - field type
+  - enum options as JSONB
+  - timestamps managed by GORM
 
 The `inventories.tenant_id` value must reference `tenants.id`.
 Authorization outbox records represent pending relationship grants that must be applied to SpiceDB.
@@ -85,6 +96,11 @@ Inventory access grant rows represent direct inventory viewer/editor grants. The
 
 Inventory access grant writes must be committed with a matching authorization outbox event in one transaction. Viewer grants must enqueue `grant_inventory_viewer`; editor grants must enqueue `grant_inventory_editor`.
 Repeated writes for the same tenant, inventory, principal, and relationship must be no-ops and must not enqueue another authorization outbox event.
+
+Custom field definitions must be scoped by tenant and optionally by inventory. The first persistence shape must prevent duplicate tenant-scoped keys inside one tenant and duplicate inventory-scoped keys inside one inventory.
+PostgreSQL migrations must also enforce the effective-key invariant across scopes so concurrent API replicas cannot create an inventory-scoped definition and a tenant-scoped definition with the same key in one tenant.
+That enforcement must include a database-level serialization point, such as a transaction-scoped advisory lock keyed by tenant and field key, not only a read-before-write trigger check.
+The database must validate persisted custom field definition key, display name, enum option, scope, and field type shape as a defense-in-depth guard around the domain model.
 
 ## Initial Asset Schema
 
@@ -116,7 +132,7 @@ The table must preserve these invariants:
 - Only container-capable asset kinds may be used as parents.
 - Custom field values must be stored as JSONB in PostgreSQL and must default to an empty object.
 - The repository adapter must be able to round-trip validated custom field values so future custom-field APIs do not require a persistence rewrite.
-- The first public asset create endpoint may only accept empty custom field objects until custom field definitions are implemented.
+- The public asset create endpoint may accept non-empty custom field objects only after application validation against effective custom field definitions.
 
 The initial asset kind enumeration is:
 
@@ -144,7 +160,7 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Tenant-scoped custom field definitions must be distinguishable from inventory-scoped custom field definitions.
 - In the PostgreSQL adapter, asset custom field values should be stored in a JSONB column.
 - The initial `assets.custom_fields` value must be a JSON object.
-- The first asset slice must reject non-empty custom field values until custom field definition persistence and validation are implemented.
+- Asset custom field values may be non-empty only after application validation against effective custom field definitions.
 - Domain code must not expose or manipulate raw JSONB.
 - Repository adapters must map stored custom field values into typed domain values.
 - Custom field values must be validated by domain or application services before persistence.
@@ -164,6 +180,7 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Repository tests may use SQLite fakes only when the behavior is meaningfully equivalent to the production repository contract.
 - PostgreSQL-backed tests are required for PostgreSQL-specific behavior such as JSONB semantics, constraints, indexing, or transaction behavior.
 - Tests must cover tenant isolation, inventory isolation, custom field mapping, custom field validation boundaries, and error handling.
+- Tests must cover custom field definition persistence, duplicate key rejection, tenant-scoped listing, inventory-scoped listing, and effective definition resolution.
 - Tests must cover that location-like nodes are persisted as assets with kind `location`.
 - Tests must cover parent-child persistence and movement within a single inventory.
 - Tests must cover that cross-tenant and cross-inventory containment is rejected.

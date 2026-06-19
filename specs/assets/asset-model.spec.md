@@ -32,8 +32,8 @@ This spec does not define the full lifecycle model, consumable model, search beh
   - Lifecycle state.
 - Assets must support custom field values.
 - Asset custom field values must be validated against tenant-scoped and inventory-scoped custom field definitions.
-- The first asset slice may only accept an empty custom field map until custom field definitions are implemented.
-- Non-empty custom field values must be rejected until the relevant definition and validation behavior exists.
+- Asset create may accept non-empty custom field values when every value is validated against the effective custom field definitions for the target inventory.
+- Non-empty custom field values must be rejected when the relevant definition is missing or validation fails.
 - The asset domain must not be overfit to one product category.
 - Asset kind must be represented as a domain enumeration, not ad hoc strings.
 - The initial asset kinds are:

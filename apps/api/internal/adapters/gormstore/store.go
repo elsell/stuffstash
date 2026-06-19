@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -25,7 +28,7 @@ func NewStore(db *gorm.DB) Store {
 }
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &assetModel{}, &authorizationOutboxEventModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &customFieldDefinitionModel{}, &assetModel{}, &authorizationOutboxEventModel{})
 }
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -333,6 +336,116 @@ func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID
 	return items, nil
 }
 
+func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customfield.Definition) error {
+	enumOptions, err := json.Marshal(customFieldKeysToStrings(definition.EnumOptions))
+	if err != nil {
+		return err
+	}
+	model := customFieldDefinitionModel{
+		ID:          definition.ID.String(),
+		TenantID:    definition.TenantID.String(),
+		Scope:       definition.Scope.String(),
+		FieldKey:    definition.Key.String(),
+		DisplayName: definition.DisplayName.String(),
+		FieldType:   definition.Type.String(),
+		EnumOptions: string(enumOptions),
+	}
+	if definition.InventoryID.String() != "" {
+		inventoryID := definition.InventoryID.String()
+		model.InventoryID = &inventoryID
+	}
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing customFieldDefinitionModel
+		query := tx.Where(&customFieldDefinitionModel{
+			TenantID: definition.TenantID.String(),
+			FieldKey: definition.Key.String(),
+		})
+		if definition.Scope == customfield.ScopeInventory {
+			query = query.Where(clause.Or(
+				clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+				clause.Eq{Column: "inventory_id", Value: definition.InventoryID.String()},
+			))
+		}
+		err := query.First(&existing).Error
+		if err == nil {
+			return ports.ErrConflict
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if err := tx.Save(&model).Error; err != nil {
+			return customFieldDefinitionWriteError(err)
+		}
+		return nil
+	})
+}
+
+func (s Store) ListTenantCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	query := s.db.WithContext(ctx).Where(&customFieldDefinitionModel{
+		TenantID: tenantID.String(),
+		Scope:    customfield.ScopeTenant.String(),
+	})
+	return s.listCustomFieldDefinitions(query, page)
+}
+
+func (s Store) ListInventoryCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	query := s.db.WithContext(ctx).
+		Where(&customFieldDefinitionModel{TenantID: tenantID.String()}).
+		Where(clause.Or(
+			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
+		))
+	return s.listCustomFieldDefinitions(query, page)
+}
+
+func (s Store) ListEffectiveCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) ([]customfield.Definition, error) {
+	if inventoryID.String() == "" {
+		return s.ListTenantCustomFieldDefinitions(ctx, tenantID, ports.CustomFieldDefinitionPageRequest{})
+	}
+	return s.ListInventoryCustomFieldDefinitions(ctx, tenantID, inventoryID, ports.CustomFieldDefinitionPageRequest{})
+}
+
+func (s Store) listCustomFieldDefinitions(query *gorm.DB, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	var models []customFieldDefinitionModel
+	if page.AfterDefinitionKey != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "cursor_key"}, Value: page.AfterDefinitionKey})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "cursor_key"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+	items := make([]customfield.Definition, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid custom field definition row %q", model.ID)
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func customFieldDefinitionWriteError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var postgresError *pgconn.PgError
+	if errors.As(err, &postgresError) {
+		switch postgresError.Code {
+		case "23505", "23514":
+			return ports.ErrConflict
+		}
+	}
+
+	if strings.Contains(err.Error(), "constraint failed") || strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		return ports.ErrConflict
+	}
+
+	return err
+}
+
 func (s Store) CreateAsset(ctx context.Context, item asset.Asset) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var containingInventory inventoryModel
@@ -491,6 +604,22 @@ type inventoryAccessGrantModel struct {
 	UpdatedAt    time.Time
 }
 
+type customFieldDefinitionModel struct {
+	ID          string          `gorm:"primaryKey;size:26"`
+	TenantID    string          `gorm:"not null;size:26;index"`
+	Tenant      tenantModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID *string         `gorm:"size:26;index"`
+	Inventory   *inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	Scope       string          `gorm:"not null;size:32;index;check:chk_custom_field_definitions_scope,scope IN ('tenant','inventory')"`
+	CursorKey   string          `gorm:"not null;size:32;index"`
+	FieldKey    string          `gorm:"not null;size:80;index"`
+	DisplayName string          `gorm:"not null;size:120"`
+	FieldType   string          `gorm:"not null;size:32;check:chk_custom_field_definitions_field_type,field_type IN ('text','number','boolean','date','url','enum')"`
+	EnumOptions string          `gorm:"type:jsonb;not null;default:'[]'"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
 type assetModel struct {
 	ID             string         `gorm:"primaryKey;size:26"`
 	TenantID       string         `gorm:"not null;size:26;index:idx_assets_tenant_inventory"`
@@ -537,6 +666,20 @@ func (inventoryModel) TableName() string {
 
 func (inventoryAccessGrantModel) TableName() string {
 	return "inventory_access_grants"
+}
+
+func (customFieldDefinitionModel) TableName() string {
+	return "custom_field_definitions"
+}
+
+func (m *customFieldDefinitionModel) BeforeSave(*gorm.DB) error {
+	scope := customfield.Scope(m.Scope)
+	prefix := "1:"
+	if scope == customfield.ScopeTenant {
+		prefix = "0:"
+	}
+	m.CursorKey = prefix + m.ID
+	return nil
 }
 
 func (m *inventoryAccessGrantModel) BeforeSave(*gorm.DB) error {
@@ -613,6 +756,52 @@ func (m inventoryAccessGrantModel) toPort() (ports.InventoryAccessGrant, bool) {
 	}, true
 }
 
+func (m customFieldDefinitionModel) toDomain() (customfield.Definition, bool) {
+	id, ok := customfield.NewID(m.ID)
+	if !ok {
+		return customfield.Definition{}, false
+	}
+	key, ok := customfield.NewKey(m.FieldKey)
+	if !ok {
+		return customfield.Definition{}, false
+	}
+	displayName, ok := customfield.NewDisplayName(m.DisplayName)
+	if !ok {
+		return customfield.Definition{}, false
+	}
+	fieldType, ok := customfield.NewFieldType(m.FieldType)
+	if !ok {
+		return customfield.Definition{}, false
+	}
+	scope := customfield.Scope(m.Scope)
+	inventoryID := customfield.InventoryID("")
+	if m.InventoryID != nil {
+		inventoryID = customfield.InventoryID(*m.InventoryID)
+	}
+	var rawOptions []string
+	if err := json.Unmarshal([]byte(m.EnumOptions), &rawOptions); err != nil {
+		return customfield.Definition{}, false
+	}
+	options := make([]customfield.Key, 0, len(rawOptions))
+	for _, raw := range rawOptions {
+		option, ok := customfield.NewKey(raw)
+		if !ok {
+			return customfield.Definition{}, false
+		}
+		options = append(options, option)
+	}
+	return customfield.NewDefinition(
+		id,
+		customfield.TenantID(m.TenantID),
+		inventoryID,
+		scope,
+		key,
+		displayName,
+		fieldType,
+		options,
+	)
+}
+
 func (m assetModel) toDomain() (asset.Asset, bool) {
 	id, ok := asset.NewID(m.ID)
 	if !ok {
@@ -675,4 +864,12 @@ func outboxKindForInventoryAccess(relationship ports.InventoryAccessRelationship
 	default:
 		return ports.AuthorizationOutboxGrantInventoryViewer
 	}
+}
+
+func customFieldKeysToStrings(keys []customfield.Key) []string {
+	values := make([]string, 0, len(keys))
+	for _, key := range keys {
+		values = append(values, key.String())
+	}
+	return values
 }

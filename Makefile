@@ -46,7 +46,7 @@ verify-spicedb-adapter:
 	scripts/verify-spicedb-adapter.sh
 
 verify-postgres-adapter:
-	STUFF_STASH_TEST_POSTGRES_DSN="$(STUFF_STASH_TEST_POSTGRES_DSN)" GOCACHE=$(GOCACHE) go test ./apps/api/internal/adapters/gormstore -run TestPostgresStoreClaimsOutboxEventOnceAcrossWorkers -count=1
+	STUFF_STASH_TEST_POSTGRES_DSN="$(STUFF_STASH_TEST_POSTGRES_DSN)" GOCACHE=$(GOCACHE) go test ./apps/api/internal/adapters/gormstore -run TestPostgresStore -count=1
 
 verify-migrations:
 	STUFF_STASH_TEST_POSTGRES_DSN="$(STUFF_STASH_TEST_POSTGRES_DSN)" GOCACHE=$(GOCACHE) go test ./apps/api/internal/adapters/dbmigrations -run TestPostgresRunnerAppliesAndReportsNoopMigrations -count=1

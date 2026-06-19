@@ -34,7 +34,7 @@ func (a *Authorizer) CheckTenant(_ context.Context, principal identity.Principal
 	defer a.mu.RUnlock()
 
 	switch permission {
-	case ports.TenantPermissionView, ports.TenantPermissionCreateInventory:
+	case ports.TenantPermissionView, ports.TenantPermissionCreateInventory, ports.TenantPermissionConfigure:
 		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) {
 			return nil
 		}
@@ -66,7 +66,7 @@ func (a *Authorizer) CheckInventory(_ context.Context, principal identity.Princi
 		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) || hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) {
 			return nil
 		}
-	case ports.InventoryPermissionShare:
+	case ports.InventoryPermissionShare, ports.InventoryPermissionConfigure:
 		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) {
 			return nil
 		}

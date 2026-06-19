@@ -14,6 +14,7 @@ type App struct {
 	authorizer       ports.Authorizer
 	tenants          ports.TenantRepository
 	inventories      ports.InventoryRepository
+	customFields     ports.CustomFieldDefinitionRepository
 	assets           ports.AssetRepository
 	outbox           ports.AuthorizationOutbox
 	ids              ports.IDGenerator
@@ -29,6 +30,7 @@ type Dependencies struct {
 	Authorizer                    ports.Authorizer
 	Tenants                       ports.TenantRepository
 	Inventories                   ports.InventoryRepository
+	CustomFields                  ports.CustomFieldDefinitionRepository
 	Assets                        ports.AssetRepository
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
@@ -46,6 +48,7 @@ func New(deps Dependencies) App {
 		authorizer:       deps.Authorizer,
 		tenants:          deps.Tenants,
 		inventories:      deps.Inventories,
+		customFields:     deps.CustomFields,
 		assets:           deps.Assets,
 		outbox:           deps.Outbox,
 		ids:              deps.IDs,

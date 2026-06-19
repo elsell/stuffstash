@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -52,9 +53,21 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 	if !ok {
 		return asset.Asset{}, ErrInvalidInput
 	}
-	customFields, ok := asset.NewEmptyOnlyCustomFields(input.CustomFields)
+	customFields, ok := asset.NewCustomFields(normalizeCustomFieldValues(input.CustomFields))
 	if !ok {
 		return asset.Asset{}, ErrInvalidInput
+	}
+	if !customFields.IsEmpty() {
+		if a.customFields == nil {
+			return asset.Asset{}, ErrInvalidInput
+		}
+		definitions, err := a.customFields.ListEffectiveCustomFieldDefinitions(ctx, input.TenantID, input.InventoryID)
+		if err != nil {
+			return asset.Asset{}, err
+		}
+		if !customfield.DefinitionSet(definitions).ValidateValues(customFields.Values()) {
+			return asset.Asset{}, ErrInvalidInput
+		}
 	}
 
 	id, ok := asset.NewID(a.ids.NewID())
@@ -113,6 +126,14 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 	})
 
 	return item, nil
+}
+
+func normalizeCustomFieldValues(values map[string]any) map[string]any {
+	normalized := map[string]any{}
+	for key, value := range values {
+		normalized[key] = customfield.NormalizeJSONNumber(value)
+	}
+	return normalized
 }
 
 func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsResult, error) {

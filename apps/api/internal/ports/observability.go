@@ -17,6 +17,8 @@ const (
 	EventInventoriesListed               EventName = "inventory.listed"
 	EventInventoryAccessGranted          EventName = "inventory_access.granted"
 	EventInventoryAccessListed           EventName = "inventory_access.listed"
+	EventCustomFieldDefinitionCreated    EventName = "custom_field_definition.created"
+	EventCustomFieldDefinitionsListed    EventName = "custom_field_definition.listed"
 	EventAssetCreated                    EventName = "asset.created"
 	EventAssetsListed                    EventName = "asset.listed"
 	EventAuthorizationOutboxDrained      EventName = "authorization_outbox.drained"

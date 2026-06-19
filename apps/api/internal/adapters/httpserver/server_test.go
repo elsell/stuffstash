@@ -96,10 +96,14 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 		{name: "create tenant", method: http.MethodPost, path: "/tenants", body: map[string]string{"name": "Home"}},
 		{name: "create inventory", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories", body: map[string]string{"name": "Tools"}},
 		{name: "list inventories", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories"},
+		{name: "create tenant custom field definition", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/custom-field-definitions", body: map[string]string{"key": "serial", "displayName": "Serial", "type": "text"}},
+		{name: "list tenant custom field definitions", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/custom-field-definitions"},
 		{name: "create asset", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets", body: map[string]string{"kind": "item", "title": "Drill"}},
 		{name: "list assets", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets"},
 		{name: "grant inventory access", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/access-grants", body: map[string]string{"principalId": "viewer", "relationship": "viewer"}},
 		{name: "list inventory access grants", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/access-grants"},
+		{name: "create inventory custom field definition", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/custom-field-definitions", body: map[string]any{"key": "condition", "displayName": "Condition", "type": "enum", "enumOptions": []string{"new", "used"}}},
+		{name: "list inventory custom field definitions", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/custom-field-definitions"},
 	}
 
 	authCases := []struct {
@@ -350,6 +354,300 @@ func TestUnrelatedUserCannotCreateOrListAssets(t *testing.T) {
 		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, listAssets.Code, listAssets.Body.String())
 	}
 	assertSafeError(t, listAssets, "forbidden", "Forbidden.")
+}
+
+func TestCustomFieldDefinitionFlowAndAssetValidation(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FB1"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const hiddenInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+			{id: hiddenInventoryID, tenantID: tenantID, name: "Hidden", owner: "hidden-owner"},
+		},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FAY",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAZ",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB0",
+		},
+	}))
+
+	tenantDefinitionResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/custom-field-definitions", "Bearer dev:tenant-owner", map[string]any{
+		"key":         "serial",
+		"displayName": "Serial",
+		"type":        "text",
+	})
+	if tenantDefinitionResponse.Code != http.StatusCreated {
+		t.Fatalf("expected tenant definition status %d, got %d with body %s", http.StatusCreated, tenantDefinitionResponse.Code, tenantDefinitionResponse.Body.String())
+	}
+	tenantDefinition := decodeCustomFieldDefinition(t, tenantDefinitionResponse)
+	assertCustomFieldDefinition(t, tenantDefinition.Data, tenantID, "", "tenant", "serial", "text")
+
+	tenantDefinitionList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/custom-field-definitions?limit=50", "Bearer dev:tenant-owner", nil)
+	if tenantDefinitionList.Code != http.StatusOK {
+		t.Fatalf("expected tenant definition list status %d, got %d with body %s", http.StatusOK, tenantDefinitionList.Code, tenantDefinitionList.Body.String())
+	}
+
+	inventoryDefinitionResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "condition",
+		"displayName": "Condition",
+		"type":        "enum",
+		"enumOptions": []string{"new", "used"},
+	})
+	if inventoryDefinitionResponse.Code != http.StatusCreated {
+		t.Fatalf("expected inventory definition status %d, got %d with body %s", http.StatusCreated, inventoryDefinitionResponse.Code, inventoryDefinitionResponse.Body.String())
+	}
+	inventoryDefinition := decodeCustomFieldDefinition(t, inventoryDefinitionResponse)
+	assertCustomFieldDefinition(t, inventoryDefinition.Data, tenantID, inventoryID, "inventory", "condition", "enum")
+
+	duplicateDefinition := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "serial",
+		"displayName": "Serial Again",
+		"type":        "text",
+	})
+	if duplicateDefinition.Code != http.StatusBadRequest {
+		t.Fatalf("expected duplicate definition status %d, got %d with body %s", http.StatusBadRequest, duplicateDefinition.Code, duplicateDefinition.Body.String())
+	}
+	assertSafeError(t, duplicateDefinition, "invalid_request", "Invalid request.")
+
+	tenantConflictDefinition := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/custom-field-definitions", "Bearer dev:tenant-owner", map[string]any{
+		"key":         "condition",
+		"displayName": "Condition Again",
+		"type":        "enum",
+		"enumOptions": []string{"new", "used"},
+	})
+	if tenantConflictDefinition.Code != http.StatusBadRequest {
+		t.Fatalf("expected tenant conflict definition status %d, got %d with body %s", http.StatusBadRequest, tenantConflictDefinition.Code, tenantConflictDefinition.Body.String())
+	}
+	assertSafeError(t, tenantConflictDefinition, "invalid_request", "Invalid request.")
+
+	firstPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions?limit=1", "Bearer dev:inventory-owner", nil)
+	if firstPageResponse.Code != http.StatusOK {
+		t.Fatalf("expected first definition page status %d, got %d with body %s", http.StatusOK, firstPageResponse.Code, firstPageResponse.Body.String())
+	}
+	firstPage := decodeCustomFieldDefinitionList(t, firstPageResponse)
+	if len(firstPage.Data) != 1 || firstPage.Data[0].Key != "serial" || firstPage.Meta.Pagination == nil || !firstPage.Meta.Pagination.HasMore || firstPage.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected first page with inherited tenant definition, got %+v", firstPage)
+	}
+	secondPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions?limit=1&cursor="+*firstPage.Meta.Pagination.NextCursor, "Bearer dev:inventory-owner", nil)
+	if secondPageResponse.Code != http.StatusOK {
+		t.Fatalf("expected second definition page status %d, got %d with body %s", http.StatusOK, secondPageResponse.Code, secondPageResponse.Body.String())
+	}
+	secondPage := decodeCustomFieldDefinitionList(t, secondPageResponse)
+	if len(secondPage.Data) != 1 || secondPage.Data[0].Key != "condition" || secondPage.Meta.Pagination == nil || secondPage.Meta.Pagination.HasMore || secondPage.Meta.Pagination.NextCursor != nil {
+		t.Fatalf("expected second page with inventory definition, got %+v", secondPage)
+	}
+
+	createAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:inventory-owner", map[string]any{
+		"kind":  "item",
+		"title": "Drill",
+		"customFields": map[string]any{
+			"serial":    "abc",
+			"condition": "used",
+		},
+	})
+	if createAsset.Code != http.StatusCreated {
+		t.Fatalf("expected asset create status %d, got %d with body %s", http.StatusCreated, createAsset.Code, createAsset.Body.String())
+	}
+	assetBody := decodeAsset(t, createAsset)
+	if assetBody.Data.CustomFields["serial"] != "abc" || assetBody.Data.CustomFields["condition"] != "used" {
+		t.Fatalf("expected custom field values in asset response, got %+v", assetBody.Data.CustomFields)
+	}
+
+	badAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:inventory-owner", map[string]any{
+		"kind":  "item",
+		"title": "Bad Drill",
+		"customFields": map[string]any{
+			"condition": "broken",
+		},
+	})
+	if badAsset.Code != http.StatusBadRequest {
+		t.Fatalf("expected invalid custom field value status %d, got %d with body %s", http.StatusBadRequest, badAsset.Code, badAsset.Body.String())
+	}
+	assertSafeError(t, badAsset, "invalid_request", "Invalid request.")
+
+	for _, item := range []struct {
+		name          string
+		method        string
+		path          string
+		principal     string
+		body          any
+		expectedCode  int
+		expectedError string
+	}{
+		{
+			name:          "inventory owner cannot list tenant definitions",
+			method:        http.MethodGet,
+			path:          "/tenants/" + tenantID + "/custom-field-definitions",
+			principal:     "inventory-owner",
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:      "inventory owner cannot create tenant definitions",
+			method:    http.MethodPost,
+			path:      "/tenants/" + tenantID + "/custom-field-definitions",
+			principal: "inventory-owner",
+			body: map[string]any{
+				"key":         "inventory-owned",
+				"displayName": "Inventory Owned",
+				"type":        "text",
+			},
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:          "unrelated user cannot list tenant definitions",
+			method:        http.MethodGet,
+			path:          "/tenants/" + tenantID + "/custom-field-definitions",
+			principal:     "intruder",
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:      "unrelated user cannot create tenant definitions",
+			method:    http.MethodPost,
+			path:      "/tenants/" + tenantID + "/custom-field-definitions",
+			principal: "intruder",
+			body: map[string]any{
+				"key":         "intruder-field",
+				"displayName": "Intruder Field",
+				"type":        "text",
+			},
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:          "unrelated user cannot list inventory definitions",
+			method:        http.MethodGet,
+			path:          "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions",
+			principal:     "intruder",
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:      "unrelated user cannot create inventory definitions",
+			method:    http.MethodPost,
+			path:      "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions",
+			principal: "intruder",
+			body: map[string]any{
+				"key":         "intruder-inventory-field",
+				"displayName": "Intruder Inventory Field",
+				"type":        "text",
+			},
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:          "inventory owner cannot list hidden inventory definitions",
+			method:        http.MethodGet,
+			path:          "/tenants/" + tenantID + "/inventories/" + hiddenInventoryID + "/custom-field-definitions",
+			principal:     "inventory-owner",
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:      "inventory owner cannot create hidden inventory definitions",
+			method:    http.MethodPost,
+			path:      "/tenants/" + tenantID + "/inventories/" + hiddenInventoryID + "/custom-field-definitions",
+			principal: "inventory-owner",
+			body: map[string]any{
+				"key":         "hidden-field",
+				"displayName": "Hidden Field",
+				"type":        "text",
+			},
+			expectedCode:  http.StatusForbidden,
+			expectedError: "forbidden",
+		},
+		{
+			name:          "wrong tenant inventory list is hidden",
+			method:        http.MethodGet,
+			path:          "/tenants/" + otherTenantID + "/inventories/" + inventoryID + "/custom-field-definitions",
+			principal:     "inventory-owner",
+			expectedCode:  http.StatusNotFound,
+			expectedError: "resource_not_found",
+		},
+		{
+			name:      "wrong tenant inventory create is hidden",
+			method:    http.MethodPost,
+			path:      "/tenants/" + otherTenantID + "/inventories/" + inventoryID + "/custom-field-definitions",
+			principal: "inventory-owner",
+			body: map[string]any{
+				"key":         "wrong-tenant-field",
+				"displayName": "Wrong Tenant Field",
+				"type":        "text",
+			},
+			expectedCode:  http.StatusNotFound,
+			expectedError: "resource_not_found",
+		},
+		{
+			name:          "missing inventory list is hidden",
+			method:        http.MethodGet,
+			path:          "/tenants/" + tenantID + "/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB2/custom-field-definitions",
+			principal:     "inventory-owner",
+			expectedCode:  http.StatusNotFound,
+			expectedError: "resource_not_found",
+		},
+		{
+			name:      "missing inventory create is hidden",
+			method:    http.MethodPost,
+			path:      "/tenants/" + tenantID + "/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB2/custom-field-definitions",
+			principal: "inventory-owner",
+			body: map[string]any{
+				"key":         "missing-inventory-field",
+				"displayName": "Missing Inventory Field",
+				"type":        "text",
+			},
+			expectedCode:  http.StatusNotFound,
+			expectedError: "resource_not_found",
+		},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			response := performRequest(server, item.method, item.path, "Bearer dev:"+item.principal, item.body)
+			if response.Code != item.expectedCode {
+				t.Fatalf("expected status %d, got %d with body %s", item.expectedCode, response.Code, response.Body.String())
+			}
+			assertErrorCode(t, response, item.expectedError)
+		})
+	}
+
+	viewerGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if viewerGrant.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+	viewerList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions?limit=50", "Bearer dev:viewer-user", nil)
+	if viewerList.Code != http.StatusOK {
+		t.Fatalf("expected viewer list status %d, got %d with body %s", http.StatusOK, viewerList.Code, viewerList.Body.String())
+	}
+	viewerCreate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:viewer-user", map[string]any{
+		"key":         "viewer-field",
+		"displayName": "Viewer Field",
+		"type":        "text",
+	})
+	if viewerCreate.Code != http.StatusForbidden {
+		t.Fatalf("expected viewer create status %d, got %d with body %s", http.StatusForbidden, viewerCreate.Code, viewerCreate.Body.String())
+	}
+	assertSafeError(t, viewerCreate, "forbidden", "Forbidden.")
+
+	wrongScopeCursor := paginationCursor(map[string]any{
+		"v":          1,
+		"collection": "custom_field_definitions",
+		"scope":      tenantID + ":" + hiddenInventoryID,
+		"lastId":     "0:" + tenantDefinition.Data.ID,
+	})
+	wrongCursorList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions?cursor="+wrongScopeCursor, "Bearer dev:inventory-owner", nil)
+	if wrongCursorList.Code != http.StatusBadRequest {
+		t.Fatalf("expected wrong-scope cursor status %d, got %d with body %s", http.StatusBadRequest, wrongCursorList.Code, wrongCursorList.Body.String())
+	}
+	assertSafeError(t, wrongCursorList, "invalid_request", "Invalid request.")
 }
 
 func TestInventorySharingEnforcesViewerEditorAndShareBoundaries(t *testing.T) {
@@ -679,14 +977,15 @@ func TestStateCreatedDuringAuthorizationGrantFailureStaysProtected(t *testing.T)
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	store := memory.NewStore()
 	server := NewServer(":0", app.New(app.Dependencies{
-		Observer:    &fakeObserver{},
-		Auth:        auth.NewLocalDevAuthenticator(),
-		Authorizer:  failingGrantAuthorizer{},
-		Tenants:     store,
-		Inventories: store,
-		Assets:      store,
-		Outbox:      store,
-		IDs:         &fakeIDGenerator{ids: []string{tenantID, "tenant-event"}},
+		Observer:     &fakeObserver{},
+		Auth:         auth.NewLocalDevAuthenticator(),
+		Authorizer:   failingGrantAuthorizer{},
+		Tenants:      store,
+		Inventories:  store,
+		CustomFields: store,
+		Assets:       store,
+		Outbox:       store,
+		IDs:          &fakeIDGenerator{ids: []string{tenantID, "tenant-event"}},
 	}))
 
 	createTenant := performRequest(server, http.MethodPost, "/tenants", "Bearer dev:owner", map[string]string{"name": "Home"})
@@ -742,6 +1041,12 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/access-grants"]; !ok {
 		t.Fatalf("expected OpenAPI to include inventory access grant path, got %s", response.Body.String())
 	}
+	if _, ok := body.Paths["/tenants/{tenantId}/custom-field-definitions"]; !ok {
+		t.Fatalf("expected OpenAPI to include tenant custom field definition path, got %s", response.Body.String())
+	}
+	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions"]; !ok {
+		t.Fatalf("expected OpenAPI to include inventory custom field definition path, got %s", response.Body.String())
+	}
 	if _, ok := body.Paths["/"]; ok {
 		t.Fatalf("expected OpenAPI to omit local API index path, got %s", response.Body.String())
 	}
@@ -753,14 +1058,15 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 func newTestApp(observer ports.Observer, ids ...string) app.App {
 	store := memory.NewStore()
 	return app.New(app.Dependencies{
-		Observer:    observer,
-		Auth:        auth.NewLocalDevAuthenticator(),
-		Authorizer:  memory.NewAuthorizer(),
-		Tenants:     store,
-		Inventories: store,
-		Assets:      store,
-		Outbox:      store,
-		IDs:         &fakeIDGenerator{ids: ids},
+		Observer:     observer,
+		Auth:         auth.NewLocalDevAuthenticator(),
+		Authorizer:   memory.NewAuthorizer(),
+		Tenants:      store,
+		Inventories:  store,
+		CustomFields: store,
+		Assets:       store,
+		Outbox:       store,
+		IDs:          &fakeIDGenerator{ids: ids},
 	})
 }
 
@@ -809,14 +1115,15 @@ func newSeededTestApp(t *testing.T, state seededState) app.App {
 	}
 
 	return app.New(app.Dependencies{
-		Observer:    &fakeObserver{},
-		Auth:        auth.NewLocalDevAuthenticator(),
-		Authorizer:  authorizer,
-		Tenants:     store,
-		Inventories: store,
-		Assets:      store,
-		Outbox:      store,
-		IDs:         &fakeIDGenerator{},
+		Observer:     &fakeObserver{},
+		Auth:         auth.NewLocalDevAuthenticator(),
+		Authorizer:   authorizer,
+		Tenants:      store,
+		Inventories:  store,
+		CustomFields: store,
+		Assets:       store,
+		Outbox:       store,
+		IDs:          &fakeIDGenerator{ids: state.ids},
 	})
 }
 
@@ -905,6 +1212,16 @@ type assetListBody struct {
 	Meta responseMeta    `json:"meta"`
 }
 
+type customFieldDefinitionBody struct {
+	Data customFieldDefinitionResponse `json:"data"`
+	Meta responseMeta                  `json:"meta"`
+}
+
+type customFieldDefinitionListBody struct {
+	Data []customFieldDefinitionResponse `json:"data"`
+	Meta responseMeta                    `json:"meta"`
+}
+
 type inventoryAccessGrantBody struct {
 	Data inventoryAccessGrantResponse `json:"data"`
 	Meta responseMeta                 `json:"meta"`
@@ -918,6 +1235,7 @@ type inventoryAccessGrantListBody struct {
 type seededState struct {
 	tenants     []seedTenant
 	inventories []seedInventory
+	ids         []string
 }
 
 type seedTenant struct {
@@ -975,6 +1293,22 @@ func decodeInventoryListBody(t *testing.T, response *httptest.ResponseRecorder) 
 	return body
 }
 
+func decodeCustomFieldDefinition(t *testing.T, response *httptest.ResponseRecorder) customFieldDefinitionBody {
+	t.Helper()
+
+	var body customFieldDefinitionBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeCustomFieldDefinitionList(t *testing.T, response *httptest.ResponseRecorder) customFieldDefinitionListBody {
+	t.Helper()
+
+	var body customFieldDefinitionListBody
+	decodeBody(t, response, &body)
+	return body
+}
+
 func decodeInventoryAccessGrant(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessGrantBody {
 	t.Helper()
 
@@ -996,6 +1330,14 @@ func assertInventoryAccessGrant(t *testing.T, grant inventoryAccessGrantResponse
 
 	if grant.TenantID != tenantID || grant.InventoryID != inventoryID || grant.PrincipalID != principalID || grant.Relationship != relationship {
 		t.Fatalf("expected access grant %s/%s/%s/%s, got %+v", tenantID, inventoryID, principalID, relationship, grant)
+	}
+}
+
+func assertCustomFieldDefinition(t *testing.T, definition customFieldDefinitionResponse, tenantID string, inventoryID string, scope string, key string, fieldType string) {
+	t.Helper()
+
+	if definition.TenantID != tenantID || definition.InventoryID != inventoryID || definition.Scope != scope || definition.Key != key || definition.Type != fieldType {
+		t.Fatalf("expected custom field definition %s/%s/%s/%s/%s, got %+v", tenantID, inventoryID, scope, key, fieldType, definition)
 	}
 }
 

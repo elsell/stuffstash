@@ -8,7 +8,7 @@ The first API slice should prove the security boundary, Huma/OpenAPI generation,
 
 This spec covers the first protected REST endpoints.
 
-It does not cover asset movement, custom field definition APIs, location-specific APIs, conversational, import/export, media, or search endpoints.
+It does not cover asset movement, location-specific APIs, conversational, import/export, media, or search endpoints.
 
 ## Local Convenience Endpoint
 
@@ -30,6 +30,10 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
+- `POST /tenants/{tenantId}/custom-field-definitions`
+- `GET /tenants/{tenantId}/custom-field-definitions`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 
 ## Authentication
 
@@ -49,6 +53,10 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.view`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
+- `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
+- `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.configure`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.view`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
 
 ## First Asset REST Slice
@@ -57,7 +65,7 @@ The first protected REST slice includes:
 - Asset creation must support root assets and child assets through `parentAssetId`.
 - Parent assets must be in the same tenant and inventory as the child.
 - Parent assets must have kind `container` or `location`.
-- Non-empty custom field values must be rejected until custom field definitions are implemented.
+- Non-empty custom field values must be validated against effective custom field definitions before asset creation.
 - New assets must be created with lifecycle state `active`.
 - Asset listing returns assets scoped to one inventory.
 - Asset listing must support cursor pagination with `limit` and `cursor` query parameters.
@@ -90,7 +98,8 @@ The first protected REST slice includes:
 - Tests must verify asset endpoint authentication and authorization failures.
 - Tests must verify cross-tenant and cross-inventory asset containment attempts fail.
 - Tests must verify item assets cannot be parents.
-- Tests must verify non-empty custom field values are rejected.
+- Tests must verify non-empty custom field values are accepted only when definitions exist and values validate.
+- Tests must verify custom field definitions are authenticated, authorized, cursor-paginated, tenant/inventory isolated, and used for asset value validation.
 - Tests must verify unauthorized errors use the safe error envelope.
 - Tests must verify the API index route is available.
 - Tests must verify the OpenAPI route is available.

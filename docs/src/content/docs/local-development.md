@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, create and list assets, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom fields, create and list assets, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
 
 ## Requirements
 
@@ -101,6 +101,38 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
   -H 'Authorization: Bearer dev:user-one' \
   -H 'Content-Type: application/json' \
   -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>"}'
+```
+
+Define custom fields before sending custom values on assets:
+
+Keys use lowercase letters, numbers, and hyphens. Initial field types are `text`, `number`, `boolean`, `date`, `url`, and `enum`.
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/custom-field-definitions \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"serial","displayName":"Serial","type":"text"}'
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"condition","displayName":"Condition","type":"enum","enumOptions":["new","used"]}'
+```
+
+Create an item with custom field values:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>","customFields":{"serial":"bag-1","condition":"new"}}'
+```
+
+Inventory custom field lists include tenant fields and inventory fields:
+
+```sh
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions?limit=50' \
+  -H 'Authorization: Bearer dev:user-one'
 ```
 
 List assets in the inventory:

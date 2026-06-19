@@ -10,6 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -191,6 +192,51 @@ func registerRoutes(api huma.API, application app.App) {
 		}, nil
 	}, huma.OperationTags("inventories"), securedOperation)
 
+	huma.Post(api, "/tenants/{tenantId}/custom-field-definitions", func(ctx context.Context, input *createTenantCustomFieldDefinitionInput) (*createCustomFieldDefinitionOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		definition, err := application.CreateTenantCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			Key:         input.Body.Key,
+			DisplayName: input.Body.DisplayName,
+			Type:        input.Body.Type,
+			EnumOptions: input.Body.EnumOptions,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &createCustomFieldDefinitionOutput{
+			Body: successEnvelope[customFieldDefinitionResponse]{
+				Data: customFieldDefinitionToResponse(definition),
+				Meta: responseMeta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("custom field definitions"), createdOperation, securedOperation)
+
+	huma.Get(api, "/tenants/{tenantId}/custom-field-definitions", func(ctx context.Context, input *listTenantCustomFieldDefinitionsInput) (*listCustomFieldDefinitionsOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListTenantCustomFieldDefinitions(ctx, app.ListCustomFieldDefinitionsInput{
+			Principal: principal,
+			TenantID:  tenant.ID(input.TenantID),
+			Limit:     input.Limit,
+			Cursor:    input.Cursor,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return customFieldDefinitionsOutput(input.TenantID, result), nil
+	}, huma.OperationTags("custom field definitions"), securedOperation)
+
 	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets", func(ctx context.Context, input *createAssetInput) (*createAssetOutput, error) {
 		principal, err := authenticate(ctx, application, input.Authorization)
 		if err != nil {
@@ -255,6 +301,53 @@ func registerRoutes(api huma.API, application app.App) {
 			},
 		}, nil
 	}, huma.OperationTags("assets"), securedOperation)
+
+	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", func(ctx context.Context, input *createInventoryCustomFieldDefinitionInput) (*createCustomFieldDefinitionOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		definition, err := application.CreateInventoryCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			Key:         input.Body.Key,
+			DisplayName: input.Body.DisplayName,
+			Type:        input.Body.Type,
+			EnumOptions: input.Body.EnumOptions,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &createCustomFieldDefinitionOutput{
+			Body: successEnvelope[customFieldDefinitionResponse]{
+				Data: customFieldDefinitionToResponse(definition),
+				Meta: responseMeta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("custom field definitions"), createdOperation, securedOperation)
+
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", func(ctx context.Context, input *listInventoryCustomFieldDefinitionsInput) (*listCustomFieldDefinitionsOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListInventoryCustomFieldDefinitions(ctx, app.ListCustomFieldDefinitionsInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			Limit:       input.Limit,
+			Cursor:      input.Cursor,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return customFieldDefinitionsOutput(input.TenantID, result), nil
+	}, huma.OperationTags("custom field definitions"), securedOperation)
 
 	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", func(ctx context.Context, input *grantInventoryAccessInput) (*grantInventoryAccessOutput, error) {
 		principal, err := authenticate(ctx, application, input.Authorization)
@@ -434,6 +527,52 @@ type listInventoriesOutput struct {
 	Body successEnvelope[[]inventoryResponse]
 }
 
+type createTenantCustomFieldDefinitionInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	Body          struct {
+		Key         string   `json:"key" maxLength:"80" doc:"Stable custom field key"`
+		DisplayName string   `json:"displayName" maxLength:"120" doc:"User-facing field label"`
+		Type        string   `json:"type" enum:"text,number,boolean,date,url,enum" doc:"Custom field type"`
+		EnumOptions []string `json:"enumOptions,omitempty" doc:"Allowed enum option keys"`
+	}
+}
+
+type createInventoryCustomFieldDefinitionInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Body          struct {
+		Key         string   `json:"key" maxLength:"80" doc:"Stable custom field key"`
+		DisplayName string   `json:"displayName" maxLength:"120" doc:"User-facing field label"`
+		Type        string   `json:"type" enum:"text,number,boolean,date,url,enum" doc:"Custom field type"`
+		EnumOptions []string `json:"enumOptions,omitempty" doc:"Allowed enum option keys"`
+	}
+}
+
+type createCustomFieldDefinitionOutput struct {
+	Body successEnvelope[customFieldDefinitionResponse]
+}
+
+type listTenantCustomFieldDefinitionsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type listInventoryCustomFieldDefinitionsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type listCustomFieldDefinitionsOutput struct {
+	Body successEnvelope[[]customFieldDefinitionResponse]
+}
+
 type createAssetInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
@@ -556,6 +695,17 @@ type inventoryResponse struct {
 	Name     string `json:"name"`
 }
 
+type customFieldDefinitionResponse struct {
+	ID          string   `json:"id"`
+	TenantID    string   `json:"tenantId"`
+	InventoryID string   `json:"inventoryId,omitempty"`
+	Scope       string   `json:"scope"`
+	Key         string   `json:"key"`
+	DisplayName string   `json:"displayName"`
+	Type        string   `json:"type"`
+	EnumOptions []string `json:"enumOptions"`
+}
+
 type assetResponse struct {
 	ID             string         `json:"id"`
 	TenantID       string         `json:"tenantId"`
@@ -586,6 +736,43 @@ func assetToResponse(item asset.Asset) assetResponse {
 		Description:    item.Description.String(),
 		CustomFields:   item.CustomFields.Values(),
 		LifecycleState: item.LifecycleState.String(),
+	}
+}
+
+func customFieldDefinitionToResponse(definition customfield.Definition) customFieldDefinitionResponse {
+	options := make([]string, 0, len(definition.EnumOptions))
+	for _, option := range definition.EnumOptions {
+		options = append(options, option.String())
+	}
+	return customFieldDefinitionResponse{
+		ID:          definition.ID.String(),
+		TenantID:    definition.TenantID.String(),
+		InventoryID: definition.InventoryID.String(),
+		Scope:       definition.Scope.String(),
+		Key:         definition.Key.String(),
+		DisplayName: definition.DisplayName.String(),
+		Type:        definition.Type.String(),
+		EnumOptions: options,
+	}
+}
+
+func customFieldDefinitionsOutput(tenantID string, result app.ListCustomFieldDefinitionsResult) *listCustomFieldDefinitionsOutput {
+	data := make([]customFieldDefinitionResponse, 0, len(result.Items))
+	for _, definition := range result.Items {
+		data = append(data, customFieldDefinitionToResponse(definition))
+	}
+	return &listCustomFieldDefinitionsOutput{
+		Body: successEnvelope[[]customFieldDefinitionResponse]{
+			Data: data,
+			Meta: responseMeta{
+				TenantID: tenantID,
+				Pagination: &paginationMeta{
+					Limit:      result.Limit,
+					NextCursor: result.NextCursor,
+					HasMore:    result.HasMore,
+				},
+			},
+		},
 	}
 }
 

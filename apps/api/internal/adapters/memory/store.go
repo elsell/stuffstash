@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -19,6 +20,7 @@ type Store struct {
 	tenants      map[tenant.ID]tenant.Tenant
 	inventories  map[inventory.InventoryID]inventory.Inventory
 	accessGrants map[string]ports.InventoryAccessGrant
+	customFields map[customfield.ID]customfield.Definition
 	assets       map[asset.ID]asset.Asset
 	outbox       map[string]ports.AuthorizationOutboxEvent
 }
@@ -28,6 +30,7 @@ func NewStore() *Store {
 		tenants:      map[tenant.ID]tenant.Tenant{},
 		inventories:  map[inventory.InventoryID]inventory.Inventory{},
 		accessGrants: map[string]ports.InventoryAccessGrant{},
+		customFields: map[customfield.ID]customfield.Definition{},
 		assets:       map[asset.ID]asset.Asset{},
 		outbox:       map[string]ports.AuthorizationOutboxEvent{},
 	}
@@ -243,6 +246,79 @@ func (s *Store) ListInventoryAccessGrants(_ context.Context, tenantID tenant.ID,
 	return items, nil
 }
 
+func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.tenants[tenant.ID(definition.TenantID.String())]; !exists {
+		return ports.ErrForbidden
+	}
+	if definition.Scope == customfield.ScopeInventory {
+		item, ok := s.inventories[inventory.InventoryID(definition.InventoryID.String())]
+		if !ok || item.TenantID.String() != definition.TenantID.String() {
+			return ports.ErrForbidden
+		}
+	}
+	for _, existing := range s.customFields {
+		if customfield.DefinitionsConflict(existing, definition) {
+			return ports.ErrConflict
+		}
+	}
+	s.customFields[definition.ID] = definition
+	return nil
+}
+
+func (s *Store) ListTenantCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []customfield.Definition{}
+	for _, definition := range s.customFields {
+		if definition.TenantID.String() == tenantID.String() && definition.Scope == customfield.ScopeTenant && definition.CursorKey() > page.AfterDefinitionKey {
+			items = append(items, definition)
+		}
+	}
+	return pagedCustomFieldDefinitions(items, page.Limit), nil
+}
+
+func (s *Store) ListInventoryCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []customfield.Definition{}
+	for _, definition := range s.customFields {
+		if definition.TenantID.String() != tenantID.String() || definition.CursorKey() <= page.AfterDefinitionKey {
+			continue
+		}
+		if definition.Scope == customfield.ScopeTenant || definition.InventoryID.String() == inventoryID.String() {
+			items = append(items, definition)
+		}
+	}
+	return pagedCustomFieldDefinitions(items, page.Limit), nil
+}
+
+func (s *Store) ListEffectiveCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) ([]customfield.Definition, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []customfield.Definition{}
+	for _, definition := range s.customFields {
+		if definition.TenantID.String() != tenantID.String() {
+			continue
+		}
+		if inventoryID.String() == "" {
+			if definition.Scope == customfield.ScopeTenant {
+				items = append(items, definition)
+			}
+			continue
+		}
+		if definition.Scope == customfield.ScopeTenant || definition.InventoryID.String() == inventoryID.String() {
+			items = append(items, definition)
+		}
+	}
+	return pagedCustomFieldDefinitions(items, 0), nil
+}
+
 func (s *Store) CreateAsset(_ context.Context, item asset.Asset) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -322,4 +398,14 @@ func outboxKindForInventoryAccess(relationship ports.InventoryAccessRelationship
 	default:
 		return ports.AuthorizationOutboxGrantInventoryViewer
 	}
+}
+
+func pagedCustomFieldDefinitions(items []customfield.Definition, limit int) []customfield.Definition {
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if limit > 0 && len(items) > limit {
+		return items[:limit]
+	}
+	return items
 }
