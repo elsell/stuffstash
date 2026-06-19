@@ -43,12 +43,25 @@ type UpdateAssetOutput struct {
 	Body shared.SuccessEnvelope[AssetResponse]
 }
 
-type ListAssetsInput struct {
+type UpdateAssetLifecycleInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
-	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
-	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+}
+
+type UpdateAssetLifecycleOutput struct {
+	Body shared.SuccessEnvelope[AssetResponse]
+}
+
+type ListAssetsInput struct {
+	Authorization  string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID       string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID    string `path:"inventoryId" doc:"Inventory ID"`
+	Limit          int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor         string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	LifecycleState string `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
 }
 
 type ListAssetsOutput struct {

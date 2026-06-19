@@ -213,7 +213,8 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Domain code must not expose or manipulate raw JSONB.
 - Repository adapters must map stored custom field values into typed domain values.
 - Custom field values must be validated by domain or application services before persistence.
-- Repository adapters must update assets without changing their tenant, inventory, kind, or lifecycle state in the first update slice.
+- Repository adapters must perform generic asset updates without changing tenant, inventory, kind, or lifecycle state.
+- Explicit lifecycle update persistence may change only lifecycle state and must preserve the rest of the asset.
 - Repository adapters must defensively reject asset updates that would point to a parent in another tenant or inventory, point to an item parent, point to an archived parent, point to the asset itself, or create a containment cycle.
 
 ## Migrations

@@ -30,11 +30,12 @@ type CreateAssetInput struct {
 }
 
 type ListAssetsInput struct {
-	Principal   identity.Principal
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Limit       int
-	Cursor      string
+	Principal      identity.Principal
+	TenantID       tenant.ID
+	InventoryID    inventory.InventoryID
+	Limit          int
+	Cursor         string
+	LifecycleState string
 }
 
 type AssetParentUpdate struct {
@@ -54,6 +55,15 @@ type UpdateAssetInput struct {
 	Description   *string
 	ParentAssetID AssetParentUpdate
 	CustomFields  map[string]any
+}
+
+type UpdateAssetLifecycleInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
 }
 
 type ListAssetsResult struct {
@@ -287,6 +297,98 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 	return updated, nil
 }
 
+func (a App) ArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
+	return a.updateAssetLifecycle(ctx, input, asset.LifecycleStateActive, asset.LifecycleStateArchived, audit.ActionAssetArchived, ports.EventAssetArchived, "asset archived")
+}
+
+func (a App) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
+	return a.updateAssetLifecycle(ctx, input, asset.LifecycleStateArchived, asset.LifecycleStateActive, audit.ActionAssetRestored, ports.EventAssetRestored, "asset restored")
+}
+
+func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycleInput, from asset.LifecycleState, to asset.LifecycleState, action audit.Action, eventName ports.EventName, eventMessage string) (asset.Asset, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return asset.Asset{}, err
+	}
+	if input.AssetID.String() == "" {
+		return asset.Asset{}, ErrInvalidInput
+	}
+
+	current, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if !found {
+		return asset.Asset{}, ErrNotFound
+	}
+	if current.LifecycleState != from {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	if to == asset.LifecycleStateArchived {
+		hasActiveChildren, err := a.assets.AssetHasActiveChildren(ctx, input.TenantID, input.InventoryID, input.AssetID)
+		if err != nil {
+			return asset.Asset{}, err
+		}
+		if hasActiveChildren {
+			return asset.Asset{}, ErrInvalidInput
+		}
+	}
+	if to == asset.LifecycleStateActive && current.ParentAssetID.String() != "" {
+		parent, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, current.ParentAssetID)
+		if err != nil {
+			return asset.Asset{}, err
+		}
+		if !found {
+			return asset.Asset{}, ErrInvalidInput
+		}
+		if parent.LifecycleState != asset.LifecycleStateActive {
+			return asset.Asset{}, ErrInvalidInput
+		}
+	}
+
+	updated := current
+	updated.LifecycleState = to
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      action,
+		TargetType:  audit.TargetAsset,
+		TargetID:    updated.ID.String(),
+		Metadata: map[string]string{
+			"asset_kind":      updated.Kind.String(),
+			"previous_state":  current.LifecycleState.String(),
+			"lifecycle_state": updated.LifecycleState.String(),
+		},
+	})
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if err := a.assets.UpdateAssetLifecycle(ctx, updated, auditRecord); err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return asset.Asset{}, ErrInvalidInput
+		}
+		return asset.Asset{}, err
+	}
+
+	a.observer.Record(ctx, ports.Event{
+		Name:    eventName,
+		Message: eventMessage,
+		Fields: map[string]string{
+			"tenant_id":       input.TenantID.String(),
+			"inventory_id":    input.InventoryID.String(),
+			"asset_id":        updated.ID.String(),
+			"asset_kind":      updated.Kind.String(),
+			"principal_id":    input.Principal.ID.String(),
+			"lifecycle_state": updated.LifecycleState.String(),
+			"previous_state":  current.LifecycleState.String(),
+		},
+	})
+
+	return updated, nil
+}
+
 func (a App) validatedAssetCustomAssetTypeID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, rawCustomAssetTypeID string) (asset.CustomAssetTypeID, error) {
 	if strings.TrimSpace(rawCustomAssetTypeID) == "" {
 		return "", nil
@@ -377,14 +479,19 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	}
 
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
-	afterAssetID, err := decodeAssetCursor(input.TenantID, input.InventoryID, input.Cursor)
+	lifecycleFilter, err := assetLifecycleFilter(input.LifecycleState)
+	if err != nil {
+		return ListAssetsResult{}, ErrInvalidInput
+	}
+	afterAssetID, err := decodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, input.Cursor)
 	if err != nil {
 		return ListAssetsResult{}, ErrInvalidInput
 	}
 
 	items, err := a.assets.ListAssetsByInventory(ctx, input.TenantID, input.InventoryID, ports.AssetListPageRequest{
-		AfterAssetID: afterAssetID,
-		Limit:        limit + 1,
+		AfterAssetID:    afterAssetID,
+		Limit:           limit + 1,
+		LifecycleFilter: lifecycleFilter,
 	})
 	if err != nil {
 		return ListAssetsResult{}, err
@@ -394,7 +501,7 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, items[len(items)-1].ID)
+		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, items[len(items)-1].ID)
 	}
 
 	a.observer.Record(ctx, ports.Event{
@@ -405,6 +512,7 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 			"inventory_id": input.InventoryID.String(),
 			"principal_id": input.Principal.ID.String(),
 			"limit":        strings.TrimSpace(strconv.Itoa(limit)),
+			"lifecycle":    string(lifecycleFilter),
 		},
 	})
 
@@ -416,12 +524,27 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	}, nil
 }
 
-func encodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, id asset.ID) *string {
-	return encodePageCursor("assets", tenantID.String()+":"+inventoryID.String(), id.String())
+func assetLifecycleFilter(value string) (ports.AssetLifecycleFilter, error) {
+	switch strings.TrimSpace(value) {
+	case "":
+		return ports.AssetLifecycleFilterActive, nil
+	case string(ports.AssetLifecycleFilterActive):
+		return ports.AssetLifecycleFilterActive, nil
+	case string(ports.AssetLifecycleFilterArchived):
+		return ports.AssetLifecycleFilterArchived, nil
+	case string(ports.AssetLifecycleFilterAll):
+		return ports.AssetLifecycleFilterAll, nil
+	default:
+		return "", ErrInvalidInput
+	}
 }
 
-func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (asset.ID, error) {
-	decoded, err := decodePageCursor("assets", tenantID.String()+":"+inventoryID.String(), cursor)
+func encodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, id asset.ID) *string {
+	return encodePageCursor("assets", tenantID.String()+":"+inventoryID.String()+":"+string(lifecycleFilter), id.String())
+}
+
+func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, cursor string) (asset.ID, error) {
+	decoded, err := decodePageCursor("assets", tenantID.String()+":"+inventoryID.String()+":"+string(lifecycleFilter), cursor)
 	if err != nil {
 		return asset.ID(""), err
 	}

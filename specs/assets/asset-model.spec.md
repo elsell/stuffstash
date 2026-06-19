@@ -8,9 +8,9 @@ The asset model must stay lean, flexible, and useful across many categories with
 
 ## Scope
 
-This spec covers the initial asset model direction, asset create/update behavior, movement inside an inventory, and the first persistence shape for assets.
+This spec covers the initial asset model direction, asset create/update behavior, movement inside an inventory, the first persistence shape for assets, and the first archive/restore lifecycle behavior.
 
-This spec does not define the full lifecycle model, consumable model, search behavior, media attachments, or every REST endpoint.
+This spec does not define the full lifecycle model, consumable model, search behavior, media attachments, permanent deletion, or every REST endpoint.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ This spec does not define the full lifecycle model, consumable model, search beh
 - Asset create may accept non-empty custom field values when every value is validated against the effective custom field definitions for the target inventory and the asset's custom asset type.
 - Asset update may replace title, description, parent asset reference, and custom field values.
 - Asset update must validate custom field values against the same effective custom field definitions used by asset create.
-- Asset update must not change asset ID, tenant ID, inventory ID, kind, custom asset type, or lifecycle state in the first update slice.
+- Asset update must not change asset ID, tenant ID, inventory ID, kind, custom asset type, or lifecycle state.
 - Asset movement is represented by updating an asset's parent asset reference.
 - Cross-inventory movement is not supported in the first update slice.
 - Clearing `parentAssetId` moves an asset to the inventory root.
@@ -52,8 +52,8 @@ This spec does not define the full lifecycle model, consumable model, search beh
 - The domain model may expose location-friendly language to users, but persistence must store location-like nodes as assets.
 - The initial lifecycle states are `active` and `archived`.
 - New assets are created as `active`.
-- The first asset slice must persist lifecycle state but must not expose archive or unarchive operations.
 - Archived assets must not be valid containment targets.
+- Asset archive and restore are explicit lifecycle operations, not generic asset update fields.
 
 ## Initial Persistence Shape
 
@@ -88,8 +88,49 @@ Persistence rules:
 - Custom asset type must not change the base containment rules. A `medicine` custom asset type can still be an `item`, `container`, or `location` depending on its base asset kind.
 - `custom_fields` must default to an empty object, not null.
 - Domain and application code must not manipulate raw JSONB.
-- Update persistence must preserve the same tenant, inventory, kind, and lifecycle state for the target asset.
+- Generic asset update persistence must preserve the same tenant, inventory, kind, and lifecycle state for the target asset.
+- Archive/restore persistence may change only lifecycle state.
 - Update persistence must defensively reject cross-tenant and cross-inventory parent references.
+
+## Lifecycle
+
+The first lifecycle slice supports reversible archive and restore.
+
+The lifecycle states are:
+
+- `active`: visible in normal inventory work.
+- `archived`: hidden from normal inventory work but kept for history and possible restore.
+
+New assets are created as `active`.
+
+Archive:
+
+- Uses `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive`.
+- Requires authentication and `inventory.edit_asset`.
+- Must reject archiving an asset that is already archived.
+- Must reject archiving an asset that has active children.
+- Must not permanently delete the asset.
+- Must preserve parent, custom field values, custom asset type, title, description, tenant, and inventory.
+- Must emit `asset.archived` audit history.
+- Must record domain observability through the injected observer.
+
+Restore:
+
+- Uses `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore`.
+- Requires authentication and `inventory.edit_asset`.
+- Must reject restoring an asset that is already active.
+- Must reject restore when the asset has a parent and that parent is not active.
+- Must preserve parent, custom field values, custom asset type, title, description, tenant, and inventory.
+- Must emit `asset.restored` audit history.
+- Must record domain observability through the injected observer.
+
+Asset listing:
+
+- Defaults to `active` assets only.
+- May request `lifecycleState=active` explicitly.
+- May request `lifecycleState=archived` to list archived assets.
+- May request `lifecycleState=all` to list active and archived assets.
+- Must include lifecycle filter information in cursor validation so cursors cannot be reused across different lifecycle list scopes.
 
 ## Containment
 
@@ -120,6 +161,7 @@ The system must eventually support things that can be used up, such as medicine,
 - Tests must verify containment behavior for item, container, and location asset kinds.
 - Tests must verify asset nesting, moving an asset between parents, moving a container or location with descendants, moving to root, self-parent rejection, cycle rejection, and item-as-parent rejection.
 - Tests must verify location-like assets are persisted through the same asset repository path as other assets.
+- Tests must verify asset archive and restore happy paths, active-only default listing, archived listing, active-child archive rejection, archived-parent restore rejection, audit history, and adversarial authorization failures.
 - Security-sensitive asset behavior must have adversarial end-to-end tests before public interaction points expose it.
 
 ## Open Questions

@@ -312,3 +312,251 @@ func TestAssetUpdateFlowAndMovement(t *testing.T) {
 		t.Fatalf("expected editor title update, got %s", editorUpdate.Body.String())
 	}
 }
+
+func TestAssetLifecycleArchiveRestoreFlowAndListing(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{
+			"garage", "audit-garage",
+			"wrench", "audit-wrench",
+			"audit-wrench-archive",
+			"audit-garage-archive",
+			"audit-garage-restore",
+			"audit-wrench-restore",
+		},
+	}))
+
+	garageResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "location",
+		"title": "Garage",
+	})
+	if garageResponse.Code != http.StatusCreated {
+		t.Fatalf("expected garage create status %d, got %d with body %s", http.StatusCreated, garageResponse.Code, garageResponse.Body.String())
+	}
+	garage := decodeAsset(t, garageResponse)
+	wrenchResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":          "item",
+		"title":         "Wrench",
+		"parentAssetId": garage.Data.ID,
+	})
+	if wrenchResponse.Code != http.StatusCreated {
+		t.Fatalf("expected wrench create status %d, got %d with body %s", http.StatusCreated, wrenchResponse.Code, wrenchResponse.Body.String())
+	}
+	wrench := decodeAsset(t, wrenchResponse)
+
+	archiveWithChild := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+garage.Data.ID+"/archive", "Bearer dev:owner", nil)
+	if archiveWithChild.Code != http.StatusBadRequest {
+		t.Fatalf("expected archive with child status %d, got %d with body %s", http.StatusBadRequest, archiveWithChild.Code, archiveWithChild.Body.String())
+	}
+	assertSafeError(t, archiveWithChild, "invalid_request", "Invalid request.")
+
+	archiveChild := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID+"/archive", "Bearer dev:owner", nil)
+	if archiveChild.Code != http.StatusOK {
+		t.Fatalf("expected child archive status %d, got %d with body %s", http.StatusOK, archiveChild.Code, archiveChild.Body.String())
+	}
+	archivedChild := decodeAsset(t, archiveChild)
+	if archivedChild.Data.LifecycleState != "archived" || archivedChild.Data.ParentAssetID != garage.Data.ID {
+		t.Fatalf("expected archived child with same parent, got %+v", archivedChild.Data)
+	}
+
+	defaultList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=50", "Bearer dev:owner", nil)
+	if defaultList.Code != http.StatusOK {
+		t.Fatalf("expected default list status %d, got %d with body %s", http.StatusOK, defaultList.Code, defaultList.Body.String())
+	}
+	defaultListBody := decodeAssetList(t, defaultList)
+	if assetListContainsID(defaultListBody.Data, wrench.Data.ID) || !assetListContainsID(defaultListBody.Data, garage.Data.ID) {
+		t.Fatalf("expected default list to include active garage and exclude archived wrench, got %+v", defaultListBody.Data)
+	}
+
+	archivedList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?lifecycleState=archived&limit=50", "Bearer dev:owner", nil)
+	if archivedList.Code != http.StatusOK {
+		t.Fatalf("expected archived list status %d, got %d with body %s", http.StatusOK, archivedList.Code, archivedList.Body.String())
+	}
+	if !assetListContainsID(decodeAssetList(t, archivedList).Data, wrench.Data.ID) {
+		t.Fatalf("expected archived list to include wrench, got %s", archivedList.Body.String())
+	}
+
+	archiveParent := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+garage.Data.ID+"/archive", "Bearer dev:owner", nil)
+	if archiveParent.Code != http.StatusOK {
+		t.Fatalf("expected parent archive status %d, got %d with body %s", http.StatusOK, archiveParent.Code, archiveParent.Body.String())
+	}
+
+	restoreChildWithArchivedParent := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID+"/restore", "Bearer dev:owner", nil)
+	if restoreChildWithArchivedParent.Code != http.StatusBadRequest {
+		t.Fatalf("expected child restore with archived parent status %d, got %d with body %s", http.StatusBadRequest, restoreChildWithArchivedParent.Code, restoreChildWithArchivedParent.Body.String())
+	}
+	assertSafeError(t, restoreChildWithArchivedParent, "invalid_request", "Invalid request.")
+
+	restoreParent := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+garage.Data.ID+"/restore", "Bearer dev:owner", nil)
+	if restoreParent.Code != http.StatusOK {
+		t.Fatalf("expected parent restore status %d, got %d with body %s", http.StatusOK, restoreParent.Code, restoreParent.Body.String())
+	}
+	if decodeAsset(t, restoreParent).Data.LifecycleState != "active" {
+		t.Fatalf("expected restored parent active, got %s", restoreParent.Body.String())
+	}
+	restoreChild := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID+"/restore", "Bearer dev:owner", nil)
+	if restoreChild.Code != http.StatusOK {
+		t.Fatalf("expected child restore status %d, got %d with body %s", http.StatusOK, restoreChild.Code, restoreChild.Body.String())
+	}
+	if decodeAsset(t, restoreChild).Data.LifecycleState != "active" {
+		t.Fatalf("expected restored child active, got %s", restoreChild.Body.String())
+	}
+
+	auditResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=50", "Bearer dev:owner", nil)
+	if auditResponse.Code != http.StatusOK {
+		t.Fatalf("expected audit status %d, got %d with body %s", http.StatusOK, auditResponse.Code, auditResponse.Body.String())
+	}
+	auditRecords := decodeAuditRecordList(t, auditResponse).Data
+	if !auditRecordsContainAction(auditRecords, "asset.archived") || !auditRecordsContainAction(auditRecords, "asset.restored") {
+		t.Fatalf("expected archive and restore audit actions, got %+v", auditRecords)
+	}
+}
+
+func TestAssetLifecycleAuthorizationBoundaries(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	const otherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+			{id: otherInventoryID, tenantID: otherTenantID, name: "Cabin Tools", owner: "other-owner"},
+		},
+		ids: []string{
+			"wrench", "audit-wrench",
+			"viewer-grant-event", "audit-viewer-grant", "viewer-grant-claim",
+		},
+	}))
+
+	wrenchResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Wrench",
+	})
+	if wrenchResponse.Code != http.StatusCreated {
+		t.Fatalf("expected wrench create status %d, got %d with body %s", http.StatusCreated, wrenchResponse.Code, wrenchResponse.Body.String())
+	}
+	wrench := decodeAsset(t, wrenchResponse)
+
+	viewerGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]string{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if viewerGrant.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+	viewerArchive := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID+"/archive", "Bearer dev:viewer-user", nil)
+	if viewerArchive.Code != http.StatusForbidden {
+		t.Fatalf("expected viewer archive status %d, got %d with body %s", http.StatusForbidden, viewerArchive.Code, viewerArchive.Body.String())
+	}
+	assertSafeError(t, viewerArchive, "forbidden", "Forbidden.")
+
+	intruderRestore := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID+"/restore", "Bearer dev:intruder", nil)
+	if intruderRestore.Code != http.StatusForbidden {
+		t.Fatalf("expected intruder restore status %d, got %d with body %s", http.StatusForbidden, intruderRestore.Code, intruderRestore.Body.String())
+	}
+	assertSafeError(t, intruderRestore, "forbidden", "Forbidden.")
+
+	crossTenantArchive := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/inventories/"+otherInventoryID+"/assets/"+wrench.Data.ID+"/archive", "Bearer dev:other-owner", nil)
+	if crossTenantArchive.Code != http.StatusNotFound {
+		t.Fatalf("expected cross-tenant archive status %d, got %d with body %s", http.StatusNotFound, crossTenantArchive.Code, crossTenantArchive.Body.String())
+	}
+	assertSafeError(t, crossTenantArchive, "resource_not_found", "Resource not found.")
+
+	missingAuth := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID+"/archive", "", nil)
+	if missingAuth.Code != http.StatusUnauthorized {
+		t.Fatalf("expected missing auth status %d, got %d with body %s", http.StatusUnauthorized, missingAuth.Code, missingAuth.Body.String())
+	}
+	assertSafeError(t, missingAuth, "authentication_required", "Authentication required.")
+}
+
+func TestAssetLifecycleStateAndCursorContracts(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{
+			"drill", "audit-drill",
+			"hammer", "audit-hammer",
+			"wrench", "audit-wrench",
+			"audit-wrench-archive",
+		},
+	}))
+
+	for _, item := range []struct {
+		id    string
+		title string
+	}{
+		{id: "drill", title: "Drill"},
+		{id: "hammer", title: "Hammer"},
+		{id: "wrench", title: "Wrench"},
+	} {
+		response := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+			"kind":  "item",
+			"title": item.title,
+		})
+		if response.Code != http.StatusCreated {
+			t.Fatalf("expected %s create status %d, got %d with body %s", item.id, http.StatusCreated, response.Code, response.Body.String())
+		}
+	}
+
+	restoreActive := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/wrench/restore", "Bearer dev:owner", nil)
+	if restoreActive.Code != http.StatusBadRequest {
+		t.Fatalf("expected active restore status %d, got %d with body %s", http.StatusBadRequest, restoreActive.Code, restoreActive.Body.String())
+	}
+	assertSafeError(t, restoreActive, "invalid_request", "Invalid request.")
+
+	archiveWrench := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/wrench/archive", "Bearer dev:owner", nil)
+	if archiveWrench.Code != http.StatusOK {
+		t.Fatalf("expected archive status %d, got %d with body %s", http.StatusOK, archiveWrench.Code, archiveWrench.Body.String())
+	}
+	archiveAgain := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/wrench/archive", "Bearer dev:owner", nil)
+	if archiveAgain.Code != http.StatusBadRequest {
+		t.Fatalf("expected archived archive status %d, got %d with body %s", http.StatusBadRequest, archiveAgain.Code, archiveAgain.Body.String())
+	}
+	assertSafeError(t, archiveAgain, "invalid_request", "Invalid request.")
+
+	allList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?lifecycleState=all&limit=50", "Bearer dev:owner", nil)
+	if allList.Code != http.StatusOK {
+		t.Fatalf("expected all lifecycle list status %d, got %d with body %s", http.StatusOK, allList.Code, allList.Body.String())
+	}
+	allListBody := decodeAssetList(t, allList)
+	if !assetListContainsID(allListBody.Data, "drill") || !assetListContainsID(allListBody.Data, "hammer") || !assetListContainsID(allListBody.Data, "wrench") {
+		t.Fatalf("expected all lifecycle list to include active and archived assets, got %+v", allListBody.Data)
+	}
+
+	activePage := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?lifecycleState=active&limit=1", "Bearer dev:owner", nil)
+	if activePage.Code != http.StatusOK {
+		t.Fatalf("expected active page status %d, got %d with body %s", http.StatusOK, activePage.Code, activePage.Body.String())
+	}
+	activePageBody := decodeAssetList(t, activePage)
+	if activePageBody.Meta.Pagination == nil || activePageBody.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected active page to include next cursor, got %+v", activePageBody.Meta)
+	}
+	wrongScopeCursor := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?lifecycleState=archived&cursor="+*activePageBody.Meta.Pagination.NextCursor, "Bearer dev:owner", nil)
+	if wrongScopeCursor.Code != http.StatusBadRequest {
+		t.Fatalf("expected wrong-scope cursor status %d, got %d with body %s", http.StatusBadRequest, wrongScopeCursor.Code, wrongScopeCursor.Body.String())
+	}
+	assertSafeError(t, wrongScopeCursor, "invalid_request", "Invalid request.")
+
+	badLifecycleFilter := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?lifecycleState=deleted", "Bearer dev:owner", nil)
+	if badLifecycleFilter.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected bad lifecycle filter status %d, got %d with body %s", http.StatusUnprocessableEntity, badLifecycleFilter.Code, badLifecycleFilter.Body.String())
+	}
+	assertErrorCode(t, badLifecycleFilter, "invalid_request")
+}

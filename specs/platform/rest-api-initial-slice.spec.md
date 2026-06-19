@@ -29,6 +29,8 @@ The first protected REST slice includes:
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `POST /tenants/{tenantId}/custom-field-definitions`
@@ -63,6 +65,8 @@ The first protected REST slice includes:
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.create_asset`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.view`.
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` requires `inventory.edit_asset`.
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive` requires `inventory.edit_asset`.
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore` requires `inventory.edit_asset`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
@@ -92,12 +96,15 @@ The first protected REST slice includes:
 - Asset listing returns assets scoped to one inventory.
 - Asset listing must support cursor pagination with `limit` and `cursor` query parameters.
 - Asset listing must include pagination metadata in the response envelope.
+- Asset listing defaults to active assets and may request `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all`.
 - Asset update must support replacing title, description, parent asset reference, and custom field values.
-- Asset update must not support kind changes, lifecycle changes, tenant changes, or inventory changes in the first update slice.
+- Asset update must not support kind changes, lifecycle changes, tenant changes, or inventory changes.
 - Asset movement is represented by `parentAssetId` updates.
 - Asset update must allow moving an asset to the inventory root by sending `parentAssetId: null`.
 - Asset update must prevent self-parenting, containment cycles, item parents, archived parents, cross-tenant parents, and cross-inventory parents.
 - Asset update must validate custom field values against effective custom field definitions.
+- Asset archive must change lifecycle state from `active` to `archived`, reject assets with active children, emit audit history, and return the archived asset.
+- Asset restore must change lifecycle state from `archived` to `active`, reject assets whose parent is archived, emit audit history, and return the restored asset.
 - Custom asset type definitions and custom-field applicability to custom asset types are part of the current REST surface. Their detailed implementation contract is specified separately in `specs/assets/custom-asset-types.spec.md`.
 
 ## Responses

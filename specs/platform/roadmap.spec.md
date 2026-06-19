@@ -60,19 +60,20 @@ The goal is to prove a production-shaped path through:
 - Durable audit history now records the first state-changing tenant, inventory, sharing, custom asset type, custom field definition, and asset actions behind a repository port, with authenticated and authorized paginated REST reads.
 - Custom asset types now exist for tenant and inventory scopes, can be assigned to assets, can be renamed with metadata updates, and custom fields can target all assets or specific custom asset types.
 - Custom field definitions can now be renamed without changing their keys, types, enum options, applicability, or targets.
+- Asset lifecycle now supports archive and restore operations with audit history, active-only default listing, and authorization checks.
 
 ## Known Gaps
 
-- User invitation flows, access revocation, custom asset type delete/archive, search, changing custom field type or targets, custom field deletion APIs, and media attachments are not implemented.
+- User invitation flows, access revocation, custom asset type delete/archive, search, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, and media attachments are not implemented.
 - Undo is not yet implemented for audit history.
 - Custom field definitions cannot yet change schema shape, be deleted, reordered, searched, imported, exported, or managed through conversational flows.
 
 ## Next Work
 
-1. Specify and implement the next asset lifecycle slice.
-   - Start with archive/remove behavior before permanent deletes.
-   - Preserve audit history and authorization boundaries.
-   - Define whether archive is undoable before exposing undo.
+1. Specify and implement media attachments.
+   - Start with image/file metadata and local development storage.
+   - Keep blob storage behind ports and adapters.
+   - Preserve tenant and inventory authorization boundaries.
 
 ## Later Work
 
@@ -81,7 +82,6 @@ The goal is to prove a production-shaped path through:
 - Web app scaffold with SvelteKit.
 - Mobile app scaffold with React Native and Expo.
 - Audit history and undo.
-- Media attachments.
 - Conversational inventory ports and action plan execution.
 - Search with authorization-aware filtering.
 - Import and export.

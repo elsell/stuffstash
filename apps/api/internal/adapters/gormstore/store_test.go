@@ -918,6 +918,65 @@ func TestStoreUpdatesCustomAssetTypeMetadata(t *testing.T) {
 	}
 }
 
+func TestStoreUpdatesAssetLifecycleAndFiltersListings(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	parent := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	if err := createAsset(t, ctx, store, parent); err != nil {
+		t.Fatalf("create parent: %v", err)
+	}
+	child := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindItem, parent.ID.String())
+	if err := createAsset(t, ctx, store, child); err != nil {
+		t.Fatalf("create child: %v", err)
+	}
+
+	parentArchived := parent
+	parentArchived.LifecycleState = asset.LifecycleStateArchived
+	if err := store.UpdateAssetLifecycle(ctx, parentArchived, auditRecord(t, auditIDWithSuffix(parent.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived)); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected active child archive rejection, got %v", err)
+	}
+
+	child.LifecycleState = asset.LifecycleStateArchived
+	if err := store.UpdateAssetLifecycle(ctx, child, auditRecord(t, auditIDWithSuffix(child.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived)); err != nil {
+		t.Fatalf("archive child: %v", err)
+	}
+	auditRecords, err := store.ListInventoryAuditRecords(ctx, tenantID, inventoryID, ports.AuditRecordPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list lifecycle audit records: %v", err)
+	}
+	if !auditRecordsIncludeAction(auditRecords, audit.ActionAssetArchived) {
+		t.Fatalf("expected lifecycle audit records to include archive action, got %+v", auditRecords)
+	}
+	active, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{Limit: 10, LifecycleFilter: ports.AssetLifecycleFilterActive})
+	if err != nil {
+		t.Fatalf("list active assets: %v", err)
+	}
+	if len(active) != 1 || active[0].ID != parent.ID {
+		t.Fatalf("expected active parent only, got %+v", active)
+	}
+	archived, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{Limit: 10, LifecycleFilter: ports.AssetLifecycleFilterArchived})
+	if err != nil {
+		t.Fatalf("list archived assets: %v", err)
+	}
+	if len(archived) != 1 || archived[0].ID != child.ID {
+		t.Fatalf("expected archived child only, got %+v", archived)
+	}
+
+	parentArchived.LifecycleState = asset.LifecycleStateArchived
+	if err := store.UpdateAssetLifecycle(ctx, parentArchived, auditRecord(t, auditIDWithSuffix(parent.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived)); err != nil {
+		t.Fatalf("archive parent: %v", err)
+	}
+	child.LifecycleState = asset.LifecycleStateActive
+	if err := store.UpdateAssetLifecycle(ctx, child, auditRecord(t, auditIDWithSuffix(child.ID.String(), "R"), tenantID, inventoryID, audit.ActionAssetRestored)); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected archived parent restore rejection, got %v", err)
+	}
+}
+
 func TestStoreRejectsAssetContainmentCycles(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)
@@ -1333,6 +1392,15 @@ func saveInventoryAccessGrantAndEnqueue(t *testing.T, ctx context.Context, store
 func auditIDWithSuffix(id string, suffix string) string {
 	sequence := atomic.AddUint64(&testAuditRecordSequence, 1)
 	return id + "-" + suffix + "-" + strconv.FormatUint(sequence, 10)
+}
+
+func auditRecordsIncludeAction(records []audit.Record, action audit.Action) bool {
+	for _, record := range records {
+		if record.Action == action {
+			return true
+		}
+	}
+	return false
 }
 
 func auditRecord(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action) audit.Record {

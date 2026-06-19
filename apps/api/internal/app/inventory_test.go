@@ -1753,6 +1753,38 @@ func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset, a
 	return nil
 }
 
+func (f *fakeAssetRepository) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditRecord audit.Record) error {
+	if f.items == nil {
+		f.items = map[asset.ID]asset.Asset{}
+	}
+	existing, ok := f.items[item.ID]
+	if !ok || existing.TenantID != item.TenantID || existing.InventoryID != item.InventoryID {
+		return ports.ErrForbidden
+	}
+	if existing.Kind != item.Kind || existing.Title != item.Title || existing.Description != item.Description || existing.ParentAssetID != item.ParentAssetID || existing.CustomAssetTypeID != item.CustomAssetTypeID || !existing.CustomFields.Equal(item.CustomFields) {
+		return ports.ErrForbidden
+	}
+	if existing.LifecycleState == asset.LifecycleStateActive && item.LifecycleState == asset.LifecycleStateArchived {
+		for _, child := range f.items {
+			if child.TenantID == item.TenantID && child.InventoryID == item.InventoryID && child.ParentAssetID == item.ID && child.LifecycleState == asset.LifecycleStateActive {
+				return ports.ErrForbidden
+			}
+		}
+	} else if existing.LifecycleState == asset.LifecycleStateArchived && item.LifecycleState == asset.LifecycleStateActive {
+		if item.ParentAssetID.String() != "" {
+			parent, ok := f.items[item.ParentAssetID]
+			if !ok || parent.TenantID != item.TenantID || parent.InventoryID != item.InventoryID || parent.LifecycleState != asset.LifecycleStateActive {
+				return ports.ErrForbidden
+			}
+		}
+	} else {
+		return ports.ErrForbidden
+	}
+	f.items[item.ID] = item
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
 func (f *fakeAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
 	item, ok := f.items[assetID]
 	if !ok || item.TenantID != asset.TenantID(tenantID.String()) || item.InventoryID != asset.InventoryID(inventoryID.String()) {
@@ -1761,10 +1793,19 @@ func (f *fakeAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID, i
 	return item, true, nil
 }
 
+func (f *fakeAssetRepository) AssetHasActiveChildren(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (bool, error) {
+	for _, item := range f.items {
+		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && item.ParentAssetID == assetID && item.LifecycleState == asset.LifecycleStateActive {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (f *fakeAssetRepository) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetListPageRequest) ([]asset.Asset, error) {
 	items := []asset.Asset{}
 	for _, item := range f.items {
-		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && item.ID.String() > page.AfterAssetID.String() {
+		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && item.ID.String() > page.AfterAssetID.String() && fakeAssetLifecycleMatches(item.LifecycleState, page.LifecycleFilter) {
 			items = append(items, item)
 		}
 	}
@@ -1775,6 +1816,19 @@ func (f *fakeAssetRepository) ListAssetsByInventory(_ context.Context, tenantID 
 		items = items[:page.Limit]
 	}
 	return items, nil
+}
+
+func fakeAssetLifecycleMatches(state asset.LifecycleState, filter ports.AssetLifecycleFilter) bool {
+	switch filter {
+	case "", ports.AssetLifecycleFilterActive:
+		return state == asset.LifecycleStateActive
+	case ports.AssetLifecycleFilterArchived:
+		return state == asset.LifecycleStateArchived
+	case ports.AssetLifecycleFilterAll:
+		return true
+	default:
+		return false
+	}
 }
 
 type fakeObserver struct {

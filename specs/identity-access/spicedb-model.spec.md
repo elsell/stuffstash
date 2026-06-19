@@ -68,7 +68,7 @@ The first Go port permission name for asset update and same-inventory movement i
 The first audit read slice uses existing `inventory.view` for inventory-scoped audit records and existing `tenant.configure` for tenant-wide audit records.
 Exact permission names for future per-asset permissions must be defined before implementation.
 
-Archive and unarchive permissions are future permissions and must not be added to the first asset slice until archive behavior is specified and exposed.
+Archive and restore use `edit_asset` in the first lifecycle slice. A future spec may split lifecycle permissions if users need finer access control.
 
 ## Conversational Actions
 

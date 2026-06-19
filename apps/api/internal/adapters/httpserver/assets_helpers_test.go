@@ -43,3 +43,12 @@ func decodeAssetList(t *testing.T, response *httptest.ResponseRecorder) assetLis
 	decodeBody(t, response, &body)
 	return body
 }
+
+func assetListContainsID(items []assetResponse, id string) bool {
+	for _, item := range items {
+		if item.ID == id {
+			return true
+		}
+	}
+	return false
+}

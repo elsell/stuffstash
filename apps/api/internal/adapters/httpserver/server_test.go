@@ -92,6 +92,8 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets", "post")
 	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets", "get")
 	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", "patch")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive", "patch")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore", "patch")
 	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "post")
 	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "get")
 	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions", "post")

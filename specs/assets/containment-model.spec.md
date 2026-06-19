@@ -12,7 +12,7 @@ The model should support that with one containment graph instead of separate ass
 
 This spec defines the initial containment direction for assets, containers, place-like locations, and movement inside one inventory.
 
-This spec does not define search indexes, cross-inventory movement, archive behavior, or every future move rule.
+This spec does not define search indexes, cross-inventory movement, bulk archive behavior, permanent deletion, or every future move rule.
 
 ## Decision
 
@@ -51,8 +51,8 @@ This spec does not define search indexes, cross-inventory movement, archive beha
 - The first asset lifecycle states are `active` and `archived`.
 - Archived assets must not be valid containment targets.
 - Active contained assets must not silently disappear when a container is archived.
-- The first asset slice must not expose archive or unarchive operations.
-- Archive behavior for containers must be specified before container archiving is implemented.
+- Archive and restore behavior is specified in `specs/assets/asset-model.spec.md`.
+- The first lifecycle slice rejects archiving assets with active children.
 
 ## Conversational Use
 

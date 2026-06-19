@@ -50,6 +50,8 @@ const (
 	ActionAssetCreated                 Action = "asset.created"
 	ActionAssetUpdated                 Action = "asset.updated"
 	ActionAssetMoved                   Action = "asset.moved"
+	ActionAssetArchived                Action = "asset.archived"
+	ActionAssetRestored                Action = "asset.restored"
 )
 
 func NewAction(value string) (Action, bool) {
@@ -64,7 +66,9 @@ func NewAction(value string) (Action, bool) {
 		ActionCustomFieldDefinitionUpdated,
 		ActionAssetCreated,
 		ActionAssetUpdated,
-		ActionAssetMoved:
+		ActionAssetMoved,
+		ActionAssetArchived,
+		ActionAssetRestored:
 		return action, true
 	default:
 		return "", false

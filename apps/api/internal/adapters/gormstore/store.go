@@ -863,6 +863,69 @@ func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords [
 	})
 }
 
+func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing assetModel
+		err := tx.Where(&assetModel{
+			ID:          item.ID.String(),
+			TenantID:    item.TenantID.String(),
+			InventoryID: item.InventoryID.String(),
+		}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Kind != item.Kind.String() || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
+			return ports.ErrForbidden
+		}
+		var existingCustomFields map[string]any
+		if err := json.Unmarshal([]byte(existing.CustomFields), &existingCustomFields); err != nil {
+			return err
+		}
+		existingFields, ok := asset.NewCustomFields(existingCustomFields)
+		if !ok || !existingFields.Equal(item.CustomFields) {
+			return ports.ErrForbidden
+		}
+		if existing.LifecycleState == asset.LifecycleStateActive.String() && item.LifecycleState == asset.LifecycleStateArchived {
+			hasActiveChildren, err := assetHasActiveChildren(tx, item.TenantID, item.InventoryID, item.ID)
+			if err != nil {
+				return err
+			}
+			if hasActiveChildren {
+				return ports.ErrForbidden
+			}
+		} else if existing.LifecycleState == asset.LifecycleStateArchived.String() && item.LifecycleState == asset.LifecycleStateActive {
+			if item.ParentAssetID.String() != "" {
+				var parent assetModel
+				err := tx.Where(&assetModel{
+					ID:          item.ParentAssetID.String(),
+					TenantID:    item.TenantID.String(),
+					InventoryID: item.InventoryID.String(),
+				}).First(&parent).Error
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return ports.ErrForbidden
+				}
+				if err != nil {
+					return err
+				}
+				if parent.LifecycleState != asset.LifecycleStateActive.String() {
+					return ports.ErrForbidden
+				}
+			}
+		} else {
+			return ports.ErrForbidden
+		}
+		if err := tx.Model(&existing).Updates(map[string]any{
+			"lifecycle_state": item.LifecycleState.String(),
+		}).Error; err != nil {
+			return err
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
 func (s Store) AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
 	var model assetModel
 	err := s.db.WithContext(ctx).Where(&assetModel{
@@ -883,12 +946,25 @@ func (s Store) AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID in
 	return item, true, nil
 }
 
+func (s Store) AssetHasActiveChildren(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (bool, error) {
+	return assetHasActiveChildren(s.db.WithContext(ctx), asset.TenantID(tenantID.String()), asset.InventoryID(inventoryID.String()), assetID)
+}
+
 func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetListPageRequest) ([]asset.Asset, error) {
 	var models []assetModel
 	query := s.db.WithContext(ctx).Where(&assetModel{
 		TenantID:    tenantID.String(),
 		InventoryID: inventoryID.String(),
 	})
+	switch page.LifecycleFilter {
+	case "", ports.AssetLifecycleFilterActive:
+		query = query.Where(&assetModel{LifecycleState: asset.LifecycleStateActive.String()})
+	case ports.AssetLifecycleFilterArchived:
+		query = query.Where(&assetModel{LifecycleState: asset.LifecycleStateArchived.String()})
+	case ports.AssetLifecycleFilterAll:
+	default:
+		return nil, ports.ErrForbidden
+	}
 	if page.AfterAssetID.String() != "" {
 		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterAssetID.String()})
 	}
@@ -908,6 +984,17 @@ func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, in
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+func assetHasActiveChildren(db *gorm.DB, tenantID asset.TenantID, inventoryID asset.InventoryID, assetID asset.ID) (bool, error) {
+	var count int64
+	err := db.Model(&assetModel{}).Where(&assetModel{
+		TenantID:       tenantID.String(),
+		InventoryID:    inventoryID.String(),
+		ParentAssetID:  stringPtr(assetID.String()),
+		LifecycleState: asset.LifecycleStateActive.String(),
+	}).Count(&count).Error
+	return count > 0, err
 }
 
 func (s Store) SaveAuditRecord(ctx context.Context, record audit.Record) error {
@@ -1450,6 +1537,10 @@ func stringPtrFromAssetID(id asset.ID) *string {
 		return nil
 	}
 	value := id.String()
+	return &value
+}
+
+func stringPtr(value string) *string {
 	return &value
 }
 

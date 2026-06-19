@@ -20,11 +20,12 @@ func RegisterList(api huma.API, application app.App) {
 		}
 
 		result, err := application.ListAssets(ctx, app.ListAssetsInput{
-			Principal:   principal,
-			TenantID:    tenant.ID(input.TenantID),
-			InventoryID: inventory.InventoryID(input.InventoryID),
-			Limit:       input.Limit,
-			Cursor:      input.Cursor,
+			Principal:      principal,
+			TenantID:       tenant.ID(input.TenantID),
+			InventoryID:    inventory.InventoryID(input.InventoryID),
+			Limit:          input.Limit,
+			Cursor:         input.Cursor,
+			LifecycleState: input.LifecycleState,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)
@@ -42,5 +43,7 @@ func RegisterList(api huma.API, application app.App) {
 func Register(api huma.API, application app.App) {
 	RegisterCreate(api, application)
 	RegisterUpdate(api, application)
+	RegisterArchive(api, application)
+	RegisterRestore(api, application)
 	RegisterList(api, application)
 }

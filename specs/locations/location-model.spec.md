@@ -47,11 +47,12 @@ This spec does not define separate persistence tables, REST endpoints, or the fu
 - Tests must verify inventory isolation.
 - Tests must verify tenant isolation.
 - Tests must verify authorization for creating, moving, and renaming locations.
-- Delete, archive, and unarchive behavior for locations is out of scope for the first asset slice.
+- Location archive and restore use the asset lifecycle rules in `specs/assets/asset-model.spec.md`.
+- Permanent deletion behavior for locations is out of scope.
 - Conversational location creation and movement must have adversarial end-to-end tests before public interaction points expose it.
 
 ## Open Questions
 
 - Can a location be shared independently from its inventory?
-- What deletion or archive behavior should locations have?
+- What permanent deletion or bulk subtree archive behavior should locations have?
 - How should duplicate location names be handled within different branches of the hierarchy?

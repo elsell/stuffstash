@@ -191,6 +191,23 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
 
 Send `parentAssetId` as `null` to move an asset back to the inventory root.
 
+Archive and restore an asset. Use the asset ID returned by the create call.
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/archive \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one'
+
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets?lifecycleState=archived&limit=50' \
+  -H 'Authorization: Bearer dev:user-one'
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/restore \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
+Normal asset lists show active assets. Use `lifecycleState=archived` for archived assets or `lifecycleState=all` for both.
+
 Inventory custom field lists include tenant fields and inventory fields:
 
 ```sh

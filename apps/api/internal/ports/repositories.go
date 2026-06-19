@@ -81,13 +81,24 @@ type CustomAssetTypePageRequest struct {
 type AssetRepository interface {
 	CreateAsset(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
 	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record) error
+	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
 	AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error)
+	AssetHasActiveChildren(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (bool, error)
 	ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AssetListPageRequest) ([]asset.Asset, error)
 }
 
+type AssetLifecycleFilter string
+
+const (
+	AssetLifecycleFilterActive   AssetLifecycleFilter = "active"
+	AssetLifecycleFilterArchived AssetLifecycleFilter = "archived"
+	AssetLifecycleFilterAll      AssetLifecycleFilter = "all"
+)
+
 type AssetListPageRequest struct {
-	AfterAssetID asset.ID
-	Limit        int
+	AfterAssetID    asset.ID
+	Limit           int
+	LifecycleFilter AssetLifecycleFilter
 }
 
 type AuditRepository interface {

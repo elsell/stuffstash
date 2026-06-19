@@ -1,6 +1,10 @@
 package asset
 
-import "strings"
+import (
+	"bytes"
+	"encoding/json"
+	"strings"
+)
 
 type ID string
 
@@ -140,11 +144,25 @@ func (fields CustomFields) IsEmpty() bool {
 	return len(fields.values) == 0
 }
 
+func (fields CustomFields) Equal(other CustomFields) bool {
+	left, leftOK := canonicalCustomFields(fields.values)
+	right, rightOK := canonicalCustomFields(other.values)
+	return leftOK && rightOK && bytes.Equal(left, right)
+}
+
 func NewEmptyOnlyCustomFields(values map[string]any) (CustomFields, bool) {
 	if len(values) != 0 {
 		return CustomFields{}, false
 	}
 	return NewEmptyCustomFields(), true
+}
+
+func canonicalCustomFields(values map[string]any) ([]byte, bool) {
+	encoded, err := json.Marshal(values)
+	if err != nil {
+		return nil, false
+	}
+	return encoded, true
 }
 
 type Asset struct {
