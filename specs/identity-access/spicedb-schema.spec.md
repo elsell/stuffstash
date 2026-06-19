@@ -20,8 +20,10 @@ definition user {}
 definition tenant {
   relation owner: user
   relation admin: user
+  relation viewer: user
 
-  permission view = owner + admin
+  permission view = owner + admin + viewer
+  permission view_inventory = owner + admin
   permission configure = owner + admin
   permission create_inventory = owner + admin
 }
@@ -32,7 +34,7 @@ definition inventory {
   relation editor: user
   relation viewer: user
 
-  permission view = owner + editor + viewer + tenant->view
+  permission view = owner + editor + viewer + tenant->view_inventory
   permission configure = owner + tenant->configure
   permission share = owner + tenant->configure
   permission edit = owner + editor + tenant->configure
@@ -51,6 +53,10 @@ The first API slice must check:
 Creating a tenant grants the creating user the tenant `owner` relationship.
 
 Creating an inventory grants the creating user the inventory `owner` relationship and links the inventory to its tenant.
+
+Granting inventory ownership must also grant tenant `viewer` on the containing tenant. This lets an inventory owner resolve the tenant and list only visible inventories without granting tenant `create_inventory`, tenant `configure`, or inherited visibility to sibling inventories.
+
+Tenant `view_inventory` must stay separate from tenant `view`. Tenant owners and admins inherit inventory view across the tenant through `tenant->view_inventory`; tenant viewers do not.
 
 ## Adapter Strategy
 
@@ -81,3 +87,6 @@ Any unknown mode must fail startup.
 - Tests must prove unauthenticated requests never reach privileged behavior.
 - Tests must prove a user without a relationship cannot create or list inventory resources.
 - The SpiceDB adapter must have fake-backed tests for permission mapping, tenant owner grants, inventory owner grants, denied checks, and backend failures.
+- The SpiceDB adapter must have an opt-in real-SpiceDB verification path that runs against the pinned local SpiceDB image.
+- Real-SpiceDB verification must prove tenant-owner inheritance, inventory-owner visibility, unrelated-user denial, and cross-tenant denial.
+- Real-SpiceDB verification must not run during default `make test`; it must be an explicit command because it requires Docker.

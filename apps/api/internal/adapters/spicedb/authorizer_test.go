@@ -33,6 +33,9 @@ func TestAuthorizerChecksTenantPermission(t *testing.T) {
 	if request.Subject.Object.ObjectType != "user" || request.Subject.Object.ObjectId != "user-one" {
 		t.Fatalf("unexpected subject: %+v", request.Subject.Object)
 	}
+	if request.Consistency.GetFullyConsistent() != true {
+		t.Fatalf("expected fully consistent permission check")
+	}
 }
 
 func TestAuthorizerDeniesMissingPermission(t *testing.T) {
@@ -93,20 +96,29 @@ func TestAuthorizerGrantsInventoryOwnerAndTenantLink(t *testing.T) {
 	}
 
 	updates := gateway.relationshipWrites[0].Updates
-	if len(updates) != 2 {
-		t.Fatalf("expected 2 relationship updates, got %d", len(updates))
+	if len(updates) != 3 {
+		t.Fatalf("expected 3 relationship updates, got %d", len(updates))
 	}
-	if updates[0].Relationship.Relation != "tenant" {
-		t.Fatalf("expected tenant relationship first, got %q", updates[0].Relationship.Relation)
+	if updates[0].Relationship.Relation != "viewer" {
+		t.Fatalf("expected viewer relationship first, got %q", updates[0].Relationship.Relation)
 	}
-	if updates[0].Relationship.Subject.Object.ObjectType != "tenant" || updates[0].Relationship.Subject.Object.ObjectId != "tenant-one" {
-		t.Fatalf("unexpected tenant subject: %+v", updates[0].Relationship.Subject.Object)
+	if updates[0].Relationship.Resource.ObjectType != "tenant" || updates[0].Relationship.Resource.ObjectId != "tenant-one" {
+		t.Fatalf("unexpected tenant viewer resource: %+v", updates[0].Relationship.Resource)
 	}
-	if updates[1].Relationship.Relation != "owner" {
-		t.Fatalf("expected owner relationship second, got %q", updates[1].Relationship.Relation)
+	if updates[0].Relationship.Subject.Object.ObjectType != "user" || updates[0].Relationship.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected tenant viewer subject: %+v", updates[0].Relationship.Subject.Object)
 	}
-	if updates[1].Relationship.Subject.Object.ObjectType != "user" || updates[1].Relationship.Subject.Object.ObjectId != "user-one" {
-		t.Fatalf("unexpected owner subject: %+v", updates[1].Relationship.Subject.Object)
+	if updates[1].Relationship.Relation != "tenant" {
+		t.Fatalf("expected tenant relationship second, got %q", updates[1].Relationship.Relation)
+	}
+	if updates[1].Relationship.Subject.Object.ObjectType != "tenant" || updates[1].Relationship.Subject.Object.ObjectId != "tenant-one" {
+		t.Fatalf("unexpected tenant subject: %+v", updates[1].Relationship.Subject.Object)
+	}
+	if updates[2].Relationship.Relation != "owner" {
+		t.Fatalf("expected owner relationship third, got %q", updates[2].Relationship.Relation)
+	}
+	if updates[2].Relationship.Subject.Object.ObjectType != "user" || updates[2].Relationship.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected owner subject: %+v", updates[2].Relationship.Subject.Object)
 	}
 }
 

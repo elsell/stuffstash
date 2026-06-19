@@ -24,6 +24,7 @@ const (
 
 	relationOwner  = "owner"
 	relationTenant = "tenant"
+	relationViewer = "viewer"
 )
 
 type Gateway interface {
@@ -110,6 +111,11 @@ func (a Authorizer) GrantTenantOwner(ctx context.Context, principal identity.Pri
 func (a Authorizer) GrantInventoryOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
 	return a.touchRelationships(ctx,
 		relationship(
+			objectRef(objectTypeTenant, tenantID.String()),
+			relationViewer,
+			userSubject(principal),
+		),
+		relationship(
 			objectRef(objectTypeInventory, inventoryID.String()),
 			relationTenant,
 			objectSubject(objectTypeTenant, tenantID.String()),
@@ -132,6 +138,9 @@ func (a Authorizer) check(ctx context.Context, resource *v1.ObjectReference, per
 		Resource:   resource,
 		Permission: permission,
 		Subject:    subject,
+		Consistency: &v1.Consistency{
+			Requirement: &v1.Consistency_FullyConsistent{FullyConsistent: true},
+		},
 	})
 	if err != nil {
 		return err

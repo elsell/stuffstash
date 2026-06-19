@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -147,8 +148,13 @@ func (a App) ListInventories(ctx context.Context, input ListInventoriesInput) ([
 
 	visible := make([]inventory.Inventory, 0, len(items))
 	for _, item := range items {
-		if err := a.authorizer.CheckInventory(ctx, input.Principal, ports.InventoryPermissionView, item.ID); err == nil {
+		err := a.authorizer.CheckInventory(ctx, input.Principal, ports.InventoryPermissionView, item.ID)
+		if err == nil {
 			visible = append(visible, item)
+			continue
+		}
+		if !errors.Is(err, ports.ErrForbidden) {
+			return nil, err
 		}
 	}
 

@@ -1,4 +1,4 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-spicedb-adapter compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 SPICEDB_CONTAINER ?= stuff-stash-spicedb
@@ -39,6 +39,9 @@ spicedb-down:
 
 verify-local-api:
 	scripts/verify-local-api.sh
+
+verify-spicedb-adapter:
+	scripts/verify-spicedb-adapter.sh
 
 compose-up:
 	docker compose up --build

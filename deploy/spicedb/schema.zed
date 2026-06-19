@@ -3,8 +3,10 @@ definition user {}
 definition tenant {
   relation owner: user
   relation admin: user
+  relation viewer: user
 
-  permission view = owner + admin
+  permission view = owner + admin + viewer
+  permission view_inventory = owner + admin
   permission configure = owner + admin
   permission create_inventory = owner + admin
 }
@@ -15,7 +17,7 @@ definition inventory {
   relation editor: user
   relation viewer: user
 
-  permission view = owner + editor + viewer + tenant->view
+  permission view = owner + editor + viewer + tenant->view_inventory
   permission configure = owner + tenant->configure
   permission share = owner + tenant->configure
   permission edit = owner + editor + tenant->configure

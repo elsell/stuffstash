@@ -149,6 +149,16 @@ Stop the SpiceDB container when you are done:
 make spicedb-down
 ```
 
+## Verify The SpiceDB Adapter
+
+Run the real SpiceDB adapter checks with Docker:
+
+```sh
+make verify-spicedb-adapter
+```
+
+This starts the pinned local SpiceDB image, runs the adapter integration test, and removes the test container. If Go is not installed locally, the script runs the test inside the pinned Go builder image.
+
 ## Run The Docs
 
 The docs site lives in `docs/`.
