@@ -3,7 +3,7 @@ set -euo pipefail
 
 base_url="${STUFF_STASH_VERIFY_BASE_URL:-http://localhost:8080}"
 principal="${STUFF_STASH_VERIFY_PRINCIPAL:-user-one}"
-auth_header="Authorization: Bearer dev:${principal}"
+auth_header="${STUFF_STASH_VERIFY_AUTH_HEADER:-Authorization: Bearer dev:${principal}}"
 
 fail() {
   echo "verification failed: $*" >&2
@@ -178,8 +178,18 @@ printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${shelf_id
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "asset list did not include ${asset_id}"
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q '"pagination"' || fail "asset list did not include pagination metadata"
 
-viewer_principal="${STUFF_STASH_VERIFY_VIEWER_PRINCIPAL:-user-two}"
-viewer_auth_header="Authorization: Bearer dev:${viewer_principal}"
+viewer_auth_header="${STUFF_STASH_VERIFY_VIEWER_AUTH_HEADER:-}"
+viewer_principal="${STUFF_STASH_VERIFY_VIEWER_PRINCIPAL:-}"
+if [ -z "$viewer_auth_header" ]; then
+  viewer_principal="${viewer_principal:-user-two}"
+  viewer_auth_header="Authorization: Bearer dev:${viewer_principal}"
+elif [ -z "$viewer_principal" ]; then
+  viewer_me="$(request GET /me "$viewer_auth_header")"
+  viewer_me_status="$(printf '%s\n' "$viewer_me" | head -n 1)"
+  [ "$viewer_me_status" = "200" ] || fail "expected viewer /me status 200, got ${viewer_me_status}"
+  viewer_principal="$(printf '%s\n' "$viewer_me" | tail -n +2 | extract_first_id)"
+  [ -n "$viewer_principal" ] || fail "viewer /me response did not include an id"
+fi
 
 echo "granting viewer access to ${viewer_principal}"
 grant_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants" "$auth_header" "{\"principalId\":\"${viewer_principal}\",\"relationship\":\"viewer\"}")"

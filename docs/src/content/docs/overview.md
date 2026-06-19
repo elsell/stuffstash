@@ -18,7 +18,7 @@ The system should understand the request, check permissions, ask for confirmatio
 The repository has a small Go API scaffold with:
 
 - A health endpoint.
-- Local development auth and production-shaped OIDC auth.
+- Local development auth and production-shaped OIDC auth, with Dex for local OIDC verification.
 - In-memory authorization for local use and SpiceDB authorization wiring.
 - Tenant creation, inventory creation/listing, and first asset create/list/update/move flow.
 - Custom asset types, such as medicine or tools, with type-specific custom fields.
@@ -28,7 +28,7 @@ The repository has a small Go API scaffold with:
 - Direct inventory sharing by known principal ID, with viewer and editor grants.
 - Huma-generated OpenAPI at `/openapi.json`.
 - Domain-oriented observability through ports.
-- Docker and Compose files for local work, including Postgres and SpiceDB.
+- Docker and Compose files for local work, including Postgres, SpiceDB, and an optional Dex OIDC override.
 - Specs that define the product and architecture direction.
 
 Most product behavior is still being specified before implementation.
@@ -40,5 +40,5 @@ Most product behavior is still being specified before implementation.
 - **Mobile:** React Native with Expo, planned for iOS and Android.
 - **Docs:** Astro and Starlight.
 - **Authorization:** SpiceDB, with an in-memory adapter for fast local runs.
-- **Authentication:** OIDC and SSO, starting with Google; local dev auth also exists.
+- **Authentication:** OIDC and SSO, with Dex for local verification and Google planned as the first external provider.
 - **Storage:** PostgreSQL for metadata, Garage-compatible blob storage for media, local filesystem blob storage for development, and SQLite where useful for local-only fakes.

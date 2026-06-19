@@ -62,6 +62,7 @@ The goal is to prove a production-shaped path through:
 - Custom field definitions can now be renamed without changing their keys, types, enum options, applicability, or targets.
 - Asset lifecycle now supports archive and restore operations with audit history, active-only default listing, and authorization checks.
 - Asset media attachments now support JSON base64 upload, cursor-paginated listing, raw content download, local filesystem blob storage, Garage S3-compatible blob storage, audit history, generated OpenAPI, and adversarial API tests.
+- Local Dex OIDC verification now runs the full API user flow with two Dex-issued ID tokens and SpiceDB authorization.
 
 ## Known Gaps
 

@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom asset types and fields, create, list, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom asset types and fields, create, list, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary with local tokens or Dex-issued OIDC tokens.
 
 ## Requirements
 
@@ -303,7 +303,7 @@ make verify-local-api
 make compose-up
 ```
 
-Compose starts Postgres, runs migrations with the same API image, then starts the API and SpiceDB. By default, the API uses Postgres persistence and in-memory authorization.
+Compose starts Postgres, SpiceDB, migrations with the same API image, and the API. By default, the API uses Postgres persistence, local development auth, and in-memory authorization.
 
 To run the API against SpiceDB authorization:
 
@@ -313,6 +313,14 @@ make compose-up-spicedb
 
 This starts the same local stack, keeps Postgres persistence, switches authorization to SpiceDB, and bootstraps the checked-in schema.
 Local SpiceDB uses `serve-testing`, so it does not need a preshared key.
+
+To keep the stack running with Dex OIDC and SpiceDB enabled:
+
+```sh
+make compose-up-oidc
+```
+
+This adds local Dex to Compose and switches the API to OIDC mode. For the full automated check, prefer `make verify-dex-oidc-api`.
 
 In another terminal, run:
 
@@ -326,6 +334,14 @@ If port `8080` is already in use, choose another host port:
 STUFF_STASH_HTTP_PORT=18080 make compose-up-spicedb
 STUFF_STASH_VERIFY_BASE_URL=http://localhost:18080 make verify-local-api
 ```
+
+To run the same user flow with real OIDC tokens from local Dex:
+
+```sh
+make verify-dex-oidc-api
+```
+
+That command starts an isolated Compose project, asks Dex for two local-only ID tokens, rejects several bad OIDC tokens, runs the full API verification flow against OIDC auth and SpiceDB authz, then removes the containers and volumes.
 
 Stop it with:
 
@@ -406,6 +422,10 @@ You can switch to the production-shaped adapters with:
 - `STUFF_STASH_REPOSITORY_MODE=postgres`
 
 OIDC needs an issuer and client ID. A secured SpiceDB deployment needs an endpoint and preshared key. Postgres needs `STUFF_STASH_DATABASE_DSN`. Local Compose already starts Postgres and unauthenticated SpiceDB `serve-testing`, but the API does not use SpiceDB unless you choose the `spicedb` mode.
+
+With the OIDC Compose override, the API sees Dex at `http://dex:5556/dex`. From your host, Dex is published at `http://localhost:${DEX_HTTP_PORT:-5556}/dex`. The Dex verifier uses an isolated Compose project and defaults the host port to `15556`.
+
+Dex static users and client secrets are only for local verification. They are not a production auth plan.
 
 ## Pre-Commit Checks
 

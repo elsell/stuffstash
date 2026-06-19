@@ -1,4 +1,4 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docs-install docs-dev docs-build docs-preview
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -42,6 +42,9 @@ spicedb-down:
 verify-local-api:
 	scripts/verify-local-api.sh
 
+verify-dex-oidc-api:
+	scripts/verify-dex-oidc-api.sh
+
 verify-spicedb-adapter:
 	scripts/verify-spicedb-adapter.sh
 
@@ -70,6 +73,16 @@ compose-up-spicedb:
 	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
 	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
 	docker compose up --build
+
+compose-up-oidc:
+	STUFF_STASH_AUTH_MODE=oidc \
+	STUFF_STASH_AUTHZ_MODE=spicedb \
+	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
+	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
+	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
+	STUFF_STASH_OIDC_ISSUER=http://dex:5556/dex \
+	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
+	docker compose -f compose.yaml -f compose.oidc.yaml up --build
 
 compose-down:
 	docker compose down

@@ -1,0 +1,45 @@
+# Local verification fixture only.
+# Do not use this static client, static users, or password grant in production.
+
+issuer: http://dex:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+oauth2:
+  passwordConnector: local
+  skipApprovalScreen: true
+
+staticClients:
+  - id: stuff-stash-local
+    name: Stuff Stash Local
+    secret: stuff-stash-local-secret
+    redirectURIs:
+      - http://localhost:8080/callback
+      - http://localhost:5173/callback
+  - id: stuff-stash-wrong-audience
+    name: Stuff Stash Wrong Audience Fixture
+    secret: stuff-stash-wrong-audience-secret
+    redirectURIs:
+      - http://localhost:8080/callback
+
+enablePasswordDB: true
+
+staticPasswords:
+  - email: owner@example.com
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: owner
+    name: Owner User
+    emailVerified: true
+    preferredUsername: owner
+    userID: "11111111-1111-1111-1111-111111111111"
+  - email: viewer@example.com
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: viewer
+    name: Viewer User
+    emailVerified: true
+    preferredUsername: viewer
+    userID: "22222222-2222-2222-2222-222222222222"

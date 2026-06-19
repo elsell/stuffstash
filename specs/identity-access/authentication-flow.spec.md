@@ -6,14 +6,15 @@ Stuff Stash must authenticate users from the beginning while keeping provider de
 
 ## Scope
 
-This spec covers authentication boundaries, local development authentication, and the first production-shaped OIDC token verification adapter.
+This spec covers authentication boundaries, local development authentication, the first local OIDC verification fixture, and the first production-shaped OIDC token verification adapter.
 
-It does not define the final browser redirect UX, mobile sign-in UX, refresh-token storage, logout, or account-linking flows.
+It does not define the final browser redirect UX, mobile sign-in UX, refresh-token storage, logout, account-linking flows, or final external identity provider rollout.
 
 ## Decisions
 
 - Authentication must be behind ports and adapters.
-- Google OIDC is still the first real external provider.
+- Dex is the local OIDC verification fixture.
+- Google OIDC remains the first planned external provider profile.
 - The tracer bullet must use a deterministic local development authentication adapter.
 - Local development authentication exists only to prove the boundary and support adversarial tests.
 - Production-shaped authentication must use an OIDC adapter selected through environment configuration.
@@ -21,6 +22,8 @@ It does not define the final browser redirect UX, mobile sign-in UX, refresh-tok
 - Domain and application services must receive an authenticated principal, not provider-specific claims.
 - Authentication failures must return bland error responses.
 - Local development authentication must be explicitly selected and must not be the implicit production fallback.
+- Local Dex must prove real OIDC discovery, JWKS signature verification, issuer checks, and audience checks before Google OIDC is wired.
+- Dex static users and password grants are local verification fixtures only. They must not be used as the production authentication strategy.
 
 ## Authentication Modes
 
@@ -49,6 +52,16 @@ Any unknown mode must fail startup.
 - OIDC configuration must come from environment variables.
 - Missing issuer, missing client ID, provider discovery failure, verification failure, or malformed claims must fail closed.
 
+## Local Dex Fixture
+
+Local Compose provides Dex for realistic OIDC verification without requiring a Google client during early development.
+
+- Dex must run behind the same `oidc` authentication mode used for any other OIDC issuer.
+- Dex must use deterministic local users so API user-flow tests can grant and verify access across two principals.
+- Dex credentials are local-only fixtures and must be documented as unsafe for production.
+- The API must receive only bearer ID tokens from the verifier script. It must not call Dex-specific APIs from application code.
+- The verifier may use the OAuth password grant against Dex because it is a test harness. User-facing clients must use a browser or native-app OIDC flow when those clients are built.
+
 ## Principal
 
 The authenticated principal must include:
@@ -62,5 +75,9 @@ Future provider metadata may be carried at the adapter edge, but domain behavior
 - Protected endpoints must reject missing tokens.
 - Protected endpoints must reject malformed tokens.
 - Protected endpoints must accept valid local development tokens in local/test mode.
+- Protected endpoints must accept valid Dex ID tokens in OIDC mode.
+- The OIDC verifier must fail closed for missing, malformed, wrong-issuer, wrong-audience, expired, or unsigned OIDC tokens.
+- The local Dex verification path must reject missing, malformed, unsigned, and wrong-audience OIDC tokens at the HTTP boundary.
+- The local Dex verification path must run the same happy-path API user flow and authorization adversary checks as the local-dev verifier.
 - The OIDC adapter must have fake-backed tests for valid tokens, verifier failures, empty issuer or subject claims, provider-specific subject characters, malformed authorization headers, and unsupported schemes.
 - Authentication tests must use fakes or local adapters, not mocks.
