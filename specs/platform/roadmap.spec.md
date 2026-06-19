@@ -57,19 +57,20 @@ The goal is to prove a production-shaped path through:
 - Direct inventory sharing now supports owner-created viewer/editor grants, cursor-paginated grant listing, outbox-backed SpiceDB relationship writes, and adversarial API tests proving viewers and editors cannot share.
 - Custom field definitions now support tenant and inventory scopes, effective inventory listing, cursor pagination, asset value validation, and adversarial API tests for authorization and scope handling.
 - Asset update and same-inventory movement now support title, description, parent, and custom field updates while preserving containment invariants, editor/viewer authorization boundaries, and descendant relationships.
+- Durable audit history now records the first state-changing tenant, inventory, sharing, custom field definition, and asset actions behind a repository port, with authenticated and authorized paginated REST reads.
 
 ## Known Gaps
 
 - User invitation flows, access revocation, delete/archive, search, custom field update/delete APIs, and media attachments are not implemented.
-- Durable audit history is not yet implemented for state-changing actions.
+- Undo is not yet implemented for audit history.
 - Custom field definitions cannot yet be updated, deleted, reordered, searched, imported, exported, or managed through conversational flows.
 
 ## Next Work
 
-1. Specify and implement durable audit history for state-changing actions.
-   - Update the audit/history specs first.
-   - Start with tenant, inventory, asset create/update, sharing, and custom field definition events.
-   - Keep audit writes behind ports/adapters and preserve tenant/inventory authorization boundaries.
+1. Specify and implement the next asset lifecycle slice.
+   - Start with archive/remove behavior before permanent deletes.
+   - Preserve audit history and authorization boundaries.
+   - Define whether archive is undoable before exposing undo.
 
 ## Later Work
 

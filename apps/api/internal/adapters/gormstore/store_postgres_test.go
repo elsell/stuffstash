@@ -13,6 +13,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -126,7 +127,7 @@ func TestPostgresStorePersistsAssetCustomFieldsAsJSONB(t *testing.T) {
 	}
 	item.CustomFields = customFields
 
-	if err := store.CreateAsset(ctx, item); err != nil {
+	if err := store.CreateAsset(ctx, item, postgresAuditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB7", tenantID, inventoryID, audit.ActionAssetCreated)); err != nil {
 		t.Fatalf("create asset: %v", err)
 	}
 
@@ -294,4 +295,26 @@ func runEmbeddedPostgresMigrations(db *gorm.DB) error {
 		return err
 	}
 	return nil
+}
+
+func postgresAuditRecord(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action) audit.Record {
+	t.Helper()
+
+	record, ok := audit.NewRecord(
+		audit.ID(id),
+		audit.TenantID(tenantID.String()),
+		audit.InventoryID(inventoryID.String()),
+		audit.PrincipalID("user-one"),
+		action,
+		audit.SourceAPI,
+		audit.TargetAsset,
+		"postgres-test",
+		time.Now(),
+		"",
+		map[string]string{"test": "postgres"},
+	)
+	if !ok {
+		t.Fatalf("expected valid audit record")
+	}
+	return record
 }

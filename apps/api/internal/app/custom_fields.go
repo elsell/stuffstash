@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -14,6 +15,7 @@ import (
 
 type CreateCustomFieldDefinitionInput struct {
 	Principal   identity.Principal
+	Source      audit.Source
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
 	Key         string
@@ -97,7 +99,24 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 		return customfield.Definition{}, ErrInvalidInput
 	}
 
-	if err := a.customFields.SaveCustomFieldDefinition(ctx, definition); err != nil {
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		Action:      audit.ActionCustomFieldDefinitionCreated,
+		TargetType:  audit.TargetCustomFieldDefinition,
+		TargetID:    definition.ID.String(),
+		Metadata: map[string]string{
+			"field_key": definition.Key.String(),
+			"scope":     definition.Scope.String(),
+		},
+	})
+	if err != nil {
+		return customfield.Definition{}, err
+	}
+
+	if err := a.customFields.SaveCustomFieldDefinition(ctx, definition, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return customfield.Definition{}, ErrInvalidInput
 		}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -13,6 +14,7 @@ import (
 
 type GrantInventoryAccessInput struct {
 	Principal    identity.Principal
+	Source       audit.Source
 	TenantID     tenant.ID
 	InventoryID  inventory.InventoryID
 	TargetUserID string
@@ -59,7 +61,24 @@ func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAcces
 		Relationship: relationship,
 	}
 
-	if err := a.inventories.SaveInventoryAccessGrantAndEnqueue(ctx, a.ids.NewID(), grant); err != nil {
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		Action:      audit.ActionInventoryAccessGranted,
+		TargetType:  audit.TargetInventoryAccessGrant,
+		TargetID:    grant.CursorKey(),
+		Metadata: map[string]string{
+			"target_principal_id": targetPrincipalID.String(),
+			"relationship":        string(relationship),
+		},
+	})
+	if err != nil {
+		return ports.InventoryAccessGrant{}, err
+	}
+
+	if err := a.inventories.SaveInventoryAccessGrantAndEnqueue(ctx, a.ids.NewID(), grant, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return ports.InventoryAccessGrant{}, ErrInvalidInput
 		}

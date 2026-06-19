@@ -10,7 +10,9 @@ Users should be able to understand what changed, who changed it, and undo suppor
 
 This spec covers initial audit history and undo requirements.
 
-This spec does not define the final event store, persistence schema, retention policy, UI timeline, or every undoable command.
+This spec does not define the final event store, retention policy, UI timeline, or every undoable command.
+
+The first implementation slice defines durable, read-only audit records. Undo is specified as a future behavior and must not be partially implemented until the first undoable commands are specified.
 
 ## Requirements
 
@@ -22,6 +24,58 @@ This spec does not define the final event store, persistence schema, retention p
 - Audit behavior must be behind ports and adapters.
 - Audit writing must be part of the application operation boundary.
 - Audit records must preserve tenant and inventory isolation.
+- Audit records must be append-only through application ports. The first slice must not expose update or delete behavior for audit records.
+- Audit records must be cursor paginated.
+- Inventory audit reads must require `inventory.view` for the target inventory.
+- Tenant audit reads without an inventory scope must require `tenant.configure`.
+- Audit read responses must use the standard API success and error envelopes.
+
+## First Slice Record Shape
+
+The first durable record must include:
+
+- `id`: generated application ID.
+- `tenantId`: tenant security boundary.
+- `inventoryId`: inventory scope when the action is inventory-scoped. Tenant-scoped records leave this empty.
+- `principalId`: authenticated principal or system principal responsible for the action.
+- `action`: typed action name.
+- `source`: typed action source.
+- `targetType`: typed target resource type.
+- `targetId`: target resource ID.
+- `occurredAt`: server timestamp.
+- `requestId`: optional request identifier when a transport provides one.
+- `metadata`: safe JSON object for small, non-secret context.
+
+Metadata is for human context and filtering hints. It must not be treated as an authorization source.
+
+## First Slice Action Types
+
+The first implementation must write audit records for:
+
+- `tenant.created`.
+- `inventory.created`.
+- `inventory_access.granted`.
+- `custom_field_definition.created`.
+- `asset.created`.
+- `asset.updated`.
+- `asset.moved`.
+
+Asset update and asset movement may produce separate audit records from one request when both non-location fields and `parentAssetId` change.
+
+Authorization denied audit records remain required, but are not part of the first durable audit slice. They must be specified before implementation because denial auditing needs careful noise and sensitivity rules.
+
+## First Slice Sources
+
+The first implementation must support these typed sources:
+
+- `api`.
+- `conversation`.
+- `mcp`.
+- `import`.
+- `background_job`.
+- `system`.
+
+The current REST API must write `api`.
 
 ## Undo
 
@@ -36,7 +90,7 @@ This spec does not define the final event store, persistence schema, retention p
 
 ## Initial Audited Actions
 
-The first audited action set should include:
+The full audited action set should eventually include:
 
 - Asset created.
 - Asset updated.
@@ -58,7 +112,8 @@ The first audited action set should include:
 
 - Tests must verify that every state-changing application operation writes audit history.
 - Tests must verify tenant and inventory isolation for audit reads.
-- Tests must verify undo for supported commands.
+- Tests must verify pagination for audit reads.
+- Tests must verify undo for supported commands once undo is implemented.
 - Tests must verify that unauthorized users cannot read audit records or undo actions they cannot perform.
 - Tests must use fakes, not mocks.
 
@@ -67,4 +122,4 @@ The first audited action set should include:
 - Which first-release actions are undoable?
 - How long should audit records be retained?
 - Should audit history be exportable with tenant-level exports?
-- Should audit reads be available to inventory viewers or only higher relationships?
+- Should authorization denied records be visible in normal user audit history, security-only history, or both?

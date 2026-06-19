@@ -130,6 +130,15 @@ printf '%s\n' "$asset_update_response" | tail -n +2 | grep -q "\"parentAssetId\"
 printf '%s\n' "$asset_update_response" | tail -n +2 | grep -q '"title":"Fertilizer Bag"' || fail "item asset update response did not include updated title"
 printf '%s\n' "$asset_update_response" | tail -n +2 | grep -q '"condition":"used"' || fail "item asset update response did not include updated condition"
 
+echo "listing inventory audit records"
+audit_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/audit-records?limit=50" "$auth_header")"
+audit_status="$(printf '%s\n' "$audit_response" | head -n 1)"
+[ "$audit_status" = "200" ] || fail "expected inventory audit list status 200, got ${audit_status}"
+printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"asset.created"' || fail "audit list did not include asset.created"
+printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"asset.updated"' || fail "audit list did not include asset.updated"
+printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"action":"asset.moved"' || fail "audit list did not include asset.moved"
+printf '%s\n' "$audit_response" | tail -n +2 | grep -q '"pagination"' || fail "audit list did not include pagination metadata"
+
 echo "listing assets"
 asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$auth_header")"
 asset_list_status="$(printf '%s\n' "$asset_list_response" | head -n 1)"
@@ -164,6 +173,15 @@ viewer_asset_list_status="$(printf '%s\n' "$viewer_asset_list_response" | head -
 viewer_field_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/custom-field-definitions?limit=50" "$viewer_auth_header")"
 viewer_field_list_status="$(printf '%s\n' "$viewer_field_list_response" | head -n 1)"
 [ "$viewer_field_list_status" = "200" ] || fail "expected viewer custom field list status 200, got ${viewer_field_list_status}"
+
+viewer_audit_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/audit-records?limit=50" "$viewer_auth_header")"
+viewer_audit_status="$(printf '%s\n' "$viewer_audit_response" | head -n 1)"
+[ "$viewer_audit_status" = "200" ] || fail "expected viewer inventory audit list status 200, got ${viewer_audit_status}"
+printf '%s\n' "$viewer_audit_response" | tail -n +2 | grep -q '"action":"inventory_access.granted"' || fail "viewer audit list did not include inventory access grant"
+
+viewer_tenant_audit_response="$(request GET "/tenants/${tenant_id}/audit-records?limit=50" "$viewer_auth_header")"
+viewer_tenant_audit_status="$(printf '%s\n' "$viewer_tenant_audit_response" | head -n 1)"
+[ "$viewer_tenant_audit_status" = "403" ] || fail "expected viewer tenant audit list status 403, got ${viewer_tenant_audit_status}"
 
 viewer_asset_create_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$viewer_auth_header" '{"kind":"item","title":"Unauthorized"}')"
 viewer_asset_create_status="$(printf '%s\n' "$viewer_asset_create_response" | head -n 1)"

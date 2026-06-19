@@ -89,6 +89,7 @@ func main() {
 		Inventories:                   repositories.inventories,
 		CustomFields:                  repositories.customFields,
 		Assets:                        repositories.assets,
+		Audit:                         repositories.audit,
 		Outbox:                        repositories.outbox,
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
@@ -158,6 +159,7 @@ type repositories struct {
 	inventories  ports.InventoryRepository
 	customFields ports.CustomFieldDefinitionRepository
 	assets       ports.AssetRepository
+	audit        ports.AuditRepository
 	outbox       ports.AuthorizationOutbox
 }
 
@@ -165,7 +167,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, inventories: store, customFields: store, assets: store, outbox: store}, func() error { return nil }, nil
+		return repositories{tenants: store, inventories: store, customFields: store, assets: store, audit: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -174,7 +176,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store, customFields: store, assets: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, inventories: store, customFields: store, assets: store, audit: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}

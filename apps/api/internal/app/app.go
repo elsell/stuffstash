@@ -16,6 +16,7 @@ type App struct {
 	inventories      ports.InventoryRepository
 	customFields     ports.CustomFieldDefinitionRepository
 	assets           ports.AssetRepository
+	audit            ports.AuditRepository
 	outbox           ports.AuthorizationOutbox
 	ids              ports.IDGenerator
 	outboxDrainLimit int
@@ -32,6 +33,7 @@ type Dependencies struct {
 	Inventories                   ports.InventoryRepository
 	CustomFields                  ports.CustomFieldDefinitionRepository
 	Assets                        ports.AssetRepository
+	Audit                         ports.AuditRepository
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
 	AuthorizationOutboxDrainLimit int
@@ -50,6 +52,7 @@ func New(deps Dependencies) App {
 		inventories:      deps.Inventories,
 		customFields:     deps.CustomFields,
 		assets:           deps.Assets,
+		audit:            deps.Audit,
 		outbox:           deps.Outbox,
 		ids:              deps.IDs,
 		outboxDrainLimit: deps.AuthorizationOutboxDrainLimit,

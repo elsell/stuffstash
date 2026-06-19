@@ -3,10 +3,13 @@ package gormstore
 import (
 	"context"
 	"errors"
+	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -16,6 +19,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+var testAuditRecordSequence uint64
 
 func TestStorePersistsTenantsAndInventories(t *testing.T) {
 	ctx := context.Background()
@@ -111,7 +116,7 @@ func TestStoreSavesTenantAndOutboxEventAtomically(t *testing.T) {
 	err := store.SaveTenantAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenant.Tenant{
 		ID:   tenantID,
 		Name: tenantName,
-	}, identity.Principal{ID: identity.PrincipalID("user-one")})
+	}, identity.Principal{ID: identity.PrincipalID("user-one")}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, "", audit.ActionTenantCreated))
 	if err != nil {
 		t.Fatalf("save tenant and enqueue owner grant: %v", err)
 	}
@@ -151,7 +156,7 @@ func TestStoreRollsBackTenantWhenOutboxInsertFails(t *testing.T) {
 	err := store.SaveTenantAndEnqueueOwnerGrant(ctx, eventID, tenant.Tenant{
 		ID:   newTenantID,
 		Name: tenantName,
-	}, identity.Principal{ID: identity.PrincipalID("user-two")})
+	}, identity.Principal{ID: identity.PrincipalID("user-two")}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", newTenantID, "", audit.ActionTenantCreated))
 	if err == nil {
 		t.Fatalf("expected duplicate outbox event to fail")
 	}
@@ -181,7 +186,7 @@ func TestStoreSavesInventoryAndOutboxEventAtomically(t *testing.T) {
 		Name:     inventoryName,
 	}
 
-	err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAX", item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")})
+	err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAX", item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, item.ID, audit.ActionInventoryCreated))
 	if err != nil {
 		t.Fatalf("save inventory and enqueue owner grant: %v", err)
 	}
@@ -214,7 +219,7 @@ func TestStoreRollsBackInventoryWhenOutboxInsertFails(t *testing.T) {
 		ID:       inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAY"),
 		TenantID: inventory.TenantID(tenantID.String()),
 		Name:     inventoryName,
-	}, tenantID, identity.Principal{ID: identity.PrincipalID("user-two")})
+	}, tenantID, identity.Principal{ID: identity.PrincipalID("user-two")}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAY"), audit.ActionInventoryCreated))
 	if err == nil {
 		t.Fatalf("expected duplicate outbox event to fail")
 	}
@@ -242,7 +247,7 @@ func TestStoreSavesInventoryAccessGrantAndOutboxEventAtomically(t *testing.T) {
 		PrincipalID:  identity.PrincipalID("viewer-user"),
 		Relationship: ports.InventoryAccessViewer,
 	}
-	if err := store.SaveInventoryAccessGrantAndEnqueue(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAX", grant); err != nil {
+	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", grant); err != nil {
 		t.Fatalf("save inventory access grant: %v", err)
 	}
 
@@ -280,10 +285,10 @@ func TestStoreInventoryAccessGrantIsIdempotentWithoutDuplicateOutboxEvent(t *tes
 		PrincipalID:  identity.PrincipalID("viewer-user"),
 		Relationship: ports.InventoryAccessViewer,
 	}
-	if err := store.SaveInventoryAccessGrantAndEnqueue(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAX", grant); err != nil {
+	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", grant); err != nil {
 		t.Fatalf("save initial grant: %v", err)
 	}
-	if err := store.SaveInventoryAccessGrantAndEnqueue(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAY", grant); err != nil {
+	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAY", grant); err != nil {
 		t.Fatalf("save duplicate grant: %v", err)
 	}
 
@@ -327,7 +332,7 @@ func TestStoreScopesInventoryAccessGrantsToInventory(t *testing.T) {
 			PrincipalID:  identity.PrincipalID("same-user"),
 			Relationship: ports.InventoryAccessViewer,
 		}
-		if err := store.SaveInventoryAccessGrantAndEnqueue(ctx, item.eventID, grant); err != nil {
+		if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, item.eventID, grant); err != nil {
 			t.Fatalf("save scoped grant: %v", err)
 		}
 	}
@@ -369,10 +374,10 @@ func TestStorePaginatesInventoryAccessGrants(t *testing.T) {
 		PrincipalID:  identity.PrincipalID("viewer-user"),
 		Relationship: ports.InventoryAccessViewer,
 	}
-	if err := store.SaveInventoryAccessGrantAndEnqueue(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAX", viewerGrant); err != nil {
+	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", viewerGrant); err != nil {
 		t.Fatalf("save viewer grant: %v", err)
 	}
-	if err := store.SaveInventoryAccessGrantAndEnqueue(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAY", editorGrant); err != nil {
+	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAY", editorGrant); err != nil {
 		t.Fatalf("save editor grant: %v", err)
 	}
 
@@ -406,7 +411,7 @@ func TestStoreRejectsInventoryAccessGrantOutsideInventoryTenant(t *testing.T) {
 	saveTenant(t, ctx, store, tenantTwoID, "Cabin")
 	saveInventory(t, ctx, store, inventoryID.String(), tenantTwoID, "Supplies")
 
-	err := store.SaveInventoryAccessGrantAndEnqueue(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAY", ports.InventoryAccessGrant{
+	err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAY", ports.InventoryAccessGrant{
 		TenantID:     tenantOneID,
 		InventoryID:  inventoryID,
 		PrincipalID:  identity.PrincipalID("viewer-user"),
@@ -437,10 +442,10 @@ func TestStorePersistsCustomFieldDefinitionsByScope(t *testing.T) {
 
 	tenantDefinition := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
 	inventoryDefinition := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventoryOneID, customfield.ScopeInventory, "condition", customfield.FieldTypeEnum, []string{"new", "used"})
-	if err := store.SaveCustomFieldDefinition(ctx, tenantDefinition); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, tenantDefinition); err != nil {
 		t.Fatalf("save tenant definition: %v", err)
 	}
-	if err := store.SaveCustomFieldDefinition(ctx, inventoryDefinition); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, inventoryDefinition); err != nil {
 		t.Fatalf("save inventory definition: %v", err)
 	}
 
@@ -479,10 +484,10 @@ func TestStorePaginatesCustomFieldDefinitions(t *testing.T) {
 
 	first := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
 	second := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, inventoryID, customfield.ScopeInventory, "condition", customfield.FieldTypeEnum, []string{"new", "used"})
-	if err := store.SaveCustomFieldDefinition(ctx, first); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, first); err != nil {
 		t.Fatalf("save first definition: %v", err)
 	}
-	if err := store.SaveCustomFieldDefinition(ctx, second); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, second); err != nil {
 		t.Fatalf("save second definition: %v", err)
 	}
 
@@ -515,28 +520,28 @@ func TestStoreRejectsDuplicateCustomFieldDefinitionKeys(t *testing.T) {
 
 	first := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
 	duplicate := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
-	if err := store.SaveCustomFieldDefinition(ctx, first); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, first); err != nil {
 		t.Fatalf("save first definition: %v", err)
 	}
-	if err := store.SaveCustomFieldDefinition(ctx, duplicate); err == nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, duplicate); err == nil {
 		t.Fatalf("expected duplicate tenant key rejection")
 	}
 
 	inventoryFirst := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventoryID, customfield.ScopeInventory, "condition", customfield.FieldTypeText, nil)
 	inventoryDuplicate := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, customfield.ScopeInventory, "condition", customfield.FieldTypeText, nil)
-	if err := store.SaveCustomFieldDefinition(ctx, inventoryFirst); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, inventoryFirst); err != nil {
 		t.Fatalf("save inventory definition: %v", err)
 	}
-	if err := store.SaveCustomFieldDefinition(ctx, inventoryDuplicate); err == nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, inventoryDuplicate); err == nil {
 		t.Fatalf("expected duplicate inventory key rejection")
 	}
 
 	inventoryOnly := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, customfield.ScopeInventory, "warranty", customfield.FieldTypeText, nil)
 	tenantConflict := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantID, "", customfield.ScopeTenant, "warranty", customfield.FieldTypeText, nil)
-	if err := store.SaveCustomFieldDefinition(ctx, inventoryOnly); err != nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, inventoryOnly); err != nil {
 		t.Fatalf("save inventory-only definition: %v", err)
 	}
-	if err := store.SaveCustomFieldDefinition(ctx, tenantConflict); err == nil {
+	if err := saveCustomFieldDefinition(t, ctx, store, tenantConflict); err == nil {
 		t.Fatalf("expected tenant key to conflict with existing inventory key")
 	}
 }
@@ -581,7 +586,7 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 	if err := store.SaveTenantAndEnqueueOwnerGrant(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenant.Tenant{
 		ID:   tenantID,
 		Name: tenantName,
-	}, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
+	}, identity.Principal{ID: identity.PrincipalID("user-one")}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, "", audit.ActionTenantCreated)); err != nil {
 		t.Fatalf("save tenant and enqueue owner grant: %v", err)
 	}
 
@@ -720,11 +725,11 @@ func TestStorePersistsAssetsAndLocationParents(t *testing.T) {
 	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
 
 	location := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
-	if err := store.CreateAsset(ctx, location); err != nil {
+	if err := createAsset(t, ctx, store, location); err != nil {
 		t.Fatalf("save location asset: %v", err)
 	}
 	item := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindItem, location.ID.String())
-	if err := store.CreateAsset(ctx, item); err != nil {
+	if err := createAsset(t, ctx, store, item); err != nil {
 		t.Fatalf("save child asset: %v", err)
 	}
 
@@ -751,20 +756,20 @@ func TestStoreRejectsInvalidAssetParents(t *testing.T) {
 	saveInventory(t, ctx, store, inventoryTwoID.String(), tenantID, "Supplies")
 
 	itemParent := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryOneID.String(), asset.KindItem, "")
-	if err := store.CreateAsset(ctx, itemParent); err != nil {
+	if err := createAsset(t, ctx, store, itemParent); err != nil {
 		t.Fatalf("save item parent: %v", err)
 	}
 	child := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID.String(), inventoryOneID.String(), asset.KindItem, itemParent.ID.String())
-	if err := store.CreateAsset(ctx, child); !errors.Is(err, ports.ErrForbidden) {
+	if err := createAsset(t, ctx, store, child); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected item parent rejection, got %v", err)
 	}
 
 	location := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID.String(), inventoryOneID.String(), asset.KindLocation, "")
-	if err := store.CreateAsset(ctx, location); err != nil {
+	if err := createAsset(t, ctx, store, location); err != nil {
 		t.Fatalf("save location parent: %v", err)
 	}
 	crossInventoryChild := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID.String(), inventoryTwoID.String(), asset.KindItem, location.ID.String())
-	if err := store.CreateAsset(ctx, crossInventoryChild); !errors.Is(err, ports.ErrForbidden) {
+	if err := createAsset(t, ctx, store, crossInventoryChild); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected cross-inventory parent rejection, got %v", err)
 	}
 }
@@ -780,7 +785,7 @@ func TestStoreRejectsRootAssetsOutsideInventoryTenant(t *testing.T) {
 	saveInventory(t, ctx, store, inventoryID.String(), tenantTwoID, "Supplies")
 
 	item := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantOneID.String(), inventoryID.String(), asset.KindLocation, "")
-	if err := store.CreateAsset(ctx, item); !errors.Is(err, ports.ErrForbidden) {
+	if err := createAsset(t, ctx, store, item); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected tenant/inventory mismatch rejection, got %v", err)
 	}
 }
@@ -794,16 +799,16 @@ func TestStoreRejectsAssetContainmentCycles(t *testing.T) {
 	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
 
 	parent := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
-	if err := store.CreateAsset(ctx, parent); err != nil {
+	if err := createAsset(t, ctx, store, parent); err != nil {
 		t.Fatalf("save parent: %v", err)
 	}
 	child := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindContainer, parent.ID.String())
-	if err := store.CreateAsset(ctx, child); err != nil {
+	if err := createAsset(t, ctx, store, child); err != nil {
 		t.Fatalf("save child: %v", err)
 	}
 
 	parent.ParentAssetID = child.ID
-	if err := store.CreateAsset(ctx, parent); err == nil {
+	if err := createAsset(t, ctx, store, parent); err == nil {
 		t.Fatalf("expected duplicate asset rejection")
 	}
 }
@@ -818,10 +823,10 @@ func TestStorePaginatesAssetsAndRejectsDuplicateCreate(t *testing.T) {
 
 	first := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
 	second := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
-	if err := store.CreateAsset(ctx, first); err != nil {
+	if err := createAsset(t, ctx, store, first); err != nil {
 		t.Fatalf("create first asset: %v", err)
 	}
-	if err := store.CreateAsset(ctx, second); err != nil {
+	if err := createAsset(t, ctx, store, second); err != nil {
 		t.Fatalf("create second asset: %v", err)
 	}
 
@@ -839,7 +844,7 @@ func TestStorePaginatesAssetsAndRejectsDuplicateCreate(t *testing.T) {
 	if len(nextPage) != 1 || nextPage[0].ID != second.ID {
 		t.Fatalf("expected next page with second asset, got %+v", nextPage)
 	}
-	if err := store.CreateAsset(ctx, first); err == nil {
+	if err := createAsset(t, ctx, store, first); err == nil {
 		t.Fatalf("expected duplicate asset create to fail")
 	}
 }
@@ -857,7 +862,7 @@ func TestStoreUpdatesAssetsAndMovesContainersWithChildren(t *testing.T) {
 	box := assetItem("box", tenantID.String(), inventoryID.String(), asset.KindContainer, "shelf")
 	wrench := assetItem("wrench", tenantID.String(), inventoryID.String(), asset.KindItem, "box")
 	for _, item := range []asset.Asset{garage, shelf, box, wrench} {
-		if err := store.CreateAsset(ctx, item); err != nil {
+		if err := createAsset(t, ctx, store, item); err != nil {
 			t.Fatalf("create asset %s: %v", item.ID, err)
 		}
 	}
@@ -873,7 +878,7 @@ func TestStoreUpdatesAssetsAndMovesContainersWithChildren(t *testing.T) {
 		t.Fatalf("expected valid custom fields")
 	}
 	box.CustomFields = customFields
-	if err := store.UpdateAsset(ctx, box); err != nil {
+	if err := updateAsset(t, ctx, store, box); err != nil {
 		t.Fatalf("update box: %v", err)
 	}
 
@@ -893,7 +898,7 @@ func TestStoreUpdatesAssetsAndMovesContainersWithChildren(t *testing.T) {
 	}
 
 	box.ParentAssetID = asset.ID("")
-	if err := store.UpdateAsset(ctx, box); err != nil {
+	if err := updateAsset(t, ctx, store, box); err != nil {
 		t.Fatalf("move box to root: %v", err)
 	}
 	rootBox, ok, err := store.AssetByID(ctx, tenantID, inventoryID, box.ID)
@@ -918,25 +923,25 @@ func TestStoreRejectsInvalidAssetUpdates(t *testing.T) {
 	box := assetItem("box", tenantID.String(), inventoryID.String(), asset.KindContainer, "shelf")
 	itemParent := assetItem("wrench", tenantID.String(), inventoryID.String(), asset.KindItem, "")
 	for _, item := range []asset.Asset{garage, shelf, box, itemParent} {
-		if err := store.CreateAsset(ctx, item); err != nil {
+		if err := createAsset(t, ctx, store, item); err != nil {
 			t.Fatalf("create asset %s: %v", item.ID, err)
 		}
 	}
 
 	garage.ParentAssetID = box.ID
-	if err := store.UpdateAsset(ctx, garage); !errors.Is(err, ports.ErrForbidden) {
+	if err := updateAsset(t, ctx, store, garage); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected cycle rejection, got %v", err)
 	}
 	box.ParentAssetID = box.ID
-	if err := store.UpdateAsset(ctx, box); !errors.Is(err, ports.ErrForbidden) {
+	if err := updateAsset(t, ctx, store, box); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected self-parent rejection, got %v", err)
 	}
 	box.ParentAssetID = itemParent.ID
-	if err := store.UpdateAsset(ctx, box); !errors.Is(err, ports.ErrForbidden) {
+	if err := updateAsset(t, ctx, store, box); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected item-parent rejection, got %v", err)
 	}
 	box.Kind = asset.KindItem
-	if err := store.UpdateAsset(ctx, box); !errors.Is(err, ports.ErrForbidden) {
+	if err := updateAsset(t, ctx, store, box); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected kind-change rejection, got %v", err)
 	}
 }
@@ -956,7 +961,7 @@ func TestStoreRoundTripsAssetCustomFields(t *testing.T) {
 	}
 	item.CustomFields = customFields
 
-	if err := store.CreateAsset(ctx, item); err != nil {
+	if err := createAsset(t, ctx, store, item); err != nil {
 		t.Fatalf("create asset: %v", err)
 	}
 	found, ok, err := store.AssetByID(ctx, tenantID, inventoryID, item.ID)
@@ -965,6 +970,59 @@ func TestStoreRoundTripsAssetCustomFields(t *testing.T) {
 	}
 	if !ok || found.CustomFields.Values()["serial"] != "abc" {
 		t.Fatalf("expected custom fields to round-trip, got found=%t %+v", ok, found.CustomFields.Values())
+	}
+}
+
+func TestStorePersistsAndScopesAuditRecords(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+
+	tenantOne := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	tenantTwo := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	inventoryOne := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	inventoryTwo := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAY")
+	inventoryThree := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAZ")
+	saveTenant(t, ctx, store, tenantOne, "Home")
+	saveTenant(t, ctx, store, tenantTwo, "Cabin")
+	saveInventory(t, ctx, store, inventoryOne.String(), tenantOne, "Tools")
+	saveInventory(t, ctx, store, inventoryTwo.String(), tenantOne, "Supplies")
+	saveInventory(t, ctx, store, inventoryThree.String(), tenantTwo, "Cabin Tools")
+
+	for _, record := range []audit.Record{
+		auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantOne, inventoryOne, audit.ActionAssetCreated),
+		auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantOne, inventoryOne, audit.ActionAssetUpdated),
+		auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantOne, inventoryTwo, audit.ActionAssetMoved),
+		auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB3", tenantTwo, inventoryThree, audit.ActionAssetCreated),
+	} {
+		if err := store.SaveAuditRecord(ctx, record); err != nil {
+			t.Fatalf("save audit record %s: %v", record.ID, err)
+		}
+	}
+
+	firstPage, err := store.ListInventoryAuditRecords(ctx, tenantOne, inventoryOne, ports.AuditRecordPageRequest{Limit: 1})
+	if err != nil {
+		t.Fatalf("list inventory audit records: %v", err)
+	}
+	if len(firstPage) != 1 || firstPage[0].ID != audit.ID("01ARZ3NDEKTSV4RRFFQ69G5FB0") || firstPage[0].Metadata["note"] != "safe" {
+		t.Fatalf("unexpected first audit page: %+v", firstPage)
+	}
+	secondPage, err := store.ListInventoryAuditRecords(ctx, tenantOne, inventoryOne, ports.AuditRecordPageRequest{
+		AfterRecordID: firstPage[0].ID,
+		Limit:         10,
+	})
+	if err != nil {
+		t.Fatalf("list second audit page: %v", err)
+	}
+	if len(secondPage) != 1 || secondPage[0].ID != audit.ID("01ARZ3NDEKTSV4RRFFQ69G5FB1") {
+		t.Fatalf("unexpected second audit page: %+v", secondPage)
+	}
+
+	tenantPage, err := store.ListTenantAuditRecords(ctx, tenantOne, ports.AuditRecordPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list tenant audit records: %v", err)
+	}
+	if len(tenantPage) != 3 {
+		t.Fatalf("expected tenant page to include only tenant one records, got %+v", tenantPage)
 	}
 }
 
@@ -1006,7 +1064,7 @@ func saveTenantWithOutbox(t *testing.T, ctx context.Context, store Store, eventI
 	if err := store.SaveTenantAndEnqueueOwnerGrant(ctx, eventID, tenant.Tenant{
 		ID:   id,
 		Name: tenantName,
-	}, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
+	}, identity.Principal{ID: identity.PrincipalID("user-one")}, auditRecord(t, eventID, id, "", audit.ActionTenantCreated)); err != nil {
 		t.Fatalf("save tenant with outbox: %v", err)
 	}
 }
@@ -1040,9 +1098,62 @@ func saveInventoryWithOutbox(t *testing.T, ctx context.Context, store Store, eve
 		TenantID: inventory.TenantID(tenantID.String()),
 		Name:     inventoryName,
 	}
-	if err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, eventID, item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")}); err != nil {
+	if err := store.SaveInventoryAndEnqueueOwnerGrant(ctx, eventID, item, tenantID, identity.Principal{ID: identity.PrincipalID("user-one")}, auditRecord(t, eventID, tenantID, item.ID, audit.ActionInventoryCreated)); err != nil {
 		t.Fatalf("save inventory with outbox: %v", err)
 	}
+}
+
+func createAsset(t *testing.T, ctx context.Context, store Store, item asset.Asset) error {
+	t.Helper()
+
+	return store.CreateAsset(ctx, item, auditRecord(t, auditIDWithSuffix(item.ID.String(), "C"), tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAssetCreated))
+}
+
+func updateAsset(t *testing.T, ctx context.Context, store Store, item asset.Asset) error {
+	t.Helper()
+
+	return store.UpdateAsset(ctx, item, []audit.Record{
+		auditRecord(t, auditIDWithSuffix(item.ID.String(), "U"), tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAssetUpdated),
+	})
+}
+
+func saveCustomFieldDefinition(t *testing.T, ctx context.Context, store Store, definition customfield.Definition) error {
+	t.Helper()
+
+	return store.SaveCustomFieldDefinition(ctx, definition, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenant.ID(definition.TenantID.String()), inventory.InventoryID(definition.InventoryID.String()), audit.ActionCustomFieldDefinitionCreated))
+}
+
+func saveInventoryAccessGrantAndEnqueue(t *testing.T, ctx context.Context, store Store, eventID string, grant ports.InventoryAccessGrant) error {
+	t.Helper()
+
+	return store.SaveInventoryAccessGrantAndEnqueue(ctx, eventID, grant, auditRecord(t, eventID, grant.TenantID, grant.InventoryID, audit.ActionInventoryAccessGranted))
+}
+
+func auditIDWithSuffix(id string, suffix string) string {
+	sequence := atomic.AddUint64(&testAuditRecordSequence, 1)
+	return id + "-" + suffix + "-" + strconv.FormatUint(sequence, 10)
+}
+
+func auditRecord(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action) audit.Record {
+	t.Helper()
+
+	record, ok := audit.NewRecord(
+		audit.ID(id),
+		audit.TenantID(tenantID.String()),
+		audit.InventoryID(inventoryID.String()),
+		audit.PrincipalID("user-one"),
+		action,
+		audit.SourceAPI,
+		audit.TargetAsset,
+		id+"-target",
+		time.Now(),
+		"",
+		map[string]string{"note": "safe"},
+	)
+	if !ok {
+		t.Fatalf("expected valid audit record")
+	}
+	return record
 }
 
 func customFieldDefinition(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, scope customfield.Scope, keyValue string, fieldType customfield.FieldType, rawOptions []string) customfield.Definition {

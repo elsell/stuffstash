@@ -54,6 +54,8 @@ The first API slice must check:
 - `inventory.create_asset` before creating an asset inside an inventory.
 - `inventory.edit_asset` before updating or moving an asset inside an inventory.
 - `inventory.share` before creating or listing direct inventory access grants.
+- `inventory.view` before listing inventory-scoped audit records.
+- `tenant.configure` before listing tenant-wide audit records.
 
 Creating a tenant grants the creating user the tenant `owner` relationship.
 

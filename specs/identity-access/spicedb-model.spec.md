@@ -42,7 +42,8 @@ The first model should support:
 - Asset access inherited from inventory access.
 - Location-like access represented through asset access for assets with kind `location`.
 - Attachment access inherited from attached resource access.
-- Audit record access inherited from inventory access, with final read rules specified before audit API implementation.
+- Inventory audit record access inherited from inventory view access.
+- Tenant-wide audit record access limited to tenant configuration permission.
 
 ## Permissions
 
@@ -64,6 +65,7 @@ The first model should express permissions for:
 - Undo action.
 
 The first Go port permission name for asset update and same-inventory movement is `edit_asset`, mapped to the SpiceDB inventory `edit` permission.
+The first audit read slice uses existing `inventory.view` for inventory-scoped audit records and existing `tenant.configure` for tenant-wide audit records.
 Exact permission names for future per-asset permissions must be defined before implementation.
 
 Archive and unarchive permissions are future permissions and must not be added to the first asset slice until archive behavior is specified and exposed.
@@ -84,6 +86,5 @@ Archive and unarchive permissions are future permissions and must not be added t
 
 ## Open Questions
 
-- Should inventory viewer be allowed to view audit history?
 - Which operations should inventory editor be allowed to undo?
 - How should pending invitations be represented?

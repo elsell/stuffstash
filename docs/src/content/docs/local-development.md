@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom fields, create, list, update, and move assets, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom fields, create, list, update, and move assets, view audit history, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
 
 ## Requirements
 
@@ -163,9 +163,16 @@ curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/as
   -H 'Authorization: Bearer dev:user-one'
 ```
 
+List inventory audit history:
+
+```sh
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/audit-records?limit=50' \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
 Grant another local dev user viewer access:
 
-Viewers can list assets. Editors can list, create, update, and move assets. Neither can share the inventory with someone else.
+Viewers can list assets and inventory audit history. Editors can list, create, update, and move assets. Neither can share the inventory with someone else.
 
 ```sh
 curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-grants \

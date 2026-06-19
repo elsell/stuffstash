@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -16,6 +17,7 @@ import (
 
 type CreateAssetInput struct {
 	Principal     identity.Principal
+	Source        audit.Source
 	TenantID      tenant.ID
 	InventoryID   inventory.InventoryID
 	Kind          string
@@ -41,6 +43,7 @@ type AssetParentUpdate struct {
 
 type UpdateAssetInput struct {
 	Principal     identity.Principal
+	Source        audit.Source
 	TenantID      tenant.ID
 	InventoryID   inventory.InventoryID
 	AssetID       asset.ID
@@ -111,7 +114,24 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 		LifecycleState: asset.LifecycleStateActive,
 	}
 
-	if err := a.assets.CreateAsset(ctx, item); err != nil {
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		Action:      audit.ActionAssetCreated,
+		TargetType:  audit.TargetAsset,
+		TargetID:    item.ID.String(),
+		Metadata: map[string]string{
+			"asset_kind": item.Kind.String(),
+			"title":      item.Title.String(),
+		},
+	})
+	if err != nil {
+		return asset.Asset{}, err
+	}
+
+	if err := a.assets.CreateAsset(ctx, item, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
@@ -149,6 +169,8 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 		return asset.Asset{}, ErrNotFound
 	}
 	updated := current
+	parentChanged := false
+	fieldsChanged := false
 
 	if input.Title != nil {
 		title, ok := asset.NewTitle(*input.Title)
@@ -156,9 +178,15 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			return asset.Asset{}, ErrInvalidInput
 		}
 		updated.Title = title
+		if updated.Title != current.Title {
+			fieldsChanged = true
+		}
 	}
 	if input.Description != nil {
 		updated.Description = asset.NewDescription(*input.Description)
+		if updated.Description != current.Description {
+			fieldsChanged = true
+		}
 	}
 	if input.CustomFields != nil {
 		customFields, err := a.validatedCustomFields(ctx, input.TenantID, input.InventoryID, input.CustomFields)
@@ -166,6 +194,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			return asset.Asset{}, err
 		}
 		updated.CustomFields = customFields
+		fieldsChanged = true
 	}
 	if input.ParentAssetID.Present {
 		parentAssetID := asset.ID("")
@@ -177,9 +206,52 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			parentAssetID = parentAsset
 		}
 		updated.ParentAssetID = parentAssetID
+		if updated.ParentAssetID != current.ParentAssetID {
+			parentChanged = true
+		}
 	}
 
-	if err := a.assets.UpdateAsset(ctx, updated); err != nil {
+	auditRecords := []audit.Record{}
+	if fieldsChanged {
+		auditRecord, err := a.newAuditRecord(auditRecordInput{
+			PrincipalID: input.Principal.ID,
+			TenantID:    input.TenantID,
+			InventoryID: input.InventoryID,
+			Source:      input.Source,
+			Action:      audit.ActionAssetUpdated,
+			TargetType:  audit.TargetAsset,
+			TargetID:    updated.ID.String(),
+			Metadata: map[string]string{
+				"asset_kind": updated.Kind.String(),
+			},
+		})
+		if err != nil {
+			return asset.Asset{}, err
+		}
+		auditRecords = append(auditRecords, auditRecord)
+	}
+	if parentChanged {
+		auditRecord, err := a.newAuditRecord(auditRecordInput{
+			PrincipalID: input.Principal.ID,
+			TenantID:    input.TenantID,
+			InventoryID: input.InventoryID,
+			Source:      input.Source,
+			Action:      audit.ActionAssetMoved,
+			TargetType:  audit.TargetAsset,
+			TargetID:    updated.ID.String(),
+			Metadata: map[string]string{
+				"asset_kind":      updated.Kind.String(),
+				"previous_parent": current.ParentAssetID.String(),
+				"new_parent":      updated.ParentAssetID.String(),
+			},
+		})
+		if err != nil {
+			return asset.Asset{}, err
+		}
+		auditRecords = append(auditRecords, auditRecord)
+	}
+
+	if err := a.assets.UpdateAsset(ctx, updated, auditRecords); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}

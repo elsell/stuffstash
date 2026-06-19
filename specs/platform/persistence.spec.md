@@ -8,7 +8,7 @@ Stuff Stash needs persistence that supports flexible inventory data while keepin
 
 This spec covers initial persistence direction for PostgreSQL, SQLite, GORM, migrations, and custom field storage.
 
-This spec does not define every future asset index, backup strategy, or production deployment topology.
+This spec does not define every future asset index, backup strategy, retention policy, or production deployment topology.
 
 ## Requirements
 
@@ -44,6 +44,9 @@ This spec does not define every future asset index, backup strategy, or producti
 - A failed outbox event must not prevent later events in the same batch from being attempted.
 - Outbox observability must include event ID, event kind, tenant ID, inventory ID when present, attempt count, and failure details when an event fails.
 - Dead-letter observability must include event ID, event kind, tenant ID, inventory ID when present, and the terminal reason.
+- State-changing application operations must write append-only audit records behind a repository port.
+- Audit records must preserve tenant and inventory isolation in storage and read queries.
+- Audit metadata must be stored as a JSON object and must not be used as an authorization source.
 
 ## Initial Schema
 
@@ -89,6 +92,19 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - field type
   - enum options as JSONB
   - timestamps managed by GORM
+- `audit_records`
+  - `id`
+  - tenant ID
+  - inventory ID when inventory-scoped
+  - principal ID
+  - action
+  - source
+  - target type
+  - target ID
+  - occurred timestamp
+  - request ID
+  - metadata as JSONB
+  - timestamps managed by GORM
 
 The `inventories.tenant_id` value must reference `tenants.id`.
 Authorization outbox records represent pending relationship grants that must be applied to SpiceDB.
@@ -101,6 +117,8 @@ Custom field definitions must be scoped by tenant and optionally by inventory. T
 PostgreSQL migrations must also enforce the effective-key invariant across scopes so concurrent API replicas cannot create an inventory-scoped definition and a tenant-scoped definition with the same key in one tenant.
 That enforcement must include a database-level serialization point, such as a transaction-scoped advisory lock keyed by tenant and field key, not only a read-before-write trigger check.
 The database must validate persisted custom field definition key, display name, enum option, scope, and field type shape as a defense-in-depth guard around the domain model.
+
+Audit record persistence must be append-only through application ports in the first slice. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination.
 
 ## Initial Asset Schema
 

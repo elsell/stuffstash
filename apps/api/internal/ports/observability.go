@@ -22,6 +22,7 @@ const (
 	EventAssetCreated                    EventName = "asset.created"
 	EventAssetUpdated                    EventName = "asset.updated"
 	EventAssetsListed                    EventName = "asset.listed"
+	EventAuditRecordsListed              EventName = "audit_record.listed"
 	EventAuthorizationOutboxDrained      EventName = "authorization_outbox.drained"
 	EventAuthorizationOutboxFailed       EventName = "authorization_outbox.failed"
 	EventAuthorizationOutboxDeadLettered EventName = "authorization_outbox.dead_lettered"

@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -28,7 +29,7 @@ func NewStore(db *gorm.DB) Store {
 }
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &customFieldDefinitionModel{}, &assetModel{}, &authorizationOutboxEventModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &customFieldDefinitionModel{}, &assetModel{}, &auditRecordModel{}, &authorizationOutboxEventModel{})
 }
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -78,7 +79,7 @@ func (s Store) InventoryByID(ctx context.Context, tenantID tenant.ID, inventoryI
 	return item, ok, nil
 }
 
-func (s Store) SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
+func (s Store) SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID string, item tenant.Tenant, principal identity.Principal, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(&tenantModel{
 			ID:   item.ID.String(),
@@ -87,16 +88,20 @@ func (s Store) SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID strin
 			return err
 		}
 
-		return tx.Create(&authorizationOutboxEventModel{
+		if err := tx.Create(&authorizationOutboxEventModel{
 			ID:          eventID,
 			Kind:        string(ports.AuthorizationOutboxGrantTenantOwner),
 			PrincipalID: principal.ID.String(),
 			TenantID:    item.ID.String(),
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+
+		return createAuditRecord(tx, auditRecord)
 	})
 }
 
-func (s Store) SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal) error {
+func (s Store) SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(&inventoryModel{
 			ID:       item.ID.String(),
@@ -107,17 +112,21 @@ func (s Store) SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID st
 		}
 
 		inventoryID := item.ID.String()
-		return tx.Create(&authorizationOutboxEventModel{
+		if err := tx.Create(&authorizationOutboxEventModel{
 			ID:          eventID,
 			Kind:        string(ports.AuthorizationOutboxGrantInventoryOwner),
 			PrincipalID: principal.ID.String(),
 			TenantID:    tenantID.String(),
 			InventoryID: &inventoryID,
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+
+		return createAuditRecord(tx, auditRecord)
 	})
 }
 
-func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant ports.InventoryAccessGrant) error {
+func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant ports.InventoryAccessGrant, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var containingInventory inventoryModel
 		err := tx.Where(&inventoryModel{
@@ -156,13 +165,17 @@ func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID s
 		}
 
 		inventoryID := grant.InventoryID.String()
-		return tx.Create(&authorizationOutboxEventModel{
+		if err := tx.Create(&authorizationOutboxEventModel{
 			ID:          eventID,
 			Kind:        string(outboxKindForInventoryAccess(grant.Relationship)),
 			PrincipalID: grant.PrincipalID.String(),
 			TenantID:    grant.TenantID.String(),
 			InventoryID: &inventoryID,
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+
+		return createAuditRecord(tx, auditRecord)
 	})
 }
 
@@ -336,7 +349,7 @@ func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID
 	return items, nil
 }
 
-func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customfield.Definition) error {
+func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error {
 	enumOptions, err := json.Marshal(customFieldKeysToStrings(definition.EnumOptions))
 	if err != nil {
 		return err
@@ -376,7 +389,7 @@ func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customf
 		if err := tx.Save(&model).Error; err != nil {
 			return customFieldDefinitionWriteError(err)
 		}
-		return nil
+		return createAuditRecord(tx, auditRecord)
 	})
 }
 
@@ -446,7 +459,7 @@ func customFieldDefinitionWriteError(err error) error {
 	return err
 }
 
-func (s Store) CreateAsset(ctx context.Context, item asset.Asset) error {
+func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var containingInventory inventoryModel
 		err := tx.Where(&inventoryModel{
@@ -487,7 +500,7 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset) error {
 		if err != nil {
 			return err
 		}
-		return tx.Create(&assetModel{
+		if err := tx.Create(&assetModel{
 			ID:             item.ID.String(),
 			TenantID:       item.TenantID.String(),
 			InventoryID:    item.InventoryID.String(),
@@ -497,11 +510,15 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset) error {
 			Description:    item.Description.String(),
 			CustomFields:   string(customFields),
 			LifecycleState: item.LifecycleState.String(),
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+
+		return createAuditRecord(tx, auditRecord)
 	})
 }
 
-func (s Store) UpdateAsset(ctx context.Context, item asset.Asset) error {
+func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords []audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing assetModel
 		err := tx.Where(&assetModel{
@@ -554,6 +571,11 @@ func (s Store) UpdateAsset(ctx context.Context, item asset.Asset) error {
 		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
 			return err
 		}
+		for _, auditRecord := range auditRecords {
+			if err := createAuditRecord(tx, auditRecord); err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 }
@@ -599,6 +621,70 @@ func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, in
 		item, ok := model.toDomain()
 		if !ok {
 			return nil, fmt.Errorf("invalid asset row %q", model.ID)
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func (s Store) SaveAuditRecord(ctx context.Context, record audit.Record) error {
+	return createAuditRecord(s.db.WithContext(ctx), record)
+}
+
+func createAuditRecord(tx *gorm.DB, record audit.Record) error {
+	metadata, err := json.Marshal(record.MetadataValues())
+	if err != nil {
+		return err
+	}
+	model := auditRecordModel{
+		ID:          record.ID.String(),
+		TenantID:    record.TenantID.String(),
+		PrincipalID: record.PrincipalID.String(),
+		Action:      record.Action.String(),
+		Source:      record.Source.String(),
+		TargetType:  record.TargetType.String(),
+		TargetID:    record.TargetID,
+		OccurredAt:  record.OccurredAt,
+		RequestID:   record.RequestID,
+		Metadata:    string(metadata),
+	}
+	if record.InventoryID.String() != "" {
+		inventoryID := record.InventoryID.String()
+		model.InventoryID = &inventoryID
+	}
+	return tx.Create(&model).Error
+}
+
+func (s Store) ListTenantAuditRecords(ctx context.Context, tenantID tenant.ID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	query := s.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()})
+	return s.listAuditRecords(query, page)
+}
+
+func (s Store) ListInventoryAuditRecords(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	query := s.db.WithContext(ctx).Where(&auditRecordModel{
+		TenantID: tenantID.String(),
+	})
+	query = query.Where(&auditRecordModel{InventoryID: stringPtrFromInventoryID(inventoryID)})
+	return s.listAuditRecords(query, page)
+}
+
+func (s Store) listAuditRecords(query *gorm.DB, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	var models []auditRecordModel
+	if page.AfterRecordID.String() != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterRecordID.String()})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]audit.Record, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid audit record row %q", model.ID)
 		}
 		items = append(items, item)
 	}
@@ -696,6 +782,24 @@ type assetModel struct {
 	UpdatedAt      time.Time
 }
 
+type auditRecordModel struct {
+	ID          string          `gorm:"primaryKey;size:26"`
+	TenantID    string          `gorm:"not null;size:26;index:idx_audit_records_tenant_id"`
+	Tenant      tenantModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID *string         `gorm:"size:26;index:idx_audit_records_inventory_id"`
+	Inventory   *inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	PrincipalID string          `gorm:"not null;size:128;index"`
+	Action      string          `gorm:"not null;size:80;index"`
+	Source      string          `gorm:"not null;size:40"`
+	TargetType  string          `gorm:"not null;size:80;index"`
+	TargetID    string          `gorm:"not null;size:180;index"`
+	OccurredAt  time.Time       `gorm:"not null;index"`
+	RequestID   string          `gorm:"not null;default:'';size:128;index"`
+	Metadata    string          `gorm:"type:jsonb;not null;default:'{}'"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
 type authorizationOutboxEventModel struct {
 	ID               string         `gorm:"primaryKey;size:26"`
 	Kind             string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor');check:chk_authorization_outbox_events_inventory_required,(kind IN ('grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor') AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
@@ -751,6 +855,10 @@ func (m *inventoryAccessGrantModel) BeforeSave(*gorm.DB) error {
 
 func (assetModel) TableName() string {
 	return "assets"
+}
+
+func (auditRecordModel) TableName() string {
+	return "audit_records"
 }
 
 func (m inventoryModel) toDomain() (inventory.Inventory, bool) {
@@ -908,7 +1016,55 @@ func (m assetModel) toDomain() (asset.Asset, bool) {
 	}, true
 }
 
+func (m auditRecordModel) toDomain() (audit.Record, bool) {
+	id, ok := audit.NewID(m.ID)
+	if !ok {
+		return audit.Record{}, false
+	}
+	action, ok := audit.NewAction(m.Action)
+	if !ok {
+		return audit.Record{}, false
+	}
+	source, ok := audit.NewSource(m.Source)
+	if !ok {
+		return audit.Record{}, false
+	}
+	targetType, ok := audit.NewTargetType(m.TargetType)
+	if !ok {
+		return audit.Record{}, false
+	}
+	inventoryID := audit.InventoryID("")
+	if m.InventoryID != nil {
+		inventoryID = audit.InventoryID(*m.InventoryID)
+	}
+	metadata := map[string]string{}
+	if err := json.Unmarshal([]byte(m.Metadata), &metadata); err != nil {
+		return audit.Record{}, false
+	}
+	return audit.NewRecord(
+		id,
+		audit.TenantID(m.TenantID),
+		inventoryID,
+		audit.PrincipalID(m.PrincipalID),
+		action,
+		source,
+		targetType,
+		m.TargetID,
+		m.OccurredAt,
+		m.RequestID,
+		metadata,
+	)
+}
+
 func stringPtrFromAssetID(id asset.ID) *string {
+	if id.String() == "" {
+		return nil
+	}
+	value := id.String()
+	return &value
+}
+
+func stringPtrFromInventoryID(id inventory.InventoryID) *string {
 	if id.String() == "" {
 		return nil
 	}

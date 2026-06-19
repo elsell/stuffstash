@@ -11,6 +11,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -29,8 +30,9 @@ func TestCreateTenantEnqueuesAndDrainsOwnerGrant(t *testing.T) {
 		Authorizer:  authorizer,
 		Tenants:     &fakeTenantRepository{},
 		Inventories: &fakeInventoryRepository{},
+		Audit:       &fakeAuditRepository{},
 		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{ids: []string{"tenant-one", "event-one"}},
+		IDs:         &fakeIDGenerator{ids: []string{"tenant-one", "audit-one", "event-one"}},
 	})
 
 	item, err := application.CreateTenant(context.Background(), CreateTenantInput{
@@ -61,8 +63,9 @@ func TestCreateInventoryEnqueuesAndDrainsOwnerGrant(t *testing.T) {
 			exists: true,
 		},
 		Inventories: &fakeInventoryRepository{},
+		Audit:       &fakeAuditRepository{},
 		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{ids: []string{"inventory-one", "event-one"}},
+		IDs:         &fakeIDGenerator{ids: []string{"inventory-one", "audit-one", "event-one"}},
 	})
 
 	item, err := application.CreateInventory(context.Background(), CreateInventoryInput{
@@ -94,8 +97,9 @@ func TestCreateTenantKeepsOutboxEventPendingWhenGrantFails(t *testing.T) {
 		Authorizer:  authorizer,
 		Tenants:     &fakeTenantRepository{},
 		Inventories: &fakeInventoryRepository{},
+		Audit:       &fakeAuditRepository{},
 		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{ids: []string{"tenant-one", "event-one"}},
+		IDs:         &fakeIDGenerator{ids: []string{"tenant-one", "audit-one", "event-one"}},
 	})
 
 	_, err := application.CreateTenant(context.Background(), CreateTenantInput{
@@ -144,6 +148,7 @@ func TestDrainAuthorizationOutboxContinuesAfterFailedEvent(t *testing.T) {
 		Authorizer:  authorizer,
 		Tenants:     &fakeTenantRepository{},
 		Inventories: &fakeInventoryRepository{},
+		Audit:       &fakeAuditRepository{},
 		Outbox:      outbox,
 		IDs:         &fakeIDGenerator{},
 	})
@@ -184,6 +189,7 @@ func TestDrainAuthorizationOutboxDeadLettersUnrecoverableEventAndContinues(t *te
 		Authorizer:  &fakeAuthorizer{},
 		Tenants:     &fakeTenantRepository{},
 		Inventories: &fakeInventoryRepository{},
+		Audit:       &fakeAuditRepository{},
 		Outbox:      outbox,
 		IDs:         &fakeIDGenerator{},
 	})
@@ -220,7 +226,7 @@ func TestDrainAuthorizationOutboxDeadLettersDurableInvalidEvent(t *testing.T) {
 	if err := store.SaveTenantAndEnqueueOwnerGrant(ctx, "event-one", tenant.Tenant{
 		ID:   tenant.ID("tenant-one"),
 		Name: tenantName,
-	}, identity.Principal{}); err != nil {
+	}, identity.Principal{}, auditRecord("audit-one", "tenant-one", "", audit.ActionTenantCreated)); err != nil {
 		t.Fatalf("save tenant and enqueue invalid owner grant: %v", err)
 	}
 
@@ -231,6 +237,7 @@ func TestDrainAuthorizationOutboxDeadLettersDurableInvalidEvent(t *testing.T) {
 		Authorizer:  authorizer,
 		Tenants:     store,
 		Inventories: store,
+		Audit:       store,
 		Outbox:      store,
 		IDs:         &fakeIDGenerator{ids: []string{"claim-one"}},
 	})
@@ -273,6 +280,7 @@ func TestListInventoriesReturnsAuthorizationBackendFailures(t *testing.T) {
 				inventoryItem("inventory-one", "tenant-one", "Tools"),
 			},
 		},
+		Audit:  &fakeAuditRepository{},
 		Outbox: &fakeOutbox{},
 	})
 
@@ -299,6 +307,7 @@ func TestListInventoriesSkipsForbiddenInventories(t *testing.T) {
 				inventoryItem("inventory-one", "tenant-one", "Tools"),
 			},
 		},
+		Audit:  &fakeAuditRepository{},
 		Outbox: &fakeOutbox{},
 	})
 
@@ -329,6 +338,7 @@ func TestListInventoriesPaginatesAfterAuthorizationFiltering(t *testing.T) {
 			exists: true,
 		},
 		Inventories:      repository,
+		Audit:            &fakeAuditRepository{},
 		Outbox:           &fakeOutbox{},
 		DefaultPageLimit: 1,
 		MaxPageLimit:     1,
@@ -390,6 +400,7 @@ func TestListInventoriesReturnsEmptyBoundedPageWhenScanWindowIsHidden(t *testing
 			exists: true,
 		},
 		Inventories:      repository,
+		Audit:            &fakeAuditRepository{},
 		Outbox:           &fakeOutbox{},
 		DefaultPageLimit: 1,
 		MaxPageLimit:     1,
@@ -436,6 +447,7 @@ func TestCreateAndListAssets(t *testing.T) {
 			},
 		},
 		Assets:           assets,
+		Audit:            &fakeAuditRepository{},
 		Outbox:           &fakeOutbox{},
 		IDs:              &fakeIDGenerator{ids: []string{"asset-one", "asset-two"}},
 		DefaultPageLimit: 1,
@@ -514,6 +526,7 @@ func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
 		Assets: &fakeAssetRepository{
 			items: map[asset.ID]asset.Asset{itemParent.ID: itemParent},
 		},
+		Audit:  &fakeAuditRepository{},
 		Outbox: &fakeOutbox{},
 		IDs:    &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
@@ -558,6 +571,7 @@ func TestGrantInventoryAccessRequiresShareAndRejectsInvalidGrants(t *testing.T) 
 			exists: true,
 		},
 		Inventories: repository,
+		Audit:       &fakeAuditRepository{},
 		Outbox:      &fakeOutbox{},
 		IDs:         &fakeIDGenerator{ids: []string{"event-one"}},
 	})
@@ -581,6 +595,7 @@ func TestGrantInventoryAccessRequiresShareAndRejectsInvalidGrants(t *testing.T) 
 		Authorizer:  &fakeAuthorizer{},
 		Tenants:     &fakeTenantRepository{exists: true},
 		Inventories: repository,
+		Audit:       &fakeAuditRepository{},
 		Outbox:      &fakeOutbox{},
 		IDs:         &fakeIDGenerator{ids: []string{"event-two"}},
 	})
@@ -621,6 +636,7 @@ func TestGrantAndListInventoryAccessGrants(t *testing.T) {
 		Authorizer:   &fakeAuthorizer{},
 		Tenants:      &fakeTenantRepository{exists: true},
 		Inventories:  repository,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{ids: []string{"event-one", "event-two"}},
 		MaxPageLimit: 1,
@@ -687,6 +703,7 @@ func TestCreateAndListCustomFieldDefinitions(t *testing.T) {
 		Tenants:      &fakeTenantRepository{exists: true},
 		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
 		CustomFields: customFields,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{ids: []string{"tenant-definition", "inventory-definition"}},
 		MaxPageLimit: 1,
@@ -763,6 +780,7 @@ func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) 
 		Tenants:      &fakeTenantRepository{exists: true},
 		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
 		CustomFields: customFields,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{ids: []string{"definition-one"}},
 	})
@@ -784,6 +802,7 @@ func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) 
 		Tenants:      &fakeTenantRepository{exists: true},
 		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
 		CustomFields: customFields,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{ids: []string{"definition-two", "definition-three"}},
 	})
@@ -814,10 +833,10 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 	customFields := &fakeCustomFieldRepository{}
 	serialDefinition := customFieldDefinition("serial-definition", "tenant-one", "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
 	conditionDefinition := customFieldDefinition("condition-definition", "tenant-one", "inventory-one", customfield.ScopeInventory, "condition", customfield.FieldTypeEnum, []string{"new", "used"})
-	if err := customFields.SaveCustomFieldDefinition(context.Background(), serialDefinition); err != nil {
+	if err := customFields.SaveCustomFieldDefinition(context.Background(), serialDefinition, auditRecord("audit-serial", "tenant-one", "", audit.ActionCustomFieldDefinitionCreated)); err != nil {
 		t.Fatalf("save serial definition: %v", err)
 	}
-	if err := customFields.SaveCustomFieldDefinition(context.Background(), conditionDefinition); err != nil {
+	if err := customFields.SaveCustomFieldDefinition(context.Background(), conditionDefinition, auditRecord("audit-condition", "tenant-one", "inventory-one", audit.ActionCustomFieldDefinitionCreated)); err != nil {
 		t.Fatalf("save condition definition: %v", err)
 	}
 	assets := &fakeAssetRepository{}
@@ -828,6 +847,7 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
 		CustomFields: customFields,
 		Assets:       assets,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
@@ -867,7 +887,8 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 
 func TestUpdateAssetMovesAndValidatesCustomFields(t *testing.T) {
 	customFields := &fakeCustomFieldRepository{}
-	if err := customFields.SaveCustomFieldDefinition(context.Background(), customFieldDefinition("serial-definition", "tenant-one", "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)); err != nil {
+	serialDefinition := customFieldDefinition("serial-definition", "tenant-one", "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
+	if err := customFields.SaveCustomFieldDefinition(context.Background(), serialDefinition, auditRecord("audit-serial", "tenant-one", "", audit.ActionCustomFieldDefinitionCreated)); err != nil {
 		t.Fatalf("save serial definition: %v", err)
 	}
 	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
@@ -883,6 +904,7 @@ func TestUpdateAssetMovesAndValidatesCustomFields(t *testing.T) {
 		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
 		CustomFields: customFields,
 		Assets:       assets,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{},
 	})
@@ -945,6 +967,7 @@ func TestUpdateAssetRejectsInvalidMovement(t *testing.T) {
 		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
 		CustomFields: &fakeCustomFieldRepository{},
 		Assets:       assets,
+		Audit:        &fakeAuditRepository{},
 		Outbox:       &fakeOutbox{},
 		IDs:          &fakeIDGenerator{},
 	})
@@ -1019,6 +1042,7 @@ func TestUpdateAssetRequiresEditPermission(t *testing.T) {
 		Assets: &fakeAssetRepository{items: map[asset.ID]asset.Asset{
 			asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
 		}},
+		Audit:  &fakeAuditRepository{},
 		Outbox: &fakeOutbox{},
 		IDs:    &fakeIDGenerator{},
 	})
@@ -1033,6 +1057,221 @@ func TestUpdateAssetRequiresEditPermission(t *testing.T) {
 	})
 	if !errors.Is(err, ErrUnauthorized) {
 		t.Fatalf("expected unauthorized update, got %v", err)
+	}
+}
+
+func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
+	assets := &fakeAssetRepository{}
+	customFields := &fakeCustomFieldRepository{}
+	inventories := &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}}
+	outbox := &fakeOutbox{}
+	application := New(Dependencies{
+		Observer:     &fakeObserver{},
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  inventories,
+		CustomFields: customFields,
+		Assets:       assets,
+		Audit:        &fakeAuditRepository{},
+		Outbox:       outbox,
+		IDs: &fakeIDGenerator{ids: []string{
+			"tenant-created", "audit-tenant", "tenant-owner-event", "claim-tenant",
+			"inventory-created", "audit-inventory", "inventory-owner-event", "claim-inventory",
+			"audit-share", "share-event", "claim-share",
+			"definition-created", "audit-definition",
+			"garage", "audit-location",
+			"drill", "audit-asset",
+			"audit-asset-updated", "audit-asset-moved",
+		}},
+	})
+
+	if _, err := application.CreateTenant(context.Background(), CreateTenantInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("owner")},
+		Name:      "Home",
+	}); err != nil {
+		t.Fatalf("create tenant: %v", err)
+	}
+	if _, err := application.CreateInventory(context.Background(), CreateInventoryInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:  tenant.ID("tenant-one"),
+		Name:      "Tools",
+	}); err != nil {
+		t.Fatalf("create inventory: %v", err)
+	}
+	if _, err := application.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		TargetUserID: "viewer",
+		Relationship: "viewer",
+	}); err != nil {
+		t.Fatalf("grant inventory access: %v", err)
+	}
+	if _, err := application.CreateInventoryCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Key:         "serial",
+		DisplayName: "Serial",
+		Type:        "text",
+	}); err != nil {
+		t.Fatalf("create custom field definition: %v", err)
+	}
+	location, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "location",
+		Title:       "Garage",
+	})
+	if err != nil {
+		t.Fatalf("create location asset: %v", err)
+	}
+	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "item",
+		Title:       "Drill",
+	})
+	if err != nil {
+		t.Fatalf("create item asset: %v", err)
+	}
+	title := "Cordless Drill"
+	if _, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     item.ID,
+		Title:       &title,
+		ParentAssetID: AssetParentUpdate{
+			Present: true,
+			Value:   location.ID.String(),
+		},
+	}); err != nil {
+		t.Fatalf("update and move asset: %v", err)
+	}
+
+	auditRecords := append([]audit.Record{}, outbox.auditRecords...)
+	auditRecords = append(auditRecords, inventories.auditRecords...)
+	auditRecords = append(auditRecords, customFields.auditRecords...)
+	auditRecords = append(auditRecords, assets.auditRecords...)
+	collectedAudits := &fakeAuditRepository{items: auditRecords}
+	for _, expected := range []audit.Action{
+		audit.ActionTenantCreated,
+		audit.ActionInventoryCreated,
+		audit.ActionInventoryAccessGranted,
+		audit.ActionCustomFieldDefinitionCreated,
+		audit.ActionAssetCreated,
+		audit.ActionAssetUpdated,
+		audit.ActionAssetMoved,
+	} {
+		if !collectedAudits.hasAction(expected) {
+			t.Fatalf("expected audit action %s in %+v", expected, collectedAudits.items)
+		}
+	}
+	moved, ok := collectedAudits.recordForAction(audit.ActionAssetMoved)
+	if !ok {
+		t.Fatalf("expected asset moved audit record")
+	}
+	if moved.Source != audit.SourceAPI || moved.TargetType != audit.TargetAsset || moved.TargetID != item.ID.String() || moved.Metadata["new_parent"] != location.ID.String() {
+		t.Fatalf("unexpected asset moved record: %+v", moved)
+	}
+}
+
+func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
+	audits := &fakeAuditRepository{items: []audit.Record{
+		auditRecord("audit-one", "tenant-one", "inventory-one", audit.ActionAssetCreated),
+		auditRecord("audit-two", "tenant-one", "inventory-one", audit.ActionAssetUpdated),
+		auditRecord("audit-three", "tenant-one", "inventory-two", audit.ActionAssetCreated),
+		auditRecord("audit-four", "tenant-two", "inventory-three", audit.ActionAssetCreated),
+	}}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &fakeAuthorizer{},
+		Tenants:    &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+			inventoryItem("inventory-two", "tenant-one", "Supplies"),
+		}},
+		Audit:  audits,
+		Outbox: &fakeOutbox{},
+	})
+
+	firstPage, err := application.ListInventoryAuditRecords(context.Background(), ListAuditRecordsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       1,
+	})
+	if err != nil {
+		t.Fatalf("list first audit page: %v", err)
+	}
+	if len(firstPage.Items) != 1 || !firstPage.HasMore || firstPage.NextCursor == nil || firstPage.Items[0].ID != audit.ID("audit-one") {
+		t.Fatalf("unexpected first audit page: %+v", firstPage)
+	}
+	secondPage, err := application.ListInventoryAuditRecords(context.Background(), ListAuditRecordsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       1,
+		Cursor:      *firstPage.NextCursor,
+	})
+	if err != nil {
+		t.Fatalf("list second audit page: %v", err)
+	}
+	if len(secondPage.Items) != 1 || secondPage.HasMore || secondPage.Items[0].ID != audit.ID("audit-two") {
+		t.Fatalf("unexpected second audit page: %+v", secondPage)
+	}
+
+	tenantPage, err := application.ListTenantAuditRecords(context.Background(), ListAuditRecordsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:  tenant.ID("tenant-one"),
+		Limit:     10,
+	})
+	if err != nil {
+		t.Fatalf("list tenant audit records: %v", err)
+	}
+	if len(tenantPage.Items) != 3 {
+		t.Fatalf("expected tenant audit list to exclude other tenant, got %+v", tenantPage.Items)
+	}
+
+	deniedInventory := New(Dependencies{
+		Observer: &fakeObserver{},
+		Authorizer: &fakeAuthorizer{
+			checkInventoryErr: ports.ErrForbidden,
+		},
+		Tenants: &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		}},
+		Audit:  audits,
+		Outbox: &fakeOutbox{},
+	})
+	_, err = deniedInventory.ListInventoryAuditRecords(context.Background(), ListAuditRecordsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("intruder")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+	})
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected forbidden inventory audit read, got %v", err)
+	}
+
+	deniedTenant := New(Dependencies{
+		Observer: &fakeObserver{},
+		Authorizer: &fakeAuthorizer{
+			checkTenantErr: ports.ErrForbidden,
+		},
+		Tenants: &fakeTenantRepository{exists: true},
+		Audit:   audits,
+		Outbox:  &fakeOutbox{},
+	})
+	_, err = deniedTenant.ListTenantAuditRecords(context.Background(), ListAuditRecordsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:  tenant.ID("tenant-one"),
+	})
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected forbidden tenant audit read, got %v", err)
 	}
 }
 
@@ -1095,6 +1334,7 @@ func (f *fakeTenantRepository) TenantExists(context.Context, tenant.ID) (bool, e
 type fakeInventoryRepository struct {
 	items        []inventory.Inventory
 	accessGrants []ports.InventoryAccessGrant
+	auditRecords []audit.Record
 	calls        int
 	limits       []int
 }
@@ -1109,31 +1349,108 @@ func (f *fakeInventoryRepository) InventoryByID(_ context.Context, tenantID tena
 }
 
 type fakeAssetRepository struct {
-	items map[asset.ID]asset.Asset
+	items        map[asset.ID]asset.Asset
+	auditRecords []audit.Record
 }
 
 type fakeCustomFieldRepository struct {
-	items []customfield.Definition
+	items        []customfield.Definition
+	auditRecords []audit.Record
 }
 
 type fakeOutbox struct {
 	events       []ports.AuthorizationOutboxEvent
+	auditRecords []audit.Record
 	processed    []string
 	failed       []string
 	deadLettered []string
 }
 
-func (f *fakeOutbox) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
+type fakeAuditRepository struct {
+	items []audit.Record
+}
+
+func (f *fakeAuditRepository) SaveAuditRecord(_ context.Context, record audit.Record) error {
+	f.items = append(f.items, record)
+	return nil
+}
+
+func (f *fakeAuditRepository) hasAction(action audit.Action) bool {
+	_, ok := f.recordForAction(action)
+	return ok
+}
+
+func (f *fakeAuditRepository) recordForAction(action audit.Action) (audit.Record, bool) {
+	for _, record := range f.items {
+		if record.Action == action {
+			return record, true
+		}
+	}
+	return audit.Record{}, false
+}
+
+func (f *fakeAuditRepository) ListTenantAuditRecords(_ context.Context, tenantID tenant.ID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	items := []audit.Record{}
+	for _, record := range f.items {
+		if record.TenantID.String() == tenantID.String() && record.ID.String() > page.AfterRecordID.String() {
+			items = append(items, record)
+		}
+	}
+	return pagedFakeAuditRecords(items, page.Limit), nil
+}
+
+func (f *fakeAuditRepository) ListInventoryAuditRecords(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	items := []audit.Record{}
+	for _, record := range f.items {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.ID.String() > page.AfterRecordID.String() {
+			items = append(items, record)
+		}
+	}
+	return pagedFakeAuditRecords(items, page.Limit), nil
+}
+
+func pagedFakeAuditRecords(items []audit.Record, limit int) []audit.Record {
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if limit > 0 && len(items) > limit {
+		items = items[:limit]
+	}
+	return items
+}
+
+func auditRecord(id string, tenantID string, inventoryID string, action audit.Action) audit.Record {
+	record, ok := audit.NewRecord(
+		audit.ID(id),
+		audit.TenantID(tenantID),
+		audit.InventoryID(inventoryID),
+		audit.PrincipalID("owner"),
+		action,
+		audit.SourceAPI,
+		audit.TargetAsset,
+		id+"-target",
+		time.Now(),
+		"",
+		map[string]string{},
+	)
+	if !ok {
+		panic("invalid test audit record")
+	}
+	return record
+}
+
+func (f *fakeOutbox) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal, auditRecord audit.Record) error {
 	f.events = append(f.events, ports.AuthorizationOutboxEvent{
 		ID:          eventID,
 		Kind:        ports.AuthorizationOutboxGrantTenantOwner,
 		PrincipalID: principal.ID,
 		TenantID:    item.ID,
 	})
+	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
 }
 
-func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal) error {
+func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal, auditRecord audit.Record) error {
 	f.events = append(f.events, ports.AuthorizationOutboxEvent{
 		ID:          eventID,
 		Kind:        ports.AuthorizationOutboxGrantInventoryOwner,
@@ -1141,6 +1458,7 @@ func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventI
 		TenantID:    tenantID,
 		InventoryID: item.ID,
 	})
+	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
 }
 
@@ -1211,13 +1529,14 @@ func (f *fakeInventoryRepository) SaveInventory(context.Context, inventory.Inven
 	return nil
 }
 
-func (f *fakeInventoryRepository) SaveInventoryAccessGrantAndEnqueue(_ context.Context, _ string, grant ports.InventoryAccessGrant) error {
+func (f *fakeInventoryRepository) SaveInventoryAccessGrantAndEnqueue(_ context.Context, _ string, grant ports.InventoryAccessGrant, auditRecord audit.Record) error {
 	for _, existing := range f.accessGrants {
 		if existing.TenantID == grant.TenantID && existing.InventoryID == grant.InventoryID && existing.CursorKey() == grant.CursorKey() {
 			return nil
 		}
 	}
 	f.accessGrants = append(f.accessGrants, grant)
+	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
 }
 
@@ -1256,13 +1575,14 @@ func (f *fakeInventoryRepository) ListInventoriesByTenant(_ context.Context, ten
 	return items, nil
 }
 
-func (f *fakeCustomFieldRepository) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition) error {
+func (f *fakeCustomFieldRepository) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition, auditRecord audit.Record) error {
 	for _, existing := range f.items {
 		if customfield.DefinitionsConflict(existing, definition) {
 			return ports.ErrConflict
 		}
 	}
 	f.items = append(f.items, definition)
+	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
 }
 
@@ -1337,7 +1657,7 @@ func (s *selectiveInventoryAuthorizer) GrantInventoryEditor(context.Context, ide
 	return nil
 }
 
-func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset) error {
+func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record) error {
 	if f.items == nil {
 		f.items = map[asset.ID]asset.Asset{}
 	}
@@ -1351,10 +1671,11 @@ func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset) e
 		}
 	}
 	f.items[item.ID] = item
+	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
 }
 
-func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset) error {
+func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []audit.Record) error {
 	if f.items == nil {
 		f.items = map[asset.ID]asset.Asset{}
 	}
@@ -1385,6 +1706,7 @@ func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset) e
 		}
 	}
 	f.items[item.ID] = item
+	f.auditRecords = append(f.auditRecords, auditRecords...)
 	return nil
 }
 

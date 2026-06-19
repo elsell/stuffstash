@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -16,11 +17,13 @@ import (
 
 type CreateTenantInput struct {
 	Principal identity.Principal
+	Source    audit.Source
 	Name      string
 }
 
 type CreateInventoryInput struct {
 	Principal identity.Principal
+	Source    audit.Source
 	TenantID  tenant.ID
 	Name      string
 }
@@ -65,7 +68,21 @@ func (a App) CreateTenant(ctx context.Context, input CreateTenantInput) (tenant.
 		Name: tenantName,
 	}
 
-	if err := a.outbox.SaveTenantAndEnqueueOwnerGrant(ctx, a.ids.NewID(), item, input.Principal); err != nil {
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    item.ID,
+		Source:      input.Source,
+		Action:      audit.ActionTenantCreated,
+		TargetType:  audit.TargetTenant,
+		TargetID:    item.ID.String(),
+		Metadata: map[string]string{
+			"name": item.Name.String(),
+		},
+	})
+	if err != nil {
+		return tenant.Tenant{}, err
+	}
+	if err := a.outbox.SaveTenantAndEnqueueOwnerGrant(ctx, a.ids.NewID(), item, input.Principal, auditRecord); err != nil {
 		return tenant.Tenant{}, err
 	}
 
@@ -117,7 +134,22 @@ func (a App) CreateInventory(ctx context.Context, input CreateInventoryInput) (i
 		Name:     inventoryName,
 	}
 
-	if err := a.outbox.SaveInventoryAndEnqueueOwnerGrant(ctx, a.ids.NewID(), item, input.TenantID, input.Principal); err != nil {
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: item.ID,
+		Source:      input.Source,
+		Action:      audit.ActionInventoryCreated,
+		TargetType:  audit.TargetInventory,
+		TargetID:    item.ID.String(),
+		Metadata: map[string]string{
+			"name": item.Name.String(),
+		},
+	})
+	if err != nil {
+		return inventory.Inventory{}, err
+	}
+	if err := a.outbox.SaveInventoryAndEnqueueOwnerGrant(ctx, a.ids.NewID(), item, input.TenantID, input.Principal, auditRecord); err != nil {
 		return inventory.Inventory{}, err
 	}
 

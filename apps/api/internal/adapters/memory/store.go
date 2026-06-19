@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -22,6 +23,7 @@ type Store struct {
 	accessGrants map[string]ports.InventoryAccessGrant
 	customFields map[customfield.ID]customfield.Definition
 	assets       map[asset.ID]asset.Asset
+	auditRecords map[audit.ID]audit.Record
 	outbox       map[string]ports.AuthorizationOutboxEvent
 }
 
@@ -32,6 +34,7 @@ func NewStore() *Store {
 		accessGrants: map[string]ports.InventoryAccessGrant{},
 		customFields: map[customfield.ID]customfield.Definition{},
 		assets:       map[asset.ID]asset.Asset{},
+		auditRecords: map[audit.ID]audit.Record{},
 		outbox:       map[string]ports.AuthorizationOutboxEvent{},
 	}
 }
@@ -71,11 +74,12 @@ func (s *Store) InventoryByID(_ context.Context, tenantID tenant.ID, inventoryID
 	return item, true, nil
 }
 
-func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
+func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.tenants[item.ID] = item
+	s.auditRecords[auditRecord.ID] = auditRecord
 	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
 		ID:          eventID,
 		Kind:        ports.AuthorizationOutboxGrantTenantOwner,
@@ -86,11 +90,12 @@ func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string
 	return nil
 }
 
-func (s *Store) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal) error {
+func (s *Store) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID string, item inventory.Inventory, tenantID tenant.ID, principal identity.Principal, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.inventories[item.ID] = item
+	s.auditRecords[auditRecord.ID] = auditRecord
 	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
 		ID:          eventID,
 		Kind:        ports.AuthorizationOutboxGrantInventoryOwner,
@@ -102,7 +107,7 @@ func (s *Store) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventID str
 	return nil
 }
 
-func (s *Store) SaveInventoryAccessGrantAndEnqueue(_ context.Context, eventID string, grant ports.InventoryAccessGrant) error {
+func (s *Store) SaveInventoryAccessGrantAndEnqueue(_ context.Context, eventID string, grant ports.InventoryAccessGrant, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -116,6 +121,7 @@ func (s *Store) SaveInventoryAccessGrantAndEnqueue(_ context.Context, eventID st
 		return nil
 	}
 	s.accessGrants[grantKey] = grant
+	s.auditRecords[auditRecord.ID] = auditRecord
 	s.outbox[eventID] = ports.AuthorizationOutboxEvent{
 		ID:          eventID,
 		Kind:        outboxKindForInventoryAccess(grant.Relationship),
@@ -246,7 +252,7 @@ func (s *Store) ListInventoryAccessGrants(_ context.Context, tenantID tenant.ID,
 	return items, nil
 }
 
-func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition) error {
+func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -265,6 +271,7 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 		}
 	}
 	s.customFields[definition.ID] = definition
+	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
 }
 
@@ -319,7 +326,7 @@ func (s *Store) ListEffectiveCustomFieldDefinitions(_ context.Context, tenantID 
 	return pagedCustomFieldDefinitions(items, 0), nil
 }
 
-func (s *Store) CreateAsset(_ context.Context, item asset.Asset) error {
+func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -354,10 +361,11 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset) error {
 		}
 	}
 	s.assets[item.ID] = item
+	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
 }
 
-func (s *Store) UpdateAsset(_ context.Context, item asset.Asset) error {
+func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -391,6 +399,9 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset) error {
 		}
 	}
 	s.assets[item.ID] = item
+	for _, auditRecord := range auditRecords {
+		s.auditRecords[auditRecord.ID] = auditRecord
+	}
 	return nil
 }
 
@@ -422,6 +433,59 @@ func (s *Store) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inv
 		items = items[:page.Limit]
 	}
 	return items, nil
+}
+
+func (s *Store) SaveAuditRecord(_ context.Context, record audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.tenants[tenant.ID(record.TenantID.String())]; !exists {
+		return ports.ErrForbidden
+	}
+	if record.InventoryID.String() != "" {
+		item, ok := s.inventories[inventory.InventoryID(record.InventoryID.String())]
+		if !ok || item.TenantID.String() != record.TenantID.String() {
+			return ports.ErrForbidden
+		}
+	}
+	s.auditRecords[record.ID] = record
+	return nil
+}
+
+func (s *Store) ListTenantAuditRecords(_ context.Context, tenantID tenant.ID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []audit.Record{}
+	for _, record := range s.auditRecords {
+		if record.TenantID.String() == tenantID.String() && record.ID.String() > page.AfterRecordID.String() {
+			items = append(items, record)
+		}
+	}
+	return pagedAuditRecords(items, page.Limit), nil
+}
+
+func (s *Store) ListInventoryAuditRecords(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []audit.Record{}
+	for _, record := range s.auditRecords {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.ID.String() > page.AfterRecordID.String() {
+			items = append(items, record)
+		}
+	}
+	return pagedAuditRecords(items, page.Limit), nil
+}
+
+func pagedAuditRecords(items []audit.Record, limit int) []audit.Record {
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if limit > 0 && len(items) > limit {
+		items = items[:limit]
+	}
+	return items
 }
 
 func inventoryAccessGrantStorageKey(grant ports.InventoryAccessGrant) string {

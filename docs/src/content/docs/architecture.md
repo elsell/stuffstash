@@ -47,6 +47,8 @@ The current API slice proves this boundary with local development auth, OIDC tok
 
 When the API creates data that needs a SpiceDB relationship, it saves the data and an authorization outbox event in the same database transaction. The API then tries to drain that outbox right away. If SpiceDB is down, the relationship write can be retried instead of being lost. If an event is permanently invalid, it is dead-lettered instead of retried forever. Outbox events are claimed with short leases so more than one API replica can run safely.
 
+State-changing application services also write append-only audit records through a repository port. Inventory viewers can read inventory history. Tenant-wide history is limited to tenant configuration access.
+
 ## Assets And Locations
 
 Locations are represented as assets with kind `location`.

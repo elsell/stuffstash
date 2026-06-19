@@ -33,8 +33,10 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `POST /tenants/{tenantId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/custom-field-definitions`
+- `GET /tenants/{tenantId}/audit-records`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records`
 
 ## Authentication
 
@@ -57,8 +59,10 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
+- `GET /tenants/{tenantId}/audit-records` requires `tenant.configure`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.view`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records` requires `inventory.view`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
 
 ## First Asset REST Slice
@@ -87,6 +91,17 @@ The first protected REST slice includes:
 - IDs must be ULIDs.
 - JSON fields must use `camelCase`.
 
+## First Audit REST Slice
+
+- Audit listing must be read-only.
+- Tenant audit listing returns all records in the tenant, including inventory-scoped records.
+- Inventory audit listing returns records scoped to the inventory.
+- Audit listing must support cursor pagination with `limit` and `cursor` query parameters.
+- Audit listing must include pagination metadata in the response envelope.
+- Audit records must include typed action, source, target type, target ID, principal ID, occurred timestamp, and safe metadata.
+- Inventory viewers may read inventory-scoped audit records.
+- Inventory viewers must not read tenant-wide audit records unless they also have tenant configuration permission.
+
 ## OpenAPI
 
 - Huma must generate OpenAPI for protected REST endpoints.
@@ -110,6 +125,8 @@ The first protected REST slice includes:
 - Tests must verify movement to root, moving containers or locations with descendants, self-parent rejection, and cycle rejection.
 - Tests must verify non-empty custom field values are accepted only when definitions exist and values validate.
 - Tests must verify custom field definitions are authenticated, authorized, cursor-paginated, tenant/inventory isolated, and used for asset value validation.
+- Tests must verify audit records are written for state-changing operations.
+- Tests must verify tenant and inventory audit record listing is authenticated, authorized, cursor-paginated, and tenant/inventory isolated.
 - Tests must verify unauthorized errors use the safe error envelope.
 - Tests must verify the API index route is available.
 - Tests must verify the OpenAPI route is available.

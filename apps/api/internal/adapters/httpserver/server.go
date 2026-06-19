@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -109,6 +111,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		tenant, err := application.CreateTenant(ctx, app.CreateTenantInput{
 			Principal: principal,
+			Source:    audit.SourceAPI,
 			Name:      input.Body.Name,
 		})
 		if err != nil {
@@ -134,6 +137,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		item, err := application.CreateInventory(ctx, app.CreateInventoryInput{
 			Principal: principal,
+			Source:    audit.SourceAPI,
 			TenantID:  tenant.ID(input.TenantID),
 			Name:      input.Body.Name,
 		})
@@ -201,6 +205,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		definition, err := application.CreateTenantCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
 			Principal:   principal,
+			Source:      audit.SourceAPI,
 			TenantID:    tenant.ID(input.TenantID),
 			Key:         input.Body.Key,
 			DisplayName: input.Body.DisplayName,
@@ -238,6 +243,25 @@ func registerRoutes(api huma.API, application app.App) {
 		return customFieldDefinitionsOutput(input.TenantID, result), nil
 	}, huma.OperationTags("custom field definitions"), securedOperation)
 
+	huma.Get(api, "/tenants/{tenantId}/audit-records", func(ctx context.Context, input *listTenantAuditRecordsInput) (*listAuditRecordsOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListTenantAuditRecords(ctx, app.ListAuditRecordsInput{
+			Principal: principal,
+			TenantID:  tenant.ID(input.TenantID),
+			Limit:     input.Limit,
+			Cursor:    input.Cursor,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return auditRecordsOutput(input.TenantID, result), nil
+	}, huma.OperationTags("audit records"), securedOperation)
+
 	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets", func(ctx context.Context, input *createAssetInput) (*createAssetOutput, error) {
 		principal, err := authenticate(ctx, application, input.Authorization)
 		if err != nil {
@@ -246,6 +270,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		item, err := application.CreateAsset(ctx, app.CreateAssetInput{
 			Principal:     principal,
+			Source:        audit.SourceAPI,
 			TenantID:      tenant.ID(input.TenantID),
 			InventoryID:   inventory.InventoryID(input.InventoryID),
 			Kind:          input.Body.Kind,
@@ -274,6 +299,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		item, err := application.UpdateAsset(ctx, app.UpdateAssetInput{
 			Principal:   principal,
+			Source:      audit.SourceAPI,
 			TenantID:    tenant.ID(input.TenantID),
 			InventoryID: inventory.InventoryID(input.InventoryID),
 			AssetID:     asset.ID(input.AssetID),
@@ -335,6 +361,26 @@ func registerRoutes(api huma.API, application app.App) {
 		}, nil
 	}, huma.OperationTags("assets"), securedOperation)
 
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", func(ctx context.Context, input *listInventoryAuditRecordsInput) (*listAuditRecordsOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListInventoryAuditRecords(ctx, app.ListAuditRecordsInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			Limit:       input.Limit,
+			Cursor:      input.Cursor,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return auditRecordsOutput(input.TenantID, result), nil
+	}, huma.OperationTags("audit records"), securedOperation)
+
 	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", func(ctx context.Context, input *createInventoryCustomFieldDefinitionInput) (*createCustomFieldDefinitionOutput, error) {
 		principal, err := authenticate(ctx, application, input.Authorization)
 		if err != nil {
@@ -343,6 +389,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		definition, err := application.CreateInventoryCustomFieldDefinition(ctx, app.CreateCustomFieldDefinitionInput{
 			Principal:   principal,
+			Source:      audit.SourceAPI,
 			TenantID:    tenant.ID(input.TenantID),
 			InventoryID: inventory.InventoryID(input.InventoryID),
 			Key:         input.Body.Key,
@@ -390,6 +437,7 @@ func registerRoutes(api huma.API, application app.App) {
 
 		grant, err := application.GrantInventoryAccess(ctx, app.GrantInventoryAccessInput{
 			Principal:    principal,
+			Source:       audit.SourceAPI,
 			TenantID:     tenant.ID(input.TenantID),
 			InventoryID:  inventory.InventoryID(input.InventoryID),
 			TargetUserID: input.Body.PrincipalID,
@@ -606,6 +654,25 @@ type listCustomFieldDefinitionsOutput struct {
 	Body successEnvelope[[]customFieldDefinitionResponse]
 }
 
+type listTenantAuditRecordsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type listInventoryAuditRecordsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type listAuditRecordsOutput struct {
+	Body successEnvelope[[]auditRecordResponse]
+}
+
 type createAssetInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
@@ -801,6 +868,20 @@ type inventoryAccessGrantResponse struct {
 	Relationship string `json:"relationship"`
 }
 
+type auditRecordResponse struct {
+	ID          string            `json:"id"`
+	TenantID    string            `json:"tenantId"`
+	InventoryID string            `json:"inventoryId,omitempty"`
+	PrincipalID string            `json:"principalId"`
+	Action      string            `json:"action"`
+	Source      string            `json:"source"`
+	TargetType  string            `json:"targetType"`
+	TargetID    string            `json:"targetId"`
+	OccurredAt  time.Time         `json:"occurredAt"`
+	RequestID   string            `json:"requestId,omitempty"`
+	Metadata    map[string]string `json:"metadata"`
+}
+
 func assetToResponse(item asset.Asset) assetResponse {
 	return assetResponse{
 		ID:             item.ID.String(),
@@ -849,6 +930,42 @@ func customFieldDefinitionsOutput(tenantID string, result app.ListCustomFieldDef
 				},
 			},
 		},
+	}
+}
+
+func auditRecordsOutput(tenantID string, result app.ListAuditRecordsResult) *listAuditRecordsOutput {
+	data := make([]auditRecordResponse, 0, len(result.Items))
+	for _, record := range result.Items {
+		data = append(data, auditRecordToResponse(record))
+	}
+	return &listAuditRecordsOutput{
+		Body: successEnvelope[[]auditRecordResponse]{
+			Data: data,
+			Meta: responseMeta{
+				TenantID: tenantID,
+				Pagination: &paginationMeta{
+					Limit:      result.Limit,
+					NextCursor: result.NextCursor,
+					HasMore:    result.HasMore,
+				},
+			},
+		},
+	}
+}
+
+func auditRecordToResponse(record audit.Record) auditRecordResponse {
+	return auditRecordResponse{
+		ID:          record.ID.String(),
+		TenantID:    record.TenantID.String(),
+		InventoryID: record.InventoryID.String(),
+		PrincipalID: record.PrincipalID.String(),
+		Action:      record.Action.String(),
+		Source:      record.Source.String(),
+		TargetType:  record.TargetType.String(),
+		TargetID:    record.TargetID,
+		OccurredAt:  record.OccurredAt,
+		RequestID:   record.RequestID,
+		Metadata:    record.MetadataValues(),
 	}
 }
 
