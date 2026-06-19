@@ -1,6 +1,7 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-spicedb-adapter verify-postgres-adapter compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-spicedb-adapter verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
+STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
 STUFF_STASH_TEST_POSTGRES_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
 SPICEDB_CONTAINER ?= stuff-stash-spicedb
 SPICEDB_GRPC_PORT ?= 50051
@@ -46,6 +47,15 @@ verify-spicedb-adapter:
 
 verify-postgres-adapter:
 	STUFF_STASH_TEST_POSTGRES_DSN="$(STUFF_STASH_TEST_POSTGRES_DSN)" GOCACHE=$(GOCACHE) go test ./apps/api/internal/adapters/gormstore -run TestPostgresStoreClaimsOutboxEventOnceAcrossWorkers -count=1
+
+verify-migrations:
+	STUFF_STASH_TEST_POSTGRES_DSN="$(STUFF_STASH_TEST_POSTGRES_DSN)" GOCACHE=$(GOCACHE) go test ./apps/api/internal/adapters/dbmigrations -run TestPostgresRunnerAppliesAndReportsNoopMigrations -count=1
+
+migrate-up:
+	STUFF_STASH_DATABASE_DSN="$(STUFF_STASH_DATABASE_DSN)" GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash migrate up
+
+migrate-status:
+	STUFF_STASH_DATABASE_DSN="$(STUFF_STASH_DATABASE_DSN)" GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash migrate status
 
 compose-up:
 	docker compose up --build

@@ -50,28 +50,21 @@ The goal is to prove a production-shaped path through:
 - Tenant and inventory creation now write durable state and authorization grant intent through a transactional outbox before SpiceDB relationship writes are drained.
 - Authorization outbox retries now run on startup and on an environment-configured interval, not only after create requests.
 - Authorization outbox events now use claim IDs and lease deadlines so multiple API replicas do not update the same event at the same time.
+- The pinned migration library is wired into the `stuff-stash` binary, and the same image can run `migrate up` or `migrate status`.
 
 ## Known Gaps
 
-- `golang-migrate/migrate` is specified in `tooling-versions.spec.md`, but the CLI is not wired into root commands yet.
-- The app still relies on GORM schema migration for the local tracer bullet. Production migration execution must use reviewed migration files.
 - Unrecoverable authorization outbox events do not yet have a dead-letter state.
 - Asset and containment behavior is specified but not implemented.
 
 ## Next Work
 
-1. Wire the pinned migration CLI.
-   - Use the `golang-migrate/migrate` version already specified in `tooling-versions.spec.md`.
-   - Add root migration commands.
-   - Verify migrations against Postgres.
-   - Stop relying on GORM schema migration beyond the local tracer bullet allowance.
-
-2. Add dead-letter handling for unrecoverable authorization outbox events.
+1. Add dead-letter handling for unrecoverable authorization outbox events.
    - Add an explicit terminal state for malformed or permanently invalid events.
    - Keep retryable SpiceDB outages separate from unrecoverable event data problems.
    - Preserve observability for operators to inspect and recover dead-lettered events.
 
-3. Start the first asset and containment implementation slice.
+2. Start the first asset and containment implementation slice.
    - Update the asset and containment specs first.
    - Implement the smallest useful asset model inside an inventory.
    - Preserve tenant and inventory isolation.

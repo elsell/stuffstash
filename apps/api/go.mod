@@ -6,8 +6,12 @@ require (
 	github.com/authzed/authzed-go v1.10.0
 	github.com/coreos/go-oidc/v3 v3.19.0
 	github.com/danielgtaylor/huma/v2 v2.38.0
+	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/oklog/ulid/v2 v2.1.1
 	google.golang.org/grpc v1.80.0
+	gorm.io/driver/postgres v1.6.0
+	gorm.io/driver/sqlite v1.6.0
+	gorm.io/gorm v1.31.1
 )
 
 require (
@@ -23,6 +27,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jzelinskie/stringz v0.0.3 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	golang.org/x/crypto v0.50.0 // indirect
@@ -34,7 +39,4 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260414002931-afd174a4e478 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	gorm.io/driver/postgres v1.6.0 // indirect
-	gorm.io/driver/sqlite v1.6.0 // indirect
-	gorm.io/gorm v1.31.1 // indirect
 )

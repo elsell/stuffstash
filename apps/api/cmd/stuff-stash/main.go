@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/dbmigrations"
 	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
@@ -22,6 +24,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -34,6 +37,14 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		if err := runMigrationCommand(ctx, cfg, os.Args[2:], os.Stdout); err != nil {
+			recordStartupFailure(observer, err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	authenticator, err := buildAuthenticator(ctx, cfg)
 	if err != nil {
@@ -164,6 +175,18 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 }
 
 func openPostgresStore(ctx context.Context, dsn string) (gormstore.Store, func() error, error) {
+	db, closeStore, err := openPostgresDB(ctx, dsn)
+	if err != nil {
+		return gormstore.Store{}, nil, err
+	}
+	if err := verifyPostgresSchemaCurrent(db); err != nil {
+		_ = closeStore()
+		return gormstore.Store{}, nil, err
+	}
+	return gormstore.NewStore(db), closeStore, nil
+}
+
+func openPostgresDB(ctx context.Context, dsn string) (*gorm.DB, func() error, error) {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 	deadline := time.NewTimer(30 * time.Second)
@@ -171,44 +194,103 @@ func openPostgresStore(ctx context.Context, dsn string) (gormstore.Store, func()
 
 	var lastErr error
 	for {
-		store, closeStore, err := tryOpenPostgresStore(ctx, dsn)
+		db, closeStore, err := tryOpenPostgresDB(ctx, dsn)
 		if err == nil {
-			return store, closeStore, nil
+			return db, closeStore, nil
 		}
 		lastErr = err
 
 		select {
 		case <-ctx.Done():
-			return gormstore.Store{}, nil, ctx.Err()
+			return nil, nil, ctx.Err()
 		case <-deadline.C:
-			return gormstore.Store{}, nil, fmt.Errorf("open postgres store: %w", lastErr)
+			return nil, nil, fmt.Errorf("open postgres store: %w", lastErr)
 		case <-ticker.C:
 		}
 	}
 }
 
-func tryOpenPostgresStore(ctx context.Context, dsn string) (gormstore.Store, func() error, error) {
+func tryOpenPostgresDB(ctx context.Context, dsn string) (*gorm.DB, func() error, error) {
 	db, err := gormstore.OpenPostgres(dsn)
 	if err != nil {
-		return gormstore.Store{}, nil, err
+		return nil, nil, err
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		return gormstore.Store{}, nil, err
+		return nil, nil, err
 	}
 	closeStore := sqlDB.Close
 
 	if err := sqlDB.PingContext(ctx); err != nil {
 		_ = closeStore()
-		return gormstore.Store{}, nil, err
-	}
-	if err := gormstore.Migrate(ctx, db); err != nil {
-		_ = closeStore()
-		return gormstore.Store{}, nil, err
+		return nil, nil, err
 	}
 
-	return gormstore.NewStore(db), closeStore, nil
+	return db, closeStore, nil
+}
+
+func runMigrationCommand(ctx context.Context, cfg config.Config, args []string, output io.Writer) error {
+	if len(args) != 1 {
+		return errors.New("migration command must be one of: up, status")
+	}
+	switch args[0] {
+	case "up", "status":
+	default:
+		return errors.New("migration command must be one of: up, status")
+	}
+	if strings.TrimSpace(cfg.DatabaseDSN) == "" {
+		return errors.New("database dsn is required")
+	}
+
+	db, closeDB, err := openPostgresDB(ctx, cfg.DatabaseDSN)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = closeDB()
+	}()
+
+	runner := dbmigrations.NewRunner(db)
+	switch args[0] {
+	case "up":
+		if err := runner.Up(); err != nil {
+			return err
+		}
+		_, _ = fmt.Fprintln(output, "migrations applied")
+	case "status":
+		status, err := runner.Status()
+		if err != nil {
+			return err
+		}
+		if status.Empty {
+			_, _ = fmt.Fprintln(output, "migration version: none")
+			return nil
+		}
+		_, _ = fmt.Fprintf(output, "migration version: %d latest: %d dirty: %t\n", status.Version, status.Latest, status.Dirty)
+	}
+	return nil
+}
+
+func verifyPostgresSchemaCurrent(db *gorm.DB) error {
+	status, err := dbmigrations.NewRunner(db).Status()
+	if err != nil {
+		return err
+	}
+	return validateMigrationStatus(status)
+}
+
+func validateMigrationStatus(status dbmigrations.Status) error {
+	if status.Empty {
+		return errors.New("database migrations have not been applied")
+	}
+	if status.Dirty {
+		return fmt.Errorf("database migrations are dirty at version %d", status.Version)
+	}
+	if status.Version != status.Latest {
+		return fmt.Errorf("database migration version %d does not match latest %d", status.Version, status.Latest)
+	}
+	return nil
 }
 
 func buildAuthenticator(ctx context.Context, cfg config.Config) (ports.Authenticator, error) {

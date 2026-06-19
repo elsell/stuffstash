@@ -1,14 +1,71 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/dbmigrations"
 	"github.com/stuffstash/stuff-stash/internal/config"
 )
+
+func TestRunMigrationCommandRejectsMissingAction(t *testing.T) {
+	var output bytes.Buffer
+
+	err := runMigrationCommand(context.Background(), config.Config{DatabaseDSN: "postgres://example"}, nil, &output)
+	if err == nil {
+		t.Fatalf("expected missing migration action error")
+	}
+}
+
+func TestRunMigrationCommandRejectsUnknownAction(t *testing.T) {
+	var output bytes.Buffer
+
+	err := runMigrationCommand(context.Background(), config.Config{DatabaseDSN: "postgres://example"}, []string{"sideways"}, &output)
+	if err == nil {
+		t.Fatalf("expected unknown migration action error")
+	}
+}
+
+func TestRunMigrationCommandRejectsMissingDSN(t *testing.T) {
+	var output bytes.Buffer
+
+	err := runMigrationCommand(context.Background(), config.Config{}, []string{"up"}, &output)
+	if err == nil {
+		t.Fatalf("expected missing database dsn error")
+	}
+}
+
+func TestValidateMigrationStatusRejectsEmptySchema(t *testing.T) {
+	err := validateMigrationStatus(dbmigrations.Status{Latest: 3, Empty: true})
+	if err == nil {
+		t.Fatalf("expected empty schema error")
+	}
+}
+
+func TestValidateMigrationStatusRejectsDirtySchema(t *testing.T) {
+	err := validateMigrationStatus(dbmigrations.Status{Version: 2, Latest: 3, Dirty: true})
+	if err == nil {
+		t.Fatalf("expected dirty schema error")
+	}
+}
+
+func TestValidateMigrationStatusRejectsOutdatedSchema(t *testing.T) {
+	err := validateMigrationStatus(dbmigrations.Status{Version: 2, Latest: 3})
+	if err == nil {
+		t.Fatalf("expected outdated schema error")
+	}
+}
+
+func TestValidateMigrationStatusAcceptsCurrentSchema(t *testing.T) {
+	err := validateMigrationStatus(dbmigrations.Status{Version: 3, Latest: 3})
+	if err != nil {
+		t.Fatalf("validate current schema: %v", err)
+	}
+}
 
 func TestBuildAuthenticatorAcceptsLocalDevMode(t *testing.T) {
 	authenticator, err := buildAuthenticator(context.Background(), config.Config{AuthMode: "local-dev"})

@@ -17,7 +17,10 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - OIDC verifier: `github.com/coreos/go-oidc/v3 v3.19.0`.
 - OAuth2 support: `golang.org/x/oauth2 v0.36.0`.
 - gRPC: `google.golang.org/grpc v1.80.0`.
-- golang-migrate: `github.com/golang-migrate/migrate/v4 v4.19.1` when migration execution is implemented.
+- GORM: `gorm.io/gorm v1.31.1`.
+- GORM Postgres driver: `gorm.io/driver/postgres v1.6.0`.
+- GORM SQLite driver: `gorm.io/driver/sqlite v1.6.0`.
+- golang-migrate: `github.com/golang-migrate/migrate/v4 v4.19.1`.
 
 ## Pinned Container Images
 

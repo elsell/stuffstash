@@ -1,4 +1,21 @@
 services:
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:-registry.access.redhat.com/hi/go:1.25.10-builder-1780418048@sha256:1a99d42f555db97455998945faf3c797c1f65ce1b92e4d9952a589446d114d6c}
+        RUNTIME_IMAGE: ${RUNTIME_IMAGE:-registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha256:82ab1238082f405e19e1cc6e4950549371b6742ba6b649ca356c058249162540}
+    image: stuff-stash:local
+    command:
+      - migrate
+      - up
+    environment:
+      STUFF_STASH_DATABASE_DSN: ${STUFF_STASH_DATABASE_DSN:-postgres://stuffstash:stuffstash-local@postgres:5432/stuffstash?sslmode=disable}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   app:
     build:
       context: .
@@ -26,8 +43,12 @@ services:
     ports:
       - "${STUFF_STASH_HTTP_PORT:-8080}:8080"
     depends_on:
-      - postgres
-      - spicedb
+      postgres:
+        condition: service_started
+      spicedb:
+        condition: service_started
+      migration:
+        condition: service_completed_successfully
 
   postgres:
     image: postgres:18.1-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
@@ -39,6 +60,13 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 2s
+      timeout: 5s
+      retries: 15
 
   spicedb:
     image: authzed/spicedb:v1.47.1@sha256:25c5499a43fdb206b7b1b72da4ba7ca911d92fd80d4d08ce2e95bf7ea0709788

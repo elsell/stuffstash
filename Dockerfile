@@ -10,6 +10,7 @@ COPY apps/api/go.mod ./
 COPY apps/api/go.sum ./
 COPY apps/api/cmd ./cmd
 COPY apps/api/internal ./internal
+COPY apps/api/migrations ./migrations
 RUN CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash ./cmd/stuff-stash
 
 FROM ${RUNTIME_IMAGE}

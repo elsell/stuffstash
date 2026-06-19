@@ -97,7 +97,7 @@ make verify-local-api
 make compose-up
 ```
 
-Compose starts the API, Postgres, and SpiceDB. By default, the API uses Postgres persistence and in-memory authorization.
+Compose starts Postgres, runs migrations with the same API image, then starts the API and SpiceDB. By default, the API uses Postgres persistence and in-memory authorization.
 
 To run the API against SpiceDB authorization:
 
@@ -125,6 +125,23 @@ Stop it with:
 
 ```sh
 make compose-down
+```
+
+## Run Migrations
+
+The app binary owns migrations too. That keeps local runs and Kubernetes jobs on the same path.
+
+```sh
+make migrate-up
+make migrate-status
+```
+
+Set `STUFF_STASH_DATABASE_DSN` when you need a database other than the local Compose default.
+
+To verify migration behavior against Postgres:
+
+```sh
+make verify-migrations
 ```
 
 ## Run With SpiceDB Without Compose
