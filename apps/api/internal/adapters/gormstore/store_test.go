@@ -283,6 +283,44 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 	}
 }
 
+func TestStoreMarksOutboxEventsDeadLettered(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	saveTenantWithOutbox(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Home")
+
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("expected 1 claimed event, got %+v", events)
+	}
+
+	if err := store.MarkAuthorizationOutboxEventDeadLettered(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "wrong-claim", "invalid event"); !errors.Is(err, ports.ErrAuthorizationOutboxClaimLost) {
+		t.Fatalf("expected claim lost error, got %v", err)
+	}
+	if err := store.MarkAuthorizationOutboxEventDeadLettered(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "claim-one", "invalid event"); err != nil {
+		t.Fatalf("mark outbox dead-lettered: %v", err)
+	}
+
+	var model authorizationOutboxEventModel
+	if err := store.db.WithContext(ctx).Where(&authorizationOutboxEventModel{ID: "01ARZ3NDEKTSV4RRFFQ69G5FAW"}).First(&model).Error; err != nil {
+		t.Fatalf("load outbox event: %v", err)
+	}
+	if model.DeadLetteredAt == nil || model.DeadLetterReason != "invalid event" {
+		t.Fatalf("expected dead-letter details, got %+v", model)
+	}
+
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected dead-lettered event hidden from pending list, got %+v", events)
+	}
+}
+
 func TestStoreClaimsHideEventsUntilLeaseExpires(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

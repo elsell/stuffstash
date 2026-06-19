@@ -30,16 +30,18 @@ const (
 )
 
 type AuthorizationOutboxEvent struct {
-	ID           string
-	Kind         AuthorizationOutboxEventKind
-	PrincipalID  identity.PrincipalID
-	TenantID     tenant.ID
-	InventoryID  inventory.InventoryID
-	Attempts     int
-	LastError    string
-	ClaimID      string
-	ClaimedUntil time.Time
-	CreatedAt    time.Time
+	ID               string
+	Kind             AuthorizationOutboxEventKind
+	PrincipalID      identity.PrincipalID
+	TenantID         tenant.ID
+	InventoryID      inventory.InventoryID
+	Attempts         int
+	LastError        string
+	ClaimID          string
+	ClaimedUntil     time.Time
+	DeadLetteredAt   time.Time
+	DeadLetterReason string
+	CreatedAt        time.Time
 }
 
 type AuthorizationOutbox interface {
@@ -48,4 +50,5 @@ type AuthorizationOutbox interface {
 	ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimID string, limit int, leaseUntil time.Time) ([]AuthorizationOutboxEvent, error)
 	MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string, claimID string) error
 	MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID string, claimID string, reason string) error
+	MarkAuthorizationOutboxEventDeadLettered(ctx context.Context, eventID string, claimID string, reason string) error
 }

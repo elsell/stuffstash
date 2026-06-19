@@ -4,13 +4,18 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func TestCreateTenantEnqueuesAndDrainsOwnerGrant(t *testing.T) {
@@ -152,6 +157,104 @@ func TestDrainAuthorizationOutboxContinuesAfterFailedEvent(t *testing.T) {
 	}
 }
 
+func TestDrainAuthorizationOutboxDeadLettersUnrecoverableEventAndContinues(t *testing.T) {
+	observer := &fakeObserver{}
+	outbox := &fakeOutbox{
+		events: []ports.AuthorizationOutboxEvent{
+			{
+				ID:          "bad-event",
+				Kind:        ports.AuthorizationOutboxEventKind("unknown"),
+				PrincipalID: identity.PrincipalID("user-one"),
+				TenantID:    tenant.ID("tenant-one"),
+			},
+			{
+				ID:          "inventory-event",
+				Kind:        ports.AuthorizationOutboxGrantInventoryOwner,
+				PrincipalID: identity.PrincipalID("user-one"),
+				TenantID:    tenant.ID("tenant-one"),
+				InventoryID: inventory.InventoryID("inventory-one"),
+			},
+		},
+	}
+	application := New(Dependencies{
+		Observer:    observer,
+		Authorizer:  &fakeAuthorizer{},
+		Tenants:     &fakeTenantRepository{},
+		Inventories: &fakeInventoryRepository{},
+		Outbox:      outbox,
+		IDs:         &fakeIDGenerator{},
+	})
+
+	if err := application.DrainAuthorizationOutbox(context.Background(), 10); err != nil {
+		t.Fatalf("dead-lettering unrecoverable events should not fail the batch: %v", err)
+	}
+	if !slices.Contains(outbox.deadLettered, "bad-event") {
+		t.Fatalf("expected bad event to be dead-lettered, got %+v", outbox.deadLettered)
+	}
+	if !slices.Contains(outbox.processed, "inventory-event") {
+		t.Fatalf("expected inventory event to process after dead-letter, got %+v", outbox.processed)
+	}
+	if !observer.hasEvent(ports.EventAuthorizationOutboxDeadLettered) {
+		t.Fatalf("expected outbox dead-letter observability event, got %+v", observer.events)
+	}
+
+	events, err := outbox.ClaimPendingAuthorizationOutboxEvents(context.Background(), "claim-two", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected dead-lettered event to stay out of pending claims, got %+v", events)
+	}
+}
+
+func TestDrainAuthorizationOutboxDeadLettersDurableInvalidEvent(t *testing.T) {
+	ctx := context.Background()
+	store := newAppTestGORMStore(t, ctx)
+	tenantName, ok := tenant.NewName("Home")
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+	if err := store.SaveTenantAndEnqueueOwnerGrant(ctx, "event-one", tenant.Tenant{
+		ID:   tenant.ID("tenant-one"),
+		Name: tenantName,
+	}, identity.Principal{}); err != nil {
+		t.Fatalf("save tenant and enqueue invalid owner grant: %v", err)
+	}
+
+	observer := &fakeObserver{}
+	authorizer := &fakeAuthorizer{}
+	application := New(Dependencies{
+		Observer:    observer,
+		Authorizer:  authorizer,
+		Tenants:     store,
+		Inventories: store,
+		Outbox:      store,
+		IDs:         &fakeIDGenerator{ids: []string{"claim-one"}},
+	})
+
+	if err := application.DrainAuthorizationOutbox(ctx, 10); err != nil {
+		t.Fatalf("dead-lettering durable invalid events should not fail the batch: %v", err)
+	}
+	if len(authorizer.tenantOwnerGrants) != 0 {
+		t.Fatalf("expected invalid event not to reach authorizer, got %+v", authorizer.tenantOwnerGrants)
+	}
+	if !observer.hasEvent(ports.EventAuthorizationOutboxDeadLettered) {
+		t.Fatalf("expected outbox dead-letter observability event, got %+v", observer.events)
+	}
+	deadLetterEvent, ok := observer.eventNamed(ports.EventAuthorizationOutboxDeadLettered)
+	if !ok || !strings.Contains(deadLetterEvent.Fields["reason"], "principal id") {
+		t.Fatalf("expected actionable dead-letter reason, got %+v", deadLetterEvent)
+	}
+
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox events: %v", err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("expected durable dead-lettered event to stay out of pending claims, got %+v", events)
+	}
+}
+
 func TestListInventoriesReturnsAuthorizationBackendFailures(t *testing.T) {
 	expected := errors.New("authorization backend unavailable")
 	application := New(Dependencies{
@@ -253,9 +356,10 @@ type fakeInventoryRepository struct {
 }
 
 type fakeOutbox struct {
-	events    []ports.AuthorizationOutboxEvent
-	processed []string
-	failed    []string
+	events       []ports.AuthorizationOutboxEvent
+	processed    []string
+	failed       []string
+	deadLettered []string
 }
 
 func (f *fakeOutbox) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal) error {
@@ -279,13 +383,26 @@ func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventI
 	return nil
 }
 
-func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, _ int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+	if limit <= 0 {
+		limit = 25
+	}
+	now := time.Now()
 	events := make([]ports.AuthorizationOutboxEvent, 0, len(f.events))
 	for index, event := range f.events {
+		if !event.DeadLetteredAt.IsZero() {
+			continue
+		}
+		if !event.ClaimedUntil.IsZero() && event.ClaimedUntil.After(now) {
+			continue
+		}
 		event.ClaimID = claimID
 		event.ClaimedUntil = leaseUntil
 		f.events[index] = event
 		events = append(events, event)
+		if len(events) == limit {
+			break
+		}
 	}
 	return events, nil
 }
@@ -305,6 +422,21 @@ func (f *fakeOutbox) MarkAuthorizationOutboxEventFailed(_ context.Context, event
 	for index, event := range f.events {
 		if event.ID == eventID && event.ClaimID == claimID {
 			f.failed = append(f.failed, eventID)
+			event.ClaimID = ""
+			event.ClaimedUntil = time.Time{}
+			f.events[index] = event
+			return nil
+		}
+	}
+	return ports.ErrAuthorizationOutboxClaimLost
+}
+
+func (f *fakeOutbox) MarkAuthorizationOutboxEventDeadLettered(_ context.Context, eventID string, claimID string, reason string) error {
+	for index, event := range f.events {
+		if event.ID == eventID && event.ClaimID == claimID {
+			f.deadLettered = append(f.deadLettered, eventID)
+			event.DeadLetteredAt = time.Now()
+			event.DeadLetterReason = reason
 			event.ClaimID = ""
 			event.ClaimedUntil = time.Time{}
 			f.events[index] = event
@@ -339,6 +471,15 @@ func (f *fakeObserver) hasEvent(name ports.EventName) bool {
 	return false
 }
 
+func (f *fakeObserver) eventNamed(name ports.EventName) (ports.Event, bool) {
+	for _, event := range f.events {
+		if event.Name == name {
+			return event, true
+		}
+	}
+	return ports.Event{}, false
+}
+
 type fakeIDGenerator struct {
 	ids []string
 }
@@ -350,6 +491,22 @@ func (f *fakeIDGenerator) NewID() string {
 	id := f.ids[0]
 	f.ids = f.ids[1:]
 	return id
+}
+
+func newAppTestGORMStore(t *testing.T, ctx context.Context) gormstore.Store {
+	t.Helper()
+
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	if err != nil {
+		t.Fatalf("open sqlite fake: %v", err)
+	}
+	if err := gormstore.Migrate(ctx, db); err != nil {
+		t.Fatalf("migrate sqlite fake: %v", err)
+	}
+
+	return gormstore.NewStore(db)
 }
 
 func inventoryItem(id string, tenantID string, name string) inventory.Inventory {

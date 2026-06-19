@@ -148,6 +148,7 @@ func skipLockedForUpdate() clause.Locking {
 func claimableAuthorizationOutboxEvent(now time.Time) clause.Expression {
 	return clause.And(
 		clause.Eq{Column: clause.Column{Name: "processed_at"}, Value: nil},
+		clause.Eq{Column: clause.Column{Name: "dead_lettered_at"}, Value: nil},
 		clause.Or(
 			clause.Eq{Column: clause.Column{Name: "claim_id"}, Value: ""},
 			clause.Lte{Column: clause.Column{Name: "claimed_until"}, Value: now},
@@ -193,6 +194,26 @@ func (s Store) MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID s
 	})
 }
 
+func (s Store) MarkAuthorizationOutboxEventDeadLettered(ctx context.Context, eventID string, claimID string, reason string) error {
+	now := time.Now()
+	result := s.db.WithContext(ctx).
+		Model(&authorizationOutboxEventModel{}).
+		Where(&authorizationOutboxEventModel{ID: eventID, ClaimID: claimID}).
+		Updates(map[string]any{
+			"dead_lettered_at":   now,
+			"dead_letter_reason": reason,
+			"claim_id":           "",
+			"claimed_until":      nil,
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	return nil
+}
+
 func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID) ([]inventory.Inventory, error) {
 	var models []inventoryModel
 	if err := s.db.WithContext(ctx).Where(&inventoryModel{TenantID: tenantID.String()}).Find(&models).Error; err != nil {
@@ -236,20 +257,22 @@ type inventoryModel struct {
 }
 
 type authorizationOutboxEventModel struct {
-	ID           string         `gorm:"primaryKey;size:26"`
-	Kind         string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner');check:chk_authorization_outbox_events_inventory_required,(kind = 'grant_inventory_owner' AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
-	PrincipalID  string         `gorm:"not null;size:128;index"`
-	TenantID     string         `gorm:"not null;size:26;index"`
-	Tenant       tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	InventoryID  *string        `gorm:"size:26;index"`
-	Inventory    inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
-	Attempts     int            `gorm:"not null;default:0"`
-	LastError    string         `gorm:"not null;default:''"`
-	ClaimID      string         `gorm:"not null;default:'';size:26;index"`
-	ClaimedUntil *time.Time     `gorm:"index"`
-	ProcessedAt  *time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID               string         `gorm:"primaryKey;size:26"`
+	Kind             string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner');check:chk_authorization_outbox_events_inventory_required,(kind = 'grant_inventory_owner' AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
+	PrincipalID      string         `gorm:"not null;size:128;index"`
+	TenantID         string         `gorm:"not null;size:26;index"`
+	Tenant           tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID      *string        `gorm:"size:26;index"`
+	Inventory        inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
+	Attempts         int            `gorm:"not null;default:0"`
+	LastError        string         `gorm:"not null;default:''"`
+	ClaimID          string         `gorm:"not null;default:'';size:26;index"`
+	ClaimedUntil     *time.Time     `gorm:"index"`
+	ProcessedAt      *time.Time
+	DeadLetteredAt   *time.Time `gorm:"index"`
+	DeadLetterReason string     `gorm:"not null;default:''"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 func (authorizationOutboxEventModel) TableName() string {
@@ -296,5 +319,9 @@ func (m authorizationOutboxEventModel) toPort() ports.AuthorizationOutboxEvent {
 	if m.ClaimedUntil != nil {
 		event.ClaimedUntil = *m.ClaimedUntil
 	}
+	if m.DeadLetteredAt != nil {
+		event.DeadLetteredAt = *m.DeadLetteredAt
+	}
+	event.DeadLetterReason = m.DeadLetterReason
 	return event
 }

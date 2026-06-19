@@ -51,20 +51,15 @@ The goal is to prove a production-shaped path through:
 - Authorization outbox retries now run on startup and on an environment-configured interval, not only after create requests.
 - Authorization outbox events now use claim IDs and lease deadlines so multiple API replicas do not update the same event at the same time.
 - The pinned migration library is wired into the `stuff-stash` binary, and the same image can run `migrate up` or `migrate status`.
+- Authorization outbox events now support a terminal dead-letter state for unrecoverable event data problems while keeping transient SpiceDB failures retryable.
 
 ## Known Gaps
 
-- Unrecoverable authorization outbox events do not yet have a dead-letter state.
 - Asset and containment behavior is specified but not implemented.
 
 ## Next Work
 
-1. Add dead-letter handling for unrecoverable authorization outbox events.
-   - Add an explicit terminal state for malformed or permanently invalid events.
-   - Keep retryable SpiceDB outages separate from unrecoverable event data problems.
-   - Preserve observability for operators to inspect and recover dead-lettered events.
-
-2. Start the first asset and containment implementation slice.
+1. Start the first asset and containment implementation slice.
    - Update the asset and containment specs first.
    - Implement the smallest useful asset model inside an inventory.
    - Preserve tenant and inventory isolation.

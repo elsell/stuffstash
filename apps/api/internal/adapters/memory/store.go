@@ -92,6 +92,9 @@ func (s *Store) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID
 	now := time.Now()
 	events := []ports.AuthorizationOutboxEvent{}
 	for _, event := range s.outbox {
+		if !event.DeadLetteredAt.IsZero() {
+			continue
+		}
 		if !event.ClaimedUntil.IsZero() && event.ClaimedUntil.After(now) {
 			continue
 		}
@@ -137,6 +140,22 @@ func (s *Store) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID st
 	}
 	event.Attempts++
 	event.LastError = reason
+	event.ClaimID = ""
+	event.ClaimedUntil = time.Time{}
+	s.outbox[eventID] = event
+	return nil
+}
+
+func (s *Store) MarkAuthorizationOutboxEventDeadLettered(_ context.Context, eventID string, claimID string, reason string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.outbox[eventID]
+	if !ok || event.ClaimID != claimID {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	event.DeadLetteredAt = time.Now()
+	event.DeadLetterReason = reason
 	event.ClaimID = ""
 	event.ClaimedUntil = time.Time{}
 	s.outbox[eventID] = event

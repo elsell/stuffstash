@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -149,8 +150,20 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 	var drainErr error
 	processedCount := 0
 	failedCount := 0
+	deadLetteredCount := 0
 	for _, event := range events {
 		if err := a.applyAuthorizationOutboxEvent(ctx, event); err != nil {
+			if isUnrecoverableAuthorizationOutboxError(err) {
+				if markErr := a.outbox.MarkAuthorizationOutboxEventDeadLettered(ctx, event.ID, claimID, err.Error()); markErr != nil {
+					failedCount++
+					a.recordAuthorizationOutboxEventFailed(ctx, event, markErr)
+					drainErr = errors.Join(drainErr, markErr)
+					continue
+				}
+				deadLetteredCount++
+				a.recordAuthorizationOutboxEventDeadLettered(ctx, event, err)
+				continue
+			}
 			failedCount++
 			if markErr := a.outbox.MarkAuthorizationOutboxEventFailed(ctx, event.ID, claimID, err.Error()); markErr != nil {
 				a.recordAuthorizationOutboxEventFailed(ctx, event, markErr)
@@ -174,9 +187,10 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 			Name:    ports.EventAuthorizationOutboxDrained,
 			Message: "authorization outbox drained",
 			Fields: map[string]string{
-				"event_count":     strconv.Itoa(len(events)),
-				"processed_count": strconv.Itoa(processedCount),
-				"failed_count":    strconv.Itoa(failedCount),
+				"event_count":         strconv.Itoa(len(events)),
+				"processed_count":     strconv.Itoa(processedCount),
+				"failed_count":        strconv.Itoa(failedCount),
+				"dead_lettered_count": strconv.Itoa(deadLetteredCount),
 			},
 		})
 	}
@@ -185,6 +199,10 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 }
 
 func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.AuthorizationOutboxEvent) error {
+	if err := validateAuthorizationOutboxEvent(event); err != nil {
+		return err
+	}
+
 	principal := identity.Principal{ID: event.PrincipalID}
 	switch event.Kind {
 	case ports.AuthorizationOutboxGrantTenantOwner:
@@ -194,6 +212,33 @@ func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.Auth
 	default:
 		return ErrInvalidInput
 	}
+}
+
+func validateAuthorizationOutboxEvent(event ports.AuthorizationOutboxEvent) error {
+	if _, ok := identity.NewPrincipalID(event.PrincipalID.String()); !ok {
+		return fmt.Errorf("%w: authorization outbox event principal id is invalid", ErrInvalidInput)
+	}
+	if _, ok := tenant.NewID(event.TenantID.String()); !ok {
+		return fmt.Errorf("%w: authorization outbox event tenant id is invalid", ErrInvalidInput)
+	}
+
+	switch event.Kind {
+	case ports.AuthorizationOutboxGrantTenantOwner:
+		if event.InventoryID.String() != "" {
+			return fmt.Errorf("%w: tenant owner grant must not include inventory id", ErrInvalidInput)
+		}
+	case ports.AuthorizationOutboxGrantInventoryOwner:
+		if _, ok := inventory.NewID(event.InventoryID.String()); !ok {
+			return fmt.Errorf("%w: inventory owner grant inventory id is invalid", ErrInvalidInput)
+		}
+	default:
+		return fmt.Errorf("%w: authorization outbox event kind is unsupported", ErrInvalidInput)
+	}
+	return nil
+}
+
+func isUnrecoverableAuthorizationOutboxError(err error) bool {
+	return errors.Is(err, ErrInvalidInput)
 }
 
 func (a App) recordAuthorizationOutboxEventFailed(ctx context.Context, event ports.AuthorizationOutboxEvent, err error) {
@@ -207,6 +252,20 @@ func (a App) recordAuthorizationOutboxEventFailed(ctx context.Context, event por
 			"inventory_id": event.InventoryID.String(),
 			"attempts":     strconv.Itoa(event.Attempts + 1),
 			"error":        err.Error(),
+		},
+	})
+}
+
+func (a App) recordAuthorizationOutboxEventDeadLettered(ctx context.Context, event ports.AuthorizationOutboxEvent, err error) {
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAuthorizationOutboxDeadLettered,
+		Message: "authorization outbox event dead-lettered",
+		Fields: map[string]string{
+			"event_id":     event.ID,
+			"event_kind":   string(event.Kind),
+			"tenant_id":    event.TenantID.String(),
+			"inventory_id": event.InventoryID.String(),
+			"reason":       err.Error(),
 		},
 	})
 }
