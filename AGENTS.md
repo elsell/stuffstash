@@ -15,6 +15,9 @@ These instructions are binding for all agents and contributors working in this r
 - The spec must be updated before any coding begins.
 - Code must follow the spec. If code and spec disagree, update the spec first, then update the code.
 - Do not introduce behavior, architecture, dependencies, or domain concepts that are not represented in the relevant spec.
+- `specs/platform/roadmap.spec.md` records the current focus and likely next work.
+- Keep the roadmap spec current when project focus, sequencing, completion evidence, or known blockers change.
+- Do not update the roadmap for tiny fixes, formatting-only changes, or routine refactors that do not change project direction.
 
 ## Documentation
 
@@ -238,8 +241,10 @@ Before implementing any change:
 6. Validate configuration comes from environment-backed configuration objects.
 7. Add or update adversarial end-to-end security tests for every authentication or authorization boundary touched by the change.
 8. Run the relevant tests.
-9. Run the relevant pre-commit hooks, or explain why they could not be run.
-10. Commit using an atomic Conventional Commit message when asked to commit changes.
+9. Run the code critic agent and address or explicitly defer its findings.
+10. Update `specs/platform/roadmap.spec.md` if project focus, sequencing, completion evidence, or known blockers changed.
+11. Run the relevant pre-commit hooks, or explain why they could not be run.
+12. Commit using an atomic Conventional Commit message when asked to commit changes.
 
 ## Code Smells
 
