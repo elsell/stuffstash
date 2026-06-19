@@ -14,13 +14,14 @@ This spec does not define full aggregates, persistence schemas, REST endpoints, 
 
 ### Assets
 
-The asset context owns inventory items.
+The asset context owns inventory nodes.
 
-Assets must be flexible enough to represent household items, tools, electronics, medicine, pantry goods, documents, containers, and other things without making any one category the product focus.
+Assets must be flexible enough to represent household items, tools, electronics, medicine, pantry goods, documents, containers, place-like locations, and other things without making any one category the product focus.
 
 The asset context owns:
 
 - Asset identity.
+- Asset kind, including item, container, and location-like assets.
 - Asset title and description.
 - Asset lifecycle once specified.
 - Asset containment behavior once specified.
@@ -56,15 +57,15 @@ The identity and access context owns:
 
 ### Locations
 
-The location context owns named places and containment paths inside an inventory.
+The location context owns user-facing named place behavior inside an inventory.
 
-Locations are inventory-scoped and hierarchical. Locations and container assets are separate domain concepts that share containment behavior.
+Locations are inventory-scoped and hierarchical from the user's point of view. In the initial implementation, a location is backed by an asset with kind `location`, not by a separate persisted location hierarchy.
 
 The location context owns:
 
-- Location identity.
-- Location names and hierarchy.
-- Moving locations within an inventory.
+- Location language and UX concepts.
+- Location hierarchy behavior through asset containment.
+- Moving location assets within an inventory.
 - Resolving spoken or typed location references.
 
 ### Agent And Model

@@ -8,15 +8,22 @@ Locations must support ordinary household language such as garage, shelf, bin, c
 
 ## Scope
 
-This spec covers the initial location model direction.
+This spec covers the initial location model direction from the user's point of view.
 
-This spec does not define persistence tables, REST endpoints, or the fuzzy matching implementation for natural language.
+This spec does not define separate persistence tables, REST endpoints, or the fuzzy matching implementation for natural language.
+
+## Decision
+
+- Locations are user-facing place concepts backed by assets with kind `location`.
+- The system must not implement a separate location hierarchy table for the first asset slice.
+- Location behavior must use the shared asset containment model.
+- A future spec may reintroduce separate location persistence only if it explains why the unified model is insufficient.
 
 ## Requirements
 
 - Locations are inventory-scoped.
 - Locations must support hierarchy.
-- A location may have a parent location.
+- A location asset may have a parent location or container asset.
 - Location nesting may be arbitrarily deep unless a future performance or usability spec defines a limit.
 - Locations must be movable within an inventory.
 - Moving a location must preserve its children unless a future spec defines a different behavior.
@@ -26,18 +33,21 @@ This spec does not define persistence tables, REST endpoints, or the fuzzy match
 
 ## Relationship To Assets
 
-- Assets may be placed in locations.
-- Assets may be placed inside other assets when the parent asset behaves like a container.
-- Locations and container assets must share containment behavior.
-- Locations and assets are separate domain concepts with a shared containment abstraction.
+- Assets may be placed in location assets.
+- Assets may be placed inside container assets.
+- Locations and container assets share the same containment behavior.
+- The domain may expose location-specific operations for clarity, but those operations must delegate to the asset containment model.
+- Location creation creates an asset with kind `location`.
 
 ## Testing
 
 - Tests must verify location hierarchy behavior.
 - Tests must verify moving locations.
+- Tests must verify location operations persist location assets, not separate location rows.
 - Tests must verify inventory isolation.
 - Tests must verify tenant isolation.
-- Tests must verify authorization for creating, moving, renaming, and deleting locations.
+- Tests must verify authorization for creating, moving, and renaming locations.
+- Delete, archive, and unarchive behavior for locations is out of scope for the first asset slice.
 - Conversational location creation and movement must have adversarial end-to-end tests before public interaction points expose it.
 
 ## Open Questions

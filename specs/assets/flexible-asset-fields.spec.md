@@ -4,18 +4,22 @@
 
 Stuff Stash must support useful inventory details without forcing every household, hobby, tool, pantry item, document, or garage object into one rigid schema.
 
-The asset model needs a stable core plus custom fields from day one.
+The asset model needs a stable core plus a custom-field storage path from day one.
 
 ## Scope
 
 This spec covers flexible asset metadata requirements.
 
-This spec does not define the full asset aggregate, asset lifecycle, search model, persistence schema, UI editor, or import/export behavior.
+This spec does not define the full asset aggregate, asset lifecycle, search model, UI editor, or import/export behavior.
+
+The first asset slice may store only an empty custom field value object until custom field definition persistence and validation are implemented.
 
 ## Requirements
 
 - Assets must have a stable domain core for fields that are truly common to inventory items.
 - Assets must support custom fields.
+- The initial asset schema must include a place to store custom field values.
+- Non-empty custom field values must be rejected until custom field definition persistence and validation are implemented.
 - Custom field definitions may be tenant-scoped or inventory-scoped.
 - Tenant-scoped custom field definitions must flow down into inventories.
 - Inventory-scoped custom field definitions must apply only inside that inventory.

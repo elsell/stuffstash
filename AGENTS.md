@@ -87,7 +87,8 @@ These instructions are binding for all agents and contributors working in this r
   - Media domain
   - Data portability domain
 - These boundaries must be changed through specs before implementation.
-- Assets and locations are separate domain concepts that share containment behavior.
+- Location is user-facing domain language backed by assets with kind `location` in the first persistence slice.
+- Asset containment is the shared model for item, container, and location-like assets.
 - The first asset lifecycle states are `active` and `archived`.
 
 ## Observability

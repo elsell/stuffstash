@@ -4,60 +4,68 @@
 
 Stuff Stash needs a clear model for where things are and what can contain other things.
 
-Users think in a mix of places and containers: garage, shelf, toolbox, drawer, bin, medicine cabinet, and backpack. The model should support that without forcing locations and assets to be the same concept.
+Users think in a mix of places and containers: garage, shelf, toolbox, drawer, bin, medicine cabinet, and backpack.
+
+The model should support that with one containment graph instead of separate asset and location hierarchies.
 
 ## Scope
 
-This spec defines the initial containment direction for assets and locations.
+This spec defines the initial containment direction for assets, containers, and place-like locations.
 
-This spec does not define persistence tables, search indexes, REST endpoints, or every move rule.
+This spec does not define search indexes, REST endpoints, or every move rule.
 
 ## Decision
 
-- Assets and locations are separate domain concepts.
-- Assets and locations must share containment behavior through a common containment abstraction.
-- A location is a named place inside an inventory.
-- An asset is a thing inside an inventory.
-- Some assets may be containers.
-- A container asset may contain other assets.
-- A location may contain assets and child locations.
+- Assets and locations are unified in the containment model.
+- The persisted node is an asset.
+- A location is a place-like asset with asset kind `location`.
+- A normal stored thing is an asset with asset kind `item`.
+- A movable container thing is an asset with asset kind `container`.
+- Container and location assets may contain child assets.
+- Item assets may be contained but must not contain children.
+- User interfaces, conversational flows, and docs may say "location" when the asset kind is `location`.
 
 ## Requirements
 
 - Containment must be inventory-scoped.
 - Containment must preserve tenant isolation through the inventory.
-- A contained asset must belong to the same inventory as its container or location.
-- A child location must belong to the same inventory as its parent location.
-- The system must support moving an asset between locations.
+- A child asset must belong to the same tenant and inventory as its parent asset.
+- A root asset has no parent asset.
+- The system must support moving an asset between location assets.
 - The system must support moving an asset into a container asset.
 - The system must support moving a container asset with its contained assets.
-- The system must support moving a location with its child locations and contained assets.
+- The system must support moving a location asset with its child location assets and contained assets.
 - The system must prevent containment cycles.
-- The system must prevent placing a location inside an asset unless a future spec explicitly introduces that behavior.
-- The system must support arbitrary location depth unless future performance or usability specs define a limit.
+- The system must prevent an asset from containing itself.
+- The system must prevent placing a child under an `item` asset.
+- The system must support arbitrary containment depth unless future performance or usability specs define a limit.
 - The system must expose containment through application operations, not direct persistence operations.
+- The first implementation must enforce containment invariants in application/domain code before repository persistence.
+- The repository adapter must defensively preserve tenant and inventory boundaries.
 
 ## Initial Lifecycle Interaction
 
 - The first asset lifecycle states are `active` and `archived`.
 - Archived assets must not be valid containment targets.
 - Active contained assets must not silently disappear when a container is archived.
+- The first asset slice must not expose archive or unarchive operations.
 - Archive behavior for containers must be specified before container archiving is implemented.
 
 ## Conversational Use
 
-- Conversational flows may create locations and move assets through containment operations.
+- Conversational flows may create location assets and move assets through containment operations.
 - Conversational flows may move assets into container assets when the target is unambiguous.
 - Ambiguous containment targets must trigger clarification.
 - Model output must not bypass containment validation.
 
 ## Testing
 
-- Tests must verify moving assets between locations.
+- Tests must verify moving assets between location assets.
 - Tests must verify moving assets into container assets.
 - Tests must verify moving container assets with children.
-- Tests must verify moving locations with children.
+- Tests must verify moving location assets with children.
 - Tests must verify cycle prevention.
+- Tests must verify item assets cannot contain children.
 - Tests must verify tenant, inventory, and authorization boundaries.
 
 ## Open Questions

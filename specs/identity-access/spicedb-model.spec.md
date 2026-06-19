@@ -26,7 +26,6 @@ The first SpiceDB schema should include:
 - `tenant`
 - `inventory`
 - `asset`
-- `location`
 - `attachment`
 - `audit_record`
 
@@ -41,7 +40,7 @@ The first model should support:
 - Inventory viewer.
 - Inventory access inherited from tenant owner or tenant admin.
 - Asset access inherited from inventory access.
-- Location access inherited from inventory access.
+- Location-like access represented through asset access for assets with kind `location`.
 - Attachment access inherited from attached resource access.
 - Audit record access inherited from inventory access, with final read rules specified before audit API implementation.
 
@@ -55,10 +54,9 @@ The first model should express permissions for:
 - Create asset.
 - Edit asset.
 - Move asset.
-- Archive asset.
-- View location.
-- Create location.
-- Move location.
+- View location as asset view on a `location` asset.
+- Create location as asset create with kind `location`.
+- Move location as asset move on a `location` asset.
 - Upload attachment.
 - View attachment.
 - Export inventory.
@@ -66,6 +64,8 @@ The first model should express permissions for:
 - Undo action.
 
 Exact permission names must be defined before implementation.
+
+Archive and unarchive permissions are future permissions and must not be added to the first asset slice until archive behavior is specified and exposed.
 
 ## Conversational Actions
 
