@@ -55,4 +55,7 @@ The first REST slice includes:
 - Tests must verify malformed token rejection.
 - Tests must verify valid token with missing relationship rejection.
 - Tests must verify cross-tenant attempts fail.
+- Tests must verify tenant owners can list all inventories in their tenant.
+- Tests must verify inventory owners who are not tenant owners see only the inventories they can view.
+- Tests must verify unauthorized errors use the safe error envelope.
 - Tests must verify the OpenAPI route is available.

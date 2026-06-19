@@ -75,6 +75,11 @@ Every protected endpoint must have adversarial tests for:
 - Cross-tenant access.
 - Valid authorized access.
 - Valid authenticated but unauthorized access where applicable.
+- Tenant owners must be able to list all inventories in their tenant.
+- Inventory owners who are not tenant owners may list the tenant, but must only see inventories they can view.
+- Authenticated users without any relationship to a tenant or inventory must not list that tenant's inventories.
+- Authenticated users without tenant create-inventory permission must not create inventories in that tenant.
+- Hidden or unauthorized resources must use safe error responses that do not expose internal details.
 
 ## Observability
 

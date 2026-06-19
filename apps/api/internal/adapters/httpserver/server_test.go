@@ -11,6 +11,9 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -66,6 +69,7 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 	}{
 		{name: "missing token"},
 		{name: "malformed token", authorization: "Bearer nope"},
+		{name: "unsupported scheme", authorization: "Basic dev:user-one"},
 		{name: "empty principal", authorization: "Bearer dev:"},
 		{name: "unsafe principal", authorization: "Bearer dev:user/one"},
 	}
@@ -79,11 +83,7 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 					t.Fatalf("expected status %d, got %d with body %s", http.StatusUnauthorized, response.Code, response.Body.String())
 				}
 
-				var body errorResponse
-				decodeBody(t, response, &body)
-				if body.Error.Code != "authentication_required" {
-					t.Fatalf("expected authentication_required, got %q", body.Error.Code)
-				}
+				assertSafeError(t, response, "authentication_required", "Authentication required.")
 			})
 		}
 	}
@@ -160,6 +160,113 @@ func TestInventoryEndpointsDenyCrossUserAccess(t *testing.T) {
 	if list.Code != http.StatusForbidden {
 		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, list.Code, list.Body.String())
 	}
+	assertSafeError(t, list, "forbidden", "Forbidden.")
+}
+
+func TestAuthorizedUserCannotCrossTenantBoundaries(t *testing.T) {
+	const tenantOneID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const tenantTwoID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantOneID, name: "Home", owner: "owner-one"},
+			{id: tenantTwoID, name: "Cabin", owner: "owner-two"},
+		},
+		inventories: []seedInventory{
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID: tenantOneID, name: "Tools", owner: "owner-one"},
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID: tenantTwoID, name: "Supplies", owner: "owner-two"},
+		},
+	}))
+
+	createInventory := performRequest(server, http.MethodPost, "/tenants/"+tenantOneID+"/inventories", "Bearer dev:owner-two", map[string]string{"name": "Cross Tenant"})
+	if createInventory.Code != http.StatusForbidden {
+		t.Fatalf("expected create status %d, got %d with body %s", http.StatusForbidden, createInventory.Code, createInventory.Body.String())
+	}
+	assertSafeError(t, createInventory, "forbidden", "Forbidden.")
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantOneID+"/inventories", "Bearer dev:owner-two", nil)
+	if list.Code != http.StatusForbidden {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, list.Code, list.Body.String())
+	}
+	assertSafeError(t, list, "forbidden", "Forbidden.")
+}
+
+func TestTenantOwnerListsAllInventoriesInTenant(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Tools", owner: "other-user"},
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID: tenantID, name: "Supplies", owner: "another-user"},
+		},
+	}))
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories", "Bearer dev:owner", nil)
+	if list.Code != http.StatusOK {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusOK, list.Code, list.Body.String())
+	}
+
+	assertInventories(t, decodeInventoryList(t, list),
+		expectedInventory{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Tools"},
+		expectedInventory{id: "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID: tenantID, name: "Supplies"},
+	)
+}
+
+func TestInventoryOwnerListsOnlyVisibleInventories(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+		},
+		inventories: []seedInventory{
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Visible", owner: "inventory-owner"},
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID: tenantID, name: "Hidden", owner: "other-user"},
+		},
+	}))
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories", "Bearer dev:inventory-owner", nil)
+	if list.Code != http.StatusOK {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusOK, list.Code, list.Body.String())
+	}
+
+	assertInventories(t, decodeInventoryList(t, list),
+		expectedInventory{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Visible"},
+	)
+}
+
+func TestUnrelatedUserCannotCreateOrListTenantInventories(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+	}))
+
+	createInventory := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories", "Bearer dev:unrelated", map[string]string{"name": "Intrusion"})
+	if createInventory.Code != http.StatusForbidden {
+		t.Fatalf("expected create status %d, got %d with body %s", http.StatusForbidden, createInventory.Code, createInventory.Body.String())
+	}
+	assertSafeError(t, createInventory, "forbidden", "Forbidden.")
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories", "Bearer dev:unrelated", nil)
+	if list.Code != http.StatusForbidden {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, list.Code, list.Body.String())
+	}
+	assertSafeError(t, list, "forbidden", "Forbidden.")
+}
+
+func TestCreateInventoryForMissingTenantReturnsSafeNotFound(t *testing.T) {
+	server := NewServer(":0", newTestApp(&fakeObserver{}, "unused-id"))
+
+	response := performRequest(server, http.MethodPost, "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories", "Bearer dev:user-one", map[string]string{"name": "Tools"})
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status %d, got %d with body %s", http.StatusNotFound, response.Code, response.Body.String())
+	}
+	assertSafeError(t, response, "resource_not_found", "Resource not found.")
 }
 
 func TestOpenAPIIsGenerated(t *testing.T) {
@@ -188,6 +295,64 @@ func newTestApp(observer ports.Observer, ids ...string) app.App {
 		Inventories: store,
 		IDs:         &fakeIDGenerator{ids: ids},
 	})
+}
+
+func newSeededTestApp(t *testing.T, state seededState) app.App {
+	t.Helper()
+
+	ctx := context.Background()
+	store := memory.NewStore()
+	authorizer := memory.NewAuthorizer()
+
+	for _, item := range state.tenants {
+		tenantID := tenant.ID(item.id)
+		name, ok := tenant.NewName(item.name)
+		if !ok {
+			t.Fatalf("invalid tenant name %q", item.name)
+		}
+		if err := store.SaveTenant(ctx, tenant.Tenant{ID: tenantID, Name: name}); err != nil {
+			t.Fatalf("save tenant: %v", err)
+		}
+		if item.owner != "" {
+			if err := authorizer.GrantTenantOwner(ctx, principal(item.owner), tenantID); err != nil {
+				t.Fatalf("grant tenant owner: %v", err)
+			}
+		}
+	}
+
+	for _, item := range state.inventories {
+		name, ok := inventory.NewName(item.name)
+		if !ok {
+			t.Fatalf("invalid inventory name %q", item.name)
+		}
+		inventoryID := inventory.InventoryID(item.id)
+		tenantID := tenant.ID(item.tenantID)
+		if err := store.SaveInventory(ctx, inventory.Inventory{
+			ID:       inventoryID,
+			TenantID: inventory.TenantID(tenantID.String()),
+			Name:     name,
+		}); err != nil {
+			t.Fatalf("save inventory: %v", err)
+		}
+		if item.owner != "" {
+			if err := authorizer.GrantInventoryOwner(ctx, principal(item.owner), tenantID, inventoryID); err != nil {
+				t.Fatalf("grant inventory owner: %v", err)
+			}
+		}
+	}
+
+	return app.New(app.Dependencies{
+		Observer:    &fakeObserver{},
+		Auth:        auth.NewLocalDevAuthenticator(),
+		Authorizer:  authorizer,
+		Tenants:     store,
+		Inventories: store,
+		IDs:         &fakeIDGenerator{},
+	})
+}
+
+func principal(id string) identity.Principal {
+	return identity.Principal{ID: identity.PrincipalID(id)}
 }
 
 func performRequest(server *http.Server, method string, path string, authorization string, body any) *httptest.ResponseRecorder {
@@ -219,8 +384,106 @@ func decodeBody(t *testing.T, response *httptest.ResponseRecorder, body any) {
 
 type errorResponse struct {
 	Error struct {
-		Code string `json:"code"`
+		Code    string        `json:"code"`
+		Message string        `json:"message"`
+		Details []interface{} `json:"details"`
 	} `json:"error"`
+	Meta responseMeta `json:"meta"`
+}
+
+type inventoryListResponse struct {
+	Data []struct {
+		ID       string `json:"id"`
+		TenantID string `json:"tenantId"`
+		Name     string `json:"name"`
+	} `json:"data"`
+}
+
+type seededState struct {
+	tenants     []seedTenant
+	inventories []seedInventory
+}
+
+type seedTenant struct {
+	id    string
+	name  string
+	owner string
+}
+
+type seedInventory struct {
+	id       string
+	tenantID string
+	name     string
+	owner    string
+}
+
+type expectedInventory struct {
+	id       string
+	tenantID string
+	name     string
+}
+
+func decodeInventoryList(t *testing.T, response *httptest.ResponseRecorder) []struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+	Name     string `json:"name"`
+} {
+	t.Helper()
+
+	var body inventoryListResponse
+	decodeBody(t, response, &body)
+	return body.Data
+}
+
+func assertInventories(t *testing.T, inventories []struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+	Name     string `json:"name"`
+}, expected ...expectedInventory) {
+	t.Helper()
+
+	if len(inventories) != len(expected) {
+		t.Fatalf("expected inventories %v, got %+v", expected, inventories)
+	}
+
+	seen := map[string]struct {
+		tenantID string
+		name     string
+	}{}
+	for _, item := range inventories {
+		seen[item.ID] = struct {
+			tenantID string
+			name     string
+		}{tenantID: item.TenantID, name: item.Name}
+	}
+	for _, item := range expected {
+		actual, ok := seen[item.id]
+		if !ok {
+			t.Fatalf("expected inventory ID %q in %+v", item.id, inventories)
+		}
+		if actual.tenantID != item.tenantID || actual.name != item.name {
+			t.Fatalf("expected inventory %q tenant/name %q/%q, got %q/%q", item.id, item.tenantID, item.name, actual.tenantID, actual.name)
+		}
+	}
+}
+
+func assertSafeError(t *testing.T, response *httptest.ResponseRecorder, expectedCode string, expectedMessage string) {
+	t.Helper()
+
+	var body errorResponse
+	decodeBody(t, response, &body)
+	if body.Error.Code != expectedCode {
+		t.Fatalf("expected error code %q, got %q", expectedCode, body.Error.Code)
+	}
+	if body.Error.Message != expectedMessage {
+		t.Fatalf("expected error message %q, got %q", expectedMessage, body.Error.Message)
+	}
+	if len(body.Error.Details) != 0 {
+		t.Fatalf("expected no error details, got %+v", body.Error.Details)
+	}
+	if body.Meta.TenantID != "" || body.Meta.RequestID != "" {
+		t.Fatalf("expected empty error metadata, got %+v", body.Meta)
+	}
 }
 
 type fakeIDGenerator struct {

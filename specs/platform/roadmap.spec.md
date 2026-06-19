@@ -44,10 +44,10 @@ The goal is to prove a production-shaped path through:
 - `make docs-build` passed after the Postgres repository adapter was added.
 - Docker Compose verification passed on `paul` with Postgres persistence and SpiceDB authorization enabled.
 - Postgres on `paul` contained the tenant and inventory rows created by the verification script.
+- HTTP-level adversarial tests now cover protected-route auth rejection, unrelated-user denial, tenant-owner inventory listing, inventory-owner list filtering, and safe missing-tenant errors.
 
 ## Known Gaps
 
-- Current HTTP security tests cover auth rejection across protected endpoints, but cross-tenant and list-filtering cases need broader adversarial coverage.
 - The SpiceDB adapter has fake-backed unit coverage and local Compose verification, but does not yet have a dedicated real-SpiceDB adversarial test suite.
 - `golang-migrate/migrate` is specified in `tooling-versions.spec.md`, but the CLI is not wired into root commands yet.
 - The app still relies on GORM schema migration for the local tracer bullet. Production migration execution must use reviewed migration files.
@@ -55,25 +55,19 @@ The goal is to prove a production-shaped path through:
 
 ## Next Work
 
-1. Broaden adversarial auth/authz coverage for the current tenant and inventory endpoints.
-   - Verify every protected endpoint rejects missing, malformed, unsupported, and unsafe credentials.
-   - Verify valid authenticated users cannot cross tenant or inventory boundaries.
-   - Verify list endpoints only return resources visible through authorization.
-   - Prefer end-to-end HTTP tests at the real boundary.
-
-2. Add real SpiceDB-backed adversarial authorization verification.
+1. Add real SpiceDB-backed adversarial authorization verification.
    - Keep memory authorization as a fake.
    - Add tests or local verification that prove the SpiceDB adapter enforces the same relationship model as the fake.
    - Treat blocked real-SpiceDB verification as a blocker to record here, not as optional work.
    - Keep SpiceDB behind the authorization port.
 
-3. Wire the pinned migration CLI.
+2. Wire the pinned migration CLI.
    - Use the `golang-migrate/migrate` version already specified in `tooling-versions.spec.md`.
    - Add root migration commands.
    - Verify migrations against Postgres.
    - Stop relying on GORM schema migration beyond the local tracer bullet allowance.
 
-4. Start the first asset and containment implementation slice.
+3. Start the first asset and containment implementation slice.
    - Update the asset and containment specs first.
    - Implement the smallest useful asset model inside an inventory.
    - Preserve tenant and inventory isolation.
