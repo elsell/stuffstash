@@ -82,16 +82,17 @@ Future specs may allow multiple custom asset types, type inheritance, templates,
 Custom field definitions must include an applicability target:
 
 - `all_assets`: applies to every asset in the definition's effective scope.
-- `custom_asset_type`: applies only to assets whose custom asset type matches the referenced custom asset type.
+- `custom_asset_types`: applies only to assets whose custom asset type is one of the field definition's targeted custom asset types.
 
-For example, a tenant or inventory can define a `medicine` custom asset type and then define an `expiration-date` custom field that applies only to `medicine`.
+For example, a tenant or inventory can define `medicine` and `fertilizer` custom asset types and then define one `expiration-date` custom field that applies to both.
 
 Field applicability must be validated before a definition is persisted:
 
-- A custom-type-scoped field must reference an existing custom asset type available in the same effective tenant/inventory scope.
-- A tenant-scoped field may reference a tenant-scoped custom asset type.
-- An inventory-scoped field may reference either a tenant-scoped custom asset type available to that inventory or an inventory-scoped custom asset type in that inventory.
-- A tenant-scoped field must not reference an inventory-scoped custom asset type.
+- A custom-type-scoped field must target one or more existing custom asset types available in the same effective tenant/inventory scope.
+- A tenant-scoped field may target tenant-scoped custom asset types.
+- An inventory-scoped field may target tenant-scoped custom asset types available to that inventory or inventory-scoped custom asset types in that inventory.
+- A tenant-scoped field must not target inventory-scoped custom asset types.
+- An `all_assets` field must not have custom asset type targets.
 
 Asset value validation must use the asset's custom asset type when resolving effective field definitions.
 
@@ -129,7 +130,7 @@ Definitions must have:
 - Type.
 - Enum options when type is `enum`.
 - Applicability target.
-- Custom asset type reference when applicability target is `custom_asset_type`.
+- Custom asset type targets when applicability target is `custom_asset_types`.
 
 Field keys must be stable API keys:
 
