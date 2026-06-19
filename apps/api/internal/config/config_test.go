@@ -16,7 +16,14 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLease, "")
 	t.Setenv(envDefaultPageLimit, "")
 	t.Setenv(envMaxPageLimit, "")
+	t.Setenv(envBlobStorageMode, "")
 	t.Setenv(envBlobStoragePath, "")
+	t.Setenv(envS3Endpoint, "")
+	t.Setenv(envS3AccessKey, "")
+	t.Setenv(envS3SecretKey, "")
+	t.Setenv(envS3Bucket, "")
+	t.Setenv(envS3Region, "")
+	t.Setenv(envS3Secure, "")
 	t.Setenv(envMaxAttachmentBytes, "")
 
 	cfg := Load()
@@ -60,8 +67,20 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.MaxPageLimit != defaultMaxPageLimit {
 		t.Fatalf("expected max page limit %d, got %d", defaultMaxPageLimit, cfg.MaxPageLimit)
 	}
+	if cfg.BlobStorageMode != defaultBlobStorageMode {
+		t.Fatalf("expected blob storage mode %q, got %q", defaultBlobStorageMode, cfg.BlobStorageMode)
+	}
 	if cfg.BlobStoragePath != defaultBlobStoragePath {
 		t.Fatalf("expected blob storage path %q, got %q", defaultBlobStoragePath, cfg.BlobStoragePath)
+	}
+	if cfg.S3Endpoint != "" || cfg.S3AccessKey != "" || cfg.S3SecretKey != "" || cfg.S3Bucket != "" {
+		t.Fatalf("expected empty S3 connection fields, got %+v", cfg)
+	}
+	if cfg.S3Region != defaultS3Region {
+		t.Fatalf("expected S3 region %q, got %q", defaultS3Region, cfg.S3Region)
+	}
+	if !cfg.S3Secure {
+		t.Fatalf("expected S3 secure to default enabled")
 	}
 	if cfg.MaxAttachmentBytes != defaultMaxAttachmentBytes {
 		t.Fatalf("expected max attachment bytes %d, got %d", defaultMaxAttachmentBytes, cfg.MaxAttachmentBytes)
@@ -85,7 +104,14 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLease, "45s")
 	t.Setenv(envDefaultPageLimit, "13")
 	t.Setenv(envMaxPageLimit, "27")
+	t.Setenv(envBlobStorageMode, "s3")
 	t.Setenv(envBlobStoragePath, "/data/blobs")
+	t.Setenv(envS3Endpoint, "localhost:3900")
+	t.Setenv(envS3AccessKey, "access")
+	t.Setenv(envS3SecretKey, "secret")
+	t.Setenv(envS3Bucket, "stuffstash")
+	t.Setenv(envS3Region, "local")
+	t.Setenv(envS3Secure, "false")
 	t.Setenv(envMaxAttachmentBytes, "12345")
 
 	cfg := Load()
@@ -126,8 +152,17 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	if cfg.DefaultPageLimit != 13 || cfg.MaxPageLimit != 27 {
 		t.Fatalf("unexpected page limits: %+v", cfg)
 	}
+	if cfg.BlobStorageMode != "s3" {
+		t.Fatalf("expected blob storage mode s3, got %q", cfg.BlobStorageMode)
+	}
 	if cfg.BlobStoragePath != "/data/blobs" {
 		t.Fatalf("expected custom blob storage path, got %q", cfg.BlobStoragePath)
+	}
+	if cfg.S3Endpoint != "localhost:3900" || cfg.S3AccessKey != "access" || cfg.S3SecretKey != "secret" || cfg.S3Bucket != "stuffstash" {
+		t.Fatalf("unexpected S3 config: %+v", cfg)
+	}
+	if cfg.S3Region != "local" || cfg.S3Secure {
+		t.Fatalf("unexpected S3 region or secure setting: %+v", cfg)
 	}
 	if cfg.MaxAttachmentBytes != 12345 {
 		t.Fatalf("expected max attachment bytes 12345, got %d", cfg.MaxAttachmentBytes)

@@ -25,7 +25,14 @@ const (
 	envAuthorizationOutboxLease = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
 	envDefaultPageLimit         = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
 	envMaxPageLimit             = "STUFF_STASH_MAX_PAGE_LIMIT"
+	envBlobStorageMode          = "STUFF_STASH_BLOB_STORAGE_MODE"
 	envBlobStoragePath          = "STUFF_STASH_BLOB_STORAGE_PATH"
+	envS3Endpoint               = "STUFF_STASH_S3_ENDPOINT"
+	envS3AccessKey              = "STUFF_STASH_S3_ACCESS_KEY"
+	envS3SecretKey              = "STUFF_STASH_S3_SECRET_KEY"
+	envS3Bucket                 = "STUFF_STASH_S3_BUCKET"
+	envS3Region                 = "STUFF_STASH_S3_REGION"
+	envS3Secure                 = "STUFF_STASH_S3_SECURE"
 	envMaxAttachmentBytes       = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
 	defaultHTTPAddr             = ":8080"
 	defaultAuthMode             = "local-dev"
@@ -37,7 +44,10 @@ const (
 	defaultAuthorizationLease   = 30 * time.Second
 	defaultDefaultPageLimit     = 50
 	defaultMaxPageLimit         = 100
+	defaultBlobStorageMode      = "filesystem"
 	defaultBlobStoragePath      = ".stuffstash/blobs"
+	defaultS3Region             = "garage"
+	defaultS3Secure             = true
 	defaultMaxAttachmentBytes   = 5 * 1024 * 1024
 	defaultSpiceDBTLSEnabled    = true
 	defaultSpiceDBBootstrapMode = false
@@ -61,7 +71,14 @@ type Config struct {
 	AuthorizationOutboxClaimLease    time.Duration
 	DefaultPageLimit                 int
 	MaxPageLimit                     int
+	BlobStorageMode                  string
 	BlobStoragePath                  string
+	S3Endpoint                       string
+	S3AccessKey                      string
+	S3SecretKey                      string
+	S3Bucket                         string
+	S3Region                         string
+	S3Secure                         bool
 	MaxAttachmentBytes               int
 }
 
@@ -84,7 +101,14 @@ func Load() Config {
 		AuthorizationOutboxClaimLease:    durationEnvOrDefault(envAuthorizationOutboxLease, defaultAuthorizationLease),
 		DefaultPageLimit:                 intEnvOrDefault(envDefaultPageLimit, defaultDefaultPageLimit),
 		MaxPageLimit:                     intEnvOrDefault(envMaxPageLimit, defaultMaxPageLimit),
+		BlobStorageMode:                  envOrDefault(envBlobStorageMode, defaultBlobStorageMode),
 		BlobStoragePath:                  envOrDefault(envBlobStoragePath, defaultBlobStoragePath),
+		S3Endpoint:                       os.Getenv(envS3Endpoint),
+		S3AccessKey:                      os.Getenv(envS3AccessKey),
+		S3SecretKey:                      os.Getenv(envS3SecretKey),
+		S3Bucket:                         os.Getenv(envS3Bucket),
+		S3Region:                         envOrDefault(envS3Region, defaultS3Region),
+		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 	}
 }

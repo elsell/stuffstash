@@ -184,9 +184,33 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store, customAssetTypes: store, customFields: store, assets: store, attachments: store, blobs: blobstore.NewFileSystemStore(cfg.BlobStoragePath), audit: store, outbox: store}, closeStore, nil
+		blobs, err := buildBlobStorage(cfg)
+		if err != nil {
+			_ = closeStore()
+			return repositories{}, nil, err
+		}
+		return repositories{tenants: store, inventories: store, customAssetTypes: store, customFields: store, assets: store, attachments: store, blobs: blobs, audit: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
+	}
+}
+
+func buildBlobStorage(cfg config.Config) (ports.BlobStorage, error) {
+	switch strings.ToLower(strings.TrimSpace(cfg.BlobStorageMode)) {
+	case "", "filesystem":
+		return blobstore.NewFileSystemStore(cfg.BlobStoragePath), nil
+	case "s3":
+		return blobstore.NewS3Store(blobstore.S3Config{
+			Endpoint:  cfg.S3Endpoint,
+			AccessKey: cfg.S3AccessKey,
+			SecretKey: cfg.S3SecretKey,
+			Bucket:    cfg.S3Bucket,
+			Region:    cfg.S3Region,
+			Secure:    cfg.S3Secure,
+			MaxBytes:  int64(cfg.MaxAttachmentBytes),
+		})
+	default:
+		return nil, errors.New("unsupported blob storage mode")
 	}
 }
 

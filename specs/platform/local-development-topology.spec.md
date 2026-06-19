@@ -8,7 +8,7 @@ Stuff Stash needs a local stack that proves production-shaped boundaries without
 
 This spec covers the first local services used by the secure tracer bullet.
 
-It does not define Kubernetes production deployment, Garage media storage, Google OIDC, or model provider services.
+It does not define Kubernetes production deployment, Google OIDC, or model provider services.
 
 ## Decisions
 
@@ -27,6 +27,7 @@ It does not define Kubernetes production deployment, Garage media storage, Googl
 - The repository must provide a single-command Compose path for local-dev authentication with SpiceDB authorization.
 - The repository must provide a non-Compose local SpiceDB path for developer machines where the Docker Compose plugin is unavailable.
 - The repository must provide a local verification script for the first secure API flow.
+- The repository must provide a local verification command for the Garage/S3-compatible blob storage adapter.
 
 ## First Services
 
@@ -54,3 +55,4 @@ The first Compose topology includes:
 - The non-Compose SpiceDB path must bootstrap the checked-in schema automatically.
 - The local verification script must cover health, unauthenticated rejection, authenticated identity, tenant creation, inventory creation, inventory listing with pagination metadata, custom field definition creation/listing, asset creation with validated custom field values, asset update/movement, asset listing with pagination metadata, asset attachment upload/list/download, inventory audit listing with pagination metadata, direct inventory sharing, direct grant listing with pagination metadata, and adversarial viewer permission checks.
 - The repository must provide an explicit real-SpiceDB adapter verification command that starts pinned local SpiceDB, runs the adapter integration tests, and cleans up.
+- The repository must provide an explicit Garage blob storage verification command that starts a digest-pinned Garage image, runs the S3-compatible blob adapter integration test, and cleans up. Any custom image override must also be pinned with `@sha256:`.

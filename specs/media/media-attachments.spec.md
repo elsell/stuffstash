@@ -8,7 +8,7 @@ Photos, receipts, manuals, and arbitrary files help users identify and manage ph
 
 ## Scope
 
-This spec covers initial media and attachment requirements and the first asset attachment API slice.
+This spec covers initial media and attachment requirements, the first asset attachment API slice, and the first production-shaped blob storage adapter.
 
 This spec does not define multipart upload, direct-to-object-storage upload, image processing, thumbnails, virus scanning, retention policy, model vision features, or media export packaging.
 
@@ -74,6 +74,7 @@ Initial upload size limit:
 - The limit must come from `STUFF_STASH_MAX_ATTACHMENT_BYTES`.
 - The default is 5 MiB.
 - The JSON upload route must set a larger request body cap derived from the attachment limit so base64 overhead does not reject valid uploads before application validation runs.
+- Blob adapters that read from external storage must enforce the same maximum before buffering content in memory.
 
 Attachment listing:
 
@@ -95,7 +96,7 @@ Deletion:
 
 ## Storage Direction
 
-- Production blob storage should use Garage as an S3-compatible storage system.
+- Production blob storage must use Garage through an S3-compatible storage adapter.
 - Local development may use a filesystem adapter.
 - Storage credentials, bucket names, endpoints, and region-style settings must come from environment-backed configuration.
 - Blob storage dependencies and images must be pinned to reviewed versions.
@@ -106,8 +107,25 @@ The first storage adapters are:
 
 - In-memory fake storage for tests.
 - Local filesystem storage for local development.
+- S3-compatible storage for Garage.
 
-The Garage/S3-compatible adapter is a follow-up slice.
+Blob storage mode:
+
+- `STUFF_STASH_BLOB_STORAGE_MODE=filesystem` uses local filesystem storage.
+- `STUFF_STASH_BLOB_STORAGE_MODE=s3` uses the S3-compatible adapter.
+- Memory repository mode may still use the in-memory fake blob storage.
+
+S3-compatible adapter configuration:
+
+- `STUFF_STASH_S3_ENDPOINT`: endpoint host and port, without scheme.
+- `STUFF_STASH_S3_ACCESS_KEY`: access key ID.
+- `STUFF_STASH_S3_SECRET_KEY`: secret key.
+- `STUFF_STASH_S3_BUCKET`: bucket name.
+- `STUFF_STASH_S3_REGION`: region value. Defaults to `garage`.
+- `STUFF_STASH_S3_SECURE`: whether to use HTTPS. Defaults to `true`.
+
+The adapter must not create buckets at API startup. Buckets and credentials are deployment concerns.
+Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 
 ## Security
 
@@ -117,6 +135,7 @@ The Garage/S3-compatible adapter is a follow-up slice.
 - Download URLs must not bypass authorization.
 - Public buckets must not be used for private tenant inventory files.
 - Error messages must not leak storage keys, credentials, bucket internals, or filesystem paths.
+- Oversized or externally mutated blobs must not cause unbounded memory reads.
 - Attachment upload requires `inventory.edit_asset`.
 - Attachment list and content download require `inventory.view`.
 - The target asset must belong to the tenant and inventory in the route.
@@ -135,7 +154,7 @@ The Garage/S3-compatible adapter is a follow-up slice.
 - Tests must verify upload, metadata persistence, authorization, tenant isolation, inventory isolation, download, and failure behavior.
 - Tests must verify unsupported MIME type rejection, oversize rejection, invalid base64 rejection, viewer upload denial, viewer download success, intruder denial, cross-tenant hiding, and safe storage errors.
 - Tests must use fake blob storage adapters where appropriate.
-- Integration tests must cover the production-style S3-compatible adapter before release.
+- Integration tests must verify the production-style S3-compatible adapter against Garage running in Docker.
 
 ## Open Questions
 

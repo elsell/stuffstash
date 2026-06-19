@@ -1,4 +1,4 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-spicedb-adapter verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-down docker-build docs-install docs-dev docs-build docs-preview
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -44,6 +44,9 @@ verify-local-api:
 
 verify-spicedb-adapter:
 	scripts/verify-spicedb-adapter.sh
+
+verify-garage-blobstore:
+	scripts/verify-garage-blobstore.sh
 
 verify-postgres-adapter:
 	STUFF_STASH_TEST_POSTGRES_DSN="$(STUFF_STASH_TEST_POSTGRES_DSN)" GOCACHE=$(GOCACHE) go test ./apps/api/internal/adapters/gormstore -run TestPostgresStore -count=1

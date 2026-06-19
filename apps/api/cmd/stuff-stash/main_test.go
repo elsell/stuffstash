@@ -138,6 +138,30 @@ func TestBuildRepositoriesRejectsPostgresWithoutDSN(t *testing.T) {
 	}
 }
 
+func TestBuildBlobStorageAcceptsFilesystemMode(t *testing.T) {
+	store, err := buildBlobStorage(config.Config{BlobStorageMode: "filesystem", BlobStoragePath: t.TempDir()})
+	if err != nil {
+		t.Fatalf("build filesystem blob storage: %v", err)
+	}
+	if store == nil {
+		t.Fatalf("expected blob storage")
+	}
+}
+
+func TestBuildBlobStorageRejectsUnknownMode(t *testing.T) {
+	_, err := buildBlobStorage(config.Config{BlobStorageMode: "unknown"})
+	if err == nil {
+		t.Fatalf("expected unsupported blob storage mode error")
+	}
+}
+
+func TestBuildBlobStorageRejectsIncompleteS3Config(t *testing.T) {
+	_, err := buildBlobStorage(config.Config{BlobStorageMode: "s3"})
+	if err == nil {
+		t.Fatalf("expected incomplete S3 config error")
+	}
+}
+
 func TestBootstrapSpiceDBSchemaReadsSchemaFile(t *testing.T) {
 	schemaPath := filepath.Join(t.TempDir(), "schema.zed")
 	if err := os.WriteFile(schemaPath, []byte("definition user {}"), 0o600); err != nil {

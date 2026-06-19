@@ -232,6 +232,14 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
 
 Local Postgres runs store blobs under `.stuffstash/blobs` by default. Compose uses a `blob-data` volume mounted at `/var/lib/stuffstash/blobs`. Set `STUFF_STASH_BLOB_STORAGE_PATH` to choose a different local path.
 
+Garage-compatible media storage uses the S3-compatible adapter. To verify that adapter against a real Garage container:
+
+```sh
+make verify-garage-blobstore
+```
+
+To run the API against local Garage, set `STUFF_STASH_BLOB_STORAGE_MODE=s3` plus `STUFF_STASH_S3_ENDPOINT`, `STUFF_STASH_S3_ACCESS_KEY`, `STUFF_STASH_S3_SECRET_KEY`, `STUFF_STASH_S3_BUCKET`, and `STUFF_STASH_S3_SECURE=false`. Garage buckets and keys are deployment setup, not API startup work.
+
 Inventory custom field lists include tenant fields and inventory fields:
 
 ```sh

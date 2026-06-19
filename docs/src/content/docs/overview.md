@@ -23,7 +23,7 @@ The repository has a small Go API scaffold with:
 - Tenant creation, inventory creation/listing, and first asset create/list/update/move flow.
 - Custom asset types, such as medicine or tools, with type-specific custom fields.
 - Tenant and inventory custom field definitions with asset value validation.
-- Asset attachment upload, listing, and download with local blob storage.
+- Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.
 - Durable audit history for the first state-changing actions.
 - Direct inventory sharing by known principal ID, with viewer and editor grants.
 - Huma-generated OpenAPI at `/openapi.json`.
@@ -41,4 +41,4 @@ Most product behavior is still being specified before implementation.
 - **Docs:** Astro and Starlight.
 - **Authorization:** SpiceDB, with an in-memory adapter for fast local runs.
 - **Authentication:** OIDC and SSO, starting with Google; local dev auth also exists.
-- **Storage:** PostgreSQL for metadata, local filesystem blob storage for the first media slice, and SQLite where useful for local-only fakes.
+- **Storage:** PostgreSQL for metadata, Garage-compatible blob storage for media, local filesystem blob storage for development, and SQLite where useful for local-only fakes.
