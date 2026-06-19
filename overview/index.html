@@ -81,7 +81,7 @@
 <p>The repository has a small Go API scaffold with:</p>
 <ul>
 <li>A health endpoint.</li>
-<li>Local development auth and production-shaped OIDC auth.</li>
+<li>Local development auth and production-shaped OIDC auth, with Dex for local OIDC verification.</li>
 <li>In-memory authorization for local use and SpiceDB authorization wiring.</li>
 <li>Tenant creation, inventory creation/listing, and first asset create/list/update/move flow.</li>
 <li>Custom asset types, such as medicine or tools, with type-specific custom fields.</li>
@@ -91,7 +91,7 @@
 <li>Direct inventory sharing by known principal ID, with viewer and editor grants.</li>
 <li>Huma-generated OpenAPI at <code dir="auto">/openapi.json</code>.</li>
 <li>Domain-oriented observability through ports.</li>
-<li>Docker and Compose files for local work, including Postgres and SpiceDB.</li>
+<li>Docker and Compose files for local work, including Postgres, SpiceDB, and an optional Dex OIDC override.</li>
 <li>Specs that define the product and architecture direction.</li>
 </ul>
 <p>Most product behavior is still being specified before implementation.</p>
@@ -102,6 +102,6 @@
 <li><strong>Mobile:</strong> React Native with Expo, planned for iOS and Android.</li>
 <li><strong>Docs:</strong> Astro and Starlight.</li>
 <li><strong>Authorization:</strong> SpiceDB, with an in-memory adapter for fast local runs.</li>
-<li><strong>Authentication:</strong> OIDC and SSO, starting with Google; local dev auth also exists.</li>
+<li><strong>Authentication:</strong> OIDC and SSO, with Dex for local verification and Google planned as the first external provider.</li>
 <li><strong>Storage:</strong> PostgreSQL for metadata, Garage-compatible blob storage for media, local filesystem blob storage for development, and SQLite where useful for local-only fakes.</li>
 </ul> </div> <footer class="sl-flex astro-df3oioas"> <div class="meta sl-flex astro-df3oioas">   </div> <div class="pagination-links print:hidden astro-72fxhsae" dir="ltr">  <a href="/stuffstash/local-development/" rel="next" class="astro-72fxhsae"> <svg aria-hidden="true" class="astro-72fxhsae astro-gthdcb6b" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg> <span class="astro-72fxhsae"> Next <br class="astro-72fxhsae"> <span class="link-title astro-72fxhsae">Local Development</span> </span> </a> </div>  </footer> </div> </div>  </main> </div> </div> </div> </div> </body></html>
