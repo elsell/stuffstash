@@ -501,6 +501,63 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset) error {
 	})
 }
 
+func (s Store) UpdateAsset(ctx context.Context, item asset.Asset) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing assetModel
+		err := tx.Where(&assetModel{
+			ID:          item.ID.String(),
+			TenantID:    item.TenantID.String(),
+			InventoryID: item.InventoryID.String(),
+		}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Kind != item.Kind.String() || existing.LifecycleState != item.LifecycleState.String() {
+			return ports.ErrForbidden
+		}
+
+		if item.ParentAssetID.String() != "" {
+			var parent assetModel
+			err = tx.Where(&assetModel{
+				ID:          item.ParentAssetID.String(),
+				TenantID:    item.TenantID.String(),
+				InventoryID: item.InventoryID.String(),
+			}).First(&parent).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ports.ErrForbidden
+			}
+			if err != nil {
+				return err
+			}
+			parentKind, ok := asset.NewKind(parent.Kind)
+			if !ok || !parentKind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive.String() || parent.ID == item.ID.String() {
+				return ports.ErrForbidden
+			}
+			if err := rejectAssetContainmentCycle(tx, item.ID, parent); err != nil {
+				return err
+			}
+		}
+
+		customFields, err := json.Marshal(item.CustomFields.Values())
+		if err != nil {
+			return err
+		}
+		updates := map[string]any{
+			"parent_asset_id": stringPtrFromAssetID(item.ParentAssetID),
+			"title":           item.Title.String(),
+			"description":     item.Description.String(),
+			"custom_fields":   string(customFields),
+		}
+		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (s Store) AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
 	var model assetModel
 	err := s.db.WithContext(ctx).Where(&assetModel{
@@ -558,17 +615,19 @@ func rejectAssetContainmentCycle(tx *gorm.DB, assetID asset.ID, parent assetMode
 		}
 
 		nextID := *current.ParentAssetID
+		var next assetModel
 		err := tx.Where(&assetModel{
 			ID:          nextID,
 			TenantID:    current.TenantID,
 			InventoryID: current.InventoryID,
-		}).First(&current).Error
+		}).First(&next).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ports.ErrForbidden
 		}
 		if err != nil {
 			return err
 		}
+		current = next
 	}
 }
 

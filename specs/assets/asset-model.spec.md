@@ -8,7 +8,7 @@ The asset model must stay lean, flexible, and useful across many categories with
 
 ## Scope
 
-This spec covers the initial asset model direction and the first persistence shape for assets.
+This spec covers the initial asset model direction, asset create/update behavior, movement inside an inventory, and the first persistence shape for assets.
 
 This spec does not define the full lifecycle model, consumable model, search behavior, media attachments, or every REST endpoint.
 
@@ -33,6 +33,12 @@ This spec does not define the full lifecycle model, consumable model, search beh
 - Assets must support custom field values.
 - Asset custom field values must be validated against tenant-scoped and inventory-scoped custom field definitions.
 - Asset create may accept non-empty custom field values when every value is validated against the effective custom field definitions for the target inventory.
+- Asset update may replace title, description, parent asset reference, and custom field values.
+- Asset update must validate custom field values against the same effective custom field definitions used by asset create.
+- Asset update must not change asset ID, tenant ID, inventory ID, kind, or lifecycle state in the first update slice.
+- Asset movement is represented by updating an asset's parent asset reference.
+- Cross-inventory movement is not supported in the first update slice.
+- Clearing `parentAssetId` moves an asset to the inventory root.
 - Non-empty custom field values must be rejected when the relevant definition is missing or validation fails.
 - The asset domain must not be overfit to one product category.
 - Asset kind must be represented as a domain enumeration, not ad hoc strings.
@@ -77,6 +83,8 @@ Persistence rules:
 - Containment cycles must be prevented before persistence commits.
 - `custom_fields` must default to an empty object, not null.
 - Domain and application code must not manipulate raw JSONB.
+- Update persistence must preserve the same tenant, inventory, kind, and lifecycle state for the target asset.
+- Update persistence must defensively reject cross-tenant and cross-inventory parent references.
 
 ## Containment
 
@@ -85,6 +93,7 @@ Persistence rules:
 - Item assets must not contain other assets unless their kind is changed through an explicit future operation.
 - The system must support hierarchical place-like assets inside an inventory.
 - The system must support moving assets and location-like containers without excessive friction.
+- Moving a container or location must move the node with its existing descendants; children must not be rewritten one by one.
 - The implementation must not duplicate hierarchy logic for locations and container assets.
 - Locations are user-facing concepts backed by location-kind assets.
 
@@ -104,13 +113,13 @@ The system must eventually support things that can be used up, such as medicine,
 
 - Tests must verify asset creation, asset updates, custom field validation, tenant isolation, inventory isolation, and authorization.
 - Tests must verify containment behavior for item, container, and location asset kinds.
-- Tests must verify asset nesting or bundling once implemented.
+- Tests must verify asset nesting, moving an asset between parents, moving a container or location with descendants, moving to root, self-parent rejection, cycle rejection, and item-as-parent rejection.
 - Tests must verify location-like assets are persisted through the same asset repository path as other assets.
 - Security-sensitive asset behavior must have adversarial end-to-end tests before public interaction points expose it.
 
 ## Open Questions
 
 - How should consumables be modeled?
-- Can assets move between inventories?
+- Can assets move between inventories, or should cross-inventory movement remain an export/import-style workflow?
 - What asset fields should be first-class rather than custom fields?
 - Can users convert an existing asset from one kind to another?

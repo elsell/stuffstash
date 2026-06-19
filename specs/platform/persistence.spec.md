@@ -164,6 +164,8 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Domain code must not expose or manipulate raw JSONB.
 - Repository adapters must map stored custom field values into typed domain values.
 - Custom field values must be validated by domain or application services before persistence.
+- Repository adapters must update assets without changing their tenant, inventory, kind, or lifecycle state in the first update slice.
+- Repository adapters must defensively reject asset updates that would point to a parent in another tenant or inventory, point to an item parent, point to an archived parent, point to the asset itself, or create a containment cycle.
 
 ## Migrations
 
@@ -183,6 +185,7 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Tests must cover custom field definition persistence, duplicate key rejection, tenant-scoped listing, inventory-scoped listing, and effective definition resolution.
 - Tests must cover that location-like nodes are persisted as assets with kind `location`.
 - Tests must cover parent-child persistence and movement within a single inventory.
+- Tests must cover moving an asset to the inventory root and moving container/location assets with descendants.
 - Tests must cover that cross-tenant and cross-inventory containment is rejected.
 - Tests must cover cycle prevention before persistence commits.
 - Tests must cover that tenant and inventory state are persisted with authorization outbox records atomically.

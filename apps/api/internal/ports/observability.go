@@ -20,6 +20,7 @@ const (
 	EventCustomFieldDefinitionCreated    EventName = "custom_field_definition.created"
 	EventCustomFieldDefinitionsListed    EventName = "custom_field_definition.listed"
 	EventAssetCreated                    EventName = "asset.created"
+	EventAssetUpdated                    EventName = "asset.updated"
 	EventAssetsListed                    EventName = "asset.listed"
 	EventAuthorizationOutboxDrained      EventName = "authorization_outbox.drained"
 	EventAuthorizationOutboxFailed       EventName = "authorization_outbox.failed"

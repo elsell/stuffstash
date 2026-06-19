@@ -844,6 +844,103 @@ func TestStorePaginatesAssetsAndRejectsDuplicateCreate(t *testing.T) {
 	}
 }
 
+func TestStoreUpdatesAssetsAndMovesContainersWithChildren(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	garage := assetItem("garage", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	shelf := assetItem("shelf", tenantID.String(), inventoryID.String(), asset.KindLocation, "garage")
+	box := assetItem("box", tenantID.String(), inventoryID.String(), asset.KindContainer, "shelf")
+	wrench := assetItem("wrench", tenantID.String(), inventoryID.String(), asset.KindItem, "box")
+	for _, item := range []asset.Asset{garage, shelf, box, wrench} {
+		if err := store.CreateAsset(ctx, item); err != nil {
+			t.Fatalf("create asset %s: %v", item.ID, err)
+		}
+	}
+
+	box.ParentAssetID = garage.ID
+	title, ok := asset.NewTitle("Moved Box")
+	if !ok {
+		t.Fatalf("expected valid title")
+	}
+	box.Title = title
+	customFields, ok := asset.NewCustomFields(map[string]any{"serial": "abc"})
+	if !ok {
+		t.Fatalf("expected valid custom fields")
+	}
+	box.CustomFields = customFields
+	if err := store.UpdateAsset(ctx, box); err != nil {
+		t.Fatalf("update box: %v", err)
+	}
+
+	foundBox, ok, err := store.AssetByID(ctx, tenantID, inventoryID, box.ID)
+	if err != nil {
+		t.Fatalf("find box: %v", err)
+	}
+	if !ok || foundBox.ParentAssetID != garage.ID || foundBox.Title.String() != "Moved Box" || foundBox.CustomFields.Values()["serial"] != "abc" {
+		t.Fatalf("expected moved box with updated fields, found=%t %+v", ok, foundBox)
+	}
+	foundWrench, ok, err := store.AssetByID(ctx, tenantID, inventoryID, wrench.ID)
+	if err != nil {
+		t.Fatalf("find wrench: %v", err)
+	}
+	if !ok || foundWrench.ParentAssetID != box.ID {
+		t.Fatalf("expected child to remain inside moved box, found=%t %+v", ok, foundWrench)
+	}
+
+	box.ParentAssetID = asset.ID("")
+	if err := store.UpdateAsset(ctx, box); err != nil {
+		t.Fatalf("move box to root: %v", err)
+	}
+	rootBox, ok, err := store.AssetByID(ctx, tenantID, inventoryID, box.ID)
+	if err != nil {
+		t.Fatalf("find root box: %v", err)
+	}
+	if !ok || rootBox.ParentAssetID.String() != "" {
+		t.Fatalf("expected box at root, found=%t %+v", ok, rootBox)
+	}
+}
+
+func TestStoreRejectsInvalidAssetUpdates(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	garage := assetItem("garage", tenantID.String(), inventoryID.String(), asset.KindLocation, "")
+	shelf := assetItem("shelf", tenantID.String(), inventoryID.String(), asset.KindLocation, "garage")
+	box := assetItem("box", tenantID.String(), inventoryID.String(), asset.KindContainer, "shelf")
+	itemParent := assetItem("wrench", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	for _, item := range []asset.Asset{garage, shelf, box, itemParent} {
+		if err := store.CreateAsset(ctx, item); err != nil {
+			t.Fatalf("create asset %s: %v", item.ID, err)
+		}
+	}
+
+	garage.ParentAssetID = box.ID
+	if err := store.UpdateAsset(ctx, garage); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected cycle rejection, got %v", err)
+	}
+	box.ParentAssetID = box.ID
+	if err := store.UpdateAsset(ctx, box); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected self-parent rejection, got %v", err)
+	}
+	box.ParentAssetID = itemParent.ID
+	if err := store.UpdateAsset(ctx, box); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected item-parent rejection, got %v", err)
+	}
+	box.Kind = asset.KindItem
+	if err := store.UpdateAsset(ctx, box); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected kind-change rejection, got %v", err)
+	}
+}
+
 func TestStoreRoundTripsAssetCustomFields(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

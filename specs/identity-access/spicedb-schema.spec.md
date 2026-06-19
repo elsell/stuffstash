@@ -38,6 +38,7 @@ definition inventory {
   permission configure = owner + tenant->configure
   permission share = owner + tenant->configure
   permission edit = owner + editor + tenant->configure
+  permission edit_asset = edit
   permission create_asset = edit
 }
 ```
@@ -51,6 +52,7 @@ The first API slice must check:
 - `tenant.create_inventory` before creating an inventory inside a tenant.
 - `inventory.view` before returning an inventory.
 - `inventory.create_asset` before creating an asset inside an inventory.
+- `inventory.edit_asset` before updating or moving an asset inside an inventory.
 - `inventory.share` before creating or listing direct inventory access grants.
 
 Creating a tenant grants the creating user the tenant `owner` relationship.
@@ -96,5 +98,5 @@ Any unknown mode must fail startup.
 - Tests must prove a user without a relationship cannot create or list inventory resources.
 - The SpiceDB adapter must have fake-backed tests for permission mapping, tenant owner grants, inventory owner grants, inventory viewer/editor grants, denied checks, and backend failures.
 - The SpiceDB adapter must have an opt-in real-SpiceDB verification path that runs against the pinned local SpiceDB image.
-- Real-SpiceDB verification must prove tenant-owner inheritance, inventory-owner visibility, viewer/editor direct grants, share denial for non-owners, unrelated-user denial, and cross-tenant denial.
+- Real-SpiceDB verification must prove tenant-owner inheritance, inventory-owner visibility, viewer/editor direct grants, edit denial for viewers, share denial for non-owners, unrelated-user denial, and cross-tenant denial.
 - Real-SpiceDB verification must not run during default `make test`; it must be an explicit command because it requires Docker.

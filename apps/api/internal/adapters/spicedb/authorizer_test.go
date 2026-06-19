@@ -73,6 +73,29 @@ func TestAuthorizerChecksCreateAssetPermission(t *testing.T) {
 	}
 }
 
+func TestAuthorizerChecksEditAssetPermission(t *testing.T) {
+	gateway := &fakeGateway{
+		permissionship: v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION,
+	}
+	authorizer := NewAuthorizer(gateway)
+
+	err := authorizer.CheckInventory(context.Background(), principal("user-one"), ports.InventoryPermissionEditAsset, inventory.InventoryID("inventory-one"))
+	if err != nil {
+		t.Fatalf("check edit asset: %v", err)
+	}
+
+	request := gateway.checks[0]
+	if request.Resource.ObjectType != "inventory" || request.Resource.ObjectId != "inventory-one" {
+		t.Fatalf("unexpected resource: %+v", request.Resource)
+	}
+	if request.Permission != "edit_asset" {
+		t.Fatalf("unexpected permission: %q", request.Permission)
+	}
+	if request.Subject.Object.ObjectType != "user" || request.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected subject: %+v", request.Subject.Object)
+	}
+}
+
 func TestAuthorizerChecksSharePermission(t *testing.T) {
 	gateway := &fakeGateway{
 		permissionship: v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION,

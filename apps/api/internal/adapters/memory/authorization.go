@@ -62,7 +62,7 @@ func (a *Authorizer) CheckInventory(_ context.Context, principal identity.Princi
 		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) || hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) || hasPrincipal(a.inventoryViewers[inventoryID], principal.ID) {
 			return nil
 		}
-	case ports.InventoryPermissionCreateAsset:
+	case ports.InventoryPermissionCreateAsset, ports.InventoryPermissionEditAsset:
 		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) || hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) {
 			return nil
 		}

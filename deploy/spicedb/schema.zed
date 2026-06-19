@@ -21,5 +21,6 @@ definition inventory {
   permission configure = owner + tenant->configure
   permission share = owner + tenant->configure
   permission edit = owner + editor + tenant->configure
+  permission edit_asset = edit
   permission create_asset = edit
 }

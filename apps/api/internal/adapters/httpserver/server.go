@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -264,6 +265,38 @@ func registerRoutes(api huma.API, application app.App) {
 			},
 		}, nil
 	}, huma.OperationTags("assets"), createdOperation, securedOperation)
+
+	huma.Patch(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", func(ctx context.Context, input *updateAssetInput) (*updateAssetOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		item, err := application.UpdateAsset(ctx, app.UpdateAssetInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			AssetID:     asset.ID(input.AssetID),
+			Title:       input.Body.Title,
+			Description: input.Body.Description,
+			ParentAssetID: app.AssetParentUpdate{
+				Present: input.Body.ParentAssetID.present,
+				Null:    input.Body.ParentAssetID.null,
+				Value:   input.Body.ParentAssetID.value,
+			},
+			CustomFields: input.Body.CustomFields,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &updateAssetOutput{
+			Body: successEnvelope[assetResponse]{
+				Data: assetToResponse(item),
+				Meta: responseMeta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("assets"), securedOperation)
 
 	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets", func(ctx context.Context, input *listAssetsInput) (*listAssetsOutput, error) {
 		principal, err := authenticate(ctx, application, input.Authorization)
@@ -600,6 +633,49 @@ type listAssetsInput struct {
 
 type listAssetsOutput struct {
 	Body successEnvelope[[]assetResponse]
+}
+
+type updateAssetInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	Body          struct {
+		Title         *string        `json:"title,omitempty" maxLength:"160" doc:"Asset title"`
+		Description   *string        `json:"description,omitempty" doc:"Asset description"`
+		ParentAssetID nullableString `json:"parentAssetId,omitempty" doc:"Parent asset ID, or null to move to inventory root"`
+		CustomFields  map[string]any `json:"customFields,omitempty" doc:"Custom field values"`
+	}
+}
+
+type updateAssetOutput struct {
+	Body successEnvelope[assetResponse]
+}
+
+type nullableString struct {
+	present bool
+	null    bool
+	value   string
+}
+
+func (s *nullableString) UnmarshalJSON(data []byte) error {
+	s.present = true
+	if bytes.Equal(data, []byte("null")) {
+		s.null = true
+		s.value = ""
+		return nil
+	}
+	s.null = false
+	var value string
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	s.value = value
+	return nil
+}
+
+func (s nullableString) Schema(huma.Registry) *huma.Schema {
+	return &huma.Schema{Type: huma.TypeString, Nullable: true}
 }
 
 type grantInventoryAccessInput struct {

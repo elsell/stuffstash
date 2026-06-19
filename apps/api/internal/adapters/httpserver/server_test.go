@@ -100,6 +100,7 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 		{name: "list tenant custom field definitions", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/custom-field-definitions"},
 		{name: "create asset", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets", body: map[string]string{"kind": "item", "title": "Drill"}},
 		{name: "list assets", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets"},
+		{name: "update asset", method: http.MethodPatch, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/assets/01ARZ3NDEKTSV4RRFFQ69G5FAX", body: map[string]string{"title": "Drill"}},
 		{name: "grant inventory access", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/access-grants", body: map[string]string{"principalId": "viewer", "relationship": "viewer"}},
 		{name: "list inventory access grants", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/access-grants"},
 		{name: "create inventory custom field definition", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories/01ARZ3NDEKTSV4RRFFQ69G5FAW/custom-field-definitions", body: map[string]any{"key": "condition", "displayName": "Condition", "type": "enum", "enumOptions": []string{"new", "used"}}},
@@ -354,6 +355,203 @@ func TestUnrelatedUserCannotCreateOrListAssets(t *testing.T) {
 		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, listAssets.Code, listAssets.Body.String())
 	}
 	assertSafeError(t, listAssets, "forbidden", "Forbidden.")
+}
+
+func TestAssetUpdateFlowAndMovement(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
+	const otherTenantInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAZ"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+			{id: otherInventoryID, tenantID: tenantID, name: "Supplies", owner: "owner"},
+			{id: otherTenantInventoryID, tenantID: otherTenantID, name: "Cabin Tools", owner: "other-owner"},
+		},
+		ids: []string{"garage", "shelf", "box", "wrench", "other-inventory-location", "other-tenant-location"},
+	}))
+
+	garageResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "location",
+		"title": "Garage",
+	})
+	if garageResponse.Code != http.StatusCreated {
+		t.Fatalf("expected garage create status %d, got %d with body %s", http.StatusCreated, garageResponse.Code, garageResponse.Body.String())
+	}
+	garage := decodeAsset(t, garageResponse)
+
+	shelfResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":          "location",
+		"title":         "Shelf",
+		"parentAssetId": garage.Data.ID,
+	})
+	if shelfResponse.Code != http.StatusCreated {
+		t.Fatalf("expected shelf create status %d, got %d with body %s", http.StatusCreated, shelfResponse.Code, shelfResponse.Body.String())
+	}
+	shelf := decodeAsset(t, shelfResponse)
+
+	boxResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":          "container",
+		"title":         "Toolbox",
+		"parentAssetId": shelf.Data.ID,
+	})
+	if boxResponse.Code != http.StatusCreated {
+		t.Fatalf("expected box create status %d, got %d with body %s", http.StatusCreated, boxResponse.Code, boxResponse.Body.String())
+	}
+	box := decodeAsset(t, boxResponse)
+
+	wrenchResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":          "item",
+		"title":         "Wrench",
+		"parentAssetId": box.Data.ID,
+	})
+	if wrenchResponse.Code != http.StatusCreated {
+		t.Fatalf("expected wrench create status %d, got %d with body %s", http.StatusCreated, wrenchResponse.Code, wrenchResponse.Body.String())
+	}
+	wrench := decodeAsset(t, wrenchResponse)
+
+	moveBox := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:owner", map[string]any{
+		"title":         "Moved Toolbox",
+		"description":   "Blue metal box",
+		"parentAssetId": garage.Data.ID,
+	})
+	if moveBox.Code != http.StatusOK {
+		t.Fatalf("expected move status %d, got %d with body %s", http.StatusOK, moveBox.Code, moveBox.Body.String())
+	}
+	movedBox := decodeAsset(t, moveBox)
+	if movedBox.Data.Title != "Moved Toolbox" || movedBox.Data.Description != "Blue metal box" || movedBox.Data.ParentAssetID != garage.Data.ID {
+		t.Fatalf("unexpected moved box response: %+v", movedBox.Data)
+	}
+
+	assetsAfterMove := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=50", "Bearer dev:owner", nil)
+	if assetsAfterMove.Code != http.StatusOK {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusOK, assetsAfterMove.Code, assetsAfterMove.Body.String())
+	}
+	listAfterMove := decodeAssetList(t, assetsAfterMove)
+	foundWrench := false
+	for _, item := range listAfterMove.Data {
+		if item.ID == wrench.Data.ID {
+			foundWrench = true
+			if item.ParentAssetID != box.Data.ID {
+				t.Fatalf("expected wrench to remain inside moved box, got %+v", item)
+			}
+		}
+	}
+	if !foundWrench {
+		t.Fatalf("expected wrench in asset list, got %+v", listAfterMove.Data)
+	}
+
+	blankParent := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:owner", map[string]any{
+		"parentAssetId": "   ",
+	})
+	if blankParent.Code != http.StatusBadRequest {
+		t.Fatalf("expected blank parent status %d, got %d with body %s", http.StatusBadRequest, blankParent.Code, blankParent.Body.String())
+	}
+	assertSafeError(t, blankParent, "invalid_request", "Invalid request.")
+
+	otherInventoryLocationResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+otherInventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "location",
+		"title": "Other Inventory Shelf",
+	})
+	if otherInventoryLocationResponse.Code != http.StatusCreated {
+		t.Fatalf("expected other inventory location status %d, got %d with body %s", http.StatusCreated, otherInventoryLocationResponse.Code, otherInventoryLocationResponse.Body.String())
+	}
+	otherInventoryLocation := decodeAsset(t, otherInventoryLocationResponse)
+	crossInventoryMove := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:owner", map[string]any{
+		"parentAssetId": otherInventoryLocation.Data.ID,
+	})
+	if crossInventoryMove.Code != http.StatusNotFound {
+		t.Fatalf("expected cross-inventory move status %d, got %d with body %s", http.StatusNotFound, crossInventoryMove.Code, crossInventoryMove.Body.String())
+	}
+	assertSafeError(t, crossInventoryMove, "resource_not_found", "Resource not found.")
+
+	otherTenantLocationResponse := performRequest(server, http.MethodPost, "/tenants/"+otherTenantID+"/inventories/"+otherTenantInventoryID+"/assets", "Bearer dev:other-owner", map[string]any{
+		"kind":  "location",
+		"title": "Cabin Shelf",
+	})
+	if otherTenantLocationResponse.Code != http.StatusCreated {
+		t.Fatalf("expected other tenant location status %d, got %d with body %s", http.StatusCreated, otherTenantLocationResponse.Code, otherTenantLocationResponse.Body.String())
+	}
+	otherTenantLocation := decodeAsset(t, otherTenantLocationResponse)
+	crossTenantMove := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:owner", map[string]any{
+		"parentAssetId": otherTenantLocation.Data.ID,
+	})
+	if crossTenantMove.Code != http.StatusNotFound {
+		t.Fatalf("expected cross-tenant move status %d, got %d with body %s", http.StatusNotFound, crossTenantMove.Code, crossTenantMove.Body.String())
+	}
+	assertSafeError(t, crossTenantMove, "resource_not_found", "Resource not found.")
+
+	moveBoxToRoot := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:owner", map[string]any{
+		"parentAssetId": nil,
+	})
+	if moveBoxToRoot.Code != http.StatusOK {
+		t.Fatalf("expected root move status %d, got %d with body %s", http.StatusOK, moveBoxToRoot.Code, moveBoxToRoot.Body.String())
+	}
+	rootBox := decodeAsset(t, moveBoxToRoot)
+	if rootBox.Data.ParentAssetID != "" {
+		t.Fatalf("expected box at root, got %+v", rootBox.Data)
+	}
+
+	cycle := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+garage.Data.ID, "Bearer dev:owner", map[string]any{
+		"parentAssetId": shelf.Data.ID,
+	})
+	if cycle.Code != http.StatusBadRequest {
+		t.Fatalf("expected cycle status %d, got %d with body %s", http.StatusBadRequest, cycle.Code, cycle.Body.String())
+	}
+	assertSafeError(t, cycle, "invalid_request", "Invalid request.")
+
+	itemParent := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:owner", map[string]any{
+		"parentAssetId": wrench.Data.ID,
+	})
+	if itemParent.Code != http.StatusBadRequest {
+		t.Fatalf("expected item parent status %d, got %d with body %s", http.StatusBadRequest, itemParent.Code, itemParent.Body.String())
+	}
+	assertSafeError(t, itemParent, "invalid_request", "Invalid request.")
+
+	viewerGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]string{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if viewerGrant.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+	viewerUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:viewer-user", map[string]string{"title": "Viewer Rename"})
+	if viewerUpdate.Code != http.StatusForbidden {
+		t.Fatalf("expected viewer update status %d, got %d with body %s", http.StatusForbidden, viewerUpdate.Code, viewerUpdate.Body.String())
+	}
+	assertSafeError(t, viewerUpdate, "forbidden", "Forbidden.")
+
+	intruderUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:intruder", map[string]string{"title": "Intruder Rename"})
+	if intruderUpdate.Code != http.StatusForbidden {
+		t.Fatalf("expected intruder update status %d, got %d with body %s", http.StatusForbidden, intruderUpdate.Code, intruderUpdate.Body.String())
+	}
+	assertSafeError(t, intruderUpdate, "forbidden", "Forbidden.")
+
+	crossTenantPrincipalUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:other-owner", map[string]string{"title": "Other Tenant Rename"})
+	if crossTenantPrincipalUpdate.Code != http.StatusForbidden {
+		t.Fatalf("expected cross-tenant principal update status %d, got %d with body %s", http.StatusForbidden, crossTenantPrincipalUpdate.Code, crossTenantPrincipalUpdate.Body.String())
+	}
+	assertSafeError(t, crossTenantPrincipalUpdate, "forbidden", "Forbidden.")
+
+	editorGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]string{
+		"principalId":  "editor-user",
+		"relationship": "editor",
+	})
+	if editorGrant.Code != http.StatusCreated {
+		t.Fatalf("expected editor grant status %d, got %d with body %s", http.StatusCreated, editorGrant.Code, editorGrant.Body.String())
+	}
+	editorUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+box.Data.ID, "Bearer dev:editor-user", map[string]string{"title": "Editor Rename"})
+	if editorUpdate.Code != http.StatusOK {
+		t.Fatalf("expected editor update status %d, got %d with body %s", http.StatusOK, editorUpdate.Code, editorUpdate.Body.String())
+	}
+	if decodeAsset(t, editorUpdate).Data.Title != "Editor Rename" {
+		t.Fatalf("expected editor title update, got %s", editorUpdate.Body.String())
+	}
 }
 
 func TestCustomFieldDefinitionFlowAndAssetValidation(t *testing.T) {
@@ -1037,6 +1235,9 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	}
 	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/assets"]; !ok {
 		t.Fatalf("expected OpenAPI to include asset path, got %s", response.Body.String())
+	}
+	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}"]; !ok {
+		t.Fatalf("expected OpenAPI to include asset update path, got %s", response.Body.String())
 	}
 	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/access-grants"]; !ok {
 		t.Fatalf("expected OpenAPI to include inventory access grant path, got %s", response.Body.String())

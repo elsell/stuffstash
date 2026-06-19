@@ -92,7 +92,7 @@ Granting direct inventory access must also grant tenant `viewer` to the target p
 
 Granting `viewer` allows inventory viewing and asset listing.
 
-Granting `editor` allows inventory viewing, asset listing, and asset creation.
+Granting `editor` allows inventory viewing, asset listing, asset creation, asset update, and same-inventory asset movement.
 
 Neither `viewer` nor `editor` allows sharing access onward.
 

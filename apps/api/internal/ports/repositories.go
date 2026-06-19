@@ -63,6 +63,7 @@ type CustomFieldDefinitionPageRequest struct {
 
 type AssetRepository interface {
 	CreateAsset(ctx context.Context, asset asset.Asset) error
+	UpdateAsset(ctx context.Context, asset asset.Asset) error
 	AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error)
 	ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AssetListPageRequest) ([]asset.Asset, error)
 }

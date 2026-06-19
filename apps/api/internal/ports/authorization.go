@@ -24,6 +24,7 @@ type InventoryPermission string
 const (
 	InventoryPermissionView        InventoryPermission = "view"
 	InventoryPermissionCreateAsset InventoryPermission = "create_asset"
+	InventoryPermissionEditAsset   InventoryPermission = "edit_asset"
 	InventoryPermissionShare       InventoryPermission = "share"
 	InventoryPermissionConfigure   InventoryPermission = "configure"
 )

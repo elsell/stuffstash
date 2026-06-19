@@ -865,6 +865,177 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 	}
 }
 
+func TestUpdateAssetMovesAndValidatesCustomFields(t *testing.T) {
+	customFields := &fakeCustomFieldRepository{}
+	if err := customFields.SaveCustomFieldDefinition(context.Background(), customFieldDefinition("serial-definition", "tenant-one", "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)); err != nil {
+		t.Fatalf("save serial definition: %v", err)
+	}
+	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
+		asset.ID("garage"): assetItem("garage", "tenant-one", "inventory-one", asset.KindLocation, ""),
+		asset.ID("shelf"):  assetItem("shelf", "tenant-one", "inventory-one", asset.KindLocation, "garage"),
+		asset.ID("drill"):  assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, "garage"),
+	}}
+	observer := &fakeObserver{}
+	application := New(Dependencies{
+		Observer:     observer,
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: customFields,
+		Assets:       assets,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{},
+	})
+
+	title := "Cordless Drill"
+	description := "Blue case"
+	updated, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("drill"),
+		Title:       &title,
+		Description: &description,
+		ParentAssetID: AssetParentUpdate{
+			Present: true,
+			Value:   "shelf",
+		},
+		CustomFields: map[string]any{"serial": "abc"},
+	})
+	if err != nil {
+		t.Fatalf("update asset: %v", err)
+	}
+	if updated.Title.String() != title || updated.Description.String() != description || updated.ParentAssetID != asset.ID("shelf") {
+		t.Fatalf("unexpected updated asset: %+v", updated)
+	}
+	if updated.CustomFields.Values()["serial"] != "abc" {
+		t.Fatalf("expected updated custom fields, got %+v", updated.CustomFields.Values())
+	}
+	if assets.items[asset.ID("drill")].ParentAssetID != asset.ID("shelf") {
+		t.Fatalf("expected persisted parent shelf, got %+v", assets.items[asset.ID("drill")])
+	}
+	if !observer.hasEvent(ports.EventAssetUpdated) {
+		t.Fatalf("expected asset updated observability event, got %+v", observer.events)
+	}
+
+	_, err = application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		AssetID:      asset.ID("drill"),
+		CustomFields: map[string]any{"serial": 42},
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid custom field update rejection, got %v", err)
+	}
+}
+
+func TestUpdateAssetRejectsInvalidMovement(t *testing.T) {
+	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
+		asset.ID("garage"):   assetItem("garage", "tenant-one", "inventory-one", asset.KindLocation, ""),
+		asset.ID("shelf"):    assetItem("shelf", "tenant-one", "inventory-one", asset.KindLocation, "garage"),
+		asset.ID("box"):      assetItem("box", "tenant-one", "inventory-one", asset.KindContainer, "shelf"),
+		asset.ID("wrench"):   assetItem("wrench", "tenant-one", "inventory-one", asset.KindItem, "box"),
+		asset.ID("supplies"): assetItem("supplies", "tenant-one", "inventory-one", asset.KindItem, ""),
+	}}
+	application := New(Dependencies{
+		Observer:     &fakeObserver{},
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: &fakeCustomFieldRepository{},
+		Assets:       assets,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{},
+	})
+
+	for _, item := range []struct {
+		name    string
+		assetID asset.ID
+		parent  string
+	}{
+		{name: "self parent", assetID: asset.ID("box"), parent: "box"},
+		{name: "cycle through descendant", assetID: asset.ID("garage"), parent: "box"},
+		{name: "item parent", assetID: asset.ID("wrench"), parent: "supplies"},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			_, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
+				Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+				TenantID:    tenant.ID("tenant-one"),
+				InventoryID: inventory.InventoryID("inventory-one"),
+				AssetID:     item.assetID,
+				ParentAssetID: AssetParentUpdate{
+					Present: true,
+					Value:   item.parent,
+				},
+			})
+			if !errors.Is(err, ErrInvalidInput) {
+				t.Fatalf("expected invalid movement rejection, got %v", err)
+			}
+		})
+	}
+
+	updated, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("box"),
+		ParentAssetID: AssetParentUpdate{
+			Present: true,
+			Null:    true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("move container to root: %v", err)
+	}
+	if updated.ParentAssetID.String() != "" || assets.items[asset.ID("wrench")].ParentAssetID != asset.ID("box") {
+		t.Fatalf("expected box moved to root with child preserved, box=%+v wrench=%+v", updated, assets.items[asset.ID("wrench")])
+	}
+
+	_, err = application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("box"),
+		ParentAssetID: AssetParentUpdate{
+			Present: true,
+			Value:   " ",
+		},
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected blank parent rejection, got %v", err)
+	}
+}
+
+func TestUpdateAssetRequiresEditPermission(t *testing.T) {
+	application := New(Dependencies{
+		Observer: &fakeObserver{},
+		Authorizer: &fakeAuthorizer{
+			checkInventoryErr: ports.ErrForbidden,
+		},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields: &fakeCustomFieldRepository{},
+		Assets: &fakeAssetRepository{items: map[asset.ID]asset.Asset{
+			asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
+		}},
+		Outbox: &fakeOutbox{},
+		IDs:    &fakeIDGenerator{},
+	})
+
+	title := "Cordless Drill"
+	_, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("drill"),
+		Title:       &title,
+	})
+	if !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected unauthorized update, got %v", err)
+	}
+}
+
 type fakeAuthorizer struct {
 	checkInventoryErr     error
 	checkTenantErr        error
@@ -1177,6 +1348,40 @@ func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset) e
 		parent, ok := f.items[item.ParentAssetID]
 		if !ok || parent.TenantID != item.TenantID || parent.InventoryID != item.InventoryID || !parent.Kind.CanContainChildren() {
 			return ports.ErrForbidden
+		}
+	}
+	f.items[item.ID] = item
+	return nil
+}
+
+func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset) error {
+	if f.items == nil {
+		f.items = map[asset.ID]asset.Asset{}
+	}
+	existing, exists := f.items[item.ID]
+	if !exists || existing.TenantID != item.TenantID || existing.InventoryID != item.InventoryID {
+		return ports.ErrForbidden
+	}
+	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState {
+		return ports.ErrForbidden
+	}
+	if item.ParentAssetID.String() != "" {
+		parent, ok := f.items[item.ParentAssetID]
+		if !ok || parent.TenantID != item.TenantID || parent.InventoryID != item.InventoryID || !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
+			return ports.ErrForbidden
+		}
+		if parent.ID == item.ID {
+			return ports.ErrForbidden
+		}
+		for current := parent; current.ParentAssetID.String() != ""; {
+			next, ok := f.items[current.ParentAssetID]
+			if !ok || next.TenantID != item.TenantID || next.InventoryID != item.InventoryID {
+				return ports.ErrForbidden
+			}
+			if next.ID == item.ID {
+				return ports.ErrForbidden
+			}
+			current = next
 		}
 	}
 	f.items[item.ID] = item

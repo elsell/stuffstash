@@ -2,13 +2,13 @@
 
 ## Purpose
 
-The first API slice should prove the security boundary, Huma/OpenAPI generation, response contracts, tenant/inventory behavior, and the first asset create/list flow.
+The first API slice should prove the security boundary, Huma/OpenAPI generation, response contracts, tenant/inventory behavior, and the first asset create/list/update flow.
 
 ## Scope
 
 This spec covers the first protected REST endpoints.
 
-It does not cover asset movement, location-specific APIs, conversational, import/export, media, or search endpoints.
+It does not cover cross-inventory asset movement, location-specific APIs, conversational, import/export, media, or search endpoints.
 
 ## Local Convenience Endpoint
 
@@ -28,6 +28,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `POST /tenants/{tenantId}/custom-field-definitions`
@@ -51,6 +52,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories` must include pagination metadata in the response envelope.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.create_asset`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.view`.
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` requires `inventory.edit_asset`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
@@ -70,6 +72,12 @@ The first protected REST slice includes:
 - Asset listing returns assets scoped to one inventory.
 - Asset listing must support cursor pagination with `limit` and `cursor` query parameters.
 - Asset listing must include pagination metadata in the response envelope.
+- Asset update must support replacing title, description, parent asset reference, and custom field values.
+- Asset update must not support kind changes, lifecycle changes, tenant changes, or inventory changes in the first update slice.
+- Asset movement is represented by `parentAssetId` updates.
+- Asset update must allow moving an asset to the inventory root by sending `parentAssetId: null`.
+- Asset update must prevent self-parenting, containment cycles, item parents, archived parents, cross-tenant parents, and cross-inventory parents.
+- Asset update must validate custom field values against effective custom field definitions.
 
 ## Responses
 
@@ -95,9 +103,11 @@ The first protected REST slice includes:
 - Tests must verify tenant owners can list all inventories in their tenant.
 - Tests must verify inventory owners who are not tenant owners see only the inventories they can view.
 - Tests must verify asset creation and listing.
+- Tests must verify asset update and movement.
 - Tests must verify asset endpoint authentication and authorization failures.
 - Tests must verify cross-tenant and cross-inventory asset containment attempts fail.
 - Tests must verify item assets cannot be parents.
+- Tests must verify movement to root, moving containers or locations with descendants, self-parent rejection, and cycle rejection.
 - Tests must verify non-empty custom field values are accepted only when definitions exist and values validate.
 - Tests must verify custom field definitions are authenticated, authorized, cursor-paginated, tenant/inventory isolated, and used for asset value validation.
 - Tests must verify unauthorized errors use the safe error envelope.

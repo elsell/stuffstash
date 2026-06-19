@@ -53,7 +53,7 @@ The first model should express permissions for:
 - Share inventory.
 - Create asset.
 - Edit asset.
-- Move asset.
+- Move asset through asset edit permission in the first REST slice.
 - View location as asset view on a `location` asset.
 - Create location as asset create with kind `location`.
 - Move location as asset move on a `location` asset.
@@ -63,7 +63,8 @@ The first model should express permissions for:
 - View audit history.
 - Undo action.
 
-Exact permission names must be defined before implementation.
+The first Go port permission name for asset update and same-inventory movement is `edit_asset`, mapped to the SpiceDB inventory `edit` permission.
+Exact permission names for future per-asset permissions must be defined before implementation.
 
 Archive and unarchive permissions are future permissions and must not be added to the first asset slice until archive behavior is specified and exposed.
 

@@ -357,6 +357,43 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset) error {
 	return nil
 }
 
+func (s *Store) UpdateAsset(_ context.Context, item asset.Asset) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, exists := s.assets[item.ID]
+	if !exists || existing.TenantID != item.TenantID || existing.InventoryID != item.InventoryID {
+		return ports.ErrForbidden
+	}
+	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState {
+		return ports.ErrForbidden
+	}
+	if item.ParentAssetID.String() != "" {
+		parent, ok := s.assets[item.ParentAssetID]
+		if !ok {
+			return ports.ErrForbidden
+		}
+		if parent.TenantID != item.TenantID || parent.InventoryID != item.InventoryID || !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
+			return ports.ErrForbidden
+		}
+		if parent.ID == item.ID {
+			return ports.ErrForbidden
+		}
+		for current := parent; current.ParentAssetID.String() != ""; {
+			next, ok := s.assets[current.ParentAssetID]
+			if !ok || next.TenantID != item.TenantID || next.InventoryID != item.InventoryID {
+				return ports.ErrForbidden
+			}
+			if next.ID == item.ID {
+				return ports.ErrForbidden
+			}
+			current = next
+		}
+	}
+	s.assets[item.ID] = item
+	return nil
+}
+
 func (s *Store) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

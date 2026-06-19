@@ -10,9 +10,9 @@ The model should support that with one containment graph instead of separate ass
 
 ## Scope
 
-This spec defines the initial containment direction for assets, containers, and place-like locations.
+This spec defines the initial containment direction for assets, containers, place-like locations, and movement inside one inventory.
 
-This spec does not define search indexes, REST endpoints, or every move rule.
+This spec does not define search indexes, cross-inventory movement, archive behavior, or every future move rule.
 
 ## Decision
 
@@ -35,6 +35,9 @@ This spec does not define search indexes, REST endpoints, or every move rule.
 - The system must support moving an asset into a container asset.
 - The system must support moving a container asset with its contained assets.
 - The system must support moving a location asset with its child location assets and contained assets.
+- Moving a container or location asset must preserve all descendants by moving only the selected node.
+- Moving an asset to the inventory root must be supported by clearing the parent asset reference.
+- Moving an asset between inventories is out of scope for the first movement slice.
 - The system must prevent containment cycles.
 - The system must prevent an asset from containing itself.
 - The system must prevent placing a child under an `item` asset.
@@ -64,6 +67,7 @@ This spec does not define search indexes, REST endpoints, or every move rule.
 - Tests must verify moving assets into container assets.
 - Tests must verify moving container assets with children.
 - Tests must verify moving location assets with children.
+- Tests must verify moving assets to the root.
 - Tests must verify cycle prevention.
 - Tests must verify item assets cannot contain children.
 - Tests must verify tenant, inventory, and authorization boundaries.

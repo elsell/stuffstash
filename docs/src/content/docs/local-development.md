@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom fields, create and list assets, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
+The app is still early. Today, you can run the Go API, create tenants, create inventories, define custom fields, create, list, update, and move assets, share inventory access, persist data in Postgres through Compose, and test the first auth boundary.
 
 ## Requirements
 
@@ -103,6 +103,15 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
   -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>"}'
 ```
 
+Create another location under the garage if you want to test movement:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"kind":"location","title":"Shelf","parentAssetId":"<garage-asset-id>"}'
+```
+
 Define custom fields before sending custom values on assets:
 
 Keys use lowercase letters, numbers, and hyphens. Initial field types are `text`, `number`, `boolean`, `date`, `url`, and `enum`.
@@ -128,6 +137,18 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
   -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>","customFields":{"serial":"bag-1","condition":"new"}}'
 ```
 
+Move or edit an asset:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id> \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Fertilizer Bag","parentAssetId":"<shelf-asset-id>","customFields":{"serial":"bag-1","condition":"used"}}'
+```
+
+Send `parentAssetId` as `null` to move an asset back to the inventory root.
+
 Inventory custom field lists include tenant fields and inventory fields:
 
 ```sh
@@ -144,7 +165,7 @@ curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/as
 
 Grant another local dev user viewer access:
 
-Viewers can list assets. Editors can list and create assets. Neither can share the inventory with someone else.
+Viewers can list assets. Editors can list, create, update, and move assets. Neither can share the inventory with someone else.
 
 ```sh
 curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-grants \
