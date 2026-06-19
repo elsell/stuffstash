@@ -56,6 +56,11 @@ These instructions are binding for all agents and contributors working in this r
 ## Adapter Organization
 
 - Adapter code must be organized so one file does not mix unrelated domains or unrelated concerns.
+- Persistence adapter code must be organized around DDD repository responsibilities.
+- Persistence adapters must keep repository methods, persistence models, and mapping helpers grouped by the aggregate or bounded-context concept they serve.
+- GORM models are infrastructure-only data mappers. They must not be treated as domain entities, and domain entities must not persist themselves.
+- Do not let a catch-all persistence store file accumulate domain-specific repository behavior.
+- GORM repository tests must mirror repository responsibilities. Shared persistence test setup may live in `gormstore/store_test.go`, but repository behavior tests belong in focused `*_repository_test.go` files.
 - REST adapter code must be organized domain-first under `apps/api/internal/adapters/httpserver/`.
 - Each REST adapter domain must split concerns into `routes/`, `dto/`, and `mapper/` directories when it owns more than trivial behavior.
 - Route files may register HTTP operations and call application services. They must not define DTOs or response mapping helpers.
@@ -67,6 +72,7 @@ These instructions are binding for all agents and contributors working in this r
 - If a REST adapter domain grows large, split files by operation inside the relevant concern directory before adding more behavior.
 - HTTP adapter tests must mirror the adapter organization. Keep `httpserver/server_test.go` limited to platform-level behavior such as health, the local API index, unknown routes, and OpenAPI generation. Domain endpoint tests belong in focused files such as `assets_test.go`, `inventories_test.go`, `access_test.go`, `audit_test.go`, `customfields_test.go`, and `identity_test.go`. Cross-cutting test setup, request execution, generic envelopes, pagination metadata, and fakes belong in `helpers_test.go`; domain wire-contract helpers belong in focused `*_helpers_test.go` files.
 - The structural pre-commit check must guard these HTTP adapter boundaries mechanically where practical.
+- The structural pre-commit check must guard the GORM adapter against catch-all `store.go` repository behavior and catch-all `store_test.go` repository tests.
 
 ## Security
 

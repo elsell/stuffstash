@@ -21,6 +21,11 @@ This spec does not define every future asset index, backup strategy, retention p
 - Persistence must live behind repositories and adapters.
 - Domain logic must not depend on GORM models, database column names, JSONB structures, migration tools, or SQL dialect details.
 - Repository interfaces must be shaped around domain and application needs, not around database tables.
+- Persistence adapter code must be organized around domain repository responsibilities, not around one catch-all store file.
+- Repository implementations must keep domain-facing persistence methods, storage models, and mapping helpers close to the aggregate or bounded-context concept they serve.
+- Aggregate roots and repositories do not have to map one-to-one to database tables.
+- GORM models are infrastructure details and must not become domain entities.
+- Domain entities must not persist themselves. Persistence belongs to repository implementations and their mappers.
 - Tenant isolation and inventory isolation must be represented in persistence.
 - Persistence behavior must preserve authorization and tenancy assumptions from the application layer.
 - Repository adapter choice must come from `STUFF_STASH_REPOSITORY_MODE`.

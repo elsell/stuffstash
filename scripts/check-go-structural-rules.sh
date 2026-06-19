@@ -34,10 +34,14 @@ if rg --ignore-case --line-number --regexp "$sql_pattern" "${go_files[@]}"; then
 fi
 
 httpserver_touched=false
+gormstore_touched=false
 for file in "${go_files[@]}"; do
   case "$file" in
     apps/api/internal/adapters/httpserver/*)
       httpserver_touched=true
+      ;;
+    apps/api/internal/adapters/gormstore/*)
+      gormstore_touched=true
       ;;
   esac
 done
@@ -82,5 +86,21 @@ if [ "$httpserver_touched" = true ]; then
   if [ -f apps/api/internal/adapters/httpserver/helpers_test.go ] && rg --line-number --regexp '^(type|func) (asset|auditRecord|customField|inventoryAccess|decodeAsset|decodeAuditRecord|decodeCustomField|decodeInventoryAccess|assertCustomField|assertInventoryAccess)' apps/api/internal/adapters/httpserver/helpers_test.go; then
     echo "httpserver/helpers_test.go must stay limited to cross-cutting test helpers; domain wire helpers belong in focused *_helpers_test.go files" >&2
     exit 1
+  fi
+fi
+
+if [ "$gormstore_touched" = true ]; then
+  if [ -f apps/api/internal/adapters/gormstore/store.go ] && rg --line-number --regexp '^func \(s Store\) (Save|Create|Update|List|Claim|Mark|Asset|Tenant|Inventory|Custom|Attachment)' apps/api/internal/adapters/gormstore/store.go; then
+    echo "gormstore/store.go must stay limited to Store construction; repository behavior belongs in focused *_repository.go files" >&2
+    exit 1
+  fi
+
+  if [ -f apps/api/internal/adapters/gormstore/store_test.go ]; then
+    store_test_names="$(rg --only-matching --replace '$1' --regexp '^func (Test[A-Za-z0-9_]+)' apps/api/internal/adapters/gormstore/store_test.go || true)"
+    if [ -n "$store_test_names" ]; then
+      printf '%s\n' "$store_test_names" >&2
+      echo "gormstore/store_test.go must stay limited to shared helpers; repository tests belong in focused *_repository_test.go files" >&2
+      exit 1
+    fi
   fi
 fi

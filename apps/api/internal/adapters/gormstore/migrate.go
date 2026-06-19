@@ -1,0 +1,10 @@
+package gormstore
+
+import (
+	"context"
+	"gorm.io/gorm"
+)
+
+func Migrate(ctx context.Context, db *gorm.DB) error {
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &customAssetTypeModel{}, &customFieldDefinitionModel{}, &customFieldDefinitionAssetTypeModel{}, &assetModel{}, &attachmentModel{}, &auditRecordModel{}, &authorizationOutboxEventModel{})
+}
