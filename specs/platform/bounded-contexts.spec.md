@@ -22,6 +22,7 @@ The asset context owns:
 
 - Asset identity.
 - Asset kind, including item, container, and location-like assets.
+- Custom asset type assignment on assets.
 - Asset title and description.
 - Asset lifecycle once specified.
 - Asset containment behavior once specified.
@@ -39,6 +40,7 @@ The inventory context owns:
 - Inventory identity.
 - Inventory membership relationships.
 - Inventory-scoped settings.
+- Inventory-scoped custom asset type definitions.
 - Inventory-scoped custom field definitions.
 - Inventory-level sharing behavior once specified.
 
@@ -90,7 +92,8 @@ The expiration context remains a candidate context.
 Expiration may become:
 
 - A first-class domain concept.
-- A custom field type.
+- A custom field value type.
+- A custom asset type.
 - A policy or reminder capability.
 - A combination of these.
 
@@ -151,6 +154,10 @@ The data portability context owns:
 - Custom field definitions may be tenant-scoped or inventory-scoped.
 - Tenant-scoped custom field definitions flow down into inventories.
 - Inventory-scoped custom field definitions apply only inside that inventory.
+- Custom asset type definitions may be tenant-scoped or inventory-scoped.
+- Tenant-scoped custom asset type definitions flow down into inventories.
+- Inventory-scoped custom asset type definitions apply only inside that inventory.
+- Custom asset types are classification overlays on assets; base asset kind still owns containment behavior.
 - Conversational actions must execute through the same application operations and authorization checks as any other adapter.
 - Every state-changing action must produce audit history.
 - Search must return only resources the user is authorized to view.

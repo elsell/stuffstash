@@ -91,6 +91,18 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - display name
   - field type
   - enum options as JSONB
+  - applicability target
+  - custom asset type ID when applicability targets a custom asset type
+  - timestamps managed by GORM
+- `custom_asset_types`
+  - `id`
+  - `tenant_id`
+  - `inventory_id` when scoped to one inventory
+  - scope
+  - cursor key
+  - type key
+  - display name
+  - description
   - timestamps managed by GORM
 - `audit_records`
   - `id`
@@ -118,6 +130,8 @@ PostgreSQL migrations must also enforce the effective-key invariant across scope
 That enforcement must include a database-level serialization point, such as a transaction-scoped advisory lock keyed by tenant and field key, not only a read-before-write trigger check.
 The database must validate persisted custom field definition key, display name, enum option, scope, and field type shape as a defense-in-depth guard around the domain model.
 
+Custom asset type definitions must be scoped by tenant and optionally by inventory. They must preserve the same effective-key invariant as custom field definitions: no duplicate tenant-scoped type key inside one tenant, no duplicate inventory-scoped type key inside one inventory, and no tenant/inventory effective-key collision. Custom field definitions that target a custom asset type must reference a custom asset type available to the field definition's effective scope.
+
 Audit record persistence must be append-only through application ports in the first slice. All repository adapters, including the in-memory adapter, must reject duplicate audit record IDs instead of overwriting existing records. State changes paired with audit writes must fail without partial domain writes when the audit write fails. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination ordered by `(occurred_at, id)`. Inventory references must not cascade-delete audit rows; until delete behavior is specified, inventory deletion must be blocked if audit rows still reference the inventory. Migration `000009_preserve_audit_records_and_ordering` must convert existing audit record inventory references from cascade delete to restrict delete and recreate audit list indexes for `(occurred_at, id)` ordering.
 
 ## Initial Asset Schema
@@ -131,6 +145,7 @@ The `assets` table must include:
 - `inventory_id`
 - `parent_asset_id`
 - asset kind
+- custom asset type ID once custom asset types are implemented
 - title
 - description
 - custom field values
@@ -148,15 +163,19 @@ The table must preserve these invariants:
 - An asset must not be its own parent.
 - Containment cycles must not be persisted.
 - Only container-capable asset kinds may be used as parents.
+- Custom asset type must not affect containment invariants; base asset kind remains authoritative for parent/child behavior.
+- Custom asset type references must be tenant/inventory valid when present.
 - Custom field values must be stored as JSONB in PostgreSQL and must default to an empty object.
 - The repository adapter must be able to round-trip validated custom field values so future custom-field APIs do not require a persistence rewrite.
-- The public asset create endpoint may accept non-empty custom field objects only after application validation against effective custom field definitions.
+- The public asset create endpoint may accept non-empty custom field objects only after application validation against effective custom field definitions that apply to the asset's custom asset type.
 
 The initial asset kind enumeration is:
 
 - `item`
 - `container`
 - `location`
+
+Custom asset types such as `medicine`, `document`, or `battery` must not be added to the base asset kind enumeration. They belong in custom asset type persistence.
 
 The initial lifecycle state enumeration is:
 
@@ -175,10 +194,12 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 ## Custom Fields
 
 - Custom field definitions must be stored separately from asset custom field values.
+- Custom asset type definitions must be stored separately from assets and custom field definitions.
 - Tenant-scoped custom field definitions must be distinguishable from inventory-scoped custom field definitions.
+- Tenant-scoped custom asset type definitions must be distinguishable from inventory-scoped custom asset type definitions.
 - In the PostgreSQL adapter, asset custom field values should be stored in a JSONB column.
 - The initial `assets.custom_fields` value must be a JSON object.
-- Asset custom field values may be non-empty only after application validation against effective custom field definitions.
+- Asset custom field values may be non-empty only after application validation against effective custom field definitions that apply to the asset's custom asset type.
 - Domain code must not expose or manipulate raw JSONB.
 - Repository adapters must map stored custom field values into typed domain values.
 - Custom field values must be validated by domain or application services before persistence.

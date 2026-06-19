@@ -82,6 +82,7 @@ The first protected REST slice includes:
 - Asset update must allow moving an asset to the inventory root by sending `parentAssetId: null`.
 - Asset update must prevent self-parenting, containment cycles, item parents, archived parents, cross-tenant parents, and cross-inventory parents.
 - Asset update must validate custom field values against effective custom field definitions.
+- Custom asset type definitions and custom-field applicability to custom asset types are not part of the initial REST slice. They must be specified before new endpoints or asset DTO fields are added.
 
 ## Responses
 

@@ -63,7 +63,8 @@ The goal is to prove a production-shaped path through:
 
 - User invitation flows, access revocation, delete/archive, search, custom field update/delete APIs, and media attachments are not implemented.
 - Undo is not yet implemented for audit history.
-- Custom field definitions cannot yet be updated, deleted, reordered, searched, imported, exported, or managed through conversational flows.
+- Custom asset type definitions are not yet implemented.
+- Custom field definitions cannot yet be updated, deleted, reordered, searched, imported, exported, targeted to custom asset types, or managed through conversational flows.
 
 ## Next Work
 

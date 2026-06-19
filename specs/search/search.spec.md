@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Stuff Stash needs search that works across assets, locations, custom fields, and inventories the user can access.
+Stuff Stash needs search that works across assets, locations, custom asset types, custom fields, and inventories the user can access.
 
 Search should support both exact lookup and fuzzy discovery.
 
@@ -20,6 +20,7 @@ This spec does not define final indexes, ranking, query syntax, highlighting, or
 - Search must support exact search.
 - Search must support fuzzy search.
 - Search should search all relevant fields, including asset title, asset description, location names, and custom field values.
+- Search should support filtering or matching by custom asset type once custom asset types are implemented.
 - Search must support custom fields when the user can access the inventory and field definition.
 - Search must preserve tenant isolation and inventory isolation.
 - Search must support pagination.
@@ -41,7 +42,7 @@ This spec does not define final indexes, ranking, query syntax, highlighting, or
 
 ## Testing
 
-- Tests must verify exact search, fuzzy search, custom field search, pagination, tenant filtering, inventory filtering, and authorization filtering.
+- Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, pagination, tenant filtering, inventory filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
 - PostgreSQL-backed tests are required for PostgreSQL-specific search behavior.
 

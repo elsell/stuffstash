@@ -98,11 +98,16 @@ Neither `viewer` nor `editor` allows sharing access onward.
 
 ## Custom Fields
 
+- Tenant-scoped custom asset type definitions are controlled by tenant-level relationships.
+- Inventory-scoped custom asset type definitions are controlled by inventory-level relationships.
+- Custom asset type definitions do not need separate per-type permissions at first.
+- A user who can configure an inventory may configure that inventory's custom asset type definitions.
 - Tenant-scoped custom field definitions are controlled by tenant-level relationships.
 - Inventory-scoped custom field definitions are controlled by inventory-level relationships.
 - Custom field definitions do not need separate per-field permissions at first.
 - A user who can configure an inventory may configure that inventory's custom field definitions.
 - A user who can edit assets in an inventory may set values for custom fields available to that inventory.
+- A user who can edit assets in an inventory may assign available custom asset types to assets in that inventory once custom asset type assignment is implemented.
 
 ## Security Tests
 

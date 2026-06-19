@@ -31,11 +31,14 @@ This spec does not define the full lifecycle model, consumable model, search beh
   - Custom field values.
   - Lifecycle state.
 - Assets must support custom field values.
+- Assets must support an optional custom asset type once the custom asset type slice is implemented.
+- Custom asset types are user-defined metadata/classification overlays on normal assets. They must not replace the base asset kind enumeration.
+- Asset kind controls base containment behavior. Custom asset type controls user-facing classification and which type-specific custom field definitions apply.
 - Asset custom field values must be validated against tenant-scoped and inventory-scoped custom field definitions.
-- Asset create may accept non-empty custom field values when every value is validated against the effective custom field definitions for the target inventory.
+- Asset create may accept non-empty custom field values when every value is validated against the effective custom field definitions for the target inventory and the asset's custom asset type.
 - Asset update may replace title, description, parent asset reference, and custom field values.
 - Asset update must validate custom field values against the same effective custom field definitions used by asset create.
-- Asset update must not change asset ID, tenant ID, inventory ID, kind, or lifecycle state in the first update slice.
+- Asset update must not change asset ID, tenant ID, inventory ID, kind, custom asset type, or lifecycle state in the first update slice.
 - Asset movement is represented by updating an asset's parent asset reference.
 - Cross-inventory movement is not supported in the first update slice.
 - Clearing `parentAssetId` moves an asset to the inventory root.
@@ -63,6 +66,7 @@ The table must include:
 - `inventory_id`: inventory that owns the asset.
 - `parent_asset_id`: nullable self-reference for containment.
 - `kind`: domain asset kind enumeration.
+- `custom_asset_type_id`: optional reference to a custom asset type once custom asset types are implemented.
 - `title`: short display name.
 - `description`: optional longer text.
 - `custom_fields`: PostgreSQL JSONB values for validated custom field data.
@@ -81,6 +85,7 @@ Persistence rules:
 - `parent_asset_id` must be null for root assets.
 - `parent_asset_id` must never reference the asset itself.
 - Containment cycles must be prevented before persistence commits.
+- Custom asset type must not change the base containment rules. A `medicine` custom asset type can still be an `item`, `container`, or `location` depending on its base asset kind.
 - `custom_fields` must default to an empty object, not null.
 - Domain and application code must not manipulate raw JSONB.
 - Update persistence must preserve the same tenant, inventory, kind, and lifecycle state for the target asset.
@@ -123,3 +128,4 @@ The system must eventually support things that can be used up, such as medicine,
 - Can assets move between inventories, or should cross-inventory movement remain an export/import-style workflow?
 - What asset fields should be first-class rather than custom fields?
 - Can users convert an existing asset from one kind to another?
+- Can users change an existing asset's custom asset type, and how should values for no-longer-applicable custom fields be handled?
