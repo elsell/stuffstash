@@ -13,6 +13,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func init() {
@@ -254,6 +255,68 @@ func registerRoutes(api huma.API, application app.App) {
 			},
 		}, nil
 	}, huma.OperationTags("assets"), securedOperation)
+
+	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", func(ctx context.Context, input *grantInventoryAccessInput) (*grantInventoryAccessOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		grant, err := application.GrantInventoryAccess(ctx, app.GrantInventoryAccessInput{
+			Principal:    principal,
+			TenantID:     tenant.ID(input.TenantID),
+			InventoryID:  inventory.InventoryID(input.InventoryID),
+			TargetUserID: input.Body.PrincipalID,
+			Relationship: input.Body.Relationship,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		return &grantInventoryAccessOutput{
+			Body: successEnvelope[inventoryAccessGrantResponse]{
+				Data: inventoryAccessGrantToResponse(grant),
+				Meta: responseMeta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("inventory access"), createdOperation, securedOperation)
+
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", func(ctx context.Context, input *listInventoryAccessInput) (*listInventoryAccessOutput, error) {
+		principal, err := authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListInventoryAccessGrants(ctx, app.ListInventoryAccessGrantsInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			Limit:       input.Limit,
+			Cursor:      input.Cursor,
+		})
+		if err != nil {
+			return nil, toHumaError(err)
+		}
+
+		data := make([]inventoryAccessGrantResponse, 0, len(result.Items))
+		for _, grant := range result.Items {
+			data = append(data, inventoryAccessGrantToResponse(grant))
+		}
+
+		return &listInventoryAccessOutput{
+			Body: successEnvelope[[]inventoryAccessGrantResponse]{
+				Data: data,
+				Meta: responseMeta{
+					TenantID: input.TenantID,
+					Pagination: &paginationMeta{
+						Limit:      result.Limit,
+						NextCursor: result.NextCursor,
+						HasMore:    result.HasMore,
+					},
+				},
+			},
+		}, nil
+	}, huma.OperationTags("inventory access"), securedOperation)
 }
 
 func securedOperation(operation *huma.Operation) {
@@ -400,6 +463,32 @@ type listAssetsOutput struct {
 	Body successEnvelope[[]assetResponse]
 }
 
+type grantInventoryAccessInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Body          struct {
+		PrincipalID  string `json:"principalId" doc:"User principal ID to grant access to"`
+		Relationship string `json:"relationship" enum:"viewer,editor" doc:"Direct inventory relationship"`
+	}
+}
+
+type grantInventoryAccessOutput struct {
+	Body successEnvelope[inventoryAccessGrantResponse]
+}
+
+type listInventoryAccessInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type listInventoryAccessOutput struct {
+	Body successEnvelope[[]inventoryAccessGrantResponse]
+}
+
 type successEnvelope[T any] struct {
 	Data T            `json:"data"`
 	Meta responseMeta `json:"meta"`
@@ -479,6 +568,13 @@ type assetResponse struct {
 	LifecycleState string         `json:"lifecycleState"`
 }
 
+type inventoryAccessGrantResponse struct {
+	TenantID     string `json:"tenantId"`
+	InventoryID  string `json:"inventoryId"`
+	PrincipalID  string `json:"principalId"`
+	Relationship string `json:"relationship"`
+}
+
 func assetToResponse(item asset.Asset) assetResponse {
 	return assetResponse{
 		ID:             item.ID.String(),
@@ -490,5 +586,14 @@ func assetToResponse(item asset.Asset) assetResponse {
 		Description:    item.Description.String(),
 		CustomFields:   item.CustomFields.Values(),
 		LifecycleState: item.LifecycleState.String(),
+	}
+}
+
+func inventoryAccessGrantToResponse(grant ports.InventoryAccessGrant) inventoryAccessGrantResponse {
+	return inventoryAccessGrantResponse{
+		TenantID:     grant.TenantID.String(),
+		InventoryID:  grant.InventoryID.String(),
+		PrincipalID:  grant.PrincipalID.String(),
+		Relationship: string(grant.Relationship),
 	}
 }

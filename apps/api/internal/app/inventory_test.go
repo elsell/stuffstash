@@ -542,11 +542,148 @@ func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
 	}
 }
 
+func TestGrantInventoryAccessRequiresShareAndRejectsInvalidGrants(t *testing.T) {
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		},
+	}
+	application := New(Dependencies{
+		Observer: &fakeObserver{},
+		Authorizer: &fakeAuthorizer{
+			checkInventoryErr: ports.ErrForbidden,
+		},
+		Tenants: &fakeTenantRepository{
+			exists: true,
+		},
+		Inventories: repository,
+		Outbox:      &fakeOutbox{},
+		IDs:         &fakeIDGenerator{ids: []string{"event-one"}},
+	})
+
+	_, err := application.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		TargetUserID: "viewer",
+		Relationship: "viewer",
+	})
+	if !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected unauthorized without share permission, got %v", err)
+	}
+	if len(repository.accessGrants) != 0 {
+		t.Fatalf("expected no durable grant without share permission, got %+v", repository.accessGrants)
+	}
+
+	allowed := New(Dependencies{
+		Observer:    &fakeObserver{},
+		Authorizer:  &fakeAuthorizer{},
+		Tenants:     &fakeTenantRepository{exists: true},
+		Inventories: repository,
+		Outbox:      &fakeOutbox{},
+		IDs:         &fakeIDGenerator{ids: []string{"event-two"}},
+	})
+	for _, item := range []struct {
+		name          string
+		targetUserID  string
+		relationship  string
+		expectedError error
+	}{
+		{name: "self grant", targetUserID: "owner", relationship: "viewer", expectedError: ErrInvalidInput},
+		{name: "bad principal", targetUserID: "user/one", relationship: "viewer", expectedError: ErrInvalidInput},
+		{name: "bad relationship", targetUserID: "viewer", relationship: "owner", expectedError: ErrInvalidInput},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			_, err := allowed.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
+				Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+				TenantID:     tenant.ID("tenant-one"),
+				InventoryID:  inventory.InventoryID("inventory-one"),
+				TargetUserID: item.targetUserID,
+				Relationship: item.relationship,
+			})
+			if !errors.Is(err, item.expectedError) {
+				t.Fatalf("expected %v, got %v", item.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestGrantAndListInventoryAccessGrants(t *testing.T) {
+	observer := &fakeObserver{}
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		},
+	}
+	application := New(Dependencies{
+		Observer:     observer,
+		Authorizer:   &fakeAuthorizer{},
+		Tenants:      &fakeTenantRepository{exists: true},
+		Inventories:  repository,
+		Outbox:       &fakeOutbox{},
+		IDs:          &fakeIDGenerator{ids: []string{"event-one", "event-two"}},
+		MaxPageLimit: 1,
+	})
+
+	_, err := application.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		TargetUserID: "viewer",
+		Relationship: "viewer",
+	})
+	if err != nil {
+		t.Fatalf("grant viewer: %v", err)
+	}
+	_, err = application.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		TargetUserID: "editor",
+		Relationship: "editor",
+	})
+	if err != nil {
+		t.Fatalf("grant editor: %v", err)
+	}
+
+	firstPage, err := application.ListInventoryAccessGrants(context.Background(), ListInventoryAccessGrantsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       1,
+	})
+	if err != nil {
+		t.Fatalf("list first page: %v", err)
+	}
+	if len(firstPage.Items) != 1 || firstPage.Items[0].PrincipalID != identity.PrincipalID("editor") || !firstPage.HasMore || firstPage.NextCursor == nil {
+		t.Fatalf("expected first grant page with editor, got %+v", firstPage)
+	}
+
+	secondPage, err := application.ListInventoryAccessGrants(context.Background(), ListInventoryAccessGrantsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       1,
+		Cursor:      *firstPage.NextCursor,
+	})
+	if err != nil {
+		t.Fatalf("list second page: %v", err)
+	}
+	if len(secondPage.Items) != 1 || secondPage.Items[0].PrincipalID != identity.PrincipalID("viewer") || secondPage.HasMore {
+		t.Fatalf("expected second grant page with viewer, got %+v", secondPage)
+	}
+	if !observer.hasEvent(ports.EventInventoryAccessGranted) || !observer.hasEvent(ports.EventInventoryAccessListed) {
+		t.Fatalf("expected grant/list observability events, got %+v", observer.events)
+	}
+}
+
 type fakeAuthorizer struct {
-	checkInventoryErr    error
-	grantTenantOwnerErr  error
-	tenantOwnerGrants    []string
-	inventoryOwnerGrants []string
+	checkInventoryErr     error
+	grantTenantOwnerErr   error
+	tenantOwnerGrants     []string
+	inventoryOwnerGrants  []string
+	inventoryViewerGrants []string
+	inventoryEditorGrants []string
 }
 
 func (f *fakeAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
@@ -570,6 +707,16 @@ func (f *fakeAuthorizer) GrantInventoryOwner(_ context.Context, principal identi
 	return nil
 }
 
+func (f *fakeAuthorizer) GrantInventoryViewer(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	f.inventoryViewerGrants = append(f.inventoryViewerGrants, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
+	return nil
+}
+
+func (f *fakeAuthorizer) GrantInventoryEditor(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	f.inventoryEditorGrants = append(f.inventoryEditorGrants, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
+	return nil
+}
+
 type fakeTenantRepository struct {
 	exists bool
 }
@@ -583,9 +730,10 @@ func (f *fakeTenantRepository) TenantExists(context.Context, tenant.ID) (bool, e
 }
 
 type fakeInventoryRepository struct {
-	items  []inventory.Inventory
-	calls  int
-	limits []int
+	items        []inventory.Inventory
+	accessGrants []ports.InventoryAccessGrant
+	calls        int
+	limits       []int
 }
 
 func (f *fakeInventoryRepository) InventoryByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error) {
@@ -696,6 +844,33 @@ func (f *fakeInventoryRepository) SaveInventory(context.Context, inventory.Inven
 	return nil
 }
 
+func (f *fakeInventoryRepository) SaveInventoryAccessGrantAndEnqueue(_ context.Context, _ string, grant ports.InventoryAccessGrant) error {
+	for _, existing := range f.accessGrants {
+		if existing.TenantID == grant.TenantID && existing.InventoryID == grant.InventoryID && existing.CursorKey() == grant.CursorKey() {
+			return nil
+		}
+	}
+	f.accessGrants = append(f.accessGrants, grant)
+	return nil
+}
+
+func (f *fakeInventoryRepository) ListInventoryAccessGrants(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {
+	items := []ports.InventoryAccessGrant{}
+	for _, grant := range f.accessGrants {
+		key := grant.CursorKey()
+		if grant.TenantID == tenantID && grant.InventoryID == inventoryID && key > page.AfterGrantKey {
+			items = append(items, grant)
+		}
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
 func (f *fakeInventoryRepository) ListInventoriesByTenant(_ context.Context, tenantID inventory.TenantID, page ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
 	f.calls++
 	f.limits = append(f.limits, page.Limit)
@@ -734,6 +909,14 @@ func (s *selectiveInventoryAuthorizer) GrantTenantOwner(context.Context, identit
 }
 
 func (s *selectiveInventoryAuthorizer) GrantInventoryOwner(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) GrantInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) GrantInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
 	return nil
 }
 

@@ -23,6 +23,7 @@ const (
 	objectTypeInventory = "inventory"
 
 	relationOwner  = "owner"
+	relationEditor = "editor"
 	relationTenant = "tenant"
 	relationViewer = "viewer"
 )
@@ -123,6 +124,34 @@ func (a Authorizer) GrantInventoryOwner(ctx context.Context, principal identity.
 		relationship(
 			objectRef(objectTypeInventory, inventoryID.String()),
 			relationOwner,
+			userSubject(principal),
+		),
+	)
+}
+
+func (a Authorizer) GrantInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.grantDirectInventoryAccess(ctx, principal, tenantID, inventoryID, relationViewer)
+}
+
+func (a Authorizer) GrantInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.grantDirectInventoryAccess(ctx, principal, tenantID, inventoryID, relationEditor)
+}
+
+func (a Authorizer) grantDirectInventoryAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, relation string) error {
+	return a.touchRelationships(ctx,
+		relationship(
+			objectRef(objectTypeTenant, tenantID.String()),
+			relationViewer,
+			userSubject(principal),
+		),
+		relationship(
+			objectRef(objectTypeInventory, inventoryID.String()),
+			relationTenant,
+			objectSubject(objectTypeTenant, tenantID.String()),
+		),
+		relationship(
+			objectRef(objectTypeInventory, inventoryID.String()),
+			relation,
 			userSubject(principal),
 		),
 	)

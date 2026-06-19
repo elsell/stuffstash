@@ -14,6 +14,8 @@ type Authorizer struct {
 	mu               sync.RWMutex
 	tenantOwners     map[tenant.ID]map[identity.PrincipalID]struct{}
 	inventoryOwners  map[inventory.InventoryID]map[identity.PrincipalID]struct{}
+	inventoryEditors map[inventory.InventoryID]map[identity.PrincipalID]struct{}
+	inventoryViewers map[inventory.InventoryID]map[identity.PrincipalID]struct{}
 	inventoryTenants map[inventory.InventoryID]tenant.ID
 }
 
@@ -21,6 +23,8 @@ func NewAuthorizer() *Authorizer {
 	return &Authorizer{
 		tenantOwners:     map[tenant.ID]map[identity.PrincipalID]struct{}{},
 		inventoryOwners:  map[inventory.InventoryID]map[identity.PrincipalID]struct{}{},
+		inventoryEditors: map[inventory.InventoryID]map[identity.PrincipalID]struct{}{},
+		inventoryViewers: map[inventory.InventoryID]map[identity.PrincipalID]struct{}{},
 		inventoryTenants: map[inventory.InventoryID]tenant.ID{},
 	}
 }
@@ -36,7 +40,10 @@ func (a *Authorizer) CheckTenant(_ context.Context, principal identity.Principal
 		}
 		if permission == ports.TenantPermissionView {
 			for inventoryID, inventoryTenantID := range a.inventoryTenants {
-				if inventoryTenantID == tenantID && hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) {
+				if inventoryTenantID == tenantID &&
+					(hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) ||
+						hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) ||
+						hasPrincipal(a.inventoryViewers[inventoryID], principal.ID)) {
 					return nil
 				}
 			}
@@ -51,7 +58,15 @@ func (a *Authorizer) CheckInventory(_ context.Context, principal identity.Princi
 
 	tenantID := a.inventoryTenants[inventoryID]
 	switch permission {
-	case ports.InventoryPermissionView, ports.InventoryPermissionCreateAsset:
+	case ports.InventoryPermissionView:
+		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) || hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) || hasPrincipal(a.inventoryViewers[inventoryID], principal.ID) {
+			return nil
+		}
+	case ports.InventoryPermissionCreateAsset:
+		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) || hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) {
+			return nil
+		}
+	case ports.InventoryPermissionShare:
 		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) || hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) {
 			return nil
 		}
@@ -78,6 +93,30 @@ func (a *Authorizer) GrantInventoryOwner(_ context.Context, principal identity.P
 		a.inventoryOwners[inventoryID] = map[identity.PrincipalID]struct{}{}
 	}
 	a.inventoryOwners[inventoryID][principal.ID] = struct{}{}
+	a.inventoryTenants[inventoryID] = tenantID
+	return nil
+}
+
+func (a *Authorizer) GrantInventoryViewer(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if a.inventoryViewers[inventoryID] == nil {
+		a.inventoryViewers[inventoryID] = map[identity.PrincipalID]struct{}{}
+	}
+	a.inventoryViewers[inventoryID][principal.ID] = struct{}{}
+	a.inventoryTenants[inventoryID] = tenantID
+	return nil
+}
+
+func (a *Authorizer) GrantInventoryEditor(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if a.inventoryEditors[inventoryID] == nil {
+		a.inventoryEditors[inventoryID] = map[identity.PrincipalID]struct{}{}
+	}
+	a.inventoryEditors[inventoryID][principal.ID] = struct{}{}
 	a.inventoryTenants[inventoryID] = tenantID
 	return nil
 }

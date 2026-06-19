@@ -54,10 +54,11 @@ The goal is to prove a production-shaped path through:
 - Authorization outbox events now support a terminal dead-letter state for unrecoverable event data problems while keeping transient SpiceDB failures retryable.
 - The first asset REST slice implements asset creation, unified `item`/`container`/`location` kinds, same-inventory containment, cursor-paginated asset listing, and adversarial asset authorization tests.
 - Inventory listing now uses cursor pagination after authorization filtering, preserving the API collection contract without exposing hidden inventories.
+- Direct inventory sharing now supports owner-created viewer/editor grants, cursor-paginated grant listing, outbox-backed SpiceDB relationship writes, and adversarial API tests proving viewers and editors cannot share.
 
 ## Known Gaps
 
-- Asset movement, update, delete/archive, search, custom field definition APIs, and media attachments are not implemented.
+- User invitation flows, access revocation, asset movement, update, delete/archive, search, custom field definition APIs, and media attachments are not implemented.
 - Custom field values are modeled and round-trip through persistence, but non-empty values are rejected by the first asset create endpoint until custom field definitions are implemented.
 
 ## Next Work

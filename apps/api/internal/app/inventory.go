@@ -218,6 +218,10 @@ func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.Auth
 		return a.authorizer.GrantTenantOwner(ctx, principal, event.TenantID)
 	case ports.AuthorizationOutboxGrantInventoryOwner:
 		return a.authorizer.GrantInventoryOwner(ctx, principal, event.TenantID, event.InventoryID)
+	case ports.AuthorizationOutboxGrantInventoryViewer:
+		return a.authorizer.GrantInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
+	case ports.AuthorizationOutboxGrantInventoryEditor:
+		return a.authorizer.GrantInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
 	default:
 		return ErrInvalidInput
 	}
@@ -236,9 +240,9 @@ func validateAuthorizationOutboxEvent(event ports.AuthorizationOutboxEvent) erro
 		if event.InventoryID.String() != "" {
 			return fmt.Errorf("%w: tenant owner grant must not include inventory id", ErrInvalidInput)
 		}
-	case ports.AuthorizationOutboxGrantInventoryOwner:
+	case ports.AuthorizationOutboxGrantInventoryOwner, ports.AuthorizationOutboxGrantInventoryViewer, ports.AuthorizationOutboxGrantInventoryEditor:
 		if _, ok := inventory.NewID(event.InventoryID.String()); !ok {
-			return fmt.Errorf("%w: inventory owner grant inventory id is invalid", ErrInvalidInput)
+			return fmt.Errorf("%w: inventory grant inventory id is invalid", ErrInvalidInput)
 		}
 	default:
 		return fmt.Errorf("%w: authorization outbox event kind is unsupported", ErrInvalidInput)

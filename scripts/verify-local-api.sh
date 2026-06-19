@@ -103,4 +103,34 @@ printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${location
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "asset list did not include ${asset_id}"
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q '"pagination"' || fail "asset list did not include pagination metadata"
 
+viewer_principal="${STUFF_STASH_VERIFY_VIEWER_PRINCIPAL:-user-two}"
+viewer_auth_header="Authorization: Bearer dev:${viewer_principal}"
+
+echo "granting viewer access to ${viewer_principal}"
+grant_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants" "$auth_header" "{\"principalId\":\"${viewer_principal}\",\"relationship\":\"viewer\"}")"
+grant_status="$(printf '%s\n' "$grant_response" | head -n 1)"
+[ "$grant_status" = "201" ] || fail "expected access grant status 201, got ${grant_status}"
+printf '%s\n' "$grant_response" | tail -n +2 | grep -q "\"principalId\":\"${viewer_principal}\"" || fail "grant response did not include ${viewer_principal}"
+printf '%s\n' "$grant_response" | tail -n +2 | grep -q '"relationship":"viewer"' || fail "grant response did not include viewer relationship"
+
+echo "listing access grants"
+grant_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants?limit=50" "$auth_header")"
+grant_list_status="$(printf '%s\n' "$grant_list_response" | head -n 1)"
+[ "$grant_list_status" = "200" ] || fail "expected access grant list status 200, got ${grant_list_status}"
+printf '%s\n' "$grant_list_response" | tail -n +2 | grep -q "\"principalId\":\"${viewer_principal}\"" || fail "grant list did not include ${viewer_principal}"
+printf '%s\n' "$grant_list_response" | tail -n +2 | grep -q '"pagination"' || fail "grant list did not include pagination metadata"
+
+echo "checking granted viewer can read but not mutate or share"
+viewer_asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$viewer_auth_header")"
+viewer_asset_list_status="$(printf '%s\n' "$viewer_asset_list_response" | head -n 1)"
+[ "$viewer_asset_list_status" = "200" ] || fail "expected viewer asset list status 200, got ${viewer_asset_list_status}"
+
+viewer_asset_create_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$viewer_auth_header" '{"kind":"item","title":"Unauthorized"}')"
+viewer_asset_create_status="$(printf '%s\n' "$viewer_asset_create_response" | head -n 1)"
+[ "$viewer_asset_create_status" = "403" ] || fail "expected viewer asset create status 403, got ${viewer_asset_create_status}"
+
+viewer_share_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants" "$viewer_auth_header" '{"principalId":"user-three","relationship":"viewer"}')"
+viewer_share_status="$(printf '%s\n' "$viewer_share_response" | head -n 1)"
+[ "$viewer_share_status" = "403" ] || fail "expected viewer share status 403, got ${viewer_share_status}"
+
 echo "local API verification passed"

@@ -10,7 +10,7 @@ The access model should feel familiar to users: tenants contain inventories, inv
 
 This spec covers the initial identity, tenant, inventory, authentication, and authorization model.
 
-This spec does not define every SpiceDB relationship, REST endpoint, invitation flow, UI screen, or billing concept.
+This spec does not define every SpiceDB relationship, invitation flow, UI screen, or billing concept.
 
 ## Model
 
@@ -54,9 +54,47 @@ The first relationship model should include these concepts:
 - Inventory editor.
 - Inventory viewer.
 - Direct inventory sharing with another user.
-- Inherited access from tenant to inventory where appropriate.
+- Inherited access from tenant to inventory as specified in the SpiceDB schema spec.
 
-Exact SpiceDB schema names and inheritance rules must be specified before implementation.
+## First Sharing API Slice
+
+The first user-management slice supports direct inventory sharing with known principal IDs.
+
+It does not implement email invitations, invite acceptance, user search, access removal, tenant membership management, groups, or ownership transfer.
+
+The first endpoints are:
+
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
+
+`POST /access-grants`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Accepts a target principal ID and a relationship.
+- Supports only `viewer` and `editor` relationships in the first slice.
+- Must reject granting access to the caller's own principal when that would be a no-op.
+- Must persist the grant intent durably before SpiceDB is updated.
+- Must use the authorization outbox for the SpiceDB relationship write.
+- Must be idempotent for the same tenant, inventory, principal, and relationship.
+- Repeating the same grant must not create another direct grant row or another authorization outbox event.
+
+`GET /access-grants`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Lists direct inventory grants known to Stuff Stash persistence.
+- Must use the standard response envelope.
+- Must use cursor pagination with `limit` and `cursor`.
+- Must not list inherited tenant-owner or tenant-admin access as direct grants.
+
+Granting direct inventory access must also grant tenant `viewer` to the target principal so the user can resolve the containing tenant without receiving tenant configuration or sibling-inventory access.
+
+Granting `viewer` allows inventory viewing and asset listing.
+
+Granting `editor` allows inventory viewing, asset listing, and asset creation.
+
+Neither `viewer` nor `editor` allows sharing access onward.
 
 ## Custom Fields
 
@@ -71,11 +109,10 @@ Exact SpiceDB schema names and inheritance rules must be specified before implem
 - Every authenticated and authorized interaction point must have adversarial end-to-end tests.
 - Tests must cover unauthenticated access, wrong-tenant access, wrong-inventory access, viewer attempting edits, editor attempting admin operations, malformed tokens, expired tokens, and privilege escalation attempts.
 - Tests must verify that conversational actions cannot exceed the initiating user's permissions.
+- Sharing API tests must prove owners can grant access, unrelated users cannot grant or list grants, viewers cannot share, editors cannot share, and granted viewers/editors receive only their intended permissions.
 
 ## Open Questions
 
-- What exact relationship graph should be used in SpiceDB?
-- Which tenant relationships inherit to inventories?
 - How are invitations created, accepted, revoked, and audited?
 - What is the first mobile-friendly OIDC flow?
 - How should users switch between tenants and inventories?

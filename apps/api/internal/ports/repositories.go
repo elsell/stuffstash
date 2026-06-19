@@ -22,11 +22,29 @@ type InventoryRepository interface {
 	SaveInventory(ctx context.Context, inventory inventory.Inventory) error
 	InventoryByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error)
 	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID, page InventoryListPageRequest) ([]inventory.Inventory, error)
+	SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant InventoryAccessGrant) error
+	ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page InventoryAccessGrantPageRequest) ([]InventoryAccessGrant, error)
 }
 
 type InventoryListPageRequest struct {
 	AfterInventoryID inventory.InventoryID
 	Limit            int
+}
+
+type InventoryAccessGrant struct {
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	PrincipalID  identity.PrincipalID
+	Relationship InventoryAccessRelationship
+}
+
+func (g InventoryAccessGrant) CursorKey() string {
+	return g.PrincipalID.String() + ":" + string(g.Relationship)
+}
+
+type InventoryAccessGrantPageRequest struct {
+	AfterGrantKey string
+	Limit         int
 }
 
 type AssetRepository interface {
@@ -43,8 +61,10 @@ type AssetListPageRequest struct {
 type AuthorizationOutboxEventKind string
 
 const (
-	AuthorizationOutboxGrantTenantOwner    AuthorizationOutboxEventKind = "grant_tenant_owner"
-	AuthorizationOutboxGrantInventoryOwner AuthorizationOutboxEventKind = "grant_inventory_owner"
+	AuthorizationOutboxGrantTenantOwner     AuthorizationOutboxEventKind = "grant_tenant_owner"
+	AuthorizationOutboxGrantInventoryOwner  AuthorizationOutboxEventKind = "grant_inventory_owner"
+	AuthorizationOutboxGrantInventoryViewer AuthorizationOutboxEventKind = "grant_inventory_viewer"
+	AuthorizationOutboxGrantInventoryEditor AuthorizationOutboxEventKind = "grant_inventory_editor"
 )
 
 type AuthorizationOutboxEvent struct {

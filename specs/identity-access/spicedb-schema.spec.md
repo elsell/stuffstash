@@ -51,12 +51,15 @@ The first API slice must check:
 - `tenant.create_inventory` before creating an inventory inside a tenant.
 - `inventory.view` before returning an inventory.
 - `inventory.create_asset` before creating an asset inside an inventory.
+- `inventory.share` before creating or listing direct inventory access grants.
 
 Creating a tenant grants the creating user the tenant `owner` relationship.
 
 Creating an inventory grants the creating user the inventory `owner` relationship and links the inventory to its tenant.
 
 Granting inventory ownership must also grant tenant `viewer` on the containing tenant. This lets an inventory owner resolve the tenant and list only visible inventories without granting tenant `create_inventory`, tenant `configure`, or inherited visibility to sibling inventories.
+
+Granting direct inventory `viewer` or `editor` must also grant tenant `viewer` on the containing tenant for the same reason.
 
 Tenant `view_inventory` must stay separate from tenant `view`. Tenant owners and admins inherit inventory view across the tenant through `tenant->view_inventory`; tenant viewers do not.
 
@@ -71,6 +74,7 @@ Tenant `view_inventory` must stay separate from tenant `view`. Tenant owners and
 - The SpiceDB adapter must fail closed when checks return anything other than `HAS_PERMISSION`.
 - Relationship writes must be idempotent enough for application retries. Already-existing relationships should not create privilege gaps or partial grants.
 - Relationship writes that correspond to durable tenant or inventory state must be driven by the authorization outbox, not by a standalone inline call after persistence.
+- Direct inventory access grant relationship writes must be driven by the authorization outbox after the durable access grant record is saved.
 - The application may attempt to drain the authorization outbox immediately after a write, but failed SpiceDB writes must remain retryable through the outbox.
 - Schema bootstrap must be an explicit startup option for local development and deployment automation.
 - The default API process must not rewrite the production authorization schema unless explicitly configured to do so.
@@ -90,7 +94,7 @@ Any unknown mode must fail startup.
 - Tests must prove cross-tenant denial.
 - Tests must prove unauthenticated requests never reach privileged behavior.
 - Tests must prove a user without a relationship cannot create or list inventory resources.
-- The SpiceDB adapter must have fake-backed tests for permission mapping, tenant owner grants, inventory owner grants, denied checks, and backend failures.
+- The SpiceDB adapter must have fake-backed tests for permission mapping, tenant owner grants, inventory owner grants, inventory viewer/editor grants, denied checks, and backend failures.
 - The SpiceDB adapter must have an opt-in real-SpiceDB verification path that runs against the pinned local SpiceDB image.
-- Real-SpiceDB verification must prove tenant-owner inheritance, inventory-owner visibility, unrelated-user denial, and cross-tenant denial.
+- Real-SpiceDB verification must prove tenant-owner inheritance, inventory-owner visibility, viewer/editor direct grants, share denial for non-owners, unrelated-user denial, and cross-tenant denial.
 - Real-SpiceDB verification must not run during default `make test`; it must be an explicit command because it requires Docker.

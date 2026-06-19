@@ -23,6 +23,14 @@ type InventoryPermission string
 const (
 	InventoryPermissionView        InventoryPermission = "view"
 	InventoryPermissionCreateAsset InventoryPermission = "create_asset"
+	InventoryPermissionShare       InventoryPermission = "share"
+)
+
+type InventoryAccessRelationship string
+
+const (
+	InventoryAccessViewer InventoryAccessRelationship = "viewer"
+	InventoryAccessEditor InventoryAccessRelationship = "editor"
 )
 
 type Authorizer interface {
@@ -31,4 +39,6 @@ type Authorizer interface {
 	// Grant methods must be idempotent because authorization outbox retries may replay them.
 	GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error
 	GrantInventoryOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error
+	GrantInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error
+	GrantInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error
 }

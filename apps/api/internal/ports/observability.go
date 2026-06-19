@@ -15,6 +15,8 @@ const (
 	EventTenantCreated                   EventName = "tenant.created"
 	EventInventoryCreated                EventName = "inventory.created"
 	EventInventoriesListed               EventName = "inventory.listed"
+	EventInventoryAccessGranted          EventName = "inventory_access.granted"
+	EventInventoryAccessListed           EventName = "inventory_access.listed"
 	EventAssetCreated                    EventName = "asset.created"
 	EventAssetsListed                    EventName = "asset.listed"
 	EventAuthorizationOutboxDrained      EventName = "authorization_outbox.drained"

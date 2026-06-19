@@ -25,7 +25,7 @@ func NewStore(db *gorm.DB) Store {
 }
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &assetModel{}, &authorizationOutboxEventModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &assetModel{}, &authorizationOutboxEventModel{})
 }
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -109,6 +109,55 @@ func (s Store) SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID st
 			Kind:        string(ports.AuthorizationOutboxGrantInventoryOwner),
 			PrincipalID: principal.ID.String(),
 			TenantID:    tenantID.String(),
+			InventoryID: &inventoryID,
+		}).Error
+	})
+}
+
+func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant ports.InventoryAccessGrant) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var containingInventory inventoryModel
+		err := tx.Where(&inventoryModel{
+			ID:       grant.InventoryID.String(),
+			TenantID: grant.TenantID.String(),
+		}).First(&containingInventory).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+
+		grantKey := grant.CursorKey()
+		var existingGrant inventoryAccessGrantModel
+		err = tx.Where(&inventoryAccessGrantModel{
+			TenantID:    grant.TenantID.String(),
+			InventoryID: grant.InventoryID.String(),
+			GrantKey:    grantKey,
+		}).First(&existingGrant).Error
+		if err == nil {
+			return nil
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		if err := tx.Save(&inventoryAccessGrantModel{
+			TenantID:     grant.TenantID.String(),
+			InventoryID:  grant.InventoryID.String(),
+			GrantKey:     grantKey,
+			PrincipalID:  grant.PrincipalID.String(),
+			Relationship: string(grant.Relationship),
+		}).Error; err != nil {
+			return err
+		}
+
+		inventoryID := grant.InventoryID.String()
+		return tx.Create(&authorizationOutboxEventModel{
+			ID:          eventID,
+			Kind:        string(outboxKindForInventoryAccess(grant.Relationship)),
+			PrincipalID: grant.PrincipalID.String(),
+			TenantID:    grant.TenantID.String(),
 			InventoryID: &inventoryID,
 		}).Error
 	})
@@ -254,6 +303,33 @@ func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.T
 		items = append(items, item)
 	}
 
+	return items, nil
+}
+
+func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {
+	var models []inventoryAccessGrantModel
+	query := s.db.WithContext(ctx).Where(&inventoryAccessGrantModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+	})
+	if page.AfterGrantKey != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "grant_key"}, Value: page.AfterGrantKey})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "grant_key"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]ports.InventoryAccessGrant, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toPort()
+		if !ok {
+			return nil, fmt.Errorf("invalid inventory access grant row %q", model.GrantKey)
+		}
+		items = append(items, item)
+	}
 	return items, nil
 }
 
@@ -403,6 +479,18 @@ type inventoryModel struct {
 	UpdatedAt time.Time
 }
 
+type inventoryAccessGrantModel struct {
+	TenantID     string         `gorm:"primaryKey;size:26;index:idx_inventory_access_grants_inventory"`
+	Tenant       tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID  string         `gorm:"primaryKey;size:26;index:idx_inventory_access_grants_inventory"`
+	Inventory    inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	GrantKey     string         `gorm:"primaryKey;size:180"`
+	PrincipalID  string         `gorm:"not null;size:128;index"`
+	Relationship string         `gorm:"not null;size:32;check:chk_inventory_access_grants_relationship,relationship IN ('viewer','editor')"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 type assetModel struct {
 	ID             string         `gorm:"primaryKey;size:26"`
 	TenantID       string         `gorm:"not null;size:26;index:idx_assets_tenant_inventory"`
@@ -422,7 +510,7 @@ type assetModel struct {
 
 type authorizationOutboxEventModel struct {
 	ID               string         `gorm:"primaryKey;size:26"`
-	Kind             string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner');check:chk_authorization_outbox_events_inventory_required,(kind = 'grant_inventory_owner' AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
+	Kind             string         `gorm:"not null;size:80;index;check:chk_authorization_outbox_events_kind,kind IN ('grant_tenant_owner','grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor');check:chk_authorization_outbox_events_inventory_required,(kind IN ('grant_inventory_owner','grant_inventory_viewer','grant_inventory_editor') AND inventory_id IS NOT NULL) OR (kind = 'grant_tenant_owner' AND inventory_id IS NULL)"`
 	PrincipalID      string         `gorm:"not null;size:128;index"`
 	TenantID         string         `gorm:"not null;size:26;index"`
 	Tenant           tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
@@ -445,6 +533,18 @@ func (authorizationOutboxEventModel) TableName() string {
 
 func (inventoryModel) TableName() string {
 	return "inventories"
+}
+
+func (inventoryAccessGrantModel) TableName() string {
+	return "inventory_access_grants"
+}
+
+func (m *inventoryAccessGrantModel) BeforeSave(*gorm.DB) error {
+	m.GrantKey = ports.InventoryAccessGrant{
+		PrincipalID:  identity.PrincipalID(m.PrincipalID),
+		Relationship: ports.InventoryAccessRelationship(m.Relationship),
+	}.CursorKey()
+	return nil
 }
 
 func (assetModel) TableName() string {
@@ -492,6 +592,25 @@ func (m authorizationOutboxEventModel) toPort() ports.AuthorizationOutboxEvent {
 	}
 	event.DeadLetterReason = m.DeadLetterReason
 	return event
+}
+
+func (m inventoryAccessGrantModel) toPort() (ports.InventoryAccessGrant, bool) {
+	principalID, ok := identity.NewPrincipalID(m.PrincipalID)
+	if !ok {
+		return ports.InventoryAccessGrant{}, false
+	}
+	relationship := ports.InventoryAccessRelationship(m.Relationship)
+	switch relationship {
+	case ports.InventoryAccessViewer, ports.InventoryAccessEditor:
+	default:
+		return ports.InventoryAccessGrant{}, false
+	}
+	return ports.InventoryAccessGrant{
+		TenantID:     tenant.ID(m.TenantID),
+		InventoryID:  inventory.InventoryID(m.InventoryID),
+		PrincipalID:  principalID,
+		Relationship: relationship,
+	}, true
 }
 
 func (m assetModel) toDomain() (asset.Asset, bool) {
@@ -547,4 +666,13 @@ func stringPtrFromAssetID(id asset.ID) *string {
 	}
 	value := id.String()
 	return &value
+}
+
+func outboxKindForInventoryAccess(relationship ports.InventoryAccessRelationship) ports.AuthorizationOutboxEventKind {
+	switch relationship {
+	case ports.InventoryAccessEditor:
+		return ports.AuthorizationOutboxGrantInventoryEditor
+	default:
+		return ports.AuthorizationOutboxGrantInventoryViewer
+	}
 }

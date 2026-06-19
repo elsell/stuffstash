@@ -21,6 +21,7 @@ The repository has a small Go API scaffold with:
 - Local development auth and production-shaped OIDC auth.
 - In-memory authorization for local use and SpiceDB authorization wiring.
 - Tenant creation, inventory creation/listing, and first asset creation/listing.
+- Direct inventory sharing by known principal ID, with viewer and editor grants.
 - Huma-generated OpenAPI at `/openapi.json`.
 - Domain-oriented observability through ports.
 - Docker and Compose files for local work, including Postgres and SpiceDB.

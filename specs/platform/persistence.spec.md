@@ -71,9 +71,20 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - dead-letter timestamp
   - dead-letter reason
   - timestamps managed by GORM
+- `inventory_access_grants`
+  - tenant ID
+  - inventory ID
+  - grant key
+  - principal ID
+  - relationship
+  - timestamps managed by GORM
 
 The `inventories.tenant_id` value must reference `tenants.id`.
 Authorization outbox records represent pending relationship grants that must be applied to SpiceDB.
+Inventory access grant rows represent direct inventory viewer/editor grants. The primary key must be scoped by tenant ID, inventory ID, and grant key so the same principal can receive the same relationship in more than one inventory.
+
+Inventory access grant writes must be committed with a matching authorization outbox event in one transaction. Viewer grants must enqueue `grant_inventory_viewer`; editor grants must enqueue `grant_inventory_editor`.
+Repeated writes for the same tenant, inventory, principal, and relationship must be no-ops and must not enqueue another authorization outbox event.
 
 ## Initial Asset Schema
 
@@ -158,6 +169,9 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Tests must cover that cross-tenant and cross-inventory containment is rejected.
 - Tests must cover cycle prevention before persistence commits.
 - Tests must cover that tenant and inventory state are persisted with authorization outbox records atomically.
+- Tests must cover that inventory access grants and their authorization outbox records are persisted atomically.
+- Tests must cover that duplicate inventory access grants do not enqueue duplicate authorization outbox events.
+- Tests must cover that inventory access grant keys are scoped to the inventory, not globally.
 - Tests must cover that authorization outbox processing retries failed relationship grants and marks successful grants processed.
 - Tests must cover rollback when a domain state write succeeds but the paired authorization outbox insert fails.
 - Tests must cover that claimed authorization outbox events are hidden from other claims until their lease expires.

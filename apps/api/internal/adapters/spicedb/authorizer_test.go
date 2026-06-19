@@ -73,6 +73,29 @@ func TestAuthorizerChecksCreateAssetPermission(t *testing.T) {
 	}
 }
 
+func TestAuthorizerChecksSharePermission(t *testing.T) {
+	gateway := &fakeGateway{
+		permissionship: v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION,
+	}
+	authorizer := NewAuthorizer(gateway)
+
+	err := authorizer.CheckInventory(context.Background(), principal("user-one"), ports.InventoryPermissionShare, inventory.InventoryID("inventory-one"))
+	if err != nil {
+		t.Fatalf("check share: %v", err)
+	}
+
+	request := gateway.checks[0]
+	if request.Resource.ObjectType != "inventory" || request.Resource.ObjectId != "inventory-one" {
+		t.Fatalf("unexpected resource: %+v", request.Resource)
+	}
+	if request.Permission != "share" {
+		t.Fatalf("unexpected permission: %q", request.Permission)
+	}
+	if request.Subject.Object.ObjectType != "user" || request.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected subject: %+v", request.Subject.Object)
+	}
+}
+
 func TestAuthorizerPropagatesBackendFailure(t *testing.T) {
 	expected := errors.New("backend unavailable")
 	gateway := &fakeGateway{checkErr: expected}
@@ -145,6 +168,18 @@ func TestAuthorizerGrantsInventoryOwnerAndTenantLink(t *testing.T) {
 	}
 }
 
+func TestAuthorizerGrantsInventoryViewerAndTenantLink(t *testing.T) {
+	assertDirectInventoryGrant(t, func(authorizer Authorizer) error {
+		return authorizer.GrantInventoryViewer(context.Background(), principal("user-one"), tenant.ID("tenant-one"), inventory.InventoryID("inventory-one"))
+	}, "viewer")
+}
+
+func TestAuthorizerGrantsInventoryEditorAndTenantLink(t *testing.T) {
+	assertDirectInventoryGrant(t, func(authorizer Authorizer) error {
+		return authorizer.GrantInventoryEditor(context.Background(), principal("user-one"), tenant.ID("tenant-one"), inventory.InventoryID("inventory-one"))
+	}, "editor")
+}
+
 func TestAuthorizerBootstrapsSchema(t *testing.T) {
 	gateway := &fakeGateway{}
 	authorizer := NewAuthorizer(gateway)
@@ -182,6 +217,49 @@ func TestNewGatewayAllowsUnauthenticatedLocalTesting(t *testing.T) {
 
 func principal(id string) identity.Principal {
 	return identity.Principal{ID: identity.PrincipalID(id)}
+}
+
+func assertDirectInventoryGrant(t *testing.T, grant func(Authorizer) error, expectedInventoryRelation string) {
+	t.Helper()
+
+	gateway := &fakeGateway{}
+	authorizer := NewAuthorizer(gateway)
+
+	if err := grant(authorizer); err != nil {
+		t.Fatalf("grant direct inventory access: %v", err)
+	}
+
+	updates := gateway.relationshipWrites[0].Updates
+	if len(updates) != 3 {
+		t.Fatalf("expected 3 relationship updates, got %d", len(updates))
+	}
+	if updates[0].Relationship.Resource.ObjectType != "tenant" || updates[0].Relationship.Resource.ObjectId != "tenant-one" {
+		t.Fatalf("unexpected tenant viewer resource: %+v", updates[0].Relationship.Resource)
+	}
+	if updates[0].Relationship.Relation != "viewer" {
+		t.Fatalf("expected tenant viewer relationship first, got %q", updates[0].Relationship.Relation)
+	}
+	if updates[0].Relationship.Subject.Object.ObjectType != "user" || updates[0].Relationship.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected tenant viewer subject: %+v", updates[0].Relationship.Subject.Object)
+	}
+	if updates[1].Relationship.Resource.ObjectType != "inventory" || updates[1].Relationship.Resource.ObjectId != "inventory-one" {
+		t.Fatalf("unexpected inventory tenant resource: %+v", updates[1].Relationship.Resource)
+	}
+	if updates[1].Relationship.Relation != "tenant" {
+		t.Fatalf("expected inventory tenant relationship second, got %q", updates[1].Relationship.Relation)
+	}
+	if updates[1].Relationship.Subject.Object.ObjectType != "tenant" || updates[1].Relationship.Subject.Object.ObjectId != "tenant-one" {
+		t.Fatalf("unexpected tenant subject: %+v", updates[1].Relationship.Subject.Object)
+	}
+	if updates[2].Relationship.Resource.ObjectType != "inventory" || updates[2].Relationship.Resource.ObjectId != "inventory-one" {
+		t.Fatalf("unexpected inventory access resource: %+v", updates[2].Relationship.Resource)
+	}
+	if updates[2].Relationship.Relation != expectedInventoryRelation {
+		t.Fatalf("expected inventory %q relationship third, got %q", expectedInventoryRelation, updates[2].Relationship.Relation)
+	}
+	if updates[2].Relationship.Subject.Object.ObjectType != "user" || updates[2].Relationship.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected inventory access subject: %+v", updates[2].Relationship.Subject.Object)
+	}
 }
 
 type fakeGateway struct {

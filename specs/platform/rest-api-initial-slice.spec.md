@@ -28,6 +28,8 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 
 ## Authentication
 
@@ -45,6 +47,8 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories` must include pagination metadata in the response envelope.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.create_asset`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.view`.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
 
 ## First Asset REST Slice
