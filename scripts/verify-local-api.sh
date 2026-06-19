@@ -75,10 +75,11 @@ inventory_id="$(printf '%s\n' "$inventory_response" | tail -n +2 | extract_first
 [ -n "$inventory_id" ] || fail "inventory create response did not include an id"
 
 echo "listing inventories"
-list_response="$(request GET "/tenants/${tenant_id}/inventories" "$auth_header")"
+list_response="$(request GET "/tenants/${tenant_id}/inventories?limit=50" "$auth_header")"
 list_status="$(printf '%s\n' "$list_response" | head -n 1)"
 [ "$list_status" = "200" ] || fail "expected inventory list status 200, got ${list_status}"
 printf '%s\n' "$list_response" | tail -n +2 | grep -q "\"id\":\"${inventory_id}\"" || fail "inventory list did not include ${inventory_id}"
+printf '%s\n' "$list_response" | tail -n +2 | grep -q '"pagination"' || fail "inventory list did not include pagination metadata"
 
 echo "creating location asset in inventory ${inventory_id}"
 location_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$auth_header" '{"kind":"location","title":"Garage"}')"
@@ -95,10 +96,11 @@ asset_id="$(printf '%s\n' "$asset_response" | tail -n +2 | extract_first_id)"
 [ -n "$asset_id" ] || fail "item asset create response did not include an id"
 
 echo "listing assets"
-asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets" "$auth_header")"
+asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$auth_header")"
 asset_list_status="$(printf '%s\n' "$asset_list_response" | head -n 1)"
 [ "$asset_list_status" = "200" ] || fail "expected asset list status 200, got ${asset_list_status}"
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${location_id}\"" || fail "asset list did not include ${location_id}"
 printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q "\"id\":\"${asset_id}\"" || fail "asset list did not include ${asset_id}"
+printf '%s\n' "$asset_list_response" | tail -n +2 | grep -q '"pagination"' || fail "asset list did not include pagination metadata"
 
 echo "local API verification passed"

@@ -81,7 +81,7 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories \
 List visible inventories:
 
 ```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories \
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories?limit=50' \
   -H 'Authorization: Bearer dev:user-one'
 ```
 
@@ -106,7 +106,7 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
 List assets in the inventory:
 
 ```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets?limit=50' \
   -H 'Authorization: Bearer dev:user-one'
 ```
 

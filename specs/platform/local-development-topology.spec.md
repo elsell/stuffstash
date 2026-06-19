@@ -52,5 +52,5 @@ The first Compose topology includes:
 - Running with unknown auth or authz modes must fail startup.
 - The SpiceDB Compose path must bootstrap the checked-in schema automatically.
 - The non-Compose SpiceDB path must bootstrap the checked-in schema automatically.
-- The local verification script must cover health, unauthenticated rejection, authenticated identity, tenant creation, inventory creation, and inventory listing.
+- The local verification script must cover health, unauthenticated rejection, authenticated identity, tenant creation, inventory creation, inventory listing with pagination metadata, asset creation, and asset listing with pagination metadata.
 - The repository must provide an explicit real-SpiceDB adapter verification command that starts pinned local SpiceDB, runs the adapter integration tests, and cleans up.

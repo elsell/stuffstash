@@ -53,6 +53,7 @@ The goal is to prove a production-shaped path through:
 - The pinned migration library is wired into the `stuff-stash` binary, and the same image can run `migrate up` or `migrate status`.
 - Authorization outbox events now support a terminal dead-letter state for unrecoverable event data problems while keeping transient SpiceDB failures retryable.
 - The first asset REST slice implements asset creation, unified `item`/`container`/`location` kinds, same-inventory containment, cursor-paginated asset listing, and adversarial asset authorization tests.
+- Inventory listing now uses cursor pagination after authorization filtering, preserving the API collection contract without exposing hidden inventories.
 
 ## Known Gaps
 

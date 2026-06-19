@@ -21,7 +21,12 @@ type TenantRepository interface {
 type InventoryRepository interface {
 	SaveInventory(ctx context.Context, inventory inventory.Inventory) error
 	InventoryByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error)
-	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID) ([]inventory.Inventory, error)
+	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID, page InventoryListPageRequest) ([]inventory.Inventory, error)
+}
+
+type InventoryListPageRequest struct {
+	AfterInventoryID inventory.InventoryID
+	Limit            int
 }
 
 type AssetRepository interface {

@@ -50,7 +50,7 @@ func TestStorePersistsTenantsAndInventories(t *testing.T) {
 		t.Fatalf("save inventory: %v", err)
 	}
 
-	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()))
+	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()), ports.InventoryListPageRequest{Limit: 10})
 	if err != nil {
 		t.Fatalf("list inventories: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestStoreKeepsInventoriesScopedToTenant(t *testing.T) {
 	saveInventory(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantOne, "Tools")
 	saveInventory(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantTwo, "Supplies")
 
-	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantOne.String()))
+	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantOne.String()), ports.InventoryListPageRequest{Limit: 10})
 	if err != nil {
 		t.Fatalf("list inventories: %v", err)
 	}
@@ -218,12 +218,41 @@ func TestStoreRollsBackInventoryWhenOutboxInsertFails(t *testing.T) {
 		t.Fatalf("expected duplicate outbox event to fail")
 	}
 
-	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()))
+	items, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()), ports.InventoryListPageRequest{Limit: 10})
 	if err != nil {
 		t.Fatalf("list inventories: %v", err)
 	}
 	if len(items) != 1 || items[0].ID != inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW") {
 		t.Fatalf("expected inventory write to roll back when outbox insert fails, got %+v", items)
+	}
+}
+
+func TestStorePaginatesInventoriesByTenant(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "First")
+	saveInventory(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, "Second")
+
+	page, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()), ports.InventoryListPageRequest{Limit: 1})
+	if err != nil {
+		t.Fatalf("list first page: %v", err)
+	}
+	if len(page) != 1 || page[0].ID != inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW") {
+		t.Fatalf("expected first inventory page, got %+v", page)
+	}
+
+	nextPage, err := store.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()), ports.InventoryListPageRequest{
+		AfterInventoryID: page[0].ID,
+		Limit:            1,
+	})
+	if err != nil {
+		t.Fatalf("list next page: %v", err)
+	}
+	if len(nextPage) != 1 || nextPage[0].ID != inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX") {
+		t.Fatalf("expected second inventory page, got %+v", nextPage)
 	}
 }
 

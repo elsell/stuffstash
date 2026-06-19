@@ -156,16 +156,18 @@ func registerRoutes(api huma.API, application app.App) {
 			return nil, err
 		}
 
-		items, err := application.ListInventories(ctx, app.ListInventoriesInput{
+		result, err := application.ListInventories(ctx, app.ListInventoriesInput{
 			Principal: principal,
 			TenantID:  tenant.ID(input.TenantID),
+			Limit:     input.Limit,
+			Cursor:    input.Cursor,
 		})
 		if err != nil {
 			return nil, toHumaError(err)
 		}
 
-		data := make([]inventoryResponse, 0, len(items))
-		for _, item := range items {
+		data := make([]inventoryResponse, 0, len(result.Items))
+		for _, item := range result.Items {
 			data = append(data, inventoryResponse{
 				ID:       item.ID.String(),
 				TenantID: item.TenantID.String(),
@@ -176,7 +178,14 @@ func registerRoutes(api huma.API, application app.App) {
 		return &listInventoriesOutput{
 			Body: successEnvelope[[]inventoryResponse]{
 				Data: data,
-				Meta: responseMeta{TenantID: input.TenantID},
+				Meta: responseMeta{
+					TenantID: input.TenantID,
+					Pagination: &paginationMeta{
+						Limit:      result.Limit,
+						NextCursor: result.NextCursor,
+						HasMore:    result.HasMore,
+					},
+				},
 			},
 		}, nil
 	}, huma.OperationTags("inventories"), securedOperation)
@@ -354,6 +363,8 @@ type createInventoryOutput struct {
 type listInventoriesInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
 }
 
 type listInventoriesOutput struct {
@@ -401,9 +412,9 @@ type responseMeta struct {
 }
 
 type paginationMeta struct {
-	Limit      int    `json:"limit"`
-	NextCursor string `json:"nextCursor,omitempty"`
-	HasMore    bool   `json:"hasMore"`
+	Limit      int     `json:"limit"`
+	NextCursor *string `json:"nextCursor"`
+	HasMore    bool    `json:"hasMore"`
 }
 
 type errorEnvelope struct {

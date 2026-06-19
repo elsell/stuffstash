@@ -177,15 +177,21 @@ func (s *Store) MarkAuthorizationOutboxEventDeadLettered(_ context.Context, even
 	return nil
 }
 
-func (s *Store) ListInventoriesByTenant(_ context.Context, tenantID inventory.TenantID) ([]inventory.Inventory, error) {
+func (s *Store) ListInventoriesByTenant(_ context.Context, tenantID inventory.TenantID, page ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	items := []inventory.Inventory{}
 	for _, item := range s.inventories {
-		if item.TenantID == tenantID {
+		if item.TenantID == tenantID && item.ID.String() > page.AfterInventoryID.String() {
 			items = append(items, item)
 		}
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].ID.String() < items[right].ID.String()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
 	}
 	return items, nil
 }

@@ -301,15 +301,123 @@ func TestListInventoriesSkipsForbiddenInventories(t *testing.T) {
 		Outbox: &fakeOutbox{},
 	})
 
-	items, err := application.ListInventories(context.Background(), ListInventoriesInput{
+	result, err := application.ListInventories(context.Background(), ListInventoriesInput{
 		Principal: identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:  tenant.ID("tenant-one"),
 	})
 	if err != nil {
 		t.Fatalf("list inventories: %v", err)
 	}
-	if len(items) != 0 {
-		t.Fatalf("expected forbidden inventory to be hidden, got %+v", items)
+	if len(result.Items) != 0 {
+		t.Fatalf("expected forbidden inventory to be hidden, got %+v", result.Items)
+	}
+}
+
+func TestListInventoriesPaginatesAfterAuthorizationFiltering(t *testing.T) {
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Visible One"),
+			inventoryItem("inventory-two", "tenant-one", "Hidden"),
+			inventoryItem("inventory-three", "tenant-one", "Visible Two"),
+		},
+	}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &selectiveInventoryAuthorizer{forbidden: map[inventory.InventoryID]struct{}{"inventory-two": {}}},
+		Tenants: &fakeTenantRepository{
+			exists: true,
+		},
+		Inventories:      repository,
+		Outbox:           &fakeOutbox{},
+		DefaultPageLimit: 1,
+		MaxPageLimit:     1,
+	})
+
+	firstPage, err := application.ListInventories(context.Background(), ListInventoriesInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:  tenant.ID("tenant-one"),
+	})
+	if err != nil {
+		t.Fatalf("list first page: %v", err)
+	}
+	if len(firstPage.Items) != 1 || firstPage.Items[0].ID != inventory.InventoryID("inventory-one") || !firstPage.HasMore || firstPage.NextCursor == nil {
+		t.Fatalf("expected first visible inventory page, got %+v", firstPage)
+	}
+	if repository.calls != 1 {
+		t.Fatalf("expected one bounded repository scan, got %d", repository.calls)
+	}
+	if len(repository.limits) != 1 || repository.limits[0] != 3 {
+		t.Fatalf("expected bounded scan limit 3, got %+v", repository.limits)
+	}
+
+	secondPage, err := application.ListInventories(context.Background(), ListInventoriesInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:  tenant.ID("tenant-one"),
+		Cursor:    *firstPage.NextCursor,
+	})
+	if err != nil {
+		t.Fatalf("list second page: %v", err)
+	}
+	if len(secondPage.Items) != 1 || secondPage.Items[0].ID != inventory.InventoryID("inventory-three") || secondPage.HasMore {
+		t.Fatalf("expected second visible inventory page, got %+v", secondPage)
+	}
+	if repository.calls != 2 {
+		t.Fatalf("expected second request to make one more bounded scan, got %d", repository.calls)
+	}
+	if len(repository.limits) != 2 || repository.limits[1] != 3 {
+		t.Fatalf("expected second bounded scan limit 3, got %+v", repository.limits)
+	}
+}
+
+func TestListInventoriesReturnsEmptyBoundedPageWhenScanWindowIsHidden(t *testing.T) {
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("a-hidden-one", "tenant-one", "Hidden One"),
+			inventoryItem("b-hidden-two", "tenant-one", "Hidden Two"),
+			inventoryItem("c-hidden-three", "tenant-one", "Hidden Three"),
+			inventoryItem("d-visible", "tenant-one", "Visible"),
+		},
+	}
+	application := New(Dependencies{
+		Observer: &fakeObserver{},
+		Authorizer: &selectiveInventoryAuthorizer{forbidden: map[inventory.InventoryID]struct{}{
+			"a-hidden-one":   {},
+			"b-hidden-two":   {},
+			"c-hidden-three": {},
+		}},
+		Tenants: &fakeTenantRepository{
+			exists: true,
+		},
+		Inventories:      repository,
+		Outbox:           &fakeOutbox{},
+		DefaultPageLimit: 1,
+		MaxPageLimit:     1,
+	})
+
+	firstPage, err := application.ListInventories(context.Background(), ListInventoriesInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:  tenant.ID("tenant-one"),
+	})
+	if err != nil {
+		t.Fatalf("list first page: %v", err)
+	}
+	if len(firstPage.Items) != 0 || !firstPage.HasMore || firstPage.NextCursor == nil {
+		t.Fatalf("expected empty bounded page with continuation cursor, got %+v", firstPage)
+	}
+	if repository.calls != 1 || len(repository.limits) != 1 || repository.limits[0] != 3 {
+		t.Fatalf("expected one bounded scan of 3 raw inventories, calls=%d limits=%+v", repository.calls, repository.limits)
+	}
+
+	secondPage, err := application.ListInventories(context.Background(), ListInventoriesInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("user-one")},
+		TenantID:  tenant.ID("tenant-one"),
+		Cursor:    *firstPage.NextCursor,
+	})
+	if err != nil {
+		t.Fatalf("list second page: %v", err)
+	}
+	if len(secondPage.Items) != 1 || secondPage.Items[0].ID != inventory.InventoryID("d-visible") || secondPage.HasMore {
+		t.Fatalf("expected visible inventory after hidden scan window, got %+v", secondPage)
 	}
 }
 
@@ -371,7 +479,7 @@ func TestCreateAndListAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list assets: %v", err)
 	}
-	if len(result.Items) != 1 || !result.HasMore || result.NextCursor == "" || result.Limit != 1 {
+	if len(result.Items) != 1 || !result.HasMore || result.NextCursor == nil || result.Limit != 1 {
 		t.Fatalf("expected paginated first page, got %+v", result)
 	}
 
@@ -379,7 +487,7 @@ func TestCreateAndListAssets(t *testing.T) {
 		Principal:   identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
-		Cursor:      result.NextCursor,
+		Cursor:      *result.NextCursor,
 	})
 	if err != nil {
 		t.Fatalf("list next assets page: %v", err)
@@ -475,7 +583,9 @@ func (f *fakeTenantRepository) TenantExists(context.Context, tenant.ID) (bool, e
 }
 
 type fakeInventoryRepository struct {
-	items []inventory.Inventory
+	items  []inventory.Inventory
+	calls  int
+	limits []int
 }
 
 func (f *fakeInventoryRepository) InventoryByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error) {
@@ -586,8 +696,45 @@ func (f *fakeInventoryRepository) SaveInventory(context.Context, inventory.Inven
 	return nil
 }
 
-func (f *fakeInventoryRepository) ListInventoriesByTenant(context.Context, inventory.TenantID) ([]inventory.Inventory, error) {
-	return f.items, nil
+func (f *fakeInventoryRepository) ListInventoriesByTenant(_ context.Context, tenantID inventory.TenantID, page ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
+	f.calls++
+	f.limits = append(f.limits, page.Limit)
+	items := []inventory.Inventory{}
+	for _, item := range f.items {
+		if item.TenantID == tenantID && item.ID.String() > page.AfterInventoryID.String() {
+			items = append(items, item)
+		}
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].ID.String() < items[right].ID.String()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
+type selectiveInventoryAuthorizer struct {
+	forbidden map[inventory.InventoryID]struct{}
+}
+
+func (s *selectiveInventoryAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) CheckInventory(_ context.Context, _ identity.Principal, _ ports.InventoryPermission, inventoryID inventory.InventoryID) error {
+	if _, ok := s.forbidden[inventoryID]; ok {
+		return ports.ErrForbidden
+	}
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
+	return nil
+}
+
+func (s *selectiveInventoryAuthorizer) GrantInventoryOwner(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
 }
 
 func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset) error {

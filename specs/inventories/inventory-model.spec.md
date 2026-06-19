@@ -21,6 +21,7 @@ This spec does not define REST endpoints, UI navigation, billing, import/export,
 - Inventory names must be unique enough within a tenant for users to distinguish them.
 - Users may have access to one or more inventories within a tenant.
 - Users with access to multiple inventories should be able to query across those inventories when authorized.
+- Inventory collection APIs must use cursor pagination and must paginate only inventories visible to the caller.
 - Inventory-level settings must be separate from tenant-level settings.
 - Inventory-scoped custom field definitions must apply only inside that inventory.
 - Tenant-scoped custom field definitions must be available inside tenant inventories unless a future spec defines override behavior.

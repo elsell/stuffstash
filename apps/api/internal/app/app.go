@@ -39,6 +39,7 @@ type Dependencies struct {
 }
 
 func New(deps Dependencies) App {
+	maxPageLimit := normalizeMaxPageLimit(deps.MaxPageLimit)
 	return App{
 		observer:         deps.Observer,
 		auth:             deps.Auth,
@@ -50,13 +51,12 @@ func New(deps Dependencies) App {
 		ids:              deps.IDs,
 		outboxDrainLimit: deps.AuthorizationOutboxDrainLimit,
 		outboxClaimLease: deps.AuthorizationOutboxClaimLease,
-		defaultPageLimit: normalizeDefaultPageLimit(deps.DefaultPageLimit, deps.MaxPageLimit),
-		maxPageLimit:     normalizeMaxPageLimit(deps.MaxPageLimit),
+		defaultPageLimit: normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
+		maxPageLimit:     maxPageLimit,
 	}
 }
 
 func normalizeDefaultPageLimit(defaultLimit int, maxLimit int) int {
-	maxLimit = normalizeMaxPageLimit(maxLimit)
 	if defaultLimit <= 0 {
 		return 50
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -233,9 +232,16 @@ func (s Store) MarkAuthorizationOutboxEventDeadLettered(ctx context.Context, eve
 	return nil
 }
 
-func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID) ([]inventory.Inventory, error) {
+func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID, page ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
 	var models []inventoryModel
-	if err := s.db.WithContext(ctx).Where(&inventoryModel{TenantID: tenantID.String()}).Find(&models).Error; err != nil {
+	query := s.db.WithContext(ctx).Where(&inventoryModel{TenantID: tenantID.String()})
+	if page.AfterInventoryID.String() != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterInventoryID.String()})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
 		return nil, err
 	}
 
@@ -243,14 +249,10 @@ func (s Store) ListInventoriesByTenant(ctx context.Context, tenantID inventory.T
 	for _, model := range models {
 		item, ok := model.toDomain()
 		if !ok {
-			continue
+			return nil, fmt.Errorf("invalid inventory row %q", model.ID)
 		}
 		items = append(items, item)
 	}
-
-	sort.Slice(items, func(left int, right int) bool {
-		return items[left].ID.String() < items[right].ID.String()
-	})
 
 	return items, nil
 }

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -213,16 +214,19 @@ func TestSecureTenantInventoryFlow(t *testing.T) {
 		t.Fatalf("expected first asset page status %d, got %d with body %s", http.StatusOK, firstAssetPage.Code, firstAssetPage.Body.String())
 	}
 	firstPage := decodeAssetList(t, firstAssetPage)
-	if len(firstPage.Data) != 1 || firstPage.Meta.Pagination == nil || firstPage.Meta.Pagination.Limit != 1 || !firstPage.Meta.Pagination.HasMore || firstPage.Meta.Pagination.NextCursor == "" {
+	if len(firstPage.Data) != 1 || firstPage.Meta.Pagination == nil || firstPage.Meta.Pagination.Limit != 1 || !firstPage.Meta.Pagination.HasMore || firstPage.Meta.Pagination.NextCursor == nil {
 		t.Fatalf("expected first paginated asset page, got %+v", firstPage)
 	}
 
-	secondAssetPage := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=1&cursor="+firstPage.Meta.Pagination.NextCursor, "Bearer dev:user-one", nil)
+	secondAssetPage := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=1&cursor="+*firstPage.Meta.Pagination.NextCursor, "Bearer dev:user-one", nil)
 	if secondAssetPage.Code != http.StatusOK {
 		t.Fatalf("expected second asset page status %d, got %d with body %s", http.StatusOK, secondAssetPage.Code, secondAssetPage.Body.String())
 	}
+	if !bytes.Contains(secondAssetPage.Body.Bytes(), []byte(`"nextCursor":null`)) {
+		t.Fatalf("expected final asset page to include null nextCursor, got %s", secondAssetPage.Body.String())
+	}
 	secondPage := decodeAssetList(t, secondAssetPage)
-	if len(secondPage.Data) != 1 || secondPage.Meta.Pagination == nil || secondPage.Meta.Pagination.Limit != 1 || secondPage.Meta.Pagination.HasMore {
+	if len(secondPage.Data) != 1 || secondPage.Meta.Pagination == nil || secondPage.Meta.Pagination.Limit != 1 || secondPage.Meta.Pagination.HasMore || secondPage.Meta.Pagination.NextCursor != nil {
 		t.Fatalf("expected final paginated asset page, got %+v", secondPage)
 	}
 }
@@ -376,18 +380,38 @@ func TestInventoryOwnerListsOnlyVisibleInventories(t *testing.T) {
 			{id: tenantID, name: "Home", owner: "tenant-owner"},
 		},
 		inventories: []seedInventory{
-			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Visible", owner: "inventory-owner"},
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Visible One", owner: "inventory-owner"},
 			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID: tenantID, name: "Hidden", owner: "other-user"},
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID: tenantID, name: "Visible Two", owner: "inventory-owner"},
 		},
 	}))
 
-	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories", "Bearer dev:inventory-owner", nil)
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories?limit=1", "Bearer dev:inventory-owner", nil)
 	if list.Code != http.StatusOK {
 		t.Fatalf("expected list status %d, got %d with body %s", http.StatusOK, list.Code, list.Body.String())
 	}
+	firstPage := decodeInventoryListBody(t, list)
+	if firstPage.Meta.Pagination == nil || firstPage.Meta.Pagination.Limit != 1 || !firstPage.Meta.Pagination.HasMore || firstPage.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected paginated first page metadata, got %+v", firstPage.Meta)
+	}
 
-	assertInventories(t, decodeInventoryList(t, list),
-		expectedInventory{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Visible"},
+	assertInventories(t, firstPage.Data,
+		expectedInventory{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Visible One"},
+	)
+
+	secondList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories?limit=1&cursor="+*firstPage.Meta.Pagination.NextCursor, "Bearer dev:inventory-owner", nil)
+	if secondList.Code != http.StatusOK {
+		t.Fatalf("expected second list status %d, got %d with body %s", http.StatusOK, secondList.Code, secondList.Body.String())
+	}
+	if !bytes.Contains(secondList.Body.Bytes(), []byte(`"nextCursor":null`)) {
+		t.Fatalf("expected final inventory page to include null nextCursor, got %s", secondList.Body.String())
+	}
+	secondPage := decodeInventoryListBody(t, secondList)
+	if secondPage.Meta.Pagination == nil || secondPage.Meta.Pagination.Limit != 1 || secondPage.Meta.Pagination.HasMore || secondPage.Meta.Pagination.NextCursor != nil {
+		t.Fatalf("expected final page metadata, got %+v", secondPage.Meta)
+	}
+	assertInventories(t, secondPage.Data,
+		expectedInventory{id: "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID: tenantID, name: "Visible Two"},
 	)
 }
 
@@ -413,6 +437,55 @@ func TestUnrelatedUserCannotCreateOrListTenantInventories(t *testing.T) {
 		t.Fatalf("expected list status %d, got %d with body %s", http.StatusForbidden, list.Code, list.Body.String())
 	}
 	assertSafeError(t, list, "forbidden", "Forbidden.")
+}
+
+func TestInventoryListRejectsInvalidCursorSafely(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+	}))
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories?cursor=%25%25%25", "Bearer dev:owner", nil)
+	if list.Code != http.StatusBadRequest {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusBadRequest, list.Code, list.Body.String())
+	}
+	assertSafeError(t, list, "invalid_request", "Invalid request.")
+}
+
+func TestInventoryListRejectsWrongCursorShapeSafely(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+	}))
+
+	cases := []struct {
+		name   string
+		cursor string
+	}{
+		{name: "wrong collection", cursor: paginationCursor(map[string]any{"v": 1, "collection": "assets", "scope": tenantID, "lastId": "01ARZ3NDEKTSV4RRFFQ69G5FAW"})},
+		{name: "wrong tenant scope", cursor: paginationCursor(map[string]any{"v": 1, "collection": "inventories", "scope": "01ARZ3NDEKTSV4RRFFQ69G5FAX", "lastId": "01ARZ3NDEKTSV4RRFFQ69G5FAW"})},
+		{name: "wrong version", cursor: paginationCursor(map[string]any{"v": 2, "collection": "inventories", "scope": tenantID, "lastId": "01ARZ3NDEKTSV4RRFFQ69G5FAW"})},
+	}
+
+	for _, item := range cases {
+		t.Run(item.name, func(t *testing.T) {
+			list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories?cursor="+item.cursor, "Bearer dev:owner", nil)
+			if list.Code != http.StatusBadRequest {
+				t.Fatalf("expected list status %d, got %d with body %s", http.StatusBadRequest, list.Code, list.Body.String())
+			}
+			assertSafeError(t, list, "invalid_request", "Invalid request.")
+		})
+	}
 }
 
 func TestStateCreatedDuringAuthorizationGrantFailureStaysProtected(t *testing.T) {
@@ -621,6 +694,7 @@ type inventoryListResponse struct {
 		TenantID string `json:"tenantId"`
 		Name     string `json:"name"`
 	} `json:"data"`
+	Meta responseMeta `json:"meta"`
 }
 
 type assetBody struct {
@@ -685,6 +759,14 @@ func decodeInventoryList(t *testing.T, response *httptest.ResponseRecorder) []st
 	return body.Data
 }
 
+func decodeInventoryListBody(t *testing.T, response *httptest.ResponseRecorder) inventoryListResponse {
+	t.Helper()
+
+	var body inventoryListResponse
+	decodeBody(t, response, &body)
+	return body
+}
+
 func assertInventories(t *testing.T, inventories []struct {
 	ID       string `json:"id"`
 	TenantID string `json:"tenantId"`
@@ -734,6 +816,14 @@ func assertSafeError(t *testing.T, response *httptest.ResponseRecorder, expected
 	if body.Meta.TenantID != "" || body.Meta.RequestID != "" {
 		t.Fatalf("expected empty error metadata, got %+v", body.Meta)
 	}
+}
+
+func paginationCursor(payload map[string]any) string {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		panic(err)
+	}
+	return base64.RawURLEncoding.EncodeToString(data)
 }
 
 type fakeIDGenerator struct {

@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"strconv"
 	"strings"
@@ -36,7 +35,7 @@ type ListAssetsInput struct {
 type ListAssetsResult struct {
 	Items      []asset.Asset
 	Limit      int
-	NextCursor string
+	NextCursor *string
 	HasMore    bool
 }
 
@@ -121,8 +120,8 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 		return ListAssetsResult{}, err
 	}
 
-	limit := a.assetPageLimit(input.Limit)
-	afterAssetID, err := decodeAssetCursor(input.Cursor)
+	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
+	afterAssetID, err := decodeAssetCursor(input.TenantID, input.InventoryID, input.Cursor)
 	if err != nil {
 		return ListAssetsResult{}, ErrInvalidInput
 	}
@@ -136,10 +135,10 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	}
 
 	hasMore := len(items) > limit
-	nextCursor := ""
+	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeAssetCursor(items[len(items)-1].ID)
+		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, items[len(items)-1].ID)
 	}
 
 	a.observer.Record(ctx, ports.Event{
@@ -149,7 +148,7 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 			"tenant_id":    input.TenantID.String(),
 			"inventory_id": input.InventoryID.String(),
 			"principal_id": input.Principal.ID.String(),
-			"limit":        stringFromInt(limit),
+			"limit":        strings.TrimSpace(strconv.Itoa(limit)),
 		},
 	})
 
@@ -161,41 +160,23 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	}, nil
 }
 
-func (a App) assetPageLimit(requested int) int {
-	if requested <= 0 {
-		return a.defaultPageLimit
-	}
-	if requested > a.maxPageLimit {
-		return a.maxPageLimit
-	}
-	return requested
+func encodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, id asset.ID) *string {
+	return encodePageCursor("assets", tenantID.String()+":"+inventoryID.String(), id.String())
 }
 
-func encodeAssetCursor(id asset.ID) string {
-	if id.String() == "" {
-		return ""
-	}
-	return base64.RawURLEncoding.EncodeToString([]byte(id.String()))
-}
-
-func decodeAssetCursor(cursor string) (asset.ID, error) {
-	cursor = strings.TrimSpace(cursor)
-	if cursor == "" {
-		return asset.ID(""), nil
-	}
-	decoded, err := base64.RawURLEncoding.DecodeString(cursor)
+func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (asset.ID, error) {
+	decoded, err := decodePageCursor("assets", tenantID.String()+":"+inventoryID.String(), cursor)
 	if err != nil {
 		return asset.ID(""), err
 	}
-	id, ok := asset.NewID(string(decoded))
+	if decoded == "" {
+		return asset.ID(""), nil
+	}
+	id, ok := asset.NewID(decoded)
 	if !ok {
 		return asset.ID(""), ErrInvalidInput
 	}
 	return id, nil
-}
-
-func stringFromInt(value int) string {
-	return strconv.Itoa(value)
 }
 
 func (a App) ensureInventoryAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, permission ports.InventoryPermission) error {

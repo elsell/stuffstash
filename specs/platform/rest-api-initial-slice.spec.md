@@ -41,6 +41,8 @@ The first protected REST slice includes:
 - `POST /tenants` grants the caller ownership of the new tenant.
 - `POST /tenants/{tenantId}/inventories` requires `tenant.create_inventory`.
 - `GET /tenants/{tenantId}/inventories` returns only inventories visible to the caller.
+- `GET /tenants/{tenantId}/inventories` must support cursor pagination with `limit` and `cursor` query parameters.
+- `GET /tenants/{tenantId}/inventories` must include pagination metadata in the response envelope.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.create_asset`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets` requires `inventory.view`.
 - Cross-tenant and hidden-resource access must return safe authorization failures.

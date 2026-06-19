@@ -126,8 +126,8 @@ Error responses must use a consistent envelope:
     "requestId": "req_...",
     "pagination": {
       "limit": 50,
-      "nextCursor": "opaque_cursor_or_null",
-      "hasMore": true
+      "nextCursor": null,
+      "hasMore": false
     }
   }
 }
