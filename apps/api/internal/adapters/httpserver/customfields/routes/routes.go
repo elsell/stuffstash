@@ -7,7 +7,9 @@ import (
 
 func Register(api huma.API, application app.App) {
 	RegisterCreateTenant(api, application)
+	RegisterUpdateTenant(api, application)
 	RegisterListTenant(api, application)
 	RegisterCreateInventory(api, application)
+	RegisterUpdateInventory(api, application)
 	RegisterListInventory(api, application)
 }

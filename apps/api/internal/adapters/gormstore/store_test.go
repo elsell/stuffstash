@@ -546,6 +546,48 @@ func TestStoreRejectsDuplicateCustomFieldDefinitionKeys(t *testing.T) {
 	}
 }
 
+func TestStoreUpdatesCustomFieldDefinitionMetadata(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Medicine")
+
+	definition := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, inventoryID, customfield.ScopeInventory, "condition", customfield.FieldTypeEnum, []string{"new", "used"})
+	if err := saveCustomFieldDefinition(t, ctx, store, definition); err != nil {
+		t.Fatalf("save custom field definition: %v", err)
+	}
+	displayName, ok := customfield.NewDisplayName("Item Condition")
+	if !ok {
+		t.Fatalf("expected valid display name")
+	}
+	definition.DisplayName = displayName
+	if err := store.UpdateCustomFieldDefinition(ctx, definition, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); err != nil {
+		t.Fatalf("update custom field definition: %v", err)
+	}
+
+	found, ok, err := store.CustomFieldDefinitionByID(ctx, tenantID, inventoryID, definition.ID)
+	if err != nil {
+		t.Fatalf("find custom field definition: %v", err)
+	}
+	if !ok || found.DisplayName != displayName || found.Key != definition.Key || found.Type != definition.Type || len(found.EnumOptions) != 2 || found.EnumOptions[0].String() != "new" || found.EnumOptions[1].String() != "used" {
+		t.Fatalf("expected updated custom field definition metadata, got %+v", found)
+	}
+
+	mutatedKey := definition
+	mutatedKey.Key = customfield.Key("changed")
+	if err := store.UpdateCustomFieldDefinition(ctx, mutatedKey, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected immutable key rejection, got %v", err)
+	}
+
+	mutatedOptions := definition
+	mutatedOptions.EnumOptions = []customfield.Key{customfield.Key("new")}
+	if err := store.UpdateCustomFieldDefinition(ctx, mutatedOptions, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected immutable enum options rejection, got %v", err)
+	}
+}
+
 func TestStorePaginatesInventoriesByTenant(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

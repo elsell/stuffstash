@@ -40,3 +40,12 @@ func auditRecordsContainTarget(records []auditRecordResponse, targetID string) b
 	}
 	return false
 }
+
+func auditRecordsContainAction(records []auditRecordResponse, action string) bool {
+	for _, record := range records {
+		if record.Action == action {
+			return true
+		}
+	}
+	return false
+}

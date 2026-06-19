@@ -30,6 +30,40 @@ type CreateDefinitionOutput struct {
 	Body shared.SuccessEnvelope[DefinitionResponse]
 }
 
+type UpdateTenantDefinitionInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	DefinitionID  string `path:"definitionId" doc:"Custom field definition ID"`
+	Body          UpdateDefinitionBody
+}
+
+type UpdateInventoryDefinitionInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	DefinitionID  string `path:"definitionId" doc:"Custom field definition ID"`
+	Body          UpdateDefinitionBody
+}
+
+type UpdateDefinitionBody struct {
+	DisplayName        *string  `json:"displayName,omitempty" maxLength:"120" doc:"User-facing field label"`
+	Key                *string  `json:"key,omitempty" doc:"Immutable field key; rejected on update"`
+	Type               *string  `json:"type,omitempty" doc:"Immutable field type; rejected on update"`
+	EnumOptions        []string `json:"enumOptions,omitempty" doc:"Immutable enum options; rejected on update"`
+	Applicability      *string  `json:"applicability,omitempty" doc:"Immutable applicability; rejected on update"`
+	CustomAssetTypeIDs []string `json:"customAssetTypeIds,omitempty" doc:"Immutable custom asset type targets; rejected on update"`
+}
+
+func (b UpdateDefinitionBody) HasImmutableFields() bool {
+	return b.Key != nil || b.Type != nil || len(b.EnumOptions) != 0 || b.Applicability != nil || len(b.CustomAssetTypeIDs) != 0
+}
+
+type UpdateDefinitionOutput struct {
+	Body shared.SuccessEnvelope[DefinitionResponse]
+}
+
 type ListTenantDefinitionsInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`

@@ -119,7 +119,7 @@ Future specs may add richer field types such as money, quantity with units, expi
 
 The first custom-field definition slice supports durable tenant-scoped and inventory-scoped definitions.
 
-It does not implement definition update, deletion, enum option editing, display ordering, search, filtering, import/export, conversational definition creation, or per-field permissions.
+It does not implement deletion, enum option editing, applicability target editing, display ordering, search, filtering, import/export, conversational definition creation, or per-field permissions.
 
 Definitions must have:
 
@@ -150,6 +150,26 @@ Display names are user-facing labels:
 - Maximum length 120.
 - Trimmed before persistence.
 
+## Definition Lifecycle And Mutability
+
+Custom field definitions start as active records.
+
+The first update slice may change only the human-facing display name.
+
+These fields are immutable after creation:
+
+- ID.
+- Tenant ID.
+- Inventory ID.
+- Scope.
+- Key.
+- Field type.
+- Enum options.
+- Applicability target.
+- Custom asset type targets.
+
+Changing field type, enum options, applicability, or target custom asset types needs its own compatibility rules because assets may already store values validated against the current definition.
+
 Enum options:
 
 - Are required for `enum` fields.
@@ -161,8 +181,10 @@ The first custom field endpoints are:
 
 - `POST /tenants/{tenantId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/custom-field-definitions`
+- `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}`
 
 The first custom asset type endpoints are specified in `specs/assets/custom-asset-types.spec.md`.
 
@@ -182,6 +204,17 @@ List endpoints:
 - Inventory-scoped list returns the effective definitions available to that inventory: tenant-scoped definitions first, then inventory-scoped definitions.
 - Must use cursor pagination with `limit` and `cursor`.
 - Must use the standard response envelope.
+
+Update endpoints:
+
+- Require authentication.
+- Tenant-scoped update requires `tenant.configure`.
+- Inventory-scoped update requires `inventory.configure`.
+- May update only `displayName`.
+- Must reject empty update bodies.
+- Must return the updated definition in the standard response envelope.
+- Tenant-scoped update must not update inventory-scoped definitions.
+- Inventory-scoped update must not update inherited tenant-scoped definitions.
 
 ## Asset Value Validation
 

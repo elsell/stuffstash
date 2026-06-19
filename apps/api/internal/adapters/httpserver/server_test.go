@@ -81,40 +81,43 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	}
 
 	var body struct {
-		Paths      map[string]any `json:"paths"`
+		Paths      map[string]map[string]any `json:"paths"`
 		Components struct {
 			SecuritySchemes map[string]any `json:"securitySchemes"`
 		} `json:"components"`
 	}
 	decodeBody(t, response, &body)
-	if _, ok := body.Paths["/tenants/{tenantId}/inventories"]; !ok {
-		t.Fatalf("expected OpenAPI to include inventory path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/assets"]; !ok {
-		t.Fatalf("expected OpenAPI to include asset path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}"]; !ok {
-		t.Fatalf("expected OpenAPI to include asset update path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/access-grants"]; !ok {
-		t.Fatalf("expected OpenAPI to include inventory access grant path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/custom-field-definitions"]; !ok {
-		t.Fatalf("expected OpenAPI to include tenant custom field definition path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions"]; !ok {
-		t.Fatalf("expected OpenAPI to include inventory custom field definition path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/audit-records"]; !ok {
-		t.Fatalf("expected OpenAPI to include tenant audit records path, got %s", response.Body.String())
-	}
-	if _, ok := body.Paths["/tenants/{tenantId}/inventories/{inventoryId}/audit-records"]; !ok {
-		t.Fatalf("expected OpenAPI to include inventory audit records path, got %s", response.Body.String())
-	}
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories", "post")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories", "get")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets", "post")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets", "get")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", "patch")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "post")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "get")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions", "post")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions", "get")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions/{definitionId}", "patch")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", "post")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", "get")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}", "patch")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/audit-records", "get")
+	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", "get")
 	if _, ok := body.Paths["/"]; ok {
 		t.Fatalf("expected OpenAPI to omit local API index path, got %s", response.Body.String())
 	}
 	if _, ok := body.Components.SecuritySchemes["bearerAuth"]; !ok {
 		t.Fatalf("expected OpenAPI to include bearer auth, got %+v", body.Components.SecuritySchemes)
+	}
+}
+
+func assertOpenAPIPathMethod(t *testing.T, paths map[string]map[string]any, path string, method string) {
+	t.Helper()
+
+	operations, ok := paths[path]
+	if !ok {
+		t.Fatalf("expected OpenAPI to include path %s", path)
+	}
+	if _, ok := operations[method]; !ok {
+		t.Fatalf("expected OpenAPI path %s to include method %s, got %+v", path, method, operations)
 	}
 }

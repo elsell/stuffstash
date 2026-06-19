@@ -59,12 +59,13 @@ The goal is to prove a production-shaped path through:
 - Asset update and same-inventory movement now support title, description, parent, and custom field updates while preserving containment invariants, editor/viewer authorization boundaries, and descendant relationships.
 - Durable audit history now records the first state-changing tenant, inventory, sharing, custom asset type, custom field definition, and asset actions behind a repository port, with authenticated and authorized paginated REST reads.
 - Custom asset types now exist for tenant and inventory scopes, can be assigned to assets, can be renamed with metadata updates, and custom fields can target all assets or specific custom asset types.
+- Custom field definitions can now be renamed without changing their keys, types, enum options, applicability, or targets.
 
 ## Known Gaps
 
-- User invitation flows, access revocation, custom asset type delete/archive, search, custom field update/delete APIs, and media attachments are not implemented.
+- User invitation flows, access revocation, custom asset type delete/archive, search, changing custom field type or targets, custom field deletion APIs, and media attachments are not implemented.
 - Undo is not yet implemented for audit history.
-- Custom field definitions cannot yet be updated, deleted, reordered, searched, imported, exported, or managed through conversational flows.
+- Custom field definitions cannot yet change schema shape, be deleted, reordered, searched, imported, exported, or managed through conversational flows.
 
 ## Next Work
 

@@ -21,6 +21,7 @@ const (
 	EventCustomAssetTypeUpdated          EventName = "custom_asset_type.updated"
 	EventCustomAssetTypesListed          EventName = "custom_asset_type.listed"
 	EventCustomFieldDefinitionCreated    EventName = "custom_field_definition.created"
+	EventCustomFieldDefinitionUpdated    EventName = "custom_field_definition.updated"
 	EventCustomFieldDefinitionsListed    EventName = "custom_field_definition.listed"
 	EventAssetCreated                    EventName = "asset.created"
 	EventAssetUpdated                    EventName = "asset.updated"

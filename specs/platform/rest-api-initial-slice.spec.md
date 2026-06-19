@@ -33,12 +33,14 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `POST /tenants/{tenantId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/custom-field-definitions`
+- `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}`
 - `POST /tenants/{tenantId}/custom-asset-types`
 - `GET /tenants/{tenantId}/custom-asset-types`
 - `PATCH /tenants/{tenantId}/custom-asset-types/{customAssetTypeId}`
 - `GET /tenants/{tenantId}/audit-records`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}`
@@ -65,12 +67,14 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
+- `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}` requires `tenant.configure`.
 - `POST /tenants/{tenantId}/custom-asset-types` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-asset-types` requires `tenant.configure`.
 - `PATCH /tenants/{tenantId}/custom-asset-types/{customAssetTypeId}` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/audit-records` requires `tenant.configure`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions` requires `inventory.view`.
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}` requires `inventory.configure`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.view`.
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}` requires `inventory.configure`.

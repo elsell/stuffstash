@@ -301,3 +301,188 @@ func TestCustomFieldDefinitionFlowAndAssetValidation(t *testing.T) {
 	}
 	assertSafeError(t, wrongCursorList, "invalid_request", "Invalid request.")
 }
+
+func TestCustomFieldDefinitionUpdateFlowAndAuthorization(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FB1"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const hiddenInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+			{id: hiddenInventoryID, tenantID: tenantID, name: "Hidden", owner: "hidden-owner"},
+		},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FAY", "audit-tenant-definition",
+			"audit-tenant-definition-update",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAZ", "audit-inventory-definition",
+			"audit-inventory-definition-update",
+			"audit-field-viewer-grant", "field-viewer-grant-event", "field-viewer-grant-claim",
+		},
+	}))
+
+	createTenantDefinition := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/custom-field-definitions", "Bearer dev:tenant-owner", map[string]any{
+		"key":         "serial",
+		"displayName": "Serial",
+		"type":        "text",
+	})
+	if createTenantDefinition.Code != http.StatusCreated {
+		t.Fatalf("expected tenant definition create status %d, got %d with body %s", http.StatusCreated, createTenantDefinition.Code, createTenantDefinition.Body.String())
+	}
+	tenantDefinition := decodeCustomFieldDefinition(t, createTenantDefinition)
+	updateTenantDefinition := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-field-definitions/"+tenantDefinition.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"displayName": "Serial Number",
+	})
+	if updateTenantDefinition.Code != http.StatusOK {
+		t.Fatalf("expected tenant definition update status %d, got %d with body %s", http.StatusOK, updateTenantDefinition.Code, updateTenantDefinition.Body.String())
+	}
+	updatedTenantDefinition := decodeCustomFieldDefinition(t, updateTenantDefinition)
+	if updatedTenantDefinition.Data.ID != tenantDefinition.Data.ID || updatedTenantDefinition.Data.Key != "serial" || updatedTenantDefinition.Data.Type != "text" || updatedTenantDefinition.Data.DisplayName != "Serial Number" {
+		t.Fatalf("expected updated tenant definition metadata, got %+v", updatedTenantDefinition.Data)
+	}
+	tenantAudit := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/audit-records?limit=50", "Bearer dev:tenant-owner", nil)
+	if tenantAudit.Code != http.StatusOK {
+		t.Fatalf("expected tenant audit status %d, got %d with body %s", http.StatusOK, tenantAudit.Code, tenantAudit.Body.String())
+	}
+	if !auditRecordsContainAction(decodeAuditRecordList(t, tenantAudit).Data, "custom_field_definition.updated") {
+		t.Fatalf("expected tenant audit to include custom field update action, got %s", tenantAudit.Body.String())
+	}
+
+	crossTenantDefinitionUpdate := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/custom-field-definitions/"+tenantDefinition.Data.ID, "Bearer dev:other-owner", map[string]any{
+		"displayName": "Cabin Serial",
+	})
+	if crossTenantDefinitionUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected cross-tenant definition update status %d, got %d with body %s", http.StatusNotFound, crossTenantDefinitionUpdate.Code, crossTenantDefinitionUpdate.Body.String())
+	}
+	assertSafeError(t, crossTenantDefinitionUpdate, "resource_not_found", "Resource not found.")
+
+	createInventoryDefinition := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "condition",
+		"displayName": "Condition",
+		"type":        "enum",
+		"enumOptions": []string{"new", "used"},
+	})
+	if createInventoryDefinition.Code != http.StatusCreated {
+		t.Fatalf("expected inventory definition create status %d, got %d with body %s", http.StatusCreated, createInventoryDefinition.Code, createInventoryDefinition.Body.String())
+	}
+	inventoryDefinition := decodeCustomFieldDefinition(t, createInventoryDefinition)
+	updateInventoryDefinition := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Item Condition",
+	})
+	if updateInventoryDefinition.Code != http.StatusOK {
+		t.Fatalf("expected inventory definition update status %d, got %d with body %s", http.StatusOK, updateInventoryDefinition.Code, updateInventoryDefinition.Body.String())
+	}
+	updatedInventoryDefinition := decodeCustomFieldDefinition(t, updateInventoryDefinition)
+	if updatedInventoryDefinition.Data.ID != inventoryDefinition.Data.ID || updatedInventoryDefinition.Data.Key != "condition" || updatedInventoryDefinition.Data.Type != "enum" || updatedInventoryDefinition.Data.DisplayName != "Item Condition" {
+		t.Fatalf("expected updated inventory definition metadata, got %+v", updatedInventoryDefinition.Data)
+	}
+	inventoryAudit := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=50", "Bearer dev:inventory-owner", nil)
+	if inventoryAudit.Code != http.StatusOK {
+		t.Fatalf("expected inventory audit status %d, got %d with body %s", http.StatusOK, inventoryAudit.Code, inventoryAudit.Body.String())
+	}
+	if !auditRecordsContainAction(decodeAuditRecordList(t, inventoryAudit).Data, "custom_field_definition.updated") {
+		t.Fatalf("expected inventory audit to include custom field update action, got %s", inventoryAudit.Body.String())
+	}
+
+	updateInventoryDefinitionThroughTenantRoute := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"displayName": "Tenant Route Rename",
+	})
+	if updateInventoryDefinitionThroughTenantRoute.Code != http.StatusNotFound {
+		t.Fatalf("expected inventory definition through tenant route status %d, got %d with body %s", http.StatusNotFound, updateInventoryDefinitionThroughTenantRoute.Code, updateInventoryDefinitionThroughTenantRoute.Body.String())
+	}
+	assertSafeError(t, updateInventoryDefinitionThroughTenantRoute, "resource_not_found", "Resource not found.")
+
+	updateInheritedDefinition := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+tenantDefinition.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Inventory Rename",
+	})
+	if updateInheritedDefinition.Code != http.StatusNotFound {
+		t.Fatalf("expected inherited definition update status %d, got %d with body %s", http.StatusNotFound, updateInheritedDefinition.Code, updateInheritedDefinition.Body.String())
+	}
+	assertSafeError(t, updateInheritedDefinition, "resource_not_found", "Resource not found.")
+
+	intruderUpdateDefinition := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:intruder", map[string]any{
+		"displayName": "Intruder Rename",
+	})
+	if intruderUpdateDefinition.Code != http.StatusForbidden {
+		t.Fatalf("expected intruder update definition status %d, got %d with body %s", http.StatusForbidden, intruderUpdateDefinition.Code, intruderUpdateDefinition.Body.String())
+	}
+	assertSafeError(t, intruderUpdateDefinition, "forbidden", "Forbidden.")
+
+	hiddenInventoryUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+hiddenInventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Hidden Rename",
+	})
+	if hiddenInventoryUpdate.Code != http.StatusForbidden {
+		t.Fatalf("expected hidden inventory update status %d, got %d with body %s", http.StatusForbidden, hiddenInventoryUpdate.Code, hiddenInventoryUpdate.Body.String())
+	}
+	assertSafeError(t, hiddenInventoryUpdate, "forbidden", "Forbidden.")
+
+	hiddenOwnerUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+hiddenInventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:hidden-owner", map[string]any{
+		"displayName": "Hidden Owner Rename",
+	})
+	if hiddenOwnerUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected hidden owner update status %d, got %d with body %s", http.StatusNotFound, hiddenOwnerUpdate.Code, hiddenOwnerUpdate.Body.String())
+	}
+	assertSafeError(t, hiddenOwnerUpdate, "resource_not_found", "Resource not found.")
+
+	wrongTenantUpdate := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Wrong Tenant Rename",
+	})
+	if wrongTenantUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong tenant update status %d, got %d with body %s", http.StatusNotFound, wrongTenantUpdate.Code, wrongTenantUpdate.Body.String())
+	}
+	assertSafeError(t, wrongTenantUpdate, "resource_not_found", "Resource not found.")
+
+	missingInventoryUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB2/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Missing Inventory Rename",
+	})
+	if missingInventoryUpdate.Code != http.StatusNotFound {
+		t.Fatalf("expected missing inventory update status %d, got %d with body %s", http.StatusNotFound, missingInventoryUpdate.Code, missingInventoryUpdate.Body.String())
+	}
+	assertSafeError(t, missingInventoryUpdate, "resource_not_found", "Resource not found.")
+
+	viewerGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if viewerGrant.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+	viewerUpdateDefinition := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "Bearer dev:viewer-user", map[string]any{
+		"displayName": "Viewer Rename",
+	})
+	if viewerUpdateDefinition.Code != http.StatusForbidden {
+		t.Fatalf("expected viewer update definition status %d, got %d with body %s", http.StatusForbidden, viewerUpdateDefinition.Code, viewerUpdateDefinition.Body.String())
+	}
+	assertSafeError(t, viewerUpdateDefinition, "forbidden", "Forbidden.")
+
+	immutableFieldUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-field-definitions/"+tenantDefinition.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"displayName":        "Serial Label",
+		"key":                "changed",
+		"type":               "enum",
+		"enumOptions":        []string{"new"},
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{"01ARZ3NDEKTSV4RRFFQ69G5FB3"},
+	})
+	if immutableFieldUpdate.Code != http.StatusBadRequest {
+		t.Fatalf("expected immutable field update status %d, got %d with body %s", http.StatusBadRequest, immutableFieldUpdate.Code, immutableFieldUpdate.Body.String())
+	}
+	assertSafeError(t, immutableFieldUpdate, "invalid_request", "Invalid request.")
+
+	emptyUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-field-definitions/"+tenantDefinition.Data.ID, "Bearer dev:tenant-owner", map[string]any{})
+	if emptyUpdate.Code != http.StatusBadRequest {
+		t.Fatalf("expected empty update status %d, got %d with body %s", http.StatusBadRequest, emptyUpdate.Code, emptyUpdate.Body.String())
+	}
+	assertSafeError(t, emptyUpdate, "invalid_request", "Invalid request.")
+
+	missingAuthenticationUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+inventoryDefinition.Data.ID, "", map[string]any{
+		"displayName": "No Auth Rename",
+	})
+	if missingAuthenticationUpdate.Code != http.StatusUnauthorized {
+		t.Fatalf("expected missing authentication update status %d, got %d with body %s", http.StatusUnauthorized, missingAuthenticationUpdate.Code, missingAuthenticationUpdate.Body.String())
+	}
+	assertSafeError(t, missingAuthenticationUpdate, "authentication_required", "Authentication required.")
+}

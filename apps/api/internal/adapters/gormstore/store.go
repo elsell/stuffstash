@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -404,6 +405,46 @@ func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customf
 	})
 }
 
+func (s Store) UpdateCustomFieldDefinition(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing customFieldDefinitionModel
+		err := tx.Where(&customFieldDefinitionModel{
+			ID:       definition.ID.String(),
+			TenantID: definition.TenantID.String(),
+		}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Scope != definition.Scope.String() || existing.FieldKey != definition.Key.String() || existing.FieldType != definition.Type.String() || existing.Applicability != definition.Applicability.String() || stringFromPtr(existing.InventoryID) != definition.InventoryID.String() {
+			return ports.ErrForbidden
+		}
+		var rawOptions []string
+		if err := json.Unmarshal([]byte(existing.EnumOptions), &rawOptions); err != nil {
+			return err
+		}
+		if !slices.Equal(rawOptions, customFieldKeysToStrings(definition.EnumOptions)) {
+			return ports.ErrForbidden
+		}
+		targetsByDefinitionID, err := customFieldDefinitionTargets(ctx, tx, []customFieldDefinitionModel{existing})
+		if err != nil {
+			return err
+		}
+		if !slices.Equal(targetsByDefinitionID[definition.ID.String()], definition.CustomAssetTypeIDs) {
+			return ports.ErrForbidden
+		}
+
+		if err := tx.Model(&existing).Updates(map[string]any{
+			"display_name": definition.DisplayName.String(),
+		}).Error; err != nil {
+			return customFieldDefinitionWriteError(err)
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
 func (s Store) SaveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
 	model := customAssetTypeModel{
 		ID:          assetType.ID.String(),
@@ -477,6 +518,38 @@ func (s Store) ListTenantCustomFieldDefinitions(ctx context.Context, tenantID te
 		Scope:    customfield.ScopeTenant.String(),
 	})
 	return s.listCustomFieldDefinitions(ctx, query, page)
+}
+
+func (s Store) CustomFieldDefinitionByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error) {
+	query := s.db.WithContext(ctx).Where(&customFieldDefinitionModel{
+		ID:       definitionID.String(),
+		TenantID: tenantID.String(),
+	})
+	if inventoryID.String() == "" {
+		query = query.Where(&customFieldDefinitionModel{Scope: customfield.ScopeTenant.String()})
+	} else {
+		query = query.Where(clause.Or(
+			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
+		))
+	}
+	var model customFieldDefinitionModel
+	err := query.First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return customfield.Definition{}, false, nil
+	}
+	if err != nil {
+		return customfield.Definition{}, false, err
+	}
+	targetsByDefinitionID, err := customFieldDefinitionTargets(ctx, s.db, []customFieldDefinitionModel{model})
+	if err != nil {
+		return customfield.Definition{}, false, err
+	}
+	definition, ok := model.toDomain(targetsByDefinitionID[model.ID])
+	if !ok {
+		return customfield.Definition{}, false, fmt.Errorf("invalid custom field definition row %q", model.ID)
+	}
+	return definition, true, nil
 }
 
 func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
@@ -590,7 +663,7 @@ func (s Store) listCustomFieldDefinitions(ctx context.Context, query *gorm.DB, p
 	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "cursor_key"}}).Find(&models).Error; err != nil {
 		return nil, err
 	}
-	targetsByDefinitionID, err := s.customFieldDefinitionTargets(ctx, models)
+	targetsByDefinitionID, err := customFieldDefinitionTargets(ctx, s.db, models)
 	if err != nil {
 		return nil, err
 	}
@@ -605,7 +678,7 @@ func (s Store) listCustomFieldDefinitions(ctx context.Context, query *gorm.DB, p
 	return items, nil
 }
 
-func (s Store) customFieldDefinitionTargets(ctx context.Context, definitions []customFieldDefinitionModel) (map[string][]customfield.AssetTypeID, error) {
+func customFieldDefinitionTargets(ctx context.Context, db *gorm.DB, definitions []customFieldDefinitionModel) (map[string][]customfield.AssetTypeID, error) {
 	result := map[string][]customfield.AssetTypeID{}
 	if len(definitions) == 0 {
 		return result, nil
@@ -615,7 +688,7 @@ func (s Store) customFieldDefinitionTargets(ctx context.Context, definitions []c
 		ids = append(ids, definition.ID)
 	}
 	var models []customFieldDefinitionAssetTypeModel
-	if err := s.db.WithContext(ctx).Where(clause.IN{Column: clause.Column{Name: "custom_field_definition_id"}, Values: stringValues(ids)}).Find(&models).Error; err != nil {
+	if err := db.WithContext(ctx).Where(clause.IN{Column: clause.Column{Name: "custom_field_definition_id"}, Values: stringValues(ids)}).Find(&models).Error; err != nil {
 		return nil, err
 	}
 	for _, model := range models {

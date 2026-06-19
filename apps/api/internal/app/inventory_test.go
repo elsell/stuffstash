@@ -1596,6 +1596,39 @@ func (f *fakeCustomFieldRepository) SaveCustomFieldDefinition(_ context.Context,
 	return nil
 }
 
+func (f *fakeCustomFieldRepository) UpdateCustomFieldDefinition(_ context.Context, definition customfield.Definition, auditRecord audit.Record) error {
+	for index, existing := range f.items {
+		if existing.ID != definition.ID || existing.TenantID != definition.TenantID {
+			continue
+		}
+		if existing.Scope != definition.Scope || existing.InventoryID != definition.InventoryID || existing.Key != definition.Key || existing.Type != definition.Type || existing.Applicability != definition.Applicability || !slices.Equal(existing.EnumOptions, definition.EnumOptions) || !slices.Equal(existing.CustomAssetTypeIDs, definition.CustomAssetTypeIDs) {
+			return ports.ErrForbidden
+		}
+		f.items[index] = definition
+		f.auditRecords = append(f.auditRecords, auditRecord)
+		return nil
+	}
+	return ports.ErrForbidden
+}
+
+func (f *fakeCustomFieldRepository) CustomFieldDefinitionByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error) {
+	for _, item := range f.items {
+		if item.ID != definitionID || item.TenantID.String() != tenantID.String() {
+			continue
+		}
+		if inventoryID.String() == "" {
+			if item.Scope == customfield.ScopeTenant {
+				return item, true, nil
+			}
+			continue
+		}
+		if item.Scope == customfield.ScopeTenant || item.InventoryID.String() == inventoryID.String() {
+			return item, true, nil
+		}
+	}
+	return customfield.Definition{}, false, nil
+}
+
 func (f *fakeCustomFieldRepository) ListTenantCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	items := []customfield.Definition{}
 	for _, item := range f.items {

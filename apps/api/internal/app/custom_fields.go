@@ -35,6 +35,16 @@ type ListCustomFieldDefinitionsInput struct {
 	Cursor      string
 }
 
+type UpdateCustomFieldDefinitionInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	DefinitionID customfield.ID
+	DisplayName  *string
+}
+
 type ListCustomFieldDefinitionsResult struct {
 	Items      []customfield.Definition
 	Limit      int
@@ -60,6 +70,24 @@ func (a App) CreateInventoryCustomFieldDefinition(ctx context.Context, input Cre
 	}
 
 	return a.createCustomFieldDefinition(ctx, input, customfield.ScopeInventory)
+}
+
+func (a App) UpdateTenantCustomFieldDefinition(ctx context.Context, input UpdateCustomFieldDefinitionInput) (customfield.Definition, error) {
+	if err := a.ensureTenantExists(ctx, input.TenantID); err != nil {
+		return customfield.Definition{}, err
+	}
+	if err := a.authorizer.CheckTenant(ctx, input.Principal, ports.TenantPermissionConfigure, input.TenantID); err != nil {
+		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
+		return customfield.Definition{}, err
+	}
+	return a.updateCustomFieldDefinition(ctx, input, customfield.ScopeTenant)
+}
+
+func (a App) UpdateInventoryCustomFieldDefinition(ctx context.Context, input UpdateCustomFieldDefinitionInput) (customfield.Definition, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+		return customfield.Definition{}, err
+	}
+	return a.updateCustomFieldDefinition(ctx, input, customfield.ScopeInventory)
 }
 
 func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustomFieldDefinitionInput, scope customfield.Scope) (customfield.Definition, error) {
@@ -153,6 +181,77 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 	})
 
 	return definition, nil
+}
+
+func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustomFieldDefinitionInput, scope customfield.Scope) (customfield.Definition, error) {
+	definitionID, ok := customfield.NewID(input.DefinitionID.String())
+	if !ok || input.DisplayName == nil {
+		return customfield.Definition{}, ErrInvalidInput
+	}
+	current, found, err := a.customFields.CustomFieldDefinitionByID(ctx, input.TenantID, input.InventoryID, definitionID)
+	if err != nil {
+		return customfield.Definition{}, err
+	}
+	if !found {
+		return customfield.Definition{}, ErrNotFound
+	}
+	if current.Scope != scope {
+		return customfield.Definition{}, ErrNotFound
+	}
+	if scope == customfield.ScopeInventory && current.InventoryID.String() != input.InventoryID.String() {
+		return customfield.Definition{}, ErrNotFound
+	}
+
+	displayName, ok := customfield.NewDisplayName(*input.DisplayName)
+	if !ok {
+		return customfield.Definition{}, ErrInvalidInput
+	}
+	if displayName == current.DisplayName {
+		return current, nil
+	}
+	updated := current
+	updated.DisplayName = displayName
+
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionCustomFieldDefinitionUpdated,
+		TargetType:  audit.TargetCustomFieldDefinition,
+		TargetID:    updated.ID.String(),
+		Metadata: map[string]string{
+			"field_key":    updated.Key.String(),
+			"scope":        updated.Scope.String(),
+			"display_name": "true",
+		},
+	})
+	if err != nil {
+		return customfield.Definition{}, err
+	}
+
+	if err := a.customFields.UpdateCustomFieldDefinition(ctx, updated, auditRecord); err != nil {
+		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
+			return customfield.Definition{}, ErrInvalidInput
+		}
+		return customfield.Definition{}, err
+	}
+
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventCustomFieldDefinitionUpdated,
+		Message: "custom field definition updated",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"principal_id":  input.Principal.ID.String(),
+			"definition_id": updated.ID.String(),
+			"field_key":     updated.Key.String(),
+			"scope":         updated.Scope.String(),
+		},
+	})
+
+	return updated, nil
 }
 
 func (a App) ListTenantCustomFieldDefinitions(ctx context.Context, input ListCustomFieldDefinitionsInput) (ListCustomFieldDefinitionsResult, error) {

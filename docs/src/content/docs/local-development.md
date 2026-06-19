@@ -169,6 +169,16 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/cus
   -d '{"displayName":"Medicine and Vitamins"}'
 ```
 
+You can also rename a custom field without changing its key, type, or target. Use the ID returned when you created the field definition.
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions/<field-definition-id> \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"displayName":"Use By Date"}'
+```
+
 Move or edit an asset:
 
 ```sh

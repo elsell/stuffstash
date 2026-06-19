@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"errors"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -287,6 +288,48 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 	s.customFields[definition.ID] = definition
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
+}
+
+func (s *Store) UpdateCustomFieldDefinition(_ context.Context, definition customfield.Definition, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, exists := s.customFields[definition.ID]
+	if !exists || existing.TenantID != definition.TenantID || existing.InventoryID != definition.InventoryID || existing.Scope != definition.Scope {
+		return ports.ErrForbidden
+	}
+	if existing.Key != definition.Key || existing.Type != definition.Type || existing.Applicability != definition.Applicability {
+		return ports.ErrForbidden
+	}
+	if !slices.Equal(existing.EnumOptions, definition.EnumOptions) || !slices.Equal(existing.CustomAssetTypeIDs, definition.CustomAssetTypeIDs) {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.customFields[definition.ID] = definition
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) CustomFieldDefinitionByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	definition, ok := s.customFields[definitionID]
+	if !ok || definition.TenantID.String() != tenantID.String() {
+		return customfield.Definition{}, false, nil
+	}
+	if inventoryID.String() == "" {
+		if definition.Scope != customfield.ScopeTenant {
+			return customfield.Definition{}, false, nil
+		}
+		return definition, true, nil
+	}
+	if definition.Scope == customfield.ScopeInventory && definition.InventoryID.String() != inventoryID.String() {
+		return customfield.Definition{}, false, nil
+	}
+	return definition, true, nil
 }
 
 func (s *Store) SaveCustomAssetType(_ context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {

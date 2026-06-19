@@ -46,6 +46,7 @@ const (
 	ActionCustomAssetTypeCreated       Action = "custom_asset_type.created"
 	ActionCustomAssetTypeUpdated       Action = "custom_asset_type.updated"
 	ActionCustomFieldDefinitionCreated Action = "custom_field_definition.created"
+	ActionCustomFieldDefinitionUpdated Action = "custom_field_definition.updated"
 	ActionAssetCreated                 Action = "asset.created"
 	ActionAssetUpdated                 Action = "asset.updated"
 	ActionAssetMoved                   Action = "asset.moved"
@@ -60,6 +61,7 @@ func NewAction(value string) (Action, bool) {
 		ActionCustomAssetTypeCreated,
 		ActionCustomAssetTypeUpdated,
 		ActionCustomFieldDefinitionCreated,
+		ActionCustomFieldDefinitionUpdated,
 		ActionAssetCreated,
 		ActionAssetUpdated,
 		ActionAssetMoved:
