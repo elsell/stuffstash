@@ -45,6 +45,7 @@ These instructions are binding for all agents and contributors working in this r
 - Project-scoped Codex custom agents live under `.codex/agents/`.
 - Custom agents should be narrow, opinionated, and useful enough to justify their own identity.
 - The documentation agent owns human-facing documentation quality, structure, and synchronization with the codebase.
+- The documentation agent must keep its style guidance current with the desired public documentation voice: polished open source project, user-focused, beautiful, concise, clear, and selective about what belongs in docs.
 - The code critic agent owns ruthless review feedback about code smells, repetition, weak boundaries, hard-coded values, poor tests, and architectural drift.
 - After each implementation pass, run the code critic agent before finalizing the work.
 - Treat code critic findings as review input: fix confirmed issues, or explicitly explain why a finding is deferred or not applicable.
