@@ -13,11 +13,14 @@ RUN npm install --global --ignore-scripts "pnpm@${PNPM_VERSION}"
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/api-client packages/api-client
 COPY apps/web apps/web
+COPY deploy/web/nginx.conf deploy/web/nginx.conf
+COPY scripts/render-web-nginx-config.mjs scripts/render-web-nginx-config.mjs
 RUN pnpm --dir apps/web build
+RUN node scripts/render-web-nginx-config.mjs apps/web/build/index.html deploy/web/nginx.conf /tmp/stuffstash-nginx.conf
 
 FROM ${WEB_RUNTIME_IMAGE}
 
-COPY deploy/web/nginx.conf /opt/app-root/etc/nginx.default.d/stuffstash.conf
+COPY --from=builder /tmp/stuffstash-nginx.conf /opt/app-root/etc/nginx.default.d/stuffstash.conf
 COPY --from=builder /src/apps/web/build /opt/app-root/src
 EXPOSE 8080
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
