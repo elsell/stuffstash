@@ -197,6 +197,10 @@ These instructions are binding for all agents and contributors working in this r
   - Support arbitrary OIDC providers by design.
 - Web application:
   - Use SvelteKit.
+  - Treat the web application as a separate deployable frontend from the beginning.
+  - Do not embed or serve the production web application bundle from the Go API as the primary deployment model.
+  - Do not introduce a backend-for-frontend layer unless a future spec justifies it for a concrete product or security need.
+  - The web frontend must use runtime configuration for API base URL and auth settings.
   - Treat performance as a primary technology-selection and implementation concern.
 - Mobile applications:
   - Use React Native with Expo.

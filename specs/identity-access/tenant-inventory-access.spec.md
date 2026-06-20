@@ -127,6 +127,9 @@ Revoking direct inventory access removes the inventory relationship. Tenant view
 - Must not require email delivery, SMTP, or a third-party messaging service.
 - Must allow self-hosted deployments to copy and deliver invite links manually.
 - Future email, chat, or app notification delivery must be adapters around the same invitation contract.
+- Invite links are not a primary authentication mechanism.
+- Invite links must be used only to prove possession of invitation acceptance material.
+- Accepting an invite still requires an authenticated principal whose verified email matches the invitation.
 - Must not create SpiceDB relationships or direct access grants before acceptance.
 - Must produce audit history.
 - Must reject duplicate pending invitations for the same tenant, inventory, email, and relationship instead of silently rotating acceptance tokens.

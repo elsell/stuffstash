@@ -20,6 +20,11 @@ This spec does not define user-facing screens, navigation, visual design, offlin
 - Native mobile applications must use React Native with Expo.
 - Mobile targets must include iOS and Android.
 - The web and mobile applications must be separate clients in the monorepo.
+- The web application must be a separate deployable frontend from the beginning.
+- The Go API must not embed or serve the production web application bundle as the primary deployment model.
+- Local development may provide a convenience command that starts the API and web frontend together, but the services remain separate processes.
+- A backend-for-frontend layer is not part of the initial architecture.
+- The web and mobile clients must consume the same public API contract unless a future spec justifies a BFF for a concrete product or security need.
 - The clients should share generated API contracts, domain vocabulary, test scenarios, and design tokens where useful.
 - The clients must not share UI code at the cost of weaker platform behavior, worse performance, or unclear ownership.
 
@@ -33,6 +38,7 @@ This spec does not define user-facing screens, navigation, visual design, offlin
 - Generated DTOs must be mapped into client domain models at adapter boundaries.
 - Client UI, state management, and product logic must not depend directly on generated DTOs.
 - Client applications must treat the backend API contract as the source of truth for endpoint shapes, response bodies, error bodies, pagination, and authentication behavior.
+- The web frontend must use runtime configuration for the API base URL and auth settings rather than assuming same-origin deployment.
 - Client applications must not hard-code environment-specific service URLs, tenant identifiers, OAuth/OIDC settings, or other deployment configuration.
 - Runtime or build-time configuration must come from environment-backed configuration appropriate for each platform.
 - Performance must be a design constraint from the start.
@@ -58,6 +64,7 @@ The exact monorepo layout remains open, but it must support these logical areas:
 
 - Go backend service.
 - SvelteKit web application.
+- Independent frontend build and deployment path.
 - React Native and Expo mobile application.
 - Generated API clients or contract packages.
 - Client-side adapter packages that map generated DTOs to web and mobile domain models.

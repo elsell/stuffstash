@@ -8,7 +8,7 @@ Stuff Stash must authenticate users from the beginning while keeping provider de
 
 This spec covers authentication boundaries, local development authentication, the first local OIDC verification fixture, and the first production-shaped OIDC token verification adapter.
 
-It does not define the final browser redirect UX, mobile sign-in UX, refresh-token storage, logout, account-linking flows, final external identity provider rollout, or the final delivery adapter for passwordless login links.
+It does not define the final browser redirect UX, mobile sign-in UX, refresh-token storage, logout, account-linking flows, final external identity provider rollout, or invitation delivery adapters.
 
 ## Decisions
 
@@ -18,7 +18,6 @@ It does not define the final browser redirect UX, mobile sign-in UX, refresh-tok
 - The tracer bullet must use a deterministic local development authentication adapter.
 - Local development authentication exists only to prove the boundary and support adversarial tests.
 - Production-shaped authentication must use an OIDC adapter selected through environment configuration.
-- Passwordless magic-link authentication must be supported as a future production-shaped adapter because self-hosted deployments should not be forced to operate OIDC.
 - OIDC ID token verification must use a maintained OIDC library; JWT cryptography must not be hand-rolled.
 - Domain and application services must receive an authenticated principal, not provider-specific claims.
 - Authentication failures must return bland error responses.
@@ -34,8 +33,6 @@ The API supports these authentication modes:
 - `oidc`: verifies bearer ID tokens against a configured OIDC issuer and client ID.
 
 Any unknown mode must fail startup.
-
-The planned `magic-link` mode will verify a one-time passwordless login token produced by the Stuff Stash authentication adapter. It must not be listed as a supported runtime mode until it is implemented and covered by startup and API tests.
 
 ## Local Development Tokens
 
@@ -75,21 +72,6 @@ The authenticated principal must include:
 Provider-specific claims must be normalized at the adapter edge. Domain behavior may use project-owned principal fields such as verified email, but must not depend on provider-specific claim names or token objects.
 
 Local development authentication may accept an optional email fixture in addition to the stable user ID so invitation flows can be tested without OIDC. The email fixture exists only in explicit local/test mode.
-
-## Magic-Link Authentication
-
-Magic-link authentication is passwordless authentication for deployments that do not want to require Google, Dex, or another OIDC provider.
-
-- Magic-link authentication must be behind the same authentication port shape as OIDC.
-- Magic-link delivery must be behind a delivery port so SMTP, console/dev output, webhook delivery, and future notification adapters can share the same login-token contract.
-- The API must never persist raw magic-link tokens.
-- Persistence must store only a derived verifier, such as a cryptographic hash.
-- Magic-link tokens must be single-use, time-limited, and scoped to a normalized email address.
-- Magic-link TTL and delivery adapter selection must come from environment-backed configuration.
-- Token creation, successful use, expired use, replay attempts, and failed verification must produce security audit or observability events without exposing token material.
-- Production magic-link mode must fail startup unless an explicit production-safe delivery adapter is configured.
-- Local or self-host convenience delivery that prints or returns raw login links must be explicitly configured and documented as unsafe for hosted multi-user production.
-- A valid magic-link token authenticates the email principal only for the configured token scope and must not grant inventory access by itself.
 
 ## Verification
 

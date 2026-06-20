@@ -75,21 +75,22 @@ The goal is to prove a production-shaped path through:
 - Custom field definitions cannot yet perform destructive schema changes, be deleted, reordered, imported, exported, or managed through conversational flows.
 - Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
-- Magic-link authentication is specified as a future self-host-friendly authentication adapter but is not implemented.
+- Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 
 ## Next Work
 
-1. Specify and implement custom field definition archive/delete semantics.
-   - Preserve existing asset values and audit history.
-   - Decide how archived fields appear in asset read responses, search, and imports/exports.
-   - Add adversarial API tests for tenant, inventory, viewer, editor, and cross-tenant behavior.
+1. Specify and scaffold the separate SvelteKit web frontend tracer bullet.
+   - Keep the web frontend independently deployable from the Go API.
+   - Use generated OpenAPI client code behind a frontend adapter boundary.
+   - Add runtime configuration for API base URL and auth settings.
+   - Prove one real user flow against the existing API.
 
 ## Later Work
 
 - Google OIDC adapter end-to-end verification.
 - Generated API client workflow from OpenAPI.
-- Web app scaffold with SvelteKit.
 - Mobile app scaffold with React Native and Expo.
+- Custom field definition archive/delete semantics.
 - Audit history and undo.
 - Conversational inventory ports and action plan execution.
 - Import and export.

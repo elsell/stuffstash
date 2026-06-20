@@ -140,15 +140,6 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - expiration timestamp
   - created, accepted, and revoked timestamps
   - timestamps managed by GORM
-- future `magic_link_login_tokens`
-  - token ID
-  - normalized email
-  - token hash
-  - expiration timestamp
-  - used timestamp
-  - delivery adapter identifier
-  - request metadata safe for audit
-  - timestamps managed by GORM
 
 The `inventories.tenant_id` value must reference `tenants.id`.
 Authorization outbox records represent pending relationship changes that must be applied to SpiceDB.
@@ -167,7 +158,7 @@ Invitation expiration timestamps must be persisted and enforced during acceptanc
 Accepting an invitation must verify the token hash, reject expired invitations, mark it accepted, create the direct inventory access grant for the accepting principal, enqueue the matching authorization outbox event, and write audit history in one transaction.
 Revoking an invitation must only affect pending invitations and must write audit history when a pending invitation is revoked.
 
-Magic-link authentication tokens must follow the same secret-handling rule as invitation tokens: raw tokens must never be persisted, only derived verifiers may be stored, and token use must be atomic so replay attempts fail after the first successful use.
+Invitation acceptance links are not authentication tokens. They must follow bearer-secret handling rules: raw invitation tokens must never be persisted, only derived verifiers may be stored, and token use must be atomic so replay attempts fail after the first successful acceptance.
 
 Custom field definitions must be scoped by tenant and optionally by inventory. The first persistence shape must prevent duplicate tenant-scoped keys inside one tenant and duplicate inventory-scoped keys inside one inventory.
 PostgreSQL migrations must also enforce the effective-key invariant across scopes so concurrent API replicas cannot create an inventory-scoped definition and a tenant-scoped definition with the same key in one tenant.
