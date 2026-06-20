@@ -15,7 +15,7 @@ The system should understand the request, check permissions, ask for confirmatio
 
 ## What Exists Now
 
-The repository has a small Go API scaffold with:
+The repository has a Go API and the first separate SvelteKit web app with:
 
 - A health endpoint.
 - Local development auth and production-shaped OIDC auth, with Dex for local OIDC verification.
@@ -28,6 +28,8 @@ The repository has a small Go API scaffold with:
 - Durable audit history for the first state-changing actions.
 - Inventory sharing by known principal ID or invite-link token, with viewer and editor access plus revocation.
 - Huma-generated OpenAPI at `/openapi.json`.
+- A generated TypeScript API client used by the web app at its adapter boundary.
+- A web tracer bullet for local Dex sign-in, inventory creation, asset creation, and asset browsing.
 - Domain-oriented observability through ports.
 - Docker and Compose files for local work, including Postgres, SpiceDB, and an optional Dex OIDC override.
 - Specs that define the product and architecture direction.
@@ -37,7 +39,7 @@ Most product behavior is still being specified before implementation.
 ## Main Building Blocks
 
 - **API:** Go backend service.
-- **Web:** SvelteKit, planned.
+- **Web:** SvelteKit.
 - **Mobile:** React Native with Expo, planned for iOS and Android.
 - **Docs:** Astro and Starlight.
 - **Authorization:** SpiceDB, with an in-memory adapter for fast local runs.

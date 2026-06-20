@@ -82,6 +82,17 @@ Successful JSON responses must use a consistent envelope unless a spec explicitl
 - Field names in JSON must use `camelCase`.
 - Response bodies must not leak internal package names, stack traces, SQL errors, SpiceDB internals, OIDC provider internals, secrets, tokens, filesystem paths, or infrastructure details.
 
+## Browser CORS
+
+Separate browser clients may call the API directly.
+
+- Browser CORS access must be deny-by-default.
+- Allowed browser origins must come from environment-backed configuration.
+- CORS must use exact origin matching, not wildcard matching.
+- CORS preflight responses must allow only the methods and headers the public API needs.
+- CORS responses must not allow credentials in the first web tracer bullet because browser clients use bearer tokens.
+- Missing or disallowed origins must receive normal API responses without CORS allow headers.
+
 ## Error Format
 
 Error responses must use a consistent envelope:

@@ -1,0 +1,90 @@
+@import '@fontsource/geist-sans/400.css';
+@import '@fontsource/geist-sans/500.css';
+@import '@fontsource/geist-sans/600.css';
+
+:root {
+  --ss-charcoal: #303A41;
+  --ss-charcoal-deep: #243038;
+  --ss-dusty-blue: #6B90AA;
+  --ss-dusty-blue-soft: #E8F0F5;
+  --ss-amber: #F5AB4B;
+
+  --sl-font: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sl-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', monospace;
+
+  --sl-color-accent-low: var(--ss-dusty-blue-soft);
+  --sl-color-accent: var(--ss-dusty-blue);
+  --sl-color-accent-high: var(--ss-charcoal);
+  --sl-color-text-accent: var(--ss-charcoal);
+}
+
+:root[data-theme='dark'] {
+  --ss-charcoal: #E9EEF1;
+  --ss-charcoal-deep: #F7FAFB;
+  --ss-dusty-blue: #90B3C8;
+  --ss-dusty-blue-soft: #1D2A32;
+  --ss-amber: #F5B969;
+
+  --sl-color-accent-low: var(--ss-dusty-blue-soft);
+  --sl-color-accent: var(--ss-dusty-blue);
+  --sl-color-accent-high: #D8E7EF;
+  --sl-color-text-accent: #D8E7EF;
+}
+
+.site-title {
+  color: var(--ss-charcoal-deep);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.site-title img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.45rem;
+}
+
+.hero h1,
+h1 {
+  letter-spacing: 0;
+}
+
+.hero h1 {
+  color: var(--ss-charcoal-deep);
+}
+
+.hero .tagline {
+  color: #465862;
+}
+
+:root[data-theme='dark'] .hero .tagline {
+  color: #C4D2D9;
+}
+
+.sl-link-button.primary {
+  border-color: var(--ss-charcoal-deep);
+  background-color: var(--ss-charcoal-deep);
+  color: white;
+}
+
+.sl-link-button.primary:hover,
+.sl-link-button.primary:focus-visible {
+  border-color: var(--ss-charcoal);
+  background-color: var(--ss-charcoal);
+}
+
+:root[data-theme='dark'] .sl-link-button.primary {
+  color: #172027;
+}
+
+.sl-link-button.secondary {
+  border-color: color-mix(in srgb, var(--ss-dusty-blue) 70%, transparent);
+  color: var(--sl-color-text-accent);
+}
+
+a:not(.sl-link-button):hover {
+  color: var(--ss-charcoal-deep);
+}
+
+:focus-visible {
+  outline-color: var(--ss-amber);
+}

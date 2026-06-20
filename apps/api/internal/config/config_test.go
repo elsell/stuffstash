@@ -4,6 +4,7 @@ import "testing"
 
 func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envHTTPAddr, "")
+	t.Setenv(envCORSAllowedOrigins, "")
 	t.Setenv(envAuthMode, "")
 	t.Setenv(envAuthzMode, "")
 	t.Setenv(envRepositoryMode, "")
@@ -31,6 +32,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 
 	if cfg.HTTPAddr != defaultHTTPAddr {
 		t.Fatalf("expected HTTP addr %q, got %q", defaultHTTPAddr, cfg.HTTPAddr)
+	}
+	if len(cfg.CORSAllowedOrigins) != 0 {
+		t.Fatalf("expected no CORS allowed origins by default, got %+v", cfg.CORSAllowedOrigins)
 	}
 	if cfg.AuthMode != defaultAuthMode {
 		t.Fatalf("expected auth mode %q, got %q", defaultAuthMode, cfg.AuthMode)
@@ -93,9 +97,11 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthMode, "oidc")
+	t.Setenv(envCORSAllowedOrigins, "http://localhost:5173, https://stuffstash.online, http://localhost:5173")
 	t.Setenv(envAuthzMode, "spicedb")
 	t.Setenv(envOIDCIssuer, "https://accounts.google.com")
 	t.Setenv(envOIDCClientID, "client-id")
+	t.Setenv(envOIDCClientIDs, "web-client-id, mobile-client-id, client-id")
 	t.Setenv(envRepositoryMode, "postgres")
 	t.Setenv(envDatabaseDSN, "postgres://stuffstash:stuffstash-local@postgres:5432/stuffstash?sslmode=disable")
 	t.Setenv(envSpiceDBEndpoint, "spicedb:50051")
@@ -124,11 +130,17 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	if cfg.AuthMode != "oidc" {
 		t.Fatalf("expected auth mode oidc, got %q", cfg.AuthMode)
 	}
+	if len(cfg.CORSAllowedOrigins) != 2 || cfg.CORSAllowedOrigins[0] != "http://localhost:5173" || cfg.CORSAllowedOrigins[1] != "https://stuffstash.online" {
+		t.Fatalf("unexpected CORS allowed origins: %+v", cfg.CORSAllowedOrigins)
+	}
 	if cfg.AuthzMode != "spicedb" {
 		t.Fatalf("expected authz mode spicedb, got %q", cfg.AuthzMode)
 	}
 	if cfg.OIDCIssuer != "https://accounts.google.com" || cfg.OIDCClientID != "client-id" {
 		t.Fatalf("unexpected OIDC config: %+v", cfg)
+	}
+	if len(cfg.OIDCClientIDs) != 3 || cfg.OIDCClientIDs[0] != "web-client-id" || cfg.OIDCClientIDs[1] != "mobile-client-id" || cfg.OIDCClientIDs[2] != "client-id" {
+		t.Fatalf("unexpected OIDC client IDs: %+v", cfg.OIDCClientIDs)
 	}
 	if cfg.RepositoryMode != "postgres" || cfg.DatabaseDSN == "" {
 		t.Fatalf("unexpected repository config: %+v", cfg)

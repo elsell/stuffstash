@@ -9,10 +9,12 @@ import (
 
 const (
 	envHTTPAddr                 = "STUFF_STASH_HTTP_ADDR"
+	envCORSAllowedOrigins       = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
 	envAuthMode                 = "STUFF_STASH_AUTH_MODE"
 	envAuthzMode                = "STUFF_STASH_AUTHZ_MODE"
 	envOIDCIssuer               = "STUFF_STASH_OIDC_ISSUER"
 	envOIDCClientID             = "STUFF_STASH_OIDC_CLIENT_ID"
+	envOIDCClientIDs            = "STUFF_STASH_OIDC_CLIENT_IDS"
 	envRepositoryMode           = "STUFF_STASH_REPOSITORY_MODE"
 	envDatabaseDSN              = "STUFF_STASH_DATABASE_DSN"
 	envSpiceDBEndpoint          = "STUFF_STASH_SPICEDB_ENDPOINT"
@@ -57,10 +59,12 @@ const (
 
 type Config struct {
 	HTTPAddr                         string
+	CORSAllowedOrigins               []string
 	AuthMode                         string
 	AuthzMode                        string
 	OIDCIssuer                       string
 	OIDCClientID                     string
+	OIDCClientIDs                    []string
 	RepositoryMode                   string
 	DatabaseDSN                      string
 	SpiceDBEndpoint                  string
@@ -88,10 +92,12 @@ type Config struct {
 func Load() Config {
 	return Config{
 		HTTPAddr:                         envOrDefault(envHTTPAddr, defaultHTTPAddr),
+		CORSAllowedOrigins:               stringListEnv(envCORSAllowedOrigins),
 		AuthMode:                         envOrDefault(envAuthMode, defaultAuthMode),
 		AuthzMode:                        envOrDefault(envAuthzMode, defaultAuthzMode),
 		OIDCIssuer:                       os.Getenv(envOIDCIssuer),
 		OIDCClientID:                     os.Getenv(envOIDCClientID),
+		OIDCClientIDs:                    oidcClientIDs(),
 		RepositoryMode:                   envOrDefault(envRepositoryMode, defaultRepositoryMode),
 		DatabaseDSN:                      os.Getenv(envDatabaseDSN),
 		SpiceDBEndpoint:                  os.Getenv(envSpiceDBEndpoint),
@@ -115,6 +121,42 @@ func Load() Config {
 		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 	}
+}
+
+func oidcClientIDs() []string {
+	clientIDs := stringListEnv(envOIDCClientIDs)
+	singleClientID := strings.TrimSpace(os.Getenv(envOIDCClientID))
+	if singleClientID == "" {
+		return clientIDs
+	}
+	for _, clientID := range clientIDs {
+		if clientID == singleClientID {
+			return clientIDs
+		}
+	}
+	return append([]string{singleClientID}, clientIDs...)
+}
+
+func stringListEnv(name string) []string {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return nil
+	}
+	parts := strings.Split(value, ",")
+	items := make([]string, 0, len(parts))
+	seen := map[string]struct{}{}
+	for _, part := range parts {
+		item := strings.TrimSpace(part)
+		if item == "" {
+			continue
+		}
+		if _, exists := seen[item]; exists {
+			continue
+		}
+		seen[item] = struct{}{}
+		items = append(items, item)
+	}
+	return items
 }
 
 func envOrDefault(name string, fallback string) string {

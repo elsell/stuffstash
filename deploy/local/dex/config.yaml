@@ -8,6 +8,8 @@ storage:
 
 web:
   http: 0.0.0.0:5556
+  allowedOrigins:
+    - http://localhost:5173
 
 oauth2:
   passwordConnector: local
@@ -19,6 +21,11 @@ staticClients:
     secret: stuff-stash-local-secret
     redirectURIs:
       - http://localhost:8080/callback
+      - http://localhost:5173/callback
+  - id: stuff-stash-web-local
+    name: Stuff Stash Web Local
+    public: true
+    redirectURIs:
       - http://localhost:5173/callback
   - id: stuff-stash-wrong-audience
     name: Stuff Stash Wrong Audience Fixture

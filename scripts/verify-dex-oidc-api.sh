@@ -30,6 +30,7 @@ compose() {
     STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
     STUFF_STASH_OIDC_ISSUER=http://dex:5556/dex \
     STUFF_STASH_OIDC_CLIENT_ID="$client_id" \
+    STUFF_STASH_OIDC_CLIENT_IDS="${client_id},stuff-stash-web-local" \
     docker compose -p "$project" -f compose.yaml -f compose.oidc.yaml "$@"
 }
 
@@ -45,7 +46,7 @@ trap cleanup EXIT
 
 extract_json_string() {
   local key="$1"
-  jq -r --arg key "$key" '.[$key] // empty'
+  python3 -c 'import json,sys; key=sys.argv[1]; print(json.load(sys.stdin).get(key, ""))' "$key"
 }
 
 request_token() {
@@ -83,13 +84,13 @@ assert_status() {
   [ "$status" = "$expected" ] || fail "expected ${description} status ${expected}, got ${status}"
 }
 
-require_jq() {
-  if ! command -v jq >/dev/null 2>&1; then
-    fail "jq is required to parse Dex token responses"
+require_python() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    fail "python3 is required to parse Dex token responses"
   fi
 }
 
-require_jq
+require_python
 
 echo "starting Dex, Postgres, and SpiceDB for project ${project}"
 compose up -d --build postgres spicedb dex
@@ -98,12 +99,12 @@ echo "waiting for Dex discovery"
 dex_discovery=""
 for _ in $(seq 1 60); do
   dex_discovery="$(curl -fsS "${dex_base_url}/.well-known/openid-configuration" 2>/dev/null || true)"
-  if printf '%s\n' "$dex_discovery" | jq -e '.issuer == "http://dex:5556/dex"' >/dev/null 2>&1; then
+  if [ "$(printf '%s\n' "$dex_discovery" | extract_json_string issuer 2>/dev/null || true)" = "http://dex:5556/dex" ]; then
     break
   fi
   sleep 1
 done
-printf '%s\n' "$dex_discovery" | jq -e '.issuer == "http://dex:5556/dex"' >/dev/null 2>&1 || fail "Dex discovery did not become ready"
+[ "$(printf '%s\n' "$dex_discovery" | extract_json_string issuer 2>/dev/null || true)" = "http://dex:5556/dex" ] || fail "Dex discovery did not become ready"
 
 echo "requesting Dex ID tokens"
 owner_token="$(request_token owner@example.com)"

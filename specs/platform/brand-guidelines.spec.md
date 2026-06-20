@@ -283,6 +283,16 @@ The first color direction is:
 
 The brand must avoid the earlier green direction because it reads as generic AI/SaaS styling.
 
+The current logo glyph direction uses a charcoal, dusty blue, and amber palette extracted from `docs/public/brand/stuff-stash-glyph.png`.
+
+Representative sampled glyph colors are:
+
+- Charcoal frame: `#303A41`.
+- Dusty blue contained shape: `#6B90AA`.
+- Amber placed-item accent: `#F5AB4B`.
+
+These values come from dominant non-white, opaque pixel clusters in the current logo asset. They are approved as logo-direction colors, not yet as full product UI tokens.
+
 Color roles to define in a future token spec include:
 
 - Page background.
@@ -311,6 +321,10 @@ Raw token values must be tested against real product screens, item photos, light
 Client typography should prefer platform-native system fonts by default.
 
 For Apple platforms and iOS-like mockups, the direction is SF-style system typography through the platform font stack.
+
+When the brand name appears beside the glyph in marketing, documentation, app-store, or identity contexts, the preferred wordmark direction is Geist Sans. Use a medium or semibold weight before testing heavier weights. Geist is preferred for the wordmark because it feels clean, modern, native, and product-grade without making the task surfaces depend on decorative display type.
+
+The documentation site may self-host Geist Sans through `@fontsource/geist-sans 5.2.5` so the public docs can exercise the brand direction without loading fonts from a remote CDN.
 
 Typography should optimize for:
 

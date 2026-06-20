@@ -10,6 +10,12 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Stuff Stash',
+      logo: {
+        src: './src/assets/stuff-stash-glyph.png',
+        alt: 'Stuff Stash',
+      },
+      favicon: '/brand/stuff-stash-glyph.png',
+      customCss: ['./src/styles/brand.css'],
       sidebar: [
         {
           label: 'Start Here',

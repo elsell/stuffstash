@@ -1,0 +1,15 @@
+{
+  "name": "stuff-stash",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.0.7",
+  "scripts": {
+    "web:dev": "pnpm --dir apps/web dev",
+    "web:build": "pnpm --dir apps/web build",
+    "web:check": "pnpm --dir apps/web check",
+    "web:test": "pnpm --dir apps/web test",
+    "api-client:generate": "pnpm --dir packages/api-client generate",
+    "api-client:check": "pnpm --dir packages/api-client check",
+    "api-client:test": "pnpm --dir packages/api-client test"
+  }
+}

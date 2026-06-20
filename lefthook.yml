@@ -14,3 +14,15 @@ pre-commit:
     go-domain-imports:
       glob: "*.go"
       run: scripts/check-go-domain-imports.sh {staged_files}
+    api-client-check-generated:
+      glob: "packages/api-client/**"
+      run: make api-client-check-generated
+    api-client-test:
+      glob: "packages/api-client/**"
+      run: make api-client-test api-client-check
+    web-test:
+      glob: "apps/web/**"
+      run: make web-test web-check
+    docs-build:
+      glob: "docs/**"
+      run: make docs-build

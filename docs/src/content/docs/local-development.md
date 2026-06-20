@@ -12,7 +12,7 @@ The app is still early. Today, the local API can create tenants and inventories;
 - Go 1.25.8 or newer.
 - Docker with Compose, for container-based local runs.
 - Lefthook, for pre-commit checks.
-- pnpm 11.0.7, for this documentation site.
+- pnpm 11.0.7, for the documentation site, generated API client, and web app.
 
 Dependencies and base images are pinned on purpose. This project treats supply-chain security as part of the security boundary.
 
@@ -22,6 +22,17 @@ From the repository root:
 
 ```sh
 make test
+```
+
+For the web app and generated TypeScript API client:
+
+```sh
+make web-install
+make api-client-test
+make api-client-check
+make web-test
+make web-check
+make web-build
 ```
 
 ## Run The API Fast
@@ -453,6 +464,45 @@ The docs site lives in `docs/`.
 make docs-install
 make docs-dev
 ```
+
+## Run The Web App
+
+The web app lives in `apps/web/`. The first browser flow signs in through local Dex, creates a tenant and inventory, adds an asset, and lists assets.
+
+Start the API and local Dex stack in one terminal:
+
+```sh
+make compose-up-oidc
+```
+
+Then start the web dev server in another terminal:
+
+```sh
+make web-install
+make web-dev
+```
+
+Open `http://localhost:5173`.
+
+Use the local Dex test user:
+
+- Email: `owner@example.com`
+- Password: `password`
+
+The web app reads local runtime settings from `apps/web/static/config.json`. It calls the API at `http://localhost:8080`, signs in through Dex at `http://localhost:5556/dex`, and sends the Dex ID token to the API as a bearer token.
+
+When using `make compose-up-oidc`, the API verifies Dex tokens against the Compose issuer `http://dex:5556/dex` and accepts both the local API verifier client and the browser public client. If you run the API directly on the host instead, keep the Dex issuer and client IDs aligned with that topology.
+
+The browser app calls the public API through the generated TypeScript client in `packages/api-client`.
+
+When the API contract changes, regenerate the TypeScript types:
+
+```sh
+curl -fsS http://localhost:8080/openapi.json -o packages/api-client/openapi.json
+make api-client-generate
+```
+
+Keep generated DTOs behind the API client adapter. They should not become the web app's domain model.
 
 ## Auth Modes
 

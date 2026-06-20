@@ -3,3 +3,8 @@
 docs/node_modules/
 docs/dist/
 docs/.astro/
+node_modules/
+apps/web/node_modules/
+apps/web/.svelte-kit/
+apps/web/build/
+packages/api-client/node_modules/

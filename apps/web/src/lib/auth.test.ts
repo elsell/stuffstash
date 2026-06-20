@@ -1,0 +1,73 @@
+import { describe, expect, it } from 'vitest';
+import { completeSignIn, getStoredSession, signOut } from './auth';
+
+const config = {
+  apiBaseUrl: 'http://localhost:8080',
+  oidcIssuer: 'http://localhost:5556/dex',
+  oidcClientId: 'stuff-stash-web-local',
+  oidcRedirectUri: 'http://localhost:5173/callback'
+};
+
+describe('auth helpers', () => {
+  it('clears expired sessions', () => {
+    const storage = new MapStorage();
+    storage.setItem('stuffstash.oidc.session', JSON.stringify({ idToken: 'token', expiresAt: Date.now() - 1 }));
+
+    expect(getStoredSession(storage)).toBeNull();
+    expect(storage.getItem('stuffstash.oidc.session')).toBeNull();
+  });
+
+  it('exchanges callback codes and stores the id token', async () => {
+    const storage = new MapStorage();
+    storage.setItem('stuffstash.oidc.state', 'state-one');
+    storage.setItem('stuffstash.oidc.verifier', 'verifier-one');
+    storage.setItem('stuffstash.oidc.returnTo', '/');
+
+    const returnTo = await completeSignIn(
+      config,
+      'http://localhost:5173/callback?code=code-one&state=state-one',
+      async () => Response.json({ id_token: 'id-token', expires_in: 60 }),
+      storage
+    );
+
+    expect(returnTo).toBe('/');
+    expect(getStoredSession(storage)?.idToken).toBe('id-token');
+  });
+
+  it('removes stored auth state on sign out', () => {
+    const storage = new MapStorage();
+    storage.setItem('stuffstash.oidc.session', JSON.stringify({ idToken: 'token', expiresAt: Date.now() + 1000 }));
+
+    signOut(storage);
+
+    expect(getStoredSession(storage)).toBeNull();
+  });
+});
+
+class MapStorage implements Storage {
+  private readonly values = new Map<string, string>();
+
+  get length(): number {
+    return this.values.size;
+  }
+
+  clear(): void {
+    this.values.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.values.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.values.keys())[index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.values.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.values.set(key, value);
+  }
+}

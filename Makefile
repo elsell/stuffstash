@@ -1,4 +1,4 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docs-install docs-dev docs-build docs-preview
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -10,7 +10,7 @@ SPICEDB_IMAGE ?= authzed/spicedb:v1.47.1@sha256:25c5499a43fdb206b7b1b72da4ba7ca9
 CODEX_RUNTIME_BIN ?= $(HOME)/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin
 CODEX_RUNTIME_NODE_BIN ?= $(HOME)/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin
 DOCS_PATH := $(CODEX_RUNTIME_NODE_BIN):$(PATH)
-PNPM ?= $(shell command -v pnpm 2>/dev/null || test -x "$(CODEX_RUNTIME_BIN)/pnpm" && printf '%s\n' "$(CODEX_RUNTIME_BIN)/pnpm" || printf '%s\n' pnpm)
+PNPM ?= $(shell if command -v pnpm >/dev/null 2>&1; then command -v pnpm; elif test -x "$(CODEX_RUNTIME_BIN)/pnpm"; then printf '%s\n' "$(CODEX_RUNTIME_BIN)/pnpm"; else printf '%s\n' pnpm; fi)
 
 test:
 	GOCACHE=$(GOCACHE) go test ./apps/api/...
@@ -77,11 +77,13 @@ compose-up-spicedb:
 compose-up-oidc:
 	STUFF_STASH_AUTH_MODE=oidc \
 	STUFF_STASH_AUTHZ_MODE=spicedb \
+	STUFF_STASH_CORS_ALLOWED_ORIGINS=http://localhost:5173 \
 	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
 	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
 	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
 	STUFF_STASH_OIDC_ISSUER=http://dex:5556/dex \
 	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
+	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local \
 	docker compose -f compose.yaml -f compose.oidc.yaml up --build
 
 compose-down:
@@ -101,3 +103,30 @@ docs-build:
 
 docs-preview:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir docs preview
+
+web-install:
+	PATH="$(DOCS_PATH)" $(PNPM) install --frozen-lockfile
+
+web-dev:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web dev
+
+web-build:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web build
+
+web-check:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check
+
+web-test:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web test
+
+api-client-generate:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir packages/api-client generate
+
+api-client-check:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir packages/api-client check
+
+api-client-test:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir packages/api-client test
+
+api-client-check-generated:
+	PATH="$(DOCS_PATH)" PNPM="$(PNPM)" scripts/check-api-client-generated.sh

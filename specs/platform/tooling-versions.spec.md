@@ -14,6 +14,22 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - pnpm for documentation CI: `11.0.7`.
 - Astro: `astro 6.4.8`.
 - Starlight: `@astrojs/starlight 0.40.0`.
+- Geist Sans documentation font package: `@fontsource/geist-sans 5.2.5`.
+
+## Pinned Web And Client Tooling
+
+- pnpm for web/client workspaces: `11.0.7`.
+- SvelteKit: `@sveltejs/kit 2.66.0`.
+- Svelte: `svelte 5.56.3`.
+- Svelte Vite plugin: `@sveltejs/vite-plugin-svelte 7.1.2`.
+- Svelte static adapter: `@sveltejs/adapter-static 3.0.10`.
+- Vite: `vite 8.0.16`.
+- TypeScript: `typescript 5.9.3`.
+- Svelte check: `svelte-check 4.6.0`.
+- Vitest: `vitest 4.1.9`.
+- jsdom: `jsdom 29.1.1`.
+- OpenAPI TypeScript generator: `openapi-typescript 7.13.0`.
+- OpenAPI fetch runtime: `openapi-fetch 0.17.0`.
 
 ## Pinned Go Dependencies
 

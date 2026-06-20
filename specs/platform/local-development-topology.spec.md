@@ -51,6 +51,7 @@ The OIDC Compose override adds:
 - Production secrets must never be committed.
 - Dex static users and static client secrets are local-only verification fixtures.
 - Dex must be selected through the same `STUFF_STASH_AUTH_MODE=oidc`, `STUFF_STASH_OIDC_ISSUER`, and `STUFF_STASH_OIDC_CLIENT_ID` configuration used by any other OIDC issuer.
+- Local Dex may configure `STUFF_STASH_OIDC_CLIENT_IDS` when the API must accept ID tokens issued to more than one local client, such as the API verification fixture and browser public client.
 
 ## Verification
 

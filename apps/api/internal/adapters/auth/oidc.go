@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -31,13 +32,22 @@ func NewOIDCAuthenticator(verifier TokenVerifier) OIDCAuthenticator {
 }
 
 func NewOIDCAuthenticatorFromIssuer(ctx context.Context, issuer string, clientID string) (OIDCAuthenticator, error) {
+	return NewOIDCAuthenticatorFromIssuerForClientIDs(ctx, issuer, []string{clientID})
+}
+
+func NewOIDCAuthenticatorFromIssuerForClientIDs(ctx context.Context, issuer string, clientIDs []string) (OIDCAuthenticator, error) {
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
 		return OIDCAuthenticator{}, err
 	}
+	allowedClientIDs := normalizeClientIDs(clientIDs)
+	if len(allowedClientIDs) == 0 {
+		return OIDCAuthenticator{}, errors.New("at least one oidc client id is required")
+	}
 
 	return NewOIDCAuthenticator(oidcTokenVerifier{
-		verifier: provider.Verifier(&oidc.Config{ClientID: clientID}),
+		verifier:         provider.Verifier(&oidc.Config{SkipClientIDCheck: true}),
+		allowedClientIDs: allowedClientIDs,
 	}), nil
 }
 
@@ -77,13 +87,17 @@ func bearerToken(authorizationHeader string) (string, bool) {
 }
 
 type oidcTokenVerifier struct {
-	verifier *oidc.IDTokenVerifier
+	verifier         *oidc.IDTokenVerifier
+	allowedClientIDs map[string]struct{}
 }
 
 func (v oidcTokenVerifier) Verify(ctx context.Context, rawToken string) (VerifiedToken, error) {
 	token, err := v.verifier.Verify(ctx, rawToken)
 	if err != nil {
 		return VerifiedToken{}, err
+	}
+	if !v.allowsAudience(token.Audience) {
+		return VerifiedToken{}, errors.New("oidc token audience is not allowed")
 	}
 
 	claims := struct {
@@ -95,6 +109,27 @@ func (v oidcTokenVerifier) Verify(ctx context.Context, rawToken string) (Verifie
 	}
 
 	return VerifiedToken{Issuer: token.Issuer, Subject: token.Subject, Email: claims.Email, EmailVerified: claims.EmailVerified}, nil
+}
+
+func (v oidcTokenVerifier) allowsAudience(audiences []string) bool {
+	for _, audience := range audiences {
+		if _, ok := v.allowedClientIDs[audience]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeClientIDs(clientIDs []string) map[string]struct{} {
+	allowed := map[string]struct{}{}
+	for _, clientID := range clientIDs {
+		clientID = strings.TrimSpace(clientID)
+		if clientID == "" {
+			continue
+		}
+		allowed[clientID] = struct{}{}
+	}
+	return allowed
 }
 
 func oidcPrincipalID(issuer string, subject string) string {

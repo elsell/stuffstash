@@ -104,7 +104,9 @@ func main() {
 		MaxPageLimit:                  cfg.MaxPageLimit,
 		MaxAttachmentBytes:            cfg.MaxAttachmentBytes,
 	})
-	server := httpserver.NewServer(cfg.HTTPAddr, application)
+	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
+		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
+	})
 	go drainAuthorizationOutbox(ctx, application, observer, cfg.AuthorizationOutboxDrainLimit, cfg.AuthorizationOutboxDrainInterval)
 
 	errCh := make(chan error, 1)
@@ -341,10 +343,10 @@ func buildAuthenticator(ctx context.Context, cfg config.Config) (ports.Authentic
 	case "local-dev":
 		return auth.NewLocalDevAuthenticator(), nil
 	case "oidc":
-		if strings.TrimSpace(cfg.OIDCIssuer) == "" || strings.TrimSpace(cfg.OIDCClientID) == "" {
+		if strings.TrimSpace(cfg.OIDCIssuer) == "" || len(cfg.OIDCClientIDs) == 0 {
 			return nil, errors.New("oidc issuer and client id are required")
 		}
-		return auth.NewOIDCAuthenticatorFromIssuer(ctx, cfg.OIDCIssuer, cfg.OIDCClientID)
+		return auth.NewOIDCAuthenticatorFromIssuerForClientIDs(ctx, cfg.OIDCIssuer, cfg.OIDCClientIDs)
 	default:
 		return nil, errors.New("unsupported authentication mode")
 	}

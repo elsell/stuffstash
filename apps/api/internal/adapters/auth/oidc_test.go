@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -101,6 +102,34 @@ func TestOIDCAuthenticatorRejectsEmptyIssuerOrSubject(t *testing.T) {
 		if !errors.Is(err, ports.ErrUnauthenticated) {
 			t.Fatalf("expected unauthenticated, got %v", err)
 		}
+	}
+}
+
+func TestOIDCTokenVerifierAllowsConfiguredAudiences(t *testing.T) {
+	verifier := oidcTokenVerifier{allowedClientIDs: normalizeClientIDs([]string{"api-client", "web-client"})}
+
+	if !verifier.allowsAudience([]string{"web-client"}) {
+		t.Fatalf("expected web client audience to be allowed")
+	}
+	if !verifier.allowsAudience([]string{"other-client", "api-client"}) {
+		t.Fatalf("expected api client audience to be allowed")
+	}
+	if verifier.allowsAudience([]string{"other-client"}) {
+		t.Fatalf("expected unknown audience to be rejected")
+	}
+}
+
+func TestOIDCTokenVerifierRejectsEmptyClientIDSet(t *testing.T) {
+	if _, err := NewOIDCAuthenticatorFromIssuerForClientIDs(context.Background(), "://invalid", nil); err == nil {
+		t.Fatalf("expected invalid provider or empty client IDs to fail")
+	}
+
+	verifier := oidcTokenVerifier{
+		verifier:         oidc.NewVerifier("https://issuer.example", nil, &oidc.Config{SkipClientIDCheck: true}),
+		allowedClientIDs: normalizeClientIDs(nil),
+	}
+	if verifier.allowsAudience([]string{"api-client"}) {
+		t.Fatalf("expected empty audience allow-list to reject token audiences")
 	}
 }
 
