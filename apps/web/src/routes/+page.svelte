@@ -12,6 +12,8 @@
   import InventoryAssetFlow from '$lib/components/InventoryAssetFlow.svelte';
   import SessionPanel from '$lib/components/SessionPanel.svelte';
   import SignInPanel from '$lib/components/SignInPanel.svelte';
+  import * as Alert from '$lib/components/ui/alert/index.js';
+  import * as Card from '$lib/components/ui/card/index.js';
   import { getStoredSession, signOut, startSignIn, type AuthSession } from '$lib/auth';
   import { loadRuntimeConfig, type RuntimeConfig } from '$lib/runtimeConfig';
 
@@ -210,9 +212,11 @@
   <AppHeader {session} onSignOut={signOutAndReset} />
 
   {#if loading}
-    <section class="panel">
-      <p class="muted">Loading…</p>
-    </section>
+    <Card.Root>
+      <Card.Content>
+        <p class="muted">Loading...</p>
+      </Card.Content>
+    </Card.Root>
   {:else if !session}
     <SignInPanel onSignIn={signIn} />
   {:else}
@@ -249,9 +253,13 @@
   {/if}
 
   {#if message}
-    <p class="toast success">{message}</p>
+    <Alert.Root class="toast" variant="default">
+      <Alert.Description>{message}</Alert.Description>
+    </Alert.Root>
   {/if}
   {#if error}
-    <p class="toast danger">{error}</p>
+    <Alert.Root class="toast" variant="destructive">
+      <Alert.Description>{error}</Alert.Description>
+    </Alert.Root>
   {/if}
 </main>

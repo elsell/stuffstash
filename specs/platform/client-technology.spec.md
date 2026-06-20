@@ -45,7 +45,16 @@ For the SvelteKit app, this means:
 - Prefer shadcn primitives for common controls such as buttons, inputs, dialogs, tabs, menus, badges, tables, toasts, and form controls once the library is introduced.
 - Custom UI remains appropriate for product-specific surfaces such as the conversational command affordance, asset photo treatment, action previews, and inventory-specific empty states.
 
-The current hand-written tracer-bullet components may remain temporarily, but broader web UI work should introduce the shadcn component foundation before building many more screens.
+The current hand-written tracer-bullet product components may remain only when they represent product-specific composition, not reusable UI primitives. Generic controls such as buttons, inputs, text areas, selects, tabs, badges, and panel/card surfaces must use the shadcn-style primitives after the foundation exists.
+
+The first shadcn migration must:
+
+- Add the pinned Svelte-compatible shadcn CLI and dependency set to the tooling spec before use.
+- Create the local component foundation under `apps/web/src/lib/components/ui/`.
+- Add the standard `cn` utility under `apps/web/src/lib/utils.ts`.
+- Refactor the existing tracer-bullet UI away from hand-written generic primitive styling.
+- Keep custom product components only where they group domain behavior or route state, such as session status, sign-in flow, and inventory/asset workflow composition.
+- Add and maintain a local shadcn foundation check that verifies required generated primitives, exact dependency pins, expected `components.json` settings, and absence of raw generic primitives outside `components/ui/`.
 
 ## Requirements
 
@@ -94,6 +103,7 @@ The exact monorepo layout remains open, but it must support these logical areas:
 
 - Client setup instructions must be documented once the client projects exist.
 - The web app must have build, test, lint, and performance checks before user-facing web features are merged.
+- The web app must run the local shadcn foundation check after the shadcn component foundation is introduced.
 - The mobile app must have build, test, lint, and platform smoke checks before user-facing mobile features are merged.
 - Generated API client code must be reproducible from pinned tools and the checked-in OpenAPI contract.
 - Tests must verify DTO-to-domain mapping at client adapter boundaries.

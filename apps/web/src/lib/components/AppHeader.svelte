@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Button } from '$lib/components/ui/button/index.js';
   import type { AuthSession } from '$lib/auth';
 
   export let session: AuthSession | null;
@@ -16,6 +17,6 @@
     </div>
   </div>
   {#if session}
-    <button class="secondary" type="button" onclick={onSignOut}>Sign out</button>
+    <Button variant="outline" type="button" onclick={onSignOut}>Sign out</Button>
   {/if}
 </header>

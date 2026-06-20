@@ -149,7 +149,11 @@ The first web UI must follow `specs/platform/brand-guidelines.spec.md`.
 
 The web UI component foundation must follow `specs/platform/client-technology.spec.md`.
 
-The initial tracer bullet may use hand-written markup and CSS while the surface is small. Before adding substantial sharing, custom fields, media, search, or conversational screens, introduce the Svelte-compatible shadcn component foundation and migrate common primitives such as buttons, inputs, tabs, dialogs, badges, forms, and toasts toward it.
+The initial tracer bullet may keep product-specific composition components, but generic UI primitives must move to the Svelte-compatible shadcn component foundation before adding substantial sharing, custom fields, media, search, or conversational screens.
+
+The first shadcn refactor must replace hand-written generic buttons, inputs, text areas, selects, tabs, badges, and panel/card surfaces in the existing web tracer bullet. Custom components are allowed only when they express product-specific composition or domain workflow, not because a generic shadcn primitive was inconvenient.
+
+The shadcn foundation must be guarded by the web package's local shadcn foundation check so future changes cannot silently remove generated primitives, loosen dependency pins, change the component registry/style settings, or reintroduce raw generic primitives outside `components/ui/`.
 
 The tracer bullet should:
 
@@ -182,6 +186,7 @@ Before the slice is considered complete:
 
 - `make web-build` must pass.
 - `make web-test` must pass.
+- `pnpm --dir apps/web check:shadcn` must pass after the shadcn foundation exists.
 - `make docs-build` must pass.
 - Existing Go tests and structural hooks must still pass.
 
