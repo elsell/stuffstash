@@ -2,6 +2,9 @@
 .codex
 .cache
 docs/node_modules
+**/node_modules
+**/.svelte-kit
+apps/web/build
 tmp
 dist
 coverage

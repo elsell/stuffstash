@@ -38,6 +38,14 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - Generated OpenAPI types or client code must be used for the API adapter boundary as soon as the web package exists.
 - Generated DTOs must not become frontend domain models.
 - The web app must move toward shadcn-style reusable components through the Svelte-compatible shadcn implementation before broad UI expansion.
+- The production-style Kubernetes deployment must serve the web app as its own static container, not from the Go API.
+- The production-style Kubernetes deployment must use separate hostnames for browser UI and API traffic.
+- The local-cluster production-style UI hostname is `stuffstash.jsksell.com`.
+- The local-cluster production-style API hostname is `api.stuffstash.jsksell.com`.
+- The production-style web static runtime must use a pinned Red Hat hardened or UBI nginx image when available.
+- The web runtime container must run without root privileges, with a read-only root filesystem, dropped Linux capabilities, and a runtime-mounted `config.json`.
+- Static web responses must include conservative browser security headers, including content type sniffing protection, frame denial, a restrictive referrer policy, a restrictive permissions policy, and a content security policy that only permits the configured API and OIDC issuer origins.
+- The web image must be built and published separately from the API image and must receive the same provenance, signature, and registry attestation treatment as the API image.
 
 ## Local OIDC Shape
 
@@ -70,6 +78,17 @@ The first runtime config shape is:
 ```
 
 The runtime config may be served as a static file by the web app in local development. It must not be compiled into frontend source code as the only configuration mechanism.
+
+For the local-cluster production-style deployment, the runtime configuration is mounted over the static image's default `config.json` at runtime:
+
+```json
+{
+  "apiBaseUrl": "https://api.stuffstash.jsksell.com",
+  "oidcIssuer": "https://stuffstash.jsksell.com/dex",
+  "oidcClientId": "stuffstash-dev",
+  "oidcRedirectUri": "https://stuffstash.jsksell.com/callback"
+}
+```
 
 ## API Boundary
 

@@ -7,10 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  packages: write
-  id-token: write
-  attestations: write
+  contents: read
 
 concurrency:
   group: release-main
@@ -22,9 +19,17 @@ env:
   PNPM_VERSION: "11.0.7"
 
 jobs:
-  release:
-    name: Plan, build, attest, and release
+  validate:
+    name: Validate release inputs
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      release_required: ${{ steps.plan.outputs.release_required }}
+      previous_tag: ${{ steps.plan.outputs.previous_tag }}
+      next_version: ${{ steps.plan.outputs.next_version }}
+      next_tag: ${{ steps.plan.outputs.next_tag }}
+      bump: ${{ steps.plan.outputs.bump }}
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
@@ -35,65 +40,76 @@ jobs:
         id: plan
         run: scripts/plan-release.sh --github-output
 
-      - name: Report no release
-        if: steps.plan.outputs.release_required != 'true'
-        run: echo "No release-worthy Conventional Commits since ${{ steps.plan.outputs.previous_tag }}."
-
       - name: Setup Go
-        if: steps.plan.outputs.release_required == 'true'
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Setup Node
-        if: steps.plan.outputs.release_required == 'true'
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Enable pinned pnpm
-        if: steps.plan.outputs.release_required == 'true'
         run: |
           corepack enable
           corepack prepare pnpm@${PNPM_VERSION} --activate
 
       - name: Check dependency age
-        if: steps.plan.outputs.release_required == 'true'
         run: make dependency-age-check
 
       - name: Test release scripts
-        if: steps.plan.outputs.release_required == 'true'
         run: make scripts-test
 
       - name: Test API
-        if: steps.plan.outputs.release_required == 'true'
         run: make test
 
       - name: Install web dependencies
-        if: steps.plan.outputs.release_required == 'true'
         run: make web-install
 
       - name: Test web and API client
-        if: steps.plan.outputs.release_required == 'true'
         run: make web-test web-check api-client-test api-client-check
 
+      - name: Report no release
+        if: steps.plan.outputs.release_required != 'true'
+        run: echo "No release-worthy Conventional Commits since ${{ steps.plan.outputs.previous_tag }}."
+
+  publish:
+    name: Publish release images and attestations
+    needs: validate
+    if: needs.validate.outputs.release_required == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+
+      - name: Refuse existing release tag
+        run: |
+          if git rev-parse -q --verify "refs/tags/${{ needs.validate.outputs.next_tag }}" >/dev/null; then
+            echo "Release tag ${{ needs.validate.outputs.next_tag }} already exists." >&2
+            exit 1
+          fi
+
       - name: Setup Docker Buildx
-        if: steps.plan.outputs.release_required == 'true'
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
 
       - name: Log in to GHCR
-        if: steps.plan.outputs.release_required == 'true'
         run: echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Build and push image
-        if: steps.plan.outputs.release_required == 'true'
-        id: image
+      - name: Build and push API image by commit
+        id: api_image
         run: |
           owner="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
           image="ghcr.io/${owner}/stuffstash"
-          tag="${{ steps.plan.outputs.next_tag }}"
           sha_tag="sha-${GITHUB_SHA}"
 
           docker buildx build \
@@ -102,16 +118,15 @@ jobs:
             --sbom=true \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --label "org.opencontainers.image.version=${tag}" \
-            --tag "${image}:${tag}" \
+            --label "org.opencontainers.image.version=${{ needs.validate.outputs.next_tag }}" \
             --tag "${image}:${sha_tag}" \
-            --metadata-file image-metadata.json \
+            --metadata-file api-image-metadata.json \
             .
 
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json
 
-          with open("image-metadata.json", encoding="utf-8") as handle:
+          with open("api-image-metadata.json", encoding="utf-8") as handle:
               metadata = json.load(handle)
           digest = metadata.get("containerimage.digest")
           if not digest:
@@ -122,44 +137,86 @@ jobs:
           PY
 
           printf 'image=%s\n' "${image}" >> "$GITHUB_OUTPUT"
-          printf 'image_ref=%s@%s\n' "${image}" "$(python3 -c 'import json; m=json.load(open("image-metadata.json")); print(m.get("containerimage.digest") or m.get("containerimage.descriptor", {}).get("digest"))')" >> "$GITHUB_OUTPUT"
+          printf 'image_ref=%s@%s\n' "${image}" "$(python3 -c 'import json; m=json.load(open("api-image-metadata.json")); print(m.get("containerimage.digest") or m.get("containerimage.descriptor", {}).get("digest"))')" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push web image by commit
+        id: web_image
+        run: |
+          owner="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/${owner}/stuffstash-web"
+          sha_tag="sha-${GITHUB_SHA}"
+
+          docker buildx build \
+            --file Dockerfile.web \
+            --push \
+            --provenance=mode=max \
+            --sbom=true \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${{ needs.validate.outputs.next_tag }}" \
+            --tag "${image}:${sha_tag}" \
+            --metadata-file web-image-metadata.json \
+            .
+
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+
+          with open("web-image-metadata.json", encoding="utf-8") as handle:
+              metadata = json.load(handle)
+          digest = metadata.get("containerimage.digest")
+          if not digest:
+              digest = metadata.get("containerimage.descriptor", {}).get("digest")
+          if not digest:
+              raise SystemExit("buildx metadata did not include container image digest")
+          print(f"digest={digest}")
+          PY
+
+          printf 'image=%s\n' "${image}" >> "$GITHUB_OUTPUT"
+          printf 'image_ref=%s@%s\n' "${image}" "$(python3 -c 'import json; m=json.load(open("web-image-metadata.json")); print(m.get("containerimage.digest") or m.get("containerimage.descriptor", {}).get("digest"))')" >> "$GITHUB_OUTPUT"
 
       - name: Install cosign
-        if: steps.plan.outputs.release_required == 'true'
         uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22
 
-      - name: Sign image
-        if: steps.plan.outputs.release_required == 'true'
-        run: cosign sign --yes "${{ steps.image.outputs.image_ref }}"
+      - name: Sign images
+        run: |
+          cosign sign --yes "${{ steps.api_image.outputs.image_ref }}"
+          cosign sign --yes "${{ steps.web_image.outputs.image_ref }}"
 
-      - name: Verify image signature
-        if: steps.plan.outputs.release_required == 'true'
+      - name: Verify image signatures
         run: |
           cosign verify \
             --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml@refs/heads/main$" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-            "${{ steps.image.outputs.image_ref }}"
+            "${{ steps.api_image.outputs.image_ref }}"
+          cosign verify \
+            --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml@refs/heads/main$" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${{ steps.web_image.outputs.image_ref }}"
 
-      - name: Attest image provenance
-        if: steps.plan.outputs.release_required == 'true'
+      - name: Attest API image provenance
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661
         with:
-          subject-name: ${{ steps.image.outputs.image }}
-          subject-digest: ${{ steps.image.outputs.digest }}
+          subject-name: ${{ steps.api_image.outputs.image }}
+          subject-digest: ${{ steps.api_image.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest web image provenance
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661
+        with:
+          subject-name: ${{ steps.web_image.outputs.image }}
+          subject-digest: ${{ steps.web_image.outputs.digest }}
           push-to-registry: true
 
       - name: Create release tag
-        if: steps.plan.outputs.release_required == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${{ steps.plan.outputs.next_tag }}" "${GITHUB_SHA}"
-          git push origin "${{ steps.plan.outputs.next_tag }}"
+          git tag "${{ needs.validate.outputs.next_tag }}" "${GITHUB_SHA}"
+          git push origin "${{ needs.validate.outputs.next_tag }}"
 
       - name: Create GitHub release
-        if: steps.plan.outputs.release_required == 'true'
         run: |
-          previous="${{ steps.plan.outputs.previous_tag }}"
+          previous="${{ needs.validate.outputs.previous_tag }}"
           if [ "$previous" = "none" ]; then
             range="${GITHUB_SHA}"
           else
@@ -167,15 +224,17 @@ jobs:
           fi
 
           {
-            printf 'Container image: `%s`\n\n' "${{ steps.image.outputs.image_ref }}"
-            printf 'Digest: `%s`\n\n' "${{ steps.image.outputs.digest }}"
+            printf 'API image: `%s`\n\n' "${{ steps.api_image.outputs.image_ref }}"
+            printf 'API digest: `%s`\n\n' "${{ steps.api_image.outputs.digest }}"
+            printf 'Web image: `%s`\n\n' "${{ steps.web_image.outputs.image_ref }}"
+            printf 'Web digest: `%s`\n\n' "${{ steps.web_image.outputs.digest }}"
             printf 'Changes:\n'
             git log --format='- %s (%h)' "$range"
           } > release-notes.md
 
-          gh release create "${{ steps.plan.outputs.next_tag }}" \
+          gh release create "${{ needs.validate.outputs.next_tag }}" \
             --target "${GITHUB_SHA}" \
-            --title "${{ steps.plan.outputs.next_tag }}" \
+            --title "${{ needs.validate.outputs.next_tag }}" \
             --notes-file release-notes.md
         env:
           GH_TOKEN: ${{ github.token }}

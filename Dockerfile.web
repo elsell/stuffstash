@@ -1,0 +1,23 @@
+ARG NODE_BUILDER_IMAGE=registry.access.redhat.com/ubi9/nodejs-24@sha256:27dbb10d06365cc4627e4abb589780b3603feaac2577a231f95c193abfa0c04b
+ARG WEB_RUNTIME_IMAGE=registry.access.redhat.com/ubi9/nginx-124@sha256:da5615d3613867c87aefc2cfdfcc8bb5e3c5e1f778d91e26ef72ae5a7824e386
+ARG PNPM_VERSION=11.0.7
+
+FROM ${NODE_BUILDER_IMAGE} AS builder
+
+USER 0
+WORKDIR /src
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/web/package.json apps/web/package.json
+COPY packages/api-client/package.json packages/api-client/package.json
+RUN npm install --global --ignore-scripts "pnpm@${PNPM_VERSION}"
+RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY packages/api-client packages/api-client
+COPY apps/web apps/web
+RUN pnpm --dir apps/web build
+
+FROM ${WEB_RUNTIME_IMAGE}
+
+COPY deploy/web/nginx.conf /opt/app-root/etc/nginx.default.d/stuffstash.conf
+COPY --from=builder /src/apps/web/build /opt/app-root/src
+EXPOSE 8080
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

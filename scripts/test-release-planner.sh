@@ -60,4 +60,14 @@ assert_output_contains "$output" "release_required=false"
 assert_output_contains "$output" "next_tag=v1.0.0"
 assert_output_contains "$output" "bump=none"
 
+git checkout -b side-release >/dev/null
+commit "fix: unrelated side branch hotfix"
+git tag v9.0.0
+git checkout - >/dev/null
+commit "fix: mainline hotfix"
+output="$("$script_path")"
+assert_output_contains "$output" "previous_tag=v1.0.0"
+assert_output_contains "$output" "next_tag=v1.0.1"
+assert_output_contains "$output" "bump=patch"
+
 echo "release planner tests passed"

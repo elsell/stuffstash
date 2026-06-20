@@ -30,7 +30,7 @@ def parse_time(value):
 def fetch_json(url):
     if shutil.which("curl"):
         result = subprocess.run(
-            ["curl", "-fsSL", "--proto", "=https", "--tlsv1.2", url],
+            ["curl", "-fsSL", "--proto", "=https", "--tlsv1.2", "--retry", "3", "--retry-all-errors", "--retry-delay", "1", url],
             check=True,
             text=True,
             stdout=subprocess.PIPE,
@@ -156,7 +156,7 @@ def main():
             except (RuntimeError, urllib.error.URLError, TimeoutError, subprocess.CalledProcessError) as exc:
                 return f"npm {name}@{version} from {source} metadata check failed: {exc}"
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
             for failure in executor.map(check_npm, sorted(npm_versions)):
                 if failure:
                     failures.append(failure)

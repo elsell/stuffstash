@@ -1,4 +1,4 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-client-generate api-client-check api-client-test api-client-check-generated
+.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docker-build-web dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -91,6 +91,9 @@ compose-down:
 
 docker-build:
 	docker build -t stuff-stash:local .
+
+docker-build-web:
+	docker build -f Dockerfile.web -t stuff-stash-web:local .
 
 dependency-age-check:
 	python3 scripts/check-dependency-age.py

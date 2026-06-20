@@ -1,6 +1,7 @@
 packages:
   - apps/web
   - packages/api-client
+ignoreScripts: true
 overrides:
   '@csstools/css-color-parser': '4.1.1'
   '@napi-rs/wasm-runtime': '1.1.4'
