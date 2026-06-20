@@ -15,12 +15,13 @@ import (
 
 func (s Store) SaveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
 	model := customAssetTypeModel{
-		ID:          assetType.ID.String(),
-		TenantID:    assetType.TenantID.String(),
-		Scope:       assetType.Scope.String(),
-		TypeKey:     assetType.Key.String(),
-		DisplayName: assetType.DisplayName.String(),
-		Description: assetType.Description.String(),
+		ID:             assetType.ID.String(),
+		TenantID:       assetType.TenantID.String(),
+		Scope:          assetType.Scope.String(),
+		TypeKey:        assetType.Key.String(),
+		DisplayName:    assetType.DisplayName.String(),
+		Description:    assetType.Description.String(),
+		LifecycleState: assetType.LifecycleState.String(),
 	}
 	if assetType.InventoryID.String() != "" {
 		inventoryID := assetType.InventoryID.String()
@@ -56,8 +57,9 @@ func (s Store) UpdateCustomAssetType(ctx context.Context, assetType customfield.
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing customAssetTypeModel
 		err := tx.Where(&customAssetTypeModel{
-			ID:       assetType.ID.String(),
-			TenantID: assetType.TenantID.String(),
+			ID:             assetType.ID.String(),
+			TenantID:       assetType.TenantID.String(),
+			LifecycleState: customfield.AssetTypeLifecycleActive.String(),
 		}).First(&existing).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ports.ErrForbidden
@@ -80,10 +82,39 @@ func (s Store) UpdateCustomAssetType(ctx context.Context, assetType customfield.
 	})
 }
 
+func (s Store) ArchiveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	if assetType.LifecycleState != customfield.AssetTypeLifecycleArchived {
+		return ports.ErrForbidden
+	}
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing customAssetTypeModel
+		err := tx.Where(&customAssetTypeModel{
+			ID:             assetType.ID.String(),
+			TenantID:       assetType.TenantID.String(),
+			LifecycleState: customfield.AssetTypeLifecycleActive.String(),
+		}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Scope != assetType.Scope.String() || existing.TypeKey != assetType.Key.String() || stringFromPtr(existing.InventoryID) != assetType.InventoryID.String() {
+			return ports.ErrForbidden
+		}
+
+		if err := tx.Model(&existing).Update("lifecycle_state", assetType.LifecycleState.String()).Error; err != nil {
+			return customFieldDefinitionWriteError(err)
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
 func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
 	query := s.db.WithContext(ctx).Where(&customAssetTypeModel{
-		ID:       assetTypeID.String(),
-		TenantID: tenantID.String(),
+		ID:             assetTypeID.String(),
+		TenantID:       tenantID.String(),
+		LifecycleState: customfield.AssetTypeLifecycleActive.String(),
 	})
 	if inventoryID.String() == "" {
 		query = query.Where(&customAssetTypeModel{Scope: customfield.ScopeTenant.String()})
@@ -110,15 +141,16 @@ func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inve
 
 func (s Store) ListTenantCustomAssetTypes(ctx context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	query := s.db.WithContext(ctx).Where(&customAssetTypeModel{
-		TenantID: tenantID.String(),
-		Scope:    customfield.ScopeTenant.String(),
+		TenantID:       tenantID.String(),
+		Scope:          customfield.ScopeTenant.String(),
+		LifecycleState: customfield.AssetTypeLifecycleActive.String(),
 	})
 	return s.listCustomAssetTypes(query, page)
 }
 
 func (s Store) ListInventoryCustomAssetTypes(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	query := s.db.WithContext(ctx).
-		Where(&customAssetTypeModel{TenantID: tenantID.String()}).
+		Where(&customAssetTypeModel{TenantID: tenantID.String(), LifecycleState: customfield.AssetTypeLifecycleActive.String()}).
 		Where(clause.Or(
 			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
 			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
@@ -132,7 +164,7 @@ func (s Store) CustomAssetTypesByID(ctx context.Context, tenantID tenant.ID, inv
 		return nil, nil
 	}
 	query := s.db.WithContext(ctx).
-		Where(&customAssetTypeModel{TenantID: tenantID.String()}).
+		Where(&customAssetTypeModel{TenantID: tenantID.String(), LifecycleState: customfield.AssetTypeLifecycleActive.String()}).
 		Where(clause.IN{Column: clause.Column{Name: "id"}, Values: stringValues(rawIDs)}).
 		Where(clause.Or(
 			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},

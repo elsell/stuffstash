@@ -23,6 +23,7 @@ const (
 	EventInventoryInvitationRevoked      EventName = "inventory_invitation.revoked"
 	EventCustomAssetTypeCreated          EventName = "custom_asset_type.created"
 	EventCustomAssetTypeUpdated          EventName = "custom_asset_type.updated"
+	EventCustomAssetTypeArchived         EventName = "custom_asset_type.archived"
 	EventCustomAssetTypesListed          EventName = "custom_asset_type.listed"
 	EventCustomFieldDefinitionCreated    EventName = "custom_field_definition.created"
 	EventCustomFieldDefinitionUpdated    EventName = "custom_field_definition.updated"

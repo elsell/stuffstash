@@ -129,7 +129,7 @@ Revoking direct inventory access removes the inventory relationship. Tenant view
 - Future email, chat, or app notification delivery must be adapters around the same invitation contract.
 - Must not create SpiceDB relationships or direct access grants before acceptance.
 - Must produce audit history.
-- May be idempotent for the same pending tenant, inventory, email, and relationship by returning the existing pending invitation with refreshed one-time invite link material.
+- Must reject duplicate pending invitations for the same tenant, inventory, email, and relationship instead of silently rotating acceptance tokens.
 
 `POST /access-invitations/{invitationId}/accept`:
 

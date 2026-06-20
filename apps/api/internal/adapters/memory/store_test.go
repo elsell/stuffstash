@@ -8,6 +8,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -66,6 +67,30 @@ func TestStoreRejectsDuplicateAuditRecordIDsInsideAssetUpdateBatch(t *testing.T)
 	}
 }
 
+func TestStoreRejectsArchiveCustomAssetTypeWithoutArchivedLifecycle(t *testing.T) {
+	ctx := context.Background()
+	store := NewStore()
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	saveMemoryTenant(t, ctx, store, tenantID)
+	saveMemoryInventory(t, ctx, store, tenantID, inventoryID)
+
+	assetType := memoryCustomAssetType(t, "type-one", tenantID, inventoryID)
+	if err := store.SaveCustomAssetType(ctx, assetType, memoryAuditRecord(t, "audit-create", tenantID)); err != nil {
+		t.Fatalf("save custom asset type: %v", err)
+	}
+	if err := store.ArchiveCustomAssetType(ctx, assetType, memoryAuditRecord(t, "audit-archive", tenantID)); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected active lifecycle archive rejection, got %v", err)
+	}
+	archived, ok := assetType.Archive()
+	if !ok {
+		t.Fatalf("expected archive transition")
+	}
+	if err := store.ArchiveCustomAssetType(ctx, archived, memoryAuditRecord(t, "audit-archive", tenantID)); err != nil {
+		t.Fatalf("archive custom asset type: %v", err)
+	}
+}
+
 func saveMemoryTenant(t *testing.T, ctx context.Context, store *Store, tenantID tenant.ID) {
 	t.Helper()
 
@@ -92,6 +117,24 @@ func saveMemoryInventory(t *testing.T, ctx context.Context, store *Store, tenant
 	}); err != nil {
 		t.Fatalf("save inventory: %v", err)
 	}
+}
+
+func memoryCustomAssetType(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID) customfield.AssetType {
+	t.Helper()
+
+	assetType, ok := customfield.NewAssetType(
+		customfield.AssetTypeID(id),
+		customfield.TenantID(tenantID.String()),
+		customfield.InventoryID(inventoryID.String()),
+		customfield.ScopeInventory,
+		customfield.Key("medicine"),
+		customfield.DisplayName("Medicine"),
+		customfield.Description(""),
+	)
+	if !ok {
+		t.Fatalf("expected valid custom asset type")
+	}
+	return assetType
 }
 
 func memoryAsset(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID) asset.Asset {

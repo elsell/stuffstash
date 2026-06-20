@@ -87,6 +87,27 @@ func TestDefinitionRequiresEnumOptionsOnlyForEnumFields(t *testing.T) {
 	}
 }
 
+func TestCustomAssetTypeArchiveLifecycle(t *testing.T) {
+	assetType, ok := NewAssetType("type-one", "tenant-one", "inventory-one", ScopeInventory, "medicine", "Medicine", "")
+	if !ok {
+		t.Fatalf("expected valid custom asset type")
+	}
+	if assetType.LifecycleState != AssetTypeLifecycleActive || !assetType.IsActive() {
+		t.Fatalf("expected active lifecycle state, got %+v", assetType)
+	}
+
+	archived, ok := assetType.Archive()
+	if !ok {
+		t.Fatalf("expected archive to succeed")
+	}
+	if archived.LifecycleState != AssetTypeLifecycleArchived || archived.IsActive() {
+		t.Fatalf("expected archived lifecycle state, got %+v", archived)
+	}
+	if _, ok := archived.Archive(); ok {
+		t.Fatalf("expected archiving an archived custom asset type to fail")
+	}
+}
+
 func definition(t *testing.T, keyValue string, fieldType FieldType, rawOptions []string) Definition {
 	t.Helper()
 

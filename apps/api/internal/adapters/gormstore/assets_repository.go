@@ -53,8 +53,9 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord au
 		if item.CustomAssetTypeID.String() != "" {
 			var assetType customAssetTypeModel
 			err = tx.Where(&customAssetTypeModel{
-				ID:       item.CustomAssetTypeID.String(),
-				TenantID: item.TenantID.String(),
+				ID:             item.CustomAssetTypeID.String(),
+				TenantID:       item.TenantID.String(),
+				LifecycleState: customfield.AssetTypeLifecycleActive.String(),
 			}).Where(clause.Or(
 				clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
 				clause.Eq{Column: "inventory_id", Value: item.InventoryID.String()},

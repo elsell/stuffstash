@@ -169,6 +169,16 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/cus
   -d '{"displayName":"Medicine and Vitamins"}'
 ```
 
+Archive a custom asset type when it should no longer be used for new assets:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-asset-types/<medicine-type-id>/archive \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
+Archived custom asset types are hidden from normal lists and blocked for new assets or new field targets. Existing assets and field definitions keep their references.
+
 You can also rename a custom field without changing its key, type, or target. Use the ID returned when you created the field definition.
 
 ```sh

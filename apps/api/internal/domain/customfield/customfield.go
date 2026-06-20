@@ -170,16 +170,43 @@ func (a Applicability) String() string {
 }
 
 type AssetType struct {
-	ID          AssetTypeID
-	TenantID    TenantID
-	InventoryID InventoryID
-	Scope       Scope
-	Key         Key
-	DisplayName DisplayName
-	Description Description
+	ID             AssetTypeID
+	TenantID       TenantID
+	InventoryID    InventoryID
+	Scope          Scope
+	Key            Key
+	DisplayName    DisplayName
+	Description    Description
+	LifecycleState AssetTypeLifecycleState
 }
 
 func NewAssetType(id AssetTypeID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, description Description) (AssetType, bool) {
+	return NewAssetTypeWithLifecycle(id, tenantID, inventoryID, scope, key, displayName, description, AssetTypeLifecycleActive)
+}
+
+type AssetTypeLifecycleState string
+
+const (
+	AssetTypeLifecycleActive   AssetTypeLifecycleState = "active"
+	AssetTypeLifecycleArchived AssetTypeLifecycleState = "archived"
+)
+
+func NewAssetTypeLifecycleState(value string) (AssetTypeLifecycleState, bool) {
+	switch AssetTypeLifecycleState(strings.TrimSpace(value)) {
+	case AssetTypeLifecycleActive:
+		return AssetTypeLifecycleActive, true
+	case AssetTypeLifecycleArchived:
+		return AssetTypeLifecycleArchived, true
+	default:
+		return "", false
+	}
+}
+
+func (s AssetTypeLifecycleState) String() string {
+	return string(s)
+}
+
+func NewAssetTypeWithLifecycle(id AssetTypeID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, description Description, lifecycleState AssetTypeLifecycleState) (AssetType, bool) {
 	switch scope {
 	case ScopeTenant:
 		if inventoryID.String() != "" {
@@ -192,15 +219,31 @@ func NewAssetType(id AssetTypeID, tenantID TenantID, inventoryID InventoryID, sc
 	default:
 		return AssetType{}, false
 	}
+	if _, ok := NewAssetTypeLifecycleState(lifecycleState.String()); !ok {
+		return AssetType{}, false
+	}
 	return AssetType{
-		ID:          id,
-		TenantID:    tenantID,
-		InventoryID: inventoryID,
-		Scope:       scope,
-		Key:         key,
-		DisplayName: displayName,
-		Description: description,
+		ID:             id,
+		TenantID:       tenantID,
+		InventoryID:    inventoryID,
+		Scope:          scope,
+		Key:            key,
+		DisplayName:    displayName,
+		Description:    description,
+		LifecycleState: lifecycleState,
 	}, true
+}
+
+func (t AssetType) Archive() (AssetType, bool) {
+	if t.LifecycleState != AssetTypeLifecycleActive {
+		return AssetType{}, false
+	}
+	t.LifecycleState = AssetTypeLifecycleArchived
+	return t, true
+}
+
+func (t AssetType) IsActive() bool {
+	return t.LifecycleState == AssetTypeLifecycleActive
 }
 
 func (t AssetType) CursorKey() string {

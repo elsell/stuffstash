@@ -53,6 +53,25 @@ type UpdateAssetTypeOutput struct {
 	Body shared.SuccessEnvelope[AssetTypeResponse]
 }
 
+type ArchiveTenantAssetTypeInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	CustomAssetTypeID string `path:"customAssetTypeId" doc:"Custom asset type ID"`
+}
+
+type ArchiveInventoryAssetTypeInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID       string `path:"inventoryId" doc:"Inventory ID"`
+	CustomAssetTypeID string `path:"customAssetTypeId" doc:"Custom asset type ID"`
+}
+
+type ArchiveAssetTypeOutput struct {
+	Body shared.SuccessEnvelope[AssetTypeResponse]
+}
+
 type ListTenantAssetTypesInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
@@ -73,11 +92,12 @@ type ListAssetTypesOutput struct {
 }
 
 type AssetTypeResponse struct {
-	ID          string `json:"id"`
-	TenantID    string `json:"tenantId"`
-	InventoryID string `json:"inventoryId,omitempty"`
-	Scope       string `json:"scope"`
-	Key         string `json:"key"`
-	DisplayName string `json:"displayName"`
-	Description string `json:"description"`
+	ID             string `json:"id"`
+	TenantID       string `json:"tenantId"`
+	InventoryID    string `json:"inventoryId,omitempty"`
+	Scope          string `json:"scope"`
+	Key            string `json:"key"`
+	DisplayName    string `json:"displayName"`
+	Description    string `json:"description"`
+	LifecycleState string `json:"lifecycleState"`
 }

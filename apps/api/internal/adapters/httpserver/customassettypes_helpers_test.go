@@ -6,13 +6,14 @@ import (
 )
 
 type customAssetTypeResponse struct {
-	ID          string `json:"id"`
-	TenantID    string `json:"tenantId"`
-	InventoryID string `json:"inventoryId,omitempty"`
-	Scope       string `json:"scope"`
-	Key         string `json:"key"`
-	DisplayName string `json:"displayName"`
-	Description string `json:"description"`
+	ID             string `json:"id"`
+	TenantID       string `json:"tenantId"`
+	InventoryID    string `json:"inventoryId,omitempty"`
+	Scope          string `json:"scope"`
+	Key            string `json:"key"`
+	DisplayName    string `json:"displayName"`
+	Description    string `json:"description"`
+	LifecycleState string `json:"lifecycleState"`
 }
 
 type customAssetTypeBody struct {

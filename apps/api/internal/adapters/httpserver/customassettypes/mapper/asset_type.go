@@ -7,13 +7,14 @@ import (
 
 func AssetTypeToResponse(assetType customfield.AssetType) dto.AssetTypeResponse {
 	return dto.AssetTypeResponse{
-		ID:          assetType.ID.String(),
-		TenantID:    assetType.TenantID.String(),
-		InventoryID: assetType.InventoryID.String(),
-		Scope:       assetType.Scope.String(),
-		Key:         assetType.Key.String(),
-		DisplayName: assetType.DisplayName.String(),
-		Description: assetType.Description.String(),
+		ID:             assetType.ID.String(),
+		TenantID:       assetType.TenantID.String(),
+		InventoryID:    assetType.InventoryID.String(),
+		Scope:          assetType.Scope.String(),
+		Key:            assetType.Key.String(),
+		DisplayName:    assetType.DisplayName.String(),
+		Description:    assetType.Description.String(),
+		LifecycleState: assetType.LifecycleState.String(),
 	}
 }
 

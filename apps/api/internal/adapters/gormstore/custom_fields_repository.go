@@ -59,6 +59,21 @@ func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customf
 			return customFieldDefinitionWriteError(err)
 		}
 		for _, targetID := range definition.CustomAssetTypeIDs {
+			var target customAssetTypeModel
+			err := tx.Where(&customAssetTypeModel{
+				ID:             targetID.String(),
+				TenantID:       definition.TenantID.String(),
+				LifecycleState: customfield.AssetTypeLifecycleActive.String(),
+			}).Where(clause.Or(
+				clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+				clause.Eq{Column: "inventory_id", Value: definition.InventoryID.String()},
+			)).First(&target).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ports.ErrForbidden
+			}
+			if err != nil {
+				return err
+			}
 			if err := tx.Create(&customFieldDefinitionAssetTypeModel{
 				CustomFieldDefinitionID: definition.ID.String(),
 				CustomAssetTypeID:       targetID.String(),

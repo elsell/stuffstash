@@ -28,7 +28,7 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord aud
 	}
 	if item.CustomAssetTypeID.String() != "" {
 		assetType, ok := s.customAssetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())]
-		if !ok || assetType.TenantID.String() != item.TenantID.String() || (assetType.Scope == customfield.ScopeInventory && assetType.InventoryID.String() != item.InventoryID.String()) {
+		if !ok || !assetType.IsActive() || assetType.TenantID.String() != item.TenantID.String() || (assetType.Scope == customfield.ScopeInventory && assetType.InventoryID.String() != item.InventoryID.String()) {
 			return ports.ErrForbidden
 		}
 	}

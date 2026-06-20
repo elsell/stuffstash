@@ -66,10 +66,11 @@ The goal is to prove a production-shaped path through:
 - Authorized asset search now supports exact and fuzzy lookup across asset title, description, custom fields, custom asset type metadata, and attachment metadata, with tenant scoping, inventory authorization filtering, lifecycle filtering, cursor pagination, generated OpenAPI, adapter tests, and adversarial API tests.
 - Direct inventory access revocation now removes persisted viewer/editor grants, enqueues SpiceDB revoke events through the authorization outbox, records audit history, exposes a no-content REST endpoint, and has adversarial API tests.
 - Inventory invite-link tokens now support pending email-scoped invitations, time-limited one-time acceptance tokens, verified-email acceptance, outbox-backed SpiceDB grant creation, revocation, audit history, and adversarial API tests.
+- Custom asset type archive now preserves existing asset and custom field target references while hiding archived types from normal lists, blocking new assignments, blocking new field targets, recording audit history, and exposing adversarial API coverage.
 
 ## Known Gaps
 
-- Custom asset type delete/archive, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
+- Custom asset type restore/permanent delete, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
 - Undo is not yet implemented for audit history.
 - Custom field definitions cannot yet change schema shape, be deleted, reordered, imported, exported, or managed through conversational flows.
 - Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
@@ -77,9 +78,9 @@ The goal is to prove a production-shaped path through:
 
 ## Next Work
 
-1. Implement custom asset type delete or archive.
-   - Preserve existing asset references safely.
-   - Keep custom field targeting rules consistent.
+1. Specify and implement custom field definition schema evolution.
+   - Decide whether field type, enum options, applicability, and custom asset type targets can change.
+   - Preserve or migrate existing asset custom field values safely.
    - Add adversarial API tests for tenant, inventory, viewer, editor, and cross-tenant behavior.
 
 ## Later Work

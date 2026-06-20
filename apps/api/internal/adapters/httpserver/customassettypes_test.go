@@ -343,3 +343,205 @@ func TestCustomAssetTypeUpdateFlowAndAuthorization(t *testing.T) {
 	}
 	assertSafeError(t, missingAuthenticationUpdate, "authentication_required", "Authentication required.")
 }
+
+func TestCustomAssetTypeArchiveFlowAndAuthorization(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	const otherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Medicine", owner: "inventory-owner"},
+			{id: otherInventoryID, tenantID: otherTenantID, name: "Other", owner: "other-owner"},
+		},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FAZ", "audit-tenant-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB0", "audit-inventory-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB1", "audit-expiration-field",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB2", "audit-typed-asset",
+			"audit-viewer-grant", "viewer-grant-event", "viewer-grant-claim",
+			"audit-editor-grant", "editor-grant-event", "editor-grant-claim",
+			"audit-tenant-type-archive",
+			"audit-inventory-type-archive",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB3",
+		},
+	}))
+
+	createTenantType := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/custom-asset-types", "Bearer dev:tenant-owner", map[string]any{
+		"key":         "medicine",
+		"displayName": "Medicine",
+	})
+	if createTenantType.Code != http.StatusCreated {
+		t.Fatalf("expected tenant type create status %d, got %d with body %s", http.StatusCreated, createTenantType.Code, createTenantType.Body.String())
+	}
+	tenantType := decodeCustomAssetType(t, createTenantType)
+	if tenantType.Data.LifecycleState != "active" {
+		t.Fatalf("expected active tenant type, got %+v", tenantType.Data)
+	}
+
+	createInventoryType := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "supply",
+		"displayName": "Supply",
+	})
+	if createInventoryType.Code != http.StatusCreated {
+		t.Fatalf("expected inventory type create status %d, got %d with body %s", http.StatusCreated, createInventoryType.Code, createInventoryType.Body.String())
+	}
+	inventoryType := decodeCustomAssetType(t, createInventoryType)
+
+	createField := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":                "expires-on",
+		"displayName":        "Expires On",
+		"type":               "date",
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{inventoryType.Data.ID},
+	})
+	if createField.Code != http.StatusCreated {
+		t.Fatalf("expected field create status %d, got %d with body %s", http.StatusCreated, createField.Code, createField.Body.String())
+	}
+
+	createAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:inventory-owner", map[string]any{
+		"kind":              "item",
+		"title":             "Aspirin",
+		"customAssetTypeId": inventoryType.Data.ID,
+		"customFields": map[string]any{
+			"expires-on": "2028-01-01",
+		},
+	})
+	if createAsset.Code != http.StatusCreated {
+		t.Fatalf("expected typed asset create status %d, got %d with body %s", http.StatusCreated, createAsset.Code, createAsset.Body.String())
+	}
+	createdAsset := decodeAsset(t, createAsset)
+
+	grantViewer := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]any{
+		"principalId":  "viewer-user",
+		"relationship": "viewer",
+	})
+	if grantViewer.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, grantViewer.Code, grantViewer.Body.String())
+	}
+	grantEditor := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]any{
+		"principalId":  "editor-user",
+		"relationship": "editor",
+	})
+	if grantEditor.Code != http.StatusCreated {
+		t.Fatalf("expected editor grant status %d, got %d with body %s", http.StatusCreated, grantEditor.Code, grantEditor.Body.String())
+	}
+
+	for _, item := range []struct {
+		name          string
+		authorization string
+	}{
+		{name: "inventory owner", authorization: "Bearer dev:inventory-owner"},
+		{name: "viewer", authorization: "Bearer dev:viewer-user"},
+		{name: "editor", authorization: "Bearer dev:editor-user"},
+		{name: "intruder", authorization: "Bearer dev:intruder"},
+	} {
+		t.Run(item.name+" cannot archive tenant custom asset type", func(t *testing.T) {
+			response := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-asset-types/"+tenantType.Data.ID+"/archive", item.authorization, nil)
+			if response.Code != http.StatusForbidden {
+				t.Fatalf("expected tenant archive status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, "forbidden", "Forbidden.")
+		})
+	}
+
+	for _, item := range []struct {
+		name          string
+		authorization string
+		status        int
+		code          string
+	}{
+		{name: "missing auth", status: http.StatusUnauthorized, code: "authentication_required"},
+		{name: "malformed auth", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required"},
+		{name: "viewer", authorization: "Bearer dev:viewer-user", status: http.StatusForbidden, code: "forbidden"},
+		{name: "editor", authorization: "Bearer dev:editor-user", status: http.StatusForbidden, code: "forbidden"},
+		{name: "intruder", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden"},
+	} {
+		t.Run(item.name+" cannot archive inventory custom asset type", func(t *testing.T) {
+			response := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID+"/archive", item.authorization, nil)
+			if response.Code != item.status {
+				t.Fatalf("expected archive status %d, got %d with body %s", item.status, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, item.code, map[int]string{http.StatusUnauthorized: "Authentication required.", http.StatusForbidden: "Forbidden."}[item.status])
+		})
+	}
+
+	wrongTenantArchive := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/inventories/"+otherInventoryID+"/custom-asset-types/"+inventoryType.Data.ID+"/archive", "Bearer dev:other-owner", nil)
+	if wrongTenantArchive.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong tenant archive status %d, got %d with body %s", http.StatusNotFound, wrongTenantArchive.Code, wrongTenantArchive.Body.String())
+	}
+	assertSafeError(t, wrongTenantArchive, "resource_not_found", "Resource not found.")
+
+	inventoryTypeThroughTenantRoute := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-asset-types/"+inventoryType.Data.ID+"/archive", "Bearer dev:tenant-owner", nil)
+	if inventoryTypeThroughTenantRoute.Code != http.StatusNotFound {
+		t.Fatalf("expected inventory type through tenant route status %d, got %d with body %s", http.StatusNotFound, inventoryTypeThroughTenantRoute.Code, inventoryTypeThroughTenantRoute.Body.String())
+	}
+	assertSafeError(t, inventoryTypeThroughTenantRoute, "resource_not_found", "Resource not found.")
+
+	tenantTypeThroughInventoryRoute := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+tenantType.Data.ID+"/archive", "Bearer dev:inventory-owner", nil)
+	if tenantTypeThroughInventoryRoute.Code != http.StatusNotFound {
+		t.Fatalf("expected tenant type through inventory route status %d, got %d with body %s", http.StatusNotFound, tenantTypeThroughInventoryRoute.Code, tenantTypeThroughInventoryRoute.Body.String())
+	}
+	assertSafeError(t, tenantTypeThroughInventoryRoute, "resource_not_found", "Resource not found.")
+
+	archiveTenantType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/custom-asset-types/"+tenantType.Data.ID+"/archive", "Bearer dev:tenant-owner", nil)
+	if archiveTenantType.Code != http.StatusOK {
+		t.Fatalf("expected tenant type archive status %d, got %d with body %s", http.StatusOK, archiveTenantType.Code, archiveTenantType.Body.String())
+	}
+	archivedTenantType := decodeCustomAssetType(t, archiveTenantType)
+	if archivedTenantType.Data.LifecycleState != "archived" {
+		t.Fatalf("expected archived tenant type, got %+v", archivedTenantType.Data)
+	}
+
+	archiveInventoryType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+inventoryType.Data.ID+"/archive", "Bearer dev:inventory-owner", nil)
+	if archiveInventoryType.Code != http.StatusOK {
+		t.Fatalf("expected inventory type archive status %d, got %d with body %s", http.StatusOK, archiveInventoryType.Code, archiveInventoryType.Body.String())
+	}
+	archivedInventoryType := decodeCustomAssetType(t, archiveInventoryType)
+	if archivedInventoryType.Data.LifecycleState != "archived" {
+		t.Fatalf("expected archived inventory type, got %+v", archivedInventoryType.Data)
+	}
+
+	listTypes := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types?limit=10", "Bearer dev:inventory-owner", nil)
+	if listTypes.Code != http.StatusOK {
+		t.Fatalf("expected type list status %d, got %d with body %s", http.StatusOK, listTypes.Code, listTypes.Body.String())
+	}
+	if listed := decodeCustomAssetTypeList(t, listTypes); len(listed.Data) != 0 {
+		t.Fatalf("expected archived custom asset types hidden from list, got %+v", listed.Data)
+	}
+
+	listAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=10", "Bearer dev:inventory-owner", nil)
+	if listAssets.Code != http.StatusOK {
+		t.Fatalf("expected asset list status %d, got %d with body %s", http.StatusOK, listAssets.Code, listAssets.Body.String())
+	}
+	assetList := decodeAssetList(t, listAssets)
+	if len(assetList.Data) != 1 || assetList.Data[0].ID != createdAsset.Data.ID || assetList.Data[0].CustomAssetTypeID != inventoryType.Data.ID {
+		t.Fatalf("expected existing asset custom asset type reference to remain visible, got %+v", assetList.Data)
+	}
+
+	reuseArchivedType := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:inventory-owner", map[string]any{
+		"kind":              "item",
+		"title":             "Ibuprofen",
+		"customAssetTypeId": inventoryType.Data.ID,
+	})
+	if reuseArchivedType.Code != http.StatusNotFound {
+		t.Fatalf("expected archived type asset create status %d, got %d with body %s", http.StatusNotFound, reuseArchivedType.Code, reuseArchivedType.Body.String())
+	}
+	assertSafeError(t, reuseArchivedType, "resource_not_found", "Resource not found.")
+
+	targetArchivedType := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":                "dose",
+		"displayName":        "Dose",
+		"type":               "text",
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{inventoryType.Data.ID},
+	})
+	if targetArchivedType.Code != http.StatusNotFound {
+		t.Fatalf("expected archived type field target status %d, got %d with body %s", http.StatusNotFound, targetArchivedType.Code, targetArchivedType.Body.String())
+	}
+	assertSafeError(t, targetArchivedType, "resource_not_found", "Resource not found.")
+}

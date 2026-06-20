@@ -20,7 +20,7 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 	}
 	for _, targetID := range definition.CustomAssetTypeIDs {
 		target, ok := s.customAssetTypes[targetID]
-		if !ok || !customFieldTargetInScope(definition, target) {
+		if !ok || !target.IsActive() || !customFieldTargetInScope(definition, target) {
 			return ports.ErrForbidden
 		}
 	}

@@ -49,6 +49,7 @@ const (
 	ActionInventoryInvitationRevoked   Action = "inventory_invitation.revoked"
 	ActionCustomAssetTypeCreated       Action = "custom_asset_type.created"
 	ActionCustomAssetTypeUpdated       Action = "custom_asset_type.updated"
+	ActionCustomAssetTypeArchived      Action = "custom_asset_type.archived"
 	ActionCustomFieldDefinitionCreated Action = "custom_field_definition.created"
 	ActionCustomFieldDefinitionUpdated Action = "custom_field_definition.updated"
 	ActionAssetCreated                 Action = "asset.created"
@@ -71,6 +72,7 @@ func NewAction(value string) (Action, bool) {
 		ActionInventoryInvitationRevoked,
 		ActionCustomAssetTypeCreated,
 		ActionCustomAssetTypeUpdated,
+		ActionCustomAssetTypeArchived,
 		ActionCustomFieldDefinitionCreated,
 		ActionCustomFieldDefinitionUpdated,
 		ActionAssetCreated,

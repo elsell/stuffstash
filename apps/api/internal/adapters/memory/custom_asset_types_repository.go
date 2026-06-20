@@ -38,7 +38,29 @@ func (s *Store) UpdateCustomAssetType(_ context.Context, assetType customfield.A
 	if !exists || existing.TenantID != assetType.TenantID || existing.InventoryID != assetType.InventoryID || existing.Scope != assetType.Scope {
 		return ports.ErrForbidden
 	}
-	if existing.Key != assetType.Key {
+	if existing.Key != assetType.Key || !existing.IsActive() {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.customAssetTypes[assetType.ID] = assetType
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) ArchiveCustomAssetType(_ context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	if assetType.LifecycleState != customfield.AssetTypeLifecycleArchived {
+		return ports.ErrForbidden
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, exists := s.customAssetTypes[assetType.ID]
+	if !exists || existing.TenantID != assetType.TenantID || existing.InventoryID != assetType.InventoryID || existing.Scope != assetType.Scope {
+		return ports.ErrForbidden
+	}
+	if existing.Key != assetType.Key || !existing.IsActive() {
 		return ports.ErrForbidden
 	}
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
@@ -54,7 +76,7 @@ func (s *Store) CustomAssetTypeByID(_ context.Context, tenantID tenant.ID, inven
 	defer s.mu.RUnlock()
 
 	assetType, ok := s.customAssetTypes[assetTypeID]
-	if !ok || assetType.TenantID.String() != tenantID.String() {
+	if !ok || assetType.TenantID.String() != tenantID.String() || !assetType.IsActive() {
 		return customfield.AssetType{}, false, nil
 	}
 	if inventoryID.String() == "" {
@@ -75,7 +97,7 @@ func (s *Store) ListTenantCustomAssetTypes(_ context.Context, tenantID tenant.ID
 
 	items := []customfield.AssetType{}
 	for _, assetType := range s.customAssetTypes {
-		if assetType.TenantID.String() == tenantID.String() && assetType.Scope == customfield.ScopeTenant && assetType.CursorKey() > page.AfterAssetTypeKey {
+		if assetType.TenantID.String() == tenantID.String() && assetType.Scope == customfield.ScopeTenant && assetType.IsActive() && assetType.CursorKey() > page.AfterAssetTypeKey {
 			items = append(items, assetType)
 		}
 	}
@@ -88,7 +110,7 @@ func (s *Store) ListInventoryCustomAssetTypes(_ context.Context, tenantID tenant
 
 	items := []customfield.AssetType{}
 	for _, assetType := range s.customAssetTypes {
-		if assetType.TenantID.String() != tenantID.String() || assetType.CursorKey() <= page.AfterAssetTypeKey {
+		if assetType.TenantID.String() != tenantID.String() || !assetType.IsActive() || assetType.CursorKey() <= page.AfterAssetTypeKey {
 			continue
 		}
 		if assetType.Scope == customfield.ScopeTenant || assetType.InventoryID.String() == inventoryID.String() {
@@ -105,7 +127,7 @@ func (s *Store) CustomAssetTypesByID(_ context.Context, tenantID tenant.ID, inve
 	items := []customfield.AssetType{}
 	for _, id := range ids {
 		assetType, ok := s.customAssetTypes[id]
-		if !ok || assetType.TenantID.String() != tenantID.String() {
+		if !ok || assetType.TenantID.String() != tenantID.String() || !assetType.IsActive() {
 			continue
 		}
 		if assetType.Scope == customfield.ScopeInventory && assetType.InventoryID.String() != inventoryID.String() {
