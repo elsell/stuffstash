@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -153,7 +154,7 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
 		return media.Attachment{}, err
 	}
-	if err := a.attachments.SaveAttachment(ctx, attachment, auditRecord); err != nil {
+	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, attachment, auditRecord); err != nil {
 		if deleteErr := a.blobs.DeleteBlob(ctx, storageKey); deleteErr != nil {
 			a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob cleanup failed"})
 		}
@@ -366,7 +367,7 @@ func (a App) updateAttachmentLifecycle(ctx context.Context, input UpdateAttachme
 	if err != nil {
 		return media.Attachment{}, err
 	}
-	if err := a.attachments.UpdateAttachmentLifecycle(ctx, updated, auditRecord); err != nil {
+	if err := a.attachmentUnitOfWork.UpdateAttachmentLifecycle(ctx, updated, auditRecord); err != nil {
 		return media.Attachment{}, err
 	}
 	a.observer.Record(ctx, ports.Event{
@@ -416,17 +417,15 @@ func (a App) DeleteAttachment(ctx context.Context, input UpdateAttachmentLifecyc
 	if err != nil {
 		return err
 	}
-	if err := a.blobs.DeleteBlob(ctx, attachment.StorageKey); err != nil {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob delete failed"})
-		return err
-	}
-	_, removed, err := a.attachments.DeleteAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID, auditRecord)
+	deletionEventID := a.ids.NewID()
+	_, removed, err := a.attachmentUnitOfWork.DeleteAttachmentAndEnqueueBlobDeletion(ctx, deletionEventID, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID, auditRecord)
 	if err != nil {
 		return err
 	}
 	if !removed {
 		return ErrNotFound
 	}
+	a.drainBlobDeletionOutboxBestEffort(ctx, 1)
 	a.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAttachmentDeleted,
 		Message: "attachment deleted",
@@ -438,6 +437,49 @@ func (a App) DeleteAttachment(ctx context.Context, input UpdateAttachmentLifecyc
 			"principal_id":  input.Principal.ID.String(),
 		},
 	})
+	return nil
+}
+
+func (a App) drainBlobDeletionOutboxBestEffort(ctx context.Context, limit int) {
+	if err := a.DrainBlobDeletionOutbox(ctx, limit); err != nil {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventBlobStorageFailed,
+			Message: "blob deletion outbox drain failed",
+			Fields:  map[string]string{"error": err.Error()},
+		})
+	}
+}
+
+func (a App) DrainBlobDeletionOutbox(ctx context.Context, limit int) error {
+	if a.blobDeletionOutbox == nil || a.blobs == nil {
+		return nil
+	}
+	if limit <= 0 {
+		limit = 1
+	}
+	claimID := a.ids.NewID()
+	events, err := a.blobDeletionOutbox.ClaimPendingBlobDeletionEvents(ctx, claimID, limit, time.Now().UTC().Add(a.authorizationOutboxClaimLease()))
+	if err != nil {
+		return err
+	}
+	for _, event := range events {
+		if err := a.blobs.DeleteBlob(ctx, event.StorageKey); err != nil && !errors.Is(err, ports.ErrBlobNotFound) {
+			a.observer.Record(ctx, ports.Event{
+				Name:    ports.EventBlobStorageFailed,
+				Message: "blob delete failed",
+				Fields: map[string]string{
+					"event_id": event.ID,
+				},
+			})
+			if markErr := a.blobDeletionOutbox.MarkBlobDeletionEventFailed(ctx, event.ID, claimID, err.Error()); markErr != nil {
+				return markErr
+			}
+			continue
+		}
+		if err := a.blobDeletionOutbox.MarkBlobDeletionEventProcessed(ctx, event.ID, claimID); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

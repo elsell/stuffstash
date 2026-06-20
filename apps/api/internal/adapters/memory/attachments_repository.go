@@ -2,6 +2,8 @@ package memory
 
 import (
 	"context"
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -49,7 +51,7 @@ func (s *Store) UpdateAttachmentLifecycle(_ context.Context, attachment media.At
 	return nil
 }
 
-func (s *Store) DeleteAttachment(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error) {
+func (s *Store) DeleteAttachmentAndEnqueueBlobDeletion(_ context.Context, eventID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -60,9 +62,88 @@ func (s *Store) DeleteAttachment(_ context.Context, tenantID tenant.ID, inventor
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return media.Attachment{}, false, ports.ErrConflict
 	}
+	if _, exists := s.blobDeletions[eventID]; exists {
+		return media.Attachment{}, false, ports.ErrConflict
+	}
 	s.auditRecords[auditRecord.ID] = auditRecord
+	s.blobDeletions[eventID] = ports.BlobDeletionEvent{
+		ID:         eventID,
+		StorageKey: attachment.StorageKey,
+	}
 	delete(s.attachments, attachmentID)
 	return attachment, true, nil
+}
+
+func (s *Store) ClaimPendingBlobDeletionEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.BlobDeletionEvent, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	now := time.Now().UTC()
+	items := []ports.BlobDeletionEvent{}
+	for _, event := range s.blobDeletions {
+		if !event.ProcessedAt.IsZero() || !event.DeadLetteredAt.IsZero() {
+			continue
+		}
+		if event.ClaimID != "" && event.ClaimedUntil.After(now) {
+			continue
+		}
+		items = append(items, event)
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].ID < items[right].ID
+	})
+	if limit > 0 && len(items) > limit {
+		items = items[:limit]
+	}
+	for index := range items {
+		items[index].ClaimID = claimID
+		items[index].ClaimedUntil = leaseUntil
+		s.blobDeletions[items[index].ID] = items[index]
+	}
+	return items, nil
+}
+
+func (s *Store) MarkBlobDeletionEventProcessed(_ context.Context, eventID string, claimID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.blobDeletions[eventID]
+	if !ok || event.ClaimID != claimID {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	event.ProcessedAt = time.Now().UTC()
+	s.blobDeletions[eventID] = event
+	return nil
+}
+
+func (s *Store) MarkBlobDeletionEventFailed(_ context.Context, eventID string, claimID string, reason string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.blobDeletions[eventID]
+	if !ok || event.ClaimID != claimID {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	event.Attempts++
+	event.LastError = reason
+	event.ClaimID = ""
+	event.ClaimedUntil = time.Time{}
+	s.blobDeletions[eventID] = event
+	return nil
+}
+
+func (s *Store) MarkBlobDeletionEventDeadLettered(_ context.Context, eventID string, claimID string, reason string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, ok := s.blobDeletions[eventID]
+	if !ok || event.ClaimID != claimID {
+		return ports.ErrAuthorizationOutboxClaimLost
+	}
+	event.DeadLetteredAt = time.Now().UTC()
+	event.DeadLetterReason = reason
+	s.blobDeletions[eventID] = event
+	return nil
 }
 
 func (s *Store) AttachmentByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, bool, error) {

@@ -185,7 +185,7 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 		return customfield.Definition{}, err
 	}
 
-	if err := a.customFields.SaveCustomFieldDefinition(ctx, definition, auditRecord); err != nil {
+	if err := a.customFieldUnitOfWork.SaveCustomFieldDefinition(ctx, definition, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return customfield.Definition{}, ErrInvalidInput
 		}
@@ -335,7 +335,7 @@ func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustom
 		auditRecord.Metadata[key] = value
 	}
 
-	if err := a.customFields.UpdateCustomFieldDefinition(ctx, updated, auditRecord); err != nil {
+	if err := a.customFieldUnitOfWork.UpdateCustomFieldDefinition(ctx, updated, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return customfield.Definition{}, ErrInvalidInput
 		}

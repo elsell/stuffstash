@@ -11,29 +11,36 @@ import (
 )
 
 type App struct {
-	observer           ports.Observer
-	auth               ports.Authenticator
-	authorizer         ports.Authorizer
-	tenants            ports.TenantRepository
-	inventories        ports.InventoryRepository
-	inventoryAccess    ports.InventoryAccessRepository
-	customAssetTypes   ports.CustomAssetTypeRepository
-	customFields       ports.CustomFieldDefinitionRepository
-	assets             ports.AssetRepository
-	assetUnitOfWork    ports.AssetUnitOfWork
-	undoables          ports.UndoableOperationRepository
-	search             ports.AssetSearchRepository
-	attachments        ports.AttachmentRepository
-	blobs              ports.BlobStorage
-	audit              ports.AuditRepository
-	outbox             ports.AuthorizationOutbox
-	ids                ports.IDGenerator
-	outboxDrainLimit   int
-	outboxClaimLease   time.Duration
-	invitationTTL      time.Duration
-	defaultPageLimit   int
-	maxPageLimit       int
-	maxAttachmentBytes int
+	observer                  ports.Observer
+	auth                      ports.Authenticator
+	authorizer                ports.Authorizer
+	tenants                   ports.TenantRepository
+	tenantUnitOfWork          ports.TenantUnitOfWork
+	inventories               ports.InventoryRepository
+	inventoryUnitOfWork       ports.InventoryUnitOfWork
+	inventoryAccess           ports.InventoryAccessRepository
+	inventoryAccessUnitOfWork ports.InventoryAccessUnitOfWork
+	customAssetTypes          ports.CustomAssetTypeRepository
+	customAssetTypeUnitOfWork ports.CustomAssetTypeUnitOfWork
+	customFields              ports.CustomFieldDefinitionRepository
+	customFieldUnitOfWork     ports.CustomFieldDefinitionUnitOfWork
+	assets                    ports.AssetRepository
+	assetUnitOfWork           ports.AssetUnitOfWork
+	undoables                 ports.UndoableOperationRepository
+	search                    ports.AssetSearchRepository
+	attachments               ports.AttachmentRepository
+	attachmentUnitOfWork      ports.AttachmentUnitOfWork
+	blobs                     ports.BlobStorage
+	blobDeletionOutbox        ports.BlobDeletionOutbox
+	audit                     ports.AuditRepository
+	outbox                    ports.AuthorizationOutbox
+	ids                       ports.IDGenerator
+	outboxDrainLimit          int
+	outboxClaimLease          time.Duration
+	invitationTTL             time.Duration
+	defaultPageLimit          int
+	maxPageLimit              int
+	maxAttachmentBytes        int
 }
 
 type Dependencies struct {
@@ -41,16 +48,23 @@ type Dependencies struct {
 	Auth                          ports.Authenticator
 	Authorizer                    ports.Authorizer
 	Tenants                       ports.TenantRepository
+	TenantUnitOfWork              ports.TenantUnitOfWork
 	Inventories                   ports.InventoryRepository
+	InventoryUnitOfWork           ports.InventoryUnitOfWork
 	InventoryAccess               ports.InventoryAccessRepository
+	InventoryAccessUnitOfWork     ports.InventoryAccessUnitOfWork
 	CustomAssetTypes              ports.CustomAssetTypeRepository
+	CustomAssetTypeUnitOfWork     ports.CustomAssetTypeUnitOfWork
 	CustomFields                  ports.CustomFieldDefinitionRepository
+	CustomFieldUnitOfWork         ports.CustomFieldDefinitionUnitOfWork
 	Assets                        ports.AssetRepository
 	AssetUnitOfWork               ports.AssetUnitOfWork
 	Undoables                     ports.UndoableOperationRepository
 	Search                        ports.AssetSearchRepository
 	Attachments                   ports.AttachmentRepository
+	AttachmentUnitOfWork          ports.AttachmentUnitOfWork
 	Blobs                         ports.BlobStorage
+	BlobDeletionOutbox            ports.BlobDeletionOutbox
 	Audit                         ports.AuditRepository
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
@@ -69,29 +83,36 @@ func New(deps Dependencies) App {
 		ids = defaultIDGenerator{}
 	}
 	return App{
-		observer:           deps.Observer,
-		auth:               deps.Auth,
-		authorizer:         deps.Authorizer,
-		tenants:            deps.Tenants,
-		inventories:        deps.Inventories,
-		inventoryAccess:    deps.InventoryAccess,
-		customAssetTypes:   deps.CustomAssetTypes,
-		customFields:       deps.CustomFields,
-		assets:             deps.Assets,
-		assetUnitOfWork:    deps.AssetUnitOfWork,
-		undoables:          deps.Undoables,
-		search:             deps.Search,
-		attachments:        deps.Attachments,
-		blobs:              deps.Blobs,
-		audit:              deps.Audit,
-		outbox:             deps.Outbox,
-		ids:                ids,
-		outboxDrainLimit:   deps.AuthorizationOutboxDrainLimit,
-		outboxClaimLease:   deps.AuthorizationOutboxClaimLease,
-		invitationTTL:      normalizeInvitationTTL(deps.InvitationTTL),
-		defaultPageLimit:   normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
-		maxPageLimit:       maxPageLimit,
-		maxAttachmentBytes: normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
+		observer:                  deps.Observer,
+		auth:                      deps.Auth,
+		authorizer:                deps.Authorizer,
+		tenants:                   deps.Tenants,
+		tenantUnitOfWork:          deps.TenantUnitOfWork,
+		inventories:               deps.Inventories,
+		inventoryUnitOfWork:       deps.InventoryUnitOfWork,
+		inventoryAccess:           deps.InventoryAccess,
+		inventoryAccessUnitOfWork: deps.InventoryAccessUnitOfWork,
+		customAssetTypes:          deps.CustomAssetTypes,
+		customAssetTypeUnitOfWork: deps.CustomAssetTypeUnitOfWork,
+		customFields:              deps.CustomFields,
+		customFieldUnitOfWork:     deps.CustomFieldUnitOfWork,
+		assets:                    deps.Assets,
+		assetUnitOfWork:           deps.AssetUnitOfWork,
+		undoables:                 deps.Undoables,
+		search:                    deps.Search,
+		attachments:               deps.Attachments,
+		attachmentUnitOfWork:      deps.AttachmentUnitOfWork,
+		blobs:                     deps.Blobs,
+		blobDeletionOutbox:        deps.BlobDeletionOutbox,
+		audit:                     deps.Audit,
+		outbox:                    deps.Outbox,
+		ids:                       ids,
+		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,
+		outboxClaimLease:          deps.AuthorizationOutboxClaimLease,
+		invitationTTL:             normalizeInvitationTTL(deps.InvitationTTL),
+		defaultPageLimit:          normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
+		maxPageLimit:              maxPageLimit,
+		maxAttachmentBytes:        normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
 	}
 }
 

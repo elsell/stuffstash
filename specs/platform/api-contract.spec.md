@@ -159,7 +159,11 @@ Error responses must use a consistent envelope:
 - HTTP error bodies for authentication, authorization, and tenant isolation failures must be intentionally bland and safe.
 - API responses must include security headers once the HTTP adapter is implemented.
 - CORS behavior must be explicit, environment-configured, and tested before browser clients depend on it.
-- Rate limiting, request size limits, timeout behavior, and body parsing limits must be specified before public or multi-user deployment.
+- API responses must include at least `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` unless a future spec justifies a narrower route-specific exception.
+- Server read header timeout, read timeout, write timeout, idle timeout, and maximum JSON request body bytes must come from environment-backed configuration with safe defaults.
+- JSON request body limits must apply before the Huma route handler decodes request bodies.
+- Attachment upload routes may use a larger body limit derived from the configured attachment byte limit, but must still enforce a deterministic maximum.
+- Rate limiting remains required before public or multi-user deployment, but is not implemented in this hardening slice.
 
 ## Verification
 

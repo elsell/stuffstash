@@ -6,5 +6,5 @@ import (
 )
 
 func Migrate(ctx context.Context, db *gorm.DB) error {
-	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &inventoryAccessInvitationModel{}, &customAssetTypeModel{}, &customFieldDefinitionModel{}, &customFieldDefinitionAssetTypeModel{}, &assetModel{}, &undoableOperationModel{}, &attachmentModel{}, &auditRecordModel{}, &authorizationOutboxEventModel{})
+	return db.WithContext(ctx).AutoMigrate(&tenantModel{}, &inventoryModel{}, &inventoryAccessGrantModel{}, &inventoryAccessInvitationModel{}, &customAssetTypeModel{}, &customFieldDefinitionModel{}, &customFieldDefinitionAssetTypeModel{}, &assetModel{}, &undoableOperationModel{}, &attachmentModel{}, &blobDeletionEventModel{}, &auditRecordModel{}, &authorizationOutboxEventModel{})
 }

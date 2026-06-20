@@ -75,6 +75,7 @@ The goal is to prove a production-shaped path through:
 - Sharing and user-management backend hardening now includes an explicit inventory access repository port, paginated invitation listing with status filters, pending-invitation expiration management, generated OpenAPI/client updates, documentation updates, and adversarial API tests for token redaction, tenant/inventory boundaries, and role denial.
 - The first audit-backed undo/redo slice now supports asset create, update, move, archive, and restore through operation-scoped compensating commands, dedicated undoable-operation persistence, generated OpenAPI/client updates, and adversarial API coverage.
 - Asset state-changing application commands now use a dedicated transactional asset unit-of-work port instead of overloading the read repository port with audit and undoable-operation write concerns.
+- Core API hardening now separates read repositories from explicit command/unit-of-work ports across the implemented write surfaces, uses durable blob-deletion intent for attachment hard delete cleanup, routes search visibility through an authorization query port, and applies HTTP security headers, request body limits, and configurable server timeouts.
 
 ## Known Gaps
 
@@ -82,10 +83,12 @@ The goal is to prove a production-shaped path through:
 - Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
 - The real product UI is intentionally underspecified and should be redesigned before further frontend feature investment.
-- Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
+- The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
+- Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI can create inventories, create assets, browse active and archived assets, archive assets, restore assets, and hard-delete assets, but it does not yet expose sharing, search, audit history, custom fields, custom asset types, or media.
 - The web UI still uses hand-written tracer-bullet components; introduce the Svelte-compatible shadcn component foundation before broad UI expansion.
+- `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
 
 ## Next Work
 

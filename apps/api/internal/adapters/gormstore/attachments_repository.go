@@ -75,7 +75,7 @@ func (s Store) UpdateAttachmentLifecycle(ctx context.Context, attachment media.A
 	})
 }
 
-func (s Store) DeleteAttachment(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error) {
+func (s Store) DeleteAttachmentAndEnqueueBlobDeletion(ctx context.Context, eventID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error) {
 	var deleted media.Attachment
 	found := false
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -92,6 +92,12 @@ func (s Store) DeleteAttachment(ctx context.Context, tenantID tenant.ID, invento
 			return fmt.Errorf("invalid attachment row %q", existing.ID)
 		}
 		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		if err := tx.Create(&blobDeletionEventModel{
+			ID:         eventID,
+			StorageKey: existing.StorageKey,
+		}).Error; err != nil {
 			return err
 		}
 		if err := tx.Delete(&existing).Error; err != nil {

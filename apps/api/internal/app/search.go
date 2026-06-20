@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"strconv"
 	"strings"
 
@@ -69,7 +68,11 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
 
-	inventoryIDs, err := a.visibleInventoryIDs(ctx, input.Principal, input.TenantID)
+	candidateInventoryIDs, err := a.inventoryIDsForTenant(ctx, input.TenantID)
+	if err != nil {
+		return SearchAssetsResult{}, err
+	}
+	inventoryIDs, err := a.authorizer.ListViewableInventoryIDs(ctx, input.Principal, input.TenantID, candidateInventoryIDs)
 	if err != nil {
 		return SearchAssetsResult{}, err
 	}
@@ -119,24 +122,17 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	}, nil
 }
 
-func (a App) visibleInventoryIDs(ctx context.Context, principal identity.Principal, tenantID tenant.ID) ([]inventory.InventoryID, error) {
+func (a App) inventoryIDsForTenant(ctx context.Context, tenantID tenant.ID) ([]inventory.InventoryID, error) {
 	items, err := a.inventories.ListInventoriesByTenant(ctx, inventory.TenantID(tenantID.String()), ports.InventoryListPageRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	visible := make([]inventory.InventoryID, 0, len(items))
+	ids := make([]inventory.InventoryID, 0, len(items))
 	for _, item := range items {
-		err := a.authorizer.CheckInventory(ctx, principal, ports.InventoryPermissionView, item.ID)
-		if err == nil {
-			visible = append(visible, item.ID)
-			continue
-		}
-		if !errors.Is(err, ports.ErrForbidden) {
-			return nil, err
-		}
+		ids = append(ids, item.ID)
 	}
-	return visible, nil
+	return ids, nil
 }
 
 func parseSearchCustomAssetTypeID(raw string) (asset.CustomAssetTypeID, error) {

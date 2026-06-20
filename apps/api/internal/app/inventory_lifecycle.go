@@ -84,7 +84,7 @@ func (a App) UpdateTenant(ctx context.Context, input UpdateTenantInput) (tenant.
 	if err != nil {
 		return tenant.Tenant{}, err
 	}
-	if err := a.tenants.UpdateTenant(ctx, updated, auditRecord); err != nil {
+	if err := a.tenantUnitOfWork.UpdateTenant(ctx, updated, auditRecord); err != nil {
 		return tenant.Tenant{}, err
 	}
 	a.observer.Record(ctx, ports.Event{
@@ -139,7 +139,7 @@ func (a App) updateTenantLifecycle(ctx context.Context, input UpdateTenantLifecy
 	if err != nil {
 		return tenant.Tenant{}, err
 	}
-	if err := a.tenants.UpdateTenantLifecycle(ctx, updated, auditRecord); err != nil {
+	if err := a.tenantUnitOfWork.UpdateTenantLifecycle(ctx, updated, auditRecord); err != nil {
 		return tenant.Tenant{}, err
 	}
 	a.observer.Record(ctx, ports.Event{
@@ -181,7 +181,7 @@ func (a App) DeleteTenant(ctx context.Context, input UpdateTenantLifecycleInput)
 	if err != nil {
 		return err
 	}
-	if err := a.tenants.DeleteTenant(ctx, input.TenantID, auditRecord); err != nil {
+	if err := a.tenantUnitOfWork.DeleteTenant(ctx, input.TenantID, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return ErrInvalidInput
 		}
@@ -273,7 +273,7 @@ func (a App) UpdateInventory(ctx context.Context, input UpdateInventoryInput) (i
 	if err != nil {
 		return inventory.Inventory{}, err
 	}
-	if err := a.inventories.UpdateInventory(ctx, updated, auditRecord); err != nil {
+	if err := a.inventoryUnitOfWork.UpdateInventory(ctx, updated, auditRecord); err != nil {
 		return inventory.Inventory{}, err
 	}
 	a.observer.Record(ctx, ports.Event{
@@ -333,7 +333,7 @@ func (a App) updateInventoryLifecycle(ctx context.Context, input UpdateInventory
 	if err != nil {
 		return inventory.Inventory{}, err
 	}
-	if err := a.inventories.UpdateInventoryLifecycle(ctx, updated, auditRecord); err != nil {
+	if err := a.inventoryUnitOfWork.UpdateInventoryLifecycle(ctx, updated, auditRecord); err != nil {
 		return inventory.Inventory{}, err
 	}
 	a.observer.Record(ctx, ports.Event{
@@ -376,7 +376,7 @@ func (a App) DeleteInventory(ctx context.Context, input UpdateInventoryLifecycle
 	if err != nil {
 		return err
 	}
-	if err := a.inventories.DeleteInventory(ctx, input.TenantID, input.InventoryID, auditRecord); err != nil {
+	if err := a.inventoryUnitOfWork.DeleteInventory(ctx, input.TenantID, input.InventoryID, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return ErrInvalidInput
 		}

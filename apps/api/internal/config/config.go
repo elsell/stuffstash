@@ -9,6 +9,11 @@ import (
 
 const (
 	envHTTPAddr                 = "STUFF_STASH_HTTP_ADDR"
+	envHTTPReadHeaderTimeout    = "STUFF_STASH_HTTP_READ_HEADER_TIMEOUT"
+	envHTTPReadTimeout          = "STUFF_STASH_HTTP_READ_TIMEOUT"
+	envHTTPWriteTimeout         = "STUFF_STASH_HTTP_WRITE_TIMEOUT"
+	envHTTPIdleTimeout          = "STUFF_STASH_HTTP_IDLE_TIMEOUT"
+	envHTTPMaxJSONBodyBytes     = "STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES"
 	envCORSAllowedOrigins       = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
 	envAuthMode                 = "STUFF_STASH_AUTH_MODE"
 	envAuthzMode                = "STUFF_STASH_AUTHZ_MODE"
@@ -39,6 +44,11 @@ const (
 	envS3Secure                 = "STUFF_STASH_S3_SECURE"
 	envMaxAttachmentBytes       = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
 	defaultHTTPAddr             = ":8080"
+	defaultHTTPReadHeader       = 5 * time.Second
+	defaultHTTPRead             = 15 * time.Second
+	defaultHTTPWrite            = 30 * time.Second
+	defaultHTTPIdle             = 60 * time.Second
+	defaultHTTPMaxJSONBodyBytes = 1024 * 1024
 	defaultAuthMode             = "local-dev"
 	defaultAuthzMode            = "memory"
 	defaultRepositoryMode       = "memory"
@@ -60,6 +70,11 @@ const (
 
 type Config struct {
 	HTTPAddr                         string
+	HTTPReadHeaderTimeout            time.Duration
+	HTTPReadTimeout                  time.Duration
+	HTTPWriteTimeout                 time.Duration
+	HTTPIdleTimeout                  time.Duration
+	HTTPMaxJSONBodyBytes             int64
 	CORSAllowedOrigins               []string
 	AuthMode                         string
 	AuthzMode                        string
@@ -94,6 +109,11 @@ type Config struct {
 func Load() Config {
 	return Config{
 		HTTPAddr:                         envOrDefault(envHTTPAddr, defaultHTTPAddr),
+		HTTPReadHeaderTimeout:            durationEnvOrDefault(envHTTPReadHeaderTimeout, defaultHTTPReadHeader),
+		HTTPReadTimeout:                  durationEnvOrDefault(envHTTPReadTimeout, defaultHTTPRead),
+		HTTPWriteTimeout:                 durationEnvOrDefault(envHTTPWriteTimeout, defaultHTTPWrite),
+		HTTPIdleTimeout:                  durationEnvOrDefault(envHTTPIdleTimeout, defaultHTTPIdle),
+		HTTPMaxJSONBodyBytes:             int64EnvOrDefault(envHTTPMaxJSONBodyBytes, defaultHTTPMaxJSONBodyBytes),
 		CORSAllowedOrigins:               stringListEnv(envCORSAllowedOrigins),
 		AuthMode:                         envOrDefault(envAuthMode, defaultAuthMode),
 		AuthzMode:                        envOrDefault(envAuthzMode, defaultAuthzMode),
@@ -176,6 +196,18 @@ func intEnvOrDefault(name string, fallback int) int {
 		return fallback
 	}
 	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
+}
+
+func int64EnvOrDefault(name string, fallback int64) int64 {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseInt(value, 10, 64)
 	if err != nil || parsed <= 0 {
 		return fallback
 	}

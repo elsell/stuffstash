@@ -126,6 +126,21 @@ func (a Authorizer) CheckInventory(ctx context.Context, principal identity.Princ
 	return a.check(ctx, objectRef(objectTypeInventory, inventoryID.String()), string(permission), userSubject(principal))
 }
 
+func (a Authorizer) ListViewableInventoryIDs(ctx context.Context, principal identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	visible := make([]inventory.InventoryID, 0, len(candidates))
+	for _, inventoryID := range candidates {
+		err := a.CheckInventory(ctx, principal, ports.InventoryPermissionView, inventoryID)
+		if err == nil {
+			visible = append(visible, inventoryID)
+			continue
+		}
+		if !errors.Is(err, ports.ErrForbidden) {
+			return nil, err
+		}
+	}
+	return visible, nil
+}
+
 func (a Authorizer) GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error {
 	return a.touchRelationships(ctx, relationship(
 		objectRef(objectTypeTenant, tenantID.String()),

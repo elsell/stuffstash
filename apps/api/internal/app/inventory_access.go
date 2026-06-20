@@ -103,7 +103,7 @@ func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAcces
 		return ports.InventoryAccessGrant{}, err
 	}
 
-	if err := a.inventoryAccess.SaveInventoryAccessGrantAndEnqueue(ctx, a.ids.NewID(), grant, auditRecord); err != nil {
+	if err := a.inventoryAccessUnitOfWork.SaveInventoryAccessGrantAndEnqueue(ctx, a.ids.NewID(), grant, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return ports.InventoryAccessGrant{}, ErrInvalidInput
 		}
@@ -167,7 +167,7 @@ func (a App) RevokeInventoryAccess(ctx context.Context, input RevokeInventoryAcc
 
 	eventID := a.ids.NewID()
 	claimID := a.ids.NewID()
-	event, removed, err := a.inventoryAccess.DeleteInventoryAccessGrantAndClaimRevoke(ctx, eventID, claimID, time.Now().Add(a.authorizationOutboxClaimLease()), grant, auditRecord)
+	event, removed, err := a.inventoryAccessUnitOfWork.DeleteInventoryAccessGrantAndClaimRevoke(ctx, eventID, claimID, time.Now().Add(a.authorizationOutboxClaimLease()), grant, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return false, ErrInvalidInput

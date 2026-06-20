@@ -277,7 +277,7 @@ func (a App) createCustomAssetType(ctx context.Context, input CreateCustomAssetT
 		return customfield.AssetType{}, err
 	}
 
-	if err := a.customAssetTypes.SaveCustomAssetType(ctx, assetType, auditRecord); err != nil {
+	if err := a.customAssetTypeUnitOfWork.SaveCustomAssetType(ctx, assetType, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return customfield.AssetType{}, ErrInvalidInput
 		}
@@ -369,7 +369,7 @@ func (a App) updateCustomAssetType(ctx context.Context, input UpdateCustomAssetT
 		auditRecord.Metadata[key] = value
 	}
 
-	if err := a.customAssetTypes.UpdateCustomAssetType(ctx, updated, auditRecord); err != nil {
+	if err := a.customAssetTypeUnitOfWork.UpdateCustomAssetType(ctx, updated, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return customfield.AssetType{}, ErrInvalidInput
 		}
@@ -433,7 +433,7 @@ func (a App) archiveCustomAssetType(ctx context.Context, input ArchiveCustomAsse
 		return customfield.AssetType{}, err
 	}
 
-	if err := a.customAssetTypes.ArchiveCustomAssetType(ctx, archived, auditRecord); err != nil {
+	if err := a.customAssetTypeUnitOfWork.ArchiveCustomAssetType(ctx, archived, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return customfield.AssetType{}, ErrInvalidInput
 		}
@@ -493,7 +493,7 @@ func (a App) restoreCustomAssetType(ctx context.Context, input ArchiveCustomAsse
 	if err != nil {
 		return customfield.AssetType{}, err
 	}
-	if err := a.customAssetTypes.RestoreCustomAssetType(ctx, restored, auditRecord); err != nil {
+	if err := a.customAssetTypeUnitOfWork.RestoreCustomAssetType(ctx, restored, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return customfield.AssetType{}, ErrInvalidInput
 		}
@@ -553,7 +553,7 @@ func (a App) deleteCustomAssetType(ctx context.Context, input ArchiveCustomAsset
 	if err != nil {
 		return err
 	}
-	if err := a.customAssetTypes.DeleteCustomAssetType(ctx, input.TenantID, input.InventoryID, assetTypeID, auditRecord); err != nil {
+	if err := a.customAssetTypeUnitOfWork.DeleteCustomAssetType(ctx, input.TenantID, input.InventoryID, assetTypeID, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return ErrInvalidInput
 		}

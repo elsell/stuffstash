@@ -92,7 +92,12 @@ Attachment content download:
 Deletion:
 
 - Archive, restore, and hard-delete behavior is defined by `specs/platform/resource-lifecycle.spec.md`.
-- Hard delete must use the blob storage port and must not leave orphaned blob content when blob deletion fails.
+- Hard delete must preserve audit history and remove attachment metadata through an attachment command/unit-of-work port.
+- Hard delete must enqueue durable blob-deletion intent in the same database transaction that removes attachment metadata.
+- Blob deletion must be processed from an outbox after metadata deletion commits.
+- Blob deletion must be retryable and idempotent. Missing blobs should be treated as successful cleanup.
+- The API must not delete blob content inline before metadata removal commits, because that can create broken attachment records if metadata deletion fails after blob deletion succeeds.
+- Until asynchronous workers are separated from the API process, the API may drain blob-deletion events opportunistically after successful hard-delete requests, but the durable outbox is the consistency mechanism.
 
 ## Storage Direction
 
@@ -102,6 +107,7 @@ Deletion:
 - Blob storage dependencies and images must be pinned to reviewed versions.
 - Blob storage must be accessed through a port.
 - Application and domain code must not depend on S3, Garage, local filesystem paths, or provider SDK types.
+- Blob cleanup must be accessed through a blob-deletion outbox port, not by coupling attachment metadata persistence to a specific storage adapter.
 
 The first storage adapters are:
 

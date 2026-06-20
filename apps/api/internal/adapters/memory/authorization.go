@@ -74,6 +74,25 @@ func (a *Authorizer) CheckInventory(_ context.Context, principal identity.Princi
 	return ports.ErrForbidden
 }
 
+func (a *Authorizer) ListViewableInventoryIDs(_ context.Context, principal identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	visible := make([]inventory.InventoryID, 0, len(candidates))
+	for _, inventoryID := range candidates {
+		if a.inventoryTenants[inventoryID] != tenantID {
+			continue
+		}
+		if hasPrincipal(a.tenantOwners[tenantID], principal.ID) ||
+			hasPrincipal(a.inventoryOwners[inventoryID], principal.ID) ||
+			hasPrincipal(a.inventoryEditors[inventoryID], principal.ID) ||
+			hasPrincipal(a.inventoryViewers[inventoryID], principal.ID) {
+			visible = append(visible, inventoryID)
+		}
+	}
+	return visible, nil
+}
+
 func (a *Authorizer) GrantTenantOwner(_ context.Context, principal identity.Principal, tenantID tenant.ID) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()

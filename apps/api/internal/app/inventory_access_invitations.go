@@ -133,7 +133,7 @@ func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateIn
 		return CreateInventoryAccessInvitationResult{}, err
 	}
 
-	saved, err := a.inventoryAccess.SaveInventoryAccessInvitation(ctx, invitation, auditRecord)
+	saved, err := a.inventoryAccessUnitOfWork.SaveInventoryAccessInvitation(ctx, invitation, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrConflict) {
 			return CreateInventoryAccessInvitationResult{}, ErrInvalidInput
@@ -189,7 +189,7 @@ func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptIn
 		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, err
 	}
 
-	invitation, grant, err := a.inventoryAccess.AcceptInventoryAccessInvitationAndEnqueue(ctx, input.TenantID, input.InventoryID, input.InvitationID, hashInventoryInvitationToken(input.Token), input.Principal, a.ids.NewID(), auditRecord)
+	invitation, grant, err := a.inventoryAccessUnitOfWork.AcceptInventoryAccessInvitationAndEnqueue(ctx, input.TenantID, input.InventoryID, input.InvitationID, hashInventoryInvitationToken(input.Token), input.Principal, a.ids.NewID(), auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
@@ -232,7 +232,7 @@ func (a App) RevokeInventoryAccessInvitation(ctx context.Context, input RevokeIn
 	if err != nil {
 		return false, err
 	}
-	revoked, err := a.inventoryAccess.RevokeInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
+	revoked, err := a.inventoryAccessUnitOfWork.RevokeInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return false, ErrInvalidInput
@@ -389,7 +389,7 @@ func (a App) UpdateInventoryAccessInvitationExpiration(ctx context.Context, inpu
 	if err != nil {
 		return ports.InventoryAccessInvitation{}, err
 	}
-	invitation, updated, err := a.inventoryAccess.UpdateInventoryAccessInvitationExpiration(ctx, input.TenantID, input.InventoryID, input.InvitationID, input.ExpiresAt, auditRecord)
+	invitation, updated, err := a.inventoryAccessUnitOfWork.UpdateInventoryAccessInvitationExpiration(ctx, input.TenantID, input.InventoryID, input.InvitationID, input.ExpiresAt, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return ports.InventoryAccessInvitation{}, ErrInvalidInput
@@ -431,7 +431,7 @@ func (a App) CancelInventoryAccessInvitation(ctx context.Context, input RevokeIn
 	if err != nil {
 		return false, err
 	}
-	cancelled, err := a.inventoryAccess.CancelInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
+	cancelled, err := a.inventoryAccessUnitOfWork.CancelInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return false, ErrInvalidInput
@@ -472,7 +472,7 @@ func (a App) DeleteInventoryAccessInvitation(ctx context.Context, input RevokeIn
 	if err != nil {
 		return false, err
 	}
-	deleted, err := a.inventoryAccess.DeleteInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
+	deleted, err := a.inventoryAccessUnitOfWork.DeleteInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
 	if err != nil {
 		return false, err
 	}

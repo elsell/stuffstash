@@ -17,12 +17,14 @@ func TestArchiveCustomAssetTypeRecordsAuditAndObservability(t *testing.T) {
 	customAssetTypes := &fakeCustomAssetTypeRepository{}
 	observer := &fakeObserver{}
 	application := New(Dependencies{
-		Observer:         observer,
-		Authorizer:       &fakeAuthorizer{},
-		Tenants:          &fakeTenantRepository{exists: true},
-		Inventories:      &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Medicine")}},
-		CustomAssetTypes: customAssetTypes,
-		IDs:              &fakeIDGenerator{ids: []string{"type-one", "audit-create", "audit-archive"}},
+		Observer:                  observer,
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Medicine")}},
+		CustomAssetTypes:          customAssetTypes,
+		CustomAssetTypeUnitOfWork: customAssetTypes,
+		IDs:                       &fakeIDGenerator{ids: []string{"type-one", "audit-create", "audit-archive"}},
 	})
 
 	assetType, err := application.CreateInventoryCustomAssetType(context.Background(), CreateCustomAssetTypeInput{

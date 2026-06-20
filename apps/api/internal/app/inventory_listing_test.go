@@ -82,11 +82,12 @@ func TestListInventoriesPaginatesAfterAuthorizationFiltering(t *testing.T) {
 		Tenants: &fakeTenantRepository{
 			exists: true,
 		},
-		Inventories:      repository,
-		Audit:            &fakeAuditRepository{},
-		Outbox:           &fakeOutbox{},
-		DefaultPageLimit: 1,
-		MaxPageLimit:     1,
+		Inventories:         repository,
+		InventoryUnitOfWork: repository,
+		Audit:               &fakeAuditRepository{},
+		Outbox:              &fakeOutbox{},
+		DefaultPageLimit:    1,
+		MaxPageLimit:        1,
 	})
 
 	firstPage, err := application.ListInventories(context.Background(), ListInventoriesInput{
@@ -144,11 +145,12 @@ func TestListInventoriesReturnsEmptyBoundedPageWhenScanWindowIsHidden(t *testing
 		Tenants: &fakeTenantRepository{
 			exists: true,
 		},
-		Inventories:      repository,
-		Audit:            &fakeAuditRepository{},
-		Outbox:           &fakeOutbox{},
-		DefaultPageLimit: 1,
-		MaxPageLimit:     1,
+		Inventories:         repository,
+		InventoryUnitOfWork: repository,
+		Audit:               &fakeAuditRepository{},
+		Outbox:              &fakeOutbox{},
+		DefaultPageLimit:    1,
+		MaxPageLimit:        1,
 	})
 
 	firstPage, err := application.ListInventories(context.Background(), ListInventoriesInput{

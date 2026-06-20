@@ -18,13 +18,15 @@ func TestCreateTenantEnqueuesAndDrainsOwnerGrant(t *testing.T) {
 	authorizer := &fakeAuthorizer{}
 	outbox := &fakeOutbox{}
 	application := New(Dependencies{
-		Observer:    &fakeObserver{},
-		Authorizer:  authorizer,
-		Tenants:     &fakeTenantRepository{},
-		Inventories: &fakeInventoryRepository{},
-		Audit:       &fakeAuditRepository{},
-		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{ids: []string{"tenant-one", "audit-one", "event-one"}},
+		Observer:            &fakeObserver{},
+		Authorizer:          authorizer,
+		Tenants:             &fakeTenantRepository{},
+		TenantUnitOfWork:    &fakeTenantRepository{},
+		Inventories:         &fakeInventoryRepository{},
+		InventoryUnitOfWork: &fakeInventoryRepository{},
+		Audit:               &fakeAuditRepository{},
+		Outbox:              outbox,
+		IDs:                 &fakeIDGenerator{ids: []string{"tenant-one", "audit-one", "event-one"}},
 	})
 
 	item, err := application.CreateTenant(context.Background(), CreateTenantInput{
@@ -54,10 +56,11 @@ func TestCreateInventoryEnqueuesAndDrainsOwnerGrant(t *testing.T) {
 		Tenants: &fakeTenantRepository{
 			exists: true,
 		},
-		Inventories: &fakeInventoryRepository{},
-		Audit:       &fakeAuditRepository{},
-		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{ids: []string{"inventory-one", "audit-one", "event-one"}},
+		Inventories:         &fakeInventoryRepository{},
+		InventoryUnitOfWork: &fakeInventoryRepository{},
+		Audit:               &fakeAuditRepository{},
+		Outbox:              outbox,
+		IDs:                 &fakeIDGenerator{ids: []string{"inventory-one", "audit-one", "event-one"}},
 	})
 
 	item, err := application.CreateInventory(context.Background(), CreateInventoryInput{
@@ -85,13 +88,15 @@ func TestCreateTenantKeepsOutboxEventPendingWhenGrantFails(t *testing.T) {
 	observer := &fakeObserver{}
 	outbox := &fakeOutbox{}
 	application := New(Dependencies{
-		Observer:    observer,
-		Authorizer:  authorizer,
-		Tenants:     &fakeTenantRepository{},
-		Inventories: &fakeInventoryRepository{},
-		Audit:       &fakeAuditRepository{},
-		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{ids: []string{"tenant-one", "audit-one", "event-one"}},
+		Observer:            observer,
+		Authorizer:          authorizer,
+		Tenants:             &fakeTenantRepository{},
+		TenantUnitOfWork:    &fakeTenantRepository{},
+		Inventories:         &fakeInventoryRepository{},
+		InventoryUnitOfWork: &fakeInventoryRepository{},
+		Audit:               &fakeAuditRepository{},
+		Outbox:              outbox,
+		IDs:                 &fakeIDGenerator{ids: []string{"tenant-one", "audit-one", "event-one"}},
 	})
 
 	_, err := application.CreateTenant(context.Background(), CreateTenantInput{
@@ -136,13 +141,15 @@ func TestDrainAuthorizationOutboxContinuesAfterFailedEvent(t *testing.T) {
 		},
 	}
 	application := New(Dependencies{
-		Observer:    &fakeObserver{},
-		Authorizer:  authorizer,
-		Tenants:     &fakeTenantRepository{},
-		Inventories: &fakeInventoryRepository{},
-		Audit:       &fakeAuditRepository{},
-		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{},
+		Observer:            &fakeObserver{},
+		Authorizer:          authorizer,
+		Tenants:             &fakeTenantRepository{},
+		TenantUnitOfWork:    &fakeTenantRepository{},
+		Inventories:         &fakeInventoryRepository{},
+		InventoryUnitOfWork: &fakeInventoryRepository{},
+		Audit:               &fakeAuditRepository{},
+		Outbox:              outbox,
+		IDs:                 &fakeIDGenerator{},
 	})
 
 	err := application.DrainAuthorizationOutbox(context.Background(), 10)
@@ -177,13 +184,15 @@ func TestDrainAuthorizationOutboxDeadLettersUnrecoverableEventAndContinues(t *te
 		},
 	}
 	application := New(Dependencies{
-		Observer:    observer,
-		Authorizer:  &fakeAuthorizer{},
-		Tenants:     &fakeTenantRepository{},
-		Inventories: &fakeInventoryRepository{},
-		Audit:       &fakeAuditRepository{},
-		Outbox:      outbox,
-		IDs:         &fakeIDGenerator{},
+		Observer:            observer,
+		Authorizer:          &fakeAuthorizer{},
+		Tenants:             &fakeTenantRepository{},
+		TenantUnitOfWork:    &fakeTenantRepository{},
+		Inventories:         &fakeInventoryRepository{},
+		InventoryUnitOfWork: &fakeInventoryRepository{},
+		Audit:               &fakeAuditRepository{},
+		Outbox:              outbox,
+		IDs:                 &fakeIDGenerator{},
 	})
 
 	if err := application.DrainAuthorizationOutbox(context.Background(), 10); err != nil {
@@ -225,13 +234,15 @@ func TestDrainAuthorizationOutboxDeadLettersDurableInvalidEvent(t *testing.T) {
 	observer := &fakeObserver{}
 	authorizer := &fakeAuthorizer{}
 	application := New(Dependencies{
-		Observer:    observer,
-		Authorizer:  authorizer,
-		Tenants:     store,
-		Inventories: store,
-		Audit:       store,
-		Outbox:      store,
-		IDs:         &fakeIDGenerator{ids: []string{"claim-one"}},
+		Observer:            observer,
+		Authorizer:          authorizer,
+		Tenants:             store,
+		TenantUnitOfWork:    store,
+		Inventories:         store,
+		InventoryUnitOfWork: store,
+		Audit:               store,
+		Outbox:              store,
+		IDs:                 &fakeIDGenerator{ids: []string{"claim-one"}},
 	})
 
 	if err := application.DrainAuthorizationOutbox(ctx, 10); err != nil {

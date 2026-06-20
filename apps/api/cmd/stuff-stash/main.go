@@ -87,16 +87,23 @@ func main() {
 		Auth:                          authenticator,
 		Authorizer:                    authorizer,
 		Tenants:                       repositories.tenants,
+		TenantUnitOfWork:              repositories.tenantUnitOfWork,
 		Inventories:                   repositories.inventories,
+		InventoryUnitOfWork:           repositories.inventoryUnitOfWork,
 		InventoryAccess:               repositories.inventoryAccess,
+		InventoryAccessUnitOfWork:     repositories.inventoryAccessUnitOfWork,
 		CustomAssetTypes:              repositories.customAssetTypes,
+		CustomAssetTypeUnitOfWork:     repositories.customAssetTypeUnitOfWork,
 		CustomFields:                  repositories.customFields,
+		CustomFieldUnitOfWork:         repositories.customFieldUnitOfWork,
 		Assets:                        repositories.assets,
 		AssetUnitOfWork:               repositories.assetUnitOfWork,
 		Undoables:                     repositories.undoables,
 		Search:                        repositories.search,
 		Attachments:                   repositories.attachments,
+		AttachmentUnitOfWork:          repositories.attachmentUnitOfWork,
 		Blobs:                         repositories.blobs,
+		BlobDeletionOutbox:            repositories.blobDeletionOutbox,
 		Audit:                         repositories.audit,
 		Outbox:                        repositories.outbox,
 		IDs:                           idgen.NewULIDGenerator(),
@@ -109,6 +116,11 @@ func main() {
 	})
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
+		MaxJSONBodyBytes:   maxInt64(cfg.HTTPMaxJSONBodyBytes, application.MaxAttachmentJSONBodyBytes()),
+		ReadHeaderTimeout:  cfg.HTTPReadHeaderTimeout,
+		ReadTimeout:        cfg.HTTPReadTimeout,
+		WriteTimeout:       cfg.HTTPWriteTimeout,
+		IdleTimeout:        cfg.HTTPIdleTimeout,
 	})
 	go drainAuthorizationOutbox(ctx, application, observer, cfg.AuthorizationOutboxDrainLimit, cfg.AuthorizationOutboxDrainInterval)
 
@@ -141,6 +153,13 @@ func main() {
 	}
 }
 
+func maxInt64(left int64, right int64) int64 {
+	if left > right {
+		return left
+	}
+	return right
+}
+
 func drainAuthorizationOutbox(ctx context.Context, application app.App, observer ports.Observer, limit int, interval time.Duration) {
 	drain := func() {
 		if err := application.DrainAuthorizationOutbox(ctx, limit); err != nil {
@@ -167,26 +186,33 @@ func drainAuthorizationOutbox(ctx context.Context, application app.App, observer
 }
 
 type repositories struct {
-	tenants          ports.TenantRepository
-	inventories      ports.InventoryRepository
-	inventoryAccess  ports.InventoryAccessRepository
-	customAssetTypes ports.CustomAssetTypeRepository
-	customFields     ports.CustomFieldDefinitionRepository
-	assets           ports.AssetRepository
-	assetUnitOfWork  ports.AssetUnitOfWork
-	undoables        ports.UndoableOperationRepository
-	search           ports.AssetSearchRepository
-	attachments      ports.AttachmentRepository
-	blobs            ports.BlobStorage
-	audit            ports.AuditRepository
-	outbox           ports.AuthorizationOutbox
+	tenants                   ports.TenantRepository
+	tenantUnitOfWork          ports.TenantUnitOfWork
+	inventories               ports.InventoryRepository
+	inventoryUnitOfWork       ports.InventoryUnitOfWork
+	inventoryAccess           ports.InventoryAccessRepository
+	inventoryAccessUnitOfWork ports.InventoryAccessUnitOfWork
+	customAssetTypes          ports.CustomAssetTypeRepository
+	customAssetTypeUnitOfWork ports.CustomAssetTypeUnitOfWork
+	customFields              ports.CustomFieldDefinitionRepository
+	customFieldUnitOfWork     ports.CustomFieldDefinitionUnitOfWork
+	assets                    ports.AssetRepository
+	assetUnitOfWork           ports.AssetUnitOfWork
+	undoables                 ports.UndoableOperationRepository
+	search                    ports.AssetSearchRepository
+	attachments               ports.AttachmentRepository
+	attachmentUnitOfWork      ports.AttachmentUnitOfWork
+	blobs                     ports.BlobStorage
+	blobDeletionOutbox        ports.BlobDeletionOutbox
+	audit                     ports.AuditRepository
+	outbox                    ports.AuthorizationOutbox
 }
 
 func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, inventories: store, inventoryAccess: store, customAssetTypes: store, customFields: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, blobs: store, audit: store, outbox: store}, func() error { return nil }, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, audit: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -200,7 +226,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 			_ = closeStore()
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store, inventoryAccess: store, customAssetTypes: store, customFields: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, blobs: blobs, audit: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, audit: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}

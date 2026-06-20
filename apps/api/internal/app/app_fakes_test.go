@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -31,6 +32,16 @@ func (f *fakeAuthorizer) CheckTenant(context.Context, identity.Principal, ports.
 
 func (f *fakeAuthorizer) CheckInventory(context.Context, identity.Principal, ports.InventoryPermission, inventory.InventoryID) error {
 	return f.checkInventoryErr
+}
+
+func (f *fakeAuthorizer) ListViewableInventoryIDs(_ context.Context, _ identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	if f.checkInventoryErr != nil {
+		if errors.Is(f.checkInventoryErr, ports.ErrForbidden) {
+			return []inventory.InventoryID{}, nil
+		}
+		return nil, f.checkInventoryErr
+	}
+	return append([]inventory.InventoryID{}, candidates...), nil
 }
 
 func (f *fakeAuthorizer) GrantTenantOwner(_ context.Context, principal identity.Principal, tenantID tenant.ID) error {

@@ -16,15 +16,17 @@ func TestCreateAndListCustomFieldDefinitions(t *testing.T) {
 	observer := &fakeObserver{}
 	customFields := &fakeCustomFieldRepository{}
 	application := New(Dependencies{
-		Observer:     observer,
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: customFields,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{ids: []string{"tenant-definition", "inventory-definition"}},
-		MaxPageLimit: 1,
+		Observer:              observer,
+		Authorizer:            &fakeAuthorizer{},
+		Tenants:               &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:      &fakeTenantRepository{exists: true},
+		Inventories:           &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:          customFields,
+		CustomFieldUnitOfWork: customFields,
+		Audit:                 &fakeAuditRepository{},
+		Outbox:                &fakeOutbox{},
+		IDs:                   &fakeIDGenerator{ids: []string{"tenant-definition", "inventory-definition"}},
+		MaxPageLimit:          1,
 	})
 
 	tenantDefinition, err := application.CreateTenantCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
@@ -96,15 +98,18 @@ func TestUpdateCustomFieldDefinitionSchemaExpansionRecordsAuditAndObservability(
 		customAssetType(t, "supply-type", "tenant-one", "inventory-one", customfield.ScopeInventory, "supply", "Supply"),
 	}}
 	application := New(Dependencies{
-		Observer:         observer,
-		Authorizer:       &fakeAuthorizer{},
-		Tenants:          &fakeTenantRepository{exists: true},
-		Inventories:      &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Cabinet")}},
-		CustomAssetTypes: customAssetTypes,
-		CustomFields:     customFields,
-		Audit:            &fakeAuditRepository{},
-		Outbox:           &fakeOutbox{},
-		IDs:              &fakeIDGenerator{ids: []string{"condition-field", "audit-create", "audit-update"}},
+		Observer:                  observer,
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Cabinet")}},
+		CustomAssetTypes:          customAssetTypes,
+		CustomAssetTypeUnitOfWork: customAssetTypes,
+		CustomFields:              customFields,
+		CustomFieldUnitOfWork:     customFields,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    &fakeOutbox{},
+		IDs:                       &fakeIDGenerator{ids: []string{"condition-field", "audit-create", "audit-update"}},
 	})
 
 	definition, err := application.CreateInventoryCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
@@ -157,12 +162,14 @@ func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) 
 		Authorizer: &fakeAuthorizer{
 			checkTenantErr: ports.ErrForbidden,
 		},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: customFields,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{ids: []string{"definition-one"}},
+		Tenants:               &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:      &fakeTenantRepository{exists: true},
+		Inventories:           &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:          customFields,
+		CustomFieldUnitOfWork: customFields,
+		Audit:                 &fakeAuditRepository{},
+		Outbox:                &fakeOutbox{},
+		IDs:                   &fakeIDGenerator{ids: []string{"definition-one"}},
 	})
 
 	_, err := application.CreateTenantCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
@@ -177,14 +184,16 @@ func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) 
 	}
 
 	allowed := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: customFields,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{ids: []string{"definition-two", "definition-three"}},
+		Observer:              &fakeObserver{},
+		Authorizer:            &fakeAuthorizer{},
+		Tenants:               &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:      &fakeTenantRepository{exists: true},
+		Inventories:           &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:          customFields,
+		CustomFieldUnitOfWork: customFields,
+		Audit:                 &fakeAuditRepository{},
+		Outbox:                &fakeOutbox{},
+		IDs:                   &fakeIDGenerator{ids: []string{"definition-two", "definition-three"}},
 	})
 	_, err = allowed.CreateTenantCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},

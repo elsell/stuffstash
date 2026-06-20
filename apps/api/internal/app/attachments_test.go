@@ -18,15 +18,18 @@ import (
 func TestCreateAttachmentDeletesBlobWhenMetadataSaveFails(t *testing.T) {
 	blobStore := &recordingBlobStorage{}
 	application := New(Dependencies{
-		Observer:           noopObserver{},
-		Authorizer:         allowInventoryAuthorizer{},
-		Tenants:            attachmentTenantRepository{},
-		Inventories:        attachmentInventoryRepository{},
-		Assets:             attachmentAssetRepository{},
-		Attachments:        failingAttachmentRepository{},
-		Blobs:              blobStore,
-		IDs:                &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
-		MaxAttachmentBytes: 32,
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          failingAttachmentRepository{},
+		AttachmentUnitOfWork: failingAttachmentRepository{},
+		Blobs:                blobStore,
+		IDs:                  &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
+		MaxAttachmentBytes:   32,
 	})
 
 	_, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
@@ -49,15 +52,18 @@ func TestCreateAttachmentDeletesBlobWhenMetadataSaveFails(t *testing.T) {
 
 func TestCreateAttachmentRejectsContentTypeMismatch(t *testing.T) {
 	application := New(Dependencies{
-		Observer:           noopObserver{},
-		Authorizer:         allowInventoryAuthorizer{},
-		Tenants:            attachmentTenantRepository{},
-		Inventories:        attachmentInventoryRepository{},
-		Assets:             attachmentAssetRepository{},
-		Attachments:        failingAttachmentRepository{},
-		Blobs:              &recordingBlobStorage{},
-		IDs:                &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
-		MaxAttachmentBytes: 32,
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          failingAttachmentRepository{},
+		AttachmentUnitOfWork: failingAttachmentRepository{},
+		Blobs:                &recordingBlobStorage{},
+		IDs:                  &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
+		MaxAttachmentBytes:   32,
 	})
 
 	_, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
@@ -87,6 +93,10 @@ func (allowInventoryAuthorizer) CheckTenant(context.Context, identity.Principal,
 
 func (allowInventoryAuthorizer) CheckInventory(context.Context, identity.Principal, ports.InventoryPermission, inventory.InventoryID) error {
 	return nil
+}
+
+func (allowInventoryAuthorizer) ListViewableInventoryIDs(_ context.Context, _ identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	return append([]inventory.InventoryID{}, candidates...), nil
 }
 
 func (allowInventoryAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
@@ -258,7 +268,7 @@ func (failingAttachmentRepository) UpdateAttachmentLifecycle(context.Context, me
 	return ports.ErrConflict
 }
 
-func (failingAttachmentRepository) DeleteAttachment(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID, audit.Record) (media.Attachment, bool, error) {
+func (failingAttachmentRepository) DeleteAttachmentAndEnqueueBlobDeletion(context.Context, string, tenant.ID, inventory.InventoryID, asset.ID, media.ID, audit.Record) (media.Attachment, bool, error) {
 	return media.Attachment{}, false, ports.ErrConflict
 }
 

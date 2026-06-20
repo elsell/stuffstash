@@ -27,11 +27,13 @@ func TestGrantInventoryAccessRequiresShareAndRejectsInvalidGrants(t *testing.T) 
 		Tenants: &fakeTenantRepository{
 			exists: true,
 		},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          &fakeOutbox{},
-		IDs:             &fakeIDGenerator{ids: []string{"event-one"}},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    &fakeOutbox{},
+		IDs:                       &fakeIDGenerator{ids: []string{"event-one"}},
 	})
 
 	_, err := application.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
@@ -49,14 +51,17 @@ func TestGrantInventoryAccessRequiresShareAndRejectsInvalidGrants(t *testing.T) 
 	}
 
 	allowed := New(Dependencies{
-		Observer:        &fakeObserver{},
-		Authorizer:      &fakeAuthorizer{},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          &fakeOutbox{},
-		IDs:             &fakeIDGenerator{ids: []string{"event-two"}},
+		Observer:                  &fakeObserver{},
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    &fakeOutbox{},
+		IDs:                       &fakeIDGenerator{ids: []string{"event-two"}},
 	})
 	for _, item := range []struct {
 		name          string
@@ -91,15 +96,18 @@ func TestGrantAndListInventoryAccessGrants(t *testing.T) {
 		},
 	}
 	application := New(Dependencies{
-		Observer:        observer,
-		Authorizer:      &fakeAuthorizer{},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          &fakeOutbox{},
-		IDs:             &fakeIDGenerator{ids: []string{"event-one", "event-two"}},
-		MaxPageLimit:    1,
+		Observer:                  observer,
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    &fakeOutbox{},
+		IDs:                       &fakeIDGenerator{ids: []string{"event-one", "event-two"}},
+		MaxPageLimit:              1,
 	})
 
 	_, err := application.GrantInventoryAccess(context.Background(), GrantInventoryAccessInput{
@@ -172,14 +180,17 @@ func TestRevokeInventoryAccessRequiresShareAndIsIdempotent(t *testing.T) {
 		outbox: outbox,
 	}
 	application := New(Dependencies{
-		Observer:        observer,
-		Authorizer:      &fakeAuthorizer{},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          outbox,
-		IDs:             &fakeIDGenerator{ids: []string{"audit-revoke", "event-revoke", "claim-revoke", "audit-missing", "event-missing", "claim-missing"}},
+		Observer:                  observer,
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    outbox,
+		IDs:                       &fakeIDGenerator{ids: []string{"audit-revoke", "event-revoke", "claim-revoke", "audit-missing", "event-missing", "claim-missing"}},
 	})
 
 	removed, err := application.RevokeInventoryAccess(context.Background(), RevokeInventoryAccessInput{
@@ -221,12 +232,15 @@ func TestRevokeInventoryAccessRequiresShareAndIsIdempotent(t *testing.T) {
 		Authorizer: &fakeAuthorizer{
 			checkInventoryErr: ports.ErrForbidden,
 		},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          &fakeOutbox{},
-		IDs:             &fakeIDGenerator{ids: []string{"audit-unauthorized", "event-unauthorized"}},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    &fakeOutbox{},
+		IDs:                       &fakeIDGenerator{ids: []string{"audit-unauthorized", "event-unauthorized"}},
 	})
 	_, err = unauthorized.RevokeInventoryAccess(context.Background(), RevokeInventoryAccessInput{
 		Principal:    identity.Principal{ID: identity.PrincipalID("viewer")},
@@ -268,8 +282,11 @@ func TestRevokeInventoryAccessProcessesItsOwnOutboxEventWhenBacklogExists(t *tes
 		Observer:                      &fakeObserver{},
 		Authorizer:                    &fakeAuthorizer{},
 		Tenants:                       &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:              &fakeTenantRepository{exists: true},
 		Inventories:                   repository,
+		InventoryUnitOfWork:           repository,
 		InventoryAccess:               repository,
+		InventoryAccessUnitOfWork:     repository,
 		Audit:                         &fakeAuditRepository{},
 		Outbox:                        outbox,
 		IDs:                           &fakeIDGenerator{ids: []string{"audit-revoke", "event-revoke", "claim-revoke"}},
@@ -307,14 +324,17 @@ func TestInventoryAccessInvitationCreateAcceptAndRevoke(t *testing.T) {
 	}
 	observer := &fakeObserver{}
 	application := New(Dependencies{
-		Observer:        observer,
-		Authorizer:      &fakeAuthorizer{},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          outbox,
-		IDs:             &fakeIDGenerator{ids: []string{"invite-one", "audit-invite", "audit-accept", "grant-event", "grant-claim", "invite-two", "audit-invite-two", "audit-revoke"}},
+		Observer:                  observer,
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    outbox,
+		IDs:                       &fakeIDGenerator{ids: []string{"invite-one", "audit-invite", "audit-accept", "grant-event", "grant-claim", "invite-two", "audit-invite-two", "audit-revoke"}},
 	})
 
 	inviteResult, err := application.CreateInventoryAccessInvitation(context.Background(), CreateInventoryAccessInvitationInput{
@@ -421,14 +441,17 @@ func TestCreateInventoryAccessInvitationRejectsDuplicatePendingInvitation(t *tes
 		},
 	}
 	application := New(Dependencies{
-		Observer:        &fakeObserver{},
-		Authorizer:      &fakeAuthorizer{},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          &fakeOutbox{},
-		IDs:             &fakeIDGenerator{ids: []string{"invite-two", "audit-invite-two"}},
+		Observer:                  &fakeObserver{},
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    &fakeOutbox{},
+		IDs:                       &fakeIDGenerator{ids: []string{"invite-two", "audit-invite-two"}},
 	})
 
 	_, err := application.CreateInventoryAccessInvitation(context.Background(), CreateInventoryAccessInvitationInput{
@@ -473,14 +496,17 @@ func TestAcceptInventoryAccessInvitationRejectsMissingOrWrongEmail(t *testing.T)
 		outbox: &fakeOutbox{},
 	}
 	application := New(Dependencies{
-		Observer:        &fakeObserver{},
-		Authorizer:      &fakeAuthorizer{checkInventoryErr: ports.ErrForbidden},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     repository,
-		InventoryAccess: repository,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          repository.outbox,
-		IDs:             &fakeIDGenerator{ids: []string{"audit-missing", "event-missing", "audit-wrong", "event-wrong"}},
+		Observer:                  &fakeObserver{},
+		Authorizer:                &fakeAuthorizer{checkInventoryErr: ports.ErrForbidden},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               repository,
+		InventoryUnitOfWork:       repository,
+		InventoryAccess:           repository,
+		InventoryAccessUnitOfWork: repository,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    repository.outbox,
+		IDs:                       &fakeIDGenerator{ids: []string{"audit-missing", "event-missing", "audit-wrong", "event-wrong"}},
 	})
 
 	for _, item := range []struct {

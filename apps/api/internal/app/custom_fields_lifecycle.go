@@ -153,7 +153,7 @@ func (a App) updateCustomFieldDefinitionLifecycle(ctx context.Context, input Upd
 	if err != nil {
 		return customfield.Definition{}, err
 	}
-	if err := a.customFields.UpdateCustomFieldDefinitionLifecycle(ctx, updated, auditRecord); err != nil {
+	if err := a.customFieldUnitOfWork.UpdateCustomFieldDefinitionLifecycle(ctx, updated, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return customfield.Definition{}, ErrInvalidInput
 		}
@@ -232,7 +232,7 @@ func (a App) deleteCustomFieldDefinition(ctx context.Context, input UpdateCustom
 	if err != nil {
 		return err
 	}
-	if err := a.customFields.DeleteCustomFieldDefinition(ctx, input.TenantID, input.InventoryID, definitionID, auditRecord); err != nil {
+	if err := a.customFieldUnitOfWork.DeleteCustomFieldDefinition(ctx, input.TenantID, input.InventoryID, definitionID, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return ErrInvalidInput
 		}

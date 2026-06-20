@@ -4,6 +4,11 @@ import "testing"
 
 func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envHTTPAddr, "")
+	t.Setenv(envHTTPReadHeaderTimeout, "")
+	t.Setenv(envHTTPReadTimeout, "")
+	t.Setenv(envHTTPWriteTimeout, "")
+	t.Setenv(envHTTPIdleTimeout, "")
+	t.Setenv(envHTTPMaxJSONBodyBytes, "")
 	t.Setenv(envCORSAllowedOrigins, "")
 	t.Setenv(envAuthMode, "")
 	t.Setenv(envAuthzMode, "")
@@ -33,6 +38,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 
 	if cfg.HTTPAddr != defaultHTTPAddr {
 		t.Fatalf("expected HTTP addr %q, got %q", defaultHTTPAddr, cfg.HTTPAddr)
+	}
+	if cfg.HTTPReadHeaderTimeout != defaultHTTPReadHeader || cfg.HTTPReadTimeout != defaultHTTPRead || cfg.HTTPWriteTimeout != defaultHTTPWrite || cfg.HTTPIdleTimeout != defaultHTTPIdle {
+		t.Fatalf("unexpected HTTP timeout defaults: %+v", cfg)
+	}
+	if cfg.HTTPMaxJSONBodyBytes != defaultHTTPMaxJSONBodyBytes {
+		t.Fatalf("expected default max JSON body bytes %d, got %d", defaultHTTPMaxJSONBodyBytes, cfg.HTTPMaxJSONBodyBytes)
 	}
 	if len(cfg.CORSAllowedOrigins) != 0 {
 		t.Fatalf("expected no CORS allowed origins by default, got %+v", cfg.CORSAllowedOrigins)
@@ -101,6 +112,11 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthMode, "oidc")
+	t.Setenv(envHTTPReadHeaderTimeout, "2s")
+	t.Setenv(envHTTPReadTimeout, "3s")
+	t.Setenv(envHTTPWriteTimeout, "4s")
+	t.Setenv(envHTTPIdleTimeout, "5s")
+	t.Setenv(envHTTPMaxJSONBodyBytes, "2048")
 	t.Setenv(envCORSAllowedOrigins, "http://localhost:5173, https://stuffstash.online, http://localhost:5173")
 	t.Setenv(envAuthzMode, "spicedb")
 	t.Setenv(envOIDCIssuer, "https://accounts.google.com")
@@ -134,6 +150,12 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 
 	if cfg.AuthMode != "oidc" {
 		t.Fatalf("expected auth mode oidc, got %q", cfg.AuthMode)
+	}
+	if cfg.HTTPReadHeaderTimeout.String() != "2s" || cfg.HTTPReadTimeout.String() != "3s" || cfg.HTTPWriteTimeout.String() != "4s" || cfg.HTTPIdleTimeout.String() != "5s" {
+		t.Fatalf("unexpected HTTP timeout config: %+v", cfg)
+	}
+	if cfg.HTTPMaxJSONBodyBytes != 2048 {
+		t.Fatalf("expected max JSON body bytes 2048, got %d", cfg.HTTPMaxJSONBodyBytes)
 	}
 	if len(cfg.CORSAllowedOrigins) != 2 || cfg.CORSAllowedOrigins[0] != "http://localhost:5173" || cfg.CORSAllowedOrigins[1] != "https://stuffstash.online" {
 		t.Fatalf("unexpected CORS allowed origins: %+v", cfg.CORSAllowedOrigins)

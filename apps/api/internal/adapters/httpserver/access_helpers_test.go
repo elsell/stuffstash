@@ -22,6 +22,10 @@ func (failingGrantAuthorizer) CheckInventory(context.Context, identity.Principal
 	return ports.ErrForbidden
 }
 
+func (failingGrantAuthorizer) ListViewableInventoryIDs(context.Context, identity.Principal, tenant.ID, []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	return []inventory.InventoryID{}, nil
+}
+
 func (failingGrantAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
 	return errors.New("spicedb unavailable")
 }
@@ -58,6 +62,10 @@ func (f failingRevokeAuthorizer) CheckInventory(ctx context.Context, principal i
 	return f.delegate.CheckInventory(ctx, principal, permission, inventoryID)
 }
 
+func (f failingRevokeAuthorizer) ListViewableInventoryIDs(ctx context.Context, principal identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	return f.delegate.ListViewableInventoryIDs(ctx, principal, tenantID, candidates)
+}
+
 func (f failingRevokeAuthorizer) GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error {
 	return f.delegate.GrantTenantOwner(ctx, principal, tenantID)
 }
@@ -92,6 +100,10 @@ func (f failingTenantGrantAuthorizer) CheckTenant(ctx context.Context, principal
 
 func (f failingTenantGrantAuthorizer) CheckInventory(ctx context.Context, principal identity.Principal, permission ports.InventoryPermission, inventoryID inventory.InventoryID) error {
 	return f.delegate.CheckInventory(ctx, principal, permission, inventoryID)
+}
+
+func (f failingTenantGrantAuthorizer) ListViewableInventoryIDs(ctx context.Context, principal identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	return f.delegate.ListViewableInventoryIDs(ctx, principal, tenantID, candidates)
 }
 
 func (f failingTenantGrantAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {

@@ -465,6 +465,17 @@ func (s *selectiveInventoryAuthorizer) CheckInventory(_ context.Context, _ ident
 	return nil
 }
 
+func (s *selectiveInventoryAuthorizer) ListViewableInventoryIDs(_ context.Context, _ identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	visible := []inventory.InventoryID{}
+	for _, inventoryID := range candidates {
+		if _, ok := s.forbidden[inventoryID]; ok {
+			continue
+		}
+		visible = append(visible, inventoryID)
+	}
+	return visible, nil
+}
+
 func (s *selectiveInventoryAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
 	return nil
 }

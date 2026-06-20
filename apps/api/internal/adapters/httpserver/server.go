@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
@@ -17,6 +18,11 @@ func init() {
 
 type Options struct {
 	CORSAllowedOrigins []string
+	MaxJSONBodyBytes   int64
+	ReadHeaderTimeout  time.Duration
+	ReadTimeout        time.Duration
+	WriteTimeout       time.Duration
+	IdleTimeout        time.Duration
 }
 
 func NewServer(addr string, application app.App) *http.Server {
@@ -42,10 +48,48 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	api := humago.New(mux, config)
 	registerRoutes(api, application)
 
-	return &http.Server{
-		Addr:    addr,
-		Handler: withCORS(mux, options.CORSAllowedOrigins),
+	maxJSONBodyBytes := options.MaxJSONBodyBytes
+	if maxJSONBodyBytes <= 0 {
+		maxJSONBodyBytes = application.MaxAttachmentJSONBodyBytes()
 	}
+	handler := withSecurityHeaders(withCORS(withMaxJSONBodyBytes(mux, maxJSONBodyBytes), options.CORSAllowedOrigins))
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: normalizeDuration(options.ReadHeaderTimeout, 5*time.Second),
+		ReadTimeout:       normalizeDuration(options.ReadTimeout, 15*time.Second),
+		WriteTimeout:      normalizeDuration(options.WriteTimeout, 30*time.Second),
+		IdleTimeout:       normalizeDuration(options.IdleTimeout, 60*time.Second),
+	}
+}
+
+func withSecurityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func withMaxJSONBodyBytes(next http.Handler, maxBytes int64) http.Handler {
+	if maxBytes <= 0 {
+		maxBytes = 1024 * 1024
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Body != nil && strings.Contains(strings.ToLower(r.Header.Get("Content-Type")), "application/json") {
+			r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func normalizeDuration(value time.Duration, fallback time.Duration) time.Duration {
+	if value <= 0 {
+		return fallback
+	}
+	return value
 }
 
 func withCORS(next http.Handler, allowedOrigins []string) http.Handler {

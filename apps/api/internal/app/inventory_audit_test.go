@@ -17,17 +17,21 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 	inventories := &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}}
 	outbox := &fakeOutbox{}
 	application := New(Dependencies{
-		Observer:        &fakeObserver{},
-		Authorizer:      &fakeAuthorizer{},
-		Tenants:         &fakeTenantRepository{exists: true},
-		Inventories:     inventories,
-		InventoryAccess: inventories,
-		CustomFields:    customFields,
-		Assets:          assets,
-		AssetUnitOfWork: assets,
-		Undoables:       assets,
-		Audit:           &fakeAuditRepository{},
-		Outbox:          outbox,
+		Observer:                  &fakeObserver{},
+		Authorizer:                &fakeAuthorizer{},
+		Tenants:                   &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:          &fakeTenantRepository{exists: true},
+		Inventories:               inventories,
+		InventoryUnitOfWork:       inventories,
+		InventoryAccess:           inventories,
+		InventoryAccessUnitOfWork: inventories,
+		CustomFields:              customFields,
+		CustomFieldUnitOfWork:     customFields,
+		Assets:                    assets,
+		AssetUnitOfWork:           assets,
+		Undoables:                 assets,
+		Audit:                     &fakeAuditRepository{},
+		Outbox:                    outbox,
 		IDs: &fakeIDGenerator{ids: []string{
 			"tenant-created", "audit-tenant", "tenant-owner-event", "claim-tenant",
 			"inventory-created", "audit-inventory", "inventory-owner-event", "claim-inventory",
@@ -141,9 +145,10 @@ func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
 		auditRecord("audit-four", "tenant-two", "inventory-three", audit.ActionAssetCreated),
 	}}
 	application := New(Dependencies{
-		Observer:   &fakeObserver{},
-		Authorizer: &fakeAuthorizer{},
-		Tenants:    &fakeTenantRepository{exists: true},
+		Observer:         &fakeObserver{},
+		Authorizer:       &fakeAuthorizer{},
+		Tenants:          &fakeTenantRepository{exists: true},
+		TenantUnitOfWork: &fakeTenantRepository{exists: true},
 		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
 			inventoryItem("inventory-one", "tenant-one", "Tools"),
 			inventoryItem("inventory-two", "tenant-one", "Supplies"),
@@ -195,7 +200,8 @@ func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
 		Authorizer: &fakeAuthorizer{
 			checkInventoryErr: ports.ErrForbidden,
 		},
-		Tenants: &fakeTenantRepository{exists: true},
+		Tenants:          &fakeTenantRepository{exists: true},
+		TenantUnitOfWork: &fakeTenantRepository{exists: true},
 		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
 			inventoryItem("inventory-one", "tenant-one", "Tools"),
 		}},
@@ -216,9 +222,10 @@ func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
 		Authorizer: &fakeAuthorizer{
 			checkTenantErr: ports.ErrForbidden,
 		},
-		Tenants: &fakeTenantRepository{exists: true},
-		Audit:   audits,
-		Outbox:  &fakeOutbox{},
+		Tenants:          &fakeTenantRepository{exists: true},
+		TenantUnitOfWork: &fakeTenantRepository{exists: true},
+		Audit:            audits,
+		Outbox:           &fakeOutbox{},
 	})
 	_, err = deniedTenant.ListTenantAuditRecords(context.Background(), ListAuditRecordsInput{
 		Principal: identity.Principal{ID: identity.PrincipalID("viewer")},

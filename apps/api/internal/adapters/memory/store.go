@@ -23,6 +23,7 @@ type Store struct {
 	undoables        map[string]ports.UndoableOperation
 	attachments      map[media.ID]media.Attachment
 	blobs            map[media.StorageKey][]byte
+	blobDeletions    map[string]ports.BlobDeletionEvent
 	auditRecords     map[audit.ID]audit.Record
 	outbox           map[string]ports.AuthorizationOutboxEvent
 }
@@ -39,6 +40,7 @@ func NewStore() *Store {
 		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},
 		blobs:            map[media.StorageKey][]byte{},
+		blobDeletions:    map[string]ports.BlobDeletionEvent{},
 		auditRecords:     map[audit.ID]audit.Record{},
 		outbox:           map[string]ports.AuthorizationOutboxEvent{},
 	}

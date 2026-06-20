@@ -53,6 +53,10 @@ This spec does not define every future asset index, backup strategy, retention p
 - Audited list, detail, and content read operations must write safe append-only read audit records behind the same repository port.
 - State-changing operations that must commit domain state together with audit records, undoable operations, authorization outbox events, or other side-effect intent must use a dedicated transactional command/unit-of-work port instead of overloading read repository ports.
 - Read repositories must expose only lookup, list, and invariant-query behavior. Transactional command/unit-of-work ports own atomic write boundaries.
+- Tenant, inventory, inventory access, custom field definition, custom asset type, attachment, and future state-changing persistence surfaces must follow the same read repository plus command/unit-of-work split used by the asset slice.
+- State-changing application services must depend on command/unit-of-work ports for writes. Read repositories must not grow new save, update, delete, archive, restore, enqueue, claim, or lifecycle methods.
+- External side effects that cannot be committed atomically with database state, such as blob deletion or provider calls, must be represented as durable side-effect intent before they are executed.
+- Side-effect outboxes must be retryable, observable, and safe for multiple API replicas.
 - Audit records must preserve tenant and inventory isolation in storage and read queries.
 - Audit metadata must be stored as a JSON object and must not be used as an authorization source.
 
