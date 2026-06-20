@@ -293,6 +293,8 @@ Representative sampled glyph colors are:
 
 These values come from dominant non-white, opaque pixel clusters in the current logo asset. They are approved as logo-direction colors, not yet as full product UI tokens.
 
+The documentation site keeps a public favicon copy and a Starlight-imported source copy of the logo glyph. Those files must remain byte-identical, and the docs build must fail if they drift.
+
 Color roles to define in a future token spec include:
 
 - Page background.
