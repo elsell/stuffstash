@@ -37,6 +37,7 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - The web app must use the public REST API contract directly through a frontend adapter boundary.
 - Generated OpenAPI types or client code must be used for the API adapter boundary as soon as the web package exists.
 - Generated DTOs must not become frontend domain models.
+- The web app must move toward shadcn-style reusable components through the Svelte-compatible shadcn implementation before broad UI expansion.
 
 ## Local OIDC Shape
 
@@ -146,6 +147,10 @@ Lifecycle actions must surface safe API errors to the user through the existing 
 
 The first web UI must follow `specs/platform/brand-guidelines.spec.md`.
 
+The web UI component foundation must follow `specs/platform/client-technology.spec.md`.
+
+The initial tracer bullet may use hand-written markup and CSS while the surface is small. Before adding substantial sharing, custom fields, media, search, or conversational screens, introduce the Svelte-compatible shadcn component foundation and migrate common primitives such as buttons, inputs, tabs, dialogs, badges, forms, and toasts toward it.
+
 The tracer bullet should:
 
 - Feel like a clean personal tool, not warehouse software.
@@ -185,3 +190,4 @@ Before the slice is considered complete:
 - Should the first full browser e2e flow run against host-run API plus Docker infrastructure, or a dedicated Compose profile that makes Dex issuer URLs valid for both browser and API?
 - Which generated OpenAPI client tool should become the long-term standard for TypeScript clients?
 - Should design tokens live in `packages/client-domain`, a future `packages/design-tokens`, or inside `apps/web` until mobile exists?
+- Which exact pinned shadcn-svelte setup command, component registry, and dependency set should be used for the first migration pass?

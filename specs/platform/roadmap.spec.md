@@ -23,7 +23,7 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is the web lifecycle tracer bullet.
+The current focus is the web sharing and user-management tracer bullet.
 
 The goal is to prove a production-shaped path through:
 
@@ -35,7 +35,8 @@ The goal is to prove a production-shaped path through:
 - adversarial security tests,
 - domain-oriented observability,
 - local Docker verification,
-- a usable SvelteKit browser flow.
+- a usable SvelteKit browser flow,
+- a Svelte-compatible shadcn component foundation before broad UI expansion.
 
 ## Current Evidence
 
@@ -70,7 +71,8 @@ The goal is to prove a production-shaped path through:
 - Custom asset type archive now preserves existing asset and custom field target references while hiding archived types from normal lists, blocking new assignments, blocking new field targets, recording audit history, and exposing adversarial API coverage.
 - Full REST lifecycle coverage now exists for tenants, inventories, assets, attachments, custom field definitions, custom asset types, access grant detail, and invitation detail/cancel/delete.
 - Lifecycle endpoints emit read/write audit records, preserve tenant and inventory security boundaries, and are covered by OpenAPI generation checks plus adversarial HTTP tests.
-- The separate SvelteKit web app exists under `apps/web`, uses Dex OIDC with PKCE, uses runtime configuration, calls the API through the generated OpenAPI client boundary, and proves inventory creation, asset creation, and active asset browsing.
+- The separate SvelteKit web app exists under `apps/web`, uses Dex OIDC with PKCE, uses runtime configuration, calls the API through the generated OpenAPI client boundary, and proves inventory creation, asset creation, active/archived asset browsing, asset archive, asset restore, and asset hard delete.
+- `0c8d7d4 feat(web): add asset lifecycle controls` added the first web lifecycle controls and focused frontend interaction tests.
 
 ## Known Gaps
 
@@ -80,14 +82,15 @@ The goal is to prove a production-shaped path through:
 - Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
-- The web UI can create and browse active assets, but it does not yet expose archive, restore, hard delete, sharing, search, audit history, custom fields, custom asset types, or media.
+- The web UI can create inventories, create assets, browse active and archived assets, archive assets, restore assets, and hard-delete assets, but it does not yet expose sharing, search, audit history, custom fields, custom asset types, or media.
+- The web UI still uses hand-written tracer-bullet components; introduce the Svelte-compatible shadcn component foundation before broad UI expansion.
 
 ## Next Work
 
-1. Extend the SvelteKit web tracer bullet with asset lifecycle management.
-   - Browse active and archived assets.
-   - Archive, restore, and hard-delete assets through the generated API client adapter.
-   - Add focused frontend tests for lifecycle UI behavior and adapter calls.
+1. Add the Svelte-compatible shadcn component foundation for the web app.
+   - Pin the setup tooling and runtime dependencies.
+   - Introduce the first reusable primitives needed by the sharing UI.
+   - Keep generated or copied components local to `apps/web` unless a future spec justifies a shared package.
 2. Add sharing and user-management UI.
    - Show direct grants.
    - Create invite-link tokens.

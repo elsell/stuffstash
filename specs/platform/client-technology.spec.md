@@ -17,6 +17,7 @@ This spec does not define user-facing screens, navigation, visual design, offlin
 ## Decisions
 
 - The web application must use SvelteKit.
+- The SvelteKit web application must use shadcn-style components through the Svelte-compatible shadcn implementation, not the React `shadcn/ui` package.
 - Native mobile applications must use React Native with Expo.
 - Mobile targets must include iOS and Android.
 - The web and mobile applications must be separate clients in the monorepo.
@@ -27,6 +28,24 @@ This spec does not define user-facing screens, navigation, visual design, offlin
 - The web and mobile clients must consume the same public API contract unless a future spec justifies a BFF for a concrete product or security need.
 - The clients should share generated API contracts, domain vocabulary, test scenarios, and design tokens where useful.
 - The clients must not share UI code at the cost of weaker platform behavior, worse performance, or unclear ownership.
+
+## Web Component Strategy
+
+The web application must use a shadcn-style component system for reusable UI primitives.
+
+For the SvelteKit app, this means:
+
+- Use the Svelte-compatible shadcn implementation as the source for reusable web components.
+- Keep generated or copied component code inside the web application unless a future spec justifies a shared design-system package.
+- Treat shadcn components as local application UI primitives after generation; review and test them like project code.
+- Pin all component-generation tooling and runtime dependencies.
+- Do not use React `shadcn/ui` directly in the SvelteKit web application.
+- Do not let component-library DTOs, styling helpers, or implementation details leak into client domain models or API adapter code.
+- Keep Stuff Stash brand tokens, accessibility expectations, and performance budgets above component-library defaults.
+- Prefer shadcn primitives for common controls such as buttons, inputs, dialogs, tabs, menus, badges, tables, toasts, and form controls once the library is introduced.
+- Custom UI remains appropriate for product-specific surfaces such as the conversational command affordance, asset photo treatment, action previews, and inventory-specific empty states.
+
+The current hand-written tracer-bullet components may remain temporarily, but broader web UI work should introduce the shadcn component foundation before building many more screens.
 
 ## Requirements
 
@@ -55,7 +74,7 @@ This spec does not define user-facing screens, navigation, visual design, offlin
 - Web builds must track bundle size and route-level JavaScript cost.
 - Web flows must be tested with Web Vitals or an equivalent performance signal once the web app exists.
 - Mobile flows must be tested on realistic devices or emulators before release.
-- Third-party UI libraries must not be added unless a spec explains the need, expected cost, and replacement strategy.
+- Third-party UI libraries must not be added unless a spec explains the need, expected cost, and replacement strategy. The approved web UI component direction is the Svelte-compatible shadcn implementation described above.
 - Accessibility and keyboard or assistive-technology responsiveness are part of client performance, not separate polish work.
 
 ## Monorepo Expectations

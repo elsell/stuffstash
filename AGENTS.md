@@ -197,6 +197,9 @@ These instructions are binding for all agents and contributors working in this r
   - Support arbitrary OIDC providers by design.
 - Web application:
   - Use SvelteKit.
+  - Use shadcn-style reusable components through the Svelte-compatible shadcn implementation for the SvelteKit UI.
+  - Do not use the React `shadcn/ui` package directly in the SvelteKit web application.
+  - Keep generated or copied shadcn components local to the web app until a spec justifies a shared design-system package.
   - Treat the web application as a separate deployable frontend from the beginning.
   - Do not embed or serve the production web application bundle from the Go API as the primary deployment model.
   - Do not introduce a backend-for-frontend layer unless a future spec justifies it for a concrete product or security need.
