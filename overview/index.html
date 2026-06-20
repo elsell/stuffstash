@@ -83,12 +83,13 @@
 <li>A health endpoint.</li>
 <li>Local development auth and production-shaped OIDC auth, with Dex for local OIDC verification.</li>
 <li>In-memory authorization for local use and SpiceDB authorization wiring.</li>
-<li>Tenant creation, inventory creation/listing, and first asset create/list/update/move flow.</li>
+<li>Tenant and inventory creation, browsing, update, archive, restore, and hard-delete flows.</li>
+<li>Asset create/list/detail/update/move/archive/restore/delete flow.</li>
 <li>Custom asset types, such as medicine or tools, with type-specific custom fields.</li>
 <li>Tenant and inventory custom field definitions with asset value validation.</li>
 <li>Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.</li>
 <li>Asset search across the inventories a user can view.</li>
-<li>Durable audit history for the first state-changing actions.</li>
+<li>Durable audit history for state changes and selected reads.</li>
 <li>Inventory sharing by known principal ID or invite-link token, with viewer and editor access plus revocation.</li>
 <li>Huma-generated OpenAPI at <code dir="auto">/openapi.json</code>.</li>
 <li>A generated TypeScript API client used by the web app at its adapter boundary.</li>
