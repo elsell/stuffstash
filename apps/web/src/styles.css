@@ -244,6 +244,46 @@ dd {
   background: var(--color-border);
 }
 
+.inventory-tabs,
+.asset-tools,
+.asset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inventory-tabs button.active,
+.segmented button.active {
+  color: #ffffff;
+  border-color: var(--color-brand-frame);
+  background: var(--color-brand-frame);
+}
+
+.asset-tools {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.segmented {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.segmented button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 0;
+  color: var(--color-text-strong);
+  background: transparent;
+}
+
+.segmented button:hover {
+  background: var(--color-surface-raised);
+}
+
 .asset-list {
   display: grid;
   gap: 8px;
@@ -268,6 +308,21 @@ dd {
   background: #edf3f7;
   font-size: 0.8rem;
   font-weight: 650;
+}
+
+.asset-actions {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+button.danger-button {
+  color: #7f1d1d;
+  border-color: #efb3b3;
+  background: #fff1f1;
+}
+
+button.danger-button:hover {
+  background: #fee2e2;
 }
 
 .empty-state {
@@ -315,5 +370,15 @@ dd {
   .form-grid,
   .asset-form {
     grid-template-columns: 1fr;
+  }
+
+  .asset-tools,
+  .asset-actions {
+    justify-content: flex-start;
+  }
+
+  .asset-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

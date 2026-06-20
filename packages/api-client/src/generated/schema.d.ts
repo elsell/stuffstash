@@ -38,6 +38,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID */
+        get: operations["get-tenants-by-tenant-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID */
+        delete: operations["delete-tenants-by-tenant-id"];
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID */
+        patch: operations["patch-tenants-by-tenant-id"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID archive */
+        patch: operations["patch-tenants-by-tenant-id-archive"];
+        trace?: never;
+    };
     "/tenants/{tenantId}/audit-records": {
         parameters: {
             query?: never;
@@ -80,10 +116,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID custom asset types by custom asset type ID */
+        get: operations["get-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete tenants by tenant ID custom asset types by custom asset type ID */
+        delete: operations["delete-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id"];
         options?: never;
         head?: never;
         /** Patch tenants by tenant ID custom asset types by custom asset type ID */
@@ -105,6 +143,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID custom asset types by custom asset type ID archive */
         patch: operations["patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-archive"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID custom asset types by custom asset type ID restore */
+        patch: operations["patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-restore"];
         trace?: never;
     };
     "/tenants/{tenantId}/custom-field-definitions": {
@@ -132,14 +187,50 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get tenants by tenant ID custom field definitions by definition ID */
+        get: operations["get-tenants-by-tenant-id-custom-field-definitions-by-definition-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID custom field definitions by definition ID */
+        delete: operations["delete-tenants-by-tenant-id-custom-field-definitions-by-definition-id"];
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID custom field definitions by definition ID */
+        patch: operations["patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/custom-field-definitions/{definitionId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get?: never;
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch tenants by tenant ID custom field definitions by definition ID */
-        patch: operations["patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id"];
+        /** Patch tenants by tenant ID custom field definitions by definition ID archive */
+        patch: operations["patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-archive"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/custom-field-definitions/{definitionId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID custom field definitions by definition ID restore */
+        patch: operations["patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-restore"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories": {
@@ -158,6 +249,25 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id"];
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/access-grants": {
@@ -185,7 +295,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID inventories by inventory ID access grants by principal ID by relationship */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants-by-principal-id-by-relationship"];
         put?: never;
         post?: never;
         /** Delete tenants by tenant ID inventories by inventory ID access grants by principal ID by relationship */
@@ -219,7 +330,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID inventories by inventory ID access invitations by invitation ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id"];
         put?: never;
         post?: never;
         /** Delete tenants by tenant ID inventories by inventory ID access invitations by invitation ID */
@@ -244,6 +356,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID access invitations by invitation ID cancel */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID archive */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-archive"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets": {
@@ -271,10 +417,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID assets by asset ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id"];
         options?: never;
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID */
@@ -316,6 +464,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID attachments by attachment ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID assets by asset ID attachments by attachment ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID attachments by attachment ID archive */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-archive"];
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content": {
         parameters: {
             query?: never;
@@ -331,6 +514,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID attachments by attachment ID restore */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-restore"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
@@ -392,10 +592,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID inventories by inventory ID custom asset types by custom asset type ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID custom asset types by custom asset type ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id"];
         options?: never;
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID custom asset types by custom asset type ID */
@@ -417,6 +619,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID custom asset types by custom asset type ID archive */
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-archive"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID custom asset types by custom asset type ID restore */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-restore"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions": {
@@ -444,14 +663,84 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get tenants by tenant ID inventories by inventory ID custom field definitions by definition ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID custom field definitions by definition ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id"];
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID custom field definitions by definition ID */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get?: never;
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch tenants by tenant ID inventories by inventory ID custom field definitions by definition ID */
-        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id"];
+        /** Patch tenants by tenant ID inventories by inventory ID custom field definitions by definition ID archive */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-archive"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID custom field definitions by definition ID restore */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID restore */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-restore"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID restore */
+        patch: operations["patch-tenants-by-tenant-id-restore"];
         trace?: never;
     };
     "/tenants/{tenantId}/search/assets": {
@@ -536,6 +825,7 @@ export interface components {
             fileName: string;
             id: string;
             inventoryId: string;
+            lifecycleState: string;
             sha256: string;
             /** Format: int64 */
             sizeBytes: number;
@@ -651,6 +941,7 @@ export interface components {
             id: string;
             inventoryId?: string;
             key: string;
+            lifecycleState: string;
             scope: string;
             tenantId: string;
             type: string;
@@ -696,6 +987,7 @@ export interface components {
         };
         InventoryResponse: {
             id: string;
+            lifecycleState: string;
             name: string;
             tenantId: string;
         };
@@ -951,6 +1243,7 @@ export interface components {
         };
         TenantResponse: {
             id: string;
+            lifecycleState: string;
             name: string;
         };
         UpdateAssetBody: {
@@ -1005,6 +1298,26 @@ export interface components {
             key?: string;
             /** @description Immutable field type; rejected on update */
             type?: string;
+        };
+        UpdateInventoryBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateInventoryBody.json
+             */
+            readonly $schema?: string;
+            /** @description Inventory name */
+            name?: string;
+        };
+        UpdateTenantBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateTenantBody.json
+             */
+            readonly $schema?: string;
+            /** @description Tenant name */
+            name?: string;
         };
     };
     responses: never;
@@ -1085,6 +1398,156 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeTenantResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTenantBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeTenantResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-archive": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeTenantResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-audit-records": {
         parameters: {
             query?: {
@@ -1136,6 +1599,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -1194,6 +1659,82 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetTypeResponse"];
                 };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom asset type ID */
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTypeResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom asset type ID */
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error */
             default: {
@@ -1288,6 +1829,45 @@ export interface operations {
             };
         };
     };
+    "patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom asset type ID */
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTypeResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-custom-field-definitions": {
         parameters: {
             query?: {
@@ -1299,6 +1879,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -1369,6 +1951,82 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
         parameters: {
             query?: never;
@@ -1412,6 +2070,84 @@ export interface operations {
             };
         };
     };
+    "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-archive": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories": {
         parameters: {
             query?: {
@@ -1423,6 +2159,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -1493,6 +2231,125 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInventoryResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInventoryBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInventoryResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {
         parameters: {
             query?: {
@@ -1504,6 +2361,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -1560,6 +2419,49 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeGrantResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants-by-principal-id-by-relationship": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description User principal ID */
+                principalId: string;
+                /** @description Direct inventory relationship */
+                relationship: "viewer" | "editor";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1662,6 +2564,47 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Invitation ID */
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInvitationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id": {
         parameters: {
             query?: never;
@@ -1746,6 +2689,84 @@ export interface operations {
             };
         };
     };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Invitation ID */
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-archive": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInventoryResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets": {
         parameters: {
             query?: {
@@ -1759,6 +2780,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -1821,6 +2844,86 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
                 };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error */
             default: {
@@ -1930,6 +3033,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -2008,12 +3113,141 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Attachment ID */
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAttachmentResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Attachment ID */
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-archive": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Attachment ID */
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAttachmentResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-content": {
         parameters: {
             query?: never;
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -2038,6 +3272,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Attachment ID */
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAttachmentResponse"];
                 };
             };
             /** @description Error */
@@ -2145,6 +3422,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -2207,6 +3486,86 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetTypeResponse"];
                 };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom asset type ID */
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTypeResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom asset type ID */
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error */
             default: {
@@ -2305,6 +3664,47 @@ export interface operations {
             };
         };
     };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom asset type ID */
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTypeResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions": {
         parameters: {
             query?: {
@@ -2316,6 +3716,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -2390,6 +3792,86 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
         parameters: {
             query?: never;
@@ -2422,6 +3904,164 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-archive": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Custom field definition ID */
+                definitionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInventoryResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeTenantResponse"];
                 };
             };
             /** @description Error */

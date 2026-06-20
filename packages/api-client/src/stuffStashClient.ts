@@ -28,6 +28,8 @@ export interface Inventory {
 }
 
 export type AssetKind = 'item' | 'container' | 'location';
+export type AssetLifecycleState = 'active' | 'archived';
+export type AssetLifecycleFilter = AssetLifecycleState | 'all';
 
 export interface Asset {
   id: string;
@@ -36,7 +38,7 @@ export interface Asset {
   kind: AssetKind;
   title: string;
   description: string;
-  lifecycleState: string;
+  lifecycleState: AssetLifecycleState;
 }
 
 export interface CreateAssetInput {
@@ -135,13 +137,19 @@ export class StuffStashClient {
     return mapInventory(envelope.data);
   }
 
-  async listAssets(tenantId: string, inventoryId: string, limit = 50, cursor?: string): Promise<Page<Asset>> {
+  async listAssets(
+    tenantId: string,
+    inventoryId: string,
+    limit = 50,
+    cursor?: string,
+    lifecycleState: AssetLifecycleFilter = 'active'
+  ): Promise<Page<Asset>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets', {
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId },
-          query: { limit, cursor }
+          query: { limit, cursor, lifecycleState }
         }
       })
     );
@@ -157,6 +165,35 @@ export class StuffStashClient {
       })
     );
     return mapAsset(envelope.data);
+  }
+
+  async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } }
+      })
+    );
+    return mapAsset(envelope.data);
+  }
+
+  async restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } }
+      })
+    );
+    return mapAsset(envelope.data);
+  }
+
+  async deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } }
+      })
+    );
   }
 
   private async authHeaders(): Promise<Record<string, string>> {
@@ -182,6 +219,17 @@ export class StuffStashClient {
     }
     return data;
   }
+
+  private async unwrapNoContent(request: Promise<{ error?: ErrorEnvelope; response: Response }>): Promise<void> {
+    const { error, response } = await request;
+    if (!response.ok) {
+      throw new StuffStashAPIError(
+        response.status,
+        error?.error?.code ?? 'request_failed',
+        error?.error?.message ?? 'Request failed.'
+      );
+    }
+  }
 }
 
 function mapPrincipal(response: PrincipalResponse): Principal {
@@ -204,7 +252,7 @@ function mapAsset(response: AssetResponse): Asset {
     kind: mapAssetKind(response.kind),
     title: response.title,
     description: response.description,
-    lifecycleState: response.lifecycleState
+    lifecycleState: mapAssetLifecycleState(response.lifecycleState)
   };
 }
 
@@ -216,6 +264,16 @@ function mapAssetKind(kind: string): AssetKind {
       return kind;
     default:
       throw new StuffStashAPIError(200, 'invalid_asset_kind', 'Invalid asset kind.');
+  }
+}
+
+function mapAssetLifecycleState(lifecycleState: string): AssetLifecycleState {
+  switch (lifecycleState) {
+    case 'active':
+    case 'archived':
+      return lifecycleState;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_asset_lifecycle_state', 'Invalid asset lifecycle state.');
   }
 }
 

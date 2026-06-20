@@ -23,18 +23,19 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is the secure inventory tracer bullet.
+The current focus is the web lifecycle tracer bullet.
 
 The goal is to prove a production-shaped path through:
 
 - authentication,
 - relationship-based authorization,
-- tenant and inventory persistence,
+- tenant, inventory, and asset lifecycle persistence,
 - safe REST responses,
 - generated OpenAPI,
 - adversarial security tests,
 - domain-oriented observability,
-- local Docker verification.
+- local Docker verification,
+- a usable SvelteKit browser flow.
 
 ## Current Evidence
 
@@ -67,30 +68,35 @@ The goal is to prove a production-shaped path through:
 - Direct inventory access revocation now removes persisted viewer/editor grants, enqueues SpiceDB revoke events through the authorization outbox, records audit history, exposes a no-content REST endpoint, and has adversarial API tests.
 - Inventory invite-link tokens now support pending email-scoped invitations, time-limited one-time acceptance tokens, verified-email acceptance, outbox-backed SpiceDB grant creation, revocation, audit history, and adversarial API tests.
 - Custom asset type archive now preserves existing asset and custom field target references while hiding archived types from normal lists, blocking new assignments, blocking new field targets, recording audit history, and exposing adversarial API coverage.
+- Full REST lifecycle coverage now exists for tenants, inventories, assets, attachments, custom field definitions, custom asset types, access grant detail, and invitation detail/cancel/delete.
+- Lifecycle endpoints emit read/write audit records, preserve tenant and inventory security boundaries, and are covered by OpenAPI generation checks plus adversarial HTTP tests.
+- The separate SvelteKit web app exists under `apps/web`, uses Dex OIDC with PKCE, uses runtime configuration, calls the API through the generated OpenAPI client boundary, and proves inventory creation, asset creation, and active asset browsing.
 
 ## Known Gaps
 
-- Custom asset type restore/permanent delete, changing custom field type, removing custom field enum options or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
+- Changing custom field type, removing custom field enum options or targets, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
 - Undo is not yet implemented for audit history.
-- Custom field definitions cannot yet perform destructive schema changes, be deleted, reordered, imported, exported, or managed through conversational flows.
+- Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
 - Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
+- The web UI can create and browse active assets, but it does not yet expose archive, restore, hard delete, sharing, search, audit history, custom fields, custom asset types, or media.
 
 ## Next Work
 
-1. Specify and scaffold the separate SvelteKit web frontend tracer bullet.
-   - Keep the web frontend independently deployable from the Go API.
-   - Use generated OpenAPI client code behind a frontend adapter boundary.
-   - Add runtime configuration for API base URL and auth settings.
-   - Prove one real user flow against the existing API.
+1. Extend the SvelteKit web tracer bullet with asset lifecycle management.
+   - Browse active and archived assets.
+   - Archive, restore, and hard-delete assets through the generated API client adapter.
+   - Add focused frontend tests for lifecycle UI behavior and adapter calls.
+2. Add sharing and user-management UI.
+   - Show direct grants.
+   - Create invite-link tokens.
+   - Cancel invitations and revoke direct grants.
 
 ## Later Work
 
 - Google OIDC adapter end-to-end verification.
-- Generated API client workflow from OpenAPI.
 - Mobile app scaffold with React Native and Expo.
-- Custom field definition archive/delete semantics.
 - Audit history and undo.
 - Conversational inventory ports and action plan execution.
 - Import and export.

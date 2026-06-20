@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { StuffStashAPIError, StuffStashClient, type Asset, type Inventory, type Principal } from '@stuff-stash/api-client';
+  import {
+    StuffStashAPIError,
+    StuffStashClient,
+    type Asset,
+    type AssetLifecycleState,
+    type Inventory,
+    type Principal
+  } from '@stuff-stash/api-client';
   import { onMount } from 'svelte';
   import AppHeader from '$lib/components/AppHeader.svelte';
   import InventoryAssetFlow from '$lib/components/InventoryAssetFlow.svelte';
@@ -15,6 +22,7 @@
   let tenantName = 'Home';
   let inventoryName = 'Main Inventory';
   let selectedInventoryId = '';
+  let assetLifecycleState: AssetLifecycleState = 'active';
   let assetKind: 'item' | 'container' | 'location' = 'item';
   let assetTitle = '';
   let assetDescription = '';
@@ -80,6 +88,7 @@
       const inventory = await client().createInventory(tenant.id, inventoryName);
       inventories = [inventory];
       selectedInventoryId = inventory.id;
+      assetLifecycleState = 'active';
       assets = [];
       message = `Created ${inventory.name}.`;
     });
@@ -92,18 +101,30 @@
     }
     await runTask(async () => {
       inventories = (await client().listInventories(tenantId)).items;
-      selectedInventoryId = inventories[0]?.id ?? '';
+      if (!inventories.some((inventory) => inventory.id === selectedInventoryId)) {
+        selectedInventoryId = inventories[0]?.id ?? '';
+      }
       await refreshAssets();
       message = 'Inventories refreshed.';
     });
   }
 
-  async function refreshAssets(): Promise<void> {
-    if (!tenantId || !selectedInventory) {
+  async function refreshAssets(inventoryId = selectedInventoryId): Promise<void> {
+    if (!tenantId || !inventoryId) {
       assets = [];
       return;
     }
-    assets = (await client().listAssets(tenantId, selectedInventory.id)).items;
+    assets = (await client().listAssets(tenantId, inventoryId, 50, undefined, assetLifecycleState)).items;
+  }
+
+  async function selectInventory(inventoryId: string): Promise<void> {
+    selectedInventoryId = inventoryId;
+    await runTask(() => refreshAssets(inventoryId));
+  }
+
+  async function selectAssetLifecycle(lifecycleState: AssetLifecycleState): Promise<void> {
+    assetLifecycleState = lifecycleState;
+    await runTask(refreshAssets);
   }
 
   async function createAsset(): Promise<void> {
@@ -121,6 +142,39 @@
       assetTitle = '';
       assetDescription = '';
       message = `Added ${asset.title}.`;
+    });
+  }
+
+  async function archiveAsset(asset: Asset): Promise<void> {
+    if (!tenantId || !selectedInventory) {
+      return;
+    }
+    await runTask(async () => {
+      await client().archiveAsset(tenantId, selectedInventory.id, asset.id);
+      await refreshAssets();
+      message = `Archived ${asset.title}.`;
+    });
+  }
+
+  async function restoreAsset(asset: Asset): Promise<void> {
+    if (!tenantId || !selectedInventory) {
+      return;
+    }
+    await runTask(async () => {
+      await client().restoreAsset(tenantId, selectedInventory.id, asset.id);
+      await refreshAssets();
+      message = `Restored ${asset.title}.`;
+    });
+  }
+
+  async function deleteAsset(asset: Asset): Promise<void> {
+    if (!tenantId || !selectedInventory) {
+      return;
+    }
+    await runTask(async () => {
+      await client().deleteAsset(tenantId, selectedInventory.id, asset.id);
+      assets = assets.filter((item) => item.id !== asset.id);
+      message = `Deleted ${asset.title}.`;
     });
   }
 
@@ -179,11 +233,17 @@
         bind:assetDescription
         {inventories}
         {selectedInventory}
+        {assetLifecycleState}
         {assets}
         {busy}
         onCreateInventory={() => { void createTenantAndInventory(); }}
+        onSelectInventory={(inventoryId) => { void selectInventory(inventoryId); }}
+        onSelectAssetLifecycle={(lifecycleState) => { void selectAssetLifecycle(lifecycleState); }}
         onRefreshAssets={() => { void runTask(refreshAssets); }}
         onCreateAsset={() => { void createAsset(); }}
+        onArchiveAsset={(asset) => { void archiveAsset(asset); }}
+        onRestoreAsset={(asset) => { void restoreAsset(asset); }}
+        onDeleteAsset={(asset) => { void deleteAsset(asset); }}
       />
     </section>
   {/if}

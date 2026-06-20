@@ -111,7 +111,36 @@ The first asset create form may support only the base asset fields needed by the
 - Title.
 - Optional description.
 
-It does not need custom fields, media, search, asset movement, archive/restore, sharing, or conversational actions in the first web slice.
+It does not need custom fields, media, search, asset movement, sharing, or conversational actions in the first web slice.
+
+## Lifecycle Web Extension
+
+The next web pass must expose the lifecycle API enough for a user to manage test data without leaving the browser.
+
+The asset browser must support:
+
+- Active asset browsing by default.
+- Archived asset browsing through an explicit lifecycle view.
+- Asset archive from the active view.
+- Asset restore from the archived view.
+- Asset hard delete from either view.
+- Refreshing the selected lifecycle view after each lifecycle action.
+
+The UI must keep this simple:
+
+- Do not add a separate route yet.
+- Do not introduce frontend state management beyond the current page/component boundary.
+- Keep generated DTOs behind the API adapter.
+- Use small text actions or existing button styles; do not create a new design system for this pass.
+
+The API adapter must expose domain-oriented operations for:
+
+- List assets by lifecycle state.
+- Archive asset.
+- Restore asset.
+- Delete asset.
+
+Lifecycle actions must surface safe API errors to the user through the existing page message/error pattern.
 
 ## Visual Direction
 
