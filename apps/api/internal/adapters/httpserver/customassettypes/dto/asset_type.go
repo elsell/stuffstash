@@ -53,6 +53,25 @@ type UpdateAssetTypeOutput struct {
 	Body shared.SuccessEnvelope[AssetTypeResponse]
 }
 
+type GetTenantAssetTypeInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	CustomAssetTypeID string `path:"customAssetTypeId" doc:"Custom asset type ID"`
+}
+
+type GetInventoryAssetTypeInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID       string `path:"inventoryId" doc:"Inventory ID"`
+	CustomAssetTypeID string `path:"customAssetTypeId" doc:"Custom asset type ID"`
+}
+
+type GetAssetTypeOutput struct {
+	Body shared.SuccessEnvelope[AssetTypeResponse]
+}
+
 type ArchiveTenantAssetTypeInput struct {
 	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
@@ -72,8 +91,11 @@ type ArchiveAssetTypeOutput struct {
 	Body shared.SuccessEnvelope[AssetTypeResponse]
 }
 
+type DeleteAssetTypeOutput struct{}
+
 type ListTenantAssetTypesInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
 	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
@@ -81,6 +103,7 @@ type ListTenantAssetTypesInput struct {
 
 type ListInventoryAssetTypesInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`

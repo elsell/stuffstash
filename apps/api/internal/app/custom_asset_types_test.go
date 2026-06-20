@@ -112,9 +112,39 @@ func (f *fakeCustomAssetTypeRepository) ArchiveCustomAssetType(_ context.Context
 	return ports.ErrForbidden
 }
 
+func (f *fakeCustomAssetTypeRepository) RestoreCustomAssetType(_ context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	if assetType.LifecycleState != customfield.AssetTypeLifecycleActive {
+		return ports.ErrForbidden
+	}
+	for index, existing := range f.items {
+		if existing.ID != assetType.ID || existing.TenantID != assetType.TenantID || existing.InventoryID != assetType.InventoryID || existing.Scope != assetType.Scope || existing.Key != assetType.Key || existing.LifecycleState != customfield.AssetTypeLifecycleArchived {
+			continue
+		}
+		f.items[index] = assetType
+		f.auditRecords = append(f.auditRecords, auditRecord)
+		return nil
+	}
+	return ports.ErrForbidden
+}
+
+func (f *fakeCustomAssetTypeRepository) DeleteCustomAssetType(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID, auditRecord audit.Record) error {
+	for index, item := range f.items {
+		if item.ID == assetTypeID && item.TenantID.String() == tenantID.String() && (inventoryID.String() == "" || item.InventoryID.String() == inventoryID.String() || item.Scope == customfield.ScopeTenant) {
+			f.items = append(f.items[:index], f.items[index+1:]...)
+			f.auditRecords = append(f.auditRecords, auditRecord)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (f *fakeCustomAssetTypeRepository) CustomAssetTypeHasActiveReferences(context.Context, tenant.ID, inventory.InventoryID, customfield.AssetTypeID) (bool, error) {
+	return false, nil
+}
+
 func (f *fakeCustomAssetTypeRepository) CustomAssetTypeByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
 	for _, item := range f.items {
-		if item.ID != assetTypeID || item.TenantID.String() != tenantID.String() || !item.IsActive() {
+		if item.ID != assetTypeID || item.TenantID.String() != tenantID.String() {
 			continue
 		}
 		if inventoryID.String() == "" {

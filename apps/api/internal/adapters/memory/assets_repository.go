@@ -148,6 +148,27 @@ func (s *Store) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditR
 	return nil
 }
 
+func (s *Store) DeleteAsset(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item, ok := s.assets[assetID]
+	if !ok || item.TenantID.String() != tenantID.String() || item.InventoryID.String() != inventoryID.String() {
+		return ports.ErrForbidden
+	}
+	for _, child := range s.assets {
+		if child.TenantID.String() == tenantID.String() && child.InventoryID.String() == inventoryID.String() && child.ParentAssetID == assetID && child.LifecycleState == asset.LifecycleStateActive {
+			return ports.ErrForbidden
+		}
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.auditRecords[auditRecord.ID] = auditRecord
+	delete(s.assets, assetID)
+	return nil
+}
+
 func (s *Store) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

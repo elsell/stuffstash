@@ -365,6 +365,11 @@ func TestAssetLifecycleArchiveRestoreFlowAndListing(t *testing.T) {
 	if archivedChild.Data.LifecycleState != "archived" || archivedChild.Data.ParentAssetID != garage.Data.ID {
 		t.Fatalf("expected archived child with same parent, got %+v", archivedChild.Data)
 	}
+	updateArchivedChild := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+wrench.Data.ID, "Bearer dev:owner", map[string]any{"title": "Renamed Wrench"})
+	if updateArchivedChild.Code != http.StatusBadRequest {
+		t.Fatalf("expected archived child update status %d, got %d with body %s", http.StatusBadRequest, updateArchivedChild.Code, updateArchivedChild.Body.String())
+	}
+	assertSafeError(t, updateArchivedChild, "invalid_request", "Invalid request.")
 
 	defaultList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=50", "Bearer dev:owner", nil)
 	if defaultList.Code != http.StatusOK {

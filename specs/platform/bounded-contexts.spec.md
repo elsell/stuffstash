@@ -101,11 +101,12 @@ This must be decided before expiration-specific behavior is implemented.
 
 ### Audit And History
 
-The audit and history context owns durable records of what changed, who changed it, and how it changed.
+The audit and history context owns durable records of what changed, what was read where required, who did it, and how it happened.
 
 The audit and history context owns:
 
 - Audit records for state-changing actions.
+- Safe read audit records for list, detail, and content read behavior specified by REST lifecycle contracts.
 - Undo metadata and compensating action behavior once specified.
 - Safe audit views scoped by tenant and inventory authorization.
 
@@ -160,6 +161,7 @@ The data portability context owns:
 - Custom asset types are classification overlays on assets; base asset kind still owns containment behavior.
 - Conversational actions must execute through the same application operations and authorization checks as any other adapter.
 - Every state-changing action must produce audit history.
+- REST list, detail, and content read endpoints must produce safe read audit history when specified.
 - Search must return only resources the user is authorized to view.
 - Media attachments are scoped by tenant and inventory through the resource they attach to.
 - Import and export must preserve tenant, inventory, authorization, and audit boundaries.

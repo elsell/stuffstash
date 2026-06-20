@@ -18,7 +18,7 @@ type inventoryAccessInvitationModel struct {
 	Email               string         `gorm:"not null;size:320;index:idx_inventory_access_invitations_pending,priority:3"`
 	TokenHash           string         `gorm:"not null;size:128"`
 	Relationship        string         `gorm:"not null;size:32;index:idx_inventory_access_invitations_pending,priority:4;check:chk_inventory_access_invitations_relationship,relationship IN ('viewer','editor')"`
-	Status              string         `gorm:"not null;size:32;index:idx_inventory_access_invitations_pending,priority:5;check:chk_inventory_access_invitations_status,status IN ('pending','accepted','revoked')"`
+	Status              string         `gorm:"not null;size:32;index:idx_inventory_access_invitations_pending,priority:5;check:chk_inventory_access_invitations_status,status IN ('pending','accepted','revoked','cancelled')"`
 	InviterPrincipalID  string         `gorm:"not null;size:128;index"`
 	AcceptedPrincipalID string         `gorm:"size:128;index"`
 	ExpiresAt           time.Time      `gorm:"not null;index"`
@@ -72,7 +72,7 @@ func (m inventoryAccessInvitationModel) toPort() (ports.InventoryAccessInvitatio
 	}
 	status := ports.InventoryAccessInvitationStatus(m.Status)
 	switch status {
-	case ports.InventoryAccessInvitationPending, ports.InventoryAccessInvitationAccepted, ports.InventoryAccessInvitationRevoked:
+	case ports.InventoryAccessInvitationPending, ports.InventoryAccessInvitationAccepted, ports.InventoryAccessInvitationRevoked, ports.InventoryAccessInvitationCancelled:
 	default:
 		return ports.InventoryAccessInvitation{}, false
 	}

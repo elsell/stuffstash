@@ -105,6 +105,20 @@ func (s *Store) ListInventoryAccessGrants(_ context.Context, tenantID tenant.ID,
 	return items, nil
 }
 
+func (s *Store) InventoryAccessGrantByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, principalID identity.PrincipalID, relationship ports.InventoryAccessRelationship) (ports.InventoryAccessGrant, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	grant := ports.InventoryAccessGrant{
+		TenantID:     tenantID,
+		InventoryID:  inventoryID,
+		PrincipalID:  principalID,
+		Relationship: relationship,
+	}
+	stored, ok := s.accessGrants[inventoryAccessGrantStorageKey(grant)]
+	return stored, ok, nil
+}
+
 func (s *Store) SaveInventoryAccessInvitation(_ context.Context, invitation ports.InventoryAccessInvitation, auditRecord audit.Record) (ports.InventoryAccessInvitation, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -175,6 +189,17 @@ func (s *Store) AcceptInventoryAccessInvitationAndEnqueue(_ context.Context, ten
 	return invitation, grant, nil
 }
 
+func (s *Store) InventoryAccessInvitationByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string) (ports.InventoryAccessInvitation, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	invitation, ok := s.invitations[invitationID]
+	if !ok || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID {
+		return ports.InventoryAccessInvitation{}, false, nil
+	}
+	return invitation, true, nil
+}
+
 func memoryInventoryInvitationTokenHashMatches(storedHash string, providedHash string) bool {
 	return subtle.ConstantTimeCompare([]byte(storedHash), []byte(providedHash)) == 1
 }
@@ -193,6 +218,40 @@ func (s *Store) RevokeInventoryAccessInvitation(_ context.Context, tenantID tena
 	invitation.Status = ports.InventoryAccessInvitationRevoked
 	invitation.RevokedAt = time.Now()
 	s.invitations[invitation.ID] = invitation
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return true, nil
+}
+
+func (s *Store) CancelInventoryAccessInvitation(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	invitation, ok := s.invitations[invitationID]
+	if !ok || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || invitation.Status != ports.InventoryAccessInvitationPending {
+		return false, nil
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return false, ports.ErrConflict
+	}
+	invitation.Status = ports.InventoryAccessInvitationCancelled
+	invitation.RevokedAt = time.Now()
+	s.invitations[invitation.ID] = invitation
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return true, nil
+}
+
+func (s *Store) DeleteInventoryAccessInvitation(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	invitation, ok := s.invitations[invitationID]
+	if !ok || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID {
+		return false, nil
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return false, ports.ErrConflict
+	}
+	delete(s.invitations, invitationID)
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return true, nil
 }

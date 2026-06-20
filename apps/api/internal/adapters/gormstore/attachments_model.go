@@ -6,20 +6,21 @@ import (
 )
 
 type attachmentModel struct {
-	ID          string         `gorm:"primaryKey;size:26"`
-	TenantID    string         `gorm:"not null;size:26;index"`
-	Tenant      tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	InventoryID string         `gorm:"not null;size:26;index"`
-	Inventory   inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
-	AssetID     string         `gorm:"not null;size:26;index"`
-	Asset       assetModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AssetID;references:ID"`
-	StorageKey  string         `gorm:"not null;size:512;uniqueIndex"`
-	FileName    string         `gorm:"not null;size:255"`
-	ContentType string         `gorm:"not null;size:128"`
-	SizeBytes   int64          `gorm:"not null"`
-	SHA256      string         `gorm:"not null;size:64"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID             string         `gorm:"primaryKey;size:26"`
+	TenantID       string         `gorm:"not null;size:26;index"`
+	Tenant         tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID    string         `gorm:"not null;size:26;index"`
+	Inventory      inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	AssetID        string         `gorm:"not null;size:26;index"`
+	Asset          assetModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AssetID;references:ID"`
+	StorageKey     string         `gorm:"not null;size:512;uniqueIndex"`
+	FileName       string         `gorm:"not null;size:255"`
+	ContentType    string         `gorm:"not null;size:128"`
+	SizeBytes      int64          `gorm:"not null"`
+	SHA256         string         `gorm:"not null;size:64"`
+	LifecycleState string         `gorm:"not null;size:32;default:'active'"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 func (attachmentModel) TableName() string {
@@ -47,7 +48,11 @@ func (m attachmentModel) toDomain() (media.Attachment, bool) {
 	if !ok {
 		return media.Attachment{}, false
 	}
-	return media.NewAttachment(
+	lifecycleState, ok := media.NewLifecycleState(m.LifecycleState)
+	if !ok {
+		return media.Attachment{}, false
+	}
+	return media.NewAttachmentWithLifecycle(
 		id,
 		media.TenantID(m.TenantID),
 		media.InventoryID(m.InventoryID),
@@ -58,5 +63,6 @@ func (m attachmentModel) toDomain() (media.Attachment, bool) {
 		m.SizeBytes,
 		hash,
 		m.CreatedAt,
+		lifecycleState,
 	)
 }

@@ -155,6 +155,32 @@ func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID
 	return items, nil
 }
 
+func (s Store) InventoryAccessGrantByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, principalID identity.PrincipalID, relationship ports.InventoryAccessRelationship) (ports.InventoryAccessGrant, bool, error) {
+	grant := ports.InventoryAccessGrant{
+		TenantID:     tenantID,
+		InventoryID:  inventoryID,
+		PrincipalID:  principalID,
+		Relationship: relationship,
+	}
+	var model inventoryAccessGrantModel
+	err := s.db.WithContext(ctx).Where(&inventoryAccessGrantModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		GrantKey:    grant.CursorKey(),
+	}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.InventoryAccessGrant{}, false, nil
+	}
+	if err != nil {
+		return ports.InventoryAccessGrant{}, false, err
+	}
+	item, ok := model.toPort()
+	if !ok {
+		return ports.InventoryAccessGrant{}, false, fmt.Errorf("invalid inventory access grant row %q", model.GrantKey)
+	}
+	return item, true, nil
+}
+
 func (s Store) SaveInventoryAccessInvitation(ctx context.Context, invitation ports.InventoryAccessInvitation, auditRecord audit.Record) (ports.InventoryAccessInvitation, error) {
 	var saved ports.InventoryAccessInvitation
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -207,6 +233,26 @@ func (s Store) SaveInventoryAccessInvitation(ctx context.Context, invitation por
 		return nil
 	})
 	return saved, err
+}
+
+func (s Store) InventoryAccessInvitationByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string) (ports.InventoryAccessInvitation, bool, error) {
+	var model inventoryAccessInvitationModel
+	err := s.db.WithContext(ctx).Where(&inventoryAccessInvitationModel{
+		ID:          invitationID,
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+	}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.InventoryAccessInvitation{}, false, nil
+	}
+	if err != nil {
+		return ports.InventoryAccessInvitation{}, false, err
+	}
+	invitation, ok := model.toPort()
+	if !ok {
+		return ports.InventoryAccessInvitation{}, false, fmt.Errorf("invalid inventory access invitation row %q", model.ID)
+	}
+	return invitation, true, nil
 }
 
 func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
@@ -318,4 +364,57 @@ func (s Store) RevokeInventoryAccessInvitation(ctx context.Context, tenantID ten
 		return nil
 	})
 	return revoked, err
+}
+
+func (s Store) CancelInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {
+	cancelled := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model inventoryAccessInvitationModel
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&inventoryAccessInvitationModel{
+			ID:          invitationID,
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+		}).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if model.Status != string(ports.InventoryAccessInvitationPending) {
+			return nil
+		}
+		now := time.Now()
+		model.Status = string(ports.InventoryAccessInvitationCancelled)
+		model.RevokedAt = &now
+		if err := tx.Save(&model).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		cancelled = true
+		return nil
+	})
+	return cancelled, err
+}
+
+func (s Store) DeleteInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {
+	deleted := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Where(&inventoryAccessInvitationModel{
+			ID:          invitationID,
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+		}).Delete(&inventoryAccessInvitationModel{})
+		if result.Error != nil {
+			return result.Error
+		}
+		deleted = result.RowsAffected > 0
+		if !deleted {
+			return nil
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+	return deleted, err
 }

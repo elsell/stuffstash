@@ -107,7 +107,7 @@ func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords [
 		if err != nil {
 			return err
 		}
-		if existing.Kind != item.Kind.String() || existing.LifecycleState != item.LifecycleState.String() {
+		if existing.Kind != item.Kind.String() || existing.LifecycleState != item.LifecycleState.String() || existing.LifecycleState != asset.LifecycleStateActive.String() {
 			return ports.ErrForbidden
 		}
 		if stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
@@ -219,6 +219,29 @@ func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, audit
 			return err
 		}
 		return createAuditRecord(tx, auditRecord)
+	})
+}
+
+func (s Store) DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		hasActiveChildren, err := assetHasActiveChildren(tx, asset.TenantID(tenantID.String()), asset.InventoryID(inventoryID.String()), assetID)
+		if err != nil {
+			return err
+		}
+		if hasActiveChildren {
+			return ports.ErrForbidden
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		result := tx.Where(&assetModel{ID: assetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).Delete(&assetModel{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return ports.ErrForbidden
+		}
+		return nil
 	})
 }
 

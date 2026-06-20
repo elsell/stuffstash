@@ -70,6 +70,14 @@ func (a App) newAuditRecord(input auditRecordInput) (audit.Record, error) {
 	return record, nil
 }
 
+func (a App) saveReadAuditRecord(ctx context.Context, input auditRecordInput) error {
+	record, err := a.newAuditRecord(input)
+	if err != nil {
+		return err
+	}
+	return a.audit.SaveAuditRecord(ctx, record)
+}
+
 func (a App) ListTenantAuditRecords(ctx context.Context, input ListAuditRecordsInput) (ListAuditRecordsResult, error) {
 	if err := a.ensureTenantExists(ctx, input.TenantID); err != nil {
 		return ListAuditRecordsResult{}, err
@@ -92,7 +100,7 @@ func (a App) ListTenantAuditRecords(ctx context.Context, input ListAuditRecordsI
 	if err != nil {
 		return ListAuditRecordsResult{}, err
 	}
-	return a.auditRecordListResult(ctx, input, items, limit), nil
+	return a.auditRecordListResult(ctx, input, items, limit)
 }
 
 func (a App) ListInventoryAuditRecords(ctx context.Context, input ListAuditRecordsInput) (ListAuditRecordsResult, error) {
@@ -113,10 +121,10 @@ func (a App) ListInventoryAuditRecords(ctx context.Context, input ListAuditRecor
 	if err != nil {
 		return ListAuditRecordsResult{}, err
 	}
-	return a.auditRecordListResult(ctx, input, items, limit), nil
+	return a.auditRecordListResult(ctx, input, items, limit)
 }
 
-func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsInput, items []audit.Record, limit int) ListAuditRecordsResult {
+func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsInput, items []audit.Record, limit int) (ListAuditRecordsResult, error) {
 	hasMore := len(items) > limit
 	var nextCursor *string
 	if hasMore {
@@ -134,13 +142,26 @@ func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsIn
 			"limit":        strconv.Itoa(limit),
 		},
 	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Action:      audit.ActionAuditRecordListed,
+		TargetType:  audit.TargetAuditRecord,
+		TargetID:    auditRecordCursorScope(input.TenantID, input.InventoryID),
+		Metadata: map[string]string{
+			"limit": strconv.Itoa(limit),
+		},
+	}); err != nil {
+		return ListAuditRecordsResult{}, err
+	}
 
 	return ListAuditRecordsResult{
 		Items:      items,
 		Limit:      limit,
 		NextCursor: nextCursor,
 		HasMore:    hasMore,
-	}
+	}, nil
 }
 
 type auditRecordCursorPayload struct {

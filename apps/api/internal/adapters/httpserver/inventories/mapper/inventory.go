@@ -7,9 +7,10 @@ import (
 
 func InventoryToResponse(item inventory.Inventory) dto.InventoryResponse {
 	return dto.InventoryResponse{
-		ID:       item.ID.String(),
-		TenantID: item.TenantID.String(),
-		Name:     item.Name.String(),
+		ID:             item.ID.String(),
+		TenantID:       item.TenantID.String(),
+		Name:           item.Name.String(),
+		LifecycleState: item.LifecycleState.String(),
 	}
 }
 

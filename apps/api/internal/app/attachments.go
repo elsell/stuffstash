@@ -31,6 +31,8 @@ type CreateAttachmentInput struct {
 
 type ListAttachmentsInput struct {
 	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
 	AssetID     asset.ID
@@ -38,8 +40,30 @@ type ListAttachmentsInput struct {
 	Cursor      string
 }
 
+type GetAttachmentInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	AssetID      asset.ID
+	AttachmentID media.ID
+}
+
 type DownloadAttachmentInput struct {
 	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	AssetID      asset.ID
+	AttachmentID media.ID
+}
+
+type UpdateAttachmentLifecycleInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
 	TenantID     tenant.ID
 	InventoryID  inventory.InventoryID
 	AssetID      asset.ID
@@ -59,7 +83,7 @@ type AttachmentContentResult struct {
 }
 
 func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) (media.Attachment, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return media.Attachment{}, err
 	}
 	if a.attachments == nil || a.blobs == nil {
@@ -68,10 +92,8 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 	if input.AssetID.String() == "" {
 		return media.Attachment{}, ErrInvalidInput
 	}
-	if _, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return media.Attachment{}, err
-	} else if !found {
-		return media.Attachment{}, ErrNotFound
 	}
 	fileName, ok := media.NewFileName(input.FileName)
 	if !ok {
@@ -152,13 +174,11 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 }
 
 func (a App) ListAttachments(ctx context.Context, input ListAttachmentsInput) (ListAttachmentsResult, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return ListAttachmentsResult{}, err
 	}
-	if _, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return ListAttachmentsResult{}, err
-	} else if !found {
-		return ListAttachmentsResult{}, ErrNotFound
 	}
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
 	afterAttachmentID, err := decodeAttachmentCursor(input.TenantID, input.InventoryID, input.AssetID, input.Cursor)
@@ -189,11 +209,74 @@ func (a App) ListAttachments(ctx context.Context, input ListAttachmentsInput) (L
 			"limit":        strings.TrimSpace(strconv.Itoa(limit)),
 		},
 	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAttachmentListed,
+		TargetType:  audit.TargetAsset,
+		TargetID:    input.AssetID.String(),
+		Metadata: map[string]string{
+			"limit": strconv.Itoa(limit),
+		},
+	}); err != nil {
+		return ListAttachmentsResult{}, err
+	}
 	return ListAttachmentsResult{Items: items, Limit: limit, NextCursor: nextCursor, HasMore: hasMore}, nil
 }
 
+func (a App) GetAttachment(ctx context.Context, input GetAttachmentInput) (media.Attachment, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+		return media.Attachment{}, err
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+		return media.Attachment{}, err
+	}
+	attachment, found, err := a.attachments.AttachmentByID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
+	if err != nil {
+		return media.Attachment{}, err
+	}
+	if !found {
+		return media.Attachment{}, ErrNotFound
+	}
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAttachmentViewed,
+		TargetType:  audit.TargetAttachment,
+		TargetID:    attachment.ID.String(),
+		Metadata: map[string]string{
+			"asset_id":         input.AssetID.String(),
+			"lifecycle_state":  attachment.LifecycleState.String(),
+			"attachment_bytes": strconv.FormatInt(attachment.SizeBytes, 10),
+		},
+	}); err != nil {
+		return media.Attachment{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAttachmentViewed,
+		Message: "attachment viewed",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"asset_id":      input.AssetID.String(),
+			"attachment_id": attachment.ID.String(),
+			"principal_id":  input.Principal.ID.String(),
+		},
+	})
+	return attachment, nil
+}
+
 func (a App) DownloadAttachment(ctx context.Context, input DownloadAttachmentInput) (AttachmentContentResult, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+		return AttachmentContentResult{}, err
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return AttachmentContentResult{}, err
 	}
 	attachment, found, err := a.attachments.AttachmentByID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
@@ -202,6 +285,21 @@ func (a App) DownloadAttachment(ctx context.Context, input DownloadAttachmentInp
 	}
 	if !found {
 		return AttachmentContentResult{}, ErrNotFound
+	}
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAttachmentContentDownloaded,
+		TargetType:  audit.TargetAttachment,
+		TargetID:    attachment.ID.String(),
+		Metadata: map[string]string{
+			"asset_id": input.AssetID.String(),
+		},
+	}); err != nil {
+		return AttachmentContentResult{}, err
 	}
 	content, err := a.blobs.GetBlob(ctx, attachment.StorageKey)
 	if err != nil {
@@ -222,6 +320,127 @@ func (a App) DownloadAttachment(ctx context.Context, input DownloadAttachmentInp
 	return AttachmentContentResult{Attachment: attachment, Content: content}, nil
 }
 
+func (a App) ArchiveAttachment(ctx context.Context, input UpdateAttachmentLifecycleInput) (media.Attachment, error) {
+	return a.updateAttachmentLifecycle(ctx, input, media.LifecycleStateActive, media.LifecycleStateArchived, audit.ActionAttachmentArchived, ports.EventAttachmentArchived, "attachment archived")
+}
+
+func (a App) RestoreAttachment(ctx context.Context, input UpdateAttachmentLifecycleInput) (media.Attachment, error) {
+	return a.updateAttachmentLifecycle(ctx, input, media.LifecycleStateArchived, media.LifecycleStateActive, audit.ActionAttachmentRestored, ports.EventAttachmentRestored, "attachment restored")
+}
+
+func (a App) updateAttachmentLifecycle(ctx context.Context, input UpdateAttachmentLifecycleInput, from media.LifecycleState, to media.LifecycleState, action audit.Action, eventName ports.EventName, eventMessage string) (media.Attachment, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return media.Attachment{}, err
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+		return media.Attachment{}, err
+	}
+	attachment, found, err := a.attachments.AttachmentByID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
+	if err != nil {
+		return media.Attachment{}, err
+	}
+	if !found {
+		return media.Attachment{}, ErrNotFound
+	}
+	if attachment.LifecycleState != from {
+		return media.Attachment{}, ErrInvalidInput
+	}
+	updated := attachment
+	updated.LifecycleState = to
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      action,
+		TargetType:  audit.TargetAttachment,
+		TargetID:    updated.ID.String(),
+		Metadata: map[string]string{
+			"asset_id":         input.AssetID.String(),
+			"previous_state":   attachment.LifecycleState.String(),
+			"lifecycle_state":  updated.LifecycleState.String(),
+			"attachment_bytes": strconv.FormatInt(updated.SizeBytes, 10),
+		},
+	})
+	if err != nil {
+		return media.Attachment{}, err
+	}
+	if err := a.attachments.UpdateAttachmentLifecycle(ctx, updated, auditRecord); err != nil {
+		return media.Attachment{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    eventName,
+		Message: eventMessage,
+		Fields: map[string]string{
+			"tenant_id":       input.TenantID.String(),
+			"inventory_id":    input.InventoryID.String(),
+			"asset_id":        input.AssetID.String(),
+			"attachment_id":   updated.ID.String(),
+			"principal_id":    input.Principal.ID.String(),
+			"lifecycle_state": updated.LifecycleState.String(),
+		},
+	})
+	return updated, nil
+}
+
+func (a App) DeleteAttachment(ctx context.Context, input UpdateAttachmentLifecycleInput) error {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return err
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+		return err
+	}
+	attachment, found, err := a.attachments.AttachmentByID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return ErrNotFound
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAttachmentDeleted,
+		TargetType:  audit.TargetAttachment,
+		TargetID:    attachment.ID.String(),
+		Metadata: map[string]string{
+			"asset_id":         input.AssetID.String(),
+			"lifecycle_state":  attachment.LifecycleState.String(),
+			"attachment_bytes": strconv.FormatInt(attachment.SizeBytes, 10),
+		},
+	})
+	if err != nil {
+		return err
+	}
+	if err := a.blobs.DeleteBlob(ctx, attachment.StorageKey); err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob delete failed"})
+		return err
+	}
+	_, removed, err := a.attachments.DeleteAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID, auditRecord)
+	if err != nil {
+		return err
+	}
+	if !removed {
+		return ErrNotFound
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAttachmentDeleted,
+		Message: "attachment deleted",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"asset_id":      input.AssetID.String(),
+			"attachment_id": input.AttachmentID.String(),
+			"principal_id":  input.Principal.ID.String(),
+		},
+	})
+	return nil
+}
+
 func encodeAttachmentCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, id media.ID) *string {
 	return encodePageCursor("attachments", tenantID.String()+":"+inventoryID.String()+":"+assetID.String(), id.String())
 }
@@ -239,6 +458,17 @@ func decodeAttachmentCursor(tenantID tenant.ID, inventoryID inventory.InventoryI
 		return "", ErrInvalidInput
 	}
 	return id, nil
+}
+
+func (a App) ensureActiveAssetForAttachment(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) error {
+	item, found, err := a.assets.AssetByID(ctx, tenantID, inventoryID, assetID)
+	if err != nil {
+		return err
+	}
+	if !found || item.LifecycleState != asset.LifecycleStateActive {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func contentMatchesType(contentType media.ContentType, content []byte) bool {

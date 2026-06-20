@@ -144,6 +144,25 @@ func (fields CustomFields) IsEmpty() bool {
 	return len(fields.values) == 0
 }
 
+func (fields CustomFields) HasNonEmptyValue(key string) bool {
+	value, ok := fields.values[key]
+	if !ok {
+		return false
+	}
+	switch typed := value.(type) {
+	case nil:
+		return false
+	case string:
+		return strings.TrimSpace(typed) != ""
+	case []any:
+		return len(typed) != 0
+	case map[string]any:
+		return len(typed) != 0
+	default:
+		return true
+	}
+}
+
 func (fields CustomFields) Equal(other CustomFields) bool {
 	left, leftOK := canonicalCustomFields(fields.values)
 	right, rightOK := canonicalCustomFields(other.values)

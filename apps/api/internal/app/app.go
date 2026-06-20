@@ -2,8 +2,10 @@ package app
 
 import (
 	"context"
+	"crypto/rand"
 	"time"
 
+	"github.com/oklog/ulid/v2"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -56,6 +58,10 @@ type Dependencies struct {
 
 func New(deps Dependencies) App {
 	maxPageLimit := normalizeMaxPageLimit(deps.MaxPageLimit)
+	ids := deps.IDs
+	if ids == nil {
+		ids = defaultIDGenerator{}
+	}
 	return App{
 		observer:           deps.Observer,
 		auth:               deps.Auth,
@@ -70,7 +76,7 @@ func New(deps Dependencies) App {
 		blobs:              deps.Blobs,
 		audit:              deps.Audit,
 		outbox:             deps.Outbox,
-		ids:                deps.IDs,
+		ids:                ids,
 		outboxDrainLimit:   deps.AuthorizationOutboxDrainLimit,
 		outboxClaimLease:   deps.AuthorizationOutboxClaimLease,
 		invitationTTL:      normalizeInvitationTTL(deps.InvitationTTL),
@@ -78,6 +84,12 @@ func New(deps Dependencies) App {
 		maxPageLimit:       maxPageLimit,
 		maxAttachmentBytes: normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
 	}
+}
+
+type defaultIDGenerator struct{}
+
+func (defaultIDGenerator) NewID() string {
+	return ulid.MustNew(ulid.Timestamp(time.Now().UTC()), rand.Reader).String()
 }
 
 func (a App) MaxAttachmentJSONBodyBytes() int64 {

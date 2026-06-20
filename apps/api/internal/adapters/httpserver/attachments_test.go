@@ -73,6 +73,35 @@ func TestAttachmentUploadListAndDownloadFlow(t *testing.T) {
 	if !bytes.Equal(download.Body.Bytes(), content) {
 		t.Fatalf("expected downloaded content %q, got %q", string(content), download.Body.String())
 	}
+
+	archiveAsset := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/archive", "Bearer dev:owner", nil)
+	if archiveAsset.Code != http.StatusOK {
+		t.Fatalf("expected asset archive status %d, got %d with body %s", http.StatusOK, archiveAsset.Code, archiveAsset.Body.String())
+	}
+	uploadToArchivedAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", map[string]any{
+		"fileName":      "later.png",
+		"contentType":   "image/png",
+		"contentBase64": base64.StdEncoding.EncodeToString(content),
+	})
+	if uploadToArchivedAsset.Code != http.StatusNotFound {
+		t.Fatalf("expected archived asset upload status %d, got %d with body %s", http.StatusNotFound, uploadToArchivedAsset.Code, uploadToArchivedAsset.Body.String())
+	}
+	assertSafeError(t, uploadToArchivedAsset, "resource_not_found", "Resource not found.")
+	listArchivedAssetAttachments := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", nil)
+	if listArchivedAssetAttachments.Code != http.StatusNotFound {
+		t.Fatalf("expected archived asset attachment list status %d, got %d with body %s", http.StatusNotFound, listArchivedAssetAttachments.Code, listArchivedAssetAttachments.Body.String())
+	}
+	assertSafeError(t, listArchivedAssetAttachments, "resource_not_found", "Resource not found.")
+	detailArchivedAssetAttachment := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID, "Bearer dev:owner", nil)
+	if detailArchivedAssetAttachment.Code != http.StatusNotFound {
+		t.Fatalf("expected archived asset attachment detail status %d, got %d with body %s", http.StatusNotFound, detailArchivedAssetAttachment.Code, detailArchivedAssetAttachment.Body.String())
+	}
+	assertSafeError(t, detailArchivedAssetAttachment, "resource_not_found", "Resource not found.")
+	downloadArchivedAssetAttachment := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/content", "Bearer dev:owner", nil)
+	if downloadArchivedAssetAttachment.Code != http.StatusNotFound {
+		t.Fatalf("expected archived asset attachment download status %d, got %d with body %s", http.StatusNotFound, downloadArchivedAssetAttachment.Code, downloadArchivedAssetAttachment.Body.String())
+	}
+	assertSafeError(t, downloadArchivedAssetAttachment, "resource_not_found", "Resource not found.")
 }
 
 func TestAttachmentListIsPaginated(t *testing.T) {

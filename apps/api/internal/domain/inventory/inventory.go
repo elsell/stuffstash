@@ -38,8 +38,48 @@ func (n Name) String() string {
 	return string(n)
 }
 
+type LifecycleState string
+
+const (
+	LifecycleStateActive   LifecycleState = "active"
+	LifecycleStateArchived LifecycleState = "archived"
+)
+
+func NewLifecycleState(value string) (LifecycleState, bool) {
+	switch LifecycleState(strings.TrimSpace(value)) {
+	case LifecycleStateActive:
+		return LifecycleStateActive, true
+	case LifecycleStateArchived:
+		return LifecycleStateArchived, true
+	default:
+		return "", false
+	}
+}
+
+func (s LifecycleState) String() string {
+	return string(s)
+}
+
 type Inventory struct {
-	ID       InventoryID
-	TenantID TenantID
-	Name     Name
+	ID             InventoryID
+	TenantID       TenantID
+	Name           Name
+	LifecycleState LifecycleState
+}
+
+func NewInventory(id InventoryID, tenantID TenantID, name Name, lifecycleState LifecycleState) (Inventory, bool) {
+	if id.String() == "" || tenantID.String() == "" || name.String() == "" {
+		return Inventory{}, false
+	}
+	if lifecycleState.String() == "" {
+		lifecycleState = LifecycleStateActive
+	}
+	if _, ok := NewLifecycleState(lifecycleState.String()); !ok {
+		return Inventory{}, false
+	}
+	return Inventory{ID: id, TenantID: tenantID, Name: name, LifecycleState: lifecycleState}, true
+}
+
+func (i Inventory) IsActive() bool {
+	return i.LifecycleState == "" || i.LifecycleState == LifecycleStateActive
 }

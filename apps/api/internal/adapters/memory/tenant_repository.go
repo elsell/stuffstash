@@ -13,16 +13,79 @@ func (s *Store) SaveTenant(_ context.Context, item tenant.Tenant) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if item.LifecycleState.String() == "" {
+		item.LifecycleState = tenant.LifecycleStateActive
+	}
 	s.tenants[item.ID] = item
 	return nil
+}
+
+func (s *Store) TenantByID(_ context.Context, tenantID tenant.ID) (tenant.Tenant, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	item, ok := s.tenants[tenantID]
+	return item, ok, nil
 }
 
 func (s *Store) TenantExists(_ context.Context, tenantID tenant.ID) (bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	_, ok := s.tenants[tenantID]
-	return ok, nil
+	item, ok := s.tenants[tenantID]
+	return ok && item.IsActive(), nil
+}
+
+func (s *Store) UpdateTenant(_ context.Context, item tenant.Tenant, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, ok := s.tenants[item.ID]
+	if !ok || !existing.IsActive() || item.LifecycleState != tenant.LifecycleStateActive {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.tenants[item.ID] = item
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) UpdateTenantLifecycle(_ context.Context, item tenant.Tenant, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, ok := s.tenants[item.ID]
+	if !ok || existing.Name != item.Name || existing.LifecycleState == item.LifecycleState {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.tenants[item.ID] = item
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) DeleteTenant(_ context.Context, tenantID tenant.ID, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.tenants[tenantID]; !ok {
+		return ports.ErrForbidden
+	}
+	for _, item := range s.inventories {
+		if item.TenantID.String() == tenantID.String() {
+			return ports.ErrForbidden
+		}
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.auditRecords[auditRecord.ID] = auditRecord
+	delete(s.tenants, tenantID)
+	return nil
 }
 
 func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal, auditRecord audit.Record) error {
@@ -31,6 +94,9 @@ func (s *Store) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string
 
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
+	}
+	if item.LifecycleState.String() == "" {
+		item.LifecycleState = tenant.LifecycleStateActive
 	}
 	s.tenants[item.ID] = item
 	s.auditRecords[auditRecord.ID] = auditRecord

@@ -7,7 +7,8 @@ import (
 
 func TenantToResponse(item tenant.Tenant) dto.TenantResponse {
 	return dto.TenantResponse{
-		ID:   item.ID.String(),
-		Name: item.Name.String(),
+		ID:             item.ID.String(),
+		Name:           item.Name.String(),
+		LifecycleState: item.LifecycleState.String(),
 	}
 }

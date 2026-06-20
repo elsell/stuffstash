@@ -21,19 +21,31 @@ var ErrBlobNotFound = errors.New("blob not found")
 
 type TenantRepository interface {
 	SaveTenant(ctx context.Context, tenant tenant.Tenant) error
+	TenantByID(ctx context.Context, tenantID tenant.ID) (tenant.Tenant, bool, error)
 	TenantExists(ctx context.Context, tenantID tenant.ID) (bool, error)
+	UpdateTenant(ctx context.Context, tenant tenant.Tenant, auditRecord audit.Record) error
+	UpdateTenantLifecycle(ctx context.Context, tenant tenant.Tenant, auditRecord audit.Record) error
+	DeleteTenant(ctx context.Context, tenantID tenant.ID, auditRecord audit.Record) error
 }
 
 type InventoryRepository interface {
 	SaveInventory(ctx context.Context, inventory inventory.Inventory) error
 	InventoryByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error)
+	UpdateInventory(ctx context.Context, inventory inventory.Inventory, auditRecord audit.Record) error
+	UpdateInventoryLifecycle(ctx context.Context, inventory inventory.Inventory, auditRecord audit.Record) error
+	DeleteInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error
+	InventoryHasActiveAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (bool, error)
 	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID, page InventoryListPageRequest) ([]inventory.Inventory, error)
 	SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant InventoryAccessGrant, auditRecord audit.Record) error
 	DeleteInventoryAccessGrantAndClaimRevoke(ctx context.Context, eventID string, claimID string, leaseUntil time.Time, grant InventoryAccessGrant, auditRecord audit.Record) (AuthorizationOutboxEvent, bool, error)
+	InventoryAccessGrantByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, principalID identity.PrincipalID, relationship InventoryAccessRelationship) (InventoryAccessGrant, bool, error)
 	ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page InventoryAccessGrantPageRequest) ([]InventoryAccessGrant, error)
 	SaveInventoryAccessInvitation(ctx context.Context, invitation InventoryAccessInvitation, auditRecord audit.Record) (InventoryAccessInvitation, error)
+	InventoryAccessInvitationByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string) (InventoryAccessInvitation, bool, error)
 	AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (InventoryAccessInvitation, InventoryAccessGrant, error)
 	RevokeInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
+	CancelInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
+	DeleteInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
 }
 
 type InventoryListPageRequest struct {
@@ -82,9 +94,10 @@ type InventoryAccessGrantPageRequest struct {
 type InventoryAccessInvitationStatus string
 
 const (
-	InventoryAccessInvitationPending  InventoryAccessInvitationStatus = "pending"
-	InventoryAccessInvitationAccepted InventoryAccessInvitationStatus = "accepted"
-	InventoryAccessInvitationRevoked  InventoryAccessInvitationStatus = "revoked"
+	InventoryAccessInvitationPending   InventoryAccessInvitationStatus = "pending"
+	InventoryAccessInvitationAccepted  InventoryAccessInvitationStatus = "accepted"
+	InventoryAccessInvitationRevoked   InventoryAccessInvitationStatus = "revoked"
+	InventoryAccessInvitationCancelled InventoryAccessInvitationStatus = "cancelled"
 )
 
 type InventoryAccessInvitation struct {
@@ -106,6 +119,9 @@ type InventoryAccessInvitation struct {
 type CustomFieldDefinitionRepository interface {
 	SaveCustomFieldDefinition(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error
 	UpdateCustomFieldDefinition(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error
+	UpdateCustomFieldDefinitionLifecycle(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error
+	DeleteCustomFieldDefinition(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID, auditRecord audit.Record) error
+	CustomFieldDefinitionHasActiveAssetValues(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definition customfield.Definition) (bool, error)
 	CustomFieldDefinitionByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error)
 	ListTenantCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, page CustomFieldDefinitionPageRequest) ([]customfield.Definition, error)
 	ListInventoryCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page CustomFieldDefinitionPageRequest) ([]customfield.Definition, error)
@@ -121,6 +137,9 @@ type CustomAssetTypeRepository interface {
 	SaveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error
 	UpdateCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error
 	ArchiveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error
+	RestoreCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error
+	DeleteCustomAssetType(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID, auditRecord audit.Record) error
+	CustomAssetTypeHasActiveReferences(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (bool, error)
 	CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error)
 	ListTenantCustomAssetTypes(ctx context.Context, tenantID tenant.ID, page CustomAssetTypePageRequest) ([]customfield.AssetType, error)
 	ListInventoryCustomAssetTypes(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page CustomAssetTypePageRequest) ([]customfield.AssetType, error)
@@ -136,6 +155,7 @@ type AssetRepository interface {
 	CreateAsset(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
 	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record) error
 	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
+	DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error
 	AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error)
 	AssetHasActiveChildren(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (bool, error)
 	ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AssetListPageRequest) ([]asset.Asset, error)
@@ -194,6 +214,8 @@ type AuditRecordPageRequest struct {
 
 type AttachmentRepository interface {
 	SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
+	UpdateAttachmentLifecycle(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
+	DeleteAttachment(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error)
 	AttachmentByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, bool, error)
 	ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page AttachmentListPageRequest) ([]media.Attachment, error)
 }

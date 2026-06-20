@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -22,14 +23,15 @@ func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customf
 		return err
 	}
 	model := customFieldDefinitionModel{
-		ID:            definition.ID.String(),
-		TenantID:      definition.TenantID.String(),
-		Scope:         definition.Scope.String(),
-		FieldKey:      definition.Key.String(),
-		DisplayName:   definition.DisplayName.String(),
-		FieldType:     definition.Type.String(),
-		EnumOptions:   string(enumOptions),
-		Applicability: definition.Applicability.String(),
+		ID:             definition.ID.String(),
+		TenantID:       definition.TenantID.String(),
+		Scope:          definition.Scope.String(),
+		FieldKey:       definition.Key.String(),
+		DisplayName:    definition.DisplayName.String(),
+		FieldType:      definition.Type.String(),
+		EnumOptions:    string(enumOptions),
+		Applicability:  definition.Applicability.String(),
+		LifecycleState: lifecycleStateOrActive(definition.LifecycleState.String()),
 	}
 	if definition.InventoryID.String() != "" {
 		inventoryID := definition.InventoryID.String()
@@ -111,6 +113,9 @@ func (s Store) UpdateCustomFieldDefinition(ctx context.Context, definition custo
 		if existing.Scope != definition.Scope.String() || existing.FieldKey != definition.Key.String() || existing.FieldType != definition.Type.String() || stringFromPtr(existing.InventoryID) != definition.InventoryID.String() {
 			return ports.ErrForbidden
 		}
+		if existing.LifecycleState != customfield.DefinitionLifecycleActive.String() || definition.LifecycleState != customfield.DefinitionLifecycleActive {
+			return ports.ErrForbidden
+		}
 
 		targetsByDefinitionID, err := customFieldDefinitionTargets(ctx, tx, []customFieldDefinitionModel{existing})
 		if err != nil {
@@ -158,27 +163,88 @@ func (s Store) UpdateCustomFieldDefinition(ctx context.Context, definition custo
 	})
 }
 
+func (s Store) UpdateCustomFieldDefinitionLifecycle(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing customFieldDefinitionModel
+		err := tx.Where(&customFieldDefinitionModel{ID: definition.ID.String(), TenantID: definition.TenantID.String()}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Scope != definition.Scope.String() || existing.FieldKey != definition.Key.String() || existing.FieldType != definition.Type.String() || stringFromPtr(existing.InventoryID) != definition.InventoryID.String() || existing.LifecycleState == definition.LifecycleState.String() {
+			return ports.ErrForbidden
+		}
+		if err := tx.Model(&existing).Update("lifecycle_state", definition.LifecycleState.String()).Error; err != nil {
+			return customFieldDefinitionWriteError(err)
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
+func (s Store) DeleteCustomFieldDefinition(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var definition customFieldDefinitionModel
+		err := scopedCustomFieldDefinitionQuery(tx, tenantID, inventoryID, definitionID).First(&definition).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		if err := tx.Where(&customFieldDefinitionAssetTypeModel{CustomFieldDefinitionID: definitionID.String()}).Delete(&customFieldDefinitionAssetTypeModel{}).Error; err != nil {
+			return err
+		}
+		result := tx.Delete(&definition)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return ports.ErrForbidden
+		}
+		return nil
+	})
+}
+
+func (s Store) CustomFieldDefinitionHasActiveAssetValues(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definition customfield.Definition) (bool, error) {
+	query := s.db.WithContext(ctx).Where(&assetModel{
+		TenantID:       tenantID.String(),
+		LifecycleState: asset.LifecycleStateActive.String(),
+	})
+	if inventoryID.String() != "" {
+		query = query.Where(&assetModel{InventoryID: inventoryID.String()})
+	}
+	var models []assetModel
+	if err := query.Find(&models).Error; err != nil {
+		return false, err
+	}
+	for _, model := range models {
+		item, ok := model.toDomain()
+		if !ok {
+			return false, fmt.Errorf("invalid asset row %q", model.ID)
+		}
+		if item.CustomFields.HasNonEmptyValue(definition.Key.String()) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (s Store) ListTenantCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	query := s.db.WithContext(ctx).Where(&customFieldDefinitionModel{
-		TenantID: tenantID.String(),
-		Scope:    customfield.ScopeTenant.String(),
+		TenantID:       tenantID.String(),
+		Scope:          customfield.ScopeTenant.String(),
+		LifecycleState: customfield.DefinitionLifecycleActive.String(),
 	})
 	return s.listCustomFieldDefinitions(ctx, query, page)
 }
 
 func (s Store) CustomFieldDefinitionByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error) {
-	query := s.db.WithContext(ctx).Where(&customFieldDefinitionModel{
-		ID:       definitionID.String(),
-		TenantID: tenantID.String(),
-	})
-	if inventoryID.String() == "" {
-		query = query.Where(&customFieldDefinitionModel{Scope: customfield.ScopeTenant.String()})
-	} else {
-		query = query.Where(clause.Or(
-			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
-			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
-		))
-	}
+	query := scopedCustomFieldDefinitionQuery(s.db.WithContext(ctx), tenantID, inventoryID, definitionID)
 	var model customFieldDefinitionModel
 	err := query.First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -200,12 +266,23 @@ func (s Store) CustomFieldDefinitionByID(ctx context.Context, tenantID tenant.ID
 
 func (s Store) ListInventoryCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	query := s.db.WithContext(ctx).
-		Where(&customFieldDefinitionModel{TenantID: tenantID.String()}).
+		Where(&customFieldDefinitionModel{TenantID: tenantID.String(), LifecycleState: customfield.DefinitionLifecycleActive.String()}).
 		Where(clause.Or(
 			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
 			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
 		))
 	return s.listCustomFieldDefinitions(ctx, query, page)
+}
+
+func scopedCustomFieldDefinitionQuery(db *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) *gorm.DB {
+	query := db.Where(&customFieldDefinitionModel{ID: definitionID.String(), TenantID: tenantID.String()})
+	if inventoryID.String() == "" {
+		return query.Where(&customFieldDefinitionModel{Scope: customfield.ScopeTenant.String()})
+	}
+	return query.Where(clause.Or(
+		clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+		clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
+	))
 }
 
 func (s Store) ListEffectiveCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) ([]customfield.Definition, error) {

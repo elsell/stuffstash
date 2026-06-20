@@ -112,33 +112,71 @@ func (hash SHA256) String() string {
 	return string(hash)
 }
 
+type LifecycleState string
+
+const (
+	LifecycleStateActive   LifecycleState = "active"
+	LifecycleStateArchived LifecycleState = "archived"
+)
+
+func NewLifecycleState(value string) (LifecycleState, bool) {
+	switch LifecycleState(strings.TrimSpace(value)) {
+	case LifecycleStateActive:
+		return LifecycleStateActive, true
+	case LifecycleStateArchived:
+		return LifecycleStateArchived, true
+	default:
+		return "", false
+	}
+}
+
+func (s LifecycleState) String() string {
+	return string(s)
+}
+
 type Attachment struct {
-	ID          ID
-	TenantID    TenantID
-	InventoryID InventoryID
-	AssetID     AssetID
-	StorageKey  StorageKey
-	FileName    FileName
-	ContentType ContentType
-	SizeBytes   int64
-	SHA256      SHA256
-	CreatedAt   time.Time
+	ID             ID
+	TenantID       TenantID
+	InventoryID    InventoryID
+	AssetID        AssetID
+	StorageKey     StorageKey
+	FileName       FileName
+	ContentType    ContentType
+	SizeBytes      int64
+	SHA256         SHA256
+	CreatedAt      time.Time
+	LifecycleState LifecycleState
 }
 
 func NewAttachment(id ID, tenantID TenantID, inventoryID InventoryID, assetID AssetID, storageKey StorageKey, fileName FileName, contentType ContentType, sizeBytes int64, sha256 SHA256, createdAt time.Time) (Attachment, bool) {
+	return NewAttachmentWithLifecycle(id, tenantID, inventoryID, assetID, storageKey, fileName, contentType, sizeBytes, sha256, createdAt, LifecycleStateActive)
+}
+
+func NewAttachmentWithLifecycle(id ID, tenantID TenantID, inventoryID InventoryID, assetID AssetID, storageKey StorageKey, fileName FileName, contentType ContentType, sizeBytes int64, sha256 SHA256, createdAt time.Time, lifecycleState LifecycleState) (Attachment, bool) {
 	if sizeBytes <= 0 || createdAt.IsZero() {
 		return Attachment{}, false
 	}
+	if lifecycleState.String() == "" {
+		lifecycleState = LifecycleStateActive
+	}
+	if _, ok := NewLifecycleState(lifecycleState.String()); !ok {
+		return Attachment{}, false
+	}
 	return Attachment{
-		ID:          id,
-		TenantID:    tenantID,
-		InventoryID: inventoryID,
-		AssetID:     assetID,
-		StorageKey:  storageKey,
-		FileName:    fileName,
-		ContentType: contentType,
-		SizeBytes:   sizeBytes,
-		SHA256:      sha256,
-		CreatedAt:   createdAt.UTC(),
+		ID:             id,
+		TenantID:       tenantID,
+		InventoryID:    inventoryID,
+		AssetID:        assetID,
+		StorageKey:     storageKey,
+		FileName:       fileName,
+		ContentType:    contentType,
+		SizeBytes:      sizeBytes,
+		SHA256:         sha256,
+		CreatedAt:      createdAt.UTC(),
+		LifecycleState: lifecycleState,
 	}, true
+}
+
+func (a Attachment) IsActive() bool {
+	return a.LifecycleState == "" || a.LifecycleState == LifecycleStateActive
 }

@@ -50,6 +50,7 @@ This spec does not define every future asset index, backup strategy, retention p
 - Outbox observability must include event ID, event kind, tenant ID, inventory ID when present, attempt count, and failure details when an event fails.
 - Dead-letter observability must include event ID, event kind, tenant ID, inventory ID when present, and the terminal reason.
 - State-changing application operations must write append-only audit records behind a repository port.
+- Audited list, detail, and content read operations must write safe append-only read audit records behind the same repository port.
 - Audit records must preserve tenant and inventory isolation in storage and read queries.
 - Audit metadata must be stored as a JSON object and must not be used as an authorization source.
 
@@ -157,6 +158,8 @@ Raw invitation acceptance tokens must never be persisted. Persistence must store
 Invitation expiration timestamps must be persisted and enforced during acceptance.
 Accepting an invitation must verify the token hash, reject expired invitations, mark it accepted, create the direct inventory access grant for the accepting principal, enqueue the matching authorization outbox event, and write audit history in one transaction.
 Revoking an invitation must only affect pending invitations and must write audit history when a pending invitation is revoked.
+Cancelling an invitation is the normal user-visible lifecycle operation for pending invitations and must write audit history.
+Hard-deleting an invitation removes invitation metadata and must write audit history before removal.
 
 Invitation acceptance links are not authentication tokens. They must follow bearer-secret handling rules: raw invitation tokens must never be persisted, only derived verifiers may be stored, and token use must be atomic so replay attempts fail after the first successful acceptance.
 
@@ -171,7 +174,7 @@ Custom field definitions that target custom asset types must use `custom_field_d
 
 The detailed persistence contract for custom asset types and field applicability is defined in `specs/assets/custom-asset-types.spec.md`.
 
-Audit record persistence must be append-only through application ports in the first slice. All repository adapters, including the in-memory adapter, must reject duplicate audit record IDs instead of overwriting existing records. State changes paired with audit writes must fail without partial domain writes when the audit write fails. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination ordered by `(occurred_at, id)`. Inventory references must not cascade-delete audit rows; until delete behavior is specified, inventory deletion must be blocked if audit rows still reference the inventory. Migration `000009_preserve_audit_records_and_ordering` must convert existing audit record inventory references from cascade delete to restrict delete and recreate audit list indexes for `(occurred_at, id)` ordering.
+Audit record persistence must be append-only through application ports in the first slice. All repository adapters, including the in-memory adapter, must reject duplicate audit record IDs instead of overwriting existing records. State changes paired with audit writes must fail without partial domain writes when the audit write fails. The database must validate audit action, source, target type, and metadata object shape. Audit list queries must support tenant-wide and inventory-scoped cursor pagination ordered by `(occurred_at, id)`. Hard-delete behavior must preserve audit rows; domain repositories must block hard delete when child rows would make the delete ambiguous or unsafe. Migration `000009_preserve_audit_records_and_ordering` must convert existing audit record inventory references from cascade delete to restrict delete and recreate audit list indexes for `(occurred_at, id)` ordering.
 
 ## Initial Asset Schema
 

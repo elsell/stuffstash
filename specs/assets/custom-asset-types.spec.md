@@ -10,7 +10,7 @@ An asset with a custom asset type is still a normal asset. Base `kind` controls 
 
 This spec covers the first custom asset type API and the changes needed for custom field definitions and asset custom field validation.
 
-This spec does not implement multiple custom asset types per asset, custom type inheritance, icons, display ordering, permanent delete APIs, import/export, search indexing, or UI editing flows.
+This spec does not implement multiple custom asset types per asset, custom type inheritance, icons, display ordering, import/export, search indexing, or UI editing flows. Restore and hard-delete behavior is defined by `specs/platform/resource-lifecycle.spec.md`.
 
 ## Model
 
@@ -64,7 +64,7 @@ Archived custom asset types:
 - Must not be editable through metadata update endpoints.
 - Must emit audit history when archived.
 
-Archiving is one-way in the first slice. Restore and permanent delete require separate compatibility specs.
+Archived custom asset types can be restored or hard-deleted only through the lifecycle endpoints defined by `specs/platform/resource-lifecycle.spec.md`.
 
 The first update slice may change only human-facing metadata:
 
@@ -79,7 +79,7 @@ These fields are immutable after creation:
 - Scope.
 - Key.
 
-Changing keys, scope, tenant, inventory, restore/delete behavior, display ordering, and icon/media metadata are separate slices. They need their own compatibility rules because assets, field definitions, imports, exports, audit records, and generated clients may already refer to the existing custom asset type.
+Changing keys, scope, tenant, inventory, display ordering, and icon/media metadata are separate slices. They need their own compatibility rules because assets, field definitions, imports, exports, audit records, and generated clients may already refer to the existing custom asset type.
 
 ## Effective Scope
 

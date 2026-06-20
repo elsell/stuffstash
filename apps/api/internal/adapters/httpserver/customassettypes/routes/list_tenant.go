@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/customassettypes/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
@@ -20,6 +21,8 @@ func RegisterListTenant(api huma.API, application app.App) {
 
 		result, err := application.ListTenantCustomAssetTypes(ctx, app.ListCustomAssetTypesInput{
 			Principal: principal,
+			Source:    audit.SourceAPI,
+			RequestID: input.RequestID,
 			TenantID:  tenant.ID(input.TenantID),
 			Limit:     input.Limit,
 			Cursor:    input.Cursor,

@@ -6,12 +6,13 @@ import (
 )
 
 type inventoryModel struct {
-	ID        string      `gorm:"primaryKey;size:26"`
-	TenantID  string      `gorm:"not null;size:26;index"`
-	Tenant    tenantModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	Name      string      `gorm:"not null;size:120"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID             string      `gorm:"primaryKey;size:26"`
+	TenantID       string      `gorm:"not null;size:26;index"`
+	Tenant         tenantModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	Name           string      `gorm:"not null;size:120"`
+	LifecycleState string      `gorm:"not null;size:32;default:'active'"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 func (inventoryModel) TableName() string {
@@ -28,9 +29,10 @@ func (m inventoryModel) toDomain() (inventory.Inventory, bool) {
 		return inventory.Inventory{}, false
 	}
 
-	return inventory.Inventory{
-		ID:       id,
-		TenantID: inventory.TenantID(m.TenantID),
-		Name:     name,
-	}, true
+	lifecycleState, ok := inventory.NewLifecycleState(m.LifecycleState)
+	if !ok {
+		return inventory.Inventory{}, false
+	}
+
+	return inventory.NewInventory(id, inventory.TenantID(m.TenantID), name, lifecycleState)
 }

@@ -125,6 +125,23 @@ func (attachmentTenantRepository) TenantExists(context.Context, tenant.ID) (bool
 	return true, nil
 }
 
+func (attachmentTenantRepository) TenantByID(_ context.Context, tenantID tenant.ID) (tenant.Tenant, bool, error) {
+	name, _ := tenant.NewName("Tenant")
+	return tenant.Tenant{ID: tenantID, Name: name, LifecycleState: tenant.LifecycleStateActive}, true, nil
+}
+
+func (attachmentTenantRepository) UpdateTenant(context.Context, tenant.Tenant, audit.Record) error {
+	return nil
+}
+
+func (attachmentTenantRepository) UpdateTenantLifecycle(context.Context, tenant.Tenant, audit.Record) error {
+	return nil
+}
+
+func (attachmentTenantRepository) DeleteTenant(context.Context, tenant.ID, audit.Record) error {
+	return nil
+}
+
 type attachmentInventoryRepository struct{}
 
 func (attachmentInventoryRepository) SaveInventory(context.Context, inventory.Inventory) error {
@@ -136,6 +153,22 @@ func (attachmentInventoryRepository) InventoryByID(_ context.Context, tenantID t
 		ID:       inventoryID,
 		TenantID: inventory.TenantID(tenantID.String()),
 	}, true, nil
+}
+
+func (attachmentInventoryRepository) UpdateInventory(context.Context, inventory.Inventory, audit.Record) error {
+	return nil
+}
+
+func (attachmentInventoryRepository) UpdateInventoryLifecycle(context.Context, inventory.Inventory, audit.Record) error {
+	return nil
+}
+
+func (attachmentInventoryRepository) DeleteInventory(context.Context, tenant.ID, inventory.InventoryID, audit.Record) error {
+	return nil
+}
+
+func (attachmentInventoryRepository) InventoryHasActiveAssets(context.Context, tenant.ID, inventory.InventoryID) (bool, error) {
+	return false, nil
 }
 
 func (attachmentInventoryRepository) ListInventoriesByTenant(context.Context, inventory.TenantID, ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
@@ -150,6 +183,10 @@ func (attachmentInventoryRepository) DeleteInventoryAccessGrantAndClaimRevoke(co
 	return ports.AuthorizationOutboxEvent{}, false, nil
 }
 
+func (attachmentInventoryRepository) InventoryAccessGrantByID(context.Context, tenant.ID, inventory.InventoryID, identity.PrincipalID, ports.InventoryAccessRelationship) (ports.InventoryAccessGrant, bool, error) {
+	return ports.InventoryAccessGrant{}, false, nil
+}
+
 func (attachmentInventoryRepository) SaveInventoryAccessInvitation(context.Context, ports.InventoryAccessInvitation, audit.Record) (ports.InventoryAccessInvitation, error) {
 	return ports.InventoryAccessInvitation{}, nil
 }
@@ -159,6 +196,18 @@ func (attachmentInventoryRepository) AcceptInventoryAccessInvitationAndEnqueue(c
 }
 
 func (attachmentInventoryRepository) RevokeInventoryAccessInvitation(context.Context, tenant.ID, inventory.InventoryID, string, audit.Record) (bool, error) {
+	return false, nil
+}
+
+func (attachmentInventoryRepository) InventoryAccessInvitationByID(context.Context, tenant.ID, inventory.InventoryID, string) (ports.InventoryAccessInvitation, bool, error) {
+	return ports.InventoryAccessInvitation{}, false, nil
+}
+
+func (attachmentInventoryRepository) CancelInventoryAccessInvitation(context.Context, tenant.ID, inventory.InventoryID, string, audit.Record) (bool, error) {
+	return false, nil
+}
+
+func (attachmentInventoryRepository) DeleteInventoryAccessInvitation(context.Context, tenant.ID, inventory.InventoryID, string, audit.Record) (bool, error) {
 	return false, nil
 }
 
@@ -178,11 +227,16 @@ func (attachmentAssetRepository) UpdateAssetLifecycle(context.Context, asset.Ass
 	return nil
 }
 
+func (attachmentAssetRepository) DeleteAsset(context.Context, tenant.ID, inventory.InventoryID, asset.ID, audit.Record) error {
+	return nil
+}
+
 func (attachmentAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
 	return asset.Asset{
-		ID:          assetID,
-		TenantID:    asset.TenantID(tenantID.String()),
-		InventoryID: asset.InventoryID(inventoryID.String()),
+		ID:             assetID,
+		TenantID:       asset.TenantID(tenantID.String()),
+		InventoryID:    asset.InventoryID(inventoryID.String()),
+		LifecycleState: asset.LifecycleStateActive,
 	}, true, nil
 }
 
@@ -198,6 +252,14 @@ type failingAttachmentRepository struct{}
 
 func (failingAttachmentRepository) SaveAttachment(context.Context, media.Attachment, audit.Record) error {
 	return ports.ErrConflict
+}
+
+func (failingAttachmentRepository) UpdateAttachmentLifecycle(context.Context, media.Attachment, audit.Record) error {
+	return ports.ErrConflict
+}
+
+func (failingAttachmentRepository) DeleteAttachment(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID, audit.Record) (media.Attachment, bool, error) {
+	return media.Attachment{}, false, ports.ErrConflict
 }
 
 func (failingAttachmentRepository) AttachmentByID(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID) (media.Attachment, bool, error) {

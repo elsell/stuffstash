@@ -10,7 +10,7 @@ The asset model needs a stable core plus custom asset types and a custom-field s
 
 This spec covers flexible asset metadata requirements, custom asset types, and how custom fields attach to assets.
 
-This spec does not define the full asset aggregate, asset lifecycle, search model, UI editor, or import/export behavior.
+This spec does not define the full asset aggregate, search model, UI editor, or import/export behavior. Resource lifecycle behavior for assets, custom fields, and custom asset types is defined by `specs/platform/resource-lifecycle.spec.md`.
 
 The detailed implementation contract for custom asset type APIs, field applicability, and asset assignment is defined in `specs/assets/custom-asset-types.spec.md`.
 

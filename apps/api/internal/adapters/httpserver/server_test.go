@@ -87,34 +87,79 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 		} `json:"components"`
 	}
 	decodeBody(t, response, &body)
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-asset-types", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-asset-types", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/archive", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/archive", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/custom-field-definitions/{definitionId}", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", "post")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}", "patch")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/audit-records", "get")
-	assertOpenAPIPathMethod(t, body.Paths, "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", "get")
+	expectedOperations := []struct {
+		path   string
+		method string
+	}{
+		{"/tenants/{tenantId}", "get"},
+		{"/tenants/{tenantId}", "patch"},
+		{"/tenants/{tenantId}", "delete"},
+		{"/tenants/{tenantId}/archive", "patch"},
+		{"/tenants/{tenantId}/restore", "patch"},
+		{"/tenants/{tenantId}/inventories", "post"},
+		{"/tenants/{tenantId}/inventories", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/archive", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/restore", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/archive", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/restore", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-grants", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel", "patch"},
+		{"/tenants/{tenantId}/custom-asset-types", "post"},
+		{"/tenants/{tenantId}/custom-asset-types", "get"},
+		{"/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}", "get"},
+		{"/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}", "patch"},
+		{"/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}", "delete"},
+		{"/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/archive", "patch"},
+		{"/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/restore", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/archive", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/restore", "patch"},
+		{"/tenants/{tenantId}/custom-field-definitions", "post"},
+		{"/tenants/{tenantId}/custom-field-definitions", "get"},
+		{"/tenants/{tenantId}/custom-field-definitions/{definitionId}", "get"},
+		{"/tenants/{tenantId}/custom-field-definitions/{definitionId}", "patch"},
+		{"/tenants/{tenantId}/custom-field-definitions/{definitionId}", "delete"},
+		{"/tenants/{tenantId}/custom-field-definitions/{definitionId}/archive", "patch"},
+		{"/tenants/{tenantId}/custom-field-definitions/{definitionId}/restore", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}", "delete"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/archive", "patch"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/restore", "patch"},
+		{"/tenants/{tenantId}/audit-records", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/audit-records", "get"},
+	}
+	for _, operation := range expectedOperations {
+		assertOpenAPIPathMethod(t, body.Paths, operation.path, operation.method)
+	}
 	if _, ok := body.Paths["/"]; ok {
 		t.Fatalf("expected OpenAPI to omit local API index path, got %s", response.Body.String())
 	}

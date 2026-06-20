@@ -22,6 +22,28 @@ type CreateTenantInput struct {
 	Name      string
 }
 
+type GetTenantInput struct {
+	Principal identity.Principal
+	Source    audit.Source
+	RequestID string
+	TenantID  tenant.ID
+}
+
+type UpdateTenantInput struct {
+	Principal identity.Principal
+	Source    audit.Source
+	RequestID string
+	TenantID  tenant.ID
+	Name      *string
+}
+
+type UpdateTenantLifecycleInput struct {
+	Principal identity.Principal
+	Source    audit.Source
+	RequestID string
+	TenantID  tenant.ID
+}
+
 type CreateInventoryInput struct {
 	Principal identity.Principal
 	Source    audit.Source
@@ -30,8 +52,35 @@ type CreateInventoryInput struct {
 	Name      string
 }
 
+type GetInventoryInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+}
+
+type UpdateInventoryInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Name        *string
+}
+
+type UpdateInventoryLifecycleInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+}
+
 type ListInventoriesInput struct {
 	Principal identity.Principal
+	Source    audit.Source
+	RequestID string
 	TenantID  tenant.ID
 	Limit     int
 	Cursor    string
@@ -444,6 +493,20 @@ func (a App) ListInventories(ctx context.Context, input ListInventoriesInput) (L
 			"limit":        strconv.Itoa(limit),
 		},
 	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryListed,
+		TargetType:  audit.TargetTenant,
+		TargetID:    input.TenantID.String(),
+		Metadata: map[string]string{
+			"limit": strconv.Itoa(limit),
+		},
+	}); err != nil {
+		return ListInventoriesResult{}, err
+	}
 
 	return ListInventoriesResult{
 		Items:      visible,

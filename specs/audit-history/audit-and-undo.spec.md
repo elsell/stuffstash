@@ -17,6 +17,7 @@ The first implementation slice defines durable, read-only audit records. Undo is
 ## Requirements
 
 - Every state-changing action must produce an audit record.
+- List, detail, and content read endpoints must produce safe read audit records where specified by the REST and lifecycle specs.
 - Audit records must include the authenticated principal, tenant, inventory, action type, target resources, timestamp, source adapter, and request identifier where available.
 - Audit records must distinguish between direct user actions, conversational actions, MCP actions, imports, background jobs, and system actions.
 - Conversational audit records must reference the action plan and approval when available.
@@ -31,7 +32,7 @@ The first implementation slice defines durable, read-only audit records. Undo is
 - Inventory audit reads must require `inventory.view` for the target inventory.
 - Tenant audit reads without an inventory scope must require `tenant.configure`.
 - Audit read responses must use the standard API success and error envelopes.
-- HTTP adapters must capture `X-Request-ID` for state-changing requests when the client supplies it and store it on emitted audit records.
+- HTTP adapters must capture `X-Request-ID` for audited requests when the client supplies it and store it on emitted audit records.
 
 ## First Slice Record Shape
 
@@ -53,7 +54,7 @@ Metadata is for human context and filtering hints. It must not be treated as an 
 
 ## First Slice Action Types
 
-The first implementation must write audit records for:
+The first implementation wrote audit records for:
 
 - `tenant.created`.
 - `inventory.created`.
@@ -66,6 +67,8 @@ The first implementation must write audit records for:
 Asset update and asset movement may produce separate audit records from one request when both non-location fields and `parentAssetId` change.
 
 Authorization denied audit records remain required, but are not part of the first durable audit slice. They must be specified before implementation because denial auditing needs careful noise and sensitivity rules.
+
+The current REST lifecycle action set is extended by `specs/platform/resource-lifecycle.spec.md`, including explicit read audit actions and lifecycle write actions.
 
 ## First Slice Sources
 
@@ -114,6 +117,7 @@ The full audited action set should eventually include:
 ## Testing
 
 - Tests must verify that every state-changing application operation writes audit history.
+- Tests must verify that audited read endpoints write safe read history without storing response bodies, secrets, tokens, blob contents, or authorization internals.
 - Tests must verify tenant and inventory isolation for audit reads.
 - Tests must verify pagination for audit reads, including `(occurredAt, id)` ordering.
 - Tests must verify duplicate audit record IDs are rejected instead of replacing existing records.

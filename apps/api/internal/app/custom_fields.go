@@ -29,10 +29,30 @@ type CreateCustomFieldDefinitionInput struct {
 
 type ListCustomFieldDefinitionsInput struct {
 	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
 	Limit       int
 	Cursor      string
+}
+
+type GetCustomFieldDefinitionInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	DefinitionID customfield.ID
+}
+
+type UpdateCustomFieldDefinitionLifecycleInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	DefinitionID customfield.ID
 }
 
 type UpdateCustomFieldDefinitionInput struct {
@@ -70,7 +90,7 @@ func (a App) CreateTenantCustomFieldDefinition(ctx context.Context, input Create
 }
 
 func (a App) CreateInventoryCustomFieldDefinition(ctx context.Context, input CreateCustomFieldDefinitionInput) (customfield.Definition, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
 		return customfield.Definition{}, err
 	}
 
@@ -89,7 +109,7 @@ func (a App) UpdateTenantCustomFieldDefinition(ctx context.Context, input Update
 }
 
 func (a App) UpdateInventoryCustomFieldDefinition(ctx context.Context, input UpdateCustomFieldDefinitionInput) (customfield.Definition, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
 		return customfield.Definition{}, err
 	}
 	return a.updateCustomFieldDefinition(ctx, input, customfield.ScopeInventory)
@@ -255,7 +275,7 @@ func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustom
 		}
 		updated.CustomAssetTypeIDs = targetIDs
 	}
-	updated, ok = customfield.NewDefinition(
+	updated, ok = customfield.NewDefinitionWithLifecycle(
 		updated.ID,
 		updated.TenantID,
 		updated.InventoryID,
@@ -266,8 +286,12 @@ func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustom
 		updated.EnumOptions,
 		updated.Applicability,
 		updated.CustomAssetTypeIDs,
+		updated.LifecycleState,
 	)
 	if !ok {
+		return customfield.Definition{}, ErrInvalidInput
+	}
+	if !current.IsActive() {
 		return customfield.Definition{}, ErrInvalidInput
 	}
 	schemaChange, ok := current.CompatibleSchemaChange(updated)
@@ -356,11 +380,11 @@ func (a App) ListTenantCustomFieldDefinitions(ctx context.Context, input ListCus
 		return ListCustomFieldDefinitionsResult{}, err
 	}
 
-	return a.customFieldDefinitionListResult(ctx, input, items, limit), nil
+	return a.customFieldDefinitionListResult(ctx, input, items, limit)
 }
 
 func (a App) ListInventoryCustomFieldDefinitions(ctx context.Context, input ListCustomFieldDefinitionsInput) (ListCustomFieldDefinitionsResult, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return ListCustomFieldDefinitionsResult{}, err
 	}
 
@@ -377,10 +401,10 @@ func (a App) ListInventoryCustomFieldDefinitions(ctx context.Context, input List
 		return ListCustomFieldDefinitionsResult{}, err
 	}
 
-	return a.customFieldDefinitionListResult(ctx, input, items, limit), nil
+	return a.customFieldDefinitionListResult(ctx, input, items, limit)
 }
 
-func (a App) customFieldDefinitionListResult(ctx context.Context, input ListCustomFieldDefinitionsInput, items []customfield.Definition, limit int) ListCustomFieldDefinitionsResult {
+func (a App) customFieldDefinitionListResult(ctx context.Context, input ListCustomFieldDefinitionsInput, items []customfield.Definition, limit int) (ListCustomFieldDefinitionsResult, error) {
 	hasMore := len(items) > limit
 	var nextCursor *string
 	if hasMore {
@@ -398,13 +422,28 @@ func (a App) customFieldDefinitionListResult(ctx context.Context, input ListCust
 			"limit":        strconv.Itoa(limit),
 		},
 	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionCustomFieldDefinitionListed,
+		TargetType:  audit.TargetTenant,
+		TargetID:    input.TenantID.String(),
+		Metadata: map[string]string{
+			"limit": strconv.Itoa(limit),
+		},
+	}); err != nil {
+		return ListCustomFieldDefinitionsResult{}, err
+	}
 
 	return ListCustomFieldDefinitionsResult{
 		Items:      items,
 		Limit:      limit,
 		NextCursor: nextCursor,
 		HasMore:    hasMore,
-	}
+	}, nil
 }
 
 func customFieldEnumOptions(values []string) ([]customfield.Key, bool) {

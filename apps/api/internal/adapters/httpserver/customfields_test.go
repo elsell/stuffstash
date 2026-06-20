@@ -654,6 +654,10 @@ func TestCustomFieldDefinitionSchemaEvolutionRejectsInvalidTargets(t *testing.T)
 			"01ARZ3NDEKTSV4RRFFQ69G5FB4", "audit-tenant-type",
 			"01ARZ3NDEKTSV4RRFFQ69G5FB5", "audit-inventory-field",
 			"01ARZ3NDEKTSV4RRFFQ69G5FB6", "audit-tenant-field",
+			"01ARZ3NDEKTSV4RRFFQ69G5FBA", "audit-restore-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FBB", "audit-restore-field",
+			"audit-restore-field-archive",
+			"audit-restore-type-archive",
 		},
 	}))
 
@@ -690,6 +694,32 @@ func TestCustomFieldDefinitionSchemaEvolutionRejectsInvalidTargets(t *testing.T)
 		t.Fatalf("expected tenant field status %d, got %d with body %s", http.StatusCreated, tenantFieldResponse.Code, tenantFieldResponse.Body.String())
 	}
 	tenantField := decodeCustomFieldDefinition(t, tenantFieldResponse)
+
+	restoreType := createCustomAssetTypeForTest(t, server, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", "restore-type")
+	restoreFieldResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":                "restore-field",
+		"displayName":        "Restore Field",
+		"type":               "text",
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{restoreType.Data.ID},
+	})
+	if restoreFieldResponse.Code != http.StatusCreated {
+		t.Fatalf("expected restore field status %d, got %d with body %s", http.StatusCreated, restoreFieldResponse.Code, restoreFieldResponse.Body.String())
+	}
+	restoreField := decodeCustomFieldDefinition(t, restoreFieldResponse)
+	archiveRestoreField := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+restoreField.Data.ID+"/archive", "Bearer dev:inventory-owner", nil)
+	if archiveRestoreField.Code != http.StatusOK {
+		t.Fatalf("expected restore field archive status %d, got %d with body %s", http.StatusOK, archiveRestoreField.Code, archiveRestoreField.Body.String())
+	}
+	archiveRestoreType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+restoreType.Data.ID+"/archive", "Bearer dev:inventory-owner", nil)
+	if archiveRestoreType.Code != http.StatusOK {
+		t.Fatalf("expected restore type archive status %d, got %d with body %s", http.StatusOK, archiveRestoreType.Code, archiveRestoreType.Body.String())
+	}
+	restoreFieldWithArchivedTarget := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+restoreField.Data.ID+"/restore", "Bearer dev:inventory-owner", nil)
+	if restoreFieldWithArchivedTarget.Code != http.StatusNotFound {
+		t.Fatalf("expected restore field with archived target status %d, got %d with body %s", http.StatusNotFound, restoreFieldWithArchivedTarget.Code, restoreFieldWithArchivedTarget.Body.String())
+	}
+	assertSafeError(t, restoreFieldWithArchivedTarget, "resource_not_found", "Resource not found.")
 
 	cases := []struct {
 		name             string

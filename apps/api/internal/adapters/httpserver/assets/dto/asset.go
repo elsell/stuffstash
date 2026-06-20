@@ -43,6 +43,18 @@ type UpdateAssetOutput struct {
 	Body shared.SuccessEnvelope[AssetResponse]
 }
 
+type GetAssetInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+}
+
+type GetAssetOutput struct {
+	Body shared.SuccessEnvelope[AssetResponse]
+}
+
 type UpdateAssetLifecycleInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
@@ -55,8 +67,11 @@ type UpdateAssetLifecycleOutput struct {
 	Body shared.SuccessEnvelope[AssetResponse]
 }
 
+type DeleteAssetOutput struct{}
+
 type ListAssetsInput struct {
 	Authorization  string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID      string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID       string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID    string `path:"inventoryId" doc:"Inventory ID"`
 	Limit          int    `query:"limit" minimum:"1" doc:"Requested page size"`

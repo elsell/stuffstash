@@ -15,6 +15,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -298,12 +299,14 @@ func paginationCursor(payload map[string]any) string {
 }
 
 type fakeIDGenerator struct {
-	ids []string
+	ids     []string
+	counter int
 }
 
 func (f *fakeIDGenerator) NewID() string {
 	if len(f.ids) == 0 {
-		panic("fake ID generator exhausted")
+		f.counter++
+		return "generated-id-" + strconv.Itoa(f.counter)
 	}
 	id := f.ids[0]
 	f.ids = f.ids[1:]

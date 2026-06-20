@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/access/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
@@ -21,6 +22,8 @@ func RegisterList(api huma.API, application app.App) {
 
 		result, err := application.ListInventoryAccessGrants(ctx, app.ListInventoryAccessGrantsInput{
 			Principal:   principal,
+			Source:      audit.SourceAPI,
+			RequestID:   input.RequestID,
 			TenantID:    tenant.ID(input.TenantID),
 			InventoryID: inventory.InventoryID(input.InventoryID),
 			Limit:       input.Limit,

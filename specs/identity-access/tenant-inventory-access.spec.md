@@ -69,6 +69,8 @@ The first endpoints are:
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
 
 `POST /access-grants`:
@@ -145,13 +147,30 @@ Revoking direct inventory access removes the inventory relationship. Tenant view
 - Must mark the invitation accepted, create the direct access grant for the accepting principal, enqueue the matching SpiceDB grant event, and write audit history in one transaction.
 - Must drain the authorization outbox after commit and leave failed relationship writes retryable.
 
+`GET /access-invitations/{invitationId}`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Returns invitation metadata without returning raw acceptance token material.
+- Must produce safe read audit history.
+
+`PATCH /access-invitations/{invitationId}/cancel`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Must cancel only pending invitations.
+- Must not remove existing direct access grants.
+- Must produce audit history only when a pending invitation existed and was cancelled.
+- Must use the standard no-content response.
+
 `DELETE /access-invitations/{invitationId}`:
 
 - Requires authentication.
 - Requires `inventory.share`.
-- Must revoke only pending invitations.
+- Must hard-delete invitation metadata only.
 - Must not remove existing direct access grants.
-- Must produce audit history only when a pending invitation existed and was revoked.
+- Must preserve audit history.
+- Must produce audit history only when invitation metadata existed and was removed.
 - Must use the standard no-content response.
 
 Granting `viewer` allows inventory viewing and asset listing.

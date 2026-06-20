@@ -60,8 +60,34 @@ type UpdateDefinitionOutput struct {
 	Body shared.SuccessEnvelope[DefinitionResponse]
 }
 
+type GetTenantDefinitionInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	DefinitionID  string `path:"definitionId" doc:"Custom field definition ID"`
+}
+
+type GetInventoryDefinitionInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	DefinitionID  string `path:"definitionId" doc:"Custom field definition ID"`
+}
+
+type GetDefinitionOutput struct {
+	Body shared.SuccessEnvelope[DefinitionResponse]
+}
+
+type UpdateDefinitionLifecycleOutput struct {
+	Body shared.SuccessEnvelope[DefinitionResponse]
+}
+
+type DeleteDefinitionOutput struct{}
+
 type ListTenantDefinitionsInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
 	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
@@ -69,6 +95,7 @@ type ListTenantDefinitionsInput struct {
 
 type ListInventoryDefinitionsInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
@@ -90,4 +117,5 @@ type DefinitionResponse struct {
 	EnumOptions        []string `json:"enumOptions"`
 	Applicability      string   `json:"applicability"`
 	CustomAssetTypeIDs []string `json:"customAssetTypeIds"`
+	LifecycleState     string   `json:"lifecycleState"`
 }

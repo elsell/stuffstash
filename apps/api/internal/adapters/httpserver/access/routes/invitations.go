@@ -66,12 +66,54 @@ func RegisterInvitations(api huma.API, application app.App) {
 		}, nil
 	}, huma.OperationTags("inventory access"), shared.SecuredOperation)
 
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", func(ctx context.Context, input *dto.RevokeInventoryAccessInvitationInput) (*dto.GetInventoryAccessInvitationOutput, error) {
+		principal, err := shared.Authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+		invitation, err := application.GetInventoryAccessInvitation(ctx, app.GetInventoryAccessInvitationInput{
+			Principal:    principal,
+			Source:       audit.SourceAPI,
+			RequestID:    input.RequestID,
+			TenantID:     tenant.ID(input.TenantID),
+			InventoryID:  inventory.InventoryID(input.InventoryID),
+			InvitationID: input.InvitationID,
+		})
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+		return &dto.GetInventoryAccessInvitationOutput{
+			Body: shared.SuccessEnvelope[dto.InvitationResponse]{
+				Data: mapper.InvitationToResponse(invitation),
+				Meta: shared.Meta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("inventory access"), shared.SecuredOperation)
+
+	huma.Patch(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel", func(ctx context.Context, input *dto.RevokeInventoryAccessInvitationInput) (*dto.RevokeInventoryAccessInvitationOutput, error) {
+		principal, err := shared.Authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := application.CancelInventoryAccessInvitation(ctx, app.RevokeInventoryAccessInvitationInput{
+			Principal:    principal,
+			Source:       audit.SourceAPI,
+			RequestID:    input.RequestID,
+			TenantID:     tenant.ID(input.TenantID),
+			InventoryID:  inventory.InventoryID(input.InventoryID),
+			InvitationID: input.InvitationID,
+		}); err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+		return &dto.RevokeInventoryAccessInvitationOutput{}, nil
+	}, huma.OperationTags("inventory access"), shared.NoContentOperation, shared.SecuredOperation)
+
 	huma.Delete(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", func(ctx context.Context, input *dto.RevokeInventoryAccessInvitationInput) (*dto.RevokeInventoryAccessInvitationOutput, error) {
 		principal, err := shared.Authenticate(ctx, application, input.Authorization)
 		if err != nil {
 			return nil, err
 		}
-		if _, err := application.RevokeInventoryAccessInvitation(ctx, app.RevokeInventoryAccessInvitationInput{
+		if _, err := application.DeleteInventoryAccessInvitation(ctx, app.RevokeInventoryAccessInvitationInput{
 			Principal:    principal,
 			Source:       audit.SourceAPI,
 			RequestID:    input.RequestID,

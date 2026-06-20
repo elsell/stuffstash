@@ -6,9 +6,15 @@ import (
 )
 
 type inventoryResponse struct {
-	ID       string `json:"id"`
-	TenantID string `json:"tenantId"`
-	Name     string `json:"name"`
+	ID             string `json:"id"`
+	TenantID       string `json:"tenantId"`
+	Name           string `json:"name"`
+	LifecycleState string `json:"lifecycleState"`
+}
+
+type inventoryBody struct {
+	Data inventoryResponse `json:"data"`
+	Meta responseMeta      `json:"meta"`
 }
 
 type inventoryListResponse struct {

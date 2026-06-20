@@ -25,6 +25,7 @@ func DefinitionToResponse(definition customfield.Definition) dto.DefinitionRespo
 		EnumOptions:        options,
 		Applicability:      definition.Applicability.String(),
 		CustomAssetTypeIDs: targets,
+		LifecycleState:     definition.LifecycleState.String(),
 	}
 }
 

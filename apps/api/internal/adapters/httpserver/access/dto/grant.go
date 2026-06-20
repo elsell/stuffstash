@@ -21,6 +21,7 @@ type GrantInventoryAccessOutput struct {
 
 type ListInventoryAccessInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
@@ -29,6 +30,19 @@ type ListInventoryAccessInput struct {
 
 type ListInventoryAccessOutput struct {
 	Body shared.SuccessEnvelope[[]GrantResponse]
+}
+
+type GetInventoryAccessGrantInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	PrincipalID   string `path:"principalId" doc:"User principal ID"`
+	Relationship  string `path:"relationship" enum:"viewer,editor" doc:"Direct inventory relationship"`
+}
+
+type GetInventoryAccessGrantOutput struct {
+	Body shared.SuccessEnvelope[GrantResponse]
 }
 
 type RevokeInventoryAccessInput struct {
@@ -82,6 +96,10 @@ type RevokeInventoryAccessInvitationInput struct {
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	InvitationID  string `path:"invitationId" doc:"Invitation ID"`
+}
+
+type GetInventoryAccessInvitationOutput struct {
+	Body shared.SuccessEnvelope[InvitationResponse]
 }
 
 type RevokeInventoryAccessInvitationOutput struct{}

@@ -276,6 +276,29 @@ type Definition struct {
 	EnumOptions        []Key
 	Applicability      Applicability
 	CustomAssetTypeIDs []AssetTypeID
+	LifecycleState     DefinitionLifecycleState
+}
+
+type DefinitionLifecycleState string
+
+const (
+	DefinitionLifecycleActive   DefinitionLifecycleState = "active"
+	DefinitionLifecycleArchived DefinitionLifecycleState = "archived"
+)
+
+func NewDefinitionLifecycleState(value string) (DefinitionLifecycleState, bool) {
+	switch DefinitionLifecycleState(strings.TrimSpace(value)) {
+	case DefinitionLifecycleActive:
+		return DefinitionLifecycleActive, true
+	case DefinitionLifecycleArchived:
+		return DefinitionLifecycleArchived, true
+	default:
+		return "", false
+	}
+}
+
+func (s DefinitionLifecycleState) String() string {
+	return string(s)
 }
 
 type DefinitionSchemaChange struct {
@@ -331,6 +354,10 @@ func (set DefinitionSet) ValidateValuesForAssetType(values map[string]any, custo
 }
 
 func NewDefinition(id ID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, fieldType FieldType, enumOptions []Key, applicability Applicability, customAssetTypeIDs []AssetTypeID) (Definition, bool) {
+	return NewDefinitionWithLifecycle(id, tenantID, inventoryID, scope, key, displayName, fieldType, enumOptions, applicability, customAssetTypeIDs, DefinitionLifecycleActive)
+}
+
+func NewDefinitionWithLifecycle(id ID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, fieldType FieldType, enumOptions []Key, applicability Applicability, customAssetTypeIDs []AssetTypeID, lifecycleState DefinitionLifecycleState) (Definition, bool) {
 	switch scope {
 	case ScopeTenant:
 		if inventoryID.String() != "" {
@@ -366,6 +393,12 @@ func NewDefinition(id ID, tenantID TenantID, inventoryID InventoryID, scope Scop
 	default:
 		return Definition{}, false
 	}
+	if lifecycleState.String() == "" {
+		lifecycleState = DefinitionLifecycleActive
+	}
+	if _, ok := NewDefinitionLifecycleState(lifecycleState.String()); !ok {
+		return Definition{}, false
+	}
 
 	return Definition{
 		ID:                 id,
@@ -378,7 +411,12 @@ func NewDefinition(id ID, tenantID TenantID, inventoryID InventoryID, scope Scop
 		EnumOptions:        options,
 		Applicability:      applicability,
 		CustomAssetTypeIDs: targets,
+		LifecycleState:     lifecycleState,
 	}, true
+}
+
+func (d Definition) IsActive() bool {
+	return d.LifecycleState == "" || d.LifecycleState == DefinitionLifecycleActive
 }
 
 func (d Definition) AppliesTo(customAssetTypeID AssetTypeID) bool {

@@ -8,20 +8,21 @@ import (
 )
 
 type customFieldDefinitionModel struct {
-	ID            string          `gorm:"primaryKey;size:26"`
-	TenantID      string          `gorm:"not null;size:26;index"`
-	Tenant        tenantModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	InventoryID   *string         `gorm:"size:26;index"`
-	Inventory     *inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
-	Scope         string          `gorm:"not null;size:32;index;check:chk_custom_field_definitions_scope,scope IN ('tenant','inventory')"`
-	CursorKey     string          `gorm:"not null;size:32;index"`
-	FieldKey      string          `gorm:"not null;size:80;index"`
-	DisplayName   string          `gorm:"not null;size:120"`
-	FieldType     string          `gorm:"not null;size:32;check:chk_custom_field_definitions_field_type,field_type IN ('text','number','boolean','date','url','enum')"`
-	EnumOptions   string          `gorm:"type:jsonb;not null;default:'[]'"`
-	Applicability string          `gorm:"not null;size:32;default:'all_assets';check:chk_custom_field_definitions_applicability,applicability IN ('all_assets','custom_asset_types')"`
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID             string          `gorm:"primaryKey;size:26"`
+	TenantID       string          `gorm:"not null;size:26;index"`
+	Tenant         tenantModel     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID    *string         `gorm:"size:26;index"`
+	Inventory      *inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:InventoryID;references:ID"`
+	Scope          string          `gorm:"not null;size:32;index;check:chk_custom_field_definitions_scope,scope IN ('tenant','inventory')"`
+	CursorKey      string          `gorm:"not null;size:32;index"`
+	FieldKey       string          `gorm:"not null;size:80;index"`
+	DisplayName    string          `gorm:"not null;size:120"`
+	FieldType      string          `gorm:"not null;size:32;check:chk_custom_field_definitions_field_type,field_type IN ('text','number','boolean','date','url','enum')"`
+	EnumOptions    string          `gorm:"type:jsonb;not null;default:'[]'"`
+	Applicability  string          `gorm:"not null;size:32;default:'all_assets';check:chk_custom_field_definitions_applicability,applicability IN ('all_assets','custom_asset_types')"`
+	LifecycleState string          `gorm:"not null;size:32;default:'active'"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type customFieldDefinitionAssetTypeModel struct {
@@ -92,7 +93,11 @@ func (m customFieldDefinitionModel) toDomain(customAssetTypeIDs []customfield.As
 		}
 		options = append(options, option)
 	}
-	return customfield.NewDefinition(
+	lifecycleState, ok := customfield.NewDefinitionLifecycleState(m.LifecycleState)
+	if !ok {
+		return customfield.Definition{}, false
+	}
+	return customfield.NewDefinitionWithLifecycle(
 		id,
 		customfield.TenantID(m.TenantID),
 		inventoryID,
@@ -103,5 +108,6 @@ func (m customFieldDefinitionModel) toDomain(customAssetTypeIDs []customfield.As
 		options,
 		applicability,
 		customAssetTypeIDs,
+		lifecycleState,
 	)
 }

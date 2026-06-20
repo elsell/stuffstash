@@ -9,15 +9,16 @@ import (
 
 func AttachmentToResponse(attachment media.Attachment) dto.AttachmentResponse {
 	return dto.AttachmentResponse{
-		ID:          attachment.ID.String(),
-		TenantID:    attachment.TenantID.String(),
-		InventoryID: attachment.InventoryID.String(),
-		AssetID:     attachment.AssetID.String(),
-		FileName:    attachment.FileName.String(),
-		ContentType: attachment.ContentType.String(),
-		SizeBytes:   attachment.SizeBytes,
-		SHA256:      attachment.SHA256.String(),
-		CreatedAt:   attachment.CreatedAt.UTC().Format(time.RFC3339),
+		ID:             attachment.ID.String(),
+		TenantID:       attachment.TenantID.String(),
+		InventoryID:    attachment.InventoryID.String(),
+		AssetID:        attachment.AssetID.String(),
+		FileName:       attachment.FileName.String(),
+		ContentType:    attachment.ContentType.String(),
+		SizeBytes:      attachment.SizeBytes,
+		SHA256:         attachment.SHA256.String(),
+		CreatedAt:      attachment.CreatedAt.UTC().Format(time.RFC3339),
+		LifecycleState: attachment.LifecycleState.String(),
 	}
 }
 

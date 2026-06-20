@@ -17,6 +17,7 @@ type customFieldDefinitionResponse struct {
 	EnumOptions        []string `json:"enumOptions"`
 	Applicability      string   `json:"applicability"`
 	CustomAssetTypeIDs []string `json:"customAssetTypeIds"`
+	LifecycleState     string   `json:"lifecycleState"`
 }
 
 type customFieldDefinitionBody struct {

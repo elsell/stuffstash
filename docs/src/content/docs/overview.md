@@ -20,12 +20,13 @@ The repository has a Go API and the first separate SvelteKit web app with:
 - A health endpoint.
 - Local development auth and production-shaped OIDC auth, with Dex for local OIDC verification.
 - In-memory authorization for local use and SpiceDB authorization wiring.
-- Tenant creation, inventory creation/listing, and first asset create/list/update/move flow.
+- Tenant and inventory creation, browsing, update, archive, restore, and hard-delete flows.
+- Asset create/list/detail/update/move/archive/restore/delete flow.
 - Custom asset types, such as medicine or tools, with type-specific custom fields.
 - Tenant and inventory custom field definitions with asset value validation.
 - Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.
 - Asset search across the inventories a user can view.
-- Durable audit history for the first state-changing actions.
+- Durable audit history for state changes and selected reads.
 - Inventory sharing by known principal ID or invite-link token, with viewer and editor access plus revocation.
 - Huma-generated OpenAPI at `/openapi.json`.
 - A generated TypeScript API client used by the web app at its adapter boundary.

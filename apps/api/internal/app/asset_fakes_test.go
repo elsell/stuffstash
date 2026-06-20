@@ -3,6 +3,10 @@ package app
 import (
 	"context"
 	"errors"
+	"sort"
+	"testing"
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -14,97 +18,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"sort"
-	"testing"
-	"time"
 )
-
-type fakeAuthorizer struct {
-	checkInventoryErr      error
-	checkTenantErr         error
-	grantTenantOwnerErr    error
-	tenantOwnerGrants      []string
-	inventoryOwnerGrants   []string
-	inventoryViewerGrants  []string
-	inventoryEditorGrants  []string
-	inventoryViewerRevokes []string
-	inventoryEditorRevokes []string
-}
-
-func (f *fakeAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
-	if f.checkTenantErr != nil {
-		return f.checkTenantErr
-	}
-	return nil
-}
-
-func (f *fakeAuthorizer) CheckInventory(context.Context, identity.Principal, ports.InventoryPermission, inventory.InventoryID) error {
-	return f.checkInventoryErr
-}
-
-func (f *fakeAuthorizer) GrantTenantOwner(_ context.Context, principal identity.Principal, tenantID tenant.ID) error {
-	if f.grantTenantOwnerErr != nil {
-		return f.grantTenantOwnerErr
-	}
-	f.tenantOwnerGrants = append(f.tenantOwnerGrants, principal.ID.String()+":"+tenantID.String())
-	return nil
-}
-
-func (f *fakeAuthorizer) GrantInventoryOwner(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	f.inventoryOwnerGrants = append(f.inventoryOwnerGrants, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
-	return nil
-}
-
-func (f *fakeAuthorizer) GrantInventoryViewer(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	f.inventoryViewerGrants = append(f.inventoryViewerGrants, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
-	return nil
-}
-
-func (f *fakeAuthorizer) GrantInventoryEditor(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	f.inventoryEditorGrants = append(f.inventoryEditorGrants, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
-	return nil
-}
-
-func (f *fakeAuthorizer) RevokeInventoryViewer(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	f.inventoryViewerRevokes = append(f.inventoryViewerRevokes, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
-	return nil
-}
-
-func (f *fakeAuthorizer) RevokeInventoryEditor(_ context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	f.inventoryEditorRevokes = append(f.inventoryEditorRevokes, principal.ID.String()+":"+tenantID.String()+":"+inventoryID.String())
-	return nil
-}
-
-type fakeTenantRepository struct {
-	exists bool
-}
-
-func (f *fakeTenantRepository) SaveTenant(context.Context, tenant.Tenant) error {
-	return nil
-}
-
-func (f *fakeTenantRepository) TenantExists(context.Context, tenant.ID) (bool, error) {
-	return f.exists, nil
-}
-
-type fakeInventoryRepository struct {
-	items        []inventory.Inventory
-	accessGrants []ports.InventoryAccessGrant
-	invitations  []ports.InventoryAccessInvitation
-	auditRecords []audit.Record
-	outbox       *fakeOutbox
-	calls        int
-	limits       []int
-}
-
-func (f *fakeInventoryRepository) InventoryByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (inventory.Inventory, bool, error) {
-	for _, item := range f.items {
-		if item.ID == inventoryID && item.TenantID == inventory.TenantID(tenantID.String()) {
-			return item, true, nil
-		}
-	}
-	return inventory.Inventory{}, false, nil
-}
 
 type fakeAssetRepository struct {
 	items        map[asset.ID]asset.Asset
@@ -317,6 +231,36 @@ func (f *fakeInventoryRepository) SaveInventory(context.Context, inventory.Inven
 	return nil
 }
 
+func (f *fakeInventoryRepository) UpdateInventory(_ context.Context, item inventory.Inventory, auditRecord audit.Record) error {
+	for index, existing := range f.items {
+		if existing.ID == item.ID && existing.TenantID == item.TenantID {
+			f.items[index] = item
+			f.auditRecords = append(f.auditRecords, auditRecord)
+			return nil
+		}
+	}
+	return ports.ErrForbidden
+}
+
+func (f *fakeInventoryRepository) UpdateInventoryLifecycle(ctx context.Context, item inventory.Inventory, auditRecord audit.Record) error {
+	return f.UpdateInventory(ctx, item, auditRecord)
+}
+
+func (f *fakeInventoryRepository) DeleteInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error {
+	for index, item := range f.items {
+		if item.ID == inventoryID && item.TenantID.String() == tenantID.String() {
+			f.items = append(f.items[:index], f.items[index+1:]...)
+			f.auditRecords = append(f.auditRecords, auditRecord)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (f *fakeInventoryRepository) InventoryHasActiveAssets(context.Context, tenant.ID, inventory.InventoryID) (bool, error) {
+	return false, nil
+}
+
 func (f *fakeInventoryRepository) SaveInventoryAccessGrantAndEnqueue(_ context.Context, _ string, grant ports.InventoryAccessGrant, auditRecord audit.Record) error {
 	for _, existing := range f.accessGrants {
 		if existing.TenantID == grant.TenantID && existing.InventoryID == grant.InventoryID && existing.CursorKey() == grant.CursorKey() {
@@ -372,6 +316,15 @@ func (f *fakeInventoryRepository) ListInventoryAccessGrants(_ context.Context, t
 	return items, nil
 }
 
+func (f *fakeInventoryRepository) InventoryAccessGrantByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, principalID identity.PrincipalID, relationship ports.InventoryAccessRelationship) (ports.InventoryAccessGrant, bool, error) {
+	for _, grant := range f.accessGrants {
+		if grant.TenantID == tenantID && grant.InventoryID == inventoryID && grant.PrincipalID == principalID && grant.Relationship == relationship {
+			return grant, true, nil
+		}
+	}
+	return ports.InventoryAccessGrant{}, false, nil
+}
+
 func (f *fakeInventoryRepository) ListInventoriesByTenant(_ context.Context, tenantID inventory.TenantID, page ports.InventoryListPageRequest) ([]inventory.Inventory, error) {
 	f.calls++
 	f.limits = append(f.limits, page.Limit)
@@ -414,6 +367,25 @@ func (f *fakeCustomFieldRepository) UpdateCustomFieldDefinition(_ context.Contex
 		return nil
 	}
 	return ports.ErrForbidden
+}
+
+func (f *fakeCustomFieldRepository) UpdateCustomFieldDefinitionLifecycle(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error {
+	return f.UpdateCustomFieldDefinition(ctx, definition, auditRecord)
+}
+
+func (f *fakeCustomFieldRepository) DeleteCustomFieldDefinition(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID, auditRecord audit.Record) error {
+	for index, item := range f.items {
+		if item.ID == definitionID && item.TenantID.String() == tenantID.String() {
+			f.items = append(f.items[:index], f.items[index+1:]...)
+			f.auditRecords = append(f.auditRecords, auditRecord)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (f *fakeCustomFieldRepository) CustomFieldDefinitionHasActiveAssetValues(context.Context, tenant.ID, inventory.InventoryID, customfield.Definition) (bool, error) {
+	return false, nil
 }
 
 func (f *fakeCustomFieldRepository) recordForAction(action audit.Action) (audit.Record, bool) {
@@ -548,7 +520,7 @@ func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset, a
 	if !exists || existing.TenantID != item.TenantID || existing.InventoryID != item.InventoryID {
 		return ports.ErrForbidden
 	}
-	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState {
+	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState || existing.LifecycleState != asset.LifecycleStateActive {
 		return ports.ErrForbidden
 	}
 	if item.ParentAssetID.String() != "" {
@@ -603,6 +575,19 @@ func (f *fakeAssetRepository) UpdateAssetLifecycle(_ context.Context, item asset
 		return ports.ErrForbidden
 	}
 	f.items[item.ID] = item
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
+func (f *fakeAssetRepository) DeleteAsset(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error {
+	if f.items == nil {
+		return nil
+	}
+	item, ok := f.items[assetID]
+	if !ok || item.TenantID.String() != tenantID.String() || item.InventoryID.String() != inventoryID.String() {
+		return nil
+	}
+	delete(f.items, assetID)
 	f.auditRecords = append(f.auditRecords, auditRecord)
 	return nil
 }

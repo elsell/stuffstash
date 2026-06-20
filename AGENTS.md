@@ -236,6 +236,7 @@ These instructions are binding for all agents and contributors working in this r
 ## Audit, Search, Media, And Portability
 
 - Every state-changing action must produce audit history.
+- REST list, detail, and content read endpoints must produce safe read audit history where specified by the relevant REST lifecycle contract.
 - Undo must be implemented through domain behavior or compensating application commands, not direct database reversal.
 - Search must support exact and fuzzy lookup over resources the user is authorized to view.
 - Search must preserve SpiceDB authorization, tenant isolation, and inventory isolation.

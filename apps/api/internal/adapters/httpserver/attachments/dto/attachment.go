@@ -23,6 +23,7 @@ type CreateAssetAttachmentOutput struct {
 
 type ListAssetAttachmentsInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	AssetID       string `path:"assetId" doc:"Asset ID"`
@@ -36,6 +37,7 @@ type ListAssetAttachmentsOutput struct {
 
 type DownloadAssetAttachmentInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	AssetID       string `path:"assetId" doc:"Asset ID"`
@@ -48,14 +50,43 @@ type DownloadAssetAttachmentOutput struct {
 	Body               []byte
 }
 
+type GetAssetAttachmentInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	AttachmentID  string `path:"attachmentId" doc:"Attachment ID"`
+}
+
+type GetAssetAttachmentOutput struct {
+	Body shared.SuccessEnvelope[AttachmentResponse]
+}
+
+type UpdateAssetAttachmentLifecycleInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	AttachmentID  string `path:"attachmentId" doc:"Attachment ID"`
+}
+
+type UpdateAssetAttachmentLifecycleOutput struct {
+	Body shared.SuccessEnvelope[AttachmentResponse]
+}
+
+type DeleteAssetAttachmentOutput struct{}
+
 type AttachmentResponse struct {
-	ID          string `json:"id"`
-	TenantID    string `json:"tenantId"`
-	InventoryID string `json:"inventoryId"`
-	AssetID     string `json:"assetId"`
-	FileName    string `json:"fileName"`
-	ContentType string `json:"contentType"`
-	SizeBytes   int64  `json:"sizeBytes"`
-	SHA256      string `json:"sha256"`
-	CreatedAt   string `json:"createdAt"`
+	ID             string `json:"id"`
+	TenantID       string `json:"tenantId"`
+	InventoryID    string `json:"inventoryId"`
+	AssetID        string `json:"assetId"`
+	FileName       string `json:"fileName"`
+	ContentType    string `json:"contentType"`
+	SizeBytes      int64  `json:"sizeBytes"`
+	SHA256         string `json:"sha256"`
+	CreatedAt      string `json:"createdAt"`
+	LifecycleState string `json:"lifecycleState"`
 }

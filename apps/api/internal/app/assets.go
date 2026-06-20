@@ -31,11 +31,22 @@ type CreateAssetInput struct {
 
 type ListAssetsInput struct {
 	Principal      identity.Principal
+	Source         audit.Source
+	RequestID      string
 	TenantID       tenant.ID
 	InventoryID    inventory.InventoryID
 	Limit          int
 	Cursor         string
 	LifecycleState string
+}
+
+type GetAssetInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
 }
 
 type AssetParentUpdate struct {
@@ -74,7 +85,7 @@ type ListAssetsResult struct {
 }
 
 func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
 		return asset.Asset{}, err
 	}
 
@@ -176,7 +187,7 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 }
 
 func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Asset, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return asset.Asset{}, err
 	}
 	if input.AssetID.String() == "" {
@@ -189,6 +200,9 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 	}
 	if !found {
 		return asset.Asset{}, ErrNotFound
+	}
+	if current.LifecycleState != asset.LifecycleStateActive {
+		return asset.Asset{}, ErrInvalidInput
 	}
 	updated := current
 	parentChanged := false
@@ -305,8 +319,101 @@ func (a App) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) 
 	return a.updateAssetLifecycle(ctx, input, asset.LifecycleStateArchived, asset.LifecycleStateActive, audit.ActionAssetRestored, ports.EventAssetRestored, "asset restored")
 }
 
+func (a App) GetAsset(ctx context.Context, input GetAssetInput) (asset.Asset, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+		return asset.Asset{}, err
+	}
+	if input.AssetID.String() == "" {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	item, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if !found {
+		return asset.Asset{}, ErrNotFound
+	}
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAssetViewed,
+		TargetType:  audit.TargetAsset,
+		TargetID:    item.ID.String(),
+		Metadata: map[string]string{
+			"asset_kind":      item.Kind.String(),
+			"lifecycle_state": item.LifecycleState.String(),
+		},
+	}); err != nil {
+		return asset.Asset{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAssetViewed,
+		Message: "asset viewed",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"asset_id":     item.ID.String(),
+			"principal_id": input.Principal.ID.String(),
+		},
+	})
+	return item, nil
+}
+
+func (a App) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) error {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return err
+	}
+	if input.AssetID.String() == "" {
+		return ErrInvalidInput
+	}
+	item, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return ErrNotFound
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAssetDeleted,
+		TargetType:  audit.TargetAsset,
+		TargetID:    item.ID.String(),
+		Metadata: map[string]string{
+			"asset_kind":      item.Kind.String(),
+			"lifecycle_state": item.LifecycleState.String(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+	if err := a.assets.DeleteAsset(ctx, input.TenantID, input.InventoryID, input.AssetID, auditRecord); err != nil {
+		if errors.Is(err, ports.ErrConflict) {
+			return ErrInvalidInput
+		}
+		return err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAssetDeleted,
+		Message: "asset deleted",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"asset_id":     input.AssetID.String(),
+			"principal_id": input.Principal.ID.String(),
+		},
+	})
+	return nil
+}
+
 func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycleInput, from asset.LifecycleState, to asset.LifecycleState, action audit.Action, eventName ports.EventName, eventMessage string) (asset.Asset, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return asset.Asset{}, err
 	}
 	if input.AssetID.String() == "" {
@@ -474,7 +581,7 @@ func normalizeCustomFieldValues(values map[string]any) map[string]any {
 }
 
 func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsResult, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return ListAssetsResult{}, err
 	}
 
@@ -515,6 +622,22 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 			"lifecycle":    string(lifecycleFilter),
 		},
 	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAssetListed,
+		TargetType:  audit.TargetInventory,
+		TargetID:    input.InventoryID.String(),
+		Metadata: map[string]string{
+			"limit":     strconv.Itoa(limit),
+			"lifecycle": string(lifecycleFilter),
+		},
+	}); err != nil {
+		return ListAssetsResult{}, err
+	}
 
 	return ListAssetsResult{
 		Items:      items,
@@ -558,26 +681,42 @@ func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, li
 	return id, nil
 }
 
+func (a App) ensureActiveInventoryAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, permission ports.InventoryPermission) error {
+	item, err := a.ensureInventoryAccessItem(ctx, principal, tenantID, inventoryID, permission)
+	if err != nil {
+		return err
+	}
+	if !item.IsActive() {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (a App) ensureInventoryAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, permission ports.InventoryPermission) error {
+	_, err := a.ensureInventoryAccessItem(ctx, principal, tenantID, inventoryID, permission)
+	return err
+}
+
+func (a App) ensureInventoryAccessItem(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, permission ports.InventoryPermission) (inventory.Inventory, error) {
 	exists, err := a.tenants.TenantExists(ctx, tenantID)
 	if err != nil {
-		return err
+		return inventory.Inventory{}, err
 	}
 	if !exists {
-		return ErrNotFound
+		return inventory.Inventory{}, ErrNotFound
 	}
 
-	_, found, err := a.inventories.InventoryByID(ctx, tenantID, inventoryID)
+	item, found, err := a.inventories.InventoryByID(ctx, tenantID, inventoryID)
 	if err != nil {
-		return err
+		return inventory.Inventory{}, err
 	}
 	if !found {
-		return ErrNotFound
+		return inventory.Inventory{}, ErrNotFound
 	}
 
 	if err := a.authorizer.CheckInventory(ctx, principal, permission, inventoryID); err != nil {
 		a.recordAuthorizationDenied(ctx, principal, tenantID)
-		return err
+		return inventory.Inventory{}, err
 	}
-	return nil
+	return item, nil
 }

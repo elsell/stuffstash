@@ -28,10 +28,22 @@ type GrantInventoryAccessInput struct {
 
 type ListInventoryAccessGrantsInput struct {
 	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
 	Limit       int
 	Cursor      string
+}
+
+type GetInventoryAccessGrantInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	TargetUserID string
+	Relationship string
 }
 
 type ListInventoryAccessGrantsResult struct {
@@ -85,8 +97,17 @@ type RevokeInventoryAccessInvitationInput struct {
 	InvitationID string
 }
 
+type GetInventoryAccessInvitationInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	InvitationID string
+}
+
 func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAccessInput) (ports.InventoryAccessGrant, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
 		return ports.InventoryAccessGrant{}, err
 	}
 
@@ -152,7 +173,7 @@ func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAcces
 }
 
 func (a App) RevokeInventoryAccess(ctx context.Context, input RevokeInventoryAccessInput) (bool, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
 		return false, err
 	}
 
@@ -220,7 +241,7 @@ func (a App) RevokeInventoryAccess(ctx context.Context, input RevokeInventoryAcc
 }
 
 func (a App) ListInventoryAccessGrants(ctx context.Context, input ListInventoryAccessGrantsInput) (ListInventoryAccessGrantsResult, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
 		return ListInventoryAccessGrantsResult{}, err
 	}
 
@@ -255,6 +276,21 @@ func (a App) ListInventoryAccessGrants(ctx context.Context, input ListInventoryA
 			"limit":        strconv.Itoa(limit),
 		},
 	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryAccessGrantListed,
+		TargetType:  audit.TargetInventory,
+		TargetID:    input.InventoryID.String(),
+		Metadata: map[string]string{
+			"limit": strconv.Itoa(limit),
+		},
+	}); err != nil {
+		return ListInventoryAccessGrantsResult{}, err
+	}
 
 	return ListInventoryAccessGrantsResult{
 		Items:      items,
@@ -264,8 +300,57 @@ func (a App) ListInventoryAccessGrants(ctx context.Context, input ListInventoryA
 	}, nil
 }
 
+func (a App) GetInventoryAccessGrant(ctx context.Context, input GetInventoryAccessGrantInput) (ports.InventoryAccessGrant, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return ports.InventoryAccessGrant{}, err
+	}
+	targetPrincipalID, ok := identity.NewPrincipalID(input.TargetUserID)
+	if !ok {
+		return ports.InventoryAccessGrant{}, ErrInvalidInput
+	}
+	relationship, ok := inventoryAccessRelationship(input.Relationship)
+	if !ok {
+		return ports.InventoryAccessGrant{}, ErrInvalidInput
+	}
+	grant, found, err := a.inventories.InventoryAccessGrantByID(ctx, input.TenantID, input.InventoryID, targetPrincipalID, relationship)
+	if err != nil {
+		return ports.InventoryAccessGrant{}, err
+	}
+	if !found {
+		return ports.InventoryAccessGrant{}, ErrNotFound
+	}
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryAccessGrantViewed,
+		TargetType:  audit.TargetInventoryAccessGrant,
+		TargetID:    grant.CursorKey(),
+		Metadata: map[string]string{
+			"target_principal_id": targetPrincipalID.String(),
+			"relationship":        string(relationship),
+		},
+	}); err != nil {
+		return ports.InventoryAccessGrant{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventInventoryAccessViewed,
+		Message: "inventory access grant viewed",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"principal_id": input.Principal.ID.String(),
+			"target_id":    targetPrincipalID.String(),
+			"relationship": string(relationship),
+		},
+	})
+	return grant, nil
+}
+
 func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateInventoryAccessInvitationInput) (CreateInventoryAccessInvitationResult, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
 		return CreateInventoryAccessInvitationResult{}, err
 	}
 	email, ok := identity.NewEmail(input.Email)
@@ -340,6 +425,13 @@ func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptIn
 	if input.Token == "" {
 		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
 	}
+	item, found, err := a.inventories.InventoryByID(ctx, input.TenantID, input.InventoryID)
+	if err != nil {
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, err
+	}
+	if !found || !item.IsActive() {
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
 		PrincipalID: input.Principal.ID,
@@ -384,7 +476,7 @@ func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptIn
 }
 
 func (a App) RevokeInventoryAccessInvitation(ctx context.Context, input RevokeInventoryAccessInvitationInput) (bool, error) {
-	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
 		return false, err
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
@@ -422,6 +514,125 @@ func (a App) RevokeInventoryAccessInvitation(ctx context.Context, input RevokeIn
 		})
 	}
 	return revoked, nil
+}
+
+func (a App) GetInventoryAccessInvitation(ctx context.Context, input GetInventoryAccessInvitationInput) (ports.InventoryAccessInvitation, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return ports.InventoryAccessInvitation{}, err
+	}
+	invitation, found, err := a.inventories.InventoryAccessInvitationByID(ctx, input.TenantID, input.InventoryID, input.InvitationID)
+	if err != nil {
+		return ports.InventoryAccessInvitation{}, err
+	}
+	if !found {
+		return ports.InventoryAccessInvitation{}, ErrNotFound
+	}
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryInvitationViewed,
+		TargetType:  audit.TargetInventoryInvitation,
+		TargetID:    invitation.ID,
+		Metadata: map[string]string{
+			"relationship": string(invitation.Relationship),
+			"status":       string(invitation.Status),
+		},
+	}); err != nil {
+		return ports.InventoryAccessInvitation{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventInventoryInvitationViewed,
+		Message: "inventory invitation viewed",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"principal_id":  input.Principal.ID.String(),
+			"invitation_id": invitation.ID,
+			"status":        string(invitation.Status),
+		},
+	})
+	return invitation, nil
+}
+
+func (a App) CancelInventoryAccessInvitation(ctx context.Context, input RevokeInventoryAccessInvitationInput) (bool, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return false, err
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryInvitationCancelled,
+		TargetType:  audit.TargetInventoryInvitation,
+		TargetID:    input.InvitationID,
+		Metadata:    map[string]string{},
+	})
+	if err != nil {
+		return false, err
+	}
+	cancelled, err := a.inventories.CancelInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return false, ErrInvalidInput
+		}
+		return false, err
+	}
+	if cancelled {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventInventoryInvitationCancelled,
+			Message: "inventory invitation cancelled",
+			Fields: map[string]string{
+				"tenant_id":     input.TenantID.String(),
+				"inventory_id":  input.InventoryID.String(),
+				"principal_id":  input.Principal.ID.String(),
+				"invitation_id": input.InvitationID,
+				"result_status": string(ports.InventoryAccessInvitationCancelled),
+			},
+		})
+	}
+	return cancelled, nil
+}
+
+func (a App) DeleteInventoryAccessInvitation(ctx context.Context, input RevokeInventoryAccessInvitationInput) (bool, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return false, err
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryInvitationDeleted,
+		TargetType:  audit.TargetInventoryInvitation,
+		TargetID:    input.InvitationID,
+		Metadata:    map[string]string{},
+	})
+	if err != nil {
+		return false, err
+	}
+	deleted, err := a.inventories.DeleteInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
+	if err != nil {
+		return false, err
+	}
+	if deleted {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventInventoryInvitationDeleted,
+			Message: "inventory invitation deleted",
+			Fields: map[string]string{
+				"tenant_id":     input.TenantID.String(),
+				"inventory_id":  input.InventoryID.String(),
+				"principal_id":  input.Principal.ID.String(),
+				"invitation_id": input.InvitationID,
+			},
+		})
+	}
+	return deleted, nil
 }
 
 func inventoryAccessRelationship(value string) (ports.InventoryAccessRelationship, bool) {

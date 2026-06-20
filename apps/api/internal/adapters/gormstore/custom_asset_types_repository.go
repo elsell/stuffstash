@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -110,20 +111,86 @@ func (s Store) ArchiveCustomAssetType(ctx context.Context, assetType customfield
 	})
 }
 
-func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
-	query := s.db.WithContext(ctx).Where(&customAssetTypeModel{
-		ID:             assetTypeID.String(),
-		TenantID:       tenantID.String(),
-		LifecycleState: customfield.AssetTypeLifecycleActive.String(),
-	})
-	if inventoryID.String() == "" {
-		query = query.Where(&customAssetTypeModel{Scope: customfield.ScopeTenant.String()})
-	} else {
-		query = query.Where(clause.Or(
-			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
-			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
-		))
+func (s Store) RestoreCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
+	if assetType.LifecycleState != customfield.AssetTypeLifecycleActive {
+		return ports.ErrForbidden
 	}
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing customAssetTypeModel
+		err := tx.Where(&customAssetTypeModel{
+			ID:             assetType.ID.String(),
+			TenantID:       assetType.TenantID.String(),
+			LifecycleState: customfield.AssetTypeLifecycleArchived.String(),
+		}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		if existing.Scope != assetType.Scope.String() || existing.TypeKey != assetType.Key.String() || stringFromPtr(existing.InventoryID) != assetType.InventoryID.String() {
+			return ports.ErrForbidden
+		}
+		if err := tx.Model(&existing).Update("lifecycle_state", assetType.LifecycleState.String()).Error; err != nil {
+			return customFieldDefinitionWriteError(err)
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
+func (s Store) DeleteCustomAssetType(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		refs, err := customAssetTypeHasActiveReferences(tx, tenantID, inventoryID, assetTypeID)
+		if err != nil {
+			return err
+		}
+		if refs {
+			return ports.ErrForbidden
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		result := scopedCustomAssetTypeQuery(tx, tenantID, inventoryID, assetTypeID).Delete(&customAssetTypeModel{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return ports.ErrForbidden
+		}
+		return nil
+	})
+}
+
+func (s Store) CustomAssetTypeHasActiveReferences(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (bool, error) {
+	return customAssetTypeHasActiveReferences(s.db.WithContext(ctx), tenantID, inventoryID, assetTypeID)
+}
+
+func customAssetTypeHasActiveReferences(db *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (bool, error) {
+	var assetCount int64
+	rawAssetTypeID := assetTypeID.String()
+	assetQuery := db.Model(&assetModel{}).Where(&assetModel{
+		TenantID:          tenantID.String(),
+		LifecycleState:    asset.LifecycleStateActive.String(),
+		CustomAssetTypeID: &rawAssetTypeID,
+	})
+	if inventoryID.String() != "" {
+		assetQuery = assetQuery.Where(&assetModel{InventoryID: inventoryID.String()})
+	}
+	if err := assetQuery.Count(&assetCount).Error; err != nil {
+		return false, err
+	}
+	if assetCount > 0 {
+		return true, nil
+	}
+	var targetCount int64
+	if err := db.Model(&customFieldDefinitionAssetTypeModel{}).Where(&customFieldDefinitionAssetTypeModel{TenantID: tenantID.String(), CustomAssetTypeID: assetTypeID.String()}).Count(&targetCount).Error; err != nil {
+		return false, err
+	}
+	return targetCount > 0, nil
+}
+
+func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) (customfield.AssetType, bool, error) {
+	query := scopedCustomAssetTypeQuery(s.db.WithContext(ctx), tenantID, inventoryID, assetTypeID)
 	var model customAssetTypeModel
 	err := query.First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -137,6 +204,17 @@ func (s Store) CustomAssetTypeByID(ctx context.Context, tenantID tenant.ID, inve
 		return customfield.AssetType{}, false, fmt.Errorf("invalid custom asset type row %q", model.ID)
 	}
 	return assetType, true, nil
+}
+
+func scopedCustomAssetTypeQuery(db *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, assetTypeID customfield.AssetTypeID) *gorm.DB {
+	query := db.Where(&customAssetTypeModel{ID: assetTypeID.String(), TenantID: tenantID.String()})
+	if inventoryID.String() == "" {
+		return query.Where(&customAssetTypeModel{Scope: customfield.ScopeTenant.String()})
+	}
+	return query.Where(clause.Or(
+		clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+		clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
+	))
 }
 
 func (s Store) ListTenantCustomAssetTypes(ctx context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {

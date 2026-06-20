@@ -31,6 +31,9 @@ func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfi
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
 	}
+	if definition.LifecycleState.String() == "" {
+		definition.LifecycleState = customfield.DefinitionLifecycleActive
+	}
 	s.customFields[definition.ID] = definition
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
@@ -41,7 +44,7 @@ func (s *Store) UpdateCustomFieldDefinition(_ context.Context, definition custom
 	defer s.mu.Unlock()
 
 	existing, exists := s.customFields[definition.ID]
-	if !exists || existing.TenantID != definition.TenantID || existing.InventoryID != definition.InventoryID || existing.Scope != definition.Scope {
+	if !exists || existing.TenantID != definition.TenantID || existing.InventoryID != definition.InventoryID || existing.Scope != definition.Scope || !existing.IsActive() || definition.LifecycleState != customfield.DefinitionLifecycleActive {
 		return ports.ErrForbidden
 	}
 	schemaChange, ok := existing.CompatibleSchemaChange(definition)
@@ -60,6 +63,62 @@ func (s *Store) UpdateCustomFieldDefinition(_ context.Context, definition custom
 	s.customFields[definition.ID] = definition
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
+}
+
+func (s *Store) UpdateCustomFieldDefinitionLifecycle(_ context.Context, definition customfield.Definition, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, exists := s.customFields[definition.ID]
+	if !exists || existing.TenantID != definition.TenantID || existing.InventoryID != definition.InventoryID || existing.Scope != definition.Scope || existing.Key != definition.Key || existing.LifecycleState == definition.LifecycleState {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.customFields[definition.ID] = definition
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
+func (s *Store) DeleteCustomFieldDefinition(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	definition, ok := s.customFields[definitionID]
+	if !ok || definition.TenantID.String() != tenantID.String() {
+		return ports.ErrForbidden
+	}
+	if inventoryID.String() == "" && definition.Scope != customfield.ScopeTenant {
+		return ports.ErrForbidden
+	}
+	if inventoryID.String() != "" && definition.Scope == customfield.ScopeInventory && definition.InventoryID.String() != inventoryID.String() {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.auditRecords[auditRecord.ID] = auditRecord
+	delete(s.customFields, definitionID)
+	return nil
+}
+
+func (s *Store) CustomFieldDefinitionHasActiveAssetValues(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definition customfield.Definition) (bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, item := range s.assets {
+		if item.TenantID.String() != tenantID.String() || item.LifecycleState.String() != "active" {
+			continue
+		}
+		if inventoryID.String() != "" && item.InventoryID.String() != inventoryID.String() {
+			continue
+		}
+		if item.CustomFields.HasNonEmptyValue(definition.Key.String()) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (s *Store) CustomFieldDefinitionByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error) {
@@ -88,7 +147,7 @@ func (s *Store) ListTenantCustomFieldDefinitions(_ context.Context, tenantID ten
 
 	items := []customfield.Definition{}
 	for _, definition := range s.customFields {
-		if definition.TenantID.String() == tenantID.String() && definition.Scope == customfield.ScopeTenant && definition.CursorKey() > page.AfterDefinitionKey {
+		if definition.TenantID.String() == tenantID.String() && definition.Scope == customfield.ScopeTenant && definition.IsActive() && definition.CursorKey() > page.AfterDefinitionKey {
 			items = append(items, definition)
 		}
 	}
@@ -101,7 +160,7 @@ func (s *Store) ListInventoryCustomFieldDefinitions(_ context.Context, tenantID 
 
 	items := []customfield.Definition{}
 	for _, definition := range s.customFields {
-		if definition.TenantID.String() != tenantID.String() || definition.CursorKey() <= page.AfterDefinitionKey {
+		if definition.TenantID.String() != tenantID.String() || !definition.IsActive() || definition.CursorKey() <= page.AfterDefinitionKey {
 			continue
 		}
 		if definition.Scope == customfield.ScopeTenant || definition.InventoryID.String() == inventoryID.String() {
@@ -117,7 +176,7 @@ func (s *Store) ListEffectiveCustomFieldDefinitions(_ context.Context, tenantID 
 
 	items := []customfield.Definition{}
 	for _, definition := range s.customFields {
-		if definition.TenantID.String() != tenantID.String() {
+		if definition.TenantID.String() != tenantID.String() || !definition.IsActive() {
 			continue
 		}
 		if inventoryID.String() == "" {

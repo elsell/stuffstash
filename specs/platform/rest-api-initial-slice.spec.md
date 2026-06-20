@@ -8,7 +8,9 @@ The first API slice should prove the security boundary, Huma/OpenAPI generation,
 
 This spec covers the first protected REST endpoints.
 
-It does not cover cross-inventory asset movement, location-specific APIs, conversational, import/export, general delete endpoints outside direct inventory access revocation, or search endpoints.
+It does not cover cross-inventory asset movement, location-specific APIs, conversational, or import/export endpoints.
+
+The current REST surface extends this initial slice with resource detail, archive, restore, cancel, and hard-delete endpoints defined by `specs/platform/resource-lifecycle.spec.md`. When this initial slice and the lifecycle spec differ about the current lifecycle surface, the lifecycle spec is authoritative for lifecycle behavior.
 
 ## Local Convenience Endpoint
 
@@ -82,7 +84,7 @@ The first protected REST slice includes:
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}` requires `inventory.share`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations` requires `inventory.share` and returns time-limited one-time invite link material for delivery outside the core service.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept` requires a matching authenticated principal email and an unexpired invite acceptance token, then creates the accepted direct grant.
-- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}` requires `inventory.share`.
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}` requires `inventory.share`. In the lifecycle slice this endpoint is reserved for deliberate hard delete, and `PATCH /cancel` is the normal pending-invitation cancellation endpoint.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}` requires `tenant.configure`.

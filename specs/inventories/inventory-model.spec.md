@@ -52,4 +52,4 @@ The product must not assume that every tenant has only one inventory.
 - Can assets move between inventories?
 - If assets can move between inventories, what happens to custom field values that are not defined in the destination inventory?
 - If assets can move between inventories, what happens to custom asset type assignments that are not defined in the destination inventory?
-- Should inventories have lifecycle states such as active, archived, or deleted?
+- Inventories have `active` and `archived` lifecycle states. Archive, restore, and hard-delete behavior is defined by `specs/platform/resource-lifecycle.spec.md`.

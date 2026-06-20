@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
@@ -20,6 +21,8 @@ func RegisterList(api huma.API, application app.App) {
 
 		result, err := application.ListInventories(ctx, app.ListInventoriesInput{
 			Principal: principal,
+			Source:    audit.SourceAPI,
+			RequestID: input.RequestID,
 			TenantID:  tenant.ID(input.TenantID),
 			Limit:     input.Limit,
 			Cursor:    input.Cursor,
@@ -39,5 +42,10 @@ func RegisterList(api huma.API, application app.App) {
 
 func Register(api huma.API, application app.App) {
 	RegisterCreate(api, application)
+	RegisterDetail(api, application)
+	RegisterUpdate(api, application)
+	RegisterArchive(api, application)
+	RegisterRestore(api, application)
+	RegisterDelete(api, application)
 	RegisterList(api, application)
 }

@@ -6,15 +6,16 @@ import (
 )
 
 type attachmentResponse struct {
-	ID          string `json:"id"`
-	TenantID    string `json:"tenantId"`
-	InventoryID string `json:"inventoryId"`
-	AssetID     string `json:"assetId"`
-	FileName    string `json:"fileName"`
-	ContentType string `json:"contentType"`
-	SizeBytes   int64  `json:"sizeBytes"`
-	SHA256      string `json:"sha256"`
-	CreatedAt   string `json:"createdAt"`
+	ID             string `json:"id"`
+	TenantID       string `json:"tenantId"`
+	InventoryID    string `json:"inventoryId"`
+	AssetID        string `json:"assetId"`
+	FileName       string `json:"fileName"`
+	ContentType    string `json:"contentType"`
+	SizeBytes      int64  `json:"sizeBytes"`
+	SHA256         string `json:"sha256"`
+	CreatedAt      string `json:"createdAt"`
+	LifecycleState string `json:"lifecycleState"`
 }
 
 type attachmentBody struct {

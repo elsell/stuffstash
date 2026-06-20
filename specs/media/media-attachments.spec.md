@@ -91,8 +91,8 @@ Attachment content download:
 
 Deletion:
 
-- Is not implemented in the first slice.
-- Must be specified before public delete endpoints exist.
+- Archive, restore, and hard-delete behavior is defined by `specs/platform/resource-lifecycle.spec.md`.
+- Hard delete must use the blob storage port and must not leave orphaned blob content when blob deletion fails.
 
 ## Storage Direction
 
@@ -145,6 +145,7 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 ## Audit And Observability
 
 - Uploading an attachment must emit `attachment.created` audit history.
+- Attachment detail, list, content download, archive, restore, and hard delete must emit safe audit history where specified by the lifecycle contract.
 - Listing attachments must record domain observability through the injected observer.
 - Downloading attachment content must record domain observability through the injected observer.
 - Blob storage failures must be recorded through domain-oriented observability without leaking provider internals.
