@@ -179,14 +179,16 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/cus
 
 Archived custom asset types are hidden from normal lists and blocked for new assets or new field targets. Existing assets and field definitions keep their references.
 
-You can also rename a custom field without changing its key, type, or target. Use the ID returned when you created the field definition.
+You can also update a custom field without breaking existing assets. Use the ID returned when you created the field definition.
+
+Allowed changes are intentionally narrow: rename the field, add enum options, add custom asset type targets, or expand a targeted field to all assets. Removing options or narrowing targets is blocked for now so old asset data stays valid.
 
 ```sh
 curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions/<field-definition-id> \
   -X PATCH \
   -H 'Authorization: Bearer dev:user-one' \
   -H 'Content-Type: application/json' \
-  -d '{"displayName":"Use By Date"}'
+  -d '{"displayName":"Use By Date","enumOptions":["new","used","expired"]}'
 ```
 
 Move or edit an asset:

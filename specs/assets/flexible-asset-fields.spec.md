@@ -119,7 +119,7 @@ Future specs may add richer field types such as money, quantity with units, expi
 
 The first custom-field definition slice supports durable tenant-scoped and inventory-scoped definitions.
 
-It does not implement deletion, enum option editing, applicability target editing, display ordering, search, filtering, import/export, conversational definition creation, or per-field permissions.
+It does not implement deletion, enum option removal, enum option renaming, enum option reordering, applicability narrowing, target removal, display ordering, search, filtering, import/export, conversational definition creation, or per-field permissions.
 
 Definitions must have:
 
@@ -154,7 +154,19 @@ Display names are user-facing labels:
 
 Custom field definitions start as active records.
 
-The first update slice may change only the human-facing display name.
+The first update slice may change the human-facing display name.
+
+The first schema evolution slice may also make compatibility-preserving changes:
+
+- Enum fields may add new enum options.
+- Enum options must never be removed, renamed, or reordered in this slice.
+- A field targeted to custom asset types may add new active custom asset type targets in the same effective scope.
+- A field targeted to custom asset types may expand to `all_assets`.
+- A field that applies to `all_assets` must not be narrowed to custom asset types.
+- Field type remains immutable.
+- Field key, scope, tenant, and inventory remain immutable.
+
+These rules preserve existing asset custom field values. They allow future data to become valid without making previously valid data invalid.
 
 These fields are immutable after creation:
 
@@ -164,11 +176,8 @@ These fields are immutable after creation:
 - Scope.
 - Key.
 - Field type.
-- Enum options.
-- Applicability target.
-- Custom asset type targets.
 
-Changing field type, enum options, applicability, or target custom asset types needs its own compatibility rules because assets may already store values validated against the current definition.
+Changing field type, removing enum options, reordering enum options, narrowing applicability, or removing target custom asset types is not allowed in the first schema evolution slice because assets may already store values validated against the current definition.
 
 Enum options:
 
@@ -210,11 +219,21 @@ Update endpoints:
 - Require authentication.
 - Tenant-scoped update requires `tenant.configure`.
 - Inventory-scoped update requires `inventory.configure`.
-- May update only `displayName`.
+- May update `displayName`.
+- May add enum options to enum fields.
+- May add custom asset type targets to `custom_asset_types` definitions.
+- May expand a `custom_asset_types` definition to `all_assets`.
 - Must reject empty update bodies.
 - Must return the updated definition in the standard response envelope.
 - Tenant-scoped update must not update inventory-scoped definitions.
 - Inventory-scoped update must not update inherited tenant-scoped definitions.
+- Must reject field type changes.
+- Must reject enum option removal, rename, or reorder.
+- Must reject enum options on non-enum fields.
+- Must reject narrowing `all_assets` to `custom_asset_types`.
+- Must reject removing existing custom asset type targets.
+- Must reject new custom asset type targets that are unknown, archived, hidden, wrong-scope, wrong-inventory, or cross-tenant.
+- Must preserve existing asset custom field values.
 
 ## Asset Value Validation
 

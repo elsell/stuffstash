@@ -278,6 +278,12 @@ type Definition struct {
 	CustomAssetTypeIDs []AssetTypeID
 }
 
+type DefinitionSchemaChange struct {
+	AddedEnumOptions        []Key
+	AddedCustomAssetTypeIDs []AssetTypeID
+	ExpandedToAllAssets     bool
+}
+
 func (d Definition) CursorKey() string {
 	switch d.Scope {
 	case ScopeTenant:
@@ -390,6 +396,52 @@ func (d Definition) AppliesTo(customAssetTypeID AssetTypeID) bool {
 	return false
 }
 
+func (d Definition) CompatibleSchemaChange(next Definition) (DefinitionSchemaChange, bool) {
+	if d.ID != next.ID ||
+		d.TenantID != next.TenantID ||
+		d.InventoryID != next.InventoryID ||
+		d.Scope != next.Scope ||
+		d.Key != next.Key ||
+		d.Type != next.Type {
+		return DefinitionSchemaChange{}, false
+	}
+
+	addedOptions, ok := appendedKeys(d.EnumOptions, next.EnumOptions)
+	if !ok {
+		return DefinitionSchemaChange{}, false
+	}
+	if d.Type != FieldTypeEnum && len(next.EnumOptions) != 0 {
+		return DefinitionSchemaChange{}, false
+	}
+
+	change := DefinitionSchemaChange{AddedEnumOptions: addedOptions}
+	switch d.Applicability {
+	case ApplicabilityAllAssets:
+		if next.Applicability != ApplicabilityAllAssets || len(next.CustomAssetTypeIDs) != 0 {
+			return DefinitionSchemaChange{}, false
+		}
+	case ApplicabilityCustomAssetTypes:
+		switch next.Applicability {
+		case ApplicabilityAllAssets:
+			if len(next.CustomAssetTypeIDs) != 0 {
+				return DefinitionSchemaChange{}, false
+			}
+			change.ExpandedToAllAssets = true
+		case ApplicabilityCustomAssetTypes:
+			addedTargets, ok := appendedAssetTypeIDs(d.CustomAssetTypeIDs, next.CustomAssetTypeIDs)
+			if !ok {
+				return DefinitionSchemaChange{}, false
+			}
+			change.AddedCustomAssetTypeIDs = addedTargets
+		default:
+			return DefinitionSchemaChange{}, false
+		}
+	default:
+		return DefinitionSchemaChange{}, false
+	}
+	return change, true
+}
+
 func (d Definition) ValidValue(value any) bool {
 	switch d.Type {
 	case FieldTypeText:
@@ -452,6 +504,54 @@ func hasDuplicateKeys(keys []Key) bool {
 			return true
 		}
 		seen[key] = struct{}{}
+	}
+	return false
+}
+
+func appendedKeys(current []Key, next []Key) ([]Key, bool) {
+	if len(next) < len(current) {
+		return nil, false
+	}
+	for index, key := range current {
+		if next[index] != key {
+			return nil, false
+		}
+	}
+	added := append([]Key(nil), next[len(current):]...)
+	return added, !hasDuplicateKeys(next)
+}
+
+func appendedAssetTypeIDs(current []AssetTypeID, next []AssetTypeID) ([]AssetTypeID, bool) {
+	if len(next) < len(current) || hasDuplicateAssetTypeIDs(next) {
+		return nil, false
+	}
+	currentSet := map[AssetTypeID]struct{}{}
+	for _, id := range current {
+		currentSet[id] = struct{}{}
+	}
+	added := []AssetTypeID{}
+	for _, id := range next {
+		if _, exists := currentSet[id]; exists {
+			continue
+		}
+		added = append(added, id)
+	}
+	if len(next)-len(added) != len(current) {
+		return nil, false
+	}
+	for _, id := range current {
+		if !containsAssetTypeID(next, id) {
+			return nil, false
+		}
+	}
+	return added, true
+}
+
+func containsAssetTypeID(ids []AssetTypeID, expected AssetTypeID) bool {
+	for _, id := range ids {
+		if id == expected {
+			return true
+		}
 	}
 	return false
 }

@@ -108,6 +108,65 @@ func TestCustomAssetTypeArchiveLifecycle(t *testing.T) {
 	}
 }
 
+func TestDefinitionCompatibleSchemaChangeAllowsOnlyExpansion(t *testing.T) {
+	enum := definition(t, "condition", FieldTypeEnum, []string{"new", "used"})
+	withAddedOption := enum
+	option, ok := NewKey("broken")
+	if !ok {
+		t.Fatalf("expected valid option")
+	}
+	withAddedOption.EnumOptions = append(withAddedOption.EnumOptions, option)
+	change, ok := enum.CompatibleSchemaChange(withAddedOption)
+	if !ok || len(change.AddedEnumOptions) != 1 || change.AddedEnumOptions[0] != option {
+		t.Fatalf("expected enum option addition to be compatible, change=%+v ok=%v", change, ok)
+	}
+
+	removedOption := enum
+	removedOption.EnumOptions = removedOption.EnumOptions[:1]
+	if _, ok := enum.CompatibleSchemaChange(removedOption); ok {
+		t.Fatalf("expected enum option removal to be incompatible")
+	}
+	reorderedOptions := enum
+	reorderedOptions.EnumOptions = append([]Key(nil), enum.EnumOptions...)
+	reorderedOptions.EnumOptions[0], reorderedOptions.EnumOptions[1] = reorderedOptions.EnumOptions[1], reorderedOptions.EnumOptions[0]
+	if _, ok := enum.CompatibleSchemaChange(reorderedOptions); ok {
+		t.Fatalf("expected enum option reorder to be incompatible")
+	}
+
+	targeted := targetedDefinition(t, "dose", FieldTypeText, "medicine-type")
+	withAddedTarget := targeted
+	addedTarget, ok := NewAssetTypeID("fertilizer-type")
+	if !ok {
+		t.Fatalf("expected valid target")
+	}
+	withAddedTarget.CustomAssetTypeIDs = append(withAddedTarget.CustomAssetTypeIDs, addedTarget)
+	change, ok = targeted.CompatibleSchemaChange(withAddedTarget)
+	if !ok || len(change.AddedCustomAssetTypeIDs) != 1 || change.AddedCustomAssetTypeIDs[0] != addedTarget {
+		t.Fatalf("expected target addition to be compatible, change=%+v ok=%v", change, ok)
+	}
+	reorderedTargets := targeted
+	reorderedTargets.CustomAssetTypeIDs = []AssetTypeID{addedTarget, targeted.CustomAssetTypeIDs[0]}
+	change, ok = targeted.CompatibleSchemaChange(reorderedTargets)
+	if !ok || len(change.AddedCustomAssetTypeIDs) != 1 || change.AddedCustomAssetTypeIDs[0] != addedTarget {
+		t.Fatalf("expected reordered target addition to be compatible, change=%+v ok=%v", change, ok)
+	}
+
+	allAssets := targeted
+	allAssets.Applicability = ApplicabilityAllAssets
+	allAssets.CustomAssetTypeIDs = nil
+	change, ok = targeted.CompatibleSchemaChange(allAssets)
+	if !ok || !change.ExpandedToAllAssets {
+		t.Fatalf("expected custom type applicability to expand to all assets, change=%+v ok=%v", change, ok)
+	}
+
+	narrowed := enum
+	narrowed.Applicability = ApplicabilityCustomAssetTypes
+	narrowed.CustomAssetTypeIDs = []AssetTypeID{"medicine-type"}
+	if _, ok := enum.CompatibleSchemaChange(narrowed); ok {
+		t.Fatalf("expected all-assets definition narrowing to be incompatible")
+	}
+}
+
 func definition(t *testing.T, keyValue string, fieldType FieldType, rawOptions []string) Definition {
 	t.Helper()
 

@@ -14,7 +14,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"slices"
 	"sort"
 	"testing"
 	"time"
@@ -407,7 +406,7 @@ func (f *fakeCustomFieldRepository) UpdateCustomFieldDefinition(_ context.Contex
 		if existing.ID != definition.ID || existing.TenantID != definition.TenantID {
 			continue
 		}
-		if existing.Scope != definition.Scope || existing.InventoryID != definition.InventoryID || existing.Key != definition.Key || existing.Type != definition.Type || existing.Applicability != definition.Applicability || !slices.Equal(existing.EnumOptions, definition.EnumOptions) || !slices.Equal(existing.CustomAssetTypeIDs, definition.CustomAssetTypeIDs) {
+		if _, ok := existing.CompatibleSchemaChange(definition); !ok {
 			return ports.ErrForbidden
 		}
 		f.items[index] = definition
@@ -415,6 +414,15 @@ func (f *fakeCustomFieldRepository) UpdateCustomFieldDefinition(_ context.Contex
 		return nil
 	}
 	return ports.ErrForbidden
+}
+
+func (f *fakeCustomFieldRepository) recordForAction(action audit.Action) (audit.Record, bool) {
+	for _, record := range f.auditRecords {
+		if record.Action == action {
+			return record, true
+		}
+	}
+	return audit.Record{}, false
 }
 
 func (f *fakeCustomFieldRepository) CustomFieldDefinitionByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) (customfield.Definition, bool, error) {

@@ -7,7 +7,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
-	"slices"
 	"sort"
 )
 
@@ -45,11 +44,15 @@ func (s *Store) UpdateCustomFieldDefinition(_ context.Context, definition custom
 	if !exists || existing.TenantID != definition.TenantID || existing.InventoryID != definition.InventoryID || existing.Scope != definition.Scope {
 		return ports.ErrForbidden
 	}
-	if existing.Key != definition.Key || existing.Type != definition.Type || existing.Applicability != definition.Applicability {
+	schemaChange, ok := existing.CompatibleSchemaChange(definition)
+	if !ok {
 		return ports.ErrForbidden
 	}
-	if !slices.Equal(existing.EnumOptions, definition.EnumOptions) || !slices.Equal(existing.CustomAssetTypeIDs, definition.CustomAssetTypeIDs) {
-		return ports.ErrForbidden
+	for _, targetID := range schemaChange.AddedCustomAssetTypeIDs {
+		target, ok := s.customAssetTypes[targetID]
+		if !ok || !target.IsActive() || !customFieldTargetInScope(definition, target) {
+			return ports.ErrForbidden
+		}
 	}
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict

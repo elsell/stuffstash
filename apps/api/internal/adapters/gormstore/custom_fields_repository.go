@@ -13,7 +13,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"slices"
 	"strings"
 )
 
@@ -58,22 +57,10 @@ func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customf
 		if err := tx.Save(&model).Error; err != nil {
 			return customFieldDefinitionWriteError(err)
 		}
+		if err := validateCustomFieldDefinitionTargetRows(ctx, tx, definition, definition.CustomAssetTypeIDs); err != nil {
+			return err
+		}
 		for _, targetID := range definition.CustomAssetTypeIDs {
-			var target customAssetTypeModel
-			err := tx.Where(&customAssetTypeModel{
-				ID:             targetID.String(),
-				TenantID:       definition.TenantID.String(),
-				LifecycleState: customfield.AssetTypeLifecycleActive.String(),
-			}).Where(clause.Or(
-				clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
-				clause.Eq{Column: "inventory_id", Value: definition.InventoryID.String()},
-			)).First(&target).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ports.ErrForbidden
-			}
-			if err != nil {
-				return err
-			}
 			if err := tx.Create(&customFieldDefinitionAssetTypeModel{
 				CustomFieldDefinitionID: definition.ID.String(),
 				CustomAssetTypeID:       targetID.String(),
@@ -85,6 +72,27 @@ func (s Store) SaveCustomFieldDefinition(ctx context.Context, definition customf
 		}
 		return createAuditRecord(tx, auditRecord)
 	})
+}
+
+func validateCustomFieldDefinitionTargetRows(ctx context.Context, tx *gorm.DB, definition customfield.Definition, targetIDs []customfield.AssetTypeID) error {
+	for _, targetID := range targetIDs {
+		var target customAssetTypeModel
+		err := tx.WithContext(ctx).Where(&customAssetTypeModel{
+			ID:             targetID.String(),
+			TenantID:       definition.TenantID.String(),
+			LifecycleState: customfield.AssetTypeLifecycleActive.String(),
+		}).Where(clause.Or(
+			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+			clause.Eq{Column: "inventory_id", Value: definition.InventoryID.String()},
+		)).First(&target).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s Store) UpdateCustomFieldDefinition(ctx context.Context, definition customfield.Definition, auditRecord audit.Record) error {
@@ -100,28 +108,51 @@ func (s Store) UpdateCustomFieldDefinition(ctx context.Context, definition custo
 		if err != nil {
 			return err
 		}
-		if existing.Scope != definition.Scope.String() || existing.FieldKey != definition.Key.String() || existing.FieldType != definition.Type.String() || existing.Applicability != definition.Applicability.String() || stringFromPtr(existing.InventoryID) != definition.InventoryID.String() {
+		if existing.Scope != definition.Scope.String() || existing.FieldKey != definition.Key.String() || existing.FieldType != definition.Type.String() || stringFromPtr(existing.InventoryID) != definition.InventoryID.String() {
 			return ports.ErrForbidden
 		}
-		var rawOptions []string
-		if err := json.Unmarshal([]byte(existing.EnumOptions), &rawOptions); err != nil {
-			return err
-		}
-		if !slices.Equal(rawOptions, customFieldKeysToStrings(definition.EnumOptions)) {
-			return ports.ErrForbidden
-		}
+
 		targetsByDefinitionID, err := customFieldDefinitionTargets(ctx, tx, []customFieldDefinitionModel{existing})
 		if err != nil {
 			return err
 		}
-		if !slices.Equal(targetsByDefinitionID[definition.ID.String()], definition.CustomAssetTypeIDs) {
+		current, ok := existing.toDomain(targetsByDefinitionID[existing.ID])
+		if !ok {
+			return fmt.Errorf("invalid custom field definition row %q", existing.ID)
+		}
+		schemaChange, ok := current.CompatibleSchemaChange(definition)
+		if !ok {
 			return ports.ErrForbidden
 		}
+		if err := validateCustomFieldDefinitionTargetRows(ctx, tx, definition, schemaChange.AddedCustomAssetTypeIDs); err != nil {
+			return err
+		}
 
+		enumOptions, err := json.Marshal(customFieldKeysToStrings(definition.EnumOptions))
+		if err != nil {
+			return err
+		}
 		if err := tx.Model(&existing).Updates(map[string]any{
-			"display_name": definition.DisplayName.String(),
+			"display_name":  definition.DisplayName.String(),
+			"enum_options":  string(enumOptions),
+			"applicability": definition.Applicability.String(),
 		}).Error; err != nil {
 			return customFieldDefinitionWriteError(err)
+		}
+		if schemaChange.ExpandedToAllAssets {
+			if err := tx.Where(&customFieldDefinitionAssetTypeModel{CustomFieldDefinitionID: definition.ID.String()}).Delete(&customFieldDefinitionAssetTypeModel{}).Error; err != nil {
+				return customFieldDefinitionWriteError(err)
+			}
+		}
+		for _, targetID := range schemaChange.AddedCustomAssetTypeIDs {
+			if err := tx.Create(&customFieldDefinitionAssetTypeModel{
+				CustomFieldDefinitionID: definition.ID.String(),
+				CustomAssetTypeID:       targetID.String(),
+				TenantID:                definition.TenantID.String(),
+				InventoryID:             existing.InventoryID,
+			}).Error; err != nil {
+				return customFieldDefinitionWriteError(err)
+			}
 		}
 		return createAuditRecord(tx, auditRecord)
 	})

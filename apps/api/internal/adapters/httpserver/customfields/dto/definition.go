@@ -48,16 +48,12 @@ type UpdateInventoryDefinitionInput struct {
 }
 
 type UpdateDefinitionBody struct {
-	DisplayName        *string  `json:"displayName,omitempty" maxLength:"120" doc:"User-facing field label"`
-	Key                *string  `json:"key,omitempty" doc:"Immutable field key; rejected on update"`
-	Type               *string  `json:"type,omitempty" doc:"Immutable field type; rejected on update"`
-	EnumOptions        []string `json:"enumOptions,omitempty" doc:"Immutable enum options; rejected on update"`
-	Applicability      *string  `json:"applicability,omitempty" doc:"Immutable applicability; rejected on update"`
-	CustomAssetTypeIDs []string `json:"customAssetTypeIds,omitempty" doc:"Immutable custom asset type targets; rejected on update"`
-}
-
-func (b UpdateDefinitionBody) HasImmutableFields() bool {
-	return b.Key != nil || b.Type != nil || len(b.EnumOptions) != 0 || b.Applicability != nil || len(b.CustomAssetTypeIDs) != 0
+	DisplayName        *string   `json:"displayName,omitempty" maxLength:"120" doc:"User-facing field label"`
+	Key                *string   `json:"key,omitempty" doc:"Immutable field key; rejected on update"`
+	Type               *string   `json:"type,omitempty" doc:"Immutable field type; rejected on update"`
+	EnumOptions        *[]string `json:"enumOptions,omitempty" doc:"Complete enum option list; append-only for enum fields"`
+	Applicability      *string   `json:"applicability,omitempty" enum:"all_assets,custom_asset_types" doc:"Applicability may only expand from custom_asset_types to all_assets"`
+	CustomAssetTypeIDs *[]string `json:"customAssetTypeIds,omitempty" doc:"Complete custom asset type target list; append-only while applicability is custom_asset_types"`
 }
 
 type UpdateDefinitionOutput struct {

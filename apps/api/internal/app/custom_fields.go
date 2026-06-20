@@ -36,13 +36,18 @@ type ListCustomFieldDefinitionsInput struct {
 }
 
 type UpdateCustomFieldDefinitionInput struct {
-	Principal    identity.Principal
-	Source       audit.Source
-	RequestID    string
-	TenantID     tenant.ID
-	InventoryID  inventory.InventoryID
-	DefinitionID customfield.ID
-	DisplayName  *string
+	Principal          identity.Principal
+	Source             audit.Source
+	RequestID          string
+	TenantID           tenant.ID
+	InventoryID        inventory.InventoryID
+	DefinitionID       customfield.ID
+	DisplayName        *string
+	Key                *string
+	Type               *string
+	EnumOptions        *[]string
+	Applicability      *string
+	CustomAssetTypeIDs *[]string
 }
 
 type ListCustomFieldDefinitionsResult struct {
@@ -185,7 +190,7 @@ func (a App) createCustomFieldDefinition(ctx context.Context, input CreateCustom
 
 func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustomFieldDefinitionInput, scope customfield.Scope) (customfield.Definition, error) {
 	definitionID, ok := customfield.NewID(input.DefinitionID.String())
-	if !ok || input.DisplayName == nil {
+	if !ok || updateCustomFieldDefinitionInputIsEmpty(input) {
 		return customfield.Definition{}, ErrInvalidInput
 	}
 	current, found, err := a.customFields.CustomFieldDefinitionByID(ctx, input.TenantID, input.InventoryID, definitionID)
@@ -202,15 +207,88 @@ func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustom
 		return customfield.Definition{}, ErrNotFound
 	}
 
-	displayName, ok := customfield.NewDisplayName(*input.DisplayName)
+	updated := current
+	changedFields := map[string]string{}
+	if input.DisplayName != nil {
+		displayName, ok := customfield.NewDisplayName(*input.DisplayName)
+		if !ok {
+			return customfield.Definition{}, ErrInvalidInput
+		}
+		if displayName != current.DisplayName {
+			updated.DisplayName = displayName
+			changedFields["display_name"] = "true"
+		}
+	}
+	if input.Key != nil {
+		key, ok := customfield.NewKey(*input.Key)
+		if !ok || key != current.Key {
+			return customfield.Definition{}, ErrInvalidInput
+		}
+	}
+	if input.Type != nil {
+		fieldType, ok := customfield.NewFieldType(*input.Type)
+		if !ok || fieldType != current.Type {
+			return customfield.Definition{}, ErrInvalidInput
+		}
+	}
+	if input.EnumOptions != nil {
+		enumOptions, ok := customFieldEnumOptions(*input.EnumOptions)
+		if !ok {
+			return customfield.Definition{}, ErrInvalidInput
+		}
+		updated.EnumOptions = enumOptions
+	}
+	if input.Applicability != nil {
+		applicability, ok := customfield.NewApplicability(*input.Applicability)
+		if !ok {
+			return customfield.Definition{}, ErrInvalidInput
+		}
+		updated.Applicability = applicability
+		if applicability == customfield.ApplicabilityAllAssets {
+			updated.CustomAssetTypeIDs = nil
+		}
+	}
+	if input.CustomAssetTypeIDs != nil {
+		targetIDs, err := customFieldTargetIDs(*input.CustomAssetTypeIDs)
+		if err != nil {
+			return customfield.Definition{}, err
+		}
+		updated.CustomAssetTypeIDs = targetIDs
+	}
+	updated, ok = customfield.NewDefinition(
+		updated.ID,
+		updated.TenantID,
+		updated.InventoryID,
+		updated.Scope,
+		updated.Key,
+		updated.DisplayName,
+		updated.Type,
+		updated.EnumOptions,
+		updated.Applicability,
+		updated.CustomAssetTypeIDs,
+	)
 	if !ok {
 		return customfield.Definition{}, ErrInvalidInput
 	}
-	if displayName == current.DisplayName {
+	schemaChange, ok := current.CompatibleSchemaChange(updated)
+	if !ok {
+		return customfield.Definition{}, ErrInvalidInput
+	}
+	if len(schemaChange.AddedCustomAssetTypeIDs) != 0 {
+		if err := a.validateCustomFieldTargetIDs(ctx, input.TenantID, input.InventoryID, scope, schemaChange.AddedCustomAssetTypeIDs); err != nil {
+			return customfield.Definition{}, err
+		}
+		changedFields["custom_asset_type_targets_added"] = strconv.Itoa(len(schemaChange.AddedCustomAssetTypeIDs))
+	}
+	if len(schemaChange.AddedEnumOptions) != 0 {
+		changedFields["enum_options_added"] = strconv.Itoa(len(schemaChange.AddedEnumOptions))
+	}
+	if schemaChange.ExpandedToAllAssets {
+		changedFields["applicability"] = customfield.ApplicabilityAllAssets.String()
+	}
+	if len(changedFields) == 0 {
 		return current, nil
 	}
-	updated := current
-	updated.DisplayName = displayName
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
 		PrincipalID: input.Principal.ID,
@@ -222,13 +300,15 @@ func (a App) updateCustomFieldDefinition(ctx context.Context, input UpdateCustom
 		TargetType:  audit.TargetCustomFieldDefinition,
 		TargetID:    updated.ID.String(),
 		Metadata: map[string]string{
-			"field_key":    updated.Key.String(),
-			"scope":        updated.Scope.String(),
-			"display_name": "true",
+			"field_key": updated.Key.String(),
+			"scope":     updated.Scope.String(),
 		},
 	})
 	if err != nil {
 		return customfield.Definition{}, err
+	}
+	for key, value := range changedFields {
+		auditRecord.Metadata[key] = value
 	}
 
 	if err := a.customFields.UpdateCustomFieldDefinition(ctx, updated, auditRecord); err != nil {
@@ -339,16 +419,19 @@ func customFieldEnumOptions(values []string) ([]customfield.Key, bool) {
 	return options, true
 }
 
-func (a App) validatedCustomFieldTargetIDs(ctx context.Context, input CreateCustomFieldDefinitionInput, scope customfield.Scope, applicability customfield.Applicability) ([]customfield.AssetTypeID, error) {
-	if applicability == customfield.ApplicabilityAllAssets {
-		if len(input.CustomAssetTypeIDs) != 0 {
-			return nil, ErrInvalidInput
-		}
-		return nil, nil
-	}
-	targetIDs := make([]customfield.AssetTypeID, 0, len(input.CustomAssetTypeIDs))
+func updateCustomFieldDefinitionInputIsEmpty(input UpdateCustomFieldDefinitionInput) bool {
+	return input.DisplayName == nil &&
+		input.Key == nil &&
+		input.Type == nil &&
+		input.EnumOptions == nil &&
+		input.Applicability == nil &&
+		input.CustomAssetTypeIDs == nil
+}
+
+func customFieldTargetIDs(values []string) ([]customfield.AssetTypeID, error) {
+	targetIDs := make([]customfield.AssetTypeID, 0, len(values))
 	seen := map[customfield.AssetTypeID]struct{}{}
-	for _, raw := range input.CustomAssetTypeIDs {
+	for _, raw := range values {
 		id, ok := customfield.NewAssetTypeID(raw)
 		if !ok {
 			return nil, ErrInvalidInput
@@ -359,18 +442,39 @@ func (a App) validatedCustomFieldTargetIDs(ctx context.Context, input CreateCust
 		seen[id] = struct{}{}
 		targetIDs = append(targetIDs, id)
 	}
-	if len(targetIDs) == 0 {
-		return nil, ErrInvalidInput
+	return targetIDs, nil
+}
+
+func (a App) validatedCustomFieldTargetIDs(ctx context.Context, input CreateCustomFieldDefinitionInput, scope customfield.Scope, applicability customfield.Applicability) ([]customfield.AssetTypeID, error) {
+	if applicability == customfield.ApplicabilityAllAssets {
+		if len(input.CustomAssetTypeIDs) != 0 {
+			return nil, ErrInvalidInput
+		}
+		return nil, nil
 	}
-	if a.customAssetTypes == nil {
-		return nil, ErrInvalidInput
-	}
-	targets, err := a.customAssetTypes.CustomAssetTypesByID(ctx, input.TenantID, input.InventoryID, targetIDs)
+	targetIDs, err := customFieldTargetIDs(input.CustomAssetTypeIDs)
 	if err != nil {
 		return nil, err
 	}
+	if len(targetIDs) == 0 {
+		return nil, ErrInvalidInput
+	}
+	if err := a.validateCustomFieldTargetIDs(ctx, input.TenantID, input.InventoryID, scope, targetIDs); err != nil {
+		return nil, err
+	}
+	return targetIDs, nil
+}
+
+func (a App) validateCustomFieldTargetIDs(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, scope customfield.Scope, targetIDs []customfield.AssetTypeID) error {
+	if a.customAssetTypes == nil {
+		return ErrInvalidInput
+	}
+	targets, err := a.customAssetTypes.CustomAssetTypesByID(ctx, tenantID, inventoryID, targetIDs)
+	if err != nil {
+		return err
+	}
 	if len(targets) != len(targetIDs) {
-		return nil, ErrNotFound
+		return ErrNotFound
 	}
 	targetByID := map[customfield.AssetTypeID]customfield.AssetType{}
 	for _, target := range targets {
@@ -379,19 +483,19 @@ func (a App) validatedCustomFieldTargetIDs(ctx context.Context, input CreateCust
 	for _, id := range targetIDs {
 		target, found := targetByID[id]
 		if !found {
-			return nil, ErrNotFound
+			return ErrNotFound
 		}
-		if target.TenantID.String() != input.TenantID.String() {
-			return nil, ErrNotFound
+		if target.TenantID.String() != tenantID.String() {
+			return ErrNotFound
 		}
-		if scope == customfield.ScopeInventory && target.Scope == customfield.ScopeInventory && target.InventoryID.String() != input.InventoryID.String() {
-			return nil, ErrNotFound
+		if scope == customfield.ScopeInventory && target.Scope == customfield.ScopeInventory && target.InventoryID.String() != inventoryID.String() {
+			return ErrNotFound
 		}
 		if scope == customfield.ScopeTenant && target.Scope != customfield.ScopeTenant {
-			return nil, ErrInvalidInput
+			return ErrInvalidInput
 		}
 	}
-	return targetIDs, nil
+	return nil
 }
 
 func encodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, key string) *string {

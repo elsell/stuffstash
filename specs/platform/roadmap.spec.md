@@ -59,7 +59,7 @@ The goal is to prove a production-shaped path through:
 - Asset update and same-inventory movement now support title, description, parent, and custom field updates while preserving containment invariants, editor/viewer authorization boundaries, and descendant relationships.
 - Durable audit history now records the first state-changing tenant, inventory, sharing, custom asset type, custom field definition, and asset actions behind a repository port, with authenticated and authorized paginated REST reads.
 - Custom asset types now exist for tenant and inventory scopes, can be assigned to assets, can be renamed with metadata updates, and custom fields can target all assets or specific custom asset types.
-- Custom field definitions can now be renamed without changing their keys, types, enum options, applicability, or targets.
+- Custom field definitions can now be renamed and safely evolved by adding enum options, adding active custom asset type targets, or expanding targeted fields to all assets while rejecting incompatible narrowing or removals.
 - Asset lifecycle now supports archive and restore operations with audit history, active-only default listing, and authorization checks.
 - Asset media attachments now support JSON base64 upload, cursor-paginated listing, raw content download, local filesystem blob storage, Garage S3-compatible blob storage, audit history, generated OpenAPI, and adversarial API tests.
 - Local Dex OIDC verification now runs the full API user flow with two Dex-issued ID tokens and SpiceDB authorization.
@@ -70,17 +70,18 @@ The goal is to prove a production-shaped path through:
 
 ## Known Gaps
 
-- Custom asset type restore/permanent delete, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
+- Custom asset type restore/permanent delete, changing custom field type, removing custom field enum options or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
 - Undo is not yet implemented for audit history.
-- Custom field definitions cannot yet change schema shape, be deleted, reordered, imported, exported, or managed through conversational flows.
+- Custom field definitions cannot yet perform destructive schema changes, be deleted, reordered, imported, exported, or managed through conversational flows.
 - Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
+- Magic-link authentication is specified as a future self-host-friendly authentication adapter but is not implemented.
 
 ## Next Work
 
-1. Specify and implement custom field definition schema evolution.
-   - Decide whether field type, enum options, applicability, and custom asset type targets can change.
-   - Preserve or migrate existing asset custom field values safely.
+1. Specify and implement custom field definition archive/delete semantics.
+   - Preserve existing asset values and audit history.
+   - Decide how archived fields appear in asset read responses, search, and imports/exports.
    - Add adversarial API tests for tenant, inventory, viewer, editor, and cross-tenant behavior.
 
 ## Later Work

@@ -168,3 +168,81 @@ func TestStoreUpdatesCustomFieldDefinitionMetadata(t *testing.T) {
 		t.Fatalf("expected immutable enum options rejection, got %v", err)
 	}
 }
+
+func TestStoreUpdatesCustomFieldDefinitionSchemaByExpansion(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Medicine")
+
+	medicineType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), customfield.ScopeInventory, "medicine")
+	supplyType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), customfield.ScopeInventory, "supply")
+	containerType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FAR", tenantID.String(), inventoryID.String(), customfield.ScopeInventory, "container")
+	if err := saveCustomAssetType(t, ctx, store, medicineType); err != nil {
+		t.Fatalf("save medicine type: %v", err)
+	}
+	if err := saveCustomAssetType(t, ctx, store, supplyType); err != nil {
+		t.Fatalf("save supply type: %v", err)
+	}
+	if err := saveCustomAssetType(t, ctx, store, containerType); err != nil {
+		t.Fatalf("save container type: %v", err)
+	}
+
+	definition := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventoryID, customfield.ScopeInventory, "condition", customfield.FieldTypeEnum, []string{"new", "used"})
+	definition.Applicability = customfield.ApplicabilityCustomAssetTypes
+	definition.CustomAssetTypeIDs = []customfield.AssetTypeID{medicineType.ID}
+	if err := saveCustomFieldDefinition(t, ctx, store, definition); err != nil {
+		t.Fatalf("save targeted definition: %v", err)
+	}
+
+	expanded := definition
+	expanded.EnumOptions = append(expanded.EnumOptions, customfield.Key("expired"))
+	expanded.CustomAssetTypeIDs = append(expanded.CustomAssetTypeIDs, supplyType.ID)
+	if err := store.UpdateCustomFieldDefinition(ctx, expanded, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); err != nil {
+		t.Fatalf("expand definition schema: %v", err)
+	}
+
+	found, ok, err := store.CustomFieldDefinitionByID(ctx, tenantID, inventoryID, definition.ID)
+	if err != nil {
+		t.Fatalf("find expanded definition: %v", err)
+	}
+	if !ok || len(found.EnumOptions) != 3 || len(found.CustomAssetTypeIDs) != 2 {
+		t.Fatalf("expected expanded definition, found=%v definition=%+v", ok, found)
+	}
+
+	reorderedExistingTargets := found
+	reorderedExistingTargets.CustomAssetTypeIDs = []customfield.AssetTypeID{supplyType.ID, medicineType.ID, containerType.ID}
+	if err := store.UpdateCustomFieldDefinition(ctx, reorderedExistingTargets, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "E"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); err != nil {
+		t.Fatalf("expand definition schema with reordered existing targets: %v", err)
+	}
+	found, ok, err = store.CustomFieldDefinitionByID(ctx, tenantID, inventoryID, definition.ID)
+	if err != nil {
+		t.Fatalf("find reordered expanded definition: %v", err)
+	}
+	if !ok || len(found.CustomAssetTypeIDs) != 3 {
+		t.Fatalf("expected reordered target expansion, found=%v definition=%+v", ok, found)
+	}
+
+	allAssets := found
+	allAssets.Applicability = customfield.ApplicabilityAllAssets
+	allAssets.CustomAssetTypeIDs = nil
+	if err := store.UpdateCustomFieldDefinition(ctx, allAssets, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); err != nil {
+		t.Fatalf("expand definition to all assets: %v", err)
+	}
+	found, ok, err = store.CustomFieldDefinitionByID(ctx, tenantID, inventoryID, definition.ID)
+	if err != nil {
+		t.Fatalf("find all-assets definition: %v", err)
+	}
+	if !ok || found.Applicability != customfield.ApplicabilityAllAssets || len(found.CustomAssetTypeIDs) != 0 {
+		t.Fatalf("expected all-assets definition without targets, found=%v definition=%+v", ok, found)
+	}
+
+	narrowed := allAssets
+	narrowed.Applicability = customfield.ApplicabilityCustomAssetTypes
+	narrowed.CustomAssetTypeIDs = []customfield.AssetTypeID{medicineType.ID}
+	if err := store.UpdateCustomFieldDefinition(ctx, narrowed, auditRecord(t, auditIDWithSuffix(definition.ID.String(), "D"), tenantID, inventoryID, audit.ActionCustomFieldDefinitionUpdated)); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected narrowing rejection, got %v", err)
+	}
+}

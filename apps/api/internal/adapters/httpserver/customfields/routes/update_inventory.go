@@ -20,18 +20,20 @@ func RegisterUpdateInventory(api huma.API, application app.App) {
 		if err != nil {
 			return nil, err
 		}
-		if input.Body.HasImmutableFields() {
-			return nil, shared.ToHumaError(app.ErrInvalidInput)
-		}
 
 		definition, err := application.UpdateInventoryCustomFieldDefinition(ctx, app.UpdateCustomFieldDefinitionInput{
-			Principal:    principal,
-			Source:       audit.SourceAPI,
-			RequestID:    input.RequestID,
-			TenantID:     tenant.ID(input.TenantID),
-			InventoryID:  inventory.InventoryID(input.InventoryID),
-			DefinitionID: customfield.ID(input.DefinitionID),
-			DisplayName:  input.Body.DisplayName,
+			Principal:          principal,
+			Source:             audit.SourceAPI,
+			RequestID:          input.RequestID,
+			TenantID:           tenant.ID(input.TenantID),
+			InventoryID:        inventory.InventoryID(input.InventoryID),
+			DefinitionID:       customfield.ID(input.DefinitionID),
+			DisplayName:        input.Body.DisplayName,
+			Key:                input.Body.Key,
+			Type:               input.Body.Type,
+			EnumOptions:        input.Body.EnumOptions,
+			Applicability:      input.Body.Applicability,
+			CustomAssetTypeIDs: input.Body.CustomAssetTypeIDs,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

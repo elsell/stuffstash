@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 )
@@ -50,4 +51,40 @@ func assertCustomFieldDefinition(t *testing.T, definition customFieldDefinitionR
 	if definition.TenantID != tenantID || definition.InventoryID != inventoryID || definition.Scope != scope || definition.Key != key || definition.Type != fieldType {
 		t.Fatalf("expected custom field definition %s/%s/%s/%s/%s, got %+v", tenantID, inventoryID, scope, key, fieldType, definition)
 	}
+}
+
+func createCustomAssetTypeForTest(t *testing.T, server *http.Server, path string, auth string, key string) customAssetTypeBody {
+	t.Helper()
+
+	response := performRequest(server, http.MethodPost, path, auth, map[string]any{
+		"key":         key,
+		"displayName": key,
+	})
+	if response.Code != http.StatusCreated {
+		t.Fatalf("expected custom asset type status %d, got %d with body %s", http.StatusCreated, response.Code, response.Body.String())
+	}
+	return decodeCustomAssetType(t, response)
+}
+
+func customFieldDefinitionFromList(t *testing.T, server *http.Server, tenantID string, inventoryID string, fieldID string, inventoryScoped bool) customFieldDefinitionResponse {
+	t.Helper()
+
+	path := "/tenants/" + tenantID + "/custom-field-definitions?limit=20"
+	auth := "Bearer dev:tenant-owner"
+	if inventoryScoped {
+		path = "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions?limit=20"
+		auth = "Bearer dev:inventory-owner"
+	}
+	response := performRequest(server, http.MethodGet, path, auth, nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected custom field list status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
+	}
+	body := decodeCustomFieldDefinitionList(t, response)
+	for _, definition := range body.Data {
+		if definition.ID == fieldID {
+			return definition
+		}
+	}
+	t.Fatalf("expected custom field definition %q in list, got %+v", fieldID, body.Data)
+	return customFieldDefinitionResponse{}
 }

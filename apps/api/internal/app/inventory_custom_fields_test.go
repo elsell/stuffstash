@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -87,6 +88,68 @@ func TestCreateAndListCustomFieldDefinitions(t *testing.T) {
 	}
 }
 
+func TestUpdateCustomFieldDefinitionSchemaExpansionRecordsAuditAndObservability(t *testing.T) {
+	observer := &fakeObserver{}
+	customFields := &fakeCustomFieldRepository{}
+	customAssetTypes := &fakeCustomAssetTypeRepository{items: []customfield.AssetType{
+		customAssetType(t, "medicine-type", "tenant-one", "inventory-one", customfield.ScopeInventory, "medicine", "Medicine"),
+		customAssetType(t, "supply-type", "tenant-one", "inventory-one", customfield.ScopeInventory, "supply", "Supply"),
+	}}
+	application := New(Dependencies{
+		Observer:         observer,
+		Authorizer:       &fakeAuthorizer{},
+		Tenants:          &fakeTenantRepository{exists: true},
+		Inventories:      &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Cabinet")}},
+		CustomAssetTypes: customAssetTypes,
+		CustomFields:     customFields,
+		Audit:            &fakeAuditRepository{},
+		Outbox:           &fakeOutbox{},
+		IDs:              &fakeIDGenerator{ids: []string{"condition-field", "audit-create", "audit-update"}},
+	})
+
+	definition, err := application.CreateInventoryCustomFieldDefinition(context.Background(), CreateCustomFieldDefinitionInput{
+		Principal:          identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:           tenant.ID("tenant-one"),
+		InventoryID:        inventory.InventoryID("inventory-one"),
+		Key:                "condition",
+		DisplayName:        "Condition",
+		Type:               "enum",
+		EnumOptions:        []string{"new", "used"},
+		Applicability:      "custom_asset_types",
+		CustomAssetTypeIDs: []string{"medicine-type"},
+	})
+	if err != nil {
+		t.Fatalf("create custom field definition: %v", err)
+	}
+
+	updated, err := application.UpdateInventoryCustomFieldDefinition(context.Background(), UpdateCustomFieldDefinitionInput{
+		Principal:          identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:           tenant.ID("tenant-one"),
+		InventoryID:        inventory.InventoryID("inventory-one"),
+		DefinitionID:       definition.ID,
+		DisplayName:        stringPtr("Condition"),
+		EnumOptions:        stringSlicePtr("new", "used", "expired"),
+		CustomAssetTypeIDs: stringSlicePtr("medicine-type", "supply-type"),
+	})
+	if err != nil {
+		t.Fatalf("update custom field definition: %v", err)
+	}
+	if len(updated.EnumOptions) != 3 || len(updated.CustomAssetTypeIDs) != 2 {
+		t.Fatalf("expected enum and target expansion, got %+v", updated)
+	}
+
+	if !observer.hasEvent(ports.EventCustomFieldDefinitionUpdated) {
+		t.Fatalf("expected custom field update event, got %+v", observer.events)
+	}
+	record, ok := customFields.recordForAction(audit.ActionCustomFieldDefinitionUpdated)
+	if !ok {
+		t.Fatalf("expected custom field update audit, got %+v", customFields.auditRecords)
+	}
+	if record.Metadata["enum_options_added"] != "1" || record.Metadata["custom_asset_type_targets_added"] != "1" {
+		t.Fatalf("expected schema expansion audit metadata, got %+v", record.Metadata)
+	}
+}
+
 func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) {
 	customFields := &fakeCustomFieldRepository{}
 	application := New(Dependencies{
@@ -144,4 +207,30 @@ func TestCustomFieldDefinitionsRejectUnauthorizedAndDuplicateKeys(t *testing.T) 
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected duplicate effective key rejection, got %v", err)
 	}
+}
+
+func customAssetType(t *testing.T, id string, tenantID string, inventoryID string, scope customfield.Scope, key string, displayName string) customfield.AssetType {
+	t.Helper()
+
+	assetType, ok := customfield.NewAssetType(
+		customfield.AssetTypeID(id),
+		customfield.TenantID(tenantID),
+		customfield.InventoryID(inventoryID),
+		scope,
+		customfield.Key(key),
+		customfield.DisplayName(displayName),
+		customfield.Description(""),
+	)
+	if !ok {
+		t.Fatalf("invalid test custom asset type %q", id)
+	}
+	return assetType
+}
+
+func stringPtr(value string) *string {
+	return &value
+}
+
+func stringSlicePtr(values ...string) *[]string {
+	return &values
 }

@@ -486,3 +486,280 @@ func TestCustomFieldDefinitionUpdateFlowAndAuthorization(t *testing.T) {
 	}
 	assertSafeError(t, missingAuthenticationUpdate, "authentication_required", "Authentication required.")
 }
+
+func TestCustomFieldDefinitionSchemaEvolution(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Medicine", owner: "inventory-owner"},
+		},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FAX", "audit-medicine-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAY", "audit-supply-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAZ", "audit-condition-field",
+			"audit-condition-field-expand",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB0", "audit-supply-asset",
+			"audit-condition-field-all-assets",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB1", "audit-untyped-asset",
+		},
+	}))
+
+	medicineTypeResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "medicine",
+		"displayName": "Medicine",
+	})
+	if medicineTypeResponse.Code != http.StatusCreated {
+		t.Fatalf("expected medicine type status %d, got %d with body %s", http.StatusCreated, medicineTypeResponse.Code, medicineTypeResponse.Body.String())
+	}
+	medicineType := decodeCustomAssetType(t, medicineTypeResponse)
+	supplyTypeResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", map[string]any{
+		"key":         "supply",
+		"displayName": "Supply",
+	})
+	if supplyTypeResponse.Code != http.StatusCreated {
+		t.Fatalf("expected supply type status %d, got %d with body %s", http.StatusCreated, supplyTypeResponse.Code, supplyTypeResponse.Body.String())
+	}
+	supplyType := decodeCustomAssetType(t, supplyTypeResponse)
+
+	fieldResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":                "condition",
+		"displayName":        "Condition",
+		"type":               "enum",
+		"enumOptions":        []string{"new", "used"},
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{medicineType.Data.ID},
+	})
+	if fieldResponse.Code != http.StatusCreated {
+		t.Fatalf("expected field create status %d, got %d with body %s", http.StatusCreated, fieldResponse.Code, fieldResponse.Body.String())
+	}
+	field := decodeCustomFieldDefinition(t, fieldResponse)
+
+	expandedResponse := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName":        "Item Condition",
+		"enumOptions":        []string{"new", "used", "expired"},
+		"customAssetTypeIds": []string{medicineType.Data.ID, supplyType.Data.ID},
+	})
+	if expandedResponse.Code != http.StatusOK {
+		t.Fatalf("expected schema expansion status %d, got %d with body %s", http.StatusOK, expandedResponse.Code, expandedResponse.Body.String())
+	}
+	expanded := decodeCustomFieldDefinition(t, expandedResponse)
+	if expanded.Data.DisplayName != "Item Condition" || len(expanded.Data.EnumOptions) != 3 || len(expanded.Data.CustomAssetTypeIDs) != 2 {
+		t.Fatalf("expected enum option and target expansion, got %+v", expanded.Data)
+	}
+
+	createSupplyAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:inventory-owner", map[string]any{
+		"kind":              "item",
+		"title":             "Fertilizer",
+		"customAssetTypeId": supplyType.Data.ID,
+		"customFields": map[string]any{
+			"condition": "expired",
+		},
+	})
+	if createSupplyAsset.Code != http.StatusCreated {
+		t.Fatalf("expected supply asset status %d, got %d with body %s", http.StatusCreated, createSupplyAsset.Code, createSupplyAsset.Body.String())
+	}
+
+	removeOption := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"enumOptions": []string{"new"},
+	})
+	if removeOption.Code != http.StatusBadRequest {
+		t.Fatalf("expected remove option status %d, got %d with body %s", http.StatusBadRequest, removeOption.Code, removeOption.Body.String())
+	}
+	assertSafeError(t, removeOption, "invalid_request", "Invalid request.")
+
+	reorderOptions := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"enumOptions": []string{"used", "new", "expired"},
+	})
+	if reorderOptions.Code != http.StatusBadRequest {
+		t.Fatalf("expected reorder option status %d, got %d with body %s", http.StatusBadRequest, reorderOptions.Code, reorderOptions.Body.String())
+	}
+	assertSafeError(t, reorderOptions, "invalid_request", "Invalid request.")
+
+	removeOptionsWithRename := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName": "Ignored Rename",
+		"enumOptions": []string{},
+	})
+	if removeOptionsWithRename.Code != http.StatusBadRequest {
+		t.Fatalf("expected empty enum option removal status %d, got %d with body %s", http.StatusBadRequest, removeOptionsWithRename.Code, removeOptionsWithRename.Body.String())
+	}
+	assertSafeError(t, removeOptionsWithRename, "invalid_request", "Invalid request.")
+
+	removeTargetsWithRename := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"displayName":        "Ignored Rename",
+		"customAssetTypeIds": []string{},
+	})
+	if removeTargetsWithRename.Code != http.StatusBadRequest {
+		t.Fatalf("expected empty target removal status %d, got %d with body %s", http.StatusBadRequest, removeTargetsWithRename.Code, removeTargetsWithRename.Body.String())
+	}
+	assertSafeError(t, removeTargetsWithRename, "invalid_request", "Invalid request.")
+
+	allAssetsResponse := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"applicability": "all_assets",
+	})
+	if allAssetsResponse.Code != http.StatusOK {
+		t.Fatalf("expected all-assets expansion status %d, got %d with body %s", http.StatusOK, allAssetsResponse.Code, allAssetsResponse.Body.String())
+	}
+	allAssets := decodeCustomFieldDefinition(t, allAssetsResponse)
+	if allAssets.Data.Applicability != "all_assets" || len(allAssets.Data.CustomAssetTypeIDs) != 0 {
+		t.Fatalf("expected all-assets applicability without targets, got %+v", allAssets.Data)
+	}
+
+	narrowToTargets := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions/"+field.Data.ID, "Bearer dev:inventory-owner", map[string]any{
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{medicineType.Data.ID},
+	})
+	if narrowToTargets.Code != http.StatusBadRequest {
+		t.Fatalf("expected narrowing status %d, got %d with body %s", http.StatusBadRequest, narrowToTargets.Code, narrowToTargets.Body.String())
+	}
+	assertSafeError(t, narrowToTargets, "invalid_request", "Invalid request.")
+
+	createUntypedAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:inventory-owner", map[string]any{
+		"kind":  "item",
+		"title": "Notebook",
+		"customFields": map[string]any{
+			"condition": "expired",
+		},
+	})
+	if createUntypedAsset.Code != http.StatusCreated {
+		t.Fatalf("expected untyped asset status %d, got %d with body %s", http.StatusCreated, createUntypedAsset.Code, createUntypedAsset.Body.String())
+	}
+}
+
+func TestCustomFieldDefinitionSchemaEvolutionRejectsInvalidTargets(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
+	const otherTenantInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAZ"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+			{id: otherTenantID, name: "Neighbor", owner: "other-tenant-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Medicine", owner: "inventory-owner"},
+			{id: otherInventoryID, tenantID: tenantID, name: "Garage", owner: "other-inventory-owner"},
+			{id: otherTenantInventoryID, tenantID: otherTenantID, name: "Neighbor Stuff", owner: "other-tenant-inventory-owner"},
+		},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FB0", "audit-valid-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB1", "audit-archived-type",
+			"audit-archived-type-archive",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB2", "audit-wrong-inventory-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB3", "audit-cross-tenant-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB4", "audit-tenant-type",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB5", "audit-inventory-field",
+			"01ARZ3NDEKTSV4RRFFQ69G5FB6", "audit-tenant-field",
+		},
+	}))
+
+	validType := createCustomAssetTypeForTest(t, server, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", "medicine")
+	archivedType := createCustomAssetTypeForTest(t, server, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types", "Bearer dev:inventory-owner", "archived")
+	archiveResponse := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+archivedType.Data.ID+"/archive", "Bearer dev:inventory-owner", nil)
+	if archiveResponse.Code != http.StatusOK {
+		t.Fatalf("expected archive status %d, got %d with body %s", http.StatusOK, archiveResponse.Code, archiveResponse.Body.String())
+	}
+	wrongInventoryType := createCustomAssetTypeForTest(t, server, "/tenants/"+tenantID+"/inventories/"+otherInventoryID+"/custom-asset-types", "Bearer dev:other-inventory-owner", "garage")
+	crossTenantType := createCustomAssetTypeForTest(t, server, "/tenants/"+otherTenantID+"/inventories/"+otherTenantInventoryID+"/custom-asset-types", "Bearer dev:other-tenant-inventory-owner", "neighbor")
+	tenantType := createCustomAssetTypeForTest(t, server, "/tenants/"+tenantID+"/custom-asset-types", "Bearer dev:tenant-owner", "tenant-type")
+
+	inventoryFieldResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions", "Bearer dev:inventory-owner", map[string]any{
+		"key":                "condition",
+		"displayName":        "Condition",
+		"type":               "text",
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{validType.Data.ID},
+	})
+	if inventoryFieldResponse.Code != http.StatusCreated {
+		t.Fatalf("expected inventory field status %d, got %d with body %s", http.StatusCreated, inventoryFieldResponse.Code, inventoryFieldResponse.Body.String())
+	}
+	inventoryField := decodeCustomFieldDefinition(t, inventoryFieldResponse)
+
+	tenantFieldResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/custom-field-definitions", "Bearer dev:tenant-owner", map[string]any{
+		"key":                "tenant-condition",
+		"displayName":        "Tenant Condition",
+		"type":               "text",
+		"applicability":      "custom_asset_types",
+		"customAssetTypeIds": []string{tenantType.Data.ID},
+	})
+	if tenantFieldResponse.Code != http.StatusCreated {
+		t.Fatalf("expected tenant field status %d, got %d with body %s", http.StatusCreated, tenantFieldResponse.Code, tenantFieldResponse.Body.String())
+	}
+	tenantField := decodeCustomFieldDefinition(t, tenantFieldResponse)
+
+	cases := []struct {
+		name             string
+		path             string
+		fieldID          string
+		auth             string
+		currentTargetID  string
+		rejectedTargetID string
+		inventoryScoped  bool
+	}{
+		{
+			name:             "unknown target",
+			path:             "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions/" + inventoryField.Data.ID,
+			fieldID:          inventoryField.Data.ID,
+			auth:             "Bearer dev:inventory-owner",
+			currentTargetID:  validType.Data.ID,
+			rejectedTargetID: "01ARZ3NDEKTSV4RRFFQ69G5FB9",
+			inventoryScoped:  true,
+		},
+		{
+			name:             "archived target",
+			path:             "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions/" + inventoryField.Data.ID,
+			fieldID:          inventoryField.Data.ID,
+			auth:             "Bearer dev:inventory-owner",
+			currentTargetID:  validType.Data.ID,
+			rejectedTargetID: archivedType.Data.ID,
+			inventoryScoped:  true,
+		},
+		{
+			name:             "wrong inventory target",
+			path:             "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions/" + inventoryField.Data.ID,
+			fieldID:          inventoryField.Data.ID,
+			auth:             "Bearer dev:inventory-owner",
+			currentTargetID:  validType.Data.ID,
+			rejectedTargetID: wrongInventoryType.Data.ID,
+			inventoryScoped:  true,
+		},
+		{
+			name:             "cross tenant target",
+			path:             "/tenants/" + tenantID + "/inventories/" + inventoryID + "/custom-field-definitions/" + inventoryField.Data.ID,
+			fieldID:          inventoryField.Data.ID,
+			auth:             "Bearer dev:inventory-owner",
+			currentTargetID:  validType.Data.ID,
+			rejectedTargetID: crossTenantType.Data.ID,
+			inventoryScoped:  true,
+		},
+		{
+			name:             "tenant field cannot target inventory scoped type",
+			path:             "/tenants/" + tenantID + "/custom-field-definitions/" + tenantField.Data.ID,
+			fieldID:          tenantField.Data.ID,
+			auth:             "Bearer dev:tenant-owner",
+			currentTargetID:  tenantType.Data.ID,
+			rejectedTargetID: validType.Data.ID,
+		},
+	}
+
+	for _, item := range cases {
+		t.Run(item.name, func(t *testing.T) {
+			response := performRequest(server, http.MethodPatch, item.path, item.auth, map[string]any{
+				"customAssetTypeIds": []string{item.currentTargetID, item.rejectedTargetID},
+			})
+			if response.Code != http.StatusNotFound {
+				t.Fatalf("expected invalid target status %d, got %d with body %s", http.StatusNotFound, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, "resource_not_found", "Resource not found.")
+
+			found := customFieldDefinitionFromList(t, server, tenantID, inventoryID, item.fieldID, item.inventoryScoped)
+			if len(found.CustomAssetTypeIDs) != 1 || found.CustomAssetTypeIDs[0] != item.currentTargetID {
+				t.Fatalf("expected rejected target update to leave targets unchanged, got %+v", found)
+			}
+		})
+	}
+}
