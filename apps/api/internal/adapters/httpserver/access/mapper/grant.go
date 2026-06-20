@@ -25,6 +25,10 @@ func GrantsToResponse(grants []ports.InventoryAccessGrant) []dto.GrantResponse {
 }
 
 func InvitationToResponse(invitation ports.InventoryAccessInvitation) dto.InvitationResponse {
+	return InvitationToResponseAt(invitation, time.Now())
+}
+
+func InvitationToResponseAt(invitation ports.InventoryAccessInvitation, now time.Time) dto.InvitationResponse {
 	return dto.InvitationResponse{
 		ID:                  invitation.ID,
 		TenantID:            invitation.TenantID.String(),
@@ -35,7 +39,20 @@ func InvitationToResponse(invitation ports.InventoryAccessInvitation) dto.Invita
 		InviterPrincipalID:  invitation.InviterPrincipalID.String(),
 		AcceptedPrincipalID: invitation.AcceptedPrincipalID.String(),
 		ExpiresAt:           invitation.ExpiresAt.Format(time.RFC3339),
+		IsExpired:           invitation.IsExpired(now),
 	}
+}
+
+func InvitationsToResponse(invitations []ports.InventoryAccessInvitation) []dto.InvitationResponse {
+	return InvitationsToResponseAt(invitations, time.Now())
+}
+
+func InvitationsToResponseAt(invitations []ports.InventoryAccessInvitation, now time.Time) []dto.InvitationResponse {
+	data := make([]dto.InvitationResponse, 0, len(invitations))
+	for _, invitation := range invitations {
+		data = append(data, InvitationToResponseAt(invitation, now))
+	}
+	return data
 }
 
 func InvitationAcceptanceToResponse(invitation ports.InventoryAccessInvitation, grant ports.InventoryAccessGrant) dto.InvitationAcceptanceResponse {

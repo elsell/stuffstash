@@ -67,7 +67,7 @@ func TestPostgresStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 		t.Fatalf("expected valid custom fields")
 	}
 	drill.CustomFields = drillFields
-	if err := store.CreateAsset(ctx, drill, postgresAuditRecord(t, drillAuditID, tenantID, inventoryID, audit.ActionAssetCreated)); err != nil {
+	if err := store.CreateAsset(ctx, drill, postgresAuditRecord(t, drillAuditID, tenantID, inventoryID, audit.ActionAssetCreated), nil); err != nil {
 		t.Fatalf("create drill: %v", err)
 	}
 	saveSearchAttachmentWithAuditID(t, ctx, store, attachmentID, attachmentAuditID, drill, "warranty-card.png", media.ContentTypePNG)
@@ -76,7 +76,7 @@ func TestPostgresStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	aspirinTitle, _ := asset.NewTitle("Aspirin")
 	aspirin.Title = aspirinTitle
 	aspirin.CustomAssetTypeID = asset.CustomAssetTypeID(medicineType.ID.String())
-	if err := store.CreateAsset(ctx, aspirin, postgresAuditRecord(t, aspirinAuditID, tenantID, inventoryID, audit.ActionAssetCreated)); err != nil {
+	if err := store.CreateAsset(ctx, aspirin, postgresAuditRecord(t, aspirinAuditID, tenantID, inventoryID, audit.ActionAssetCreated), nil); err != nil {
 		t.Fatalf("create aspirin: %v", err)
 	}
 

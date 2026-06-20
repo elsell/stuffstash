@@ -10,6 +10,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envRepositoryMode, "")
 	t.Setenv(envDatabaseDSN, "")
 	t.Setenv(envSpiceDBTLSEnabled, "")
+	t.Setenv(envSpiceDBCAPath, "")
 	t.Setenv(envSpiceDBBootstrapSchema, "")
 	t.Setenv(envSpiceDBSchemaPath, "")
 	t.Setenv(envAuthorizationOutboxLimit, "")
@@ -50,6 +51,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	}
 	if !cfg.SpiceDBTLSEnabled {
 		t.Fatalf("expected SpiceDB TLS to default enabled")
+	}
+	if cfg.SpiceDBCAPath != "" {
+		t.Fatalf("expected empty SpiceDB CA path, got %q", cfg.SpiceDBCAPath)
 	}
 	if cfg.SpiceDBBootstrapSchema {
 		t.Fatalf("expected SpiceDB schema bootstrap to default disabled")
@@ -107,6 +111,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envSpiceDBEndpoint, "spicedb:50051")
 	t.Setenv(envSpiceDBPresharedKey, "local-key")
 	t.Setenv(envSpiceDBTLSEnabled, "false")
+	t.Setenv(envSpiceDBCAPath, "/var/run/stuffstash/spicedb-ca/ca.crt")
 	t.Setenv(envSpiceDBBootstrapSchema, "true")
 	t.Setenv(envSpiceDBSchemaPath, "custom/schema.zed")
 	t.Setenv(envAuthorizationOutboxLimit, "7")
@@ -150,6 +155,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.SpiceDBTLSEnabled {
 		t.Fatalf("expected SpiceDB TLS disabled")
+	}
+	if cfg.SpiceDBCAPath != "/var/run/stuffstash/spicedb-ca/ca.crt" {
+		t.Fatalf("expected custom SpiceDB CA path, got %q", cfg.SpiceDBCAPath)
 	}
 	if !cfg.SpiceDBBootstrapSchema {
 		t.Fatalf("expected SpiceDB schema bootstrap enabled")

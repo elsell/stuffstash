@@ -127,7 +127,7 @@ func TestPostgresStorePersistsAssetCustomFieldsAsJSONB(t *testing.T) {
 	}
 	item.CustomFields = customFields
 
-	if err := store.CreateAsset(ctx, item, postgresAuditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB7", tenantID, inventoryID, audit.ActionAssetCreated)); err != nil {
+	if err := store.CreateAsset(ctx, item, postgresAuditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB7", tenantID, inventoryID, audit.ActionAssetCreated), nil); err != nil {
 		t.Fatalf("create asset: %v", err)
 	}
 

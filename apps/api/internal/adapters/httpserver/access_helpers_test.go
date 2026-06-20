@@ -145,12 +145,18 @@ type inventoryAccessInvitationResponse struct {
 	InviterPrincipalID  string `json:"inviterPrincipalId"`
 	AcceptedPrincipalID string `json:"acceptedPrincipalId"`
 	ExpiresAt           string `json:"expiresAt"`
+	IsExpired           bool   `json:"isExpired"`
 	AcceptanceToken     string `json:"acceptanceToken"`
 }
 
 type inventoryAccessInvitationBody struct {
 	Data inventoryAccessInvitationResponse `json:"data"`
 	Meta responseMeta                      `json:"meta"`
+}
+
+type inventoryAccessInvitationListBody struct {
+	Data []inventoryAccessInvitationResponse `json:"data"`
+	Meta responseMeta                        `json:"meta"`
 }
 
 type inventoryAccessInvitationAcceptanceResponse struct {
@@ -183,6 +189,14 @@ func decodeInventoryAccessInvitationAcceptance(t *testing.T, response *httptest.
 	t.Helper()
 
 	var body inventoryAccessInvitationAcceptanceBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeInventoryAccessInvitationList(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessInvitationListBody {
+	t.Helper()
+
+	var body inventoryAccessInvitationListBody
 	decodeBody(t, response, &body)
 	return body
 }

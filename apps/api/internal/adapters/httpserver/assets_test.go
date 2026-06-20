@@ -124,7 +124,7 @@ func TestAssetUpdateFlowAndMovement(t *testing.T) {
 			"garage", "audit-garage",
 			"shelf", "audit-shelf",
 			"box", "audit-box",
-			"wrench", "audit-wrench",
+			"wrench", "op-wrench", "audit-wrench",
 			"audit-box-update", "audit-box-move",
 			"other-inventory-location", "audit-other-inventory-location",
 			"other-tenant-location", "audit-other-tenant-location",
@@ -325,7 +325,7 @@ func TestAssetLifecycleArchiveRestoreFlowAndListing(t *testing.T) {
 		},
 		ids: []string{
 			"garage", "audit-garage",
-			"wrench", "audit-wrench",
+			"wrench", "op-wrench", "audit-wrench",
 			"audit-wrench-archive",
 			"audit-garage-archive",
 			"audit-garage-restore",
@@ -439,7 +439,7 @@ func TestAssetLifecycleAuthorizationBoundaries(t *testing.T) {
 			{id: otherInventoryID, tenantID: otherTenantID, name: "Cabin Tools", owner: "other-owner"},
 		},
 		ids: []string{
-			"wrench", "audit-wrench",
+			"wrench", "op-wrench", "audit-wrench",
 			"viewer-grant-event", "audit-viewer-grant", "viewer-grant-claim",
 		},
 	}))
@@ -496,9 +496,9 @@ func TestAssetLifecycleStateAndCursorContracts(t *testing.T) {
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
 		ids: []string{
-			"drill", "audit-drill",
-			"hammer", "audit-hammer",
-			"wrench", "audit-wrench",
+			"drill", "op-drill", "audit-drill",
+			"hammer", "op-hammer", "audit-hammer",
+			"wrench", "op-wrench", "audit-wrench",
 			"audit-wrench-archive",
 		},
 	}))

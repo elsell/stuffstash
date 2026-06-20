@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, the local API can create tenants and inventories; define custom asset types and fields; manage assets, attachments, search, and audit history; share inventory access directly or with invite-link tokens; revoke access; and run against Postgres, SpiceDB, and Dex through Compose.
+The app is still early. Today, the local API can create tenants and inventories; define custom asset types and fields; manage assets, attachments, search, and audit history; share inventory access directly or with invite-link tokens; manage pending invitations; revoke access; and run against Postgres, SpiceDB, and Dex through Compose.
 
 ## Requirements
 
@@ -312,6 +312,25 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/acc
   -H 'Content-Type: application/json' \
   -d '{"email":"user-two@example.com","relationship":"viewer"}'
 ```
+
+List pending invite links:
+
+```sh
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations?status=pending&limit=50' \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
+To test manual expiration, create a separate pending invite and set its expiration in the past:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations/<pending-invitation-id>/expiration \
+  -X PATCH \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"expiresAt":"2024-01-01T00:00:00Z"}'
+```
+
+Invitation lists support `status=all`, `pending`, `accepted`, `revoked`, `cancelled`, or `expired`. List and detail responses do not return the acceptance token after creation.
 
 Accept the invite:
 

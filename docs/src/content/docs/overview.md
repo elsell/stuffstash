@@ -5,7 +5,7 @@ description: What Stuff Stash is and what problem it solves.
 
 Stuff Stash is a home inventory system.
 
-It is meant to track items, places, containers, photos, files, and history across one or more inventories. Today, the API handles tenants, inventories, assets, custom asset types, custom fields, asset attachments, audit history, direct inventory sharing, invite-link tokens, and revocation. A tenant is the top-level security boundary. A tenant can have many inventories, such as household, tools, or medicine.
+It is meant to track items, places, containers, photos, files, and history across one or more inventories. Today, the API handles tenants, inventories, assets, custom asset types, custom fields, asset attachments, audit history, direct inventory sharing, invite-link tokens, pending-invitation management, and revocation. A tenant is the top-level security boundary. A tenant can have many inventories, such as household, tools, or medicine.
 
 The main goal is low-friction updates. A user should be able to say something like:
 
@@ -27,7 +27,7 @@ The repository has a Go API and the first separate SvelteKit web app with:
 - Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.
 - Asset search across the inventories a user can view.
 - Durable audit history for state changes and selected reads.
-- Inventory sharing by known principal ID or invite-link token, with viewer and editor access plus revocation.
+- Inventory sharing by known principal ID or invite-link token, with viewer and editor access, pending-invitation management, and revocation.
 - Huma-generated OpenAPI at `/openapi.json`.
 - A generated TypeScript API client used by the web app at its adapter boundary.
 - A web tracer bullet for local Dex sign-in, inventory creation, asset creation, and asset browsing.

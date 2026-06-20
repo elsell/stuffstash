@@ -17,14 +17,16 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 	inventories := &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}}
 	outbox := &fakeOutbox{}
 	application := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  inventories,
-		CustomFields: customFields,
-		Assets:       assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       outbox,
+		Observer:        &fakeObserver{},
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     inventories,
+		InventoryAccess: inventories,
+		CustomFields:    customFields,
+		Assets:          assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          outbox,
 		IDs: &fakeIDGenerator{ids: []string{
 			"tenant-created", "audit-tenant", "tenant-owner-event", "claim-tenant",
 			"inventory-created", "audit-inventory", "inventory-owner-event", "claim-inventory",

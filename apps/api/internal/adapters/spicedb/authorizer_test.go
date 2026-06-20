@@ -2,7 +2,10 @@ package spicedb
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
@@ -259,7 +262,7 @@ func TestAuthorizerBootstrapsSchema(t *testing.T) {
 }
 
 func TestNewGatewayRequiresEndpoint(t *testing.T) {
-	gateway, err := NewGateway("", "", false)
+	gateway, err := NewGateway("", "", false, "")
 	if err == nil {
 		t.Fatalf("expected missing endpoint error")
 	}
@@ -269,7 +272,7 @@ func TestNewGatewayRequiresEndpoint(t *testing.T) {
 }
 
 func TestNewGatewayAllowsUnauthenticatedLocalTesting(t *testing.T) {
-	gateway, err := NewGateway("localhost:50051", "", false)
+	gateway, err := NewGateway("localhost:50051", "", false, "")
 	if err != nil {
 		t.Fatalf("create unauthenticated local gateway: %v", err)
 	}
@@ -278,6 +281,37 @@ func TestNewGatewayAllowsUnauthenticatedLocalTesting(t *testing.T) {
 			t.Fatalf("close gateway: %v", err)
 		}
 	})
+}
+
+func TestNewTLSConfigLoadsCustomCA(t *testing.T) {
+	caPath := filepath.Join(t.TempDir(), "ca.crt")
+	if err := os.WriteFile(caPath, []byte(testCACertificatePEM), 0o600); err != nil {
+		t.Fatalf("write ca: %v", err)
+	}
+
+	config, err := newTLSConfig(caPath)
+	if err != nil {
+		t.Fatalf("create tls config: %v", err)
+	}
+
+	if config.MinVersion != tls.VersionTLS12 {
+		t.Fatalf("expected TLS 1.2 minimum, got %d", config.MinVersion)
+	}
+	if config.RootCAs == nil {
+		t.Fatalf("expected custom root CAs")
+	}
+}
+
+func TestNewTLSConfigRejectsInvalidCA(t *testing.T) {
+	caPath := filepath.Join(t.TempDir(), "ca.crt")
+	if err := os.WriteFile(caPath, []byte("not a certificate"), 0o600); err != nil {
+		t.Fatalf("write ca: %v", err)
+	}
+
+	_, err := newTLSConfig(caPath)
+	if err == nil {
+		t.Fatalf("expected invalid CA error")
+	}
 }
 
 func principal(id string) identity.Principal {
@@ -354,3 +388,26 @@ func (f *fakeGateway) WriteSchema(_ context.Context, request *v1.WriteSchemaRequ
 	f.schemaWrites = append(f.schemaWrites, request)
 	return &v1.WriteSchemaResponse{}, f.schemaErr
 }
+
+const testCACertificatePEM = `-----BEGIN CERTIFICATE-----
+MIIDpDCCAoygAwIBAgIUNryriY/J75dF/XfR5ZXqO5yFkJYwDQYJKoZIhvcNAQEL
+BQAwTjELMAkGA1UEBhMCVVMxDjAMBgNVBAgMBVN0YXRlMQ0wCwYDVQQHDARDaXR5
+MRAwDgYDVQQKDAdIb21lbGFiMQ4wDAYDVQQDDAVsZW5ueTAeFw0yNTEwMzAyMDA5
+MDRaFw0zNTEwMjgyMDA5MDRaME4xCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVTdGF0
+ZTENMAsGA1UEBwwEQ2l0eTEQMA4GA1UECgwHSG9tZWxhYjEOMAwGA1UEAwwFbGVu
+bnkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCTatL9743mv7xQ6yHv
+Tt6Nf1arvvxwh9ZI5SgJnd6cglTQr2bzOfNKwC63K/JoJ28bKrOc4p9YBvQlvQvA
+j7QEcYoUxevC/V9CSo06mQpbZCa3Emhe8yTUBxwOW0rinZv5HrLuHgBAAa909fPf
+Qi3m2T+F7uVOCRmjwiUxdBXn9/3I8FKE3JIUolCphcBgH/0e7Cs8GMoKYymGidfN
+jDR59qhejkjbBihWZCCe8icTWNMGgBmpMyNNeJFxxZ7f3vpuR6MDHwcfnBtlpG8J
+yEXaHdv13LAxNBW+M+LqZt0ZsojCBYCyhGudFqz7fO4SgdYZBSpbmd2DLOBKKokf
+IGU/AgMBAAGjejB4MB0GA1UdDgQWBBRjzf2X95ZhToDaZvBQw9c2Jt2lUTAfBgNV
+HSMEGDAWgBRjzf2X95ZhToDaZvBQw9c2Jt2lUTAPBgNVHRMBAf8EBTADAQH/MCUG
+A1UdEQQeMByCBWxlbm55ggcqLmxvY2FshwTAqALkhwR/AAABMA0GCSqGSIb3DQEB
+CwUAA4IBAQAvS0O1XwJFBJvPxWEjiJrcI+bPxxO6noPq2LPBLREpKMb4b+Mqq1/K
+2MsRwZOtoreuU1xdSj3AUktTWh5+95CCyW8ClwfCgAjcYfyhKI+sHBVwTN8I8au0
+AurFv2MUhq8xw1Q5lEpceeMouf5btu8NR/ykJSyj06REBROnl7dDfBJUW9apHg4d
+1LVEmk8vqKro1g1rmIbPBVtYvpUsyMxzg2WqhqjCNIHHyu3iKdx1mGQkW1+ynfgS
+HcoOxtVkkxpvvGT7J1qDCD8Fkd59cBKlyWdcaxbRS4WODgVylOaMHdybyJwb8Zm0
+ttoTWy9Dk5K+U4SjA882EfsjA2ro6pkD
+-----END CERTIFICATE-----`

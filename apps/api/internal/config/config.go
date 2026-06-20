@@ -20,6 +20,7 @@ const (
 	envSpiceDBEndpoint          = "STUFF_STASH_SPICEDB_ENDPOINT"
 	envSpiceDBPresharedKey      = "STUFF_STASH_SPICEDB_PRESHARED_KEY"
 	envSpiceDBTLSEnabled        = "STUFF_STASH_SPICEDB_TLS_ENABLED"
+	envSpiceDBCAPath            = "STUFF_STASH_SPICEDB_CA_PATH"
 	envSpiceDBBootstrapSchema   = "STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA"
 	envSpiceDBSchemaPath        = "STUFF_STASH_SPICEDB_SCHEMA_PATH"
 	envAuthorizationOutboxLimit = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
@@ -70,6 +71,7 @@ type Config struct {
 	SpiceDBEndpoint                  string
 	SpiceDBPresharedKey              string
 	SpiceDBTLSEnabled                bool
+	SpiceDBCAPath                    string
 	SpiceDBBootstrapSchema           bool
 	SpiceDBSchemaPath                string
 	AuthorizationOutboxDrainLimit    int
@@ -103,6 +105,7 @@ func Load() Config {
 		SpiceDBEndpoint:                  os.Getenv(envSpiceDBEndpoint),
 		SpiceDBPresharedKey:              os.Getenv(envSpiceDBPresharedKey),
 		SpiceDBTLSEnabled:                boolEnvOrDefault(envSpiceDBTLSEnabled, defaultSpiceDBTLSEnabled),
+		SpiceDBCAPath:                    os.Getenv(envSpiceDBCAPath),
 		SpiceDBBootstrapSchema:           boolEnvOrDefault(envSpiceDBBootstrapSchema, defaultSpiceDBBootstrapMode),
 		SpiceDBSchemaPath:                envOrDefault(envSpiceDBSchemaPath, defaultSpiceDBSchemaPath),
 		AuthorizationOutboxDrainLimit:    intEnvOrDefault(envAuthorizationOutboxLimit, defaultAuthorizationLimit),

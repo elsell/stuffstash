@@ -200,8 +200,75 @@ func (s *Store) InventoryAccessInvitationByID(_ context.Context, tenantID tenant
 	return invitation, true, nil
 }
 
+func (s *Store) ListInventoryAccessInvitations(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessInvitationPageRequest) ([]ports.InventoryAccessInvitation, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	now := page.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+	items := []ports.InventoryAccessInvitation{}
+	for _, invitation := range s.invitations {
+		key := invitation.CursorKey()
+		if invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || key <= page.AfterInvitationID {
+			continue
+		}
+		if !memoryInvitationMatchesStatusFilter(invitation, page.StatusFilter, now) {
+			continue
+		}
+		items = append(items, invitation)
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
+func memoryInvitationMatchesStatusFilter(invitation ports.InventoryAccessInvitation, filter ports.InventoryAccessInvitationStatusFilter, now time.Time) bool {
+	switch filter {
+	case "", ports.InventoryAccessInvitationStatusFilterAll:
+		return true
+	case ports.InventoryAccessInvitationStatusFilterPending:
+		return invitation.Status == ports.InventoryAccessInvitationPending && !invitation.IsExpired(now)
+	case ports.InventoryAccessInvitationStatusFilterExpired:
+		return invitation.IsExpired(now)
+	case ports.InventoryAccessInvitationStatusFilterAccepted:
+		return invitation.Status == ports.InventoryAccessInvitationAccepted
+	case ports.InventoryAccessInvitationStatusFilterRevoked:
+		return invitation.Status == ports.InventoryAccessInvitationRevoked
+	case ports.InventoryAccessInvitationStatusFilterCancelled:
+		return invitation.Status == ports.InventoryAccessInvitationCancelled
+	default:
+		return false
+	}
+}
+
 func memoryInventoryInvitationTokenHashMatches(storedHash string, providedHash string) bool {
 	return subtle.ConstantTimeCompare([]byte(storedHash), []byte(providedHash)) == 1
+}
+
+func (s *Store) UpdateInventoryAccessInvitationExpiration(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, expiresAt time.Time, auditRecord audit.Record) (ports.InventoryAccessInvitation, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	invitation, ok := s.invitations[invitationID]
+	if !ok || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID {
+		return ports.InventoryAccessInvitation{}, false, nil
+	}
+	if invitation.Status != ports.InventoryAccessInvitationPending {
+		return ports.InventoryAccessInvitation{}, false, ports.ErrConflict
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.InventoryAccessInvitation{}, false, ports.ErrConflict
+	}
+	invitation.ExpiresAt = expiresAt
+	s.invitations[invitation.ID] = invitation
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return invitation, true, nil
 }
 
 func (s *Store) RevokeInventoryAccessInvitation(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {

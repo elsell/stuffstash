@@ -44,7 +44,7 @@ func TestStoreRejectsDuplicateAuditRecordIDsInsideAssetUpdateBatch(t *testing.T)
 	saveMemoryInventory(t, ctx, store, tenantID, inventoryID)
 
 	item := memoryAsset(t, "asset-one", tenantID, inventoryID)
-	if err := store.CreateAsset(ctx, item, memoryAuditRecord(t, "audit-create", tenantID)); err != nil {
+	if err := store.CreateAsset(ctx, item, memoryAuditRecord(t, "audit-create", tenantID), nil); err != nil {
 		t.Fatalf("create asset: %v", err)
 	}
 	title, ok := asset.NewTitle("Moved Drill")
@@ -54,7 +54,7 @@ func TestStoreRejectsDuplicateAuditRecordIDsInsideAssetUpdateBatch(t *testing.T)
 	item.Title = title
 
 	duplicate := memoryAuditRecord(t, "audit-duplicate", tenantID)
-	err := store.UpdateAsset(ctx, item, []audit.Record{duplicate, duplicate})
+	err := store.UpdateAsset(ctx, item, []audit.Record{duplicate, duplicate}, nil)
 	if !errors.Is(err, ports.ErrConflict) {
 		t.Fatalf("expected duplicate audit conflict, got %v", err)
 	}

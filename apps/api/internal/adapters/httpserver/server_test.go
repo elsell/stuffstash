@@ -122,9 +122,11 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}", "get"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}", "delete"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", "get"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", "get"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", "delete"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration", "patch"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel", "patch"},
 		{"/tenants/{tenantId}/custom-asset-types", "post"},
 		{"/tenants/{tenantId}/custom-asset-types", "get"},
@@ -156,6 +158,8 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/restore", "patch"},
 		{"/tenants/{tenantId}/audit-records", "get"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/audit-records", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo", "post"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo", "post"},
 	}
 	for _, operation := range expectedOperations {
 		assertOpenAPIPathMethod(t, body.Paths, operation.path, operation.method)

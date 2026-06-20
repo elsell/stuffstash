@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -87,6 +88,43 @@ func (f *fakeInventoryRepository) InventoryAccessInvitationByID(_ context.Contex
 	return ports.InventoryAccessInvitation{}, false, nil
 }
 
+func (f *fakeInventoryRepository) ListInventoryAccessInvitations(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessInvitationPageRequest) ([]ports.InventoryAccessInvitation, error) {
+	items := []ports.InventoryAccessInvitation{}
+	now := page.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+	for _, invitation := range f.invitations {
+		if invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || invitation.ID <= page.AfterInvitationID {
+			continue
+		}
+		if !fakeInvitationMatchesStatusFilter(invitation, page.StatusFilter, now) {
+			continue
+		}
+		items = append(items, invitation)
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].CursorKey() < items[right].CursorKey()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
+func fakeInvitationMatchesStatusFilter(invitation ports.InventoryAccessInvitation, statusFilter ports.InventoryAccessInvitationStatusFilter, now time.Time) bool {
+	switch statusFilter {
+	case "", ports.InventoryAccessInvitationStatusFilterAll:
+		return true
+	case ports.InventoryAccessInvitationStatusFilterPending:
+		return invitation.Status == ports.InventoryAccessInvitationPending && !invitation.IsExpired(now)
+	case ports.InventoryAccessInvitationStatusFilterExpired:
+		return invitation.Status == ports.InventoryAccessInvitationPending && invitation.IsExpired(now)
+	default:
+		return string(invitation.Status) == string(statusFilter)
+	}
+}
+
 func (f *fakeInventoryRepository) CancelInventoryAccessInvitation(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {
 	for index, invitation := range f.invitations {
 		if invitation.ID == invitationID && invitation.TenantID == tenantID && invitation.InventoryID == inventoryID && invitation.Status == ports.InventoryAccessInvitationPending {
@@ -97,6 +135,22 @@ func (f *fakeInventoryRepository) CancelInventoryAccessInvitation(_ context.Cont
 		}
 	}
 	return false, nil
+}
+
+func (f *fakeInventoryRepository) UpdateInventoryAccessInvitationExpiration(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, expiresAt time.Time, auditRecord audit.Record) (ports.InventoryAccessInvitation, bool, error) {
+	for index, invitation := range f.invitations {
+		if invitation.ID != invitationID || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID {
+			continue
+		}
+		if invitation.Status != ports.InventoryAccessInvitationPending {
+			return ports.InventoryAccessInvitation{}, false, ports.ErrConflict
+		}
+		invitation.ExpiresAt = expiresAt
+		f.invitations[index] = invitation
+		f.auditRecords = append(f.auditRecords, auditRecord)
+		return invitation, true, nil
+	}
+	return ports.InventoryAccessInvitation{}, false, nil
 }
 
 func (f *fakeInventoryRepository) DeleteInventoryAccessInvitation(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {

@@ -101,7 +101,7 @@ func saveInventoryWithOutbox(t *testing.T, ctx context.Context, store Store, eve
 func createAsset(t *testing.T, ctx context.Context, store Store, item asset.Asset) error {
 	t.Helper()
 
-	return store.CreateAsset(ctx, item, auditRecord(t, auditIDWithSuffix(item.ID.String(), "C"), tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAssetCreated))
+	return store.CreateAsset(ctx, item, auditRecord(t, auditIDWithSuffix(item.ID.String(), "C"), tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAssetCreated), nil)
 }
 
 func updateAsset(t *testing.T, ctx context.Context, store Store, item asset.Asset) error {
@@ -109,7 +109,7 @@ func updateAsset(t *testing.T, ctx context.Context, store Store, item asset.Asse
 
 	return store.UpdateAsset(ctx, item, []audit.Record{
 		auditRecord(t, auditIDWithSuffix(item.ID.String(), "U"), tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAssetUpdated),
-	})
+	}, nil)
 }
 
 func saveCustomFieldDefinition(t *testing.T, ctx context.Context, store Store, definition customfield.Definition) error {

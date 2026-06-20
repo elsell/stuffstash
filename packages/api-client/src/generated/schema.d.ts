@@ -313,7 +313,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID inventories by inventory ID access invitations */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations"];
         put?: never;
         /** Post tenants by tenant ID inventories by inventory ID access invitations */
         post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations"];
@@ -373,6 +374,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID access invitations by invitation ID cancel */
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID access invitations by invitation ID expiration */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-expiration"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/archive": {
@@ -726,6 +744,40 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-restore"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID undoable operations by operation ID redo */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-redo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID undoable operations by operation ID undo */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-undo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/restore": {
         parameters: {
             query?: never;
@@ -1022,6 +1074,7 @@ export interface components {
             id: string;
             inventoryId: string;
             inviterPrincipalId: string;
+            isExpired: boolean;
             relationship: string;
             status: string;
             tenantId: string;
@@ -1211,6 +1264,16 @@ export interface components {
             data: components["schemas"]["InventoryResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListInvitationResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListInvitationResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InvitationResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListRecordResponse: {
             /**
              * Format: uri
@@ -1308,6 +1371,19 @@ export interface components {
             readonly $schema?: string;
             /** @description Inventory name */
             name?: string;
+        };
+        UpdateInvitationExpirationBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateInvitationExpirationBody.json
+             */
+            readonly $schema?: string;
+            /**
+             * Format: date-time
+             * @description New invitation expiration timestamp
+             */
+            expiresAt: string;
         };
         UpdateTenantBody: {
             /**
@@ -2521,6 +2597,52 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+                /** @description Invitation status filter */
+                status?: "all" | "pending" | "accepted" | "revoked" | "cancelled" | "expired";
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListInvitationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations": {
         parameters: {
             query?: never;
@@ -2716,6 +2838,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-expiration": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Invitation ID */
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInvitationExpirationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInvitationResponse"];
+                };
             };
             /** @description Error */
             default: {
@@ -4025,6 +4192,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeInventoryResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-redo": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Undoable operation ID */
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-undo": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Undoable operation ID */
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
                 };
             };
             /** @description Error */

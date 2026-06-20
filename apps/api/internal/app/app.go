@@ -16,9 +16,11 @@ type App struct {
 	authorizer         ports.Authorizer
 	tenants            ports.TenantRepository
 	inventories        ports.InventoryRepository
+	inventoryAccess    ports.InventoryAccessRepository
 	customAssetTypes   ports.CustomAssetTypeRepository
 	customFields       ports.CustomFieldDefinitionRepository
 	assets             ports.AssetRepository
+	undoables          ports.UndoableOperationRepository
 	search             ports.AssetSearchRepository
 	attachments        ports.AttachmentRepository
 	blobs              ports.BlobStorage
@@ -39,9 +41,11 @@ type Dependencies struct {
 	Authorizer                    ports.Authorizer
 	Tenants                       ports.TenantRepository
 	Inventories                   ports.InventoryRepository
+	InventoryAccess               ports.InventoryAccessRepository
 	CustomAssetTypes              ports.CustomAssetTypeRepository
 	CustomFields                  ports.CustomFieldDefinitionRepository
 	Assets                        ports.AssetRepository
+	Undoables                     ports.UndoableOperationRepository
 	Search                        ports.AssetSearchRepository
 	Attachments                   ports.AttachmentRepository
 	Blobs                         ports.BlobStorage
@@ -68,9 +72,11 @@ func New(deps Dependencies) App {
 		authorizer:         deps.Authorizer,
 		tenants:            deps.Tenants,
 		inventories:        deps.Inventories,
+		inventoryAccess:    deps.InventoryAccess,
 		customAssetTypes:   deps.CustomAssetTypes,
 		customFields:       deps.CustomFields,
 		assets:             deps.Assets,
+		undoables:          deps.Undoables,
 		search:             deps.Search,
 		attachments:        deps.Attachments,
 		blobs:              deps.Blobs,

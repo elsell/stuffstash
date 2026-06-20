@@ -13,6 +13,8 @@ This spec does not define every schema line, invitation workflow, or migration p
 ## Decisions
 
 - Authorization must use SpiceDB.
+- Production SpiceDB connections must use TLS.
+- Deployments that use an app-local or self-signed SpiceDB certificate must configure the API with `STUFF_STASH_SPICEDB_CA_PATH`.
 - Relationships must follow a Google Drive-style sharing model.
 - Tenants are the top-level security boundary.
 - Inventories are shareable organizational units inside tenants.

@@ -36,15 +36,20 @@ type InventoryRepository interface {
 	DeleteInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error
 	InventoryHasActiveAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (bool, error)
 	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID, page InventoryListPageRequest) ([]inventory.Inventory, error)
+}
+
+type InventoryAccessRepository interface {
 	SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant InventoryAccessGrant, auditRecord audit.Record) error
 	DeleteInventoryAccessGrantAndClaimRevoke(ctx context.Context, eventID string, claimID string, leaseUntil time.Time, grant InventoryAccessGrant, auditRecord audit.Record) (AuthorizationOutboxEvent, bool, error)
 	InventoryAccessGrantByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, principalID identity.PrincipalID, relationship InventoryAccessRelationship) (InventoryAccessGrant, bool, error)
 	ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page InventoryAccessGrantPageRequest) ([]InventoryAccessGrant, error)
 	SaveInventoryAccessInvitation(ctx context.Context, invitation InventoryAccessInvitation, auditRecord audit.Record) (InventoryAccessInvitation, error)
 	InventoryAccessInvitationByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string) (InventoryAccessInvitation, bool, error)
+	ListInventoryAccessInvitations(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page InventoryAccessInvitationPageRequest) ([]InventoryAccessInvitation, error)
 	AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (InventoryAccessInvitation, InventoryAccessGrant, error)
 	RevokeInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
 	CancelInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
+	UpdateInventoryAccessInvitationExpiration(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, expiresAt time.Time, auditRecord audit.Record) (InventoryAccessInvitation, bool, error)
 	DeleteInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
 }
 
@@ -100,6 +105,17 @@ const (
 	InventoryAccessInvitationCancelled InventoryAccessInvitationStatus = "cancelled"
 )
 
+type InventoryAccessInvitationStatusFilter string
+
+const (
+	InventoryAccessInvitationStatusFilterAll       InventoryAccessInvitationStatusFilter = "all"
+	InventoryAccessInvitationStatusFilterPending   InventoryAccessInvitationStatusFilter = "pending"
+	InventoryAccessInvitationStatusFilterAccepted  InventoryAccessInvitationStatusFilter = "accepted"
+	InventoryAccessInvitationStatusFilterRevoked   InventoryAccessInvitationStatusFilter = "revoked"
+	InventoryAccessInvitationStatusFilterCancelled InventoryAccessInvitationStatusFilter = "cancelled"
+	InventoryAccessInvitationStatusFilterExpired   InventoryAccessInvitationStatusFilter = "expired"
+)
+
 type InventoryAccessInvitation struct {
 	ID                  string
 	TenantID            tenant.ID
@@ -114,6 +130,21 @@ type InventoryAccessInvitation struct {
 	ExpiresAt           time.Time
 	AcceptedAt          time.Time
 	RevokedAt           time.Time
+}
+
+func (i InventoryAccessInvitation) IsExpired(now time.Time) bool {
+	return i.Status == InventoryAccessInvitationPending && !i.ExpiresAt.IsZero() && !i.ExpiresAt.After(now)
+}
+
+func (i InventoryAccessInvitation) CursorKey() string {
+	return i.ID
+}
+
+type InventoryAccessInvitationPageRequest struct {
+	AfterInvitationID string
+	Limit             int
+	StatusFilter      InventoryAccessInvitationStatusFilter
+	Now               time.Time
 }
 
 type CustomFieldDefinitionRepository interface {
@@ -152,13 +183,51 @@ type CustomAssetTypePageRequest struct {
 }
 
 type AssetRepository interface {
-	CreateAsset(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
-	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record) error
-	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record) error
+	CreateAsset(ctx context.Context, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
+	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record, undoableOperation *UndoableOperation) error
+	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error
 	AssetByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error)
 	AssetHasActiveChildren(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (bool, error)
 	ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AssetListPageRequest) ([]asset.Asset, error)
+}
+
+type UndoableOperationRepository interface {
+	UndoableOperationByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, operationID string) (UndoableOperation, bool, error)
+	ApplyAssetUndoableOperation(ctx context.Context, operationID string, direction UndoableOperationDirection, expectedCurrent asset.Asset, resulting asset.Asset, auditRecord audit.Record) (UndoableOperation, asset.Asset, error)
+}
+
+type UndoableOperationStatus string
+
+const (
+	UndoableOperationAvailable UndoableOperationStatus = "available"
+	UndoableOperationUndone    UndoableOperationStatus = "undone"
+	UndoableOperationRedone    UndoableOperationStatus = "redone"
+)
+
+type UndoableOperationDirection string
+
+const (
+	UndoableOperationDirectionUndo UndoableOperationDirection = "undo"
+	UndoableOperationDirectionRedo UndoableOperationDirection = "redo"
+)
+
+type UndoableOperation struct {
+	ID                string
+	TenantID          tenant.ID
+	InventoryID       inventory.InventoryID
+	PrincipalID       identity.PrincipalID
+	Source            audit.Source
+	TargetType        audit.TargetType
+	TargetID          string
+	OriginalAction    audit.Action
+	Status            UndoableOperationStatus
+	CreatedAt         time.Time
+	LastAppliedAt     time.Time
+	BeforeAsset       *asset.Asset
+	AfterAsset        asset.Asset
+	UndoAuditRecordID audit.ID
+	RedoAuditRecordID audit.ID
 }
 
 type AssetLifecycleFilter string

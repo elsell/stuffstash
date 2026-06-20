@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -143,6 +144,11 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 		LifecycleState:    asset.LifecycleStateActive,
 	}
 
+	undoableOperation, err := a.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetCreated, nil, item)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
 		PrincipalID: input.Principal.ID,
 		TenantID:    input.TenantID,
@@ -153,8 +159,9 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 		TargetType:  audit.TargetAsset,
 		TargetID:    item.ID.String(),
 		Metadata: map[string]string{
-			"asset_kind": item.Kind.String(),
-			"title":      item.Title.String(),
+			"asset_kind":   item.Kind.String(),
+			"operation_id": undoableOperation.ID,
+			"title":        item.Title.String(),
 		},
 	})
 	if err != nil {
@@ -164,7 +171,7 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 		auditRecord.Metadata["custom_asset_type_id"] = item.CustomAssetTypeID.String()
 	}
 
-	if err := a.assets.CreateAsset(ctx, item, auditRecord); err != nil {
+	if err := a.assets.CreateAsset(ctx, item, auditRecord, &undoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
@@ -247,8 +254,27 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 		}
 	}
 
+	var undoableOperation *ports.UndoableOperation
+	if fieldsChanged || parentChanged {
+		operationAction := audit.ActionAssetMoved
+		if fieldsChanged {
+			operationAction = audit.ActionAssetUpdated
+		}
+		operation, err := a.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, operationAction, &current, updated)
+		if err != nil {
+			return asset.Asset{}, err
+		}
+		undoableOperation = &operation
+	}
+
 	auditRecords := []audit.Record{}
 	if fieldsChanged {
+		metadata := map[string]string{
+			"asset_kind": updated.Kind.String(),
+		}
+		if undoableOperation != nil {
+			metadata["operation_id"] = undoableOperation.ID
+		}
 		auditRecord, err := a.newAuditRecord(auditRecordInput{
 			PrincipalID: input.Principal.ID,
 			TenantID:    input.TenantID,
@@ -258,9 +284,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			Action:      audit.ActionAssetUpdated,
 			TargetType:  audit.TargetAsset,
 			TargetID:    updated.ID.String(),
-			Metadata: map[string]string{
-				"asset_kind": updated.Kind.String(),
-			},
+			Metadata:    metadata,
 		})
 		if err != nil {
 			return asset.Asset{}, err
@@ -268,6 +292,14 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 		auditRecords = append(auditRecords, auditRecord)
 	}
 	if parentChanged {
+		metadata := map[string]string{
+			"asset_kind":      updated.Kind.String(),
+			"previous_parent": current.ParentAssetID.String(),
+			"new_parent":      updated.ParentAssetID.String(),
+		}
+		if undoableOperation != nil {
+			metadata["operation_id"] = undoableOperation.ID
+		}
 		auditRecord, err := a.newAuditRecord(auditRecordInput{
 			PrincipalID: input.Principal.ID,
 			TenantID:    input.TenantID,
@@ -277,11 +309,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 			Action:      audit.ActionAssetMoved,
 			TargetType:  audit.TargetAsset,
 			TargetID:    updated.ID.String(),
-			Metadata: map[string]string{
-				"asset_kind":      updated.Kind.String(),
-				"previous_parent": current.ParentAssetID.String(),
-				"new_parent":      updated.ParentAssetID.String(),
-			},
+			Metadata:    metadata,
 		})
 		if err != nil {
 			return asset.Asset{}, err
@@ -289,7 +317,7 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 		auditRecords = append(auditRecords, auditRecord)
 	}
 
-	if err := a.assets.UpdateAsset(ctx, updated, auditRecords); err != nil {
+	if err := a.assets.UpdateAsset(ctx, updated, auditRecords, undoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
@@ -454,6 +482,10 @@ func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycl
 
 	updated := current
 	updated.LifecycleState = to
+	undoableOperation, err := a.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, action, &current, updated)
+	if err != nil {
+		return asset.Asset{}, err
+	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
 		PrincipalID: input.Principal.ID,
 		TenantID:    input.TenantID,
@@ -465,6 +497,7 @@ func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycl
 		TargetID:    updated.ID.String(),
 		Metadata: map[string]string{
 			"asset_kind":      updated.Kind.String(),
+			"operation_id":    undoableOperation.ID,
 			"previous_state":  current.LifecycleState.String(),
 			"lifecycle_state": updated.LifecycleState.String(),
 		},
@@ -472,7 +505,8 @@ func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycl
 	if err != nil {
 		return asset.Asset{}, err
 	}
-	if err := a.assets.UpdateAssetLifecycle(ctx, updated, auditRecord); err != nil {
+
+	if err := a.assets.UpdateAssetLifecycle(ctx, updated, auditRecord, &undoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
@@ -494,6 +528,35 @@ func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycl
 	})
 
 	return updated, nil
+}
+
+func (a App) newAssetUndoableOperation(principalID identity.PrincipalID, source audit.Source, tenantID tenant.ID, inventoryID inventory.InventoryID, originalAction audit.Action, before *asset.Asset, after asset.Asset) (ports.UndoableOperation, error) {
+	if a.undoables == nil {
+		return ports.UndoableOperation{}, ErrInvalidInput
+	}
+	id := a.ids.NewID()
+	if strings.TrimSpace(id) == "" {
+		return ports.UndoableOperation{}, ErrInvalidInput
+	}
+	var beforeCopy *asset.Asset
+	if before != nil {
+		copied := *before
+		beforeCopy = &copied
+	}
+	return ports.UndoableOperation{
+		ID:             id,
+		TenantID:       tenantID,
+		InventoryID:    inventoryID,
+		PrincipalID:    principalID,
+		Source:         source,
+		TargetType:     audit.TargetAsset,
+		TargetID:       after.ID.String(),
+		OriginalAction: originalAction,
+		Status:         ports.UndoableOperationAvailable,
+		CreatedAt:      time.Now().UTC(),
+		BeforeAsset:    beforeCopy,
+		AfterAsset:     after,
+	}, nil
 }
 
 func (a App) validatedAssetCustomAssetTypeID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, rawCustomAssetTypeID string) (asset.CustomAssetTypeID, error) {

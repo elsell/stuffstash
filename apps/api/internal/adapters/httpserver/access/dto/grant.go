@@ -1,6 +1,10 @@
 package dto
 
-import "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+import (
+	"time"
+
+	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+)
 
 type GrantInventoryAccessInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
@@ -90,6 +94,20 @@ type AcceptInventoryAccessInvitationOutput struct {
 	Body shared.SuccessEnvelope[InvitationAcceptanceResponse]
 }
 
+type ListInventoryAccessInvitationsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	Status        string `query:"status" enum:"all,pending,accepted,revoked,cancelled,expired" doc:"Invitation status filter"`
+}
+
+type ListInventoryAccessInvitationsOutput struct {
+	Body shared.SuccessEnvelope[[]InvitationResponse]
+}
+
 type RevokeInventoryAccessInvitationInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
@@ -98,7 +116,24 @@ type RevokeInventoryAccessInvitationInput struct {
 	InvitationID  string `path:"invitationId" doc:"Invitation ID"`
 }
 
+type UpdateInventoryAccessInvitationExpirationInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	InvitationID  string `path:"invitationId" doc:"Invitation ID"`
+	Body          UpdateInvitationExpirationBody
+}
+
+type UpdateInvitationExpirationBody struct {
+	ExpiresAt time.Time `json:"expiresAt" doc:"New invitation expiration timestamp"`
+}
+
 type GetInventoryAccessInvitationOutput struct {
+	Body shared.SuccessEnvelope[InvitationResponse]
+}
+
+type UpdateInventoryAccessInvitationExpirationOutput struct {
 	Body shared.SuccessEnvelope[InvitationResponse]
 }
 
@@ -121,6 +156,7 @@ type InvitationResponse struct {
 	InviterPrincipalID  string `json:"inviterPrincipalId"`
 	AcceptedPrincipalID string `json:"acceptedPrincipalId,omitempty"`
 	ExpiresAt           string `json:"expiresAt"`
+	IsExpired           bool   `json:"isExpired"`
 	AcceptanceToken     string `json:"acceptanceToken,omitempty"`
 }
 

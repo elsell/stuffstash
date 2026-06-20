@@ -25,7 +25,7 @@ func TestSpiceDBIntegrationEnforcesTenantAndInventoryRelationships(t *testing.T)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	gateway, err := NewGateway(endpoint, "", false)
+	gateway, err := NewGateway(endpoint, "", false, "")
 	if err != nil {
 		t.Fatalf("create spicedb gateway: %v", err)
 	}

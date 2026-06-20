@@ -8,11 +8,13 @@ Users should be able to understand what changed, who changed it, and undo suppor
 
 ## Scope
 
-This spec covers initial audit history and undo requirements.
+This spec covers audit history, the first undo/redo slice, and requirements for future undoable work.
 
 This spec does not define the final event store, retention policy, UI timeline, or every undoable command.
 
-The first implementation slice defines durable, read-only audit records. Undo is specified as a future behavior and must not be partially implemented until the first undoable commands are specified.
+The first implementation slice defined durable, read-only audit records.
+
+The second implementation slice defines undo and redo for a narrow set of asset actions.
 
 ## Requirements
 
@@ -87,12 +89,127 @@ The current REST API must write `api`.
 
 - Users should be able to undo supported actions.
 - Undo must be implemented as domain behavior or compensating application commands, not direct database reversal.
+- Redo must be implemented as domain behavior or compensating application commands, not by deleting the undo audit record or mutating history.
 - Undo must be authorized.
-- Undo must produce its own audit record.
+- Redo must be authorized.
+- Undo and redo must produce their own audit records.
 - Undo must not bypass validation, tenancy, authorization, or observability.
+- Redo must not bypass validation, tenancy, authorization, or observability.
 - Not every action must be undoable.
 - Actions that are destructive, external, or ambiguous may be marked non-undoable.
 - The system must tell the user when an action cannot be undone.
+- Undo and redo must be target-scoped. The first API must operate on a specific undoable operation ID, not on a global implicit "last action" stack.
+- Authorization must be checked when undo or redo is requested, not only when the original operation occurred.
+- Later state-changing operations on the same target must invalidate redo when replaying the old action would no longer apply to the current target state.
+- Undo and redo must not mutate or delete audit records.
+- Undoable operation records must be durable and stored separately from audit records.
+- The original audit record for an undoable action must include `operation_id` metadata so API clients can discover the operation through the normal audit trail.
+- Creating an undoable operation must be atomic with the state-changing operation that produced it.
+- Applying undo or redo must be atomic with the compensating state change and the audit record for that undo or redo.
+- Undoable operation records may contain structured before/after snapshots of safe domain state needed to apply compensating commands.
+- Undoable operation snapshots must not contain secrets, acceptance tokens, blob bytes, provider prompts, raw model responses, raw audio, or authorization internals.
+
+## First Undo/Redo Slice
+
+The first undo/redo slice supports assets only.
+
+Supported original actions:
+
+- `asset.created`.
+- `asset.updated`.
+- `asset.moved`.
+- `asset.archived`.
+- `asset.restored`.
+
+The first slice does not support undo or redo for:
+
+- Hard delete operations.
+- Tenant operations.
+- Inventory operations.
+- Sharing, access grants, or invitations.
+- Attachment upload, archive, restore, download, or delete.
+- Custom asset type changes.
+- Custom field definition changes.
+- Search.
+- Audit reads.
+
+Undo behavior:
+
+- Undoing `asset.created` must archive the created asset if it still exists, is active, and has no active children.
+- Undoing `asset.updated` must restore the prior title, description, custom fields, and custom asset type-compatible field values.
+- Undoing `asset.moved` must restore the prior parent asset.
+- Undoing `asset.archived` must restore the asset.
+- Undoing `asset.restored` must archive the asset.
+
+Redo behavior:
+
+- Redoing an undone `asset.created` must restore the archived asset if normal restore validation passes.
+- Redoing an undone `asset.updated` must reapply the original updated title, description, custom fields, and compatible custom asset type values.
+- Redoing an undone `asset.moved` must reapply the original parent asset.
+- Redoing an undone `asset.archived` must archive the asset.
+- Redoing an undone `asset.restored` must restore the asset.
+
+Validation and invalidation:
+
+- Undo or redo must fail if the target asset no longer exists.
+- Undo or redo must fail if the current asset state does not match the expected state for that operation direction.
+- Undo or redo must fail if normal asset validation would reject the compensating state, including containment, archived-parent, active-child archive, custom field, and authorization rules.
+- Undo or redo must fail after hard delete because the target no longer exists.
+- Undo or redo must fail after later changes make the saved before/after state stale.
+
+Initial operation shape:
+
+- `id`: generated application ID.
+- `tenantId`: tenant security boundary.
+- `inventoryId`: inventory scope.
+- `principalId`: principal that performed the original operation.
+- `source`: source adapter for the original operation.
+- `targetType`: first slice uses `asset`.
+- `targetId`: target asset ID.
+- `originalAction`: audit action that produced the operation.
+- `status`: `available`, `undone`, or `redone`.
+- `createdAt`: server timestamp.
+- `lastAppliedAt`: timestamp of the last undo or redo, if any.
+- `beforeState`: safe structured state before the original action, when applicable.
+- `afterState`: safe structured state after the original action.
+- `undoAuditRecordId`: audit record ID for the most recent undo, if any.
+- `redoAuditRecordId`: audit record ID for the most recent redo, if any.
+
+The first slice may expose only `undo` and `redo` endpoints. Listing undoable operations can follow once the UI timeline is specified.
+
+## REST API
+
+The first undo/redo endpoints are:
+
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo`
+
+Both endpoints:
+
+- Require authentication.
+- Require `inventory.edit_asset` for the operation inventory.
+- Use the standard success envelope.
+- Return the affected asset in the first slice.
+- Use safe error envelopes.
+- Must not reveal whether an operation exists outside the caller's authorized tenant and inventory.
+- Must emit domain-oriented observability.
+- Must be represented in the generated OpenAPI contract.
+
+## Undo/Redo Audit Actions
+
+The first undo/redo audit actions are:
+
+- `undoable_operation.undone`.
+- `undoable_operation.redone`.
+
+Audit metadata must include:
+
+- `operation_id`.
+- `original_action`.
+- `target_type`.
+- `target_id`.
+
+Audit metadata may include compact safe state hints such as lifecycle state or parent asset IDs. It must not include full custom field values unless a future spec defines redaction and retention rules.
 
 ## Initial Audited Actions
 
@@ -122,12 +239,17 @@ The full audited action set should eventually include:
 - Tests must verify pagination for audit reads, including `(occurredAt, id)` ordering.
 - Tests must verify duplicate audit record IDs are rejected instead of replacing existing records.
 - Tests must verify undo for supported commands once undo is implemented.
+- Tests must verify redo for supported commands once redo is implemented.
 - Tests must verify that unauthorized users cannot read audit records or undo actions they cannot perform.
+- Tests must verify unauthorized users cannot redo actions they cannot perform.
+- Tests must verify undo and redo fail when later target changes make the saved operation stale.
+- Tests must verify undo and redo fail across tenant and inventory boundaries.
+- Tests must verify undoable operation creation is atomic with the original state change where the repository supports transactions.
 - Tests must use fakes, not mocks.
 
 ## Open Questions
 
-- Which first-release actions are undoable?
 - How long should audit records be retained?
 - Should audit history be exportable with tenant-level exports?
 - Should authorization denied records be visible in normal user audit history, security-only history, or both?
+- Should undoable operation history be listable before the product UI timeline is designed?

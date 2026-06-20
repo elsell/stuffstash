@@ -100,7 +100,7 @@ func TestStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	}
 
 	drill.LifecycleState = asset.LifecycleStateArchived
-	if err := store.UpdateAssetLifecycle(ctx, drill, auditRecord(t, auditIDWithSuffix(drill.ID.String(), "A"), tenantID, toolsID, audit.ActionAssetArchived)); err != nil {
+	if err := store.UpdateAssetLifecycle(ctx, drill, auditRecord(t, auditIDWithSuffix(drill.ID.String(), "A"), tenantID, toolsID, audit.ActionAssetArchived), nil); err != nil {
 		t.Fatalf("archive drill: %v", err)
 	}
 	activeAfterArchive := searchPersistedAssets(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "Cordless", search.ModeFuzzy, ports.AssetLifecycleFilterActive, "", "", 10)

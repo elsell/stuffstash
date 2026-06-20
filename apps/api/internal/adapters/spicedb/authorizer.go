@@ -3,7 +3,10 @@ package spicedb
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
+	"fmt"
+	"os"
 	"strings"
 
 	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
@@ -46,16 +49,20 @@ type ClientGateway struct {
 	client *authzed.Client
 }
 
-func NewGateway(endpoint string, presharedKey string, tlsEnabled bool) (*ClientGateway, error) {
+func NewGateway(endpoint string, presharedKey string, tlsEnabled bool, caPath string) (*ClientGateway, error) {
 	endpoint = strings.TrimSpace(endpoint)
 	presharedKey = strings.TrimSpace(presharedKey)
 	if endpoint == "" {
 		return nil, errors.New("spicedb endpoint is required")
 	}
 
-	transport := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12}))
-	if !tlsEnabled {
-		transport = grpc.WithTransportCredentials(insecure.NewCredentials())
+	transport := grpc.WithTransportCredentials(insecure.NewCredentials())
+	if tlsEnabled {
+		tlsConfig, err := newTLSConfig(caPath)
+		if err != nil {
+			return nil, err
+		}
+		transport = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
 	}
 
 	clientOptions := []grpc.DialOption{transport}
@@ -75,6 +82,24 @@ func NewGateway(endpoint string, presharedKey string, tlsEnabled bool) (*ClientG
 	}
 
 	return &ClientGateway{client: client}, nil
+}
+
+func newTLSConfig(caPath string) (*tls.Config, error) {
+	config := &tls.Config{MinVersion: tls.VersionTLS12}
+	caPath = strings.TrimSpace(caPath)
+	if caPath == "" {
+		return config, nil
+	}
+	certPEM, err := os.ReadFile(caPath)
+	if err != nil {
+		return nil, fmt.Errorf("read spicedb ca certificate: %w", err)
+	}
+	pool := x509.NewCertPool()
+	if !pool.AppendCertsFromPEM(certPEM) {
+		return nil, errors.New("spicedb ca certificate must contain at least one PEM certificate")
+	}
+	config.RootCAs = pool
+	return config, nil
 }
 
 func (g *ClientGateway) CheckPermission(ctx context.Context, request *v1.CheckPermissionRequest) (*v1.CheckPermissionResponse, error) {

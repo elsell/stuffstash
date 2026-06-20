@@ -150,12 +150,12 @@ func TestStoreUpdatesAssetLifecycleAndFiltersListings(t *testing.T) {
 
 	parentArchived := parent
 	parentArchived.LifecycleState = asset.LifecycleStateArchived
-	if err := store.UpdateAssetLifecycle(ctx, parentArchived, auditRecord(t, auditIDWithSuffix(parent.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived)); !errors.Is(err, ports.ErrForbidden) {
+	if err := store.UpdateAssetLifecycle(ctx, parentArchived, auditRecord(t, auditIDWithSuffix(parent.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived), nil); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected active child archive rejection, got %v", err)
 	}
 
 	child.LifecycleState = asset.LifecycleStateArchived
-	if err := store.UpdateAssetLifecycle(ctx, child, auditRecord(t, auditIDWithSuffix(child.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived)); err != nil {
+	if err := store.UpdateAssetLifecycle(ctx, child, auditRecord(t, auditIDWithSuffix(child.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived), nil); err != nil {
 		t.Fatalf("archive child: %v", err)
 	}
 	auditRecords, err := store.ListInventoryAuditRecords(ctx, tenantID, inventoryID, ports.AuditRecordPageRequest{Limit: 10})
@@ -181,11 +181,11 @@ func TestStoreUpdatesAssetLifecycleAndFiltersListings(t *testing.T) {
 	}
 
 	parentArchived.LifecycleState = asset.LifecycleStateArchived
-	if err := store.UpdateAssetLifecycle(ctx, parentArchived, auditRecord(t, auditIDWithSuffix(parent.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived)); err != nil {
+	if err := store.UpdateAssetLifecycle(ctx, parentArchived, auditRecord(t, auditIDWithSuffix(parent.ID.String(), "A"), tenantID, inventoryID, audit.ActionAssetArchived), nil); err != nil {
 		t.Fatalf("archive parent: %v", err)
 	}
 	child.LifecycleState = asset.LifecycleStateActive
-	if err := store.UpdateAssetLifecycle(ctx, child, auditRecord(t, auditIDWithSuffix(child.ID.String(), "R"), tenantID, inventoryID, audit.ActionAssetRestored)); !errors.Is(err, ports.ErrForbidden) {
+	if err := store.UpdateAssetLifecycle(ctx, child, auditRecord(t, auditIDWithSuffix(child.ID.String(), "R"), tenantID, inventoryID, audit.ActionAssetRestored), nil); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected archived parent restore rejection, got %v", err)
 	}
 }

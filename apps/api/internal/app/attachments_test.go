@@ -215,15 +215,15 @@ func (attachmentInventoryRepository) ListInventoryAccessGrants(context.Context, 
 	return nil, nil
 }
 
-func (attachmentAssetRepository) CreateAsset(context.Context, asset.Asset, audit.Record) error {
+func (attachmentAssetRepository) CreateAsset(context.Context, asset.Asset, audit.Record, *ports.UndoableOperation) error {
 	return nil
 }
 
-func (attachmentAssetRepository) UpdateAsset(context.Context, asset.Asset, []audit.Record) error {
+func (attachmentAssetRepository) UpdateAsset(context.Context, asset.Asset, []audit.Record, *ports.UndoableOperation) error {
 	return nil
 }
 
-func (attachmentAssetRepository) UpdateAssetLifecycle(context.Context, asset.Asset, audit.Record) error {
+func (attachmentAssetRepository) UpdateAssetLifecycle(context.Context, asset.Asset, audit.Record, *ports.UndoableOperation) error {
 	return nil
 }
 

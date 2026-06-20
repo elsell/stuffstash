@@ -119,7 +119,7 @@ func TestStoreRollsBackAssetWhenAuditInsertFails(t *testing.T) {
 	}
 
 	item := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindItem, "")
-	err := store.CreateAsset(ctx, item, auditRecord(t, auditID, tenantID, inventoryID, audit.ActionAssetCreated))
+	err := store.CreateAsset(ctx, item, auditRecord(t, auditID, tenantID, inventoryID, audit.ActionAssetCreated), nil)
 	if err == nil {
 		t.Fatalf("expected duplicate audit ID to fail")
 	}

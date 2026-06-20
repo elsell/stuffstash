@@ -12,7 +12,7 @@ import (
 	"sort"
 )
 
-func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record) error {
+func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -25,6 +25,11 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord aud
 	}
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
+	}
+	if undoableOperation != nil {
+		if _, exists := s.undoables[undoableOperation.ID]; exists {
+			return ports.ErrConflict
+		}
 	}
 	if item.CustomAssetTypeID.String() != "" {
 		assetType, ok := s.customAssetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())]
@@ -57,10 +62,13 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord aud
 	}
 	s.assets[item.ID] = item
 	s.auditRecords[auditRecord.ID] = auditRecord
+	if undoableOperation != nil {
+		s.undoables[undoableOperation.ID] = *undoableOperation
+	}
 	return nil
 }
 
-func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []audit.Record) error {
+func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -106,14 +114,22 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []
 		}
 		seenAuditRecords[auditRecord.ID] = struct{}{}
 	}
+	if undoableOperation != nil {
+		if _, exists := s.undoables[undoableOperation.ID]; exists {
+			return ports.ErrConflict
+		}
+	}
 	s.assets[item.ID] = item
 	for _, auditRecord := range auditRecords {
 		s.auditRecords[auditRecord.ID] = auditRecord
 	}
+	if undoableOperation != nil {
+		s.undoables[undoableOperation.ID] = *undoableOperation
+	}
 	return nil
 }
 
-func (s *Store) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditRecord audit.Record) error {
+func (s *Store) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -143,8 +159,16 @@ func (s *Store) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditR
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
 	}
+	if undoableOperation != nil {
+		if _, exists := s.undoables[undoableOperation.ID]; exists {
+			return ports.ErrConflict
+		}
+	}
 	s.assets[item.ID] = item
 	s.auditRecords[auditRecord.ID] = auditRecord
+	if undoableOperation != nil {
+		s.undoables[undoableOperation.ID] = *undoableOperation
+	}
 	return nil
 }
 

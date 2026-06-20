@@ -389,6 +389,14 @@ func TestInventoryAccessInvitationsCreateAcceptAndRevoke(t *testing.T) {
 			"audit-accept-viewer", "accept-viewer-event", "accept-viewer-claim",
 			"audit-already-accepted", "already-accepted-event",
 			"audit-editor-grant", "editor-grant-event", "editor-grant-claim",
+			"invite-pending", "audit-invite-pending",
+			"audit-wrong-inventory-expiration",
+			"audit-list-invitations", "audit-list-invitations-page-two", "audit-list-invitations-all",
+			"audit-list-pending", "audit-list-expired-before-update",
+			"audit-expire-pending",
+			"audit-list-expired-after-update", "audit-list-pending-after-update",
+			"audit-expired-pending-accept", "expired-pending-accept-event",
+			"audit-update-accepted-expiration",
 			"invite-editor", "audit-invite-editor", "audit-revoke-editor",
 			"audit-revoked-accept", "revoked-accept-event",
 		},
@@ -410,6 +418,9 @@ func TestInventoryAccessInvitationsCreateAcceptAndRevoke(t *testing.T) {
 	}
 	if invitation.ExpiresAt == "" {
 		t.Fatalf("expected invitation response to include expiresAt")
+	}
+	if invitation.IsExpired {
+		t.Fatalf("expected new invitation not to be expired: %+v", invitation)
 	}
 
 	missingEmailAccept := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user", map[string]string{
@@ -497,6 +508,155 @@ func TestInventoryAccessInvitationsCreateAcceptAndRevoke(t *testing.T) {
 		t.Fatalf("expected editor grant status %d, got %d with body %s", http.StatusCreated, editorGrant.Code, editorGrant.Body.String())
 	}
 
+	pendingInviteResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations", "Bearer dev:inventory-owner", map[string]string{
+		"email":        "pending@example.com",
+		"relationship": "viewer",
+	})
+	if pendingInviteResponse.Code != http.StatusCreated {
+		t.Fatalf("expected pending invitation create status %d, got %d with body %s", http.StatusCreated, pendingInviteResponse.Code, pendingInviteResponse.Body.String())
+	}
+	pendingInvite := decodeInventoryAccessInvitation(t, pendingInviteResponse).Data
+	if pendingInvite.AcceptanceToken == "" {
+		t.Fatalf("expected pending invite create response to include token")
+	}
+
+	wrongTenantInviteList := performRequest(server, http.MethodGet, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/access-invitations?limit=50", "Bearer dev:inventory-owner", nil)
+	if wrongTenantInviteList.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong-tenant invitation list status %d, got %d with body %s", http.StatusNotFound, wrongTenantInviteList.Code, wrongTenantInviteList.Body.String())
+	}
+	assertSafeError(t, wrongTenantInviteList, "resource_not_found", "Resource not found.")
+
+	wrongInventoryInviteList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB1/access-invitations?limit=50", "Bearer dev:inventory-owner", nil)
+	if wrongInventoryInviteList.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong-inventory invitation list status %d, got %d with body %s", http.StatusNotFound, wrongInventoryInviteList.Code, wrongInventoryInviteList.Body.String())
+	}
+	assertSafeError(t, wrongInventoryInviteList, "resource_not_found", "Resource not found.")
+
+	wrongTenantExpiration := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/access-invitations/"+pendingInvite.ID+"/expiration", "Bearer dev:inventory-owner", map[string]string{
+		"expiresAt": time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+	})
+	if wrongTenantExpiration.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong-tenant invitation expiration update status %d, got %d with body %s", http.StatusNotFound, wrongTenantExpiration.Code, wrongTenantExpiration.Body.String())
+	}
+	assertSafeError(t, wrongTenantExpiration, "resource_not_found", "Resource not found.")
+
+	wrongInventoryExpiration := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+otherInventoryID+"/access-invitations/"+pendingInvite.ID+"/expiration", "Bearer dev:inventory-owner", map[string]string{
+		"expiresAt": time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+	})
+	if wrongInventoryExpiration.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong-inventory invitation expiration update status %d, got %d with body %s", http.StatusNotFound, wrongInventoryExpiration.Code, wrongInventoryExpiration.Body.String())
+	}
+	assertSafeError(t, wrongInventoryExpiration, "resource_not_found", "Resource not found.")
+
+	missingInventoryExpiration := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/01ARZ3NDEKTSV4RRFFQ69G5FB1/access-invitations/"+pendingInvite.ID+"/expiration", "Bearer dev:inventory-owner", map[string]string{
+		"expiresAt": time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+	})
+	if missingInventoryExpiration.Code != http.StatusNotFound {
+		t.Fatalf("expected missing-inventory invitation expiration update status %d, got %d with body %s", http.StatusNotFound, missingInventoryExpiration.Code, missingInventoryExpiration.Body.String())
+	}
+	assertSafeError(t, missingInventoryExpiration, "resource_not_found", "Resource not found.")
+
+	firstInvitePageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?limit=1", "Bearer dev:inventory-owner", nil)
+	if firstInvitePageResponse.Code != http.StatusOK {
+		t.Fatalf("expected first invitation page status %d, got %d with body %s", http.StatusOK, firstInvitePageResponse.Code, firstInvitePageResponse.Body.String())
+	}
+	firstInvitePage := decodeInventoryAccessInvitationList(t, firstInvitePageResponse)
+	if len(firstInvitePage.Data) != 1 || firstInvitePage.Meta.Pagination == nil || firstInvitePage.Meta.Pagination.Limit != 1 || !firstInvitePage.Meta.Pagination.HasMore || firstInvitePage.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected first invitation page metadata, got %+v", firstInvitePage)
+	}
+	if firstInvitePage.Data[0].AcceptanceToken != "" {
+		t.Fatalf("expected list response to redact acceptance token, got %+v", firstInvitePage.Data[0])
+	}
+
+	secondInvitePageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?limit=1&cursor="+*firstInvitePage.Meta.Pagination.NextCursor, "Bearer dev:inventory-owner", nil)
+	if secondInvitePageResponse.Code != http.StatusOK {
+		t.Fatalf("expected second invitation page status %d, got %d with body %s", http.StatusOK, secondInvitePageResponse.Code, secondInvitePageResponse.Body.String())
+	}
+	secondInvitePage := decodeInventoryAccessInvitationList(t, secondInvitePageResponse)
+	if len(secondInvitePage.Data) != 1 || secondInvitePage.Meta.Pagination == nil || secondInvitePage.Meta.Pagination.HasMore || secondInvitePage.Meta.Pagination.NextCursor != nil {
+		t.Fatalf("expected final invitation page metadata, got %+v", secondInvitePage)
+	}
+	if secondInvitePage.Data[0].AcceptanceToken != "" {
+		t.Fatalf("expected second list response to redact acceptance token, got %+v", secondInvitePage.Data[0])
+	}
+
+	allInviteResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?limit=50", "Bearer dev:inventory-owner", nil)
+	if allInviteResponse.Code != http.StatusOK {
+		t.Fatalf("expected invitation list status %d, got %d with body %s", http.StatusOK, allInviteResponse.Code, allInviteResponse.Body.String())
+	}
+	allInvites := decodeInventoryAccessInvitationList(t, allInviteResponse)
+	if len(allInvites.Data) != 2 {
+		t.Fatalf("expected accepted and pending invitations in all filter, got %+v", allInvites.Data)
+	}
+
+	pendingInviteListBeforeUpdate := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?status=pending&limit=50", "Bearer dev:inventory-owner", nil)
+	if pendingInviteListBeforeUpdate.Code != http.StatusOK {
+		t.Fatalf("expected pending invitation list status %d, got %d with body %s", http.StatusOK, pendingInviteListBeforeUpdate.Code, pendingInviteListBeforeUpdate.Body.String())
+	}
+	pendingBefore := decodeInventoryAccessInvitationList(t, pendingInviteListBeforeUpdate)
+	if len(pendingBefore.Data) != 1 || pendingBefore.Data[0].ID != pendingInvite.ID || pendingBefore.Data[0].IsExpired {
+		t.Fatalf("expected only unexpired pending invitation, got %+v", pendingBefore.Data)
+	}
+
+	expiredBeforeUpdate := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?status=expired&limit=50", "Bearer dev:inventory-owner", nil)
+	if expiredBeforeUpdate.Code != http.StatusOK {
+		t.Fatalf("expected expired invitation list status %d, got %d with body %s", http.StatusOK, expiredBeforeUpdate.Code, expiredBeforeUpdate.Body.String())
+	}
+	if expiredBefore := decodeInventoryAccessInvitationList(t, expiredBeforeUpdate); len(expiredBefore.Data) != 0 {
+		t.Fatalf("expected no expired invitations before update, got %+v", expiredBefore.Data)
+	}
+
+	badStatusInviteList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?status=deleted", "Bearer dev:inventory-owner", nil)
+	if badStatusInviteList.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected bad invitation status filter status %d, got %d with body %s", http.StatusUnprocessableEntity, badStatusInviteList.Code, badStatusInviteList.Body.String())
+	}
+	assertErrorCode(t, badStatusInviteList, "invalid_request")
+
+	manualExpiration := time.Now().Add(-time.Hour).UTC().Format(time.RFC3339)
+	expirePendingResponse := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+pendingInvite.ID+"/expiration", "Bearer dev:inventory-owner", map[string]string{
+		"expiresAt": manualExpiration,
+	})
+	if expirePendingResponse.Code != http.StatusOK {
+		t.Fatalf("expected expire invitation status %d, got %d with body %s", http.StatusOK, expirePendingResponse.Code, expirePendingResponse.Body.String())
+	}
+	expiredPendingInvite := decodeInventoryAccessInvitation(t, expirePendingResponse).Data
+	if !expiredPendingInvite.IsExpired || expiredPendingInvite.AcceptanceToken != "" {
+		t.Fatalf("expected expired response without token, got %+v", expiredPendingInvite)
+	}
+
+	expiredAfterUpdate := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?status=expired&limit=50", "Bearer dev:inventory-owner", nil)
+	if expiredAfterUpdate.Code != http.StatusOK {
+		t.Fatalf("expected expired invitation list after update status %d, got %d with body %s", http.StatusOK, expiredAfterUpdate.Code, expiredAfterUpdate.Body.String())
+	}
+	expiredAfter := decodeInventoryAccessInvitationList(t, expiredAfterUpdate)
+	if len(expiredAfter.Data) != 1 || expiredAfter.Data[0].ID != pendingInvite.ID || !expiredAfter.Data[0].IsExpired {
+		t.Fatalf("expected manually expired invitation, got %+v", expiredAfter.Data)
+	}
+
+	pendingAfterUpdate := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations?status=pending&limit=50", "Bearer dev:inventory-owner", nil)
+	if pendingAfterUpdate.Code != http.StatusOK {
+		t.Fatalf("expected pending invitation list after update status %d, got %d with body %s", http.StatusOK, pendingAfterUpdate.Code, pendingAfterUpdate.Body.String())
+	}
+	if pendingAfter := decodeInventoryAccessInvitationList(t, pendingAfterUpdate); len(pendingAfter.Data) != 0 {
+		t.Fatalf("expected no unexpired pending invitations after manual expiration, got %+v", pendingAfter.Data)
+	}
+
+	acceptManuallyExpired := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+pendingInvite.ID+"/accept", "Bearer dev:pending-user:pending@example.com", map[string]string{
+		"acceptanceToken": pendingInvite.AcceptanceToken,
+	})
+	if acceptManuallyExpired.Code != http.StatusForbidden {
+		t.Fatalf("expected manually expired invitation accept status %d, got %d with body %s", http.StatusForbidden, acceptManuallyExpired.Code, acceptManuallyExpired.Body.String())
+	}
+	assertSafeError(t, acceptManuallyExpired, "forbidden", "Forbidden.")
+
+	updateAcceptedExpiration := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/expiration", "Bearer dev:inventory-owner", map[string]string{
+		"expiresAt": time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+	})
+	if updateAcceptedExpiration.Code != http.StatusBadRequest {
+		t.Fatalf("expected accepted invitation expiration update status %d, got %d with body %s", http.StatusBadRequest, updateAcceptedExpiration.Code, updateAcceptedExpiration.Body.String())
+	}
+	assertSafeError(t, updateAcceptedExpiration, "invalid_request", "Invalid request.")
+
 	for _, item := range []struct {
 		name string
 		auth string
@@ -513,6 +673,24 @@ func TestInventoryAccessInvitationsCreateAcceptAndRevoke(t *testing.T) {
 			if response.Code != http.StatusForbidden {
 				t.Fatalf("expected invitation create status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
 			}
+		})
+
+		t.Run(item.name+" cannot list invitations", func(t *testing.T) {
+			response := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations", item.auth, nil)
+			if response.Code != http.StatusForbidden {
+				t.Fatalf("expected invitation list status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, "forbidden", "Forbidden.")
+		})
+
+		t.Run(item.name+" cannot update invitation expiration", func(t *testing.T) {
+			response := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+pendingInvite.ID+"/expiration", item.auth, map[string]string{
+				"expiresAt": time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+			})
+			if response.Code != http.StatusForbidden {
+				t.Fatalf("expected invitation expiration update status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, "forbidden", "Forbidden.")
 		})
 	}
 

@@ -41,6 +41,34 @@ func RegisterInvitations(api huma.API, application app.App) {
 		}, nil
 	}, huma.OperationTags("inventory access"), shared.CreatedOperation, shared.SecuredOperation)
 
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", func(ctx context.Context, input *dto.ListInventoryAccessInvitationsInput) (*dto.ListInventoryAccessInvitationsOutput, error) {
+		principal, err := shared.Authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := application.ListInventoryAccessInvitations(ctx, app.ListInventoryAccessInvitationsInput{
+			Principal:    principal,
+			Source:       audit.SourceAPI,
+			RequestID:    input.RequestID,
+			TenantID:     tenant.ID(input.TenantID),
+			InventoryID:  inventory.InventoryID(input.InventoryID),
+			Limit:        input.Limit,
+			Cursor:       input.Cursor,
+			StatusFilter: input.Status,
+		})
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+
+		return &dto.ListInventoryAccessInvitationsOutput{
+			Body: shared.SuccessEnvelope[[]dto.InvitationResponse]{
+				Data: mapper.InvitationsToResponseAt(result.Items, result.Now),
+				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
+			},
+		}, nil
+	}, huma.OperationTags("inventory access"), shared.SecuredOperation)
+
 	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept", func(ctx context.Context, input *dto.AcceptInventoryAccessInvitationInput) (*dto.AcceptInventoryAccessInvitationOutput, error) {
 		principal, err := shared.Authenticate(ctx, application, input.Authorization)
 		if err != nil {
@@ -83,6 +111,31 @@ func RegisterInvitations(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 		return &dto.GetInventoryAccessInvitationOutput{
+			Body: shared.SuccessEnvelope[dto.InvitationResponse]{
+				Data: mapper.InvitationToResponse(invitation),
+				Meta: shared.Meta{TenantID: input.TenantID},
+			},
+		}, nil
+	}, huma.OperationTags("inventory access"), shared.SecuredOperation)
+
+	huma.Patch(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration", func(ctx context.Context, input *dto.UpdateInventoryAccessInvitationExpirationInput) (*dto.UpdateInventoryAccessInvitationExpirationOutput, error) {
+		principal, err := shared.Authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+		invitation, err := application.UpdateInventoryAccessInvitationExpiration(ctx, app.UpdateInventoryAccessInvitationExpirationInput{
+			Principal:    principal,
+			Source:       audit.SourceAPI,
+			RequestID:    input.RequestID,
+			TenantID:     tenant.ID(input.TenantID),
+			InventoryID:  inventory.InventoryID(input.InventoryID),
+			InvitationID: input.InvitationID,
+			ExpiresAt:    input.Body.ExpiresAt,
+		})
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+		return &dto.UpdateInventoryAccessInvitationExpirationOutput{
 			Body: shared.SuccessEnvelope[dto.InvitationResponse]{
 				Data: mapper.InvitationToResponse(invitation),
 				Meta: shared.Meta{TenantID: input.TenantID},

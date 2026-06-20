@@ -23,20 +23,17 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is the web sharing and user-management tracer bullet.
+The current focus is the UI spec and design workshop before further frontend expansion.
 
 The goal is to prove a production-shaped path through:
 
-- authentication,
-- relationship-based authorization,
-- tenant, inventory, and asset lifecycle persistence,
-- safe REST responses,
-- generated OpenAPI,
-- adversarial security tests,
-- domain-oriented observability,
-- local Docker verification,
-- a usable SvelteKit browser flow,
-- a Svelte-compatible shadcn component foundation before broad UI expansion.
+- user-centered inventory creation, asset creation, browsing, and sharing workflows,
+- mobile-first interaction patterns that can later support conversational inventory,
+- a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
+- clear separation between generated API DTOs and frontend domain models,
+- performance-conscious frontend choices,
+- generated OpenAPI/client integration without hand-written API clients,
+- a frontend direction that does not overfit the disposable tracer-bullet screens.
 
 ## Current Evidence
 
@@ -73,13 +70,17 @@ The goal is to prove a production-shaped path through:
 - Lifecycle endpoints emit read/write audit records, preserve tenant and inventory security boundaries, and are covered by OpenAPI generation checks plus adversarial HTTP tests.
 - The separate SvelteKit web app exists under `apps/web`, uses Dex OIDC with PKCE, uses runtime configuration, calls the API through the generated OpenAPI client boundary, and proves inventory creation, asset creation, active/archived asset browsing, asset archive, asset restore, and asset hard delete.
 - `0c8d7d4 feat(web): add asset lifecycle controls` added the first web lifecycle controls and focused frontend interaction tests.
+- The current web screens are disposable tracer-bullet UI. Do not expand them into the real product UI before a dedicated UI spec and design workshop.
+- `cac140c feat(web): adopt shadcn component primitives` added the Svelte-compatible shadcn foundation and dependency freshness checks.
+- Sharing and user-management backend hardening now includes an explicit inventory access repository port, paginated invitation listing with status filters, pending-invitation expiration management, generated OpenAPI/client updates, documentation updates, and adversarial API tests for token redaction, tenant/inventory boundaries, and role denial.
+- The first audit-backed undo/redo slice now supports asset create, update, move, archive, and restore through operation-scoped compensating commands, dedicated undoable-operation persistence, generated OpenAPI/client updates, and adversarial API coverage.
 
 ## Known Gaps
 
 - Changing custom field type, removing custom field enum options or targets, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
-- Undo is not yet implemented for audit history.
+- Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
-- Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
+- The real product UI is intentionally underspecified and should be redesigned before further frontend feature investment.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI can create inventories, create assets, browse active and archived assets, archive assets, restore assets, and hard-delete assets, but it does not yet expose sharing, search, audit history, custom fields, custom asset types, or media.
@@ -87,19 +88,14 @@ The goal is to prove a production-shaped path through:
 
 ## Next Work
 
-1. Add the Svelte-compatible shadcn component foundation for the web app.
-   - Pin the setup tooling and runtime dependencies.
-   - Introduce the first reusable primitives needed by the sharing UI.
-   - Keep generated or copied components local to `apps/web` unless a future spec justifies a shared package.
-2. Add sharing and user-management UI.
-   - Show direct grants.
-   - Create invite-link tokens.
-   - Cancel invitations and revoke direct grants.
+1. Run a UI spec and design workshop before expanding the web frontend.
+   - Treat the current screens as disposable tracer-bullet UI.
+   - Keep the shadcn foundation, but do not assume the current layout, copy, or workflow survives.
+2. Decide whether the undoable-operation creation boundary should remain on asset repository methods or move to a dedicated transactional command/unit-of-work port before expanding undo/redo beyond assets.
 
 ## Later Work
 
 - Google OIDC adapter end-to-end verification.
 - Mobile app scaffold with React Native and Expo.
-- Audit history and undo.
 - Conversational inventory ports and action plan execution.
 - Import and export.

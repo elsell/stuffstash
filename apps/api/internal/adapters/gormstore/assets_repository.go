@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord audit.Record) error {
+func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var containingInventory inventoryModel
 		err := tx.Where(&inventoryModel{
@@ -89,11 +89,14 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord au
 			return err
 		}
 
-		return createAuditRecord(tx, auditRecord)
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		return createUndoableOperation(tx, undoableOperation)
 	})
 }
 
-func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords []audit.Record) error {
+func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing assetModel
 		err := tx.Where(&assetModel{
@@ -155,11 +158,11 @@ func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords [
 				return err
 			}
 		}
-		return nil
+		return createUndoableOperation(tx, undoableOperation)
 	})
 }
 
-func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, auditRecord audit.Record) error {
+func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing assetModel
 		err := tx.Where(&assetModel{
@@ -218,7 +221,10 @@ func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, audit
 		}).Error; err != nil {
 			return err
 		}
-		return createAuditRecord(tx, auditRecord)
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		return createUndoableOperation(tx, undoableOperation)
 	})
 }
 

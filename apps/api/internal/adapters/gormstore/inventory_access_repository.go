@@ -255,6 +255,54 @@ func (s Store) InventoryAccessInvitationByID(ctx context.Context, tenantID tenan
 	return invitation, true, nil
 }
 
+func (s Store) ListInventoryAccessInvitations(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.InventoryAccessInvitationPageRequest) ([]ports.InventoryAccessInvitation, error) {
+	var models []inventoryAccessInvitationModel
+	query := s.db.WithContext(ctx).Where(&inventoryAccessInvitationModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+	})
+	if page.AfterInvitationID != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterInvitationID})
+	}
+	now := page.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+	switch page.StatusFilter {
+	case "", ports.InventoryAccessInvitationStatusFilterAll:
+	case ports.InventoryAccessInvitationStatusFilterPending:
+		query = query.Where(&inventoryAccessInvitationModel{Status: string(ports.InventoryAccessInvitationPending)}).
+			Where(clause.Gt{Column: clause.Column{Name: "expires_at"}, Value: now})
+	case ports.InventoryAccessInvitationStatusFilterExpired:
+		query = query.Where(&inventoryAccessInvitationModel{Status: string(ports.InventoryAccessInvitationPending)}).
+			Where(clause.Lte{Column: clause.Column{Name: "expires_at"}, Value: now})
+	case ports.InventoryAccessInvitationStatusFilterAccepted:
+		query = query.Where(&inventoryAccessInvitationModel{Status: string(ports.InventoryAccessInvitationAccepted)})
+	case ports.InventoryAccessInvitationStatusFilterRevoked:
+		query = query.Where(&inventoryAccessInvitationModel{Status: string(ports.InventoryAccessInvitationRevoked)})
+	case ports.InventoryAccessInvitationStatusFilterCancelled:
+		query = query.Where(&inventoryAccessInvitationModel{Status: string(ports.InventoryAccessInvitationCancelled)})
+	default:
+		return nil, fmt.Errorf("invalid inventory invitation status filter %q", page.StatusFilter)
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]ports.InventoryAccessInvitation, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toPort()
+		if !ok {
+			return nil, fmt.Errorf("invalid inventory access invitation row %q", model.ID)
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
 func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
 	var saved ports.InventoryAccessInvitation
 	var grant ports.InventoryAccessGrant
@@ -331,6 +379,43 @@ func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, te
 
 func inventoryInvitationTokenHashMatches(storedHash string, providedHash string) bool {
 	return subtle.ConstantTimeCompare([]byte(storedHash), []byte(providedHash)) == 1
+}
+
+func (s Store) UpdateInventoryAccessInvitationExpiration(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, expiresAt time.Time, auditRecord audit.Record) (ports.InventoryAccessInvitation, bool, error) {
+	var saved ports.InventoryAccessInvitation
+	updated := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model inventoryAccessInvitationModel
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&inventoryAccessInvitationModel{
+			ID:          invitationID,
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+		}).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if model.Status != string(ports.InventoryAccessInvitationPending) {
+			return ports.ErrConflict
+		}
+		model.ExpiresAt = expiresAt
+		if err := tx.Save(&model).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		var ok bool
+		saved, ok = model.toPort()
+		if !ok {
+			return fmt.Errorf("invalid inventory access invitation row %q", model.ID)
+		}
+		updated = true
+		return nil
+	})
+	return saved, updated, err
 }
 
 func (s Store) RevokeInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {

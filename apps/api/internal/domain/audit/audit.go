@@ -40,59 +40,63 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
-	ActionTenantCreated                 Action = "tenant.created"
-	ActionTenantViewed                  Action = "tenant.viewed"
-	ActionTenantUpdated                 Action = "tenant.updated"
-	ActionTenantArchived                Action = "tenant.archived"
-	ActionTenantRestored                Action = "tenant.restored"
-	ActionTenantDeleted                 Action = "tenant.deleted"
-	ActionInventoryCreated              Action = "inventory.created"
-	ActionInventoryViewed               Action = "inventory.viewed"
-	ActionInventoryListed               Action = "inventory.listed"
-	ActionInventoryUpdated              Action = "inventory.updated"
-	ActionInventoryArchived             Action = "inventory.archived"
-	ActionInventoryRestored             Action = "inventory.restored"
-	ActionInventoryDeleted              Action = "inventory.deleted"
-	ActionInventoryAccessGranted        Action = "inventory_access.granted"
-	ActionInventoryAccessGrantViewed    Action = "inventory_access_grant.viewed"
-	ActionInventoryAccessGrantListed    Action = "inventory_access_grant.listed"
-	ActionInventoryAccessRevoked        Action = "inventory_access.revoked"
-	ActionInventoryInvitationCreated    Action = "inventory_invitation.created"
-	ActionInventoryInvitationViewed     Action = "inventory_invitation.viewed"
-	ActionInventoryInvitationAccepted   Action = "inventory_invitation.accepted"
-	ActionInventoryInvitationRevoked    Action = "inventory_invitation.revoked"
-	ActionInventoryInvitationCancelled  Action = "inventory_invitation.cancelled"
-	ActionInventoryInvitationDeleted    Action = "inventory_invitation.deleted"
-	ActionCustomAssetTypeCreated        Action = "custom_asset_type.created"
-	ActionCustomAssetTypeViewed         Action = "custom_asset_type.viewed"
-	ActionCustomAssetTypeListed         Action = "custom_asset_type.listed"
-	ActionCustomAssetTypeUpdated        Action = "custom_asset_type.updated"
-	ActionCustomAssetTypeArchived       Action = "custom_asset_type.archived"
-	ActionCustomAssetTypeRestored       Action = "custom_asset_type.restored"
-	ActionCustomAssetTypeDeleted        Action = "custom_asset_type.deleted"
-	ActionCustomFieldDefinitionCreated  Action = "custom_field_definition.created"
-	ActionCustomFieldDefinitionViewed   Action = "custom_field_definition.viewed"
-	ActionCustomFieldDefinitionListed   Action = "custom_field_definition.listed"
-	ActionCustomFieldDefinitionUpdated  Action = "custom_field_definition.updated"
-	ActionCustomFieldDefinitionArchived Action = "custom_field_definition.archived"
-	ActionCustomFieldDefinitionRestored Action = "custom_field_definition.restored"
-	ActionCustomFieldDefinitionDeleted  Action = "custom_field_definition.deleted"
-	ActionAssetCreated                  Action = "asset.created"
-	ActionAssetViewed                   Action = "asset.viewed"
-	ActionAssetListed                   Action = "asset.listed"
-	ActionAssetUpdated                  Action = "asset.updated"
-	ActionAssetMoved                    Action = "asset.moved"
-	ActionAssetArchived                 Action = "asset.archived"
-	ActionAssetRestored                 Action = "asset.restored"
-	ActionAssetDeleted                  Action = "asset.deleted"
-	ActionAttachmentCreated             Action = "attachment.created"
-	ActionAttachmentViewed              Action = "attachment.viewed"
-	ActionAttachmentListed              Action = "attachment.listed"
-	ActionAttachmentContentDownloaded   Action = "attachment.content_downloaded"
-	ActionAttachmentArchived            Action = "attachment.archived"
-	ActionAttachmentRestored            Action = "attachment.restored"
-	ActionAttachmentDeleted             Action = "attachment.deleted"
-	ActionAuditRecordListed             Action = "audit_record.listed"
+	ActionTenantCreated                        Action = "tenant.created"
+	ActionTenantViewed                         Action = "tenant.viewed"
+	ActionTenantUpdated                        Action = "tenant.updated"
+	ActionTenantArchived                       Action = "tenant.archived"
+	ActionTenantRestored                       Action = "tenant.restored"
+	ActionTenantDeleted                        Action = "tenant.deleted"
+	ActionInventoryCreated                     Action = "inventory.created"
+	ActionInventoryViewed                      Action = "inventory.viewed"
+	ActionInventoryListed                      Action = "inventory.listed"
+	ActionInventoryUpdated                     Action = "inventory.updated"
+	ActionInventoryArchived                    Action = "inventory.archived"
+	ActionInventoryRestored                    Action = "inventory.restored"
+	ActionInventoryDeleted                     Action = "inventory.deleted"
+	ActionInventoryAccessGranted               Action = "inventory_access.granted"
+	ActionInventoryAccessGrantViewed           Action = "inventory_access_grant.viewed"
+	ActionInventoryAccessGrantListed           Action = "inventory_access_grant.listed"
+	ActionInventoryAccessRevoked               Action = "inventory_access.revoked"
+	ActionInventoryInvitationCreated           Action = "inventory_invitation.created"
+	ActionInventoryInvitationViewed            Action = "inventory_invitation.viewed"
+	ActionInventoryInvitationListed            Action = "inventory_invitation.listed"
+	ActionInventoryInvitationAccepted          Action = "inventory_invitation.accepted"
+	ActionInventoryInvitationExpirationUpdated Action = "inventory_invitation.expiration_updated"
+	ActionInventoryInvitationRevoked           Action = "inventory_invitation.revoked"
+	ActionInventoryInvitationCancelled         Action = "inventory_invitation.cancelled"
+	ActionInventoryInvitationDeleted           Action = "inventory_invitation.deleted"
+	ActionCustomAssetTypeCreated               Action = "custom_asset_type.created"
+	ActionCustomAssetTypeViewed                Action = "custom_asset_type.viewed"
+	ActionCustomAssetTypeListed                Action = "custom_asset_type.listed"
+	ActionCustomAssetTypeUpdated               Action = "custom_asset_type.updated"
+	ActionCustomAssetTypeArchived              Action = "custom_asset_type.archived"
+	ActionCustomAssetTypeRestored              Action = "custom_asset_type.restored"
+	ActionCustomAssetTypeDeleted               Action = "custom_asset_type.deleted"
+	ActionCustomFieldDefinitionCreated         Action = "custom_field_definition.created"
+	ActionCustomFieldDefinitionViewed          Action = "custom_field_definition.viewed"
+	ActionCustomFieldDefinitionListed          Action = "custom_field_definition.listed"
+	ActionCustomFieldDefinitionUpdated         Action = "custom_field_definition.updated"
+	ActionCustomFieldDefinitionArchived        Action = "custom_field_definition.archived"
+	ActionCustomFieldDefinitionRestored        Action = "custom_field_definition.restored"
+	ActionCustomFieldDefinitionDeleted         Action = "custom_field_definition.deleted"
+	ActionAssetCreated                         Action = "asset.created"
+	ActionAssetViewed                          Action = "asset.viewed"
+	ActionAssetListed                          Action = "asset.listed"
+	ActionAssetUpdated                         Action = "asset.updated"
+	ActionAssetMoved                           Action = "asset.moved"
+	ActionAssetArchived                        Action = "asset.archived"
+	ActionAssetRestored                        Action = "asset.restored"
+	ActionAssetDeleted                         Action = "asset.deleted"
+	ActionAttachmentCreated                    Action = "attachment.created"
+	ActionAttachmentViewed                     Action = "attachment.viewed"
+	ActionAttachmentListed                     Action = "attachment.listed"
+	ActionAttachmentContentDownloaded          Action = "attachment.content_downloaded"
+	ActionAttachmentArchived                   Action = "attachment.archived"
+	ActionAttachmentRestored                   Action = "attachment.restored"
+	ActionAttachmentDeleted                    Action = "attachment.deleted"
+	ActionAuditRecordListed                    Action = "audit_record.listed"
+	ActionUndoableOperationUndone              Action = "undoable_operation.undone"
+	ActionUndoableOperationRedone              Action = "undoable_operation.redone"
 )
 
 func NewAction(value string) (Action, bool) {
@@ -117,7 +121,9 @@ func NewAction(value string) (Action, bool) {
 		ActionInventoryAccessRevoked,
 		ActionInventoryInvitationCreated,
 		ActionInventoryInvitationViewed,
+		ActionInventoryInvitationListed,
 		ActionInventoryInvitationAccepted,
+		ActionInventoryInvitationExpirationUpdated,
 		ActionInventoryInvitationRevoked,
 		ActionInventoryInvitationCancelled,
 		ActionInventoryInvitationDeleted,
@@ -150,7 +156,9 @@ func NewAction(value string) (Action, bool) {
 		ActionAttachmentArchived,
 		ActionAttachmentRestored,
 		ActionAttachmentDeleted,
-		ActionAuditRecordListed:
+		ActionAuditRecordListed,
+		ActionUndoableOperationUndone,
+		ActionUndoableOperationRedone:
 		return action, true
 	default:
 		return "", false
@@ -198,12 +206,13 @@ const (
 	TargetAsset                 TargetType = "asset"
 	TargetAttachment            TargetType = "attachment"
 	TargetAuditRecord           TargetType = "audit_record"
+	TargetUndoableOperation     TargetType = "undoable_operation"
 )
 
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord:
+	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord, TargetUndoableOperation:
 		return targetType, true
 	default:
 		return "", false

@@ -20,6 +20,7 @@ type Store struct {
 	customAssetTypes map[customfield.AssetTypeID]customfield.AssetType
 	customFields     map[customfield.ID]customfield.Definition
 	assets           map[asset.ID]asset.Asset
+	undoables        map[string]ports.UndoableOperation
 	attachments      map[media.ID]media.Attachment
 	blobs            map[media.StorageKey][]byte
 	auditRecords     map[audit.ID]audit.Record
@@ -35,6 +36,7 @@ func NewStore() *Store {
 		customAssetTypes: map[customfield.AssetTypeID]customfield.AssetType{},
 		customFields:     map[customfield.ID]customfield.Definition{},
 		assets:           map[asset.ID]asset.Asset{},
+		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},
 		blobs:            map[media.StorageKey][]byte{},
 		auditRecords:     map[audit.ID]audit.Record{},

@@ -24,7 +24,7 @@ func TestAttachmentUploadListAndDownloadFlow(t *testing.T) {
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
-		ids: []string{"asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one"},
 	}))
 
 	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
@@ -114,7 +114,7 @@ func TestAttachmentListIsPaginated(t *testing.T) {
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
-		ids: []string{"asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one", "attachment-two", "audit-attachment-two"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one", "attachment-two", "audit-attachment-two"},
 	}))
 	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",
@@ -165,7 +165,7 @@ func TestAttachmentEndpointsEnforceAuthenticationAndAuthorization(t *testing.T) 
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
-		ids: []string{"asset-one", "audit-asset-one", "viewer-grant-event", "audit-viewer-grant", "viewer-claim", "attachment-one", "audit-attachment-one"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "viewer-grant-event", "audit-viewer-grant", "viewer-claim", "attachment-one", "audit-attachment-one"},
 	}))
 	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",
@@ -256,7 +256,7 @@ func TestAttachmentEndpointsHideCrossTenantAndCrossInventoryResources(t *testing
 			{id: inventoryOneID, tenantID: tenantOneID, name: "Tools", owner: "owner-one"},
 			{id: inventoryTwoID, tenantID: tenantTwoID, name: "Supplies", owner: "owner-two"},
 		},
-		ids: []string{"asset-one", "audit-asset-one", "asset-two", "audit-asset-two", "attachment-two", "audit-attachment-two"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "asset-two", "op-asset-two", "audit-asset-two", "attachment-two", "audit-attachment-two"},
 	}))
 	assetOneResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantOneID+"/inventories/"+inventoryOneID+"/assets", "Bearer dev:owner-one", map[string]any{
 		"kind":  "item",
@@ -307,7 +307,7 @@ func TestAttachmentUploadRejectsUnsafeInput(t *testing.T) {
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
-		ids: []string{"asset-one", "audit-asset-one"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one"},
 	}))
 	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",
@@ -369,7 +369,7 @@ func TestAttachmentUploadReturnsSafeStorageErrors(t *testing.T) {
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
-		ids: []string{"asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one"},
 	}, failingBlobStorage{}))
 	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",

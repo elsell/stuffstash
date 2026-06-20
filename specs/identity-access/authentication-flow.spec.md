@@ -62,6 +62,17 @@ Local Compose provides Dex for realistic OIDC verification without requiring a G
 - The API must receive only bearer ID tokens from the verifier script. It must not call Dex-specific APIs from application code.
 - The verifier may use the OAuth password grant against Dex because it is a test harness. User-facing clients must use a browser or native-app OIDC flow when those clients are built.
 
+## Temporary Kubernetes Dex Fixture
+
+The local Kubernetes deployment may temporarily run Dex beside Stuff Stash to prove production-shaped OIDC discovery, JWKS verification, issuer checks, and audience checks before Google OIDC is configured.
+
+- The temporary Kubernetes Dex fixture must be scoped to the local development cluster.
+- The fixture must use the same `oidc` authentication mode and environment configuration used for any OIDC provider.
+- The fixture may use Dex's mock connector for interactive proof-only sign-in so no real password fixture is committed.
+- The fixture issuer must be externally reachable at the same issuer URL the API verifies.
+- The fixture client ID must be explicitly configured as a development client and must not be treated as a production Google client ID.
+- The fixture must be removed or replaced with Google OIDC before a production rollout.
+
 ## Principal
 
 The authenticated principal must include:

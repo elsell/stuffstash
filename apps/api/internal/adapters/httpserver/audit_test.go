@@ -22,10 +22,10 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 			{id: otherInventoryID, tenantID: otherTenantID, name: "Cabin Tools", owner: "other-owner"},
 		},
 		ids: []string{
-			"asset-one", "audit-asset-one",
-			"asset-two", "audit-asset-two",
-			"sibling-asset", "audit-sibling-asset",
-			"other-tenant-asset", "audit-other-tenant-asset",
+			"asset-one", "op-asset-one", "audit-asset-one",
+			"asset-two", "op-asset-two", "audit-asset-two",
+			"sibling-asset", "op-sibling-asset", "audit-sibling-asset",
+			"other-tenant-asset", "op-other-tenant-asset", "audit-other-tenant-asset",
 			"audit-viewer-grant", "viewer-grant-event", "viewer-grant-claim",
 		},
 	}))

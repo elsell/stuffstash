@@ -68,8 +68,10 @@ The first endpoints are:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/access-invitations`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
 
@@ -136,6 +138,21 @@ Revoking direct inventory access removes the inventory relationship. Tenant view
 - Must produce audit history.
 - Must reject duplicate pending invitations for the same tenant, inventory, email, and relationship instead of silently rotating acceptance tokens.
 
+`GET /access-invitations`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Lists invitation metadata scoped to the tenant and inventory.
+- Must never return raw acceptance token material or token verifiers.
+- Must use the standard response envelope.
+- Must use cursor pagination with `limit` and `cursor`.
+- Must support a status filter with `all`, `pending`, `accepted`, `revoked`, `cancelled`, and `expired`.
+- `all` is the default status filter.
+- `expired` is a derived listing filter for pending invitations whose expiration timestamp is not in the future.
+- `pending` must include only pending invitations whose expiration timestamp is still in the future.
+- Invitation responses must include whether the invitation is currently expired so clients do not have to infer expiration from clocks alone.
+- Must produce safe read audit history.
+
 `POST /access-invitations/{invitationId}/accept`:
 
 - Requires authentication.
@@ -153,6 +170,18 @@ Revoking direct inventory access removes the inventory relationship. Tenant view
 - Requires `inventory.share`.
 - Returns invitation metadata without returning raw acceptance token material.
 - Must produce safe read audit history.
+
+`PATCH /access-invitations/{invitationId}/expiration`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Accepts an RFC3339 expiration timestamp.
+- Must update only pending invitations.
+- May set the expiration into the past to manually expire a pending invite.
+- Must not rotate or return acceptance token material.
+- Must reject accepted, revoked, cancelled, deleted, wrong-tenant, and wrong-inventory invitations.
+- Must produce audit history.
+- Must return the updated invitation metadata.
 
 `PATCH /access-invitations/{invitationId}/cancel`:
 
@@ -179,6 +208,14 @@ Granting `editor` allows inventory viewing, asset listing, asset creation, asset
 
 Neither `viewer` nor `editor` allows sharing access onward.
 
+## Repository Boundaries
+
+- Inventory sharing persistence must live behind an explicit inventory access repository port.
+- The inventory repository must own inventory aggregate persistence only.
+- Direct access grants, invite-link invitations, invitation acceptance, invitation expiration management, and related authorization outbox writes must not remain on the inventory repository port.
+- The inventory access repository must preserve transactional behavior for grant, revoke, invitation acceptance, expiration update, and audit/outbox writes.
+- Persistence adapters may implement inventory and inventory access repositories on the same concrete store type, but the application layer must depend on the narrower port for each responsibility.
+
 ## Custom Fields
 
 - Tenant-scoped custom asset type definitions are controlled by tenant-level relationships.
@@ -199,6 +236,7 @@ Neither `viewer` nor `editor` allows sharing access onward.
 - Tests must verify that conversational actions cannot exceed the initiating user's permissions.
 - Sharing API tests must prove owners can grant and revoke direct access, unrelated users cannot grant, revoke, or list grants, viewers cannot share or revoke, editors cannot share or revoke, granted viewers/editors receive only their intended permissions, and revoked users lose the revoked inventory permissions.
 - Invitation API tests must prove owners can create, accept, and revoke pending invitations; viewers, editors, unrelated users, wrong-email users, missing-email users, missing-token users, wrong-token users, expired-token users, wrong-tenant callers, and wrong-inventory callers cannot exceed their permissions; revoked invitations cannot be accepted; accepted invitations create only the intended direct access relationship.
+- Invitation listing and expiration tests must prove only users with `inventory.share` can list and update invitations, pagination preserves the standard contract, raw acceptance token material is not returned after creation, expired filtering works, manually expired invitations cannot be accepted, and non-pending invitations cannot have expiration changed.
 
 ## Open Questions
 

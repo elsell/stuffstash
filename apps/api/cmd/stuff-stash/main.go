@@ -88,9 +88,11 @@ func main() {
 		Authorizer:                    authorizer,
 		Tenants:                       repositories.tenants,
 		Inventories:                   repositories.inventories,
+		InventoryAccess:               repositories.inventoryAccess,
 		CustomAssetTypes:              repositories.customAssetTypes,
 		CustomFields:                  repositories.customFields,
 		Assets:                        repositories.assets,
+		Undoables:                     repositories.undoables,
 		Search:                        repositories.search,
 		Attachments:                   repositories.attachments,
 		Blobs:                         repositories.blobs,
@@ -166,9 +168,11 @@ func drainAuthorizationOutbox(ctx context.Context, application app.App, observer
 type repositories struct {
 	tenants          ports.TenantRepository
 	inventories      ports.InventoryRepository
+	inventoryAccess  ports.InventoryAccessRepository
 	customAssetTypes ports.CustomAssetTypeRepository
 	customFields     ports.CustomFieldDefinitionRepository
 	assets           ports.AssetRepository
+	undoables        ports.UndoableOperationRepository
 	search           ports.AssetSearchRepository
 	attachments      ports.AttachmentRepository
 	blobs            ports.BlobStorage
@@ -180,7 +184,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, inventories: store, customAssetTypes: store, customFields: store, assets: store, search: store, attachments: store, blobs: store, audit: store, outbox: store}, func() error { return nil }, nil
+		return repositories{tenants: store, inventories: store, inventoryAccess: store, customAssetTypes: store, customFields: store, assets: store, undoables: store, search: store, attachments: store, blobs: store, audit: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -194,7 +198,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 			_ = closeStore()
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, inventories: store, customAssetTypes: store, customFields: store, assets: store, search: store, attachments: store, blobs: blobs, audit: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, inventories: store, inventoryAccess: store, customAssetTypes: store, customFields: store, assets: store, undoables: store, search: store, attachments: store, blobs: blobs, audit: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}
@@ -357,7 +361,7 @@ func buildAuthorizer(ctx context.Context, cfg config.Config) (ports.Authorizer, 
 	case "memory":
 		return memory.NewAuthorizer(), func() error { return nil }, nil
 	case "spicedb":
-		gateway, err := spicedb.NewGateway(cfg.SpiceDBEndpoint, cfg.SpiceDBPresharedKey, cfg.SpiceDBTLSEnabled)
+		gateway, err := spicedb.NewGateway(cfg.SpiceDBEndpoint, cfg.SpiceDBPresharedKey, cfg.SpiceDBTLSEnabled, cfg.SpiceDBCAPath)
 		if err != nil {
 			return nil, nil, err
 		}
