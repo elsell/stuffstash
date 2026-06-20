@@ -12,7 +12,7 @@ export default defineConfig({
       title: 'Stuff Stash',
       logo: {
         src: './src/assets/stuff-stash-glyph.png',
-        alt: 'Stuff Stash',
+        alt: '',
       },
       favicon: '/brand/stuff-stash-glyph.png',
       customCss: ['./src/styles/brand.css'],

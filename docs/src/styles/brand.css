@@ -86,5 +86,6 @@ a:not(.sl-link-button):hover {
 }
 
 :focus-visible {
-  outline-color: var(--ss-amber);
+  outline: 2px solid var(--ss-charcoal-deep);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ss-amber) 45%, transparent);
 }
