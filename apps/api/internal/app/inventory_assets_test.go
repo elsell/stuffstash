@@ -27,6 +27,7 @@ func TestCreateAndListAssets(t *testing.T) {
 			},
 		},
 		Assets:           assets,
+		AssetUnitOfWork:  assets,
 		Undoables:        assets,
 		Audit:            &fakeAuditRepository{},
 		Outbox:           &fakeOutbox{},
@@ -107,11 +108,12 @@ func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
 				inventoryItem("inventory-one", "tenant-one", "Tools"),
 			},
 		},
-		Assets:    assets,
-		Undoables: assets,
-		Audit:     &fakeAuditRepository{},
-		Outbox:    &fakeOutbox{},
-		IDs:       &fakeIDGenerator{ids: []string{"asset-one"}},
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
 
 	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
@@ -151,16 +153,17 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 	}
 	assets := &fakeAssetRepository{}
 	application := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: customFields,
-		Assets:       assets,
-		Undoables:    assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{ids: []string{"asset-one"}},
+		Observer:        &fakeObserver{},
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:    customFields,
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
 
 	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
@@ -209,16 +212,17 @@ func TestUpdateAssetMovesAndValidatesCustomFields(t *testing.T) {
 	}}
 	observer := &fakeObserver{}
 	application := New(Dependencies{
-		Observer:     observer,
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: customFields,
-		Assets:       assets,
-		Undoables:    assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{},
+		Observer:        observer,
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:    customFields,
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{},
 	})
 
 	title := "Cordless Drill"
@@ -271,16 +275,17 @@ func TestUndoAndRedoAssetUpdate(t *testing.T) {
 		asset.ID("drill"):  assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, "garage"),
 	}}
 	application := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: &fakeCustomFieldRepository{},
-		Assets:       assets,
-		Undoables:    assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{},
+		Observer:        &fakeObserver{},
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:    &fakeCustomFieldRepository{},
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{},
 	})
 
 	title := "Cordless Drill"
@@ -338,16 +343,17 @@ func TestRedoRejectsStaleAssetState(t *testing.T) {
 		asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
 	}}
 	application := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: &fakeCustomFieldRepository{},
-		Assets:       assets,
-		Undoables:    assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{},
+		Observer:        &fakeObserver{},
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:    &fakeCustomFieldRepository{},
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{},
 	})
 
 	title := "Cordless Drill"
@@ -410,6 +416,7 @@ func TestUndoAllowsArchivedExistingCustomAssetType(t *testing.T) {
 		CustomAssetTypes: &fakeCustomAssetTypeRepository{items: []customfield.AssetType{medicineType}},
 		CustomFields:     &fakeCustomFieldRepository{},
 		Assets:           assets,
+		AssetUnitOfWork:  assets,
 		Undoables:        assets,
 		Audit:            &fakeAuditRepository{},
 		Outbox:           &fakeOutbox{},
@@ -447,16 +454,17 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 		asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
 	}}
 	application := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: &fakeCustomFieldRepository{},
-		Assets:       assets,
-		Undoables:    assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{},
+		Observer:        &fakeObserver{},
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:    &fakeCustomFieldRepository{},
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{},
 	})
 
 	archived, err := application.ArchiveAsset(context.Background(), UpdateAssetLifecycleInput{
@@ -545,16 +553,17 @@ func TestUpdateAssetRejectsInvalidMovement(t *testing.T) {
 		asset.ID("supplies"): assetItem("supplies", "tenant-one", "inventory-one", asset.KindItem, ""),
 	}}
 	application := New(Dependencies{
-		Observer:     &fakeObserver{},
-		Authorizer:   &fakeAuthorizer{},
-		Tenants:      &fakeTenantRepository{exists: true},
-		Inventories:  &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields: &fakeCustomFieldRepository{},
-		Assets:       assets,
-		Undoables:    assets,
-		Audit:        &fakeAuditRepository{},
-		Outbox:       &fakeOutbox{},
-		IDs:          &fakeIDGenerator{},
+		Observer:        &fakeObserver{},
+		Authorizer:      &fakeAuthorizer{},
+		Tenants:         &fakeTenantRepository{exists: true},
+		Inventories:     &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:    &fakeCustomFieldRepository{},
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{},
 	})
 
 	for _, item := range []struct {

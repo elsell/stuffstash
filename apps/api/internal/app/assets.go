@@ -171,7 +171,10 @@ func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Ass
 		auditRecord.Metadata["custom_asset_type_id"] = item.CustomAssetTypeID.String()
 	}
 
-	if err := a.assets.CreateAsset(ctx, item, auditRecord, &undoableOperation); err != nil {
+	if a.assetUnitOfWork == nil {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	if err := a.assetUnitOfWork.CreateAsset(ctx, item, auditRecord, &undoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
@@ -317,7 +320,10 @@ func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Ass
 		auditRecords = append(auditRecords, auditRecord)
 	}
 
-	if err := a.assets.UpdateAsset(ctx, updated, auditRecords, undoableOperation); err != nil {
+	if a.assetUnitOfWork == nil {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	if err := a.assetUnitOfWork.UpdateAsset(ctx, updated, auditRecords, undoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
@@ -421,7 +427,10 @@ func (a App) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) e
 	if err != nil {
 		return err
 	}
-	if err := a.assets.DeleteAsset(ctx, input.TenantID, input.InventoryID, input.AssetID, auditRecord); err != nil {
+	if a.assetUnitOfWork == nil {
+		return ErrInvalidInput
+	}
+	if err := a.assetUnitOfWork.DeleteAsset(ctx, input.TenantID, input.InventoryID, input.AssetID, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return ErrInvalidInput
 		}
@@ -506,7 +515,10 @@ func (a App) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycl
 		return asset.Asset{}, err
 	}
 
-	if err := a.assets.UpdateAssetLifecycle(ctx, updated, auditRecord, &undoableOperation); err != nil {
+	if a.assetUnitOfWork == nil {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	if err := a.assetUnitOfWork.UpdateAssetLifecycle(ctx, updated, auditRecord, &undoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}

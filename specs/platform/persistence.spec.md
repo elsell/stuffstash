@@ -51,6 +51,8 @@ This spec does not define every future asset index, backup strategy, retention p
 - Dead-letter observability must include event ID, event kind, tenant ID, inventory ID when present, and the terminal reason.
 - State-changing application operations must write append-only audit records behind a repository port.
 - Audited list, detail, and content read operations must write safe append-only read audit records behind the same repository port.
+- State-changing operations that must commit domain state together with audit records, undoable operations, authorization outbox events, or other side-effect intent must use a dedicated transactional command/unit-of-work port instead of overloading read repository ports.
+- Read repositories must expose only lookup, list, and invariant-query behavior. Transactional command/unit-of-work ports own atomic write boundaries.
 - Audit records must preserve tenant and inventory isolation in storage and read queries.
 - Audit metadata must be stored as a JSON object and must not be used as an authorization source.
 

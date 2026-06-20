@@ -74,6 +74,7 @@ The goal is to prove a production-shaped path through:
 - `cac140c feat(web): adopt shadcn component primitives` added the Svelte-compatible shadcn foundation and dependency freshness checks.
 - Sharing and user-management backend hardening now includes an explicit inventory access repository port, paginated invitation listing with status filters, pending-invitation expiration management, generated OpenAPI/client updates, documentation updates, and adversarial API tests for token redaction, tenant/inventory boundaries, and role denial.
 - The first audit-backed undo/redo slice now supports asset create, update, move, archive, and restore through operation-scoped compensating commands, dedicated undoable-operation persistence, generated OpenAPI/client updates, and adversarial API coverage.
+- Asset state-changing application commands now use a dedicated transactional asset unit-of-work port instead of overloading the read repository port with audit and undoable-operation write concerns.
 
 ## Known Gaps
 
@@ -91,7 +92,6 @@ The goal is to prove a production-shaped path through:
 1. Run a UI spec and design workshop before expanding the web frontend.
    - Treat the current screens as disposable tracer-bullet UI.
    - Keep the shadcn foundation, but do not assume the current layout, copy, or workflow survives.
-2. Decide whether the undoable-operation creation boundary should remain on asset repository methods or move to a dedicated transactional command/unit-of-work port before expanding undo/redo beyond assets.
 
 ## Later Work
 

@@ -24,6 +24,7 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 		InventoryAccess: inventories,
 		CustomFields:    customFields,
 		Assets:          assets,
+		AssetUnitOfWork: assets,
 		Undoables:       assets,
 		Audit:           &fakeAuditRepository{},
 		Outbox:          outbox,
