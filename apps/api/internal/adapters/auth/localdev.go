@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"strings"
-	"unicode"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -22,21 +21,21 @@ func (LocalDevAuthenticator) Authenticate(_ context.Context, authorizationHeader
 		return identity.Principal{}, ports.ErrUnauthenticated
 	}
 
-	principalID, ok := identity.NewPrincipalID(strings.TrimPrefix(authorizationHeader, localDevPrefix))
-	if !ok || !validPrincipalID(principalID) {
+	token := strings.TrimPrefix(authorizationHeader, localDevPrefix)
+	parts := strings.SplitN(token, ":", 2)
+	principalID, ok := identity.NewPrincipalID(parts[0])
+	if !ok {
 		return identity.Principal{}, ports.ErrUnauthenticated
 	}
 
-	return identity.Principal{ID: principalID}, nil
-}
-
-func validPrincipalID(id identity.PrincipalID) bool {
-	for _, r := range id.String() {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_' || r == '.' {
-			continue
+	principal := identity.Principal{ID: principalID}
+	if len(parts) == 2 {
+		email, ok := identity.NewEmail(parts[1])
+		if !ok {
+			return identity.Principal{}, ports.ErrUnauthenticated
 		}
-		return false
+		principal.Email = email
 	}
 
-	return true
+	return principal, nil
 }

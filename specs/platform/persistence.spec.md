@@ -127,6 +127,19 @@ The first durable schema covers the secure tenant/inventory tracer bullet:
   - request ID
   - metadata as JSONB
   - timestamps managed by GORM
+- `inventory_access_invitations`
+  - `id`
+  - tenant ID
+  - inventory ID
+  - normalized invitee email
+  - token hash
+  - relationship
+  - status
+  - inviter principal ID
+  - accepted principal ID when accepted
+  - expiration timestamp
+  - created, accepted, and revoked timestamps
+  - timestamps managed by GORM
 
 The `inventories.tenant_id` value must reference `tenants.id`.
 Authorization outbox records represent pending relationship changes that must be applied to SpiceDB.
@@ -138,6 +151,12 @@ Inventory access grant deletes must be committed with a matching claimed authori
 The request that creates a revoke event must own that event's first claim before the transaction commits so a background outbox worker cannot race the request-local revoke drain.
 Revoking a missing direct grant must still enqueue the matching revoke event so stale SpiceDB direct relationships can self-heal.
 Revocation audit history must be written only when a direct grant row existed and was removed.
+
+Inventory access invitations must be scoped by tenant and inventory. Pending invitations must be unique by tenant, inventory, normalized invitee email, and relationship.
+Raw invitation acceptance tokens must never be persisted. Persistence must store only a derived token verifier, such as a cryptographic hash.
+Invitation expiration timestamps must be persisted and enforced during acceptance.
+Accepting an invitation must verify the token hash, reject expired invitations, mark it accepted, create the direct inventory access grant for the accepting principal, enqueue the matching authorization outbox event, and write audit history in one transaction.
+Revoking an invitation must only affect pending invitations and must write audit history when a pending invitation is revoked.
 
 Custom field definitions must be scoped by tenant and optionally by inventory. The first persistence shape must prevent duplicate tenant-scoped keys inside one tenant and duplicate inventory-scoped keys inside one inventory.
 PostgreSQL migrations must also enforce the effective-key invariant across scopes so concurrent API replicas cannot create an inventory-scoped definition and a tenant-scoped definition with the same key in one tenant.
@@ -250,6 +269,10 @@ Additional custom-field JSONB indexes must wait until query behavior is specifie
 - Tests must cover that tenant and inventory state are persisted with authorization outbox records atomically.
 - Tests must cover that inventory access grants and their authorization outbox records are persisted atomically.
 - Tests must cover that duplicate inventory access grants do not enqueue duplicate authorization outbox events.
+- Tests must cover that invitation acceptance persists invitation status, direct access grant, authorization outbox event, and audit history atomically.
+- Tests must cover that invitation acceptance rejects missing and mismatched acceptance tokens.
+- Tests must cover that expired invitations cannot be accepted.
+- Tests must cover that revoked invitations cannot be accepted.
 - Tests must cover that inventory access grant keys are scoped to the inventory, not globally.
 - Tests must cover that duplicate audit record IDs are rejected and that paired domain writes roll back when an audit insert fails.
 - Tests must cover that authorization outbox processing retries failed relationship grants and marks successful grants processed.

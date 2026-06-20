@@ -41,9 +41,9 @@ A tenant is the top-level security boundary.
 
 An inventory lives inside one tenant. Users can belong to more than one tenant and can have access to one or more inventories inside a tenant.
 
-Authorization is relationship-based and uses the same shape as SpiceDB. The model should feel similar to Google Drive sharing: owners, editors, viewers, and direct sharing.
+Authorization is relationship-based and uses the same shape as SpiceDB. The model should feel similar to Google Drive sharing: owners, editors, viewers, direct sharing, and email-scoped invite-link tokens.
 
-The current API slice proves this boundary with local development auth, OIDC token verification, SpiceDB authorization wiring, tenant and inventory management, asset creation and movement, custom asset types, custom fields, audit history, asset attachments, authorized search, direct inventory sharing and revocation, and Huma-generated OpenAPI.
+The current API slice proves this boundary with local development auth, OIDC token verification, SpiceDB authorization wiring, tenant and inventory management, asset creation and movement, custom asset types, custom fields, audit history, asset attachments, authorized search, direct inventory sharing, invite-link tokens, revocation, and Huma-generated OpenAPI.
 
 When the API creates data that needs a SpiceDB relationship, it saves the data and an authorization outbox event in the same database transaction. The API then tries to drain that outbox right away. If SpiceDB is down, the relationship write can be retried instead of being lost. If an event is permanently invalid, it is dead-lettered instead of retried forever. Outbox events are claimed with short leases so more than one API replica can run safely.
 

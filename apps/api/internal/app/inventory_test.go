@@ -91,6 +91,7 @@ func (f *fakeTenantRepository) TenantExists(context.Context, tenant.ID) (bool, e
 type fakeInventoryRepository struct {
 	items        []inventory.Inventory
 	accessGrants []ports.InventoryAccessGrant
+	invitations  []ports.InventoryAccessInvitation
 	auditRecords []audit.Record
 	outbox       *fakeOutbox
 	calls        int

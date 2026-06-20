@@ -37,6 +37,9 @@ The first protected REST slice includes:
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept`
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
 - `POST /tenants/{tenantId}/custom-field-definitions`
 - `GET /tenants/{tenantId}/custom-field-definitions`
 - `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}`
@@ -77,6 +80,9 @@ The first protected REST slice includes:
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}` requires `inventory.share`.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations` requires `inventory.share` and returns time-limited one-time invite link material for delivery outside the core service.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept` requires a matching authenticated principal email and an unexpired invite acceptance token, then creates the accepted direct grant.
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}` requires `inventory.share`.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `GET /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.
 - `PATCH /tenants/{tenantId}/custom-field-definitions/{definitionId}` requires `tenant.configure`.

@@ -6,5 +6,5 @@ import (
 )
 
 func PrincipalToResponse(principal identity.Principal) dto.PrincipalResponse {
-	return dto.PrincipalResponse{ID: principal.ID.String()}
+	return dto.PrincipalResponse{ID: principal.ID.String(), Email: principal.Email.String()}
 }

@@ -67,8 +67,11 @@ Local Compose provides Dex for realistic OIDC verification without requiring a G
 The authenticated principal must include:
 
 - Stable user ID.
+- Optional verified email address when the authentication adapter can provide one.
 
-Future provider metadata may be carried at the adapter edge, but domain behavior must not depend on it.
+Provider-specific claims must be normalized at the adapter edge. Domain behavior may use project-owned principal fields such as verified email, but must not depend on provider-specific claim names or token objects.
+
+Local development authentication may accept an optional email fixture in addition to the stable user ID so invitation flows can be tested without OIDC. The email fixture exists only in explicit local/test mode.
 
 ## Verification
 

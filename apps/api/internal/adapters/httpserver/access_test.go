@@ -3,6 +3,7 @@ package httpserver
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 )
@@ -363,6 +364,236 @@ func TestInventoryAccessRevocationIgnoresUnrelatedOutboxFailures(t *testing.T) {
 		t.Fatalf("expected revoked viewer list status %d, got %d with body %s", http.StatusForbidden, revokedViewerListAssets.Code, revokedViewerListAssets.Body.String())
 	}
 	assertSafeError(t, revokedViewerListAssets, "forbidden", "Forbidden.")
+}
+
+func TestInventoryAccessInvitationsCreateAcceptAndRevoke(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FB0"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+			{id: otherInventoryID, tenantID: tenantID, name: "Supplies", owner: "inventory-owner"},
+		},
+		ids: []string{
+			"invite-viewer", "audit-invite-viewer",
+			"audit-wrong-token-accept", "wrong-token-accept-event",
+			"audit-wrong-email-accept", "wrong-email-accept-event",
+			"audit-wrong-tenant-accept", "wrong-tenant-accept-event",
+			"audit-wrong-inventory-accept", "wrong-inventory-accept-event",
+			"audit-accept-viewer", "accept-viewer-event", "accept-viewer-claim",
+			"audit-already-accepted", "already-accepted-event",
+			"audit-editor-grant", "editor-grant-event", "editor-grant-claim",
+			"invite-editor", "audit-invite-editor", "audit-revoke-editor",
+			"audit-revoked-accept", "revoked-accept-event",
+		},
+	}))
+
+	invitationResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations", "Bearer dev:inventory-owner", map[string]string{
+		"email":        "Viewer@Example.COM",
+		"relationship": "viewer",
+	})
+	if invitationResponse.Code != http.StatusCreated {
+		t.Fatalf("expected invitation create status %d, got %d with body %s", http.StatusCreated, invitationResponse.Code, invitationResponse.Body.String())
+	}
+	invitation := decodeInventoryAccessInvitation(t, invitationResponse).Data
+	if invitation.Email != "viewer@example.com" || invitation.Status != "pending" || invitation.Relationship != "viewer" {
+		t.Fatalf("unexpected invitation response: %+v", invitation)
+	}
+	if invitation.AcceptanceToken == "" {
+		t.Fatalf("expected one-time acceptance token in invitation response")
+	}
+	if invitation.ExpiresAt == "" {
+		t.Fatalf("expected invitation response to include expiresAt")
+	}
+
+	missingEmailAccept := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if missingEmailAccept.Code != http.StatusForbidden {
+		t.Fatalf("expected missing email accept status %d, got %d with body %s", http.StatusForbidden, missingEmailAccept.Code, missingEmailAccept.Body.String())
+	}
+	assertSafeError(t, missingEmailAccept, "forbidden", "Forbidden.")
+
+	missingTokenAccept := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": "",
+	})
+	if missingTokenAccept.Code != http.StatusForbidden {
+		t.Fatalf("expected missing token accept status %d, got %d with body %s", http.StatusForbidden, missingTokenAccept.Code, missingTokenAccept.Body.String())
+	}
+	assertSafeError(t, missingTokenAccept, "forbidden", "Forbidden.")
+
+	wrongTokenAccept := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": "wrong-token",
+	})
+	if wrongTokenAccept.Code != http.StatusForbidden {
+		t.Fatalf("expected wrong token accept status %d, got %d with body %s", http.StatusForbidden, wrongTokenAccept.Code, wrongTokenAccept.Body.String())
+	}
+	assertSafeError(t, wrongTokenAccept, "forbidden", "Forbidden.")
+
+	wrongEmailAccept := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:wrong@example.com", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if wrongEmailAccept.Code != http.StatusForbidden {
+		t.Fatalf("expected wrong email accept status %d, got %d with body %s", http.StatusForbidden, wrongEmailAccept.Code, wrongEmailAccept.Body.String())
+	}
+	assertSafeError(t, wrongEmailAccept, "forbidden", "Forbidden.")
+
+	wrongTenantAccept := performRequest(server, http.MethodPost, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if wrongTenantAccept.Code != http.StatusForbidden {
+		t.Fatalf("expected wrong tenant accept status %d, got %d with body %s", http.StatusForbidden, wrongTenantAccept.Code, wrongTenantAccept.Body.String())
+	}
+	assertSafeError(t, wrongTenantAccept, "forbidden", "Forbidden.")
+
+	wrongInventoryAccept := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+otherInventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if wrongInventoryAccept.Code != http.StatusForbidden {
+		t.Fatalf("expected wrong inventory accept status %d, got %d with body %s", http.StatusForbidden, wrongInventoryAccept.Code, wrongInventoryAccept.Body.String())
+	}
+	assertSafeError(t, wrongInventoryAccept, "forbidden", "Forbidden.")
+
+	acceptResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if acceptResponse.Code != http.StatusOK {
+		t.Fatalf("expected invitation accept status %d, got %d with body %s", http.StatusOK, acceptResponse.Code, acceptResponse.Body.String())
+	}
+	accepted := decodeInventoryAccessInvitationAcceptance(t, acceptResponse).Data
+	if accepted.Invitation.Status != "accepted" || accepted.Invitation.AcceptedPrincipalID != "viewer-user" {
+		t.Fatalf("expected accepted invitation, got %+v", accepted.Invitation)
+	}
+	assertInventoryAccessGrant(t, accepted.Grant, tenantID, inventoryID, "viewer-user", "viewer")
+
+	acceptAlreadyAccepted := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if acceptAlreadyAccepted.Code != http.StatusForbidden {
+		t.Fatalf("expected already accepted invite status %d, got %d with body %s", http.StatusForbidden, acceptAlreadyAccepted.Code, acceptAlreadyAccepted.Body.String())
+	}
+	assertSafeError(t, acceptAlreadyAccepted, "forbidden", "Forbidden.")
+
+	viewerListAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:viewer-user", nil)
+	if viewerListAssets.Code != http.StatusOK {
+		t.Fatalf("expected accepted viewer list assets status %d, got %d with body %s", http.StatusOK, viewerListAssets.Code, viewerListAssets.Body.String())
+	}
+	viewerCreateAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:viewer-user", map[string]string{"kind": "item", "title": "Drill"})
+	if viewerCreateAsset.Code != http.StatusForbidden {
+		t.Fatalf("expected accepted viewer create asset status %d, got %d with body %s", http.StatusForbidden, viewerCreateAsset.Code, viewerCreateAsset.Body.String())
+	}
+
+	editorGrant := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "editor-user",
+		"relationship": "editor",
+	})
+	if editorGrant.Code != http.StatusCreated {
+		t.Fatalf("expected editor grant status %d, got %d with body %s", http.StatusCreated, editorGrant.Code, editorGrant.Body.String())
+	}
+
+	for _, item := range []struct {
+		name string
+		auth string
+	}{
+		{name: "viewer", auth: "Bearer dev:viewer-user"},
+		{name: "editor", auth: "Bearer dev:editor-user"},
+		{name: "unrelated user", auth: "Bearer dev:unrelated-user"},
+	} {
+		t.Run(item.name+" cannot create invitations", func(t *testing.T) {
+			response := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations", item.auth, map[string]string{
+				"email":        item.name + "@example.com",
+				"relationship": "viewer",
+			})
+			if response.Code != http.StatusForbidden {
+				t.Fatalf("expected invitation create status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+			}
+		})
+	}
+
+	editorInviteResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations", "Bearer dev:inventory-owner", map[string]string{
+		"email":        "editor@example.com",
+		"relationship": "editor",
+	})
+	if editorInviteResponse.Code != http.StatusCreated {
+		t.Fatalf("expected editor invitation create status %d, got %d with body %s", http.StatusCreated, editorInviteResponse.Code, editorInviteResponse.Body.String())
+	}
+	editorInvite := decodeInventoryAccessInvitation(t, editorInviteResponse).Data
+
+	for _, item := range []struct {
+		name string
+		auth string
+	}{
+		{name: "viewer", auth: "Bearer dev:viewer-user"},
+		{name: "editor", auth: "Bearer dev:editor-user"},
+		{name: "unrelated user", auth: "Bearer dev:unrelated-user"},
+	} {
+		t.Run(item.name+" cannot revoke invitations", func(t *testing.T) {
+			response := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+editorInvite.ID, item.auth, nil)
+			if response.Code != http.StatusForbidden {
+				t.Fatalf("expected invitation revoke status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+			}
+		})
+	}
+
+	revokeEditorInvite := performRequest(server, http.MethodDelete, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+editorInvite.ID, "Bearer dev:inventory-owner", nil)
+	if revokeEditorInvite.Code != http.StatusNoContent {
+		t.Fatalf("expected invite revoke status %d, got %d with body %s", http.StatusNoContent, revokeEditorInvite.Code, revokeEditorInvite.Body.String())
+	}
+	acceptRevoked := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+editorInvite.ID+"/accept", "Bearer dev:editor-user:editor@example.com", map[string]string{
+		"acceptanceToken": editorInvite.AcceptanceToken,
+	})
+	if acceptRevoked.Code != http.StatusForbidden {
+		t.Fatalf("expected revoked invite accept status %d, got %d with body %s", http.StatusForbidden, acceptRevoked.Code, acceptRevoked.Body.String())
+	}
+	assertSafeError(t, acceptRevoked, "forbidden", "Forbidden.")
+
+	wrongTenantInvite := performRequest(server, http.MethodPost, "/tenants/"+otherTenantID+"/inventories/"+inventoryID+"/access-invitations", "Bearer dev:inventory-owner", map[string]string{
+		"email":        "other@example.com",
+		"relationship": "viewer",
+	})
+	if wrongTenantInvite.Code != http.StatusNotFound {
+		t.Fatalf("expected wrong tenant invite status %d, got %d with body %s", http.StatusNotFound, wrongTenantInvite.Code, wrongTenantInvite.Body.String())
+	}
+	assertSafeError(t, wrongTenantInvite, "resource_not_found", "Resource not found.")
+}
+
+func TestInventoryAccessInvitationRejectsExpiredToken(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+		},
+		ids:           []string{"invite-viewer", "audit-invite-viewer", "audit-expired-accept", "expired-accept-event"},
+		invitationTTL: time.Nanosecond,
+	}))
+
+	invitationResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations", "Bearer dev:inventory-owner", map[string]string{
+		"email":        "viewer@example.com",
+		"relationship": "viewer",
+	})
+	if invitationResponse.Code != http.StatusCreated {
+		t.Fatalf("expected invitation create status %d, got %d with body %s", http.StatusCreated, invitationResponse.Code, invitationResponse.Body.String())
+	}
+	invitation := decodeInventoryAccessInvitation(t, invitationResponse).Data
+	time.Sleep(time.Millisecond)
+
+	acceptExpired := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-invitations/"+invitation.ID+"/accept", "Bearer dev:viewer-user:viewer@example.com", map[string]string{
+		"acceptanceToken": invitation.AcceptanceToken,
+	})
+	if acceptExpired.Code != http.StatusForbidden {
+		t.Fatalf("expected expired invite accept status %d, got %d with body %s", http.StatusForbidden, acceptExpired.Code, acceptExpired.Body.String())
+	}
+	assertSafeError(t, acceptExpired, "forbidden", "Forbidden.")
 }
 
 func TestStateCreatedDuringAuthorizationGrantFailureStaysProtected(t *testing.T) {

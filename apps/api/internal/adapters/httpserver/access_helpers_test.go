@@ -135,10 +135,54 @@ type inventoryAccessGrantListBody struct {
 	Meta responseMeta                   `json:"meta"`
 }
 
+type inventoryAccessInvitationResponse struct {
+	ID                  string `json:"id"`
+	TenantID            string `json:"tenantId"`
+	InventoryID         string `json:"inventoryId"`
+	Email               string `json:"email"`
+	Relationship        string `json:"relationship"`
+	Status              string `json:"status"`
+	InviterPrincipalID  string `json:"inviterPrincipalId"`
+	AcceptedPrincipalID string `json:"acceptedPrincipalId"`
+	ExpiresAt           string `json:"expiresAt"`
+	AcceptanceToken     string `json:"acceptanceToken"`
+}
+
+type inventoryAccessInvitationBody struct {
+	Data inventoryAccessInvitationResponse `json:"data"`
+	Meta responseMeta                      `json:"meta"`
+}
+
+type inventoryAccessInvitationAcceptanceResponse struct {
+	Invitation inventoryAccessInvitationResponse `json:"invitation"`
+	Grant      inventoryAccessGrantResponse      `json:"grant"`
+}
+
+type inventoryAccessInvitationAcceptanceBody struct {
+	Data inventoryAccessInvitationAcceptanceResponse `json:"data"`
+	Meta responseMeta                                `json:"meta"`
+}
+
 func decodeInventoryAccessGrant(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessGrantBody {
 	t.Helper()
 
 	var body inventoryAccessGrantBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeInventoryAccessInvitation(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessInvitationBody {
+	t.Helper()
+
+	var body inventoryAccessInvitationBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeInventoryAccessInvitationAcceptance(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessInvitationAcceptanceBody {
+	t.Helper()
+
+	var body inventoryAccessInvitationAcceptanceBody
 	decodeBody(t, response, &body)
 	return body
 }

@@ -2,6 +2,9 @@ package app
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"strconv"
 	"time"
@@ -46,6 +49,40 @@ type RevokeInventoryAccessInput struct {
 	InventoryID  inventory.InventoryID
 	TargetUserID string
 	Relationship string
+}
+
+type CreateInventoryAccessInvitationInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	Email        string
+	Relationship string
+}
+
+type CreateInventoryAccessInvitationResult struct {
+	Invitation      ports.InventoryAccessInvitation
+	AcceptanceToken string
+}
+
+type AcceptInventoryAccessInvitationInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	InvitationID string
+	Token        string
+}
+
+type RevokeInventoryAccessInvitationInput struct {
+	Principal    identity.Principal
+	Source       audit.Source
+	RequestID    string
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	InvitationID string
 }
 
 func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAccessInput) (ports.InventoryAccessGrant, error) {
@@ -227,6 +264,166 @@ func (a App) ListInventoryAccessGrants(ctx context.Context, input ListInventoryA
 	}, nil
 }
 
+func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateInventoryAccessInvitationInput) (CreateInventoryAccessInvitationResult, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return CreateInventoryAccessInvitationResult{}, err
+	}
+	email, ok := identity.NewEmail(input.Email)
+	if !ok {
+		return CreateInventoryAccessInvitationResult{}, ErrInvalidInput
+	}
+	relationship, ok := inventoryAccessRelationship(input.Relationship)
+	if !ok {
+		return CreateInventoryAccessInvitationResult{}, ErrInvalidInput
+	}
+	acceptanceToken, err := newInventoryInvitationToken()
+	if err != nil {
+		return CreateInventoryAccessInvitationResult{}, err
+	}
+
+	invitation := ports.InventoryAccessInvitation{
+		ID:                 a.ids.NewID(),
+		TenantID:           input.TenantID,
+		InventoryID:        input.InventoryID,
+		Email:              email,
+		TokenHash:          hashInventoryInvitationToken(acceptanceToken),
+		Relationship:       relationship,
+		Status:             ports.InventoryAccessInvitationPending,
+		InviterPrincipalID: input.Principal.ID,
+		ExpiresAt:          time.Now().Add(a.invitationTTL),
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryInvitationCreated,
+		TargetType:  audit.TargetInventoryInvitation,
+		TargetID:    invitation.ID,
+		Metadata: map[string]string{
+			"relationship": string(relationship),
+		},
+	})
+	if err != nil {
+		return CreateInventoryAccessInvitationResult{}, err
+	}
+
+	saved, err := a.inventories.SaveInventoryAccessInvitation(ctx, invitation, auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrConflict) {
+			return CreateInventoryAccessInvitationResult{}, ErrInvalidInput
+		}
+		return CreateInventoryAccessInvitationResult{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventInventoryInvitationCreated,
+		Message: "inventory invitation created",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"principal_id": input.Principal.ID.String(),
+			"relationship": string(relationship),
+			"status":       string(saved.Status),
+		},
+	})
+	return CreateInventoryAccessInvitationResult{
+		Invitation:      saved,
+		AcceptanceToken: acceptanceToken,
+	}, nil
+}
+
+func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptInventoryAccessInvitationInput) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
+	if input.Principal.Email.String() == "" {
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+	}
+	if input.Token == "" {
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+	}
+
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryInvitationAccepted,
+		TargetType:  audit.TargetInventoryInvitation,
+		TargetID:    input.InvitationID,
+		Metadata: map[string]string{
+			"accepted_principal_id": input.Principal.ID.String(),
+		},
+	})
+	if err != nil {
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, err
+	}
+
+	invitation, grant, err := a.inventories.AcceptInventoryAccessInvitationAndEnqueue(ctx, input.TenantID, input.InventoryID, input.InvitationID, hashInventoryInvitationToken(input.Token), input.Principal, a.ids.NewID(), auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+		}
+		if errors.Is(err, ports.ErrConflict) {
+			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrInvalidInput
+		}
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventInventoryInvitationAccepted,
+		Message: "inventory invitation accepted",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"principal_id": input.Principal.ID.String(),
+			"relationship": string(grant.Relationship),
+			"status":       string(invitation.Status),
+		},
+	})
+	a.drainAuthorizationOutboxBestEffort(ctx, a.authorizationOutboxDrainLimit())
+	return invitation, grant, nil
+}
+
+func (a App) RevokeInventoryAccessInvitation(ctx context.Context, input RevokeInventoryAccessInvitationInput) (bool, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionShare); err != nil {
+		return false, err
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionInventoryInvitationRevoked,
+		TargetType:  audit.TargetInventoryInvitation,
+		TargetID:    input.InvitationID,
+		Metadata:    map[string]string{},
+	})
+	if err != nil {
+		return false, err
+	}
+	revoked, err := a.inventories.RevokeInventoryAccessInvitation(ctx, input.TenantID, input.InventoryID, input.InvitationID, auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return false, ErrInvalidInput
+		}
+		return false, err
+	}
+	if revoked {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventInventoryInvitationRevoked,
+			Message: "inventory invitation revoked",
+			Fields: map[string]string{
+				"tenant_id":     input.TenantID.String(),
+				"inventory_id":  input.InventoryID.String(),
+				"principal_id":  input.Principal.ID.String(),
+				"invitation_id": input.InvitationID,
+				"result_status": string(ports.InventoryAccessInvitationRevoked),
+			},
+		})
+	}
+	return revoked, nil
+}
+
 func inventoryAccessRelationship(value string) (ports.InventoryAccessRelationship, bool) {
 	relationship := ports.InventoryAccessRelationship(value)
 	switch relationship {
@@ -243,4 +440,17 @@ func encodeInventoryAccessGrantCursor(tenantID tenant.ID, inventoryID inventory.
 
 func decodeInventoryAccessGrantCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (string, error) {
 	return decodePageCursor("inventory_access_grants", tenantID.String()+":"+inventoryID.String(), cursor)
+}
+
+func newInventoryInvitationToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
+}
+
+func hashInventoryInvitationToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return base64.RawURLEncoding.EncodeToString(sum[:])
 }

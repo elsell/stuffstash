@@ -2,11 +2,13 @@ package gormstore
 
 import (
 	"context"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -56,13 +58,13 @@ func (s Store) SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID s
 		if !ok {
 			return fmt.Errorf("invalid inventory access relationship %q", grant.Relationship)
 		}
-		inventoryID := grant.InventoryID.String()
+		outboxInventoryID := grant.InventoryID.String()
 		if err := tx.Create(&authorizationOutboxEventModel{
 			ID:          eventID,
 			Kind:        string(eventKind),
 			PrincipalID: grant.PrincipalID.String(),
 			TenantID:    grant.TenantID.String(),
-			InventoryID: &inventoryID,
+			InventoryID: &outboxInventoryID,
 		}).Error; err != nil {
 			return err
 		}
@@ -151,4 +153,169 @@ func (s Store) ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+func (s Store) SaveInventoryAccessInvitation(ctx context.Context, invitation ports.InventoryAccessInvitation, auditRecord audit.Record) (ports.InventoryAccessInvitation, error) {
+	var saved ports.InventoryAccessInvitation
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var containingInventory inventoryModel
+		err := tx.Where(&inventoryModel{
+			ID:       invitation.InventoryID.String(),
+			TenantID: invitation.TenantID.String(),
+		}).First(&containingInventory).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+
+		var existing inventoryAccessInvitationModel
+		err = tx.Where(&inventoryAccessInvitationModel{
+			TenantID:     invitation.TenantID.String(),
+			InventoryID:  invitation.InventoryID.String(),
+			Email:        invitation.Email.String(),
+			Relationship: string(invitation.Relationship),
+			Status:       string(ports.InventoryAccessInvitationPending),
+		}).First(&existing).Error
+		if err == nil {
+			return ports.ErrConflict
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		invitation.Status = ports.InventoryAccessInvitationPending
+		if invitation.CreatedAt.IsZero() {
+			invitation.CreatedAt = time.Now()
+		}
+		if invitation.ExpiresAt.IsZero() {
+			return ports.ErrConflict
+		}
+		model := inventoryAccessInvitationModelFromPort(invitation)
+		if err := tx.Create(&model).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		var ok bool
+		saved, ok = model.toPort()
+		if !ok {
+			return fmt.Errorf("invalid inventory access invitation row %q", model.ID)
+		}
+		return nil
+	})
+	return saved, err
+}
+
+func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
+	var saved ports.InventoryAccessInvitation
+	var grant ports.InventoryAccessGrant
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model inventoryAccessInvitationModel
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&inventoryAccessInvitationModel{ID: invitationID, TenantID: tenantID.String(), InventoryID: inventoryID.String()}).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		invitation, ok := model.toPort()
+		if !ok {
+			return fmt.Errorf("invalid inventory access invitation row %q", model.ID)
+		}
+		if invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || !inventoryInvitationTokenHashMatches(invitation.TokenHash, tokenHash) || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(time.Now()) {
+			return ports.ErrForbidden
+		}
+		eventKind, ok := invitation.Relationship.GrantOutboxKind()
+		if !ok {
+			return fmt.Errorf("invalid inventory access relationship %q", invitation.Relationship)
+		}
+
+		grant = ports.InventoryAccessGrant{
+			TenantID:     invitation.TenantID,
+			InventoryID:  invitation.InventoryID,
+			PrincipalID:  acceptor.ID,
+			Relationship: invitation.Relationship,
+		}
+		grantModel := inventoryAccessGrantModel{
+			TenantID:     grant.TenantID.String(),
+			InventoryID:  grant.InventoryID.String(),
+			GrantKey:     grant.CursorKey(),
+			PrincipalID:  grant.PrincipalID.String(),
+			Relationship: string(grant.Relationship),
+		}
+		result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&grantModel)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected > 0 {
+			outboxInventoryID := grant.InventoryID.String()
+			if err := tx.Create(&authorizationOutboxEventModel{
+				ID:          eventID,
+				Kind:        string(eventKind),
+				PrincipalID: grant.PrincipalID.String(),
+				TenantID:    grant.TenantID.String(),
+				InventoryID: &outboxInventoryID,
+			}).Error; err != nil {
+				return err
+			}
+		}
+
+		now := time.Now()
+		model.Status = string(ports.InventoryAccessInvitationAccepted)
+		model.AcceptedPrincipalID = acceptor.ID.String()
+		model.AcceptedAt = &now
+		if err := tx.Save(&model).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+
+		saved, ok = model.toPort()
+		if !ok {
+			return fmt.Errorf("invalid inventory access invitation row %q", model.ID)
+		}
+		return nil
+	})
+	return saved, grant, err
+}
+
+func inventoryInvitationTokenHashMatches(storedHash string, providedHash string) bool {
+	return subtle.ConstantTimeCompare([]byte(storedHash), []byte(providedHash)) == 1
+}
+
+func (s Store) RevokeInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error) {
+	revoked := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model inventoryAccessInvitationModel
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&inventoryAccessInvitationModel{
+			ID:          invitationID,
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+		}).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if model.Status != string(ports.InventoryAccessInvitationPending) {
+			return nil
+		}
+		now := time.Now()
+		model.Status = string(ports.InventoryAccessInvitationRevoked)
+		model.RevokedAt = &now
+		if err := tx.Save(&model).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		revoked = true
+		return nil
+	})
+	return revoked, err
 }

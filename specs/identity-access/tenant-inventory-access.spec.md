@@ -10,7 +10,7 @@ The access model should feel familiar to users: tenants contain inventories, inv
 
 This spec covers the initial identity, tenant, inventory, authentication, and authorization model.
 
-This spec does not define every SpiceDB relationship, email invitation acceptance flow, UI screen, or billing concept.
+This spec does not define every SpiceDB relationship, UI screen, billing concept, groups, or ownership transfer.
 
 ## Model
 
@@ -60,13 +60,16 @@ The first relationship model should include these concepts:
 
 The first user-management slice supports direct inventory sharing with known principal IDs.
 
-It does not implement email invitations, invite acceptance, user search, tenant membership management, groups, or ownership transfer.
+It does not implement user search, tenant membership management, groups, or ownership transfer.
 
 The first endpoints are:
 
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept`
+- `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
 
 `POST /access-grants`:
 
@@ -108,6 +111,46 @@ Granting direct inventory access must also grant tenant `viewer` to the target p
 
 Revoking direct inventory access removes the inventory relationship. Tenant viewer cleanup is deferred until tenant membership and invitation semantics are specified, because a user may still need tenant view through another inventory.
 
+`POST /access-invitations`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Accepts an invitee email address and a relationship.
+- Supports only `viewer` and `editor` relationships in the first slice.
+- Must create a pending invitation scoped to one tenant and one inventory.
+- Must normalize invitation email addresses for matching.
+- Must return one-time invite link material, including a raw acceptance token, to the caller.
+- Must never store the raw acceptance token directly.
+- Must store only a derived token verifier, such as a cryptographic hash.
+- Must set an expiration timestamp for the invite link token.
+- The invitation token TTL must come from environment-backed configuration.
+- Must not require email delivery, SMTP, or a third-party messaging service.
+- Must allow self-hosted deployments to copy and deliver invite links manually.
+- Future email, chat, or app notification delivery must be adapters around the same invitation contract.
+- Must not create SpiceDB relationships or direct access grants before acceptance.
+- Must produce audit history.
+- May be idempotent for the same pending tenant, inventory, email, and relationship by returning the existing pending invitation with refreshed one-time invite link material.
+
+`POST /access-invitations/{invitationId}/accept`:
+
+- Requires authentication.
+- Requires the authenticated principal to have a verified email address matching the invitation email.
+- Requires the raw acceptance token from the invite link.
+- Must reject missing principal email, wrong email, missing token, wrong token, expired token, wrong tenant, wrong inventory, revoked invitations, and already accepted invitations.
+- A valid token without a matching authenticated verified email must not grant access.
+- A matching authenticated verified email without the valid token must not grant access.
+- Must mark the invitation accepted, create the direct access grant for the accepting principal, enqueue the matching SpiceDB grant event, and write audit history in one transaction.
+- Must drain the authorization outbox after commit and leave failed relationship writes retryable.
+
+`DELETE /access-invitations/{invitationId}`:
+
+- Requires authentication.
+- Requires `inventory.share`.
+- Must revoke only pending invitations.
+- Must not remove existing direct access grants.
+- Must produce audit history only when a pending invitation existed and was revoked.
+- Must use the standard no-content response.
+
 Granting `viewer` allows inventory viewing and asset listing.
 
 Granting `editor` allows inventory viewing, asset listing, asset creation, asset update, and same-inventory asset movement.
@@ -133,9 +176,9 @@ Neither `viewer` nor `editor` allows sharing access onward.
 - Tests must cover unauthenticated access, wrong-tenant access, wrong-inventory access, viewer attempting edits, editor attempting admin operations, malformed tokens, expired tokens, and privilege escalation attempts.
 - Tests must verify that conversational actions cannot exceed the initiating user's permissions.
 - Sharing API tests must prove owners can grant and revoke direct access, unrelated users cannot grant, revoke, or list grants, viewers cannot share or revoke, editors cannot share or revoke, granted viewers/editors receive only their intended permissions, and revoked users lose the revoked inventory permissions.
+- Invitation API tests must prove owners can create, accept, and revoke pending invitations; viewers, editors, unrelated users, wrong-email users, missing-email users, missing-token users, wrong-token users, expired-token users, wrong-tenant callers, and wrong-inventory callers cannot exceed their permissions; revoked invitations cannot be accepted; accepted invitations create only the intended direct access relationship.
 
 ## Open Questions
 
-- How are email invitations created, accepted, revoked, and audited?
 - What is the first mobile-friendly OIDC flow?
 - How should users switch between tenants and inventories?

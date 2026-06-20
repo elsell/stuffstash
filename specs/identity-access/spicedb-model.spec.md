@@ -87,4 +87,9 @@ Archive and restore use `edit_asset` in the first lifecycle slice. A future spec
 ## Open Questions
 
 - Which operations should inventory editor be allowed to undo?
-- How should pending invitations be represented?
+
+## Invitation Representation
+
+Pending inventory access invitations are application state stored in Stuff Stash persistence.
+
+SpiceDB must only represent active relationships. An invitation creates no SpiceDB relationship until it is accepted. Acceptance creates the direct inventory viewer/editor relationship through the authorization outbox.

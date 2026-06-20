@@ -150,6 +150,18 @@ func (attachmentInventoryRepository) DeleteInventoryAccessGrantAndClaimRevoke(co
 	return ports.AuthorizationOutboxEvent{}, false, nil
 }
 
+func (attachmentInventoryRepository) SaveInventoryAccessInvitation(context.Context, ports.InventoryAccessInvitation, audit.Record) (ports.InventoryAccessInvitation, error) {
+	return ports.InventoryAccessInvitation{}, nil
+}
+
+func (attachmentInventoryRepository) AcceptInventoryAccessInvitationAndEnqueue(context.Context, tenant.ID, inventory.InventoryID, string, string, identity.Principal, string, audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
+	return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, nil
+}
+
+func (attachmentInventoryRepository) RevokeInventoryAccessInvitation(context.Context, tenant.ID, inventory.InventoryID, string, audit.Record) (bool, error) {
+	return false, nil
+}
+
 func (attachmentInventoryRepository) ListInventoryAccessGrants(context.Context, tenant.ID, inventory.InventoryID, ports.InventoryAccessGrantPageRequest) ([]ports.InventoryAccessGrant, error) {
 	return nil, nil
 }

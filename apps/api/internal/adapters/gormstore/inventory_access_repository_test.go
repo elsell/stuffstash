@@ -164,6 +164,150 @@ func TestStoreDeletesInventoryAccessGrantAndEnqueuesRevoke(t *testing.T) {
 	}
 }
 
+func TestStoreAcceptsInventoryAccessInvitationAtomically(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	email, _ := identity.NewEmail("viewer@example.com")
+	expiresAt := time.Now().Add(time.Hour)
+	invitation, err := store.SaveInventoryAccessInvitation(ctx, ports.InventoryAccessInvitation{
+		ID:                 "01ARZ3NDEKTSV4RRFFQ69G5FAX",
+		TenantID:           tenantID,
+		InventoryID:        inventoryID,
+		Email:              email,
+		TokenHash:          "correct-token-hash",
+		Relationship:       ports.InventoryAccessViewer,
+		Status:             ports.InventoryAccessInvitationPending,
+		InviterPrincipalID: identity.PrincipalID("owner"),
+		ExpiresAt:          expiresAt,
+	}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, inventoryID, audit.ActionInventoryInvitationCreated))
+	if err != nil {
+		t.Fatalf("save invitation: %v", err)
+	}
+	if invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != email {
+		t.Fatalf("unexpected invitation: %+v", invitation)
+	}
+	if invitation.ExpiresAt.IsZero() {
+		t.Fatalf("expected invitation expiry")
+	}
+
+	_, err = store.SaveInventoryAccessInvitation(ctx, ports.InventoryAccessInvitation{
+		ID:                 "01ARZ3NDEKTSV4RRFFQ69G5FB3",
+		TenantID:           tenantID,
+		InventoryID:        inventoryID,
+		Email:              email,
+		TokenHash:          "replacement-token-hash",
+		Relationship:       ports.InventoryAccessViewer,
+		Status:             ports.InventoryAccessInvitationPending,
+		InviterPrincipalID: identity.PrincipalID("owner"),
+		ExpiresAt:          time.Now().Add(time.Hour),
+	}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB4", tenantID, inventoryID, audit.ActionInventoryInvitationCreated))
+	if !errors.Is(err, ports.ErrConflict) {
+		t.Fatalf("expected duplicate pending invitation conflict, got %v", err)
+	}
+
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "wrong-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected wrong token rejection, got %v", err)
+	}
+
+	accepted, grant, err := store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB1", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	if err != nil {
+		t.Fatalf("accept invitation: %v", err)
+	}
+	if accepted.Status != ports.InventoryAccessInvitationAccepted || accepted.AcceptedPrincipalID != identity.PrincipalID("viewer-user") {
+		t.Fatalf("expected accepted invitation, got %+v", accepted)
+	}
+	if grant.PrincipalID != identity.PrincipalID("viewer-user") || grant.Relationship != ports.InventoryAccessViewer {
+		t.Fatalf("unexpected grant: %+v", grant)
+	}
+
+	grants, err := store.ListInventoryAccessGrants(ctx, tenantID, inventoryID, ports.InventoryAccessGrantPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list grants: %v", err)
+	}
+	if len(grants) != 1 || grants[0] != grant {
+		t.Fatalf("expected accepted grant persisted, got %+v", grants)
+	}
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-accept", 10, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim outbox: %v", err)
+	}
+	if len(events) != 1 || events[0].Kind != ports.AuthorizationOutboxGrantInventoryViewer || events[0].PrincipalID != identity.PrincipalID("viewer-user") {
+		t.Fatalf("expected grant viewer outbox event, got %+v", events)
+	}
+}
+
+func TestStoreRejectsRevokedInventoryAccessInvitationAcceptance(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	email, _ := identity.NewEmail("viewer@example.com")
+	invitation, err := store.SaveInventoryAccessInvitation(ctx, ports.InventoryAccessInvitation{
+		ID:                 "01ARZ3NDEKTSV4RRFFQ69G5FAX",
+		TenantID:           tenantID,
+		InventoryID:        inventoryID,
+		Email:              email,
+		TokenHash:          "correct-token-hash",
+		Relationship:       ports.InventoryAccessViewer,
+		Status:             ports.InventoryAccessInvitationPending,
+		InviterPrincipalID: identity.PrincipalID("owner"),
+		ExpiresAt:          time.Now().Add(time.Hour),
+	}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, inventoryID, audit.ActionInventoryInvitationCreated))
+	if err != nil {
+		t.Fatalf("save invitation: %v", err)
+	}
+	revoked, err := store.RevokeInventoryAccessInvitation(ctx, tenantID, inventoryID, invitation.ID, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventoryID, audit.ActionInventoryInvitationRevoked))
+	if err != nil {
+		t.Fatalf("revoke invitation: %v", err)
+	}
+	if !revoked {
+		t.Fatalf("expected invitation revoked")
+	}
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected revoked invitation forbidden, got %v", err)
+	}
+}
+
+func TestStoreRejectsExpiredInventoryAccessInvitationAcceptance(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	email, _ := identity.NewEmail("viewer@example.com")
+	invitation, err := store.SaveInventoryAccessInvitation(ctx, ports.InventoryAccessInvitation{
+		ID:                 "01ARZ3NDEKTSV4RRFFQ69G5FAX",
+		TenantID:           tenantID,
+		InventoryID:        inventoryID,
+		Email:              email,
+		TokenHash:          "correct-token-hash",
+		Relationship:       ports.InventoryAccessViewer,
+		Status:             ports.InventoryAccessInvitationPending,
+		InviterPrincipalID: identity.PrincipalID("owner"),
+		ExpiresAt:          time.Now().Add(-time.Hour),
+	}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, inventoryID, audit.ActionInventoryInvitationCreated))
+	if err != nil {
+		t.Fatalf("save invitation: %v", err)
+	}
+
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected expired invitation forbidden, got %v", err)
+	}
+}
+
 func TestStoreScopesInventoryAccessGrantsToInventory(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

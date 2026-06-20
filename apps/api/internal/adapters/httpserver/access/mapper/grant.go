@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/access/dto"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -20,4 +22,25 @@ func GrantsToResponse(grants []ports.InventoryAccessGrant) []dto.GrantResponse {
 		data = append(data, GrantToResponse(grant))
 	}
 	return data
+}
+
+func InvitationToResponse(invitation ports.InventoryAccessInvitation) dto.InvitationResponse {
+	return dto.InvitationResponse{
+		ID:                  invitation.ID,
+		TenantID:            invitation.TenantID.String(),
+		InventoryID:         invitation.InventoryID.String(),
+		Email:               invitation.Email.String(),
+		Relationship:        string(invitation.Relationship),
+		Status:              string(invitation.Status),
+		InviterPrincipalID:  invitation.InviterPrincipalID.String(),
+		AcceptedPrincipalID: invitation.AcceptedPrincipalID.String(),
+		ExpiresAt:           invitation.ExpiresAt.Format(time.RFC3339),
+	}
+}
+
+func InvitationAcceptanceToResponse(invitation ports.InventoryAccessInvitation, grant ports.InventoryAccessGrant) dto.InvitationAcceptanceResponse {
+	return dto.InvitationAcceptanceResponse{
+		Invitation: InvitationToResponse(invitation),
+		Grant:      GrantToResponse(grant),
+	}
 }

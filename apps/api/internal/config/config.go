@@ -23,6 +23,7 @@ const (
 	envAuthorizationOutboxLimit = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
 	envAuthorizationOutboxEvery = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
 	envAuthorizationOutboxLease = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
+	envInvitationTTL            = "STUFF_STASH_INVITATION_TTL"
 	envDefaultPageLimit         = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
 	envMaxPageLimit             = "STUFF_STASH_MAX_PAGE_LIMIT"
 	envBlobStorageMode          = "STUFF_STASH_BLOB_STORAGE_MODE"
@@ -42,6 +43,7 @@ const (
 	defaultAuthorizationLimit   = 25
 	defaultAuthorizationEvery   = 10 * time.Second
 	defaultAuthorizationLease   = 30 * time.Second
+	defaultInvitationTTL        = 7 * 24 * time.Hour
 	defaultDefaultPageLimit     = 50
 	defaultMaxPageLimit         = 100
 	defaultBlobStorageMode      = "filesystem"
@@ -69,6 +71,7 @@ type Config struct {
 	AuthorizationOutboxDrainLimit    int
 	AuthorizationOutboxDrainInterval time.Duration
 	AuthorizationOutboxClaimLease    time.Duration
+	InvitationTTL                    time.Duration
 	DefaultPageLimit                 int
 	MaxPageLimit                     int
 	BlobStorageMode                  string
@@ -99,6 +102,7 @@ func Load() Config {
 		AuthorizationOutboxDrainLimit:    intEnvOrDefault(envAuthorizationOutboxLimit, defaultAuthorizationLimit),
 		AuthorizationOutboxDrainInterval: durationEnvOrDefault(envAuthorizationOutboxEvery, defaultAuthorizationEvery),
 		AuthorizationOutboxClaimLease:    durationEnvOrDefault(envAuthorizationOutboxLease, defaultAuthorizationLease),
+		InvitationTTL:                    durationEnvOrDefault(envInvitationTTL, defaultInvitationTTL),
 		DefaultPageLimit:                 intEnvOrDefault(envDefaultPageLimit, defaultDefaultPageLimit),
 		MaxPageLimit:                     intEnvOrDefault(envMaxPageLimit, defaultMaxPageLimit),
 		BlobStorageMode:                  envOrDefault(envBlobStorageMode, defaultBlobStorageMode),

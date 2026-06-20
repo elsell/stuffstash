@@ -31,6 +31,9 @@ type InventoryRepository interface {
 	SaveInventoryAccessGrantAndEnqueue(ctx context.Context, eventID string, grant InventoryAccessGrant, auditRecord audit.Record) error
 	DeleteInventoryAccessGrantAndClaimRevoke(ctx context.Context, eventID string, claimID string, leaseUntil time.Time, grant InventoryAccessGrant, auditRecord audit.Record) (AuthorizationOutboxEvent, bool, error)
 	ListInventoryAccessGrants(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page InventoryAccessGrantPageRequest) ([]InventoryAccessGrant, error)
+	SaveInventoryAccessInvitation(ctx context.Context, invitation InventoryAccessInvitation, auditRecord audit.Record) (InventoryAccessInvitation, error)
+	AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (InventoryAccessInvitation, InventoryAccessGrant, error)
+	RevokeInventoryAccessInvitation(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, auditRecord audit.Record) (bool, error)
 }
 
 type InventoryListPageRequest struct {
@@ -74,6 +77,30 @@ func (r InventoryAccessRelationship) RevokeOutboxKind() (AuthorizationOutboxEven
 type InventoryAccessGrantPageRequest struct {
 	AfterGrantKey string
 	Limit         int
+}
+
+type InventoryAccessInvitationStatus string
+
+const (
+	InventoryAccessInvitationPending  InventoryAccessInvitationStatus = "pending"
+	InventoryAccessInvitationAccepted InventoryAccessInvitationStatus = "accepted"
+	InventoryAccessInvitationRevoked  InventoryAccessInvitationStatus = "revoked"
+)
+
+type InventoryAccessInvitation struct {
+	ID                  string
+	TenantID            tenant.ID
+	InventoryID         inventory.InventoryID
+	Email               identity.Email
+	TokenHash           string
+	Relationship        InventoryAccessRelationship
+	Status              InventoryAccessInvitationStatus
+	InviterPrincipalID  identity.PrincipalID
+	AcceptedPrincipalID identity.PrincipalID
+	CreatedAt           time.Time
+	ExpiresAt           time.Time
+	AcceptedAt          time.Time
+	RevokedAt           time.Time
 }
 
 type CustomFieldDefinitionRepository interface {

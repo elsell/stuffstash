@@ -44,6 +44,9 @@ const (
 	ActionInventoryCreated             Action = "inventory.created"
 	ActionInventoryAccessGranted       Action = "inventory_access.granted"
 	ActionInventoryAccessRevoked       Action = "inventory_access.revoked"
+	ActionInventoryInvitationCreated   Action = "inventory_invitation.created"
+	ActionInventoryInvitationAccepted  Action = "inventory_invitation.accepted"
+	ActionInventoryInvitationRevoked   Action = "inventory_invitation.revoked"
 	ActionCustomAssetTypeCreated       Action = "custom_asset_type.created"
 	ActionCustomAssetTypeUpdated       Action = "custom_asset_type.updated"
 	ActionCustomFieldDefinitionCreated Action = "custom_field_definition.created"
@@ -63,6 +66,9 @@ func NewAction(value string) (Action, bool) {
 		ActionInventoryCreated,
 		ActionInventoryAccessGranted,
 		ActionInventoryAccessRevoked,
+		ActionInventoryInvitationCreated,
+		ActionInventoryInvitationAccepted,
+		ActionInventoryInvitationRevoked,
 		ActionCustomAssetTypeCreated,
 		ActionCustomAssetTypeUpdated,
 		ActionCustomFieldDefinitionCreated,
@@ -114,6 +120,7 @@ const (
 	TargetTenant                TargetType = "tenant"
 	TargetInventory             TargetType = "inventory"
 	TargetInventoryAccessGrant  TargetType = "inventory_access_grant"
+	TargetInventoryInvitation   TargetType = "inventory_invitation"
 	TargetCustomAssetType       TargetType = "custom_asset_type"
 	TargetCustomFieldDefinition TargetType = "custom_field_definition"
 	TargetAsset                 TargetType = "asset"
@@ -122,7 +129,7 @@ const (
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset:
+	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset:
 		return targetType, true
 	default:
 		return "", false

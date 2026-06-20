@@ -10,6 +10,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestGrantInventoryAccessRequiresShareAndRejectsInvalidGrants(t *testing.T) {
@@ -287,5 +288,224 @@ func TestRevokeInventoryAccessProcessesItsOwnOutboxEventWhenBacklogExists(t *tes
 	}
 	if len(outbox.events) != 30 {
 		t.Fatalf("expected unrelated backlog to remain untouched, got %+v", outbox.events)
+	}
+}
+
+func TestInventoryAccessInvitationCreateAcceptAndRevoke(t *testing.T) {
+	outbox := &fakeOutbox{}
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		},
+		outbox: outbox,
+	}
+	observer := &fakeObserver{}
+	application := New(Dependencies{
+		Observer:    observer,
+		Authorizer:  &fakeAuthorizer{},
+		Tenants:     &fakeTenantRepository{exists: true},
+		Inventories: repository,
+		Audit:       &fakeAuditRepository{},
+		Outbox:      outbox,
+		IDs:         &fakeIDGenerator{ids: []string{"invite-one", "audit-invite", "audit-accept", "grant-event", "grant-claim", "invite-two", "audit-invite-two", "audit-revoke"}},
+	})
+
+	inviteResult, err := application.CreateInventoryAccessInvitation(context.Background(), CreateInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		Email:        "Viewer@Example.COM",
+		Relationship: "viewer",
+	})
+	if err != nil {
+		t.Fatalf("create invitation: %v", err)
+	}
+	invitation := inviteResult.Invitation
+	if invitation.Email.String() != "viewer@example.com" || invitation.Status != ports.InventoryAccessInvitationPending {
+		t.Fatalf("unexpected invitation: %+v", invitation)
+	}
+	if inviteResult.AcceptanceToken == "" || invitation.TokenHash != hashInventoryInvitationToken(inviteResult.AcceptanceToken) {
+		t.Fatalf("expected invitation response to include a matching one-time acceptance token")
+	}
+	if invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(time.Now()) {
+		t.Fatalf("expected pending invitation to expire in the future, got %s", invitation.ExpiresAt)
+	}
+
+	accepted, grant, err := application.AcceptInventoryAccessInvitation(context.Background(), AcceptInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: invitation.Email},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		InvitationID: invitation.ID,
+		Token:        inviteResult.AcceptanceToken,
+	})
+	if err != nil {
+		t.Fatalf("accept invitation: %v", err)
+	}
+	if accepted.Status != ports.InventoryAccessInvitationAccepted || accepted.AcceptedPrincipalID != identity.PrincipalID("viewer-user") {
+		t.Fatalf("expected accepted invitation, got %+v", accepted)
+	}
+	if grant.PrincipalID != identity.PrincipalID("viewer-user") || grant.Relationship != ports.InventoryAccessViewer {
+		t.Fatalf("unexpected grant: %+v", grant)
+	}
+	if len(repository.auditRecords) != 2 {
+		t.Fatalf("expected invite create/accept audits, got %+v", repository.auditRecords)
+	}
+	if len(outbox.processed) != 1 || outbox.processed[0] != "grant-event" {
+		t.Fatalf("expected accepted invitation grant outbox processed, got %+v", outbox.processed)
+	}
+	if !observer.hasEvent(ports.EventInventoryInvitationCreated) || !observer.hasEvent(ports.EventInventoryInvitationAccepted) {
+		t.Fatalf("expected invitation created and accepted observability events, got %+v", observer.events)
+	}
+
+	revokedInviteResult, err := application.CreateInventoryAccessInvitation(context.Background(), CreateInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		Email:        "editor@example.com",
+		Relationship: "editor",
+	})
+	if err != nil {
+		t.Fatalf("create invitation to revoke: %v", err)
+	}
+	revokedInvite := revokedInviteResult.Invitation
+	revoked, err := application.RevokeInventoryAccessInvitation(context.Background(), RevokeInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		InvitationID: revokedInvite.ID,
+	})
+	if err != nil {
+		t.Fatalf("revoke invitation: %v", err)
+	}
+	if !revoked {
+		t.Fatalf("expected pending invitation revoked")
+	}
+	if !observer.hasEvent(ports.EventInventoryInvitationRevoked) {
+		t.Fatalf("expected invitation revoked observability event, got %+v", observer.events)
+	}
+	_, _, err = application.AcceptInventoryAccessInvitation(context.Background(), AcceptInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("editor-user"), Email: identity.Email("editor@example.com")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		InvitationID: revokedInvite.ID,
+		Token:        revokedInviteResult.AcceptanceToken,
+	})
+	if !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected revoked invitation rejection, got %v", err)
+	}
+}
+
+func TestCreateInventoryAccessInvitationRejectsDuplicatePendingInvitation(t *testing.T) {
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		},
+		invitations: []ports.InventoryAccessInvitation{
+			{
+				ID:           "invite-one",
+				TenantID:     tenant.ID("tenant-one"),
+				InventoryID:  inventory.InventoryID("inventory-one"),
+				Email:        identity.Email("viewer@example.com"),
+				TokenHash:    hashInventoryInvitationToken("old-token"),
+				Relationship: ports.InventoryAccessViewer,
+				Status:       ports.InventoryAccessInvitationPending,
+				ExpiresAt:    time.Now().Add(time.Hour),
+			},
+		},
+	}
+	application := New(Dependencies{
+		Observer:    &fakeObserver{},
+		Authorizer:  &fakeAuthorizer{},
+		Tenants:     &fakeTenantRepository{exists: true},
+		Inventories: repository,
+		Audit:       &fakeAuditRepository{},
+		Outbox:      &fakeOutbox{},
+		IDs:         &fakeIDGenerator{ids: []string{"invite-two", "audit-invite-two"}},
+	})
+
+	_, err := application.CreateInventoryAccessInvitation(context.Background(), CreateInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("owner")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		Email:        "viewer@example.com",
+		Relationship: "viewer",
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected duplicate pending invitation rejection, got %v", err)
+	}
+}
+
+func TestAcceptInventoryAccessInvitationRejectsMissingOrWrongEmail(t *testing.T) {
+	repository := &fakeInventoryRepository{
+		items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		},
+		invitations: []ports.InventoryAccessInvitation{
+			{
+				ID:           "invite-one",
+				TenantID:     tenant.ID("tenant-one"),
+				InventoryID:  inventory.InventoryID("inventory-one"),
+				Email:        identity.Email("viewer@example.com"),
+				TokenHash:    hashInventoryInvitationToken("correct-token"),
+				Relationship: ports.InventoryAccessViewer,
+				Status:       ports.InventoryAccessInvitationPending,
+				ExpiresAt:    time.Now().Add(time.Hour),
+			},
+			{
+				ID:           "expired-invite",
+				TenantID:     tenant.ID("tenant-one"),
+				InventoryID:  inventory.InventoryID("inventory-one"),
+				Email:        identity.Email("expired@example.com"),
+				TokenHash:    hashInventoryInvitationToken("expired-token"),
+				Relationship: ports.InventoryAccessViewer,
+				Status:       ports.InventoryAccessInvitationPending,
+				ExpiresAt:    time.Now().Add(-time.Hour),
+			},
+		},
+		outbox: &fakeOutbox{},
+	}
+	application := New(Dependencies{
+		Observer:    &fakeObserver{},
+		Authorizer:  &fakeAuthorizer{checkInventoryErr: ports.ErrForbidden},
+		Tenants:     &fakeTenantRepository{exists: true},
+		Inventories: repository,
+		Audit:       &fakeAuditRepository{},
+		Outbox:      repository.outbox,
+		IDs:         &fakeIDGenerator{ids: []string{"audit-missing", "event-missing", "audit-wrong", "event-wrong"}},
+	})
+
+	for _, item := range []struct {
+		name      string
+		principal identity.Principal
+		token     string
+	}{
+		{name: "missing email", principal: identity.Principal{ID: identity.PrincipalID("viewer-user")}, token: "correct-token"},
+		{name: "wrong email", principal: identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: identity.Email("wrong@example.com")}, token: "correct-token"},
+		{name: "missing token", principal: identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: identity.Email("viewer@example.com")}},
+		{name: "wrong token", principal: identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: identity.Email("viewer@example.com")}, token: "wrong-token"},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			_, _, err := application.AcceptInventoryAccessInvitation(context.Background(), AcceptInventoryAccessInvitationInput{
+				Principal:    item.principal,
+				TenantID:     tenant.ID("tenant-one"),
+				InventoryID:  inventory.InventoryID("inventory-one"),
+				InvitationID: "invite-one",
+				Token:        item.token,
+			})
+			if !errors.Is(err, ErrUnauthorized) {
+				t.Fatalf("expected unauthorized, got %v", err)
+			}
+		})
+	}
+
+	_, _, err := application.AcceptInventoryAccessInvitation(context.Background(), AcceptInventoryAccessInvitationInput{
+		Principal:    identity.Principal{ID: identity.PrincipalID("expired-user"), Email: identity.Email("expired@example.com")},
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		InvitationID: "expired-invite",
+		Token:        "expired-token",
+	})
+	if !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected expired invitation rejection, got %v", err)
 	}
 }

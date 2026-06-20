@@ -5,7 +5,7 @@ description: How to run Stuff Stash locally.
 
 This page shows the current local workflow.
 
-The app is still early. Today, the local API can create tenants and inventories; define custom asset types and fields; manage assets, attachments, search, and audit history; share or revoke direct inventory access; and run against Postgres, SpiceDB, and Dex through Compose.
+The app is still early. Today, the local API can create tenants and inventories; define custom asset types and fields; manage assets, attachments, search, and audit history; share inventory access directly or with invite-link tokens; revoke access; and run against Postgres, SpiceDB, and Dex through Compose.
 
 ## Requirements
 
@@ -277,6 +277,26 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/acc
   -H 'Authorization: Bearer dev:user-one' \
   -H 'Content-Type: application/json' \
   -d '{"principalId":"user-two","relationship":"viewer"}'
+```
+
+Create an invite link for an email address:
+
+The create response includes a time-limited one-time `acceptanceToken`. No email service is required; self-hosted users can copy the token manually. In local-dev auth, include the invitee email after the principal ID so the API can verify the accepting user.
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user-two@example.com","relationship":"viewer"}'
+```
+
+Accept the invite:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations/<invitation-id>/accept \
+  -H 'Authorization: Bearer dev:user-two:user-two@example.com' \
+  -H 'Content-Type: application/json' \
+  -d '{"acceptanceToken":"<acceptance-token>"}'
 ```
 
 Remove that direct grant:

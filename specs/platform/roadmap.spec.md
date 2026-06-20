@@ -65,20 +65,22 @@ The goal is to prove a production-shaped path through:
 - Local Dex OIDC verification now runs the full API user flow with two Dex-issued ID tokens and SpiceDB authorization.
 - Authorized asset search now supports exact and fuzzy lookup across asset title, description, custom fields, custom asset type metadata, and attachment metadata, with tenant scoping, inventory authorization filtering, lifecycle filtering, cursor pagination, generated OpenAPI, adapter tests, and adversarial API tests.
 - Direct inventory access revocation now removes persisted viewer/editor grants, enqueues SpiceDB revoke events through the authorization outbox, records audit history, exposes a no-content REST endpoint, and has adversarial API tests.
+- Inventory invite-link tokens now support pending email-scoped invitations, time-limited one-time acceptance tokens, verified-email acceptance, outbox-backed SpiceDB grant creation, revocation, audit history, and adversarial API tests.
 
 ## Known Gaps
 
-- User invitation flows, custom asset type delete/archive, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
+- Custom asset type delete/archive, changing custom field type or targets, custom field deletion APIs, permanent asset deletion, media deletion, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
 - Undo is not yet implemented for audit history.
 - Custom field definitions cannot yet change schema shape, be deleted, reordered, imported, exported, or managed through conversational flows.
+- Inventory access behavior still shares the broad inventory repository port; split an inventory access repository before adding invitation listing, resend, expiration management, membership management, or richer sharing UX.
 - Search authorization filtering currently enumerates tenant inventories and checks each one; a future authorization lookup port should replace that before large tenants are expected.
 
 ## Next Work
 
-1. Implement user invitation flows.
-   - Keep the Google Drive-style sharing model.
-   - Preserve outbox-backed SpiceDB consistency.
-   - Add adversarial tests for invite creation, invite acceptance, revoked invite access, and wrong-tenant attempts.
+1. Implement custom asset type delete or archive.
+   - Preserve existing asset references safely.
+   - Keep custom field targeting rules consistent.
+   - Add adversarial API tests for tenant, inventory, viewer, editor, and cross-tenant behavior.
 
 ## Later Work
 

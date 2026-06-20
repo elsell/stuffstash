@@ -25,6 +25,7 @@ type App struct {
 	ids                ports.IDGenerator
 	outboxDrainLimit   int
 	outboxClaimLease   time.Duration
+	invitationTTL      time.Duration
 	defaultPageLimit   int
 	maxPageLimit       int
 	maxAttachmentBytes int
@@ -47,6 +48,7 @@ type Dependencies struct {
 	IDs                           ports.IDGenerator
 	AuthorizationOutboxDrainLimit int
 	AuthorizationOutboxClaimLease time.Duration
+	InvitationTTL                 time.Duration
 	DefaultPageLimit              int
 	MaxPageLimit                  int
 	MaxAttachmentBytes            int
@@ -71,6 +73,7 @@ func New(deps Dependencies) App {
 		ids:                deps.IDs,
 		outboxDrainLimit:   deps.AuthorizationOutboxDrainLimit,
 		outboxClaimLease:   deps.AuthorizationOutboxClaimLease,
+		invitationTTL:      normalizeInvitationTTL(deps.InvitationTTL),
 		defaultPageLimit:   normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
 		maxPageLimit:       maxPageLimit,
 		maxAttachmentBytes: normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
@@ -86,6 +89,13 @@ func normalizeMaxAttachmentBytes(maxBytes int) int {
 		return 5 * 1024 * 1024
 	}
 	return maxBytes
+}
+
+func normalizeInvitationTTL(ttl time.Duration) time.Duration {
+	if ttl <= 0 {
+		return 7 * 24 * time.Hour
+	}
+	return ttl
 }
 
 func normalizeDefaultPageLimit(defaultLimit int, maxLimit int) int {

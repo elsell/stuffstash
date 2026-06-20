@@ -9,4 +9,5 @@ func Register(api huma.API, application app.App) {
 	RegisterGrant(api, application)
 	RegisterList(api, application)
 	RegisterRevoke(api, application)
+	RegisterInvitations(api, application)
 }

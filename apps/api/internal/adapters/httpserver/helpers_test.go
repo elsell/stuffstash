@@ -81,6 +81,7 @@ func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blob
 		Audit:            store,
 		Outbox:           store,
 		IDs:              &fakeIDGenerator{ids: state.ids},
+		InvitationTTL:    state.invitationTTL,
 	})
 }
 
@@ -240,9 +241,10 @@ type paginationMeta struct {
 }
 
 type seededState struct {
-	tenants     []seedTenant
-	inventories []seedInventory
-	ids         []string
+	tenants       []seedTenant
+	inventories   []seedInventory
+	ids           []string
+	invitationTTL time.Duration
 }
 
 type seedTenant struct {

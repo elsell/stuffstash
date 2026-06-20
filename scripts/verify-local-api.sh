@@ -37,6 +37,14 @@ extract_first_id() {
   sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -n 1
 }
 
+extract_first_email() {
+  sed -n 's/.*"email":"\([^"]*\)".*/\1/p' | head -n 1
+}
+
+extract_first_acceptance_token() {
+  sed -n 's/.*"acceptanceToken":"\([^"]*\)".*/\1/p' | head -n 1
+}
+
 base64_one_line() {
   base64 | tr -d '\n'
 }
@@ -194,16 +202,57 @@ printf '%s\n' "$attachment_search_response" | tail -n +2 | grep -q '"field":"att
 
 viewer_auth_header="${STUFF_STASH_VERIFY_VIEWER_AUTH_HEADER:-}"
 viewer_principal="${STUFF_STASH_VERIFY_VIEWER_PRINCIPAL:-}"
+viewer_email="${STUFF_STASH_VERIFY_VIEWER_EMAIL:-}"
 if [ -z "$viewer_auth_header" ]; then
   viewer_principal="${viewer_principal:-user-two}"
-  viewer_auth_header="Authorization: Bearer dev:${viewer_principal}"
+  viewer_email="${viewer_email:-viewer@example.com}"
+  viewer_auth_header="Authorization: Bearer dev:${viewer_principal}:${viewer_email}"
 elif [ -z "$viewer_principal" ]; then
   viewer_me="$(request GET /me "$viewer_auth_header")"
   viewer_me_status="$(printf '%s\n' "$viewer_me" | head -n 1)"
   [ "$viewer_me_status" = "200" ] || fail "expected viewer /me status 200, got ${viewer_me_status}"
   viewer_principal="$(printf '%s\n' "$viewer_me" | tail -n +2 | extract_first_id)"
   [ -n "$viewer_principal" ] || fail "viewer /me response did not include an id"
+  viewer_email="$(printf '%s\n' "$viewer_me" | tail -n +2 | extract_first_email)"
 fi
+if [ -z "$viewer_email" ]; then
+  viewer_me="$(request GET /me "$viewer_auth_header")"
+  viewer_me_status="$(printf '%s\n' "$viewer_me" | head -n 1)"
+  [ "$viewer_me_status" = "200" ] || fail "expected viewer /me status 200, got ${viewer_me_status}"
+  viewer_email="$(printf '%s\n' "$viewer_me" | tail -n +2 | extract_first_email)"
+fi
+[ -n "$viewer_email" ] || fail "viewer principal does not expose an email for invitation verification"
+
+echo "inviting ${viewer_email} to inventory ${inventory_id}"
+invite_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-invitations" "$auth_header" "{\"email\":\"${viewer_email}\",\"relationship\":\"viewer\"}")"
+invite_status="$(printf '%s\n' "$invite_response" | head -n 1)"
+[ "$invite_status" = "201" ] || fail "expected invitation create status 201, got ${invite_status}"
+invite_id="$(printf '%s\n' "$invite_response" | tail -n +2 | extract_first_id)"
+[ -n "$invite_id" ] || fail "invitation create response did not include an id"
+invite_token="$(printf '%s\n' "$invite_response" | tail -n +2 | extract_first_acceptance_token)"
+[ -n "$invite_token" ] || fail "invitation create response did not include an acceptance token"
+printf '%s\n' "$invite_response" | tail -n +2 | grep -q "\"email\":\"${viewer_email}\"" || fail "invitation response did not include ${viewer_email}"
+printf '%s\n' "$invite_response" | tail -n +2 | grep -q '"status":"pending"' || fail "invitation response did not include pending status"
+
+echo "accepting invitation as ${viewer_principal}"
+invite_accept_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-invitations/${invite_id}/accept" "$viewer_auth_header" "{\"acceptanceToken\":\"${invite_token}\"}")"
+invite_accept_status="$(printf '%s\n' "$invite_accept_response" | head -n 1)"
+[ "$invite_accept_status" = "200" ] || fail "expected invitation accept status 200, got ${invite_accept_status}"
+printf '%s\n' "$invite_accept_response" | tail -n +2 | grep -q '"status":"accepted"' || fail "invitation accept response did not include accepted status"
+printf '%s\n' "$invite_accept_response" | tail -n +2 | grep -q "\"principalId\":\"${viewer_principal}\"" || fail "invitation accept response did not include ${viewer_principal} grant"
+
+invited_viewer_asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$viewer_auth_header")"
+invited_viewer_asset_list_status="$(printf '%s\n' "$invited_viewer_asset_list_response" | head -n 1)"
+[ "$invited_viewer_asset_list_status" = "200" ] || fail "expected invited viewer asset list status 200, got ${invited_viewer_asset_list_status}"
+
+echo "revoking invitation-created viewer access from ${viewer_principal}"
+invite_grant_revoke_response="$(request DELETE "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants/${viewer_principal}/viewer" "$auth_header")"
+invite_grant_revoke_status="$(printf '%s\n' "$invite_grant_revoke_response" | head -n 1)"
+[ "$invite_grant_revoke_status" = "204" ] || fail "expected invitation-created grant revoke status 204, got ${invite_grant_revoke_status}"
+
+revoked_invited_viewer_asset_list_response="$(request GET "/tenants/${tenant_id}/inventories/${inventory_id}/assets?limit=50" "$viewer_auth_header")"
+revoked_invited_viewer_asset_list_status="$(printf '%s\n' "$revoked_invited_viewer_asset_list_response" | head -n 1)"
+[ "$revoked_invited_viewer_asset_list_status" = "403" ] || fail "expected revoked invited viewer asset list status 403, got ${revoked_invited_viewer_asset_list_status}"
 
 echo "granting viewer access to ${viewer_principal}"
 grant_response="$(request POST "/tenants/${tenant_id}/inventories/${inventory_id}/access-grants" "$auth_header" "{\"principalId\":\"${viewer_principal}\",\"relationship\":\"viewer\"}")"

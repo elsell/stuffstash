@@ -16,6 +16,7 @@ type Store struct {
 	tenants          map[tenant.ID]tenant.Tenant
 	inventories      map[inventory.InventoryID]inventory.Inventory
 	accessGrants     map[string]ports.InventoryAccessGrant
+	invitations      map[string]ports.InventoryAccessInvitation
 	customAssetTypes map[customfield.AssetTypeID]customfield.AssetType
 	customFields     map[customfield.ID]customfield.Definition
 	assets           map[asset.ID]asset.Asset
@@ -30,6 +31,7 @@ func NewStore() *Store {
 		tenants:          map[tenant.ID]tenant.Tenant{},
 		inventories:      map[inventory.InventoryID]inventory.Inventory{},
 		accessGrants:     map[string]ports.InventoryAccessGrant{},
+		invitations:      map[string]ports.InventoryAccessInvitation{},
 		customAssetTypes: map[customfield.AssetTypeID]customfield.AssetType{},
 		customFields:     map[customfield.ID]customfield.Definition{},
 		assets:           map[asset.ID]asset.Asset{},

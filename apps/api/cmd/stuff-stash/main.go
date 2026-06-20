@@ -99,6 +99,7 @@ func main() {
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,
+		InvitationTTL:                 cfg.InvitationTTL,
 		DefaultPageLimit:              cfg.DefaultPageLimit,
 		MaxPageLimit:                  cfg.MaxPageLimit,
 		MaxAttachmentBytes:            cfg.MaxAttachmentBytes,
