@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (s Store) ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+func (s Store) ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimID string, limit int, now time.Time, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
 	if limit <= 0 {
 		limit = 25
 	}
@@ -17,7 +17,6 @@ func (s Store) ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimI
 	events := []ports.AuthorizationOutboxEvent{}
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var models []authorizationOutboxEventModel
-		now := time.Now()
 		if err := tx.
 			Clauses(skipLockedForUpdate()).
 			Where(claimableAuthorizationOutboxEvent(now)).
@@ -123,7 +122,7 @@ func (s Store) MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventI
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	return nil
 }
@@ -133,7 +132,7 @@ func (s Store) MarkAuthorizationOutboxEventFailed(ctx context.Context, eventID s
 		var model authorizationOutboxEventModel
 		if err := tx.Where(&authorizationOutboxEventModel{ID: eventID, ClaimID: claimID}).First(&model).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ports.ErrAuthorizationOutboxClaimLost
+				return ports.ErrOutboxClaimLost
 			}
 			return err
 		}
@@ -161,7 +160,7 @@ func (s Store) MarkAuthorizationOutboxEventDeadLettered(ctx context.Context, eve
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	return nil
 }

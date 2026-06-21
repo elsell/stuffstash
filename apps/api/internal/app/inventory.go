@@ -236,7 +236,8 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 	}
 
 	claimID := a.ids.NewID()
-	events, err := a.outbox.ClaimPendingAuthorizationOutboxEvents(ctx, claimID, limit, time.Now().Add(a.authorizationOutboxClaimLease()))
+	now := a.clock.Now().UTC()
+	events, err := a.outbox.ClaimPendingAuthorizationOutboxEvents(ctx, claimID, limit, now, now.Add(a.authorizationOutboxClaimLease()))
 	if err != nil {
 		return err
 	}
@@ -294,12 +295,12 @@ func (a App) DrainAuthorizationOutbox(ctx context.Context, limit int) error {
 
 func (a App) DrainAuthorizationOutboxEvent(ctx context.Context, eventID string) error {
 	claimID := a.ids.NewID()
-	event, found, err := a.outbox.ClaimAuthorizationOutboxEvent(ctx, eventID, claimID, time.Now().Add(a.authorizationOutboxClaimLease()))
+	event, found, err := a.outbox.ClaimAuthorizationOutboxEvent(ctx, eventID, claimID, a.clock.Now().Add(a.authorizationOutboxClaimLease()))
 	if err != nil {
 		return err
 	}
 	if !found {
-		return fmt.Errorf("%w: authorization outbox event %q is not claimable", ports.ErrAuthorizationOutboxClaimLost, eventID)
+		return fmt.Errorf("%w: authorization outbox event %q is not claimable", ports.ErrOutboxClaimLost, eventID)
 	}
 	return a.processClaimedAuthorizationOutboxEvent(ctx, event, claimID)
 }

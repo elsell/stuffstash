@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/stuffstash/stuff-stash/internal/app"
 )
 
 func TestNewErrorEnvelopeSuppressesInternalErrorDetails(t *testing.T) {
@@ -30,5 +33,55 @@ func TestNewErrorEnvelopeKeepsClientErrorDetails(t *testing.T) {
 
 	if len(envelope.BodyError.Details) != 1 || envelope.BodyError.Details[0].Message != "name is required" {
 		t.Fatalf("expected client error detail, got %+v", envelope.BodyError.Details)
+	}
+}
+
+func TestNewErrorEnvelopeUsesSafePayloadTooLargeVocabulary(t *testing.T) {
+	response := NewErrorEnvelope(http.StatusRequestEntityTooLarge, "request body is too large limit=21 bytes")
+	envelope, ok := response.(*ErrorEnvelope)
+	if !ok {
+		t.Fatalf("expected ErrorEnvelope, got %T", response)
+	}
+
+	if envelope.BodyError.Code != "payload_too_large" {
+		t.Fatalf("expected payload_too_large code, got %q", envelope.BodyError.Code)
+	}
+	if envelope.BodyError.Message != "Request body too large." {
+		t.Fatalf("expected safe payload-too-large message, got %q", envelope.BodyError.Message)
+	}
+}
+
+func TestToHumaErrorMapsSpecificApplicationErrorVocabulary(t *testing.T) {
+	previous := huma.NewError
+	huma.NewError = NewErrorEnvelope
+	t.Cleanup(func() {
+		huma.NewError = previous
+	})
+
+	tests := []struct {
+		name   string
+		err    error
+		status int
+		code   string
+	}{
+		{name: "validation", err: app.ErrValidation, status: http.StatusBadRequest, code: "invalid_request"},
+		{name: "conflict", err: app.ErrConflict, status: http.StatusConflict, code: "conflict"},
+		{name: "precondition", err: app.ErrPrecondition, status: http.StatusPreconditionFailed, code: "precondition_failed"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			response := ToHumaError(tc.err)
+			envelope, ok := response.(*ErrorEnvelope)
+			if !ok {
+				t.Fatalf("expected ErrorEnvelope, got %T", response)
+			}
+			if envelope.GetStatus() != tc.status {
+				t.Fatalf("expected status %d, got %d", tc.status, envelope.GetStatus())
+			}
+			if envelope.BodyError.Code != tc.code {
+				t.Fatalf("expected code %q, got %q", tc.code, envelope.BodyError.Code)
+			}
+		})
 	}
 }

@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-func (s *Store) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+func (s *Store) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, now time.Time, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if limit <= 0 {
 		limit = len(s.outbox)
 	}
-	now := time.Now()
+	now = now.UTC()
 	events := []ports.AuthorizationOutboxEvent{}
 	for _, event := range s.outbox {
 		if !event.DeadLetteredAt.IsZero() {
@@ -66,7 +66,7 @@ func (s *Store) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID
 
 	event, ok := s.outbox[eventID]
 	if !ok || event.ClaimID != claimID {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	delete(s.outbox, eventID)
 	return nil
@@ -78,7 +78,7 @@ func (s *Store) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID st
 
 	event, ok := s.outbox[eventID]
 	if !ok || event.ClaimID != claimID {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	event.Attempts++
 	event.LastError = reason
@@ -94,7 +94,7 @@ func (s *Store) MarkAuthorizationOutboxEventDeadLettered(_ context.Context, even
 
 	event, ok := s.outbox[eventID]
 	if !ok || event.ClaimID != claimID {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	event.DeadLetteredAt = time.Now()
 	event.DeadLetterReason = reason

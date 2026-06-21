@@ -38,7 +38,7 @@ func TestStoreSavesInventoryAccessGrantAndOutboxEventAtomically(t *testing.T) {
 		t.Fatalf("expected saved grant, got %+v", grants)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestStoreInventoryAccessGrantIsIdempotentWithoutDuplicateOutboxEvent(t *tes
 		t.Fatalf("expected one idempotent grant, got %+v", grants)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestStoreDeletesInventoryAccessGrantAndEnqueuesRevoke(t *testing.T) {
 	if err := saveInventoryAccessGrantAndEnqueue(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAX", grant); err != nil {
 		t.Fatalf("save initial grant: %v", err)
 	}
-	if _, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "grant-claim", 10, time.Now().Add(time.Minute)); err != nil {
+	if _, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "grant-claim", 10, time.Now(), time.Now().Add(time.Minute)); err != nil {
 		t.Fatalf("claim initial grant event: %v", err)
 	}
 
@@ -131,7 +131,7 @@ func TestStoreDeletesInventoryAccessGrantAndEnqueuesRevoke(t *testing.T) {
 		t.Fatalf("mark revoke processed: %v", err)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "revoke-claim-after-process", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "revoke-claim-after-process", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim pending after revoke processed: %v", err)
 	}
@@ -210,12 +210,12 @@ func TestStoreAcceptsInventoryAccessInvitationAtomically(t *testing.T) {
 		t.Fatalf("expected duplicate pending invitation conflict, got %v", err)
 	}
 
-	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "wrong-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "wrong-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
 	if !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected wrong token rejection, got %v", err)
 	}
 
-	accepted, grant, err := store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB1", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	accepted, grant, err := store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB1", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
 	if err != nil {
 		t.Fatalf("accept invitation: %v", err)
 	}
@@ -233,7 +233,7 @@ func TestStoreAcceptsInventoryAccessInvitationAtomically(t *testing.T) {
 	if len(grants) != 1 || grants[0] != grant {
 		t.Fatalf("expected accepted grant persisted, got %+v", grants)
 	}
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-accept", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-accept", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox: %v", err)
 	}
@@ -272,7 +272,7 @@ func TestStoreRejectsRevokedInventoryAccessInvitationAcceptance(t *testing.T) {
 	if !revoked {
 		t.Fatalf("expected invitation revoked")
 	}
-	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
 	if !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected revoked invitation forbidden, got %v", err)
 	}
@@ -302,7 +302,7 @@ func TestStoreRejectsExpiredInventoryAccessInvitationAcceptance(t *testing.T) {
 		t.Fatalf("save invitation: %v", err)
 	}
 
-	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
 	if !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected expired invitation forbidden, got %v", err)
 	}
@@ -427,7 +427,7 @@ func TestStoreUpdatesPendingInventoryAccessInvitationExpirationAndAudits(t *test
 		t.Fatalf("expected expiration update audit record, got %+v", records)
 	}
 
-	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
 	if !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected manually expired invitation acceptance forbidden, got %v", err)
 	}
@@ -545,7 +545,7 @@ func TestStoreRejectsInventoryAccessGrantOutsideInventoryTenant(t *testing.T) {
 		t.Fatalf("expected tenant/inventory mismatch rejection, got %v", err)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}

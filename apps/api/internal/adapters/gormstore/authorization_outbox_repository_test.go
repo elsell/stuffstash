@@ -26,7 +26,7 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 		t.Fatalf("save tenant and enqueue owner grant: %v", err)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -37,7 +37,7 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 	if err := store.MarkAuthorizationOutboxEventFailed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "claim-one", "spicedb unavailable"); err != nil {
 		t.Fatalf("mark outbox failed: %v", err)
 	}
-	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -45,10 +45,10 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 		t.Fatalf("expected failed event to remain pending, got %+v", events)
 	}
 
-	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "wrong-claim"); !errors.Is(err, ports.ErrAuthorizationOutboxClaimLost) {
+	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "wrong-claim"); !errors.Is(err, ports.ErrOutboxClaimLost) {
 		t.Fatalf("expected claim lost error, got %v", err)
 	}
-	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 10, time.Now().Add(time.Minute))
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestStoreMarksOutboxEventsProcessedAndFailed(t *testing.T) {
 	if err := store.MarkAuthorizationOutboxEventProcessed(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "claim-two"); err != nil {
 		t.Fatalf("mark outbox processed: %v", err)
 	}
-	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 10, time.Now().Add(time.Minute))
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestStoreMarksOutboxEventsDeadLettered(t *testing.T) {
 	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
 	saveTenantWithOutbox(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Home")
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestStoreMarksOutboxEventsDeadLettered(t *testing.T) {
 		t.Fatalf("expected 1 claimed event, got %+v", events)
 	}
 
-	if err := store.MarkAuthorizationOutboxEventDeadLettered(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "wrong-claim", "invalid event"); !errors.Is(err, ports.ErrAuthorizationOutboxClaimLost) {
+	if err := store.MarkAuthorizationOutboxEventDeadLettered(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "wrong-claim", "invalid event"); !errors.Is(err, ports.ErrOutboxClaimLost) {
 		t.Fatalf("expected claim lost error, got %v", err)
 	}
 	if err := store.MarkAuthorizationOutboxEventDeadLettered(ctx, "01ARZ3NDEKTSV4RRFFQ69G5FAW", "claim-one", "invalid event"); err != nil {
@@ -97,7 +97,7 @@ func TestStoreMarksOutboxEventsDeadLettered(t *testing.T) {
 		t.Fatalf("expected dead-letter details, got %+v", model)
 	}
 
-	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -112,7 +112,7 @@ func TestStoreClaimsHideEventsUntilLeaseExpires(t *testing.T) {
 	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
 	saveTenantWithOutbox(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Home")
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestStoreClaimsHideEventsUntilLeaseExpires(t *testing.T) {
 		t.Fatalf("expected claim-one to own event, got %+v", events)
 	}
 
-	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestStoreReclaimsEventsAfterLeaseExpires(t *testing.T) {
 	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
 	saveTenantWithOutbox(t, ctx, store, "01ARZ3NDEKTSV4RRFFQ69G5FAW", tenantID, "Home")
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(-time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(-time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestStoreReclaimsEventsAfterLeaseExpires(t *testing.T) {
 		t.Fatalf("expected claim-one to claim event, got %+v", events)
 	}
 
-	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	events, err = store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}

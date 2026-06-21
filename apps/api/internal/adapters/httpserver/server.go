@@ -50,9 +50,10 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 
 	maxJSONBodyBytes := options.MaxJSONBodyBytes
 	if maxJSONBodyBytes <= 0 {
-		maxJSONBodyBytes = application.MaxAttachmentJSONBodyBytes()
+		maxJSONBodyBytes = 1024 * 1024
 	}
-	handler := withSecurityHeaders(withCORS(withMaxJSONBodyBytes(mux, maxJSONBodyBytes), options.CORSAllowedOrigins))
+	applyJSONBodyLimit(api, maxJSONBodyBytes)
+	handler := withSecurityHeaders(withCORS(mux, options.CORSAllowedOrigins))
 	return &http.Server{
 		Addr:              addr,
 		Handler:           handler,
@@ -63,24 +64,39 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	}
 }
 
+func applyJSONBodyLimit(api huma.API, maxBytes int64) {
+	if maxBytes <= 0 {
+		maxBytes = 1024 * 1024
+	}
+	humaLimit := maxBytes + 1
+	for routePath, path := range api.OpenAPI().Paths {
+		for _, operation := range []*huma.Operation{
+			path.Get,
+			path.Put,
+			path.Post,
+			path.Delete,
+			path.Options,
+			path.Head,
+			path.Patch,
+			path.Trace,
+		} {
+			if operation != nil && !isAttachmentCreateRoute(routePath, operation) {
+				operation.MaxBodyBytes = humaLimit
+			}
+		}
+	}
+}
+
+func isAttachmentCreateRoute(routePath string, operation *huma.Operation) bool {
+	return operation.Method == http.MethodPost && strings.HasSuffix(routePath, "/attachments")
+}
+
 func withSecurityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
-		next.ServeHTTP(w, r)
-	})
-}
-
-func withMaxJSONBodyBytes(next http.Handler, maxBytes int64) http.Handler {
-	if maxBytes <= 0 {
-		maxBytes = 1024 * 1024
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Body != nil && strings.Contains(strings.ToLower(r.Header.Get("Content-Type")), "application/json") {
-			r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
-		}
 		next.ServeHTTP(w, r)
 	})
 }

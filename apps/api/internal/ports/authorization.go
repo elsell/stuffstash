@@ -39,6 +39,8 @@ const (
 type Authorizer interface {
 	CheckTenant(ctx context.Context, principal identity.Principal, permission TenantPermission, tenantID tenant.ID) error
 	CheckInventory(ctx context.Context, principal identity.Principal, permission InventoryPermission, inventoryID inventory.InventoryID) error
+	// ListViewableInventoryIDs receives inventory candidates that the application has already scoped to tenantID.
+	// Adapters must intersect authorization results with candidates and ignore resources outside that set.
 	ListViewableInventoryIDs(ctx context.Context, principal identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error)
 	// Grant methods must be idempotent because authorization outbox retries may replay them.
 	GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error

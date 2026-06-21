@@ -7,7 +7,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -127,7 +126,7 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 		contentType,
 		int64(len(input.Content)),
 		hash,
-		time.Now().UTC(),
+		a.clock.Now().UTC(),
 	)
 	if !ok {
 		return media.Attachment{}, ErrInvalidInput
@@ -443,7 +442,7 @@ func (a App) DeleteAttachment(ctx context.Context, input UpdateAttachmentLifecyc
 func (a App) drainBlobDeletionOutboxBestEffort(ctx context.Context, limit int) {
 	if err := a.DrainBlobDeletionOutbox(ctx, limit); err != nil {
 		a.observer.Record(ctx, ports.Event{
-			Name:    ports.EventBlobStorageFailed,
+			Name:    ports.EventBlobDeletionOutboxFailed,
 			Message: "blob deletion outbox drain failed",
 			Fields:  map[string]string{"error": err.Error()},
 		})
@@ -458,27 +457,59 @@ func (a App) DrainBlobDeletionOutbox(ctx context.Context, limit int) error {
 		limit = 1
 	}
 	claimID := a.ids.NewID()
-	events, err := a.blobDeletionOutbox.ClaimPendingBlobDeletionEvents(ctx, claimID, limit, time.Now().UTC().Add(a.authorizationOutboxClaimLease()))
+	now := a.clock.Now().UTC()
+	events, err := a.blobDeletionOutbox.ClaimPendingBlobDeletionEvents(ctx, claimID, limit, now, now.Add(a.blobDeletionClaimLease))
 	if err != nil {
 		return err
+	}
+	if len(events) > 0 {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventBlobDeletionOutboxClaimed,
+			Message: "blob deletion outbox events claimed",
+			Fields: map[string]string{
+				"event_count": strconv.Itoa(len(events)),
+			},
+		})
 	}
 	for _, event := range events {
 		if err := a.blobs.DeleteBlob(ctx, event.StorageKey); err != nil && !errors.Is(err, ports.ErrBlobNotFound) {
 			a.observer.Record(ctx, ports.Event{
-				Name:    ports.EventBlobStorageFailed,
-				Message: "blob delete failed",
+				Name:    ports.EventBlobDeletionOutboxFailed,
+				Message: "blob deletion outbox event failed",
 				Fields: map[string]string{
 					"event_id": event.ID,
+					"attempts": strconv.Itoa(event.Attempts + 1),
 				},
 			})
-			if markErr := a.blobDeletionOutbox.MarkBlobDeletionEventFailed(ctx, event.ID, claimID, err.Error()); markErr != nil {
-				return markErr
+			if event.Attempts+1 >= a.blobDeletionMaxAttempts {
+				if markErr := a.blobDeletionOutbox.MarkBlobDeletionEventDeadLettered(ctx, event.ID, claimID, err.Error()); markErr != nil {
+					return markErr
+				}
+				a.observer.Record(ctx, ports.Event{
+					Name:    ports.EventBlobDeletionOutboxDeadLettered,
+					Message: "blob deletion outbox event dead-lettered",
+					Fields: map[string]string{
+						"event_id": event.ID,
+						"attempts": strconv.Itoa(event.Attempts + 1),
+					},
+				})
+			} else {
+				if markErr := a.blobDeletionOutbox.MarkBlobDeletionEventFailed(ctx, event.ID, claimID, err.Error()); markErr != nil {
+					return markErr
+				}
 			}
 			continue
 		}
 		if err := a.blobDeletionOutbox.MarkBlobDeletionEventProcessed(ctx, event.ID, claimID); err != nil {
 			return err
 		}
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventBlobDeletionOutboxProcessed,
+			Message: "blob deletion outbox event processed",
+			Fields: map[string]string{
+				"event_id": event.ID,
+			},
+		})
 	}
 	return nil
 }

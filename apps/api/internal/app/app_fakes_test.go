@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -10,6 +11,14 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+type fakeClock struct {
+	now time.Time
+}
+
+func (f fakeClock) Now() time.Time {
+	return f.now
+}
 
 type fakeAuthorizer struct {
 	checkInventoryErr      error

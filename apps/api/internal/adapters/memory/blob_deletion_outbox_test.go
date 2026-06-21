@@ -17,7 +17,7 @@ func TestBlobDeletionOutboxClaimFailureRetryAndProcessedLifecycle(t *testing.T) 
 	}
 
 	ctx := context.Background()
-	claimed, err := store.ClaimPendingBlobDeletionEvents(ctx, "claim-one", 1, time.Now().Add(time.Minute))
+	claimed, err := store.ClaimPendingBlobDeletionEvents(ctx, "claim-one", 1, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim blob deletion events: %v", err)
 	}
@@ -28,7 +28,7 @@ func TestBlobDeletionOutboxClaimFailureRetryAndProcessedLifecycle(t *testing.T) 
 	if err := store.MarkBlobDeletionEventFailed(ctx, "event-one", "claim-one", "storage unavailable"); err != nil {
 		t.Fatalf("mark failed: %v", err)
 	}
-	reclaimed, err := store.ClaimPendingBlobDeletionEvents(ctx, "claim-two", 1, time.Now().Add(time.Minute))
+	reclaimed, err := store.ClaimPendingBlobDeletionEvents(ctx, "claim-two", 1, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("reclaim blob deletion events: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestBlobDeletionOutboxClaimFailureRetryAndProcessedLifecycle(t *testing.T) 
 	if err := store.MarkBlobDeletionEventProcessed(ctx, "event-one", "claim-two"); err != nil {
 		t.Fatalf("mark processed: %v", err)
 	}
-	empty, err := store.ClaimPendingBlobDeletionEvents(ctx, "claim-three", 1, time.Now().Add(time.Minute))
+	empty, err := store.ClaimPendingBlobDeletionEvents(ctx, "claim-three", 1, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim after processed: %v", err)
 	}

@@ -1,0 +1,110 @@
+package assets
+
+import (
+	"context"
+	"time"
+
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+type Service struct {
+	observer         ports.Observer
+	authorizer       ports.Authorizer
+	tenants          ports.TenantRepository
+	inventories      ports.InventoryRepository
+	customAssetTypes ports.CustomAssetTypeRepository
+	customFields     ports.CustomFieldDefinitionRepository
+	assets           ports.AssetRepository
+	assetUnitOfWork  ports.AssetUnitOfWork
+	undoables        ports.UndoableOperationRepository
+	audit            ports.AuditRepository
+	ids              ports.IDGenerator
+	clock            ports.Clock
+	defaultPageLimit int
+	maxPageLimit     int
+}
+
+type Dependencies struct {
+	Observer         ports.Observer
+	Authorizer       ports.Authorizer
+	Tenants          ports.TenantRepository
+	Inventories      ports.InventoryRepository
+	CustomAssetTypes ports.CustomAssetTypeRepository
+	CustomFields     ports.CustomFieldDefinitionRepository
+	Assets           ports.AssetRepository
+	AssetUnitOfWork  ports.AssetUnitOfWork
+	Undoables        ports.UndoableOperationRepository
+	Audit            ports.AuditRepository
+	IDs              ports.IDGenerator
+	Clock            ports.Clock
+	DefaultPageLimit int
+	MaxPageLimit     int
+}
+
+func New(deps Dependencies) Service {
+	maxPageLimit := appsupport.NormalizeMaxPageLimit(deps.MaxPageLimit)
+	observer := deps.Observer
+	if observer == nil {
+		observer = noopObserver{}
+	}
+	return Service{
+		observer:         observer,
+		authorizer:       deps.Authorizer,
+		tenants:          deps.Tenants,
+		inventories:      deps.Inventories,
+		customAssetTypes: deps.CustomAssetTypes,
+		customFields:     deps.CustomFields,
+		assets:           deps.Assets,
+		assetUnitOfWork:  deps.AssetUnitOfWork,
+		undoables:        deps.Undoables,
+		audit:            deps.Audit,
+		ids:              deps.IDs,
+		clock:            deps.Clock,
+		defaultPageLimit: appsupport.NormalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
+		maxPageLimit:     maxPageLimit,
+	}
+}
+
+type noopObserver struct{}
+
+func (noopObserver) Record(context.Context, ports.Event) {}
+
+func (s Service) ensureInventoryAccessDependencies() error {
+	if s.tenants == nil || s.inventories == nil || s.authorizer == nil {
+		return apperrors.ErrInvalidInput
+	}
+	return nil
+}
+
+func (s Service) ensureAssetRepository() error {
+	if s.assets == nil {
+		return apperrors.ErrInvalidInput
+	}
+	return nil
+}
+
+type defaultClock struct{}
+
+func (defaultClock) Now() time.Time {
+	return time.Now().UTC()
+}
+
+func (s Service) now() time.Time {
+	if s.clock == nil {
+		return defaultClock{}.Now()
+	}
+	return s.clock.Now()
+}
+
+func (s Service) newID() string {
+	if s.ids == nil {
+		return ""
+	}
+	return s.ids.NewID()
+}
+
+func pageLimit(defaultLimit int, maxLimit int, requested int) int {
+	return appsupport.PageLimit(defaultLimit, maxLimit, requested)
+}

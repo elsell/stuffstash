@@ -58,7 +58,7 @@ func TestPostgresStoreClaimsOutboxEventOnceAcrossWorkers(t *testing.T) {
 		wg.Add(1)
 		go func(claimID string) {
 			defer wg.Done()
-			events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, claimID, 1, time.Now().Add(time.Minute))
+			events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, claimID, 1, time.Now(), time.Now().Add(time.Minute))
 			if err != nil {
 				t.Errorf("claim %s: %v", claimID, err)
 				return
@@ -79,7 +79,7 @@ func TestPostgresStoreClaimsOutboxEventOnceAcrossWorkers(t *testing.T) {
 		t.Fatalf("expected exactly one worker to claim event, got %+v", claimedBy)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 1, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-three", 1, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim while lease active: %v", err)
 	}

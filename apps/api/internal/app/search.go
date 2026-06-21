@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -53,7 +54,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	if !ok {
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
-	lifecycleFilter, err := assetLifecycleFilter(input.LifecycleState)
+	lifecycleFilter, err := assetapp.LifecycleFilter(input.LifecycleState)
 	if err != nil {
 		return SearchAssetsResult{}, ErrInvalidInput
 	}

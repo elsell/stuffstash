@@ -114,7 +114,7 @@ func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateIn
 		Relationship:       relationship,
 		Status:             ports.InventoryAccessInvitationPending,
 		InviterPrincipalID: input.Principal.ID,
-		ExpiresAt:          time.Now().Add(a.invitationTTL),
+		ExpiresAt:          a.clock.Now().Add(a.invitationTTL),
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
 		PrincipalID: input.Principal.ID,
@@ -189,7 +189,7 @@ func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptIn
 		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, err
 	}
 
-	invitation, grant, err := a.inventoryAccessUnitOfWork.AcceptInventoryAccessInvitationAndEnqueue(ctx, input.TenantID, input.InventoryID, input.InvitationID, hashInventoryInvitationToken(input.Token), input.Principal, a.ids.NewID(), auditRecord)
+	invitation, grant, err := a.inventoryAccessUnitOfWork.AcceptInventoryAccessInvitationAndEnqueue(ctx, input.TenantID, input.InventoryID, input.InvitationID, hashInventoryInvitationToken(input.Token), input.Principal, a.ids.NewID(), a.clock.Now().UTC(), auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
@@ -311,7 +311,7 @@ func (a App) ListInventoryAccessInvitations(ctx context.Context, input ListInven
 		return ListInventoryAccessInvitationsResult{}, ErrInvalidInput
 	}
 
-	now := time.Now()
+	now := a.clock.Now()
 	items, err := a.inventoryAccess.ListInventoryAccessInvitations(ctx, input.TenantID, input.InventoryID, ports.InventoryAccessInvitationPageRequest{
 		AfterInvitationID: afterInvitationID,
 		Limit:             limit + 1,

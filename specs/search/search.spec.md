@@ -19,6 +19,8 @@ This spec does not define final indexes, ranking, advanced query syntax, highlig
 - SpiceDB filtering must be respected for search.
 - Search must discover viewable inventory IDs through a dedicated authorization visibility/query port instead of enumerating every inventory and checking each one individually in application code.
 - The authorization visibility/query port must be behind adapters so a SpiceDB lookup implementation, a local in-memory implementation, and future optimized implementations can be swapped without changing search application behavior.
+- The SpiceDB authorization adapter must use SpiceDB lookup/filter APIs for search visibility instead of looping through candidate inventories with individual permission checks.
+- Application services must build tenant-scoped inventory candidates from persistence before calling authorization visibility lookup. The SpiceDB adapter must intersect `LookupResources` output with those tenant-scoped candidates and must ignore any resource ID not present in the candidate set.
 - The search application service must pass authorized inventory IDs into the search repository. The search repository must not decide authorization itself.
 - Search must support exact search.
 - Search must support fuzzy search.
@@ -56,7 +58,7 @@ The first API slice is asset search:
 - The first PostgreSQL-backed implementation may scan tenant-scoped candidate rows through GORM and perform matching in adapter code to avoid raw SQL while the data model is small.
 - Before larger-scale search, define generated columns, indexes, JSONB search behavior, ranking, and authorization filtering strategy in this spec.
 - Before search is used at meaningful data volume, replace adapter-side candidate scanning with indexed PostgreSQL search behavior covered by PostgreSQL-backed tests.
-- Before tenants can have many inventories, replace the local in-memory visibility adapter with a production SpiceDB lookup implementation if the current adapter is not already using SpiceDB lookup APIs.
+- Before tenants can have many inventories, replace adapter-side search candidate scanning with indexed PostgreSQL search behavior covered by PostgreSQL-backed tests.
 
 ## Conversational Use
 

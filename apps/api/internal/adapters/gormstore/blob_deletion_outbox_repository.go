@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s Store) ClaimPendingBlobDeletionEvents(ctx context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.BlobDeletionEvent, error) {
+func (s Store) ClaimPendingBlobDeletionEvents(ctx context.Context, claimID string, limit int, now time.Time, leaseUntil time.Time) ([]ports.BlobDeletionEvent, error) {
 	if limit <= 0 {
 		limit = 25
 	}
@@ -20,7 +20,7 @@ func (s Store) ClaimPendingBlobDeletionEvents(ctx context.Context, claimID strin
 		var models []blobDeletionEventModel
 		if err := tx.
 			Clauses(skipLockedForUpdate()).
-			Where(claimableBlobDeletionEvent(time.Now())).
+			Where(claimableBlobDeletionEvent(now)).
 			Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
 			Limit(limit).
 			Find(&models).Error; err != nil {
@@ -73,7 +73,7 @@ func (s Store) MarkBlobDeletionEventProcessed(ctx context.Context, eventID strin
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	return nil
 }
@@ -83,7 +83,7 @@ func (s Store) MarkBlobDeletionEventFailed(ctx context.Context, eventID string, 
 		var model blobDeletionEventModel
 		if err := tx.Where(&blobDeletionEventModel{ID: eventID, ClaimID: claimID}).First(&model).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ports.ErrAuthorizationOutboxClaimLost
+				return ports.ErrOutboxClaimLost
 			}
 			return err
 		}
@@ -110,7 +110,7 @@ func (s Store) MarkBlobDeletionEventDeadLettered(ctx context.Context, eventID st
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	return nil
 }

@@ -66,6 +66,9 @@ The first shadcn migration must:
 - Generated DTOs must be mapped into client domain models at adapter boundaries.
 - Client UI, state management, and product logic must not depend directly on generated DTOs.
 - Client applications must treat the backend API contract as the source of truth for endpoint shapes, response bodies, error bodies, pagination, and authentication behavior.
+- The TypeScript client contract package must use `openapi-typescript` to generate schema types from the checked OpenAPI artifact.
+- TypeScript clients may use `openapi-fetch` inside API adapters over the generated schema types.
+- Generated schema types must remain transport infrastructure; SvelteKit and React Native code must not treat them as product domain models.
 - The web frontend must use runtime configuration for the API base URL and auth settings rather than assuming same-origin deployment.
 - Client applications must not hard-code environment-specific service URLs, tenant identifiers, OAuth/OIDC settings, or other deployment configuration.
 - Runtime or build-time configuration must come from environment-backed configuration appropriate for each platform.

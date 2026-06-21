@@ -74,11 +74,11 @@ func (s *Store) DeleteAttachmentAndEnqueueBlobDeletion(_ context.Context, eventI
 	return attachment, true, nil
 }
 
-func (s *Store) ClaimPendingBlobDeletionEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.BlobDeletionEvent, error) {
+func (s *Store) ClaimPendingBlobDeletionEvents(_ context.Context, claimID string, limit int, now time.Time, leaseUntil time.Time) ([]ports.BlobDeletionEvent, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	now := time.Now().UTC()
+	now = now.UTC().UTC()
 	items := []ports.BlobDeletionEvent{}
 	for _, event := range s.blobDeletions {
 		if !event.ProcessedAt.IsZero() || !event.DeadLetteredAt.IsZero() {
@@ -109,7 +109,7 @@ func (s *Store) MarkBlobDeletionEventProcessed(_ context.Context, eventID string
 
 	event, ok := s.blobDeletions[eventID]
 	if !ok || event.ClaimID != claimID {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	event.ProcessedAt = time.Now().UTC()
 	s.blobDeletions[eventID] = event
@@ -122,7 +122,7 @@ func (s *Store) MarkBlobDeletionEventFailed(_ context.Context, eventID string, c
 
 	event, ok := s.blobDeletions[eventID]
 	if !ok || event.ClaimID != claimID {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	event.Attempts++
 	event.LastError = reason
@@ -138,7 +138,7 @@ func (s *Store) MarkBlobDeletionEventDeadLettered(_ context.Context, eventID str
 
 	event, ok := s.blobDeletions[eventID]
 	if !ok || event.ClaimID != claimID {
-		return ports.ErrAuthorizationOutboxClaimLost
+		return ports.ErrOutboxClaimLost
 	}
 	event.DeadLetteredAt = time.Now().UTC()
 	event.DeadLetterReason = reason

@@ -81,6 +81,40 @@ func TestCreateAttachmentRejectsContentTypeMismatch(t *testing.T) {
 	}
 }
 
+func TestDrainBlobDeletionOutboxDeadLettersAfterMaxAttempts(t *testing.T) {
+	observer := &fakeObserver{}
+	storageKey, ok := media.NewStorageKey("tenant/inventory/blob")
+	if !ok {
+		t.Fatalf("expected storage key")
+	}
+	outbox := &singleBlobDeletionOutbox{
+		event: ports.BlobDeletionEvent{
+			ID:         "blob-event-one",
+			StorageKey: storageKey,
+			Attempts:   1,
+		},
+	}
+	application := New(Dependencies{
+		Observer:                      observer,
+		Blobs:                         failingBlobStorage{},
+		BlobDeletionOutbox:            outbox,
+		IDs:                           &attachmentIDGenerator{ids: []string{"claim-one"}},
+		Clock:                         fakeClock{now: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)},
+		BlobDeletionOutboxMaxAttempts: 2,
+	})
+
+	if err := application.DrainBlobDeletionOutbox(context.Background(), 1); err != nil {
+		t.Fatalf("drain blob deletion outbox: %v", err)
+	}
+
+	if !outbox.deadLettered {
+		t.Fatalf("expected blob deletion event to be dead-lettered")
+	}
+	if !observer.hasEvent(ports.EventBlobDeletionOutboxFailed) || !observer.hasEvent(ports.EventBlobDeletionOutboxDeadLettered) {
+		t.Fatalf("expected failed and dead-lettered events, got %+v", observer.events)
+	}
+}
+
 type noopObserver struct{}
 
 func (noopObserver) Record(context.Context, ports.Event) {}
@@ -283,6 +317,48 @@ func (failingAttachmentRepository) ListAttachmentsByAsset(context.Context, tenan
 type recordingBlobStorage struct {
 	put     bool
 	deleted bool
+}
+
+type failingBlobStorage struct{}
+
+func (failingBlobStorage) PutBlob(context.Context, media.StorageKey, media.ContentType, []byte) error {
+	return errors.New("storage unavailable")
+}
+
+func (failingBlobStorage) GetBlob(context.Context, media.StorageKey) ([]byte, error) {
+	return nil, errors.New("storage unavailable")
+}
+
+func (failingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
+	return errors.New("storage unavailable")
+}
+
+type singleBlobDeletionOutbox struct {
+	event        ports.BlobDeletionEvent
+	deadLettered bool
+	failed       bool
+}
+
+func (s *singleBlobDeletionOutbox) ClaimPendingBlobDeletionEvents(_ context.Context, claimID string, _ int, _ time.Time, leaseUntil time.Time) ([]ports.BlobDeletionEvent, error) {
+	s.event.ClaimID = claimID
+	s.event.ClaimedUntil = leaseUntil
+	return []ports.BlobDeletionEvent{s.event}, nil
+}
+
+func (s *singleBlobDeletionOutbox) MarkBlobDeletionEventProcessed(context.Context, string, string) error {
+	return nil
+}
+
+func (s *singleBlobDeletionOutbox) MarkBlobDeletionEventFailed(_ context.Context, _ string, _ string, reason string) error {
+	s.failed = true
+	s.event.LastError = reason
+	return nil
+}
+
+func (s *singleBlobDeletionOutbox) MarkBlobDeletionEventDeadLettered(_ context.Context, _ string, _ string, reason string) error {
+	s.deadLettered = true
+	s.event.DeadLetterReason = reason
+	return nil
 }
 
 func (r *recordingBlobStorage) PutBlob(context.Context, media.StorageKey, media.ContentType, []byte) error {

@@ -27,9 +27,9 @@ func (f *fakeInventoryRepository) SaveInventoryAccessInvitation(_ context.Contex
 	return invitation, nil
 }
 
-func (f *fakeInventoryRepository) AcceptInventoryAccessInvitationAndEnqueue(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
+func (f *fakeInventoryRepository) AcceptInventoryAccessInvitationAndEnqueue(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, now time.Time, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
 	for index, invitation := range f.invitations {
-		if invitation.ID != invitationID || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || invitation.TokenHash != tokenHash || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(time.Now()) {
+		if invitation.ID != invitationID || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || invitation.TokenHash != tokenHash || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(now) {
 			continue
 		}
 		grant := ports.InventoryAccessGrant{

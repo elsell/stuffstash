@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -33,8 +34,13 @@ const (
 
 type Gateway interface {
 	CheckPermission(ctx context.Context, request *v1.CheckPermissionRequest) (*v1.CheckPermissionResponse, error)
+	LookupResources(ctx context.Context, request *v1.LookupResourcesRequest) (lookupResourcesStream, error)
 	WriteRelationships(ctx context.Context, request *v1.WriteRelationshipsRequest) (*v1.WriteRelationshipsResponse, error)
 	WriteSchema(ctx context.Context, request *v1.WriteSchemaRequest) (*v1.WriteSchemaResponse, error)
+}
+
+type lookupResourcesStream interface {
+	Recv() (*v1.LookupResourcesResponse, error)
 }
 
 type Authorizer struct {
@@ -106,6 +112,10 @@ func (g *ClientGateway) CheckPermission(ctx context.Context, request *v1.CheckPe
 	return g.client.CheckPermission(ctx, request)
 }
 
+func (g *ClientGateway) LookupResources(ctx context.Context, request *v1.LookupResourcesRequest) (lookupResourcesStream, error) {
+	return g.client.LookupResources(ctx, request)
+}
+
 func (g *ClientGateway) WriteRelationships(ctx context.Context, request *v1.WriteRelationshipsRequest) (*v1.WriteRelationshipsResponse, error) {
 	return g.client.WriteRelationships(ctx, request)
 }
@@ -127,17 +137,52 @@ func (a Authorizer) CheckInventory(ctx context.Context, principal identity.Princ
 }
 
 func (a Authorizer) ListViewableInventoryIDs(ctx context.Context, principal identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
-	visible := make([]inventory.InventoryID, 0, len(candidates))
+	if len(candidates) == 0 {
+		return nil, nil
+	}
+
+	candidateSet := make(map[string]struct{}, len(candidates))
 	for _, inventoryID := range candidates {
-		err := a.CheckInventory(ctx, principal, ports.InventoryPermissionView, inventoryID)
-		if err == nil {
-			visible = append(visible, inventoryID)
-			continue
+		candidateSet[inventoryID.String()] = struct{}{}
+	}
+
+	stream, err := a.gateway.LookupResources(ctx, &v1.LookupResourcesRequest{
+		ResourceObjectType: objectTypeInventory,
+		Permission:         string(ports.InventoryPermissionView),
+		Subject:            userSubject(principal),
+		Consistency: &v1.Consistency{
+			Requirement: &v1.Consistency_FullyConsistent{FullyConsistent: true},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	visibleSet := make(map[string]struct{}, len(candidates))
+	for {
+		response, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
 		}
-		if !errors.Is(err, ports.ErrForbidden) {
+		if err != nil {
 			return nil, err
 		}
+		if response.GetPermissionship() != v1.LookupPermissionship_LOOKUP_PERMISSIONSHIP_HAS_PERMISSION {
+			continue
+		}
+		resourceID := response.GetResourceObjectId()
+		if _, ok := candidateSet[resourceID]; ok {
+			visibleSet[resourceID] = struct{}{}
+		}
 	}
+
+	visible := make([]inventory.InventoryID, 0, len(visibleSet))
+	for _, inventoryID := range candidates {
+		if _, ok := visibleSet[inventoryID.String()]; ok {
+			visible = append(visible, inventoryID)
+		}
+	}
+
 	return visible, nil
 }
 

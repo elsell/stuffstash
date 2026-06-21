@@ -140,7 +140,7 @@ func (f *fakeOutbox) SaveInventoryAndEnqueueOwnerGrant(_ context.Context, eventI
 }
 
 func (f *fakeOutbox) ClaimAuthorizationOutboxEvent(_ context.Context, eventID string, claimID string, leaseUntil time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	for index, event := range f.events {
 		if event.ID != eventID {
 			continue
@@ -159,11 +159,11 @@ func (f *fakeOutbox) ClaimAuthorizationOutboxEvent(_ context.Context, eventID st
 	return ports.AuthorizationOutboxEvent{}, false, nil
 }
 
-func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID string, limit int, now time.Time, leaseUntil time.Time) ([]ports.AuthorizationOutboxEvent, error) {
 	if limit <= 0 {
 		limit = 25
 	}
-	now := time.Now()
+	now = now.UTC()
 	events := make([]ports.AuthorizationOutboxEvent, 0, len(f.events))
 	for index, event := range f.events {
 		if !event.DeadLetteredAt.IsZero() {
@@ -191,7 +191,7 @@ func (f *fakeOutbox) MarkAuthorizationOutboxEventProcessed(_ context.Context, ev
 			return nil
 		}
 	}
-	return ports.ErrAuthorizationOutboxClaimLost
+	return ports.ErrOutboxClaimLost
 }
 
 func (f *fakeOutbox) MarkAuthorizationOutboxEventFailed(_ context.Context, eventID string, claimID string, _ string) error {
@@ -204,7 +204,7 @@ func (f *fakeOutbox) MarkAuthorizationOutboxEventFailed(_ context.Context, event
 			return nil
 		}
 	}
-	return ports.ErrAuthorizationOutboxClaimLost
+	return ports.ErrOutboxClaimLost
 }
 
 func (f *fakeOutbox) MarkAuthorizationOutboxEventDeadLettered(_ context.Context, eventID string, claimID string, reason string) error {
@@ -219,7 +219,7 @@ func (f *fakeOutbox) MarkAuthorizationOutboxEventDeadLettered(_ context.Context,
 			return nil
 		}
 	}
-	return ports.ErrAuthorizationOutboxClaimLost
+	return ports.ErrOutboxClaimLost
 }
 
 func (f *fakeInventoryRepository) SaveInventory(context.Context, inventory.Inventory) error {

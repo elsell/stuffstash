@@ -323,6 +323,7 @@ func TestInventoryAccessInvitationCreateAcceptAndRevoke(t *testing.T) {
 		outbox: outbox,
 	}
 	observer := &fakeObserver{}
+	now := time.Date(2030, 6, 1, 12, 30, 0, 0, time.UTC)
 	application := New(Dependencies{
 		Observer:                  observer,
 		Authorizer:                &fakeAuthorizer{},
@@ -335,6 +336,7 @@ func TestInventoryAccessInvitationCreateAcceptAndRevoke(t *testing.T) {
 		Audit:                     &fakeAuditRepository{},
 		Outbox:                    outbox,
 		IDs:                       &fakeIDGenerator{ids: []string{"invite-one", "audit-invite", "audit-accept", "grant-event", "grant-claim", "invite-two", "audit-invite-two", "audit-revoke"}},
+		Clock:                     fakeClock{now: now},
 	})
 
 	inviteResult, err := application.CreateInventoryAccessInvitation(context.Background(), CreateInventoryAccessInvitationInput{
@@ -354,8 +356,11 @@ func TestInventoryAccessInvitationCreateAcceptAndRevoke(t *testing.T) {
 	if inviteResult.AcceptanceToken == "" || invitation.TokenHash != hashInventoryInvitationToken(inviteResult.AcceptanceToken) {
 		t.Fatalf("expected invitation response to include a matching one-time acceptance token")
 	}
-	if invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(time.Now()) {
-		t.Fatalf("expected pending invitation to expire in the future, got %s", invitation.ExpiresAt)
+	if !invitation.ExpiresAt.Equal(now.Add(7 * 24 * time.Hour)) {
+		t.Fatalf("expected pending invitation expiration from injected clock, got %s", invitation.ExpiresAt)
+	}
+	if len(repository.auditRecords) != 1 || !repository.auditRecords[0].OccurredAt.Equal(now) {
+		t.Fatalf("expected invitation audit timestamp from injected clock, got %+v", repository.auditRecords)
 	}
 
 	accepted, grant, err := application.AcceptInventoryAccessInvitation(context.Background(), AcceptInventoryAccessInvitationInput{

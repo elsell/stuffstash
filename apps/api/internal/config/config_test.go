@@ -21,6 +21,10 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLimit, "")
 	t.Setenv(envAuthorizationOutboxEvery, "")
 	t.Setenv(envAuthorizationOutboxLease, "")
+	t.Setenv(envBlobDeletionOutboxLimit, "")
+	t.Setenv(envBlobDeletionOutboxEvery, "")
+	t.Setenv(envBlobDeletionOutboxLease, "")
+	t.Setenv(envBlobDeletionOutboxMaxAttempts, "")
 	t.Setenv(envInvitationTTL, "")
 	t.Setenv(envDefaultPageLimit, "")
 	t.Setenv(envMaxPageLimit, "")
@@ -81,6 +85,18 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.AuthorizationOutboxClaimLease != defaultAuthorizationLease {
 		t.Fatalf("expected authorization outbox claim lease %s, got %s", defaultAuthorizationLease, cfg.AuthorizationOutboxClaimLease)
 	}
+	if cfg.BlobDeletionOutboxDrainLimit != defaultBlobDeletionLimit {
+		t.Fatalf("expected blob deletion outbox limit %d, got %d", defaultBlobDeletionLimit, cfg.BlobDeletionOutboxDrainLimit)
+	}
+	if cfg.BlobDeletionOutboxDrainInterval != defaultBlobDeletionEvery {
+		t.Fatalf("expected blob deletion outbox interval %s, got %s", defaultBlobDeletionEvery, cfg.BlobDeletionOutboxDrainInterval)
+	}
+	if cfg.BlobDeletionOutboxClaimLease != defaultBlobDeletionLease {
+		t.Fatalf("expected blob deletion outbox claim lease %s, got %s", defaultBlobDeletionLease, cfg.BlobDeletionOutboxClaimLease)
+	}
+	if cfg.BlobDeletionOutboxMaxAttempts != defaultBlobDeletionMaxAttempts {
+		t.Fatalf("expected blob deletion outbox max attempts %d, got %d", defaultBlobDeletionMaxAttempts, cfg.BlobDeletionOutboxMaxAttempts)
+	}
 	if cfg.InvitationTTL != defaultInvitationTTL {
 		t.Fatalf("expected invitation TTL %s, got %s", defaultInvitationTTL, cfg.InvitationTTL)
 	}
@@ -133,6 +149,10 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envAuthorizationOutboxLimit, "7")
 	t.Setenv(envAuthorizationOutboxEvery, "250ms")
 	t.Setenv(envAuthorizationOutboxLease, "45s")
+	t.Setenv(envBlobDeletionOutboxLimit, "9")
+	t.Setenv(envBlobDeletionOutboxEvery, "750ms")
+	t.Setenv(envBlobDeletionOutboxLease, "55s")
+	t.Setenv(envBlobDeletionOutboxMaxAttempts, "3")
 	t.Setenv(envInvitationTTL, "2h")
 	t.Setenv(envDefaultPageLimit, "13")
 	t.Setenv(envMaxPageLimit, "27")
@@ -195,6 +215,18 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.AuthorizationOutboxClaimLease.String() != "45s" {
 		t.Fatalf("expected authorization outbox claim lease 45s, got %s", cfg.AuthorizationOutboxClaimLease)
+	}
+	if cfg.BlobDeletionOutboxDrainLimit != 9 {
+		t.Fatalf("expected blob deletion outbox drain limit 9, got %d", cfg.BlobDeletionOutboxDrainLimit)
+	}
+	if cfg.BlobDeletionOutboxDrainInterval.String() != "750ms" {
+		t.Fatalf("expected blob deletion outbox drain interval 750ms, got %s", cfg.BlobDeletionOutboxDrainInterval)
+	}
+	if cfg.BlobDeletionOutboxClaimLease.String() != "55s" {
+		t.Fatalf("expected blob deletion outbox claim lease 55s, got %s", cfg.BlobDeletionOutboxClaimLease)
+	}
+	if cfg.BlobDeletionOutboxMaxAttempts != 3 {
+		t.Fatalf("expected blob deletion outbox max attempts 3, got %d", cfg.BlobDeletionOutboxMaxAttempts)
 	}
 	if cfg.InvitationTTL.String() != "2h0m0s" {
 		t.Fatalf("expected invitation TTL 2h, got %s", cfg.InvitationTTL)

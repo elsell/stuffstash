@@ -1,4 +1,4 @@
-package main
+package bootstrap
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 func TestRunMigrationCommandRejectsMissingAction(t *testing.T) {
 	var output bytes.Buffer
 
-	err := runMigrationCommand(context.Background(), config.Config{DatabaseDSN: "postgres://example"}, nil, &output)
+	err := RunMigrationCommand(context.Background(), config.Config{DatabaseDSN: "postgres://example"}, nil, &output)
 	if err == nil {
 		t.Fatalf("expected missing migration action error")
 	}
@@ -24,7 +24,7 @@ func TestRunMigrationCommandRejectsMissingAction(t *testing.T) {
 func TestRunMigrationCommandRejectsUnknownAction(t *testing.T) {
 	var output bytes.Buffer
 
-	err := runMigrationCommand(context.Background(), config.Config{DatabaseDSN: "postgres://example"}, []string{"sideways"}, &output)
+	err := RunMigrationCommand(context.Background(), config.Config{DatabaseDSN: "postgres://example"}, []string{"sideways"}, &output)
 	if err == nil {
 		t.Fatalf("expected unknown migration action error")
 	}
@@ -33,7 +33,7 @@ func TestRunMigrationCommandRejectsUnknownAction(t *testing.T) {
 func TestRunMigrationCommandRejectsMissingDSN(t *testing.T) {
 	var output bytes.Buffer
 
-	err := runMigrationCommand(context.Background(), config.Config{}, []string{"up"}, &output)
+	err := RunMigrationCommand(context.Background(), config.Config{}, []string{"up"}, &output)
 	if err == nil {
 		t.Fatalf("expected missing database dsn error")
 	}

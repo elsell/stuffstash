@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -114,6 +115,10 @@ func TestSpiceDBIntegrationEnforcesTenantAndInventoryRelationships(t *testing.T)
 	assertForbidden(t, authorizer.CheckInventory(ctx, ownerTwo, ports.InventoryPermissionCreateAsset, inventoryOneID), "other tenant owner cannot create assets across tenant")
 	assertForbidden(t, authorizer.CheckInventory(ctx, ownerTwo, ports.InventoryPermissionEditAsset, inventoryOneID), "other tenant owner cannot edit assets across tenant")
 
+	assertViewableInventoryIDs(t, authorizer, ctx, ownerOne, tenantOneID, []inventory.InventoryID{inventoryOneID, inventoryTwoID, inventorySiblingID}, []inventory.InventoryID{inventoryOneID, inventorySiblingID}, "tenant owner can list tenant-visible candidate inventories")
+	assertViewableInventoryIDs(t, authorizer, ctx, inventoryOwner, tenantOneID, []inventory.InventoryID{inventorySiblingID, inventoryOneID, inventoryTwoID}, []inventory.InventoryID{inventoryOneID}, "inventory owner can list owned candidate inventory")
+	assertViewableInventoryIDs(t, authorizer, ctx, unrelated, tenantOneID, []inventory.InventoryID{inventoryOneID, inventorySiblingID}, nil, "unrelated user cannot list candidate inventories")
+
 	if err := authorizer.RevokeInventoryViewer(ctx, inventoryViewer, tenantOneID, inventoryOneID); err != nil {
 		t.Fatalf("revoke inventory viewer: %v", err)
 	}
@@ -180,5 +185,22 @@ func assertForbidden(t *testing.T, err error, behavior string) {
 
 	if !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("%s: expected forbidden, got %v", behavior, err)
+	}
+}
+
+func assertViewableInventoryIDs(t *testing.T, authorizer Authorizer, ctx context.Context, principal identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID, expected []inventory.InventoryID, behavior string) {
+	t.Helper()
+
+	visible, err := authorizer.ListViewableInventoryIDs(ctx, principal, tenantID, candidates)
+	if err != nil {
+		t.Fatalf("%s: list viewable inventory ids: %v", behavior, err)
+	}
+	if len(visible) != len(expected) {
+		t.Fatalf("%s: expected %d visible inventories, got %d: %#v", behavior, len(expected), len(visible), visible)
+	}
+	for index := range expected {
+		if visible[index] != expected[index] {
+			t.Fatalf("%s: expected visible[%d] %q, got %q", behavior, index, expected[index], visible[index])
+		}
 	}
 }

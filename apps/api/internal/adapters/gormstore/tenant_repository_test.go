@@ -70,7 +70,7 @@ func TestStoreSavesTenantAndOutboxEventAtomically(t *testing.T) {
 		t.Fatalf("expected tenant to exist")
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}

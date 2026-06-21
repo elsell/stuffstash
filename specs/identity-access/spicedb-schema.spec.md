@@ -81,6 +81,9 @@ Tenant `view_inventory` must stay separate from tenant `view`. Tenant owners and
 - Direct inventory access grant relationship writes must be driven by the authorization outbox after the durable access grant record is saved.
 - Direct inventory access revocation relationship removals must be driven by a request-claimed authorization outbox event after the durable access grant record is removed.
 - Idempotent direct inventory access revocation must enqueue a relationship removal even when the local grant row is already missing, so stale SpiceDB relationships can self-heal.
+- Inventory containment must be represented explicitly with `inventory#tenant@tenant`, not by concatenating tenant and inventory IDs into SpiceDB object IDs.
+- Tenant-scoped inventory discovery remains a persistence responsibility. Authorization visibility lookup must compose tenant-scoped persistence candidates with SpiceDB permission lookup results.
+- The SpiceDB adapter must not rely on composite object IDs for tenant safety. It must ignore lookup results outside the tenant-scoped candidate set provided by the application service.
 - The application may attempt to drain the authorization outbox immediately after a write, but failed SpiceDB writes must remain retryable through the outbox.
 - Schema bootstrap must be an explicit startup option for local development and deployment automation.
 - The default API process must not rewrite the production authorization schema unless explicitly configured to do so.

@@ -50,8 +50,12 @@ func ToHumaError(err error) error {
 		return huma.Error401Unauthorized("Authentication required.")
 	case errors.Is(err, app.ErrUnauthorized):
 		return huma.Error403Forbidden("Forbidden.")
-	case errors.Is(err, app.ErrInvalidInput):
+	case errors.Is(err, app.ErrValidation), errors.Is(err, app.ErrInvalidInput):
 		return huma.Error400BadRequest("Invalid request.")
+	case errors.Is(err, app.ErrConflict):
+		return huma.Error409Conflict("Conflict.")
+	case errors.Is(err, app.ErrPrecondition):
+		return huma.Error412PreconditionFailed("Precondition failed.")
 	case errors.Is(err, app.ErrNotFound):
 		return huma.Error404NotFound("Resource not found.")
 	default:
@@ -84,6 +88,12 @@ func errorCode(status int) string {
 		return "forbidden"
 	case http.StatusNotFound:
 		return "resource_not_found"
+	case http.StatusConflict:
+		return "conflict"
+	case http.StatusPreconditionFailed:
+		return "precondition_failed"
+	case http.StatusRequestEntityTooLarge:
+		return "payload_too_large"
 	default:
 		return "internal_error"
 	}
@@ -97,6 +107,12 @@ func safeErrorMessage(status int, fallback string) string {
 		return "Forbidden."
 	case http.StatusNotFound:
 		return "Resource not found."
+	case http.StatusConflict:
+		return "Conflict."
+	case http.StatusPreconditionFailed:
+		return "Precondition failed."
+	case http.StatusRequestEntityTooLarge:
+		return "Request body too large."
 	case http.StatusInternalServerError:
 		return "Internal server error."
 	}

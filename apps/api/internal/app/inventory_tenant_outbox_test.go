@@ -208,7 +208,7 @@ func TestDrainAuthorizationOutboxDeadLettersUnrecoverableEventAndContinues(t *te
 		t.Fatalf("expected outbox dead-letter observability event, got %+v", observer.events)
 	}
 
-	events, err := outbox.ClaimPendingAuthorizationOutboxEvents(context.Background(), "claim-two", 10, time.Now().Add(time.Minute))
+	events, err := outbox.ClaimPendingAuthorizationOutboxEvents(context.Background(), "claim-two", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}
@@ -259,7 +259,7 @@ func TestDrainAuthorizationOutboxDeadLettersDurableInvalidEvent(t *testing.T) {
 		t.Fatalf("expected actionable dead-letter reason, got %+v", deadLetterEvent)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-two", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}

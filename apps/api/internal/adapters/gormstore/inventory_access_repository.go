@@ -303,7 +303,7 @@ func (s Store) ListInventoryAccessInvitations(ctx context.Context, tenantID tena
 	return items, nil
 }
 
-func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
+func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, now time.Time, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
 	var saved ports.InventoryAccessInvitation
 	var grant ports.InventoryAccessGrant
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -319,7 +319,7 @@ func (s Store) AcceptInventoryAccessInvitationAndEnqueue(ctx context.Context, te
 		if !ok {
 			return fmt.Errorf("invalid inventory access invitation row %q", model.ID)
 		}
-		if invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || !inventoryInvitationTokenHashMatches(invitation.TokenHash, tokenHash) || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(time.Now()) {
+		if invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || !inventoryInvitationTokenHashMatches(invitation.TokenHash, tokenHash) || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(now) {
 			return ports.ErrForbidden
 		}
 		eventKind, ok := invitation.Relationship.GrantOutboxKind()

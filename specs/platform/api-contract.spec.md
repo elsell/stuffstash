@@ -50,6 +50,17 @@ This spec does not define domain-specific endpoints. Domain specs must define th
 - Generated client code must not be edited manually.
 - Generated OpenAPI output and generated client code must have drift checks in pre-commit or CI once generation exists.
 
+## TypeScript Client Generation
+
+- TypeScript API contract types must be generated with `openapi-typescript`.
+- The pinned generator version is owned by `specs/platform/tooling-versions.spec.md`.
+- The checked OpenAPI artifact for the TypeScript client package lives at `packages/api-client/openapi.json` until a future spec moves or publishes it.
+- Generated TypeScript schema output lives at `packages/api-client/src/generated/schema.d.ts`.
+- The generation command is `pnpm --dir packages/api-client generate`, also exposed from the repository root as `pnpm api-client:generate`.
+- The generated schema file must not be edited by hand.
+- Hand-written TypeScript client wrappers may use `openapi-fetch` over the generated schema, but they remain transport adapters and must not become frontend domain models.
+- Web and mobile clients must map generated DTOs into client-side domain models at their adapter boundary when they need product behavior, validation, or presentation state.
+
 ## Generated SDK Boundary
 
 - Generated SDK code is transport infrastructure.
@@ -111,6 +122,7 @@ Error responses must use a consistent envelope:
 ```
 
 - `error.code` must be a stable enumeration value.
+- Application errors must use typed internal error categories for validation, conflict, precondition failure, authentication, authorization, and not found behavior. HTTP adapters map those categories to safe public envelopes.
 - `error.message` must be safe to show to a user.
 - `error.details` may include structured validation or conflict details when safe.
 - Error details must not disclose sensitive internal information.
@@ -162,7 +174,10 @@ Error responses must use a consistent envelope:
 - API responses must include at least `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` unless a future spec justifies a narrower route-specific exception.
 - Server read header timeout, read timeout, write timeout, idle timeout, and maximum JSON request body bytes must come from environment-backed configuration with safe defaults.
 - JSON request body limits must apply before the Huma route handler decodes request bodies.
+- JSON request body limits must allow bodies whose encoded byte length is exactly the configured maximum and reject bodies larger than that maximum.
+- Oversized JSON request bodies must return HTTP `413 Request Entity Too Large` with the safe error envelope code `payload_too_large`, message `Request body too large.`, and no sensitive implementation details.
 - Attachment upload routes may use a larger body limit derived from the configured attachment byte limit, but must still enforce a deterministic maximum.
+- Attachment upload body limits must be route-specific and must not raise the configured maximum JSON body size for ordinary API endpoints.
 - Rate limiting remains required before public or multi-user deployment, but is not implemented in this hardening slice.
 
 ## Verification

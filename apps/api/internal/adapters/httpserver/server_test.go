@@ -1,10 +1,11 @@
 package httpserver
 
 import (
-	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/ports"
 	"net/http"
 	"testing"
+
+	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestHealthEndpointReturnsHealthyStatus(t *testing.T) {

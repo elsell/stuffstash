@@ -97,7 +97,7 @@ func TestStoreRollsBackTenantAndOutboxWhenAuditInsertFails(t *testing.T) {
 	if exists {
 		t.Fatalf("expected tenant write to roll back after audit failure")
 	}
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}

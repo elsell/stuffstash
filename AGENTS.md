@@ -59,12 +59,20 @@ These instructions are binding for all agents and contributors working in this r
 - Design for flexibility, pluggability, and replacement of infrastructure concerns.
 - Prefer dependency injection over global state or hard-wired implementations.
 - The core service must remain usable behind multiple adapters, including REST, MCP, mobile-facing APIs, workers, CLIs, or future interfaces.
+- Application service code must move into domain-oriented packages under `apps/api/internal/app/` as bounded contexts grow, such as `internal/app/assets`.
+- The root `internal/app` package may expose compatibility facade methods during migration, but domain behavior must not accumulate there.
+- Split domain application packages by responsibility, such as commands, queries, validation, audit helpers, cursor helpers, and access helpers, before a file becomes a broad service file.
+- Shared application support packages may hold cross-cutting mechanics such as typed errors or pagination, but must not become generic business-logic junk drawers.
+- Command entrypoints such as `main.go` must stay thin. Runtime construction, adapter wiring, startup checks, background workers, and command implementations belong in testable bootstrap packages.
+- Bootstrap packages must be split by startup responsibility before they become catch-all files. Keep runtime coordination, application dependency assembly, auth construction, repository/blob construction, migrations, schema bootstrap, workers, and startup observability in focused files.
 
 ## Adapter Organization
 
 - Adapter code must be organized so one file does not mix unrelated domains or unrelated concerns.
 - Persistence adapter code must be organized around DDD repository responsibilities.
 - Persistence adapters must keep repository methods, persistence models, and mapping helpers grouped by the aggregate or bounded-context concept they serve.
+- Repository read methods for tenant-owned resources must require tenant ID, and inventory-owned resources must require both tenant ID and inventory ID unless the method is explicitly scoped by a domain object that already carries those identities.
+- Unscoped repository reads for tenant-owned resources are a security smell. Operational queues such as outboxes are the main exception because they are claimed as background work streams rather than used for user-facing resource discovery.
 - GORM models are infrastructure-only data mappers. They must not be treated as domain entities, and domain entities must not persist themselves.
 - Do not let a catch-all persistence store file accumulate domain-specific repository behavior.
 - GORM repository tests must mirror repository responsibilities. Shared persistence test setup may live in `gormstore/store_test.go`, but repository behavior tests belong in focused `*_repository_test.go` files.
@@ -172,6 +180,7 @@ These instructions are binding for all agents and contributors working in this r
 - Do not hard-code configuration values that may vary by environment, deployment, tenant, provider, datastore, credentials, endpoints, feature flags, or operational settings.
 - Configuration must be parsed and validated at application boundaries.
 - Domain code must not read environment variables directly.
+- Application code must receive time through an injected clock port when time affects domain behavior, persistence leases, audit records, expiration, or tests.
 
 ## Technology Decisions
 
@@ -214,6 +223,8 @@ These instructions are binding for all agents and contributors working in this r
   - The first REST implementation must use Huma for code-first OpenAPI generation unless a future spec changes that before route implementation begins.
   - REST API documentation must be generated through OpenAPI tooling, not manually maintained Swagger files.
   - Client API code must be generated from the OpenAPI contract unless a spec explicitly justifies an exception.
+  - TypeScript API contract types must be generated with pinned `openapi-typescript`.
+  - The TypeScript client wrapper may use pinned `openapi-fetch` over generated schema types.
   - Generated SDKs and DTOs are transport infrastructure and must sit behind frontend adapters or ports.
   - Web and mobile clients must keep separate frontend domain models where client-side product behavior needs them.
 - Conversational inventory:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
@@ -109,7 +110,7 @@ func (a App) validateUndoableAssetResult(ctx context.Context, tenantID tenant.ID
 			return err
 		}
 	}
-	if _, err := a.validatedCustomFields(ctx, tenantID, inventoryID, customAssetTypeID, item.CustomFields.Values()); err != nil {
+	if _, err := assetapp.ValidateCustomFields(ctx, a.customFields, tenantID, inventoryID, customAssetTypeID, item.CustomFields.Values()); err != nil {
 		return err
 	}
 	return nil

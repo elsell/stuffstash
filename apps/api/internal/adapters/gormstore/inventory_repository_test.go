@@ -87,7 +87,7 @@ func TestStoreSavesInventoryAndOutboxEventAtomically(t *testing.T) {
 		t.Fatalf("save inventory and enqueue owner grant: %v", err)
 	}
 
-	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now().Add(time.Minute))
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "claim-one", 10, time.Now(), time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("claim outbox events: %v", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -30,52 +31,14 @@ type ListAuditRecordsResult struct {
 	HasMore    bool
 }
 
-type auditRecordInput struct {
-	PrincipalID identity.PrincipalID
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	RequestID   string
-	Source      audit.Source
-	Action      audit.Action
-	TargetType  audit.TargetType
-	TargetID    string
-	Metadata    map[string]string
-}
+type auditRecordInput = appsupport.AuditRecordInput
 
 func (a App) newAuditRecord(input auditRecordInput) (audit.Record, error) {
-	id, ok := audit.NewID(a.ids.NewID())
-	if !ok {
-		return audit.Record{}, ErrInvalidInput
-	}
-	source := input.Source
-	if source.String() == "" {
-		source = audit.SourceAPI
-	}
-	record, ok := audit.NewRecord(
-		id,
-		audit.TenantID(input.TenantID.String()),
-		audit.InventoryID(input.InventoryID.String()),
-		audit.PrincipalID(input.PrincipalID.String()),
-		input.Action,
-		source,
-		input.TargetType,
-		input.TargetID,
-		time.Now(),
-		input.RequestID,
-		input.Metadata,
-	)
-	if !ok {
-		return audit.Record{}, ErrInvalidInput
-	}
-	return record, nil
+	return appsupport.NewAuditRecord(a.ids, a.clock, input)
 }
 
 func (a App) saveReadAuditRecord(ctx context.Context, input auditRecordInput) error {
-	record, err := a.newAuditRecord(input)
-	if err != nil {
-		return err
-	}
-	return a.audit.SaveAuditRecord(ctx, record)
+	return appsupport.SaveReadAuditRecord(ctx, a.audit, a.ids, a.clock, input)
 }
 
 func (a App) ListTenantAuditRecords(ctx context.Context, input ListAuditRecordsInput) (ListAuditRecordsResult, error) {

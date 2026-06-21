@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -261,6 +262,113 @@ func TestAuthorizerBootstrapsSchema(t *testing.T) {
 	}
 }
 
+func TestAuthorizerListsViewableInventoryIDsWithLookupResources(t *testing.T) {
+	gateway := &fakeGateway{
+		lookupResponses: []*v1.LookupResourcesResponse{
+			{
+				ResourceObjectId: "inventory-three",
+				Permissionship:   v1.LookupPermissionship_LOOKUP_PERMISSIONSHIP_HAS_PERMISSION,
+			},
+			{
+				ResourceObjectId: "inventory-one",
+				Permissionship:   v1.LookupPermissionship_LOOKUP_PERMISSIONSHIP_HAS_PERMISSION,
+			},
+			{
+				ResourceObjectId: "inventory-outside-candidates",
+				Permissionship:   v1.LookupPermissionship_LOOKUP_PERMISSIONSHIP_HAS_PERMISSION,
+			},
+			{
+				ResourceObjectId: "inventory-two",
+				Permissionship:   v1.LookupPermissionship_LOOKUP_PERMISSIONSHIP_CONDITIONAL_PERMISSION,
+			},
+		},
+	}
+	authorizer := NewAuthorizer(gateway)
+
+	visible, err := authorizer.ListViewableInventoryIDs(context.Background(), principal("user-one"), tenant.ID("tenant-one"), []inventory.InventoryID{
+		inventory.InventoryID("inventory-one"),
+		inventory.InventoryID("inventory-two"),
+		inventory.InventoryID("inventory-three"),
+	})
+	if err != nil {
+		t.Fatalf("list viewable inventory ids: %v", err)
+	}
+
+	expected := []inventory.InventoryID{
+		inventory.InventoryID("inventory-one"),
+		inventory.InventoryID("inventory-three"),
+	}
+	if len(visible) != len(expected) {
+		t.Fatalf("expected %d visible inventories, got %d: %#v", len(expected), len(visible), visible)
+	}
+	for index := range expected {
+		if visible[index] != expected[index] {
+			t.Fatalf("expected visible[%d] %q, got %q", index, expected[index], visible[index])
+		}
+	}
+	if len(gateway.checks) != 0 {
+		t.Fatalf("expected lookup resources instead of per-candidate checks, got %d checks", len(gateway.checks))
+	}
+	if len(gateway.lookupRequests) != 1 {
+		t.Fatalf("expected one lookup request, got %d", len(gateway.lookupRequests))
+	}
+	request := gateway.lookupRequests[0]
+	if request.ResourceObjectType != "inventory" {
+		t.Fatalf("unexpected resource object type: %q", request.ResourceObjectType)
+	}
+	if request.Permission != "view" {
+		t.Fatalf("unexpected permission: %q", request.Permission)
+	}
+	if request.Subject.Object.ObjectType != "user" || request.Subject.Object.ObjectId != "user-one" {
+		t.Fatalf("unexpected subject: %+v", request.Subject.Object)
+	}
+	if request.Consistency.GetFullyConsistent() != true {
+		t.Fatalf("expected fully consistent lookup")
+	}
+}
+
+func TestAuthorizerSkipsLookupWhenNoInventoryCandidates(t *testing.T) {
+	gateway := &fakeGateway{}
+	authorizer := NewAuthorizer(gateway)
+
+	visible, err := authorizer.ListViewableInventoryIDs(context.Background(), principal("user-one"), tenant.ID("tenant-one"), nil)
+	if err != nil {
+		t.Fatalf("list viewable inventory ids: %v", err)
+	}
+	if visible != nil {
+		t.Fatalf("expected nil visible inventory ids, got %#v", visible)
+	}
+	if len(gateway.lookupRequests) != 0 {
+		t.Fatalf("expected no lookup for empty candidates, got %d", len(gateway.lookupRequests))
+	}
+}
+
+func TestAuthorizerPropagatesLookupResourcesFailure(t *testing.T) {
+	expected := errors.New("lookup unavailable")
+	gateway := &fakeGateway{lookupErr: expected}
+	authorizer := NewAuthorizer(gateway)
+
+	_, err := authorizer.ListViewableInventoryIDs(context.Background(), principal("user-one"), tenant.ID("tenant-one"), []inventory.InventoryID{
+		inventory.InventoryID("inventory-one"),
+	})
+	if !errors.Is(err, expected) {
+		t.Fatalf("expected lookup error, got %v", err)
+	}
+}
+
+func TestAuthorizerPropagatesLookupResourcesStreamFailure(t *testing.T) {
+	expected := errors.New("stream interrupted")
+	gateway := &fakeGateway{lookupRecvErr: expected}
+	authorizer := NewAuthorizer(gateway)
+
+	_, err := authorizer.ListViewableInventoryIDs(context.Background(), principal("user-one"), tenant.ID("tenant-one"), []inventory.InventoryID{
+		inventory.InventoryID("inventory-one"),
+	})
+	if !errors.Is(err, expected) {
+		t.Fatalf("expected lookup stream error, got %v", err)
+	}
+}
+
 func TestNewGatewayRequiresEndpoint(t *testing.T) {
 	gateway, err := NewGateway("", "", false, "")
 	if err == nil {
@@ -364,9 +472,13 @@ func assertDirectInventoryGrant(t *testing.T, grant func(Authorizer) error, expe
 type fakeGateway struct {
 	permissionship     v1.CheckPermissionResponse_Permissionship
 	checkErr           error
+	lookupErr          error
+	lookupRecvErr      error
 	writeErr           error
 	schemaErr          error
 	checks             []*v1.CheckPermissionRequest
+	lookupRequests     []*v1.LookupResourcesRequest
+	lookupResponses    []*v1.LookupResourcesResponse
 	relationshipWrites []*v1.WriteRelationshipsRequest
 	schemaWrites       []*v1.WriteSchemaRequest
 }
@@ -379,6 +491,17 @@ func (f *fakeGateway) CheckPermission(_ context.Context, request *v1.CheckPermis
 	return &v1.CheckPermissionResponse{Permissionship: f.permissionship}, nil
 }
 
+func (f *fakeGateway) LookupResources(_ context.Context, request *v1.LookupResourcesRequest) (lookupResourcesStream, error) {
+	f.lookupRequests = append(f.lookupRequests, request)
+	if f.lookupErr != nil {
+		return nil, f.lookupErr
+	}
+	return &fakeLookupResourcesStream{
+		responses: f.lookupResponses,
+		recvErr:   f.lookupRecvErr,
+	}, nil
+}
+
 func (f *fakeGateway) WriteRelationships(_ context.Context, request *v1.WriteRelationshipsRequest) (*v1.WriteRelationshipsResponse, error) {
 	f.relationshipWrites = append(f.relationshipWrites, request)
 	return &v1.WriteRelationshipsResponse{}, f.writeErr
@@ -387,6 +510,24 @@ func (f *fakeGateway) WriteRelationships(_ context.Context, request *v1.WriteRel
 func (f *fakeGateway) WriteSchema(_ context.Context, request *v1.WriteSchemaRequest) (*v1.WriteSchemaResponse, error) {
 	f.schemaWrites = append(f.schemaWrites, request)
 	return &v1.WriteSchemaResponse{}, f.schemaErr
+}
+
+type fakeLookupResourcesStream struct {
+	responses []*v1.LookupResourcesResponse
+	recvErr   error
+	index     int
+}
+
+func (s *fakeLookupResourcesStream) Recv() (*v1.LookupResourcesResponse, error) {
+	if s.recvErr != nil {
+		return nil, s.recvErr
+	}
+	if s.index >= len(s.responses) {
+		return nil, io.EOF
+	}
+	response := s.responses[s.index]
+	s.index++
+	return response, nil
 }
 
 const testCACertificatePEM = `-----BEGIN CERTIFICATE-----

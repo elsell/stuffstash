@@ -28,6 +28,8 @@ This spec does not define every future asset index, backup strategy, retention p
 - Domain entities must not persist themselves. Persistence belongs to repository implementations and their mappers.
 - Tenant isolation and inventory isolation must be represented in persistence.
 - Persistence behavior must preserve authorization and tenancy assumptions from the application layer.
+- Repository read methods for tenant-owned resources must require tenant ID, and inventory-owned resources must require both tenant ID and inventory ID unless the method is explicitly scoped by a domain object that already carries those identities.
+- Unscoped repository reads for tenant-owned resources are not allowed without spec-level justification. Operational queues such as outboxes are the exception because they are claimed as work streams, not used as user-facing resource discovery.
 - Repository adapter choice must come from `STUFF_STASH_REPOSITORY_MODE`.
 - `memory` repository mode is allowed for local tracer bullets and tests.
 - `postgres` repository mode must use GORM and `STUFF_STASH_DATABASE_DSN`.
@@ -40,9 +42,11 @@ This spec does not define every future asset index, backup strategy, retention p
 - Outbox processing must also have a retry path that does not depend on a future write request.
 - Outbox batch size and retry interval must come from environment-backed configuration.
 - Outbox claim lease duration must come from environment-backed configuration.
+- Outbox maximum attempt count must come from environment-backed configuration when failures can move retryable work into a dead-letter terminal state.
 - Outbox workers must claim events before processing them so multiple API replicas do not process and update the same event at the same time.
 - Claimed outbox events must use a lease deadline so a crashed worker does not strand events forever.
 - Processing completion or failure must only update an event when the caller still owns the event claim.
+- All outbox implementations must use a common claim-lost error concept. Outbox behavior outside authorization must not reuse authorization-specific error names.
 - Unrecoverable outbox events must be moved to a dead-letter terminal state instead of being retried forever.
 - Dead-lettered events must not be claimed for normal processing.
 - Dead-lettering must require ownership of the active event claim.
@@ -57,6 +61,8 @@ This spec does not define every future asset index, backup strategy, retention p
 - State-changing application services must depend on command/unit-of-work ports for writes. Read repositories must not grow new save, update, delete, archive, restore, enqueue, claim, or lifecycle methods.
 - External side effects that cannot be committed atomically with database state, such as blob deletion or provider calls, must be represented as durable side-effect intent before they are executed.
 - Side-effect outboxes must be retryable, observable, and safe for multiple API replicas.
+- Side-effect outboxes that protect durable data consistency must have a periodic drain path in the main API runtime until a separate worker deployment is introduced.
+- Periodic side-effect outbox drains must emit domain-oriented observability for claimed, processed, failed, and dead-lettered work.
 - Audit records must preserve tenant and inventory isolation in storage and read queries.
 - Audit metadata must be stored as a JSON object and must not be used as an authorization source.
 

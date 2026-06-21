@@ -98,6 +98,9 @@ Deletion:
 - Blob deletion must be retryable and idempotent. Missing blobs should be treated as successful cleanup.
 - The API must not delete blob content inline before metadata removal commits, because that can create broken attachment records if metadata deletion fails after blob deletion succeeds.
 - Until asynchronous workers are separated from the API process, the API may drain blob-deletion events opportunistically after successful hard-delete requests, but the durable outbox is the consistency mechanism.
+- The API runtime must also drain blob-deletion events on an environment-configured interval so failed opportunistic cleanup does not wait for a future attachment delete.
+- Blob-deletion outbox processing must emit domain-oriented observability when events are claimed, processed, failed, and dead-lettered.
+- Blob-deletion events must move to a dead-letter terminal state once they reach the environment-configured maximum attempt count.
 
 ## Storage Direction
 
@@ -108,6 +111,7 @@ Deletion:
 - Blob storage must be accessed through a port.
 - Application and domain code must not depend on S3, Garage, local filesystem paths, or provider SDK types.
 - Blob cleanup must be accessed through a blob-deletion outbox port, not by coupling attachment metadata persistence to a specific storage adapter.
+- Blob-deletion outbox batch size, retry interval, claim lease duration, and maximum attempt count must come from environment-backed configuration.
 
 The first storage adapters are:
 
@@ -155,6 +159,7 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 - Listing attachments must record domain observability through the injected observer.
 - Downloading attachment content must record domain observability through the injected observer.
 - Blob storage failures must be recorded through domain-oriented observability without leaking provider internals.
+- Blob deletion outbox events must be recorded through domain-oriented observability without leaking storage keys.
 
 ## Testing
 

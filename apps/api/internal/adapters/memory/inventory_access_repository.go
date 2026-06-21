@@ -147,12 +147,12 @@ func (s *Store) SaveInventoryAccessInvitation(_ context.Context, invitation port
 	return invitation, nil
 }
 
-func (s *Store) AcceptInventoryAccessInvitationAndEnqueue(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
+func (s *Store) AcceptInventoryAccessInvitationAndEnqueue(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, invitationID string, tokenHash string, acceptor identity.Principal, eventID string, now time.Time, auditRecord audit.Record) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	invitation, ok := s.invitations[invitationID]
-	if !ok || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || !memoryInventoryInvitationTokenHashMatches(invitation.TokenHash, tokenHash) || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(time.Now()) {
+	if !ok || invitation.TenantID != tenantID || invitation.InventoryID != inventoryID || invitation.Status != ports.InventoryAccessInvitationPending || invitation.Email != acceptor.Email || !memoryInventoryInvitationTokenHashMatches(invitation.TokenHash, tokenHash) || invitation.ExpiresAt.IsZero() || !invitation.ExpiresAt.After(now) {
 		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ports.ErrForbidden
 	}
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {

@@ -13,8 +13,9 @@ import (
 func TestSearchAssetsUsesAuthorizationVisibilityPort(t *testing.T) {
 	search := &recordingAssetSearchRepository{}
 	authorizer := &visibilityAuthorizer{
-		t:       t,
-		visible: []inventory.InventoryID{inventory.InventoryID("inventory-two")},
+		t:        t,
+		tenantID: tenant.ID("tenant-one"),
+		visible:  []inventory.InventoryID{inventory.InventoryID("inventory-two")},
 	}
 	application := New(Dependencies{
 		Observer:   &fakeObserver{},
@@ -23,6 +24,7 @@ func TestSearchAssetsUsesAuthorizationVisibilityPort(t *testing.T) {
 		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
 			inventoryItem("inventory-one", "tenant-one", "Tools"),
 			inventoryItem("inventory-two", "tenant-one", "Medicine"),
+			inventoryItem("inventory-other", "tenant-two", "Other Tenant"),
 		}},
 		Search:           search,
 		DefaultPageLimit: 1,
@@ -43,7 +45,12 @@ func TestSearchAssetsUsesAuthorizationVisibilityPort(t *testing.T) {
 		t.Fatalf("expected search to use authorization visibility port")
 	}
 	if len(authorizer.candidates) != 2 {
-		t.Fatalf("expected two candidate inventories, got %+v", authorizer.candidates)
+		t.Fatalf("expected two tenant-scoped candidate inventories, got %+v", authorizer.candidates)
+	}
+	for _, candidate := range authorizer.candidates {
+		if candidate == inventory.InventoryID("inventory-other") {
+			t.Fatalf("authorization visibility candidates must be tenant-scoped, got %+v", authorizer.candidates)
+		}
 	}
 	if len(search.inventoryIDs) != 1 || search.inventoryIDs[0] != inventory.InventoryID("inventory-two") {
 		t.Fatalf("expected search repository to receive visible inventory IDs only, got %+v", search.inventoryIDs)
@@ -52,6 +59,7 @@ func TestSearchAssetsUsesAuthorizationVisibilityPort(t *testing.T) {
 
 type visibilityAuthorizer struct {
 	t                *testing.T
+	tenantID         tenant.ID
 	visible          []inventory.InventoryID
 	candidates       []inventory.InventoryID
 	visibilityCalled bool
@@ -66,7 +74,10 @@ func (v *visibilityAuthorizer) CheckInventory(context.Context, identity.Principa
 	return nil
 }
 
-func (v *visibilityAuthorizer) ListViewableInventoryIDs(_ context.Context, _ identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+func (v *visibilityAuthorizer) ListViewableInventoryIDs(_ context.Context, _ identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	if tenantID != v.tenantID {
+		v.t.Fatalf("expected tenant %q, got %q", v.tenantID, tenantID)
+	}
 	v.visibilityCalled = true
 	v.candidates = append([]inventory.InventoryID{}, candidates...)
 	return append([]inventory.InventoryID{}, v.visible...), nil

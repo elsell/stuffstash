@@ -8,64 +8,72 @@ import (
 )
 
 const (
-	envHTTPAddr                 = "STUFF_STASH_HTTP_ADDR"
-	envHTTPReadHeaderTimeout    = "STUFF_STASH_HTTP_READ_HEADER_TIMEOUT"
-	envHTTPReadTimeout          = "STUFF_STASH_HTTP_READ_TIMEOUT"
-	envHTTPWriteTimeout         = "STUFF_STASH_HTTP_WRITE_TIMEOUT"
-	envHTTPIdleTimeout          = "STUFF_STASH_HTTP_IDLE_TIMEOUT"
-	envHTTPMaxJSONBodyBytes     = "STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES"
-	envCORSAllowedOrigins       = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
-	envAuthMode                 = "STUFF_STASH_AUTH_MODE"
-	envAuthzMode                = "STUFF_STASH_AUTHZ_MODE"
-	envOIDCIssuer               = "STUFF_STASH_OIDC_ISSUER"
-	envOIDCClientID             = "STUFF_STASH_OIDC_CLIENT_ID"
-	envOIDCClientIDs            = "STUFF_STASH_OIDC_CLIENT_IDS"
-	envRepositoryMode           = "STUFF_STASH_REPOSITORY_MODE"
-	envDatabaseDSN              = "STUFF_STASH_DATABASE_DSN"
-	envSpiceDBEndpoint          = "STUFF_STASH_SPICEDB_ENDPOINT"
-	envSpiceDBPresharedKey      = "STUFF_STASH_SPICEDB_PRESHARED_KEY"
-	envSpiceDBTLSEnabled        = "STUFF_STASH_SPICEDB_TLS_ENABLED"
-	envSpiceDBCAPath            = "STUFF_STASH_SPICEDB_CA_PATH"
-	envSpiceDBBootstrapSchema   = "STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA"
-	envSpiceDBSchemaPath        = "STUFF_STASH_SPICEDB_SCHEMA_PATH"
-	envAuthorizationOutboxLimit = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
-	envAuthorizationOutboxEvery = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
-	envAuthorizationOutboxLease = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
-	envInvitationTTL            = "STUFF_STASH_INVITATION_TTL"
-	envDefaultPageLimit         = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
-	envMaxPageLimit             = "STUFF_STASH_MAX_PAGE_LIMIT"
-	envBlobStorageMode          = "STUFF_STASH_BLOB_STORAGE_MODE"
-	envBlobStoragePath          = "STUFF_STASH_BLOB_STORAGE_PATH"
-	envS3Endpoint               = "STUFF_STASH_S3_ENDPOINT"
-	envS3AccessKey              = "STUFF_STASH_S3_ACCESS_KEY"
-	envS3SecretKey              = "STUFF_STASH_S3_SECRET_KEY"
-	envS3Bucket                 = "STUFF_STASH_S3_BUCKET"
-	envS3Region                 = "STUFF_STASH_S3_REGION"
-	envS3Secure                 = "STUFF_STASH_S3_SECURE"
-	envMaxAttachmentBytes       = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
-	defaultHTTPAddr             = ":8080"
-	defaultHTTPReadHeader       = 5 * time.Second
-	defaultHTTPRead             = 15 * time.Second
-	defaultHTTPWrite            = 30 * time.Second
-	defaultHTTPIdle             = 60 * time.Second
-	defaultHTTPMaxJSONBodyBytes = 1024 * 1024
-	defaultAuthMode             = "local-dev"
-	defaultAuthzMode            = "memory"
-	defaultRepositoryMode       = "memory"
-	defaultSpiceDBSchemaPath    = "deploy/spicedb/schema.zed"
-	defaultAuthorizationLimit   = 25
-	defaultAuthorizationEvery   = 10 * time.Second
-	defaultAuthorizationLease   = 30 * time.Second
-	defaultInvitationTTL        = 7 * 24 * time.Hour
-	defaultDefaultPageLimit     = 50
-	defaultMaxPageLimit         = 100
-	defaultBlobStorageMode      = "filesystem"
-	defaultBlobStoragePath      = ".stuffstash/blobs"
-	defaultS3Region             = "garage"
-	defaultS3Secure             = true
-	defaultMaxAttachmentBytes   = 5 * 1024 * 1024
-	defaultSpiceDBTLSEnabled    = true
-	defaultSpiceDBBootstrapMode = false
+	envHTTPAddr                      = "STUFF_STASH_HTTP_ADDR"
+	envHTTPReadHeaderTimeout         = "STUFF_STASH_HTTP_READ_HEADER_TIMEOUT"
+	envHTTPReadTimeout               = "STUFF_STASH_HTTP_READ_TIMEOUT"
+	envHTTPWriteTimeout              = "STUFF_STASH_HTTP_WRITE_TIMEOUT"
+	envHTTPIdleTimeout               = "STUFF_STASH_HTTP_IDLE_TIMEOUT"
+	envHTTPMaxJSONBodyBytes          = "STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES"
+	envCORSAllowedOrigins            = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
+	envAuthMode                      = "STUFF_STASH_AUTH_MODE"
+	envAuthzMode                     = "STUFF_STASH_AUTHZ_MODE"
+	envOIDCIssuer                    = "STUFF_STASH_OIDC_ISSUER"
+	envOIDCClientID                  = "STUFF_STASH_OIDC_CLIENT_ID"
+	envOIDCClientIDs                 = "STUFF_STASH_OIDC_CLIENT_IDS"
+	envRepositoryMode                = "STUFF_STASH_REPOSITORY_MODE"
+	envDatabaseDSN                   = "STUFF_STASH_DATABASE_DSN"
+	envSpiceDBEndpoint               = "STUFF_STASH_SPICEDB_ENDPOINT"
+	envSpiceDBPresharedKey           = "STUFF_STASH_SPICEDB_PRESHARED_KEY"
+	envSpiceDBTLSEnabled             = "STUFF_STASH_SPICEDB_TLS_ENABLED"
+	envSpiceDBCAPath                 = "STUFF_STASH_SPICEDB_CA_PATH"
+	envSpiceDBBootstrapSchema        = "STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA"
+	envSpiceDBSchemaPath             = "STUFF_STASH_SPICEDB_SCHEMA_PATH"
+	envAuthorizationOutboxLimit      = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
+	envAuthorizationOutboxEvery      = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
+	envAuthorizationOutboxLease      = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
+	envBlobDeletionOutboxLimit       = "STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_LIMIT"
+	envBlobDeletionOutboxEvery       = "STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL"
+	envBlobDeletionOutboxLease       = "STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE"
+	envBlobDeletionOutboxMaxAttempts = "STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS"
+	envInvitationTTL                 = "STUFF_STASH_INVITATION_TTL"
+	envDefaultPageLimit              = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
+	envMaxPageLimit                  = "STUFF_STASH_MAX_PAGE_LIMIT"
+	envBlobStorageMode               = "STUFF_STASH_BLOB_STORAGE_MODE"
+	envBlobStoragePath               = "STUFF_STASH_BLOB_STORAGE_PATH"
+	envS3Endpoint                    = "STUFF_STASH_S3_ENDPOINT"
+	envS3AccessKey                   = "STUFF_STASH_S3_ACCESS_KEY"
+	envS3SecretKey                   = "STUFF_STASH_S3_SECRET_KEY"
+	envS3Bucket                      = "STUFF_STASH_S3_BUCKET"
+	envS3Region                      = "STUFF_STASH_S3_REGION"
+	envS3Secure                      = "STUFF_STASH_S3_SECURE"
+	envMaxAttachmentBytes            = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
+	defaultHTTPAddr                  = ":8080"
+	defaultHTTPReadHeader            = 5 * time.Second
+	defaultHTTPRead                  = 15 * time.Second
+	defaultHTTPWrite                 = 30 * time.Second
+	defaultHTTPIdle                  = 60 * time.Second
+	defaultHTTPMaxJSONBodyBytes      = 1024 * 1024
+	defaultAuthMode                  = "local-dev"
+	defaultAuthzMode                 = "memory"
+	defaultRepositoryMode            = "memory"
+	defaultSpiceDBSchemaPath         = "deploy/spicedb/schema.zed"
+	defaultAuthorizationLimit        = 25
+	defaultAuthorizationEvery        = 10 * time.Second
+	defaultAuthorizationLease        = 30 * time.Second
+	defaultBlobDeletionLimit         = 25
+	defaultBlobDeletionEvery         = 10 * time.Second
+	defaultBlobDeletionLease         = 30 * time.Second
+	defaultBlobDeletionMaxAttempts   = 5
+	defaultInvitationTTL             = 7 * 24 * time.Hour
+	defaultDefaultPageLimit          = 50
+	defaultMaxPageLimit              = 100
+	defaultBlobStorageMode           = "filesystem"
+	defaultBlobStoragePath           = ".stuffstash/blobs"
+	defaultS3Region                  = "garage"
+	defaultS3Secure                  = true
+	defaultMaxAttachmentBytes        = 5 * 1024 * 1024
+	defaultSpiceDBTLSEnabled         = true
+	defaultSpiceDBBootstrapMode      = false
 )
 
 type Config struct {
@@ -92,6 +100,10 @@ type Config struct {
 	AuthorizationOutboxDrainLimit    int
 	AuthorizationOutboxDrainInterval time.Duration
 	AuthorizationOutboxClaimLease    time.Duration
+	BlobDeletionOutboxDrainLimit     int
+	BlobDeletionOutboxDrainInterval  time.Duration
+	BlobDeletionOutboxClaimLease     time.Duration
+	BlobDeletionOutboxMaxAttempts    int
 	InvitationTTL                    time.Duration
 	DefaultPageLimit                 int
 	MaxPageLimit                     int
@@ -131,6 +143,10 @@ func Load() Config {
 		AuthorizationOutboxDrainLimit:    intEnvOrDefault(envAuthorizationOutboxLimit, defaultAuthorizationLimit),
 		AuthorizationOutboxDrainInterval: durationEnvOrDefault(envAuthorizationOutboxEvery, defaultAuthorizationEvery),
 		AuthorizationOutboxClaimLease:    durationEnvOrDefault(envAuthorizationOutboxLease, defaultAuthorizationLease),
+		BlobDeletionOutboxDrainLimit:     intEnvOrDefault(envBlobDeletionOutboxLimit, defaultBlobDeletionLimit),
+		BlobDeletionOutboxDrainInterval:  durationEnvOrDefault(envBlobDeletionOutboxEvery, defaultBlobDeletionEvery),
+		BlobDeletionOutboxClaimLease:     durationEnvOrDefault(envBlobDeletionOutboxLease, defaultBlobDeletionLease),
+		BlobDeletionOutboxMaxAttempts:    intEnvOrDefault(envBlobDeletionOutboxMaxAttempts, defaultBlobDeletionMaxAttempts),
 		InvitationTTL:                    durationEnvOrDefault(envInvitationTTL, defaultInvitationTTL),
 		DefaultPageLimit:                 intEnvOrDefault(envDefaultPageLimit, defaultDefaultPageLimit),
 		MaxPageLimit:                     intEnvOrDefault(envMaxPageLimit, defaultMaxPageLimit),

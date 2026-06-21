@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/oklog/ulid/v2"
+	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
+	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -35,12 +37,16 @@ type App struct {
 	audit                     ports.AuditRepository
 	outbox                    ports.AuthorizationOutbox
 	ids                       ports.IDGenerator
+	clock                     ports.Clock
 	outboxDrainLimit          int
 	outboxClaimLease          time.Duration
+	blobDeletionClaimLease    time.Duration
+	blobDeletionMaxAttempts   int
 	invitationTTL             time.Duration
 	defaultPageLimit          int
 	maxPageLimit              int
 	maxAttachmentBytes        int
+	assetService              assetapp.Service
 }
 
 type Dependencies struct {
@@ -68,8 +74,11 @@ type Dependencies struct {
 	Audit                         ports.AuditRepository
 	Outbox                        ports.AuthorizationOutbox
 	IDs                           ports.IDGenerator
+	Clock                         ports.Clock
 	AuthorizationOutboxDrainLimit int
 	AuthorizationOutboxClaimLease time.Duration
+	BlobDeletionOutboxClaimLease  time.Duration
+	BlobDeletionOutboxMaxAttempts int
 	InvitationTTL                 time.Duration
 	DefaultPageLimit              int
 	MaxPageLimit                  int
@@ -82,7 +91,12 @@ func New(deps Dependencies) App {
 	if ids == nil {
 		ids = defaultIDGenerator{}
 	}
-	return App{
+	clock := deps.Clock
+	if clock == nil {
+		clock = ports.SystemClock{}
+	}
+	defaultPageLimit := normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit)
+	app := App{
 		observer:                  deps.Observer,
 		auth:                      deps.Auth,
 		authorizer:                deps.Authorizer,
@@ -107,13 +121,33 @@ func New(deps Dependencies) App {
 		audit:                     deps.Audit,
 		outbox:                    deps.Outbox,
 		ids:                       ids,
+		clock:                     clock,
 		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,
 		outboxClaimLease:          deps.AuthorizationOutboxClaimLease,
+		blobDeletionClaimLease:    normalizeOutboxClaimLease(deps.BlobDeletionOutboxClaimLease),
+		blobDeletionMaxAttempts:   normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
 		invitationTTL:             normalizeInvitationTTL(deps.InvitationTTL),
-		defaultPageLimit:          normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
+		defaultPageLimit:          defaultPageLimit,
 		maxPageLimit:              maxPageLimit,
 		maxAttachmentBytes:        normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
 	}
+	app.assetService = assetapp.New(assetapp.Dependencies{
+		Observer:         app.observer,
+		Authorizer:       app.authorizer,
+		Tenants:          app.tenants,
+		Inventories:      app.inventories,
+		CustomAssetTypes: app.customAssetTypes,
+		CustomFields:     app.customFields,
+		Assets:           app.assets,
+		AssetUnitOfWork:  app.assetUnitOfWork,
+		Undoables:        app.undoables,
+		Audit:            app.audit,
+		IDs:              app.ids,
+		Clock:            app.clock,
+		DefaultPageLimit: app.defaultPageLimit,
+		MaxPageLimit:     app.maxPageLimit,
+	})
+	return app
 }
 
 type defaultIDGenerator struct{}
@@ -140,21 +174,26 @@ func normalizeInvitationTTL(ttl time.Duration) time.Duration {
 	return ttl
 }
 
+func normalizeOutboxClaimLease(lease time.Duration) time.Duration {
+	if lease <= 0 {
+		return 30 * time.Second
+	}
+	return lease
+}
+
+func normalizeBlobDeletionMaxAttempts(attempts int) int {
+	if attempts <= 0 {
+		return 5
+	}
+	return attempts
+}
+
 func normalizeDefaultPageLimit(defaultLimit int, maxLimit int) int {
-	if defaultLimit <= 0 {
-		return 50
-	}
-	if defaultLimit > maxLimit {
-		return maxLimit
-	}
-	return defaultLimit
+	return appsupport.NormalizeDefaultPageLimit(defaultLimit, maxLimit)
 }
 
 func normalizeMaxPageLimit(maxLimit int) int {
-	if maxLimit <= 0 {
-		return 100
-	}
-	return maxLimit
+	return appsupport.NormalizeMaxPageLimit(maxLimit)
 }
 
 func (a App) Authenticate(ctx context.Context, authorizationHeader string) (identity.Principal, error) {

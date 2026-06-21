@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -167,7 +166,7 @@ func (a App) RevokeInventoryAccess(ctx context.Context, input RevokeInventoryAcc
 
 	eventID := a.ids.NewID()
 	claimID := a.ids.NewID()
-	event, removed, err := a.inventoryAccessUnitOfWork.DeleteInventoryAccessGrantAndClaimRevoke(ctx, eventID, claimID, time.Now().Add(a.authorizationOutboxClaimLease()), grant, auditRecord)
+	event, removed, err := a.inventoryAccessUnitOfWork.DeleteInventoryAccessGrantAndClaimRevoke(ctx, eventID, claimID, a.clock.Now().Add(a.authorizationOutboxClaimLease()), grant, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return false, ErrInvalidInput
