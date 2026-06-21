@@ -7,11 +7,15 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"image"
+	"image/color"
+	"image/png"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -222,6 +226,65 @@ func TestAttachmentThumbnailEndpointUsesImageProcessor(t *testing.T) {
 	}
 	if thumbnail.Header().Get("Content-Type") != "image/png" || thumbnail.Body.String() != "thumbnail" || !processor.thumbnailCalled {
 		t.Fatalf("unexpected thumbnail response contentType=%q body=%q called=%t", thumbnail.Header().Get("Content-Type"), thumbnail.Body.String(), processor.thumbnailCalled)
+	}
+}
+
+func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededMediaTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one", "audit-download", "audit-thumbnail"},
+	}, nil, blobstore.StandardImageProcessor{}))
+	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Drill",
+	})
+	if assetResponse.Code != http.StatusCreated {
+		t.Fatalf("expected asset status %d, got %d with body %s", http.StatusCreated, assetResponse.Code, assetResponse.Body.String())
+	}
+	createdAsset := decodeAsset(t, assetResponse)
+	content := realPNGAttachmentContent(t)
+
+	createAttachment := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", map[string]any{
+		"fileName":      "workbench.png",
+		"contentType":   "image/png",
+		"contentBase64": base64.StdEncoding.EncodeToString(content),
+	})
+	if createAttachment.Code != http.StatusCreated {
+		t.Fatalf("expected attachment status %d, got %d with body %s", http.StatusCreated, createAttachment.Code, createAttachment.Body.String())
+	}
+	attachment := decodeAttachment(t, createAttachment)
+
+	download := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/content", "Bearer dev:owner", nil)
+	if download.Code != http.StatusOK {
+		t.Fatalf("expected download status %d, got %d with body %s", http.StatusOK, download.Code, download.Body.String())
+	}
+	if !bytes.Equal(download.Body.Bytes(), content) {
+		t.Fatalf("expected downloaded content to match uploaded image")
+	}
+
+	thumbnail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "Bearer dev:owner", nil)
+	if thumbnail.Code != http.StatusOK {
+		t.Fatalf("expected thumbnail status %d, got %d with body %s", http.StatusOK, thumbnail.Code, thumbnail.Body.String())
+	}
+	if thumbnail.Header().Get("Content-Type") != "image/png" {
+		t.Fatalf("expected image/png thumbnail content type, got %q", thumbnail.Header().Get("Content-Type"))
+	}
+	thumbnailImage, err := png.Decode(bytes.NewReader(thumbnail.Body.Bytes()))
+	if err != nil {
+		t.Fatalf("expected decodable thumbnail png: %v", err)
+	}
+	if thumbnailImage.Bounds().Dx() > 256 || thumbnailImage.Bounds().Dy() > 256 {
+		t.Fatalf("expected bounded thumbnail dimensions, got %dx%d", thumbnailImage.Bounds().Dx(), thumbnailImage.Bounds().Dy())
+	}
+	if len(thumbnail.Body.Bytes()) >= len(content) {
+		t.Fatalf("expected thumbnail to be smaller than uploaded image")
 	}
 }
 
@@ -541,6 +604,22 @@ func (failingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
 
 func pngAttachmentContent() []byte {
 	return []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
+}
+
+func realPNGAttachmentContent(t *testing.T) []byte {
+	t.Helper()
+
+	img := image.NewRGBA(image.Rect(0, 0, 512, 128))
+	for y := range 128 {
+		for x := range 512 {
+			img.Set(x, y, color.RGBA{R: uint8(x % 255), G: uint8(y % 255), B: 140, A: 255})
+		}
+	}
+	buffer := bytes.Buffer{}
+	if err := png.Encode(&buffer, img); err != nil {
+		t.Fatalf("encode png fixture: %v", err)
+	}
+	return buffer.Bytes()
 }
 
 func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.DirectAttachmentUploader, imageProcessor ports.ImageProcessor) app.App {

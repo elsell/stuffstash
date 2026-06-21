@@ -223,6 +223,7 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 - Tests must verify upload, direct upload initiation and completion, metadata persistence, authorization, tenant isolation, inventory isolation, download, thumbnail generation, model-image preparation, and failure behavior.
 - Tests must verify unsupported MIME type rejection, oversize rejection, invalid base64 rejection, viewer upload denial, viewer download success, intruder denial, cross-tenant hiding, and safe storage errors.
 - Tests must verify direct upload viewer denial, direct upload completion failure safety, thumbnail image-only behavior, and model-image preparation through a fake image processing adapter.
+- HTTP boundary tests must include at least one real decodable image upload that is downloaded and processed through the real image processor for thumbnail generation.
 - Tests must use fake blob storage adapters where appropriate.
 - Integration tests must verify the production-style S3-compatible adapter against Garage running in Docker.
 
