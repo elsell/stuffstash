@@ -239,7 +239,7 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 		inventories: []seedInventory{
 			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
 		},
-		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one", "audit-download", "audit-thumbnail"},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one", "audit-download", "audit-thumbnail", "viewer-grant-event", "audit-viewer-grant", "viewer-claim", "audit-viewer-download", "audit-viewer-thumbnail"},
 	}, nil, blobstore.StandardImageProcessor{}))
 	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",
@@ -286,6 +286,32 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 	if len(thumbnail.Body.Bytes()) >= len(content) {
 		t.Fatalf("expected thumbnail to be smaller than uploaded image")
 	}
+
+	grantViewer := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]any{
+		"principalId":  "viewer",
+		"relationship": "viewer",
+	})
+	if grantViewer.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, grantViewer.Code, grantViewer.Body.String())
+	}
+	viewerDownload := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/content", "Bearer dev:viewer", nil)
+	if viewerDownload.Code != http.StatusOK {
+		t.Fatalf("expected viewer image download status %d, got %d with body %s", http.StatusOK, viewerDownload.Code, viewerDownload.Body.String())
+	}
+	viewerThumbnail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "Bearer dev:viewer", nil)
+	if viewerThumbnail.Code != http.StatusOK {
+		t.Fatalf("expected viewer thumbnail status %d, got %d with body %s", http.StatusOK, viewerThumbnail.Code, viewerThumbnail.Body.String())
+	}
+	intruderThumbnail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "Bearer dev:intruder", nil)
+	if intruderThumbnail.Code != http.StatusForbidden {
+		t.Fatalf("expected intruder thumbnail status %d, got %d with body %s", http.StatusForbidden, intruderThumbnail.Code, intruderThumbnail.Body.String())
+	}
+	assertSafeError(t, intruderThumbnail, "forbidden", "Forbidden.")
+	missingAuthThumbnail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "", nil)
+	if missingAuthThumbnail.Code != http.StatusUnauthorized {
+		t.Fatalf("expected missing auth thumbnail status %d, got %d with body %s", http.StatusUnauthorized, missingAuthThumbnail.Code, missingAuthThumbnail.Body.String())
+	}
+	assertSafeError(t, missingAuthThumbnail, "authentication_required", "Authentication required.")
 }
 
 func TestAttachmentListIsPaginated(t *testing.T) {
