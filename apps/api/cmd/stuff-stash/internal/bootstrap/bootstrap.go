@@ -33,6 +33,11 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
 		MaxJSONBodyBytes:   cfg.HTTPMaxJSONBodyBytes,
+		RateLimitDisabled:  !cfg.HTTPRateLimitEnabled,
+		RateLimitRequests:  cfg.HTTPRateLimitRequests,
+		RateLimitWindow:    cfg.HTTPRateLimitWindow,
+		RateLimitBurst:     cfg.HTTPRateLimitBurst,
+		Observer:           observer,
 		ReadHeaderTimeout:  cfg.HTTPReadHeaderTimeout,
 		ReadTimeout:        cfg.HTTPReadTimeout,
 		WriteTimeout:       cfg.HTTPWriteTimeout,

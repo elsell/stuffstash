@@ -9,6 +9,10 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envHTTPWriteTimeout, "")
 	t.Setenv(envHTTPIdleTimeout, "")
 	t.Setenv(envHTTPMaxJSONBodyBytes, "")
+	t.Setenv(envHTTPRateLimitEnabled, "")
+	t.Setenv(envHTTPRateLimitRequests, "")
+	t.Setenv(envHTTPRateLimitWindow, "")
+	t.Setenv(envHTTPRateLimitBurst, "")
 	t.Setenv(envCORSAllowedOrigins, "")
 	t.Setenv(envAuthMode, "")
 	t.Setenv(envAuthzMode, "")
@@ -48,6 +52,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	}
 	if cfg.HTTPMaxJSONBodyBytes != defaultHTTPMaxJSONBodyBytes {
 		t.Fatalf("expected default max JSON body bytes %d, got %d", defaultHTTPMaxJSONBodyBytes, cfg.HTTPMaxJSONBodyBytes)
+	}
+	if !cfg.HTTPRateLimitEnabled || cfg.HTTPRateLimitRequests != defaultHTTPRateLimitRequests || cfg.HTTPRateLimitWindow != defaultHTTPRateLimitWindow || cfg.HTTPRateLimitBurst != defaultHTTPRateLimitBurst {
+		t.Fatalf("unexpected HTTP rate limit defaults: %+v", cfg)
 	}
 	if len(cfg.CORSAllowedOrigins) != 0 {
 		t.Fatalf("expected no CORS allowed origins by default, got %+v", cfg.CORSAllowedOrigins)
@@ -133,6 +140,10 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envHTTPWriteTimeout, "4s")
 	t.Setenv(envHTTPIdleTimeout, "5s")
 	t.Setenv(envHTTPMaxJSONBodyBytes, "2048")
+	t.Setenv(envHTTPRateLimitEnabled, "false")
+	t.Setenv(envHTTPRateLimitRequests, "12")
+	t.Setenv(envHTTPRateLimitWindow, "30s")
+	t.Setenv(envHTTPRateLimitBurst, "4")
 	t.Setenv(envCORSAllowedOrigins, "http://localhost:5173, https://stuffstash.online, http://localhost:5173")
 	t.Setenv(envAuthzMode, "spicedb")
 	t.Setenv(envOIDCIssuer, "https://accounts.google.com")
@@ -176,6 +187,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.HTTPMaxJSONBodyBytes != 2048 {
 		t.Fatalf("expected max JSON body bytes 2048, got %d", cfg.HTTPMaxJSONBodyBytes)
+	}
+	if cfg.HTTPRateLimitEnabled || cfg.HTTPRateLimitRequests != 12 || cfg.HTTPRateLimitWindow.String() != "30s" || cfg.HTTPRateLimitBurst != 4 {
+		t.Fatalf("unexpected HTTP rate limit config: %+v", cfg)
 	}
 	if len(cfg.CORSAllowedOrigins) != 2 || cfg.CORSAllowedOrigins[0] != "http://localhost:5173" || cfg.CORSAllowedOrigins[1] != "https://stuffstash.online" {
 		t.Fatalf("unexpected CORS allowed origins: %+v", cfg.CORSAllowedOrigins)

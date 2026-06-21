@@ -29,6 +29,8 @@ func buildApplication(cfg config.Config, observer ports.Observer, authenticator 
 		Attachments:                   repositories.attachments,
 		AttachmentUnitOfWork:          repositories.attachmentUnitOfWork,
 		Blobs:                         repositories.blobs,
+		DirectUploads:                 repositories.directUploads,
+		ImageProcessor:                repositories.imageProcessor,
 		BlobDeletionOutbox:            repositories.blobDeletionOutbox,
 		Audit:                         repositories.audit,
 		Outbox:                        repositories.outbox,

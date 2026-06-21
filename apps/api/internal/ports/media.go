@@ -33,6 +33,80 @@ type BlobStorage interface {
 	DeleteBlob(ctx context.Context, key media.StorageKey) error
 }
 
+type DirectAttachmentUploadRequest struct {
+	UploadID     string
+	AttachmentID media.ID
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	AssetID      asset.ID
+	StorageKey   media.StorageKey
+	FileName     media.FileName
+	ContentType  media.ContentType
+	SizeBytes    int64
+	ExpiresAt    time.Time
+}
+
+type DirectAttachmentUpload struct {
+	UploadID     string
+	AttachmentID media.ID
+	Method       string
+	URL          string
+	Headers      map[string]string
+	FormFields   map[string]string
+	ExpiresAt    time.Time
+}
+
+type CompletedDirectAttachmentUpload struct {
+	UploadID     string
+	AttachmentID media.ID
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	AssetID      asset.ID
+	StorageKey   media.StorageKey
+	FileName     media.FileName
+	ContentType  media.ContentType
+	SizeBytes    int64
+	SHA256       media.SHA256
+	ExpiresAt    time.Time
+}
+
+type DirectAttachmentUploader interface {
+	CreateDirectAttachmentUpload(ctx context.Context, request DirectAttachmentUploadRequest) (DirectAttachmentUpload, error)
+	CompleteDirectAttachmentUpload(ctx context.Context, uploadID string) (CompletedDirectAttachmentUpload, error)
+}
+
+type ImageDerivativeRequest struct {
+	Attachment  media.Attachment
+	Variant     media.ThumbnailVariant
+	ContentType media.ContentType
+	Content     []byte
+}
+
+type ImageDerivative struct {
+	ContentType media.ContentType
+	Content     []byte
+}
+
+type ModelImageRequest struct {
+	Attachment  media.Attachment
+	ContentType media.ContentType
+	Content     []byte
+}
+
+type ModelImage struct {
+	ContentType media.ContentType
+	Content     []byte
+	SizeBytes   int64
+	SHA256      media.SHA256
+	Width       int
+	Height      int
+}
+
+type ImageProcessor interface {
+	CreateThumbnail(ctx context.Context, request ImageDerivativeRequest) (ImageDerivative, error)
+	PrepareImageForModelUse(ctx context.Context, request ModelImageRequest) (ModelImage, error)
+}
+
 type BlobDeletionEvent struct {
 	ID               string
 	StorageKey       media.StorageKey

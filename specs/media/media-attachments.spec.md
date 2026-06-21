@@ -8,9 +8,9 @@ Photos, receipts, manuals, and arbitrary files help users identify and manage ph
 
 ## Scope
 
-This spec covers initial media and attachment requirements, the first asset attachment API slice, and the first production-shaped blob storage adapter.
+This spec covers media and attachment requirements, the asset attachment API slice, production-shaped blob storage, direct upload readiness, image derivative processing, thumbnails, and image preparation for future model adapters.
 
-This spec does not define multipart upload, direct-to-object-storage upload, image processing, thumbnails, virus scanning, retention policy, model vision features, or media export packaging.
+This spec does not define multipart upload, virus scanning, retention policy, model provider selection, model prompting, inference behavior, or media export packaging.
 
 ## Requirements
 
@@ -23,7 +23,7 @@ This spec does not define multipart upload, direct-to-object-storage upload, ima
 - File access must be authorized through the same tenant, inventory, and resource relationships as the attached resource.
 - File names, MIME types, sizes, hashes, and storage keys must be handled safely.
 - Attachments must not expose storage-provider internals to domain logic.
-- Images may be used by model providers in the future, but model vision behavior is not required initially.
+- Images may be prepared for model providers through media ports, but model provider calls, prompts, inference behavior, and provider-specific request formats are not part of the media domain.
 
 ## First Slice
 
@@ -33,19 +33,48 @@ The first upload protocol is JSON with base64 content:
 
 - It is not the final high-performance upload protocol.
 - It exists to prove the domain, authorization, metadata, storage port, and generated OpenAPI contract.
-- Multipart upload or direct-to-storage upload must be specified before larger production media workflows.
+- Multipart upload is not part of the first implementation.
+- Direct-to-object-storage upload uses an application direct upload flow and provider-specific adapter behind a port.
 
 Initial endpoints:
 
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads/{uploadId}/complete`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/thumbnail`
 
 Initial upload request fields:
 
 - `fileName`: user-facing file name.
 - `contentType`: MIME type.
 - `contentBase64`: base64-encoded file content.
+
+Direct upload initiation request fields:
+
+- `fileName`: user-facing file name.
+- `contentType`: MIME type.
+- `sizeBytes`: expected decoded content size.
+
+Direct upload initiation response fields:
+
+- `uploadId`: opaque upload identifier.
+- `attachmentId`: attachment ID reserved for completion.
+- `method`: HTTP method the client should use with the returned upload target.
+- `url`: opaque adapter-provided upload target.
+- `headers`: adapter-provided request headers the client must send.
+- `formFields`: adapter-provided form fields the client must send when the upload method requires form upload.
+- `expiresAt`: upload expiration timestamp.
+
+Direct upload completion:
+
+- The client calls the completion endpoint after successfully uploading content through the returned upload target.
+- The application must authorize completion with `inventory.edit_asset`.
+- The direct upload adapter must verify that the uploaded object exists, that its content type is expected, that the size is positive and within `STUFF_STASH_MAX_ATTACHMENT_BYTES`, and that a SHA-256 hash is available before metadata is committed.
+- Attachment metadata and audit history are committed only after the direct upload adapter verifies completion.
+- Provider URLs, object keys, bucket names, filesystem paths, credentials, and provider internals must not appear in completion responses.
+- Expired, unknown, oversized, mismatched, or incomplete direct uploads must fail safely and must not create attachment metadata.
 
 Initial attachment response fields:
 
@@ -65,7 +94,6 @@ Initial supported content types:
 
 - `image/jpeg`
 - `image/png`
-- `image/webp`
 - `application/pdf`
 
 Initial upload size limit:
@@ -88,6 +116,24 @@ Attachment content download:
 - Must return the bytes stored for the attachment.
 - Must set the stored content type.
 - Must not return presigned object storage URLs in the first slice.
+
+Thumbnails and image processing:
+
+- Thumbnails are generated through an image processing port.
+- The first thumbnail variant is `small`.
+- Thumbnail generation must be authorized with `inventory.view` and scoped to the requested tenant, inventory, asset, and attachment.
+- Thumbnail generation is supported only for image attachments.
+- The application must not contain image codec, resize, crop, EXIF, or color-management implementation details.
+- Image processing adapters must enforce bounded input and output sizes and must not leak implementation paths, command lines, or provider internals in user-facing errors.
+- Thumbnail responses must return bytes and the derivative content type; they must not expose derivative storage keys.
+
+Model image readiness:
+
+- Media may prepare image attachments for future model providers through an image preparation port.
+- Model-image preparation must require `inventory.view`, must use the same tenant/inventory/asset/attachment scoping as downloads, and must support only image attachments.
+- Prepared image data must include only the bounded bytes and media metadata needed by a future model adapter, such as content type, byte size, hash, and optional dimensions.
+- The media application layer must not call model providers, construct provider prompts, or bypass authorization, validation, audit, tenant isolation, inventory isolation, or attachment lifecycle rules.
+- Model provider adapters must be specified separately before any provider is implemented.
 
 Deletion:
 
@@ -143,11 +189,19 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 - Uploads must enforce allowed MIME types.
 - Uploads must inspect content signatures for supported types and reject content that does not match the claimed MIME type.
 - Download URLs must not bypass authorization.
+- Direct upload targets must be opaque, bounded, expiring, and usable only for the intended tenant, inventory, asset, attachment ID, content type, and size.
+- Direct upload completion must verify uploaded object metadata before committing attachment metadata.
+- Garage/S3 direct upload targets must use presigned object-storage POST policies behind the direct upload port.
+- S3-compatible direct upload initiation must include policy form fields that constrain object key, content type, content length, and expiration.
+- S3-compatible direct upload completion must not rely on process-local pending state. Completion state must be durable or encoded in a signed opaque upload token so restarts and multi-replica routing do not break completion.
+- Local filesystem and memory runtime modes must not advertise direct upload targets unless a real local upload target adapter is implemented.
 - Public buckets must not be used for private tenant inventory files.
 - Error messages must not leak storage keys, credentials, bucket internals, or filesystem paths.
 - Oversized or externally mutated blobs must not cause unbounded memory reads.
 - Attachment upload requires `inventory.edit_asset`.
+- Attachment direct upload initiation and completion require `inventory.edit_asset`.
 - Attachment list and content download require `inventory.view`.
+- Attachment thumbnail and model-image preparation require `inventory.view`.
 - The target asset must belong to the tenant and inventory in the route.
 - Hidden or cross-tenant assets must return safe not-found behavior after the caller passes inventory authorization.
 - Viewers may list and download attachment content but must not upload.
@@ -158,19 +212,21 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 - Attachment detail, list, content download, archive, restore, and hard delete must emit safe audit history where specified by the lifecycle contract.
 - Listing attachments must record domain observability through the injected observer.
 - Downloading attachment content must record domain observability through the injected observer.
+- Creating and completing direct uploads must record domain observability through the injected observer.
+- Generating thumbnails and preparing model images must record domain observability through the injected observer.
 - Blob storage failures must be recorded through domain-oriented observability without leaking provider internals.
 - Blob deletion outbox events must be recorded through domain-oriented observability without leaking storage keys.
 
 ## Testing
 
-- Tests must verify upload, metadata persistence, authorization, tenant isolation, inventory isolation, download, and failure behavior.
+- Tests must verify upload, direct upload initiation and completion, metadata persistence, authorization, tenant isolation, inventory isolation, download, thumbnail generation, model-image preparation, and failure behavior.
 - Tests must verify unsupported MIME type rejection, oversize rejection, invalid base64 rejection, viewer upload denial, viewer download success, intruder denial, cross-tenant hiding, and safe storage errors.
+- Tests must verify direct upload viewer denial, direct upload completion failure safety, thumbnail image-only behavior, and model-image preparation through a fake image processing adapter.
 - Tests must use fake blob storage adapters where appropriate.
 - Integration tests must verify the production-style S3-compatible adapter against Garage running in Docker.
 
 ## Open Questions
 
 - Are attachments versioned?
-- Are thumbnails generated immediately, lazily, or not at first?
+- Are thumbnails persisted durably, cached opportunistically, or always generated lazily?
 - What virus scanning or content safety workflow is required before arbitrary file uploads?
-- What direct upload protocol should replace JSON base64 for larger production media?

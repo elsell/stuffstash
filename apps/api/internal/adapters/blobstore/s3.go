@@ -24,9 +24,10 @@ type S3Config struct {
 }
 
 type S3Store struct {
-	client   *minio.Client
-	bucket   string
-	maxBytes int64
+	client                 *minio.Client
+	bucket                 string
+	maxBytes               int64
+	directUploadSigningKey []byte
 }
 
 func NewS3Store(config S3Config) (S3Store, error) {
@@ -46,10 +47,13 @@ func NewS3Store(config S3Config) (S3Store, error) {
 	if err != nil {
 		return S3Store{}, err
 	}
-	return S3Store{client: client, bucket: bucket, maxBytes: config.MaxBytes}, nil
+	return S3Store{client: client, bucket: bucket, maxBytes: config.MaxBytes, directUploadSigningKey: []byte(secretKey)}, nil
 }
 
 func (s S3Store) PutBlob(ctx context.Context, key media.StorageKey, contentType media.ContentType, data []byte) error {
+	if s.maxBytes > 0 && int64(len(data)) > s.maxBytes {
+		return errors.New("blob exceeds configured maximum size")
+	}
 	_, err := s.client.PutObject(ctx, s.bucket, key.String(), bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{
 		ContentType: contentType.String(),
 	})

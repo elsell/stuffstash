@@ -10,6 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func init() {
@@ -19,6 +20,12 @@ func init() {
 type Options struct {
 	CORSAllowedOrigins []string
 	MaxJSONBodyBytes   int64
+	RateLimitDisabled  bool
+	RateLimiter        ports.RateLimiter
+	RateLimitRequests  int
+	RateLimitWindow    time.Duration
+	RateLimitBurst     int
+	Observer           ports.Observer
 	ReadHeaderTimeout  time.Duration
 	ReadTimeout        time.Duration
 	WriteTimeout       time.Duration
@@ -53,7 +60,13 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 		maxJSONBodyBytes = 1024 * 1024
 	}
 	applyJSONBodyLimit(api, maxJSONBodyBytes)
-	handler := withSecurityHeaders(withCORS(mux, options.CORSAllowedOrigins))
+	rateLimiter := options.RateLimiter
+	if options.RateLimitDisabled {
+		rateLimiter = nil
+	} else if rateLimiter == nil {
+		rateLimiter = NewTokenBucketRateLimiter(options.RateLimitRequests, options.RateLimitWindow, options.RateLimitBurst)
+	}
+	handler := withSecurityHeaders(withCORS(withRateLimit(mux, rateLimiter, options.Observer), options.CORSAllowedOrigins))
 	return &http.Server{
 		Addr:              addr,
 		Handler:           handler,

@@ -11,7 +11,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestAttachmentUploadListAndDownloadFlow(t *testing.T) {
@@ -104,6 +108,123 @@ func TestAttachmentUploadListAndDownloadFlow(t *testing.T) {
 	assertSafeError(t, downloadArchivedAssetAttachment, "resource_not_found", "Resource not found.")
 }
 
+func TestAttachmentDirectUploadFlow(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	directUploads := &httpFakeDirectAttachmentUploader{}
+	server := NewServer(":0", newSeededMediaTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "upload-one", "attachment-one", "audit-attachment-one"},
+	}, directUploads, nil))
+	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Drill",
+	})
+	if assetResponse.Code != http.StatusCreated {
+		t.Fatalf("expected asset status %d, got %d with body %s", http.StatusCreated, assetResponse.Code, assetResponse.Body.String())
+	}
+	createdAsset := decodeAsset(t, assetResponse)
+
+	initiate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/direct-uploads", "Bearer dev:owner", map[string]any{
+		"fileName":    "receipt.png",
+		"contentType": "image/png",
+		"sizeBytes":   len(pngAttachmentContent()),
+	})
+	if initiate.Code != http.StatusCreated {
+		t.Fatalf("expected direct upload status %d, got %d with body %s", http.StatusCreated, initiate.Code, initiate.Body.String())
+	}
+	upload := decodeDirectUpload(t, initiate)
+	if upload.Data.UploadID != "upload-one" || upload.Data.AttachmentID != "attachment-one" || upload.Data.Method != "PUT" || strings.Contains(upload.Data.URL, "tenant") {
+		t.Fatalf("unexpected direct upload response: %+v", upload.Data)
+	}
+
+	complete := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/direct-uploads/"+upload.Data.UploadID+"/complete", "Bearer dev:owner", nil)
+	if complete.Code != http.StatusCreated {
+		t.Fatalf("expected direct upload completion status %d, got %d with body %s", http.StatusCreated, complete.Code, complete.Body.String())
+	}
+	attachment := decodeAttachment(t, complete)
+	if attachment.Data.ID != "attachment-one" || attachment.Data.FileName != "receipt.png" || attachment.Data.SizeBytes != int64(len(pngAttachmentContent())) {
+		t.Fatalf("unexpected completed attachment: %+v", attachment.Data)
+	}
+}
+
+func TestAttachmentDirectUploadCompletionFailureReturnsSafeEnvelope(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	directUploads := &httpFakeDirectAttachmentUploader{err: ports.ErrDirectUploadMismatch}
+	server := NewServer(":0", newSeededMediaTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "upload-one", "attachment-one"},
+	}, directUploads, nil))
+	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Drill",
+	})
+	createdAsset := decodeAsset(t, assetResponse)
+	initiate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/direct-uploads", "Bearer dev:owner", map[string]any{
+		"fileName":    "receipt.png",
+		"contentType": "image/png",
+		"sizeBytes":   len(pngAttachmentContent()),
+	})
+	upload := decodeDirectUpload(t, initiate)
+
+	complete := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/direct-uploads/"+upload.Data.UploadID+"/complete", "Bearer dev:owner", nil)
+	if complete.Code != http.StatusBadRequest {
+		t.Fatalf("expected completion failure status %d, got %d with body %s", http.StatusBadRequest, complete.Code, complete.Body.String())
+	}
+	assertSafeError(t, complete, "invalid_request", "Invalid request.")
+}
+
+func TestAttachmentThumbnailEndpointUsesImageProcessor(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	processor := &httpFakeImageProcessor{thumbnailContent: []byte("thumbnail")}
+	server := NewServer(":0", newSeededMediaTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "attachment-one", "audit-attachment-one", "audit-thumbnail"},
+	}, nil, processor))
+	assetResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Drill",
+	})
+	if assetResponse.Code != http.StatusCreated {
+		t.Fatalf("expected asset status %d, got %d with body %s", http.StatusCreated, assetResponse.Code, assetResponse.Body.String())
+	}
+	createdAsset := decodeAsset(t, assetResponse)
+	createAttachment := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", map[string]any{
+		"fileName":      "receipt.png",
+		"contentType":   "image/png",
+		"contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent()),
+	})
+	if createAttachment.Code != http.StatusCreated {
+		t.Fatalf("expected attachment status %d, got %d with body %s", http.StatusCreated, createAttachment.Code, createAttachment.Body.String())
+	}
+	attachment := decodeAttachment(t, createAttachment)
+
+	thumbnail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "Bearer dev:owner", nil)
+	if thumbnail.Code != http.StatusOK {
+		t.Fatalf("expected thumbnail status %d, got %d with body %s", http.StatusOK, thumbnail.Code, thumbnail.Body.String())
+	}
+	if thumbnail.Header().Get("Content-Type") != "image/png" || thumbnail.Body.String() != "thumbnail" || !processor.thumbnailCalled {
+		t.Fatalf("unexpected thumbnail response contentType=%q body=%q called=%t", thumbnail.Header().Get("Content-Type"), thumbnail.Body.String(), processor.thumbnailCalled)
+	}
+}
+
 func TestAttachmentListIsPaginated(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
@@ -189,11 +310,21 @@ func TestAttachmentEndpointsEnforceAuthenticationAndAuthorization(t *testing.T) 
 		"contentType":   "image/png",
 		"contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent()),
 	}
+	directUploadBody := map[string]any{
+		"fileName":    "receipt.png",
+		"contentType": "image/png",
+		"sizeBytes":   len(pngAttachmentContent()),
+	}
 	viewerUpload := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:viewer", uploadBody)
 	if viewerUpload.Code != http.StatusForbidden {
 		t.Fatalf("expected viewer upload status %d, got %d with body %s", http.StatusForbidden, viewerUpload.Code, viewerUpload.Body.String())
 	}
 	assertSafeError(t, viewerUpload, "forbidden", "Forbidden.")
+	viewerDirectUpload := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/direct-uploads", "Bearer dev:viewer", directUploadBody)
+	if viewerDirectUpload.Code != http.StatusForbidden {
+		t.Fatalf("expected viewer direct upload status %d, got %d with body %s", http.StatusForbidden, viewerDirectUpload.Code, viewerDirectUpload.Body.String())
+	}
+	assertSafeError(t, viewerDirectUpload, "forbidden", "Forbidden.")
 
 	ownerUpload := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", uploadBody)
 	if ownerUpload.Code != http.StatusCreated {
@@ -213,6 +344,9 @@ func TestAttachmentEndpointsEnforceAuthenticationAndAuthorization(t *testing.T) 
 		{name: "missing auth upload", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments", body: uploadBody, status: http.StatusUnauthorized, code: "authentication_required"},
 		{name: "malformed auth upload", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments", authorization: "Bearer nope", body: uploadBody, status: http.StatusUnauthorized, code: "authentication_required"},
 		{name: "intruder upload", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments", authorization: "Bearer dev:intruder", body: uploadBody, status: http.StatusForbidden, code: "forbidden"},
+		{name: "missing auth direct upload", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments/direct-uploads", body: directUploadBody, status: http.StatusUnauthorized, code: "authentication_required"},
+		{name: "malformed auth direct upload", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments/direct-uploads", authorization: "Bearer nope", body: directUploadBody, status: http.StatusUnauthorized, code: "authentication_required"},
+		{name: "intruder direct upload", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments/direct-uploads", authorization: "Bearer dev:intruder", body: directUploadBody, status: http.StatusForbidden, code: "forbidden"},
 		{name: "missing auth list", method: http.MethodGet, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments", status: http.StatusUnauthorized, code: "authentication_required"},
 		{name: "malformed auth list", method: http.MethodGet, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required"},
 		{name: "intruder list", method: http.MethodGet, path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden"},
@@ -407,4 +541,112 @@ func (failingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
 
 func pngAttachmentContent() []byte {
 	return []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
+}
+
+func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.DirectAttachmentUploader, imageProcessor ports.ImageProcessor) app.App {
+	t.Helper()
+
+	store := memory.NewStore()
+	authorizer := memory.NewAuthorizer()
+	seedMemoryStore(t, context.Background(), store, authorizer, state)
+
+	return app.New(app.Dependencies{
+		Observer:                  &fakeObserver{},
+		Auth:                      auth.NewLocalDevAuthenticator(),
+		Authorizer:                authorizer,
+		Tenants:                   store,
+		TenantUnitOfWork:          store,
+		Inventories:               store,
+		InventoryUnitOfWork:       store,
+		InventoryAccess:           store,
+		InventoryAccessUnitOfWork: store,
+		CustomAssetTypes:          store,
+		CustomAssetTypeUnitOfWork: store,
+		CustomFields:              store,
+		CustomFieldUnitOfWork:     store,
+		Assets:                    store,
+		AssetUnitOfWork:           store,
+		Undoables:                 store,
+		Search:                    store,
+		Attachments:               store,
+		AttachmentUnitOfWork:      store,
+		Blobs:                     store,
+		DirectUploads:             directUploads,
+		ImageProcessor:            imageProcessor,
+		BlobDeletionOutbox:        store,
+		Audit:                     store,
+		Outbox:                    store,
+		IDs:                       &fakeIDGenerator{ids: state.ids},
+	})
+}
+
+type httpFakeDirectAttachmentUploader struct {
+	request ports.DirectAttachmentUploadRequest
+	err     error
+}
+
+func (f *httpFakeDirectAttachmentUploader) CreateDirectAttachmentUpload(_ context.Context, request ports.DirectAttachmentUploadRequest) (ports.DirectAttachmentUpload, error) {
+	f.request = request
+	return ports.DirectAttachmentUpload{
+		UploadID:     request.UploadID,
+		AttachmentID: request.AttachmentID,
+		Method:       "PUT",
+		URL:          "https://uploads.example.test/" + request.UploadID,
+		Headers:      map[string]string{"content-type": request.ContentType.String()},
+		ExpiresAt:    request.ExpiresAt,
+	}, nil
+}
+
+func (f *httpFakeDirectAttachmentUploader) CompleteDirectAttachmentUpload(_ context.Context, uploadID string) (ports.CompletedDirectAttachmentUpload, error) {
+	if f.err != nil {
+		return ports.CompletedDirectAttachmentUpload{}, f.err
+	}
+	if f.request.UploadID != uploadID {
+		return ports.CompletedDirectAttachmentUpload{}, app.ErrInvalidInput
+	}
+	content := pngAttachmentContent()
+	hashBytes := sha256.Sum256(content)
+	hash, ok := media.NewSHA256(hex.EncodeToString(hashBytes[:]))
+	if !ok {
+		return ports.CompletedDirectAttachmentUpload{}, app.ErrInvalidInput
+	}
+	return ports.CompletedDirectAttachmentUpload{
+		UploadID:     uploadID,
+		AttachmentID: f.request.AttachmentID,
+		TenantID:     f.request.TenantID,
+		InventoryID:  f.request.InventoryID,
+		AssetID:      f.request.AssetID,
+		StorageKey:   f.request.StorageKey,
+		FileName:     f.request.FileName,
+		ContentType:  f.request.ContentType,
+		SizeBytes:    int64(len(content)),
+		SHA256:       hash,
+		ExpiresAt:    f.request.ExpiresAt,
+	}, nil
+}
+
+type httpFakeImageProcessor struct {
+	thumbnailCalled  bool
+	thumbnailContent []byte
+}
+
+func (f *httpFakeImageProcessor) CreateThumbnail(_ context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
+	f.thumbnailCalled = true
+	return ports.ImageDerivative{ContentType: request.ContentType, Content: append([]byte(nil), f.thumbnailContent...)}, nil
+}
+
+func (f *httpFakeImageProcessor) PrepareImageForModelUse(_ context.Context, request ports.ModelImageRequest) (ports.ModelImage, error) {
+	hashBytes := sha256.Sum256(request.Content)
+	hash, ok := media.NewSHA256(hex.EncodeToString(hashBytes[:]))
+	if !ok {
+		return ports.ModelImage{}, app.ErrInvalidInput
+	}
+	return ports.ModelImage{
+		ContentType: request.ContentType,
+		Content:     append([]byte(nil), request.Content...),
+		SizeBytes:   int64(len(request.Content)),
+		SHA256:      hash,
+		Width:       1,
+		Height:      1,
+	}, nil
 }

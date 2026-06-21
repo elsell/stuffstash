@@ -14,6 +14,10 @@ const (
 	envHTTPWriteTimeout              = "STUFF_STASH_HTTP_WRITE_TIMEOUT"
 	envHTTPIdleTimeout               = "STUFF_STASH_HTTP_IDLE_TIMEOUT"
 	envHTTPMaxJSONBodyBytes          = "STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES"
+	envHTTPRateLimitEnabled          = "STUFF_STASH_HTTP_RATE_LIMIT_ENABLED"
+	envHTTPRateLimitRequests         = "STUFF_STASH_HTTP_RATE_LIMIT_REQUESTS"
+	envHTTPRateLimitWindow           = "STUFF_STASH_HTTP_RATE_LIMIT_WINDOW"
+	envHTTPRateLimitBurst            = "STUFF_STASH_HTTP_RATE_LIMIT_BURST"
 	envCORSAllowedOrigins            = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
 	envAuthMode                      = "STUFF_STASH_AUTH_MODE"
 	envAuthzMode                     = "STUFF_STASH_AUTHZ_MODE"
@@ -53,6 +57,10 @@ const (
 	defaultHTTPWrite                 = 30 * time.Second
 	defaultHTTPIdle                  = 60 * time.Second
 	defaultHTTPMaxJSONBodyBytes      = 1024 * 1024
+	defaultHTTPRateLimitEnabled      = true
+	defaultHTTPRateLimitRequests     = 120
+	defaultHTTPRateLimitWindow       = time.Minute
+	defaultHTTPRateLimitBurst        = 60
 	defaultAuthMode                  = "local-dev"
 	defaultAuthzMode                 = "memory"
 	defaultRepositoryMode            = "memory"
@@ -83,6 +91,10 @@ type Config struct {
 	HTTPWriteTimeout                 time.Duration
 	HTTPIdleTimeout                  time.Duration
 	HTTPMaxJSONBodyBytes             int64
+	HTTPRateLimitEnabled             bool
+	HTTPRateLimitRequests            int
+	HTTPRateLimitWindow              time.Duration
+	HTTPRateLimitBurst               int
 	CORSAllowedOrigins               []string
 	AuthMode                         string
 	AuthzMode                        string
@@ -126,6 +138,10 @@ func Load() Config {
 		HTTPWriteTimeout:                 durationEnvOrDefault(envHTTPWriteTimeout, defaultHTTPWrite),
 		HTTPIdleTimeout:                  durationEnvOrDefault(envHTTPIdleTimeout, defaultHTTPIdle),
 		HTTPMaxJSONBodyBytes:             int64EnvOrDefault(envHTTPMaxJSONBodyBytes, defaultHTTPMaxJSONBodyBytes),
+		HTTPRateLimitEnabled:             boolEnvOrDefault(envHTTPRateLimitEnabled, defaultHTTPRateLimitEnabled),
+		HTTPRateLimitRequests:            intEnvOrDefault(envHTTPRateLimitRequests, defaultHTTPRateLimitRequests),
+		HTTPRateLimitWindow:              durationEnvOrDefault(envHTTPRateLimitWindow, defaultHTTPRateLimitWindow),
+		HTTPRateLimitBurst:               intEnvOrDefault(envHTTPRateLimitBurst, defaultHTTPRateLimitBurst),
 		CORSAllowedOrigins:               stringListEnv(envCORSAllowedOrigins),
 		AuthMode:                         envOrDefault(envAuthMode, defaultAuthMode),
 		AuthzMode:                        envOrDefault(envAuthzMode, defaultAuthzMode),

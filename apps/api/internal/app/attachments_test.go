@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"testing"
 	"time"
@@ -75,6 +77,231 @@ func TestCreateAttachmentRejectsContentTypeMismatch(t *testing.T) {
 		FileName:    "receipt.png",
 		ContentType: "image/png",
 		Content:     []byte("not a png"),
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid input, got %v", err)
+	}
+}
+
+func TestCompleteAttachmentDirectUploadPersistsVerifiedMetadata(t *testing.T) {
+	repository := &recordingAttachmentRepository{}
+	directUploads := &fakeDirectAttachmentUploader{
+		completed: ports.CompletedDirectAttachmentUpload{
+			UploadID:     "upload-one",
+			AttachmentID: media.ID("attachment-one"),
+			TenantID:     tenant.ID("tenant-one"),
+			InventoryID:  inventory.InventoryID("inventory-one"),
+			AssetID:      asset.ID("asset-one"),
+			StorageKey:   media.StorageKey("tenant-one/inventory-one/asset-one/attachment-one"),
+			FileName:     media.FileName("receipt.png"),
+			ContentType:  media.ContentTypePNG,
+			SizeBytes:    int64(len(pngAttachmentBytes())),
+			SHA256:       sha256Of(pngAttachmentBytes()),
+			ExpiresAt:    time.Now().Add(time.Hour),
+		},
+	}
+	application := New(Dependencies{
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          repository,
+		AttachmentUnitOfWork: repository,
+		DirectUploads:        directUploads,
+		Audit:                &fakeAuditRepository{},
+		IDs:                  &attachmentIDGenerator{ids: []string{"audit-one"}},
+		MaxAttachmentBytes:   32,
+	})
+
+	attachment, err := application.CompleteAttachmentDirectUpload(context.Background(), CompleteAttachmentDirectUploadInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		UploadID:    "upload-one",
+	})
+	if err != nil {
+		t.Fatalf("complete direct upload: %v", err)
+	}
+	if attachment.ID != "attachment-one" || !repository.saved {
+		t.Fatalf("expected verified attachment to be persisted, got %+v saved=%t", attachment, repository.saved)
+	}
+}
+
+func TestCompleteAttachmentDirectUploadRejectsMismatchedScope(t *testing.T) {
+	directUploads := &fakeDirectAttachmentUploader{
+		completed: ports.CompletedDirectAttachmentUpload{
+			UploadID:     "upload-one",
+			AttachmentID: media.ID("attachment-one"),
+			TenantID:     tenant.ID("other-tenant"),
+			InventoryID:  inventory.InventoryID("inventory-one"),
+			AssetID:      asset.ID("asset-one"),
+			StorageKey:   media.StorageKey("other-tenant/inventory-one/asset-one/attachment-one"),
+			FileName:     media.FileName("receipt.png"),
+			ContentType:  media.ContentTypePNG,
+			SizeBytes:    int64(len(pngAttachmentBytes())),
+			SHA256:       sha256Of(pngAttachmentBytes()),
+			ExpiresAt:    time.Now().Add(time.Hour),
+		},
+	}
+	application := New(Dependencies{
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          &recordingAttachmentRepository{},
+		AttachmentUnitOfWork: &recordingAttachmentRepository{},
+		DirectUploads:        directUploads,
+		MaxAttachmentBytes:   32,
+	})
+
+	_, err := application.CompleteAttachmentDirectUpload(context.Background(), CompleteAttachmentDirectUploadInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		UploadID:    "upload-one",
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid input, got %v", err)
+	}
+}
+
+func TestCompleteAttachmentDirectUploadMapsExpectedAdapterFailures(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want error
+	}{
+		{name: "incomplete", err: ports.ErrDirectUploadIncomplete, want: ErrNotFound},
+		{name: "expired", err: ports.ErrDirectUploadExpired, want: ErrInvalidInput},
+		{name: "mismatch", err: ports.ErrDirectUploadMismatch, want: ErrInvalidInput},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repository := &recordingAttachmentRepository{}
+			application := New(Dependencies{
+				Observer:             noopObserver{},
+				Authorizer:           allowInventoryAuthorizer{},
+				Tenants:              attachmentTenantRepository{},
+				TenantUnitOfWork:     attachmentTenantRepository{},
+				Inventories:          attachmentInventoryRepository{},
+				InventoryUnitOfWork:  attachmentInventoryRepository{},
+				Assets:               attachmentAssetRepository{},
+				Attachments:          repository,
+				AttachmentUnitOfWork: repository,
+				DirectUploads:        &fakeDirectAttachmentUploader{err: tc.err},
+				MaxAttachmentBytes:   32,
+			})
+
+			_, err := application.CompleteAttachmentDirectUpload(context.Background(), CompleteAttachmentDirectUploadInput{
+				Principal:   identity.Principal{ID: "owner"},
+				Source:      audit.SourceAPI,
+				TenantID:    tenant.ID("tenant-one"),
+				InventoryID: inventory.InventoryID("inventory-one"),
+				AssetID:     asset.ID("asset-one"),
+				UploadID:    "upload-one",
+			})
+			if !errors.Is(err, tc.want) {
+				t.Fatalf("expected %v, got %v", tc.want, err)
+			}
+			if repository.saved {
+				t.Fatalf("expected failed direct upload to avoid metadata persistence")
+			}
+		})
+	}
+}
+
+func TestAttachmentThumbnailAndModelImageUseImageProcessorPort(t *testing.T) {
+	content := pngAttachmentBytes()
+	attachment := attachmentFixture(t, media.ContentTypePNG, content)
+	repository := &recordingAttachmentRepository{attachment: attachment, found: true}
+	blobStore := &recordingBlobStorage{content: content}
+	processor := &recordingImageProcessor{thumbnailContent: []byte("thumb"), modelContent: []byte("model")}
+	application := New(Dependencies{
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          repository,
+		AttachmentUnitOfWork: repository,
+		Blobs:                blobStore,
+		ImageProcessor:       processor,
+		Audit:                &fakeAuditRepository{},
+		IDs:                  &attachmentIDGenerator{ids: []string{"audit-thumb", "audit-model"}},
+		MaxAttachmentBytes:   32,
+	})
+
+	thumbnail, err := application.DownloadAttachmentThumbnail(context.Background(), DownloadAttachmentThumbnailInput{
+		Principal:    identity.Principal{ID: "viewer"},
+		Source:       audit.SourceAPI,
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		AssetID:      asset.ID("asset-one"),
+		AttachmentID: attachment.ID,
+		Variant:      "small",
+	})
+	if err != nil {
+		t.Fatalf("download thumbnail: %v", err)
+	}
+	if !processor.thumbnailCalled || string(thumbnail.Content) != "thumb" {
+		t.Fatalf("expected thumbnail processor output, got %+v called=%t", thumbnail, processor.thumbnailCalled)
+	}
+
+	modelImage, err := application.PrepareAttachmentForModelUse(context.Background(), PrepareAttachmentForModelUseInput{
+		Principal:    identity.Principal{ID: "viewer"},
+		Source:       audit.SourceAPI,
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		AssetID:      asset.ID("asset-one"),
+		AttachmentID: attachment.ID,
+	})
+	if err != nil {
+		t.Fatalf("prepare model image: %v", err)
+	}
+	if !processor.modelCalled || string(modelImage.Content) != "model" || modelImage.SizeBytes != int64(len("model")) {
+		t.Fatalf("expected model image processor output, got %+v called=%t", modelImage, processor.modelCalled)
+	}
+}
+
+func TestAttachmentThumbnailRejectsNonImageAttachments(t *testing.T) {
+	content := []byte("%PDF-1")
+	attachment := attachmentFixture(t, media.ContentTypePDF, content)
+	application := New(Dependencies{
+		Observer:            noopObserver{},
+		Authorizer:          allowInventoryAuthorizer{},
+		Tenants:             attachmentTenantRepository{},
+		TenantUnitOfWork:    attachmentTenantRepository{},
+		Inventories:         attachmentInventoryRepository{},
+		InventoryUnitOfWork: attachmentInventoryRepository{},
+		Assets:              attachmentAssetRepository{},
+		Attachments:         &recordingAttachmentRepository{attachment: attachment, found: true},
+		Blobs:               &recordingBlobStorage{content: content},
+		ImageProcessor:      &recordingImageProcessor{thumbnailContent: []byte("thumb")},
+		Audit:               &fakeAuditRepository{},
+		IDs:                 &attachmentIDGenerator{ids: []string{"audit-thumb"}},
+	})
+
+	_, err := application.DownloadAttachmentThumbnail(context.Background(), DownloadAttachmentThumbnailInput{
+		Principal:    identity.Principal{ID: "viewer"},
+		Source:       audit.SourceAPI,
+		TenantID:     tenant.ID("tenant-one"),
+		InventoryID:  inventory.InventoryID("inventory-one"),
+		AssetID:      asset.ID("asset-one"),
+		AttachmentID: attachment.ID,
+		Variant:      "small",
 	})
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected invalid input, got %v", err)
@@ -314,9 +541,42 @@ func (failingAttachmentRepository) ListAttachmentsByAsset(context.Context, tenan
 	return nil, nil
 }
 
+type recordingAttachmentRepository struct {
+	attachment media.Attachment
+	found      bool
+	saved      bool
+}
+
+func (r *recordingAttachmentRepository) SaveAttachment(_ context.Context, attachment media.Attachment, _ audit.Record) error {
+	r.attachment = attachment
+	r.found = true
+	r.saved = true
+	return nil
+}
+
+func (r *recordingAttachmentRepository) UpdateAttachmentLifecycle(context.Context, media.Attachment, audit.Record) error {
+	return nil
+}
+
+func (r *recordingAttachmentRepository) DeleteAttachmentAndEnqueueBlobDeletion(context.Context, string, tenant.ID, inventory.InventoryID, asset.ID, media.ID, audit.Record) (media.Attachment, bool, error) {
+	return media.Attachment{}, false, nil
+}
+
+func (r *recordingAttachmentRepository) AttachmentByID(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID) (media.Attachment, bool, error) {
+	return r.attachment, r.found, nil
+}
+
+func (r *recordingAttachmentRepository) ListAttachmentsByAsset(context.Context, tenant.ID, inventory.InventoryID, asset.ID, ports.AttachmentListPageRequest) ([]media.Attachment, error) {
+	if !r.found {
+		return nil, nil
+	}
+	return []media.Attachment{r.attachment}, nil
+}
+
 type recordingBlobStorage struct {
 	put     bool
 	deleted bool
+	content []byte
 }
 
 type failingBlobStorage struct{}
@@ -367,6 +627,9 @@ func (r *recordingBlobStorage) PutBlob(context.Context, media.StorageKey, media.
 }
 
 func (r *recordingBlobStorage) GetBlob(context.Context, media.StorageKey) ([]byte, error) {
+	if r.content != nil {
+		return append([]byte(nil), r.content...), nil
+	}
 	return nil, ports.ErrBlobNotFound
 }
 
@@ -383,4 +646,87 @@ func (g *attachmentIDGenerator) NewID() string {
 	id := g.ids[0]
 	g.ids = g.ids[1:]
 	return id
+}
+
+type fakeDirectAttachmentUploader struct {
+	request   ports.DirectAttachmentUploadRequest
+	completed ports.CompletedDirectAttachmentUpload
+	err       error
+}
+
+func (f *fakeDirectAttachmentUploader) CreateDirectAttachmentUpload(_ context.Context, request ports.DirectAttachmentUploadRequest) (ports.DirectAttachmentUpload, error) {
+	f.request = request
+	return ports.DirectAttachmentUpload{
+		UploadID:     request.UploadID,
+		AttachmentID: request.AttachmentID,
+		Method:       "PUT",
+		URL:          "https://uploads.example.test/" + request.UploadID,
+		Headers:      map[string]string{"content-type": request.ContentType.String()},
+		ExpiresAt:    request.ExpiresAt,
+	}, nil
+}
+
+func (f *fakeDirectAttachmentUploader) CompleteDirectAttachmentUpload(context.Context, string) (ports.CompletedDirectAttachmentUpload, error) {
+	if f.err != nil {
+		return ports.CompletedDirectAttachmentUpload{}, f.err
+	}
+	return f.completed, nil
+}
+
+type recordingImageProcessor struct {
+	thumbnailCalled  bool
+	modelCalled      bool
+	thumbnailContent []byte
+	modelContent     []byte
+}
+
+func (r *recordingImageProcessor) CreateThumbnail(_ context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
+	r.thumbnailCalled = true
+	return ports.ImageDerivative{ContentType: request.ContentType, Content: append([]byte(nil), r.thumbnailContent...)}, nil
+}
+
+func (r *recordingImageProcessor) PrepareImageForModelUse(_ context.Context, request ports.ModelImageRequest) (ports.ModelImage, error) {
+	r.modelCalled = true
+	hash := sha256Of(r.modelContent)
+	return ports.ModelImage{
+		ContentType: request.ContentType,
+		Content:     append([]byte(nil), r.modelContent...),
+		SizeBytes:   int64(len(r.modelContent)),
+		SHA256:      hash,
+		Width:       1,
+		Height:      1,
+	}, nil
+}
+
+func pngAttachmentBytes() []byte {
+	return []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
+}
+
+func sha256Of(content []byte) media.SHA256 {
+	hashBytes := sha256.Sum256(content)
+	hash, ok := media.NewSHA256(hex.EncodeToString(hashBytes[:]))
+	if !ok {
+		panic("invalid test hash")
+	}
+	return hash
+}
+
+func attachmentFixture(t *testing.T, contentType media.ContentType, content []byte) media.Attachment {
+	t.Helper()
+	attachment, ok := media.NewAttachment(
+		media.ID("attachment-one"),
+		media.TenantID("tenant-one"),
+		media.InventoryID("inventory-one"),
+		media.AssetID("asset-one"),
+		media.StorageKey("tenant-one/inventory-one/asset-one/attachment-one"),
+		media.FileName("receipt.png"),
+		contentType,
+		int64(len(content)),
+		sha256Of(content),
+		time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
+	)
+	if !ok {
+		t.Fatalf("expected attachment fixture")
+	}
+	return attachment
 }

@@ -13,14 +13,22 @@ import (
 )
 
 type FileSystemStore struct {
-	root string
+	root     string
+	maxBytes int64
 }
 
 func NewFileSystemStore(root string) FileSystemStore {
 	return FileSystemStore{root: root}
 }
 
+func NewFileSystemStoreWithMaxBytes(root string, maxBytes int64) FileSystemStore {
+	return FileSystemStore{root: root, maxBytes: maxBytes}
+}
+
 func (s FileSystemStore) PutBlob(_ context.Context, key media.StorageKey, _ media.ContentType, data []byte) error {
+	if s.maxBytes > 0 && int64(len(data)) > s.maxBytes {
+		return errors.New("blob exceeds configured maximum size")
+	}
 	path, err := s.pathForKey(key)
 	if err != nil {
 		return err
@@ -36,10 +44,15 @@ func (s FileSystemStore) GetBlob(_ context.Context, key media.StorageKey) ([]byt
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
+	file, err := os.Open(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, ports.ErrBlobNotFound
 	}
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	data, err := readBlobBytes(file, s.maxBytes)
 	return data, err
 }
 

@@ -28,10 +28,33 @@ type attachmentListBody struct {
 	Meta responseMeta         `json:"meta"`
 }
 
+type directUploadResponse struct {
+	UploadID     string            `json:"uploadId"`
+	AttachmentID string            `json:"attachmentId"`
+	Method       string            `json:"method"`
+	URL          string            `json:"url"`
+	Headers      map[string]string `json:"headers"`
+	FormFields   map[string]string `json:"formFields"`
+	ExpiresAt    string            `json:"expiresAt"`
+}
+
+type directUploadBody struct {
+	Data directUploadResponse `json:"data"`
+	Meta responseMeta         `json:"meta"`
+}
+
 func decodeAttachment(t *testing.T, response *httptest.ResponseRecorder) attachmentBody {
 	t.Helper()
 
 	var body attachmentBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeDirectUpload(t *testing.T, response *httptest.ResponseRecorder) directUploadBody {
+	t.Helper()
+
+	var body directUploadBody
 	decodeBody(t, response, &body)
 	return body
 }

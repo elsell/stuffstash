@@ -13,11 +13,43 @@ type CreateAssetAttachmentInput struct {
 
 type CreateAttachmentBody struct {
 	FileName      string `json:"fileName" maxLength:"255" doc:"Original file name"`
-	ContentType   string `json:"contentType" enum:"image/jpeg,image/png,image/webp,application/pdf" doc:"Media type"`
+	ContentType   string `json:"contentType" enum:"image/jpeg,image/png,application/pdf" doc:"Media type"`
 	ContentBase64 string `json:"contentBase64" doc:"Base64-encoded content"`
 }
 
 type CreateAssetAttachmentOutput struct {
+	Body shared.SuccessEnvelope[AttachmentResponse]
+}
+
+type InitiateAssetAttachmentDirectUploadInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	Body          InitiateDirectUploadBody
+}
+
+type InitiateDirectUploadBody struct {
+	FileName    string `json:"fileName" maxLength:"255" doc:"Original file name"`
+	ContentType string `json:"contentType" enum:"image/jpeg,image/png,application/pdf" doc:"Media type"`
+	SizeBytes   int64  `json:"sizeBytes" minimum:"1" doc:"Expected decoded content size"`
+}
+
+type InitiateAssetAttachmentDirectUploadOutput struct {
+	Body shared.SuccessEnvelope[DirectUploadResponse]
+}
+
+type CompleteAssetAttachmentDirectUploadInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	UploadID      string `path:"uploadId" doc:"Direct upload ID"`
+}
+
+type CompleteAssetAttachmentDirectUploadOutput struct {
 	Body shared.SuccessEnvelope[AttachmentResponse]
 }
 
@@ -48,6 +80,21 @@ type DownloadAssetAttachmentOutput struct {
 	ContentType        string `header:"Content-Type"`
 	ContentDisposition string `header:"Content-Disposition"`
 	Body               []byte
+}
+
+type DownloadAssetAttachmentThumbnailInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	AttachmentID  string `path:"attachmentId" doc:"Attachment ID"`
+	Variant       string `query:"variant" enum:"small" doc:"Thumbnail variant"`
+}
+
+type DownloadAssetAttachmentThumbnailOutput struct {
+	ContentType string `header:"Content-Type"`
+	Body        []byte
 }
 
 type GetAssetAttachmentInput struct {
@@ -89,4 +136,14 @@ type AttachmentResponse struct {
 	SHA256         string `json:"sha256"`
 	CreatedAt      string `json:"createdAt"`
 	LifecycleState string `json:"lifecycleState"`
+}
+
+type DirectUploadResponse struct {
+	UploadID     string            `json:"uploadId"`
+	AttachmentID string            `json:"attachmentId"`
+	Method       string            `json:"method"`
+	URL          string            `json:"url"`
+	Headers      map[string]string `json:"headers"`
+	FormFields   map[string]string `json:"formFields"`
+	ExpiresAt    string            `json:"expiresAt"`
 }

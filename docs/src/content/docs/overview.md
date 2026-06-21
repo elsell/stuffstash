@@ -24,7 +24,7 @@ The repository has a Go API and the first separate SvelteKit web app with:
 - Asset create/list/detail/update/move/archive/restore/delete flow.
 - Custom asset types, such as medicine or tools, with type-specific custom fields.
 - Tenant and inventory custom field definitions with asset value validation.
-- Asset attachment upload, listing, and download with local filesystem and Garage-compatible blob storage.
+- Asset attachment upload, direct upload readiness, thumbnail generation, listing, and download with local filesystem and Garage-compatible blob storage.
 - Asset search across the inventories a user can view.
 - Durable audit history for state changes and selected reads.
 - Inventory sharing by known principal ID or invite-link token, with viewer and editor access, pending-invitation management, and revocation.

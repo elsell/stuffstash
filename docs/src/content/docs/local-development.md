@@ -242,6 +242,19 @@ curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/ass
   -d "{\"fileName\":\"receipt.png\",\"contentType\":\"image/png\",\"contentBase64\":\"${CONTENT_BASE64}\"}"
 ```
 
+For larger clients, the API can also expose a direct upload handshake when S3-compatible blob storage is enabled. The returned upload target is adapter-owned and opaque. For Garage/S3, upload the file with the returned `method`, `url`, `headers`, and `formFields`, then call the completion endpoint:
+
+```sh
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/direct-uploads \
+  -H 'Authorization: Bearer dev:user-one' \
+  -H 'Content-Type: application/json' \
+  -d '{"fileName":"receipt.png","contentType":"image/png","sizeBytes":8}'
+
+curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/direct-uploads/<upload-id>/complete \
+  -X POST \
+  -H 'Authorization: Bearer dev:user-one'
+```
+
 List and download attachments:
 
 ```sh
@@ -251,6 +264,10 @@ curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/as
 curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/<attachment-id>/content \
   -H 'Authorization: Bearer dev:user-one' \
   --output attachment.bin
+
+curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/<attachment-id>/thumbnail?variant=small' \
+  -H 'Authorization: Bearer dev:user-one' \
+  --output thumbnail.bin
 ```
 
 Local Postgres runs store blobs under `.stuffstash/blobs` by default. Compose uses a `blob-data` volume mounted at `/var/lib/stuffstash/blobs`. Set `STUFF_STASH_BLOB_STORAGE_PATH` to choose a different local path.

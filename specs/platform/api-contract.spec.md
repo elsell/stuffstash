@@ -178,7 +178,16 @@ Error responses must use a consistent envelope:
 - Oversized JSON request bodies must return HTTP `413 Request Entity Too Large` with the safe error envelope code `payload_too_large`, message `Request body too large.`, and no sensitive implementation details.
 - Attachment upload routes may use a larger body limit derived from the configured attachment byte limit, but must still enforce a deterministic maximum.
 - Attachment upload body limits must be route-specific and must not raise the configured maximum JSON body size for ordinary API endpoints.
-- Rate limiting remains required before public or multi-user deployment, but is not implemented in this hardening slice.
+- HTTP rate limiting is required and must be enabled by default.
+- Rate limiting must run at the HTTP adapter boundary before route handlers perform domain work.
+- Rate limiting configuration must come from environment-backed configuration.
+- Rate limiting must support an explicit disabled mode for trusted local debugging only.
+- The first rate limiter uses an in-memory token bucket behind a rate-limiter port.
+- The in-memory limiter is acceptable for local development and single-replica deployments, but a distributed adapter is required before horizontally scaled public deployment.
+- Rate limit keys must not store raw bearer tokens. The first implementation groups requests by remote client address because rate limiting runs before authentication. Verified-principal-aware limiting may be added later behind the same rate-limiter port.
+- Rate-limited responses must return HTTP `429 Too Many Requests` with the safe error envelope code `rate_limited`, message `Too many requests.`, and no sensitive implementation details.
+- Rate-limited responses must include `Retry-After` when a retry time is known.
+- Rate-limit denials must emit domain-oriented observability without recording raw credentials.
 
 ## Verification
 

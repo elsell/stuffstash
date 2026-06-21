@@ -60,7 +60,7 @@ The goal is to prove a production-shaped path through:
 - Custom asset types now exist for tenant and inventory scopes, can be assigned to assets, can be renamed with metadata updates, and custom fields can target all assets or specific custom asset types.
 - Custom field definitions can now be renamed and safely evolved by adding enum options, adding active custom asset type targets, or expanding targeted fields to all assets while rejecting incompatible narrowing or removals.
 - Asset lifecycle now supports archive and restore operations with audit history, active-only default listing, and authorization checks.
-- Asset media attachments now support JSON base64 upload, cursor-paginated listing, raw content download, local filesystem blob storage, Garage S3-compatible blob storage, audit history, generated OpenAPI, and adversarial API tests.
+- Asset media attachments now support JSON base64 upload, direct upload initiation/completion behind media ports, cursor-paginated listing, raw content download, thumbnail generation behind an image-processing port, model-image preparation readiness behind media ports, local filesystem blob storage, Garage S3-compatible blob storage, audit history, generated OpenAPI, and adversarial API tests.
 - Local Dex OIDC verification now runs the full API user flow with two Dex-issued ID tokens and SpiceDB authorization.
 - Authorized asset search now supports exact and fuzzy lookup across asset title, description, custom fields, custom asset type metadata, and attachment metadata, with tenant scoping, inventory authorization filtering, lifecycle filtering, cursor pagination, generated OpenAPI, adapter tests, and adversarial API tests.
 - Direct inventory access revocation now removes persisted viewer/editor grants, enqueues SpiceDB revoke events through the authorization outbox, records audit history, exposes a no-content REST endpoint, and has adversarial API tests.
@@ -79,7 +79,7 @@ The goal is to prove a production-shaped path through:
 
 ## Known Gaps
 
-- Changing custom field type, removing custom field enum options or targets, media direct upload, thumbnails, and advanced search ranking/indexing are not implemented.
+- Changing custom field type, removing custom field enum options or targets, durable thumbnail caching, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
 - Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
 - The real product UI is intentionally underspecified and should be redesigned before further frontend feature investment.

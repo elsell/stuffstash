@@ -71,6 +71,26 @@ func TestFileSystemStoreRejectsEscapingKey(t *testing.T) {
 	}
 }
 
+func TestFileSystemStoreEnforcesConfiguredMaxBytes(t *testing.T) {
+	store := NewFileSystemStoreWithMaxBytes(t.TempDir(), 4)
+	key := storageKey(t, "tenant/inventory/asset/oversized")
+
+	if err := store.PutBlob(context.Background(), key, media.ContentTypePNG, []byte("12345")); err == nil {
+		t.Fatalf("expected oversized put to fail")
+	}
+
+	if err := store.PutBlob(context.Background(), key, media.ContentTypePNG, []byte("1234")); err != nil {
+		t.Fatalf("put exact max blob: %v", err)
+	}
+	read, err := store.GetBlob(context.Background(), key)
+	if err != nil {
+		t.Fatalf("get exact max blob: %v", err)
+	}
+	if !bytes.Equal(read, []byte("1234")) {
+		t.Fatalf("unexpected bytes %q", string(read))
+	}
+}
+
 func storageKey(t *testing.T, value string) media.StorageKey {
 	t.Helper()
 

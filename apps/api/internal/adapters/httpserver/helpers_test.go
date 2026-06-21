@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
@@ -16,9 +17,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 )
+
+var testRemoteAddressCounter uint64
 
 func newTestApp(observer ports.Observer, ids ...string) app.App {
 	return newTestAppWithAuthorizer(observer, memory.NewAuthorizer(), ids...)
@@ -221,12 +225,21 @@ func performRequest(server *http.Server, method string, path string, authorizati
 }
 
 func performRequestWithHeaders(server *http.Server, method string, path string, authorization string, headers map[string]string, body any) *httptest.ResponseRecorder {
+	return performRequestWithHeadersFrom(server, method, path, authorization, headers, body, nextTestRemoteAddress())
+}
+
+func performRequestFrom(server *http.Server, method string, path string, authorization string, body any, remoteAddr string) *httptest.ResponseRecorder {
+	return performRequestWithHeadersFrom(server, method, path, authorization, nil, body, remoteAddr)
+}
+
+func performRequestWithHeadersFrom(server *http.Server, method string, path string, authorization string, headers map[string]string, body any, remoteAddr string) *httptest.ResponseRecorder {
 	var requestBody []byte
 	if body != nil {
 		requestBody, _ = json.Marshal(body)
 	}
 
 	request := httptest.NewRequest(method, path, bytes.NewReader(requestBody))
+	request.RemoteAddr = remoteAddr
 	if body != nil {
 		request.Header.Set("Content-Type", "application/json")
 	}
@@ -240,6 +253,11 @@ func performRequestWithHeaders(server *http.Server, method string, path string, 
 	response := httptest.NewRecorder()
 	server.Handler.ServeHTTP(response, request)
 	return response
+}
+
+func nextTestRemoteAddress() string {
+	next := atomic.AddUint64(&testRemoteAddressCounter, 1)
+	return fmt.Sprintf("192.0.2.%d:1234", next%250+1)
 }
 
 func decodeBody(t *testing.T, response *httptest.ResponseRecorder, body any) {
@@ -349,4 +367,13 @@ type fakeObserver struct {
 
 func (f *fakeObserver) Record(_ context.Context, event ports.Event) {
 	f.events = append(f.events, event)
+}
+
+func (f *fakeObserver) hasEvent(name ports.EventName) bool {
+	for _, event := range f.events {
+		if event.Name == name {
+			return true
+		}
+	}
+	return false
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/attachments/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func AttachmentToResponse(attachment media.Attachment) dto.AttachmentResponse {
@@ -28,4 +29,24 @@ func AttachmentsToResponse(items []media.Attachment) []dto.AttachmentResponse {
 		data = append(data, AttachmentToResponse(item))
 	}
 	return data
+}
+
+func DirectUploadToResponse(upload ports.DirectAttachmentUpload) dto.DirectUploadResponse {
+	headers := map[string]string{}
+	for key, value := range upload.Headers {
+		headers[key] = value
+	}
+	formFields := map[string]string{}
+	for key, value := range upload.FormFields {
+		formFields[key] = value
+	}
+	return dto.DirectUploadResponse{
+		UploadID:     upload.UploadID,
+		AttachmentID: upload.AttachmentID.String(),
+		Method:       upload.Method,
+		URL:          upload.URL,
+		Headers:      headers,
+		FormFields:   formFields,
+		ExpiresAt:    upload.ExpiresAt.UTC().Format(time.RFC3339),
+	}
 }

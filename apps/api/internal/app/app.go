@@ -8,6 +8,7 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
+	customfieldapp "github.com/stuffstash/stuff-stash/internal/app/customfields"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -33,6 +34,8 @@ type App struct {
 	attachments               ports.AttachmentRepository
 	attachmentUnitOfWork      ports.AttachmentUnitOfWork
 	blobs                     ports.BlobStorage
+	directUploads             ports.DirectAttachmentUploader
+	imageProcessor            ports.ImageProcessor
 	blobDeletionOutbox        ports.BlobDeletionOutbox
 	audit                     ports.AuditRepository
 	outbox                    ports.AuthorizationOutbox
@@ -42,11 +45,13 @@ type App struct {
 	outboxClaimLease          time.Duration
 	blobDeletionClaimLease    time.Duration
 	blobDeletionMaxAttempts   int
+	directUploadTTL           time.Duration
 	invitationTTL             time.Duration
 	defaultPageLimit          int
 	maxPageLimit              int
 	maxAttachmentBytes        int
 	assetService              assetapp.Service
+	customFieldService        customfieldapp.Service
 }
 
 type Dependencies struct {
@@ -70,6 +75,8 @@ type Dependencies struct {
 	Attachments                   ports.AttachmentRepository
 	AttachmentUnitOfWork          ports.AttachmentUnitOfWork
 	Blobs                         ports.BlobStorage
+	DirectUploads                 ports.DirectAttachmentUploader
+	ImageProcessor                ports.ImageProcessor
 	BlobDeletionOutbox            ports.BlobDeletionOutbox
 	Audit                         ports.AuditRepository
 	Outbox                        ports.AuthorizationOutbox
@@ -79,6 +86,7 @@ type Dependencies struct {
 	AuthorizationOutboxClaimLease time.Duration
 	BlobDeletionOutboxClaimLease  time.Duration
 	BlobDeletionOutboxMaxAttempts int
+	DirectUploadTTL               time.Duration
 	InvitationTTL                 time.Duration
 	DefaultPageLimit              int
 	MaxPageLimit                  int
@@ -117,6 +125,8 @@ func New(deps Dependencies) App {
 		attachments:               deps.Attachments,
 		attachmentUnitOfWork:      deps.AttachmentUnitOfWork,
 		blobs:                     deps.Blobs,
+		directUploads:             deps.DirectUploads,
+		imageProcessor:            deps.ImageProcessor,
 		blobDeletionOutbox:        deps.BlobDeletionOutbox,
 		audit:                     deps.Audit,
 		outbox:                    deps.Outbox,
@@ -126,6 +136,7 @@ func New(deps Dependencies) App {
 		outboxClaimLease:          deps.AuthorizationOutboxClaimLease,
 		blobDeletionClaimLease:    normalizeOutboxClaimLease(deps.BlobDeletionOutboxClaimLease),
 		blobDeletionMaxAttempts:   normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
+		directUploadTTL:           normalizeDirectUploadTTL(deps.DirectUploadTTL),
 		invitationTTL:             normalizeInvitationTTL(deps.InvitationTTL),
 		defaultPageLimit:          defaultPageLimit,
 		maxPageLimit:              maxPageLimit,
@@ -146,6 +157,21 @@ func New(deps Dependencies) App {
 		Clock:            app.clock,
 		DefaultPageLimit: app.defaultPageLimit,
 		MaxPageLimit:     app.maxPageLimit,
+	})
+	app.customFieldService = customfieldapp.New(customfieldapp.Dependencies{
+		Observer:                  app.observer,
+		Authorizer:                app.authorizer,
+		Tenants:                   app.tenants,
+		Inventories:               app.inventories,
+		CustomAssetTypes:          app.customAssetTypes,
+		CustomAssetTypeUnitOfWork: app.customAssetTypeUnitOfWork,
+		CustomFields:              app.customFields,
+		CustomFieldUnitOfWork:     app.customFieldUnitOfWork,
+		Audit:                     app.audit,
+		IDs:                       app.ids,
+		Clock:                     app.clock,
+		DefaultPageLimit:          app.defaultPageLimit,
+		MaxPageLimit:              app.maxPageLimit,
 	})
 	return app
 }
@@ -170,6 +196,13 @@ func normalizeMaxAttachmentBytes(maxBytes int) int {
 func normalizeInvitationTTL(ttl time.Duration) time.Duration {
 	if ttl <= 0 {
 		return 7 * 24 * time.Hour
+	}
+	return ttl
+}
+
+func normalizeDirectUploadTTL(ttl time.Duration) time.Duration {
+	if ttl <= 0 {
+		return 15 * time.Minute
 	}
 	return ttl
 }

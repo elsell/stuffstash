@@ -2,10 +2,12 @@ package blobstore
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -45,6 +47,19 @@ func TestMapS3MissingObjectErrors(t *testing.T) {
 func TestS3StoreRejectsOversizedBlobReads(t *testing.T) {
 	if _, err := readBlobBytes(bytes.NewReader([]byte("012345678")), 8); err == nil {
 		t.Fatalf("expected oversized blob read to fail")
+	}
+}
+
+func TestS3StoreRejectsOversizedBlobWritesBeforeNetwork(t *testing.T) {
+	store := S3Store{maxBytes: 4}
+	key, ok := media.NewStorageKey("tenant/inventory/asset/attachment")
+	if !ok {
+		t.Fatal("invalid storage key")
+	}
+
+	err := store.PutBlob(context.Background(), key, media.ContentTypePNG, []byte("12345"))
+	if err == nil {
+		t.Fatalf("expected oversized blob write to fail")
 	}
 }
 

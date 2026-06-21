@@ -34,6 +34,8 @@ type repositories struct {
 	attachmentUnitOfWork      ports.AttachmentUnitOfWork
 	blobs                     ports.BlobStorage
 	blobDeletionOutbox        ports.BlobDeletionOutbox
+	directUploads             ports.DirectAttachmentUploader
+	imageProcessor            ports.ImageProcessor
 	audit                     ports.AuditRepository
 	outbox                    ports.AuthorizationOutbox
 }
@@ -42,7 +44,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, audit: store, outbox: store}, func() error { return nil }, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -51,23 +53,24 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		blobs, err := buildBlobStorage(cfg)
+		blobs, directUploads, err := buildBlobStorage(cfg)
 		if err != nil {
 			_ = closeStore()
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, audit: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}
 }
 
-func buildBlobStorage(cfg config.Config) (ports.BlobStorage, error) {
+func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.BlobStorageMode)) {
 	case "", "filesystem":
-		return blobstore.NewFileSystemStore(cfg.BlobStoragePath), nil
+		store := blobstore.NewFileSystemStoreWithMaxBytes(cfg.BlobStoragePath, int64(cfg.MaxAttachmentBytes))
+		return store, nil, nil
 	case "s3":
-		return blobstore.NewS3Store(blobstore.S3Config{
+		store, err := blobstore.NewS3Store(blobstore.S3Config{
 			Endpoint:  cfg.S3Endpoint,
 			AccessKey: cfg.S3AccessKey,
 			SecretKey: cfg.S3SecretKey,
@@ -76,8 +79,12 @@ func buildBlobStorage(cfg config.Config) (ports.BlobStorage, error) {
 			Secure:    cfg.S3Secure,
 			MaxBytes:  int64(cfg.MaxAttachmentBytes),
 		})
+		if err != nil {
+			return nil, nil, err
+		}
+		return store, blobstore.NewS3DirectAttachmentUploader(store), nil
 	default:
-		return nil, errors.New("unsupported blob storage mode")
+		return nil, nil, errors.New("unsupported blob storage mode")
 	}
 }
 

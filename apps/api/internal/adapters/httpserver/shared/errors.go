@@ -94,6 +94,8 @@ func errorCode(status int) string {
 		return "precondition_failed"
 	case http.StatusRequestEntityTooLarge:
 		return "payload_too_large"
+	case http.StatusTooManyRequests:
+		return "rate_limited"
 	default:
 		return "internal_error"
 	}
@@ -113,6 +115,8 @@ func safeErrorMessage(status int, fallback string) string {
 		return "Precondition failed."
 	case http.StatusRequestEntityTooLarge:
 		return "Request body too large."
+	case http.StatusTooManyRequests:
+		return "Too many requests."
 	case http.StatusInternalServerError:
 		return "Internal server error."
 	}

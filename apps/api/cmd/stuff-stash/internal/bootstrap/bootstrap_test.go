@@ -139,24 +139,27 @@ func TestBuildRepositoriesRejectsPostgresWithoutDSN(t *testing.T) {
 }
 
 func TestBuildBlobStorageAcceptsFilesystemMode(t *testing.T) {
-	store, err := buildBlobStorage(config.Config{BlobStorageMode: "filesystem", BlobStoragePath: t.TempDir()})
+	store, directUploads, err := buildBlobStorage(config.Config{BlobStorageMode: "filesystem", BlobStoragePath: t.TempDir()})
 	if err != nil {
 		t.Fatalf("build filesystem blob storage: %v", err)
 	}
 	if store == nil {
 		t.Fatalf("expected blob storage")
 	}
+	if directUploads != nil {
+		t.Fatalf("filesystem mode must not expose an unusable direct upload target")
+	}
 }
 
 func TestBuildBlobStorageRejectsUnknownMode(t *testing.T) {
-	_, err := buildBlobStorage(config.Config{BlobStorageMode: "unknown"})
+	_, _, err := buildBlobStorage(config.Config{BlobStorageMode: "unknown"})
 	if err == nil {
 		t.Fatalf("expected unsupported blob storage mode error")
 	}
 }
 
 func TestBuildBlobStorageRejectsIncompleteS3Config(t *testing.T) {
-	_, err := buildBlobStorage(config.Config{BlobStorageMode: "s3"})
+	_, _, err := buildBlobStorage(config.Config{BlobStorageMode: "s3"})
 	if err == nil {
 		t.Fatalf("expected incomplete S3 config error")
 	}

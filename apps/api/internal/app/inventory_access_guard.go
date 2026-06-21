@@ -25,6 +25,17 @@ func (a App) ensureInventoryAccess(ctx context.Context, principal identity.Princ
 	return err
 }
 
+func (a App) ensureTenantExists(ctx context.Context, tenantID tenant.ID) error {
+	exists, err := a.tenants.TenantExists(ctx, tenantID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (a App) ensureInventoryAccessItem(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID, permission ports.InventoryPermission) (inventory.Inventory, error) {
 	exists, err := a.tenants.TenantExists(ctx, tenantID)
 	if err != nil {

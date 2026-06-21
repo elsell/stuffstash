@@ -70,7 +70,6 @@ type ContentType string
 const (
 	ContentTypeJPEG ContentType = "image/jpeg"
 	ContentTypePNG  ContentType = "image/png"
-	ContentTypeWEBP ContentType = "image/webp"
 	ContentTypePDF  ContentType = "application/pdf"
 )
 
@@ -80,8 +79,6 @@ func NewContentType(value string) (ContentType, bool) {
 		return ContentTypeJPEG, true
 	case ContentTypePNG:
 		return ContentTypePNG, true
-	case ContentTypeWEBP:
-		return ContentTypeWEBP, true
 	case ContentTypePDF:
 		return ContentTypePDF, true
 	default:
@@ -91,6 +88,37 @@ func NewContentType(value string) (ContentType, bool) {
 
 func (contentType ContentType) String() string {
 	return string(contentType)
+}
+
+func (contentType ContentType) IsImage() bool {
+	switch contentType {
+	case ContentTypeJPEG, ContentTypePNG:
+		return true
+	default:
+		return false
+	}
+}
+
+type ThumbnailVariant string
+
+const (
+	ThumbnailVariantSmall ThumbnailVariant = "small"
+)
+
+func NewThumbnailVariant(value string) (ThumbnailVariant, bool) {
+	switch ThumbnailVariant(strings.TrimSpace(strings.ToLower(value))) {
+	case "", ThumbnailVariantSmall:
+		return ThumbnailVariantSmall, true
+	default:
+		return "", false
+	}
+}
+
+func (variant ThumbnailVariant) String() string {
+	if variant == "" {
+		return string(ThumbnailVariantSmall)
+	}
+	return string(variant)
 }
 
 type SHA256 string

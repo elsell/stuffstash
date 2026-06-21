@@ -63,6 +63,10 @@ const (
 	EventAttachmentViewed                     EventName = "attachment.viewed"
 	EventAttachmentsListed                    EventName = "attachment.listed"
 	EventAttachmentContentDownloaded          EventName = "attachment_content.downloaded"
+	EventAttachmentDirectUploadCreated        EventName = "attachment_direct_upload.created"
+	EventAttachmentDirectUploadCompleted      EventName = "attachment_direct_upload.completed"
+	EventAttachmentThumbnailGenerated         EventName = "attachment_thumbnail.generated"
+	EventAttachmentModelImagePrepared         EventName = "attachment_model_image.prepared"
 	EventAttachmentArchived                   EventName = "attachment.archived"
 	EventAttachmentRestored                   EventName = "attachment.restored"
 	EventAttachmentDeleted                    EventName = "attachment.deleted"
@@ -77,6 +81,7 @@ const (
 	EventAuthorizationOutboxDrained           EventName = "authorization_outbox.drained"
 	EventAuthorizationOutboxFailed            EventName = "authorization_outbox.failed"
 	EventAuthorizationOutboxDeadLettered      EventName = "authorization_outbox.dead_lettered"
+	EventHTTPRateLimited                      EventName = "http.rate_limited"
 )
 
 type Event struct {
