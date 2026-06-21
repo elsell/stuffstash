@@ -195,3 +195,12 @@ Error responses must use a consistent envelope:
 - OpenAPI generation must be part of the normal build or verification workflow once REST domain endpoints exist.
 - Generated OpenAPI output must be checked for drift in CI or pre-commit once the generation workflow exists.
 - Security-focused end-to-end tests must cover every authentication and authorization boundary exposed by the REST adapter.
+- Every generated OpenAPI operation must be covered by representative scenario tests, not only isolated endpoint tests.
+- Representative scenario coverage has two required dimensions:
+  - a real-use scenario that exercises the operation in a realistic product workflow; and
+  - an adversarial scenario that exercises the operation against authentication, authorization, tenant isolation, role, malformed input, hidden-resource, or safe-error behavior as applicable.
+- The HTTP adapter test suite must mechanically compare generated OpenAPI operations against operation keys executed by representative scenario tests.
+- Adding a new OpenAPI operation without executing it in both real-use and adversarial scenario coverage must fail tests.
+- Scenario coverage must record operation-level evidence, not only free-form references to test names or broad test families.
+- Exemptions are allowed only for intentionally public or local-only operations, and each exemption must be explicit, named, and justified in the test code.
+- Scenario coverage does not replace focused domain tests. Focused tests may still cover edge cases, but the scenario registry is the contract that the complete public API surface remains exercised in realistic and hostile flows.
