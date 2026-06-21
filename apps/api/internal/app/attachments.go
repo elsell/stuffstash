@@ -558,6 +558,10 @@ func contentMatchesType(contentType media.ContentType, content []byte) bool {
 			content[7] == '\n'
 	case media.ContentTypeJPEG:
 		return len(content) >= 3 && content[0] == 0xff && content[1] == 0xd8 && content[2] == 0xff
+	case media.ContentTypeWEBP:
+		return len(content) >= 12 &&
+			string(content[0:4]) == "RIFF" &&
+			string(content[8:12]) == "WEBP"
 	case media.ContentTypePDF:
 		return len(content) >= 5 && string(content[0:5]) == "%PDF-"
 	default:

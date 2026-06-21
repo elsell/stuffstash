@@ -13,7 +13,7 @@ type CreateAssetAttachmentInput struct {
 
 type CreateAttachmentBody struct {
 	FileName      string `json:"fileName" maxLength:"255" doc:"Original file name"`
-	ContentType   string `json:"contentType" enum:"image/jpeg,image/png,application/pdf" doc:"Media type"`
+	ContentType   string `json:"contentType" enum:"image/jpeg,image/png,image/webp,application/pdf" doc:"Media type"`
 	ContentBase64 string `json:"contentBase64" doc:"Base64-encoded content"`
 }
 
@@ -32,7 +32,7 @@ type InitiateAssetAttachmentDirectUploadInput struct {
 
 type InitiateDirectUploadBody struct {
 	FileName    string `json:"fileName" maxLength:"255" doc:"Original file name"`
-	ContentType string `json:"contentType" enum:"image/jpeg,image/png,application/pdf" doc:"Media type"`
+	ContentType string `json:"contentType" enum:"image/jpeg,image/png,image/webp,application/pdf" doc:"Media type"`
 	SizeBytes   int64  `json:"sizeBytes" minimum:"1" doc:"Expected decoded content size"`
 }
 

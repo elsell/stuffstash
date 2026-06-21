@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"testing"
@@ -80,6 +81,42 @@ func TestCreateAttachmentRejectsContentTypeMismatch(t *testing.T) {
 	})
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected invalid input, got %v", err)
+	}
+}
+
+func TestCreateAttachmentAcceptsWebP(t *testing.T) {
+	repository := &recordingAttachmentRepository{}
+	application := New(Dependencies{
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          repository,
+		AttachmentUnitOfWork: repository,
+		Blobs:                &recordingBlobStorage{},
+		Audit:                &fakeAuditRepository{},
+		IDs:                  &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
+		MaxAttachmentBytes:   1024,
+	})
+
+	attachment, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		FileName:    "photo.webp",
+		ContentType: "image/webp",
+		Content:     webPAttachmentBytes(),
+	})
+	if err != nil {
+		t.Fatalf("create webp attachment: %v", err)
+	}
+	if !repository.saved || attachment.ContentType != media.ContentTypeWEBP {
+		t.Fatalf("expected webp attachment to be persisted, got %+v saved=%t", attachment, repository.saved)
 	}
 }
 
@@ -700,6 +737,14 @@ func (r *recordingImageProcessor) PrepareImageForModelUse(_ context.Context, req
 
 func pngAttachmentBytes() []byte {
 	return []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
+}
+
+func webPAttachmentBytes() []byte {
+	content, err := base64.StdEncoding.DecodeString("UklGRrIBAABXRUJQVlA4TKUBAAAvSsAYAA8w//M///MfeJAkbXvaSG7m8Q3GfYSBJekwQztm/IcZlgwnmWImn2BK7aFmBtnVir6q//8VOkFE/xm4baTIu8c48ArEo6+B3zFKYln3pqClSCKX0begFTAXFOLXHSyF8cCNcZEG4OywuA4KVVfJCiArU7GAgJI8+lJP/OKMT/fBAjevg1cYB7YVkFuWga2lyPi5I0HFy5YTpWIHg0RZpkniRVW9odHAKOwosWuOGdxIyn2OvaCDvhg/we6TwadPBPbqBV58MsLmMJ8yZnOWk8SRz4N+QoyPL+MnamzMvcE1rHNEr91F9GKZPVUcS9w7PhhH36suB9qPeYb/oLk6cuTiJ0wOK3m5h1cKjW6EVZCYMK7dxcKCBdgP9HkKr9gkAO2P8GKZGWVdIAatQa+1IDpt6qyorVwdy01xdW8Jkfk6xjEXmVQQ+HQdFr6OKhIN34dXWq0+0qr6EJSCeeVLH9+gvGTLyqM65PQ44ihzlTXxQKjKbAvshXgir7Lil9w4L2bvMycmjQcqXaMCO6BlY28i+FOLzbfI1vEqxAhotocAAA==")
+	if err != nil {
+		panic("invalid webp test fixture")
+	}
+	return content
 }
 
 func sha256Of(content []byte) media.SHA256 {

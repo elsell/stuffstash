@@ -10,7 +10,7 @@ CREATE TABLE attachments (
     sha256 TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
-    CONSTRAINT chk_attachments_content_type CHECK (content_type IN ('image/jpeg', 'image/png', 'application/pdf')),
+    CONSTRAINT chk_attachments_content_type CHECK (content_type IN ('image/jpeg', 'image/png', 'image/webp', 'application/pdf')),
     CONSTRAINT chk_attachments_size_bytes CHECK (size_bytes > 0),
     CONSTRAINT chk_attachments_sha256 CHECK (length(sha256) = 64)
 );

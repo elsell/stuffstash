@@ -12,6 +12,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	_ "golang.org/x/image/webp"
 )
 
 const thumbnailMaxDimension = 256

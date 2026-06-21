@@ -70,6 +70,7 @@ type ContentType string
 const (
 	ContentTypeJPEG ContentType = "image/jpeg"
 	ContentTypePNG  ContentType = "image/png"
+	ContentTypeWEBP ContentType = "image/webp"
 	ContentTypePDF  ContentType = "application/pdf"
 )
 
@@ -79,6 +80,8 @@ func NewContentType(value string) (ContentType, bool) {
 		return ContentTypeJPEG, true
 	case ContentTypePNG:
 		return ContentTypePNG, true
+	case ContentTypeWEBP:
+		return ContentTypeWEBP, true
 	case ContentTypePDF:
 		return ContentTypePDF, true
 	default:
@@ -92,7 +95,7 @@ func (contentType ContentType) String() string {
 
 func (contentType ContentType) IsImage() bool {
 	switch contentType {
-	case ContentTypeJPEG, ContentTypePNG:
+	case ContentTypeJPEG, ContentTypePNG, ContentTypeWEBP:
 		return true
 	default:
 		return false

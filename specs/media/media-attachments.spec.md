@@ -94,6 +94,7 @@ Initial supported content types:
 
 - `image/jpeg`
 - `image/png`
+- `image/webp`
 - `application/pdf`
 
 Initial upload size limit:

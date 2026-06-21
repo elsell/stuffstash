@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"image"
@@ -152,6 +153,33 @@ func TestStandardImageProcessorPreparesBoundedImageData(t *testing.T) {
 	}
 }
 
+func TestStandardImageProcessorHandlesWebP(t *testing.T) {
+	processor := StandardImageProcessor{}
+	content := testWebP(t)
+
+	thumbnail, err := processor.CreateThumbnail(context.Background(), ports.ImageDerivativeRequest{
+		ContentType: media.ContentTypeWEBP,
+		Content:     content,
+	})
+	if err != nil {
+		t.Fatalf("create webp thumbnail: %v", err)
+	}
+	if thumbnail.ContentType != media.ContentTypePNG || len(thumbnail.Content) == 0 {
+		t.Fatalf("unexpected webp thumbnail: %+v", thumbnail)
+	}
+
+	modelImage, err := processor.PrepareImageForModelUse(context.Background(), ports.ModelImageRequest{
+		ContentType: media.ContentTypeWEBP,
+		Content:     content,
+	})
+	if err != nil {
+		t.Fatalf("prepare webp model image: %v", err)
+	}
+	if modelImage.Width <= 0 || modelImage.Height <= 0 || modelImage.SHA256.String() == "" {
+		t.Fatalf("unexpected webp model image: %+v", modelImage)
+	}
+}
+
 func directUploadRequest(t *testing.T, expiresAt time.Time) ports.DirectAttachmentUploadRequest {
 	t.Helper()
 
@@ -179,6 +207,16 @@ func directUploadRequest(t *testing.T, expiresAt time.Time) ports.DirectAttachme
 		SizeBytes:    8,
 		ExpiresAt:    expiresAt,
 	}
+}
+
+func testWebP(t *testing.T) []byte {
+	t.Helper()
+
+	content, err := base64.StdEncoding.DecodeString("UklGRrIBAABXRUJQVlA4TKUBAAAvSsAYAA8w//M///MfeJAkbXvaSG7m8Q3GfYSBJekwQztm/IcZlgwnmWImn2BK7aFmBtnVir6q//8VOkFE/xm4baTIu8c48ArEo6+B3zFKYln3pqClSCKX0begFTAXFOLXHSyF8cCNcZEG4OywuA4KVVfJCiArU7GAgJI8+lJP/OKMT/fBAjevg1cYB7YVkFuWga2lyPi5I0HFy5YTpWIHg0RZpkniRVW9odHAKOwosWuOGdxIyn2OvaCDvhg/we6TwadPBPbqBV58MsLmMJ8yZnOWk8SRz4N+QoyPL+MnamzMvcE1rHNEr91F9GKZPVUcS9w7PhhH36suB9qPeYb/oLk6cuTiJ0wOK3m5h1cKjW6EVZCYMK7dxcKCBdgP9HkKr9gkAO2P8GKZGWVdIAatQa+1IDpt6qyorVwdy01xdW8Jkfk6xjEXmVQQ+HQdFr6OKhIN34dXWq0+0qr6EJSCeeVLH9+gvGTLyqM65PQ44ihzlTXxQKjKbAvshXgir7Lil9w4L2bvMycmjQcqXaMCO6BlY28i+FOLzbfI1vEqxAhotocAAA==")
+	if err != nil {
+		t.Fatalf("decode webp fixture: %v", err)
+	}
+	return content
 }
 
 func testPNG(t *testing.T, width int, height int) []byte {
