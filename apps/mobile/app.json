@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Stuff Stash",
+    "slug": "stuff-stash",
+    "scheme": "stuffstash",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.stuffstash.mobile"
+    },
+    "android": {
+      "package": "app.stuffstash.mobile"
+    },
+    "extra": {
+      "apiBaseUrl": ""
+    }
+  }
+}

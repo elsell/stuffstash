@@ -19,6 +19,13 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 ## Pinned Web And Client Tooling
 
 - pnpm for web/client workspaces: `11.0.7`.
+- Expo: `expo 54.0.34`.
+- Expo status bar: `expo-status-bar 3.0.9`.
+- React Native: `react-native 0.81.5`.
+- React for mobile: `react 19.1.0`.
+- TypeScript for mobile: `typescript 5.9.2`.
+- React types for mobile: `@types/react 19.1.0`.
+- Expo/Metro transitive overrides required by the dependency-age gate: `@0no-co/graphql.web 1.2.0`, `baseline-browser-mapping 2.10.34`, `caniuse-lite 1.0.30001797`, `electron-to-chromium 1.5.368`, `node-releases 2.0.47`, `regjsparser 0.13.1`, `semver 7.8.2`, and `yargs 17.7.2`.
 - SvelteKit: `@sveltejs/kit 2.63.0`.
 - Svelte: `svelte 5.56.2`.
 - Svelte Vite plugin: `@sveltejs/vite-plugin-svelte 7.1.2`.

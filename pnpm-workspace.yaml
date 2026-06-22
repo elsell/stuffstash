@@ -1,14 +1,23 @@
 packages:
   - apps/web
+  - apps/mobile
   - packages/api-client
 ignoreScripts: true
 overrides:
+  '@0no-co/graphql.web': '1.2.0'
   '@csstools/css-color-parser': '4.1.1'
   '@napi-rs/wasm-runtime': '1.1.4'
   acorn: '8.16.0'
+  baseline-browser-mapping: '2.10.34'
+  caniuse-lite: '1.0.30001797'
+  electron-to-chromium: '1.5.368'
   nanoid: '3.3.12'
+  node-releases: '2.0.47'
   obug: '2.1.2'
   postcss-selector-parser: '6.1.2'
+  regjsparser: '0.13.1'
+  semver: '7.8.2'
   tldts: '7.4.2'
   tldts-core: '7.4.2'
   undici: '7.27.1'
+  yargs: '17.7.2'

@@ -23,10 +23,14 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is the UI spec and design workshop before further frontend expansion.
+The current focus is validating the first Expo mobile scaffold on a real iPhone before deeper mobile product work.
 
 The goal is to prove a production-shaped path through:
 
+- no-account Expo Go local development,
+- a separate React Native and Expo mobile app in the monorepo,
+- pinned mobile dependencies and reproducible local setup,
+- a minimal first screen that can be loaded on a physical iPhone,
 - user-centered inventory creation, asset creation, browsing, and sharing workflows,
 - mobile-first interaction patterns that can later support conversational inventory,
 - a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
@@ -92,13 +96,16 @@ The goal is to prove a production-shaped path through:
 
 ## Next Work
 
-1. Run a UI spec and design workshop before expanding the web frontend.
+1. Validate the minimal Expo mobile app on a real iPhone through Expo Go.
+   - Use the no-account local Expo Go path before considering EAS or native development builds.
+   - Keep the first mobile screen static until the iPhone development loop is proven.
+2. Run a UI spec and design workshop before expanding the web frontend.
    - Treat the current screens as disposable tracer-bullet UI.
    - Keep the shadcn foundation, but do not assume the current layout, copy, or workflow survives.
 
 ## Later Work
 
 - Google OIDC adapter end-to-end verification.
-- Mobile app scaffold with React Native and Expo.
+- Mobile inventory/auth tracer bullet after the Expo Go development loop is proven.
 - Conversational inventory ports and action plan execution.
 - Import and export.

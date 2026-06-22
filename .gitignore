@@ -7,6 +7,9 @@ node_modules/
 apps/web/node_modules/
 apps/web/.svelte-kit/
 apps/web/build/
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/dist/
 packages/api-client/node_modules/
 __pycache__/
 *.pyc

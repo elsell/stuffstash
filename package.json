@@ -4,6 +4,8 @@
   "private": true,
   "packageManager": "pnpm@11.0.7",
   "scripts": {
+    "mobile:start": "pnpm --dir apps/mobile start",
+    "mobile:check": "pnpm --dir apps/mobile check",
     "web:dev": "pnpm --dir apps/web dev",
     "web:build": "pnpm --dir apps/web build",
     "web:check": "pnpm --dir apps/web check",
