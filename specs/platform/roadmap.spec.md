@@ -86,7 +86,7 @@ The goal is to prove a production-shaped path through:
 - Changing custom field type, removing custom field enum options or targets, durable thumbnail caching, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
 - Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
-- The real product UI is intentionally underspecified and should be redesigned before further frontend feature investment.
+- The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md`, but it has not yet been promoted from the temporary candidate into `apps/web`.
 - The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
 - Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
@@ -99,9 +99,9 @@ The goal is to prove a production-shaped path through:
 1. Validate the minimal Expo mobile app on a real iPhone through Expo Go.
    - Use the no-account local Expo Go path before considering EAS or native development builds.
    - Keep the first mobile screen static until the iPhone development loop is proven.
-2. Run a UI spec and design workshop before expanding the web frontend.
-   - Treat the current screens as disposable tracer-bullet UI.
-   - Keep the shadcn foundation, but do not assume the current layout, copy, or workflow survives.
+2. Promote the approved web inventory workspace direction into `apps/web` after implementation planning.
+   - Use `specs/platform/web-inventory-workspace.spec.md` as the source of truth.
+   - Treat the current tracer-bullet screens as disposable until replaced through the approved SvelteKit/shadcn architecture.
 
 ## Later Work
 
