@@ -3,11 +3,13 @@ package gormstore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (s Store) SaveTenant(ctx context.Context, item tenant.Tenant) error {
@@ -43,6 +45,30 @@ func (s Store) TenantExists(ctx context.Context, tenantID tenant.ID) (bool, erro
 		return false, err
 	}
 	return true, nil
+}
+
+func (s Store) ListTenants(ctx context.Context, page ports.TenantListPageRequest) ([]tenant.Tenant, error) {
+	var models []tenantModel
+	query := s.db.WithContext(ctx).Where(&tenantModel{LifecycleState: tenant.LifecycleStateActive.String()})
+	if page.AfterTenantID.String() != "" {
+		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterTenantID.String()})
+	}
+	if page.Limit > 0 {
+		query = query.Limit(page.Limit)
+	}
+	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]tenant.Tenant, 0, len(models))
+	for _, model := range models {
+		item, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid tenant row %q", model.ID)
+		}
+		items = append(items, item)
+	}
+	return items, nil
 }
 
 func (s Store) UpdateTenant(ctx context.Context, item tenant.Tenant, auditRecord audit.Record) error {

@@ -45,6 +45,30 @@ func TestTenantExistsReturnsFalseForMissingTenant(t *testing.T) {
 	}
 }
 
+func TestStoreListsActiveTenantsByCursor(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+
+	saveTenantForList(t, ctx, store, tenant.ID("tenant-a"), "Tenant A", tenant.LifecycleStateActive)
+	saveTenantForList(t, ctx, store, tenant.ID("tenant-b"), "Tenant B", tenant.LifecycleStateActive)
+	saveTenantForList(t, ctx, store, tenant.ID("tenant-c"), "Tenant C", tenant.LifecycleStateArchived)
+	saveTenantForList(t, ctx, store, tenant.ID("tenant-d"), "Tenant D", tenant.LifecycleStateActive)
+
+	items, err := store.ListTenants(ctx, ports.TenantListPageRequest{
+		AfterTenantID: tenant.ID("tenant-a"),
+		Limit:         2,
+	})
+	if err != nil {
+		t.Fatalf("list tenants: %v", err)
+	}
+	if len(items) != 2 {
+		t.Fatalf("expected 2 tenants, got %d", len(items))
+	}
+	if items[0].ID != tenant.ID("tenant-b") || items[1].ID != tenant.ID("tenant-d") {
+		t.Fatalf("expected tenant-b and tenant-d, got %+v", items)
+	}
+}
+
 func TestStoreSavesTenantAndOutboxEventAtomically(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)
@@ -79,6 +103,18 @@ func TestStoreSavesTenantAndOutboxEventAtomically(t *testing.T) {
 	}
 	if events[0].Kind != ports.AuthorizationOutboxGrantTenantOwner || events[0].TenantID != tenantID || events[0].PrincipalID != "user-one" {
 		t.Fatalf("unexpected outbox event: %+v", events[0])
+	}
+}
+
+func saveTenantForList(t *testing.T, ctx context.Context, store Store, id tenant.ID, name string, lifecycleState tenant.LifecycleState) {
+	t.Helper()
+
+	tenantName, ok := tenant.NewName(name)
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+	if err := store.SaveTenant(ctx, tenant.Tenant{ID: id, Name: tenantName, LifecycleState: lifecycleState}); err != nil {
+		t.Fatalf("save tenant %s: %v", id, err)
 	}
 }
 

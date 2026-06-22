@@ -70,8 +70,9 @@ type ListInventoriesOutput struct {
 }
 
 type InventoryResponse struct {
-	ID             string `json:"id"`
-	TenantID       string `json:"tenantId"`
-	Name           string `json:"name"`
-	LifecycleState string `json:"lifecycleState"`
+	ID             string                `json:"id"`
+	TenantID       string                `json:"tenantId"`
+	Name           string                `json:"name"`
+	LifecycleState string                `json:"lifecycleState"`
+	Access         shared.AccessResponse `json:"access"`
 }

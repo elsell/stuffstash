@@ -10,6 +10,7 @@ type inventoryResponse struct {
 	TenantID       string `json:"tenantId"`
 	Name           string `json:"name"`
 	LifecycleState string `json:"lifecycleState"`
+	Access         accessResponse
 }
 
 type inventoryBody struct {

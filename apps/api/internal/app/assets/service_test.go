@@ -133,6 +133,10 @@ func (tenantExistsRepository) TenantExists(context.Context, tenant.ID) (bool, er
 	return true, nil
 }
 
+func (tenantExistsRepository) ListTenants(context.Context, ports.TenantListPageRequest) ([]tenant.Tenant, error) {
+	return nil, nil
+}
+
 type inventoryRepository struct {
 	item inventory.Inventory
 }

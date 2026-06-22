@@ -92,6 +92,67 @@ func TestInventoryOwnerListsOnlyVisibleInventories(t *testing.T) {
 	)
 }
 
+func TestInventoryResponsesIncludeEffectiveAccessMetadata(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "tenant-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "inventory-owner"},
+		},
+	}))
+
+	grantViewer := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "viewer",
+		"relationship": "viewer",
+	})
+	if grantViewer.Code != http.StatusCreated {
+		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, grantViewer.Code, grantViewer.Body.String())
+	}
+	grantEditor := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:inventory-owner", map[string]string{
+		"principalId":  "editor",
+		"relationship": "editor",
+	})
+	if grantEditor.Code != http.StatusCreated {
+		t.Fatalf("expected editor grant status %d, got %d with body %s", http.StatusCreated, grantEditor.Code, grantEditor.Body.String())
+	}
+
+	cases := []struct {
+		name                 string
+		authorization        string
+		expectedRelationship string
+		expectedPermission   string
+		forbiddenPermission  string
+	}{
+		{name: "tenant owner", authorization: "Bearer dev:tenant-owner", expectedRelationship: "owner", expectedPermission: "share"},
+		{name: "inventory owner", authorization: "Bearer dev:inventory-owner", expectedRelationship: "owner", expectedPermission: "configure"},
+		{name: "editor", authorization: "Bearer dev:editor", expectedRelationship: "editor", expectedPermission: "edit_asset", forbiddenPermission: "share"},
+		{name: "viewer", authorization: "Bearer dev:viewer", expectedRelationship: "viewer", expectedPermission: "view", forbiddenPermission: "edit_asset"},
+	}
+
+	for _, item := range cases {
+		t.Run(item.name, func(t *testing.T) {
+			response := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID, item.authorization, nil)
+			if response.Code != http.StatusOK {
+				t.Fatalf("expected inventory detail status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
+			}
+			var body inventoryBody
+			decodeBody(t, response, &body)
+			if body.Data.Access.Relationship != item.expectedRelationship {
+				t.Fatalf("expected relationship %q, got %+v", item.expectedRelationship, body.Data.Access)
+			}
+			if !accessContainsPermission(body.Data.Access.Permissions, item.expectedPermission) {
+				t.Fatalf("expected permission %q in %+v", item.expectedPermission, body.Data.Access)
+			}
+			if item.forbiddenPermission != "" && accessContainsPermission(body.Data.Access.Permissions, item.forbiddenPermission) {
+				t.Fatalf("did not expect permission %q in %+v", item.forbiddenPermission, body.Data.Access)
+			}
+		})
+	}
+}
+
 func TestUnrelatedUserCannotCreateOrListTenantInventories(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	server := NewServer(":0", newSeededTestApp(t, seededState{

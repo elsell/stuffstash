@@ -54,7 +54,8 @@ type UpdateTenantLifecycleOutput struct {
 type DeleteTenantOutput struct{}
 
 type TenantResponse struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	LifecycleState string `json:"lifecycleState"`
+	ID             string                `json:"id"`
+	Name           string                `json:"name"`
+	LifecycleState string                `json:"lifecycleState"`
+	Access         shared.AccessResponse `json:"access"`
 }

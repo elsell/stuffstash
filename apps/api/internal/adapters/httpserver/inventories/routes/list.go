@@ -5,7 +5,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/dto"
-	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -30,10 +29,14 @@ func RegisterList(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
+		data, err := inventoryResponses(ctx, application, principal, result.Items)
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
 
 		return &dto.ListInventoriesOutput{
 			Body: shared.SuccessEnvelope[[]dto.InventoryResponse]{
-				Data: mapper.InventoriesToResponse(result.Items),
+				Data: data,
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

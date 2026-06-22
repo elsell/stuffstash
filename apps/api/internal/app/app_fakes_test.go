@@ -106,6 +106,10 @@ func (f *fakeTenantRepository) TenantByID(_ context.Context, tenantID tenant.ID)
 	return tenant.Tenant{ID: tenantID, Name: name, LifecycleState: tenant.LifecycleStateActive}, true, nil
 }
 
+func (f *fakeTenantRepository) ListTenants(context.Context, ports.TenantListPageRequest) ([]tenant.Tenant, error) {
+	return nil, nil
+}
+
 func (f *fakeTenantRepository) UpdateTenant(context.Context, tenant.Tenant, audit.Record) error {
 	return nil
 }

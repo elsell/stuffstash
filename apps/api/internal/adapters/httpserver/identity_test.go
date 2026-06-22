@@ -5,6 +5,57 @@ import (
 	"testing"
 )
 
+func TestMyTenantsListShowsOnlyAccessibleTenantsWithEffectiveAccess(t *testing.T) {
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: "tenant-owned", name: "Home", owner: "owner"},
+			{id: "tenant-viewed", name: "Shared", owner: "other-owner"},
+			{id: "tenant-hidden", name: "Hidden", owner: "hidden-owner"},
+		},
+		inventories: []seedInventory{
+			{id: "inventory-viewed", tenantID: "tenant-viewed", name: "Tools", owner: "other-owner"},
+		},
+	}))
+
+	grant := performRequest(server, http.MethodPost, "/tenants/tenant-viewed/inventories/inventory-viewed/access-grants", "Bearer dev:other-owner", map[string]string{
+		"principalId":  "owner",
+		"relationship": "viewer",
+	})
+	if grant.Code != http.StatusCreated {
+		t.Fatalf("expected grant status %d, got %d with body %s", http.StatusCreated, grant.Code, grant.Body.String())
+	}
+
+	first := performRequest(server, http.MethodGet, "/me/tenants?limit=1", "Bearer dev:owner", nil)
+	if first.Code != http.StatusOK {
+		t.Fatalf("expected first tenant page status %d, got %d with body %s", http.StatusOK, first.Code, first.Body.String())
+	}
+	firstPage := decodeMyTenantList(t, first)
+	if len(firstPage.Data) != 1 || firstPage.Data[0].ID != "tenant-owned" {
+		t.Fatalf("expected first page to contain owned tenant, got %+v", firstPage.Data)
+	}
+	if firstPage.Data[0].Access.Relationship != "owner" || !accessContainsPermission(firstPage.Data[0].Access.Permissions, "configure") || !accessContainsPermission(firstPage.Data[0].Access.Permissions, "create_inventory") {
+		t.Fatalf("expected owner tenant access metadata, got %+v", firstPage.Data[0].Access)
+	}
+	if firstPage.Meta.Pagination == nil || !firstPage.Meta.Pagination.HasMore || firstPage.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected paginated first page metadata, got %+v", firstPage.Meta)
+	}
+
+	second := performRequest(server, http.MethodGet, "/me/tenants?limit=1&cursor="+*firstPage.Meta.Pagination.NextCursor, "Bearer dev:owner", nil)
+	if second.Code != http.StatusOK {
+		t.Fatalf("expected second tenant page status %d, got %d with body %s", http.StatusOK, second.Code, second.Body.String())
+	}
+	secondPage := decodeMyTenantList(t, second)
+	if len(secondPage.Data) != 1 || secondPage.Data[0].ID != "tenant-viewed" {
+		t.Fatalf("expected second page to contain shared tenant only, got %+v", secondPage.Data)
+	}
+	if secondPage.Data[0].Access.Relationship != "viewer" || !accessContainsPermission(secondPage.Data[0].Access.Permissions, "view") || accessContainsPermission(secondPage.Data[0].Access.Permissions, "configure") {
+		t.Fatalf("expected viewer tenant access metadata, got %+v", secondPage.Data[0].Access)
+	}
+	if secondPage.Meta.Pagination == nil || secondPage.Meta.Pagination.HasMore || secondPage.Meta.Pagination.NextCursor != nil {
+		t.Fatalf("expected final page metadata, got %+v", secondPage.Meta)
+	}
+}
+
 func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T) {
 	server := NewServer(":0", newTestApp(&fakeObserver{}, "01ARZ3NDEKTSV4RRFFQ69G5FAV"))
 
@@ -15,6 +66,7 @@ func TestProtectedEndpointsRejectMissingAndMalformedAuthentication(t *testing.T)
 		body   any
 	}{
 		{name: "current principal", method: http.MethodGet, path: "/me"},
+		{name: "list my tenants", method: http.MethodGet, path: "/me/tenants"},
 		{name: "create tenant", method: http.MethodPost, path: "/tenants", body: map[string]string{"name": "Home"}},
 		{name: "create inventory", method: http.MethodPost, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories", body: map[string]string{"name": "Tools"}},
 		{name: "list inventories", method: http.MethodGet, path: "/tenants/01ARZ3NDEKTSV4RRFFQ69G5FAV/inventories"},

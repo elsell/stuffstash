@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get me tenants */
+        get: operations["get-me-tenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants": {
         parameters: {
             query?: never;
@@ -482,6 +499,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID attachments direct uploads */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads/{uploadId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID attachments direct uploads by upload ID complete */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads-by-upload-id-complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}": {
         parameters: {
             query?: never;
@@ -549,6 +600,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID attachments by attachment ID restore */
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-restore"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tenants by tenant ID inventories by inventory ID assets by asset ID attachments by attachment ID thumbnail */
+        get: operations["list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-thumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
@@ -826,6 +894,10 @@ export interface components {
             /** @description One-time invite acceptance token */
             acceptanceToken: string;
         };
+        AccessResponse: {
+            permissions: string[] | null;
+            relationship: string;
+        };
         AssetResponse: {
             customAssetTypeId?: string;
             customFields: {
@@ -998,6 +1070,19 @@ export interface components {
             tenantId: string;
             type: string;
         };
+        DirectUploadResponse: {
+            attachmentId: string;
+            expiresAt: string;
+            formFields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            method: string;
+            uploadId: string;
+            url: string;
+        };
         ErrorBody: {
             code: string;
             details: components["schemas"]["ErrorDetail"][] | null;
@@ -1037,7 +1122,28 @@ export interface components {
             relationship: string;
             tenantId: string;
         };
+        InitiateDirectUploadBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/InitiateDirectUploadBody.json
+             */
+            readonly $schema?: string;
+            /**
+             * @description Media type
+             * @enum {string}
+             */
+            contentType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+            /** @description Original file name */
+            fileName: string;
+            /**
+             * Format: int64
+             * @description Expected decoded content size
+             */
+            sizeBytes: number;
+        };
         InventoryResponse: {
+            access: components["schemas"]["AccessResponse"];
             id: string;
             lifecycleState: string;
             name: string;
@@ -1083,6 +1189,12 @@ export interface components {
             pagination?: components["schemas"]["PaginationMeta"];
             requestId?: string;
             tenantId?: string;
+        };
+        MyTenantResponse: {
+            access: components["schemas"]["AccessResponse"];
+            id: string;
+            lifecycleState: string;
+            name: string;
         };
         PaginationMeta: {
             hasMore: boolean;
@@ -1152,6 +1264,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["DefinitionResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeDirectUploadResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeDirectUploadResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["DirectUploadResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeGrantResponse: {
@@ -1274,6 +1396,16 @@ export interface components {
             data: components["schemas"]["InvitationResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListMyTenantResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListMyTenantResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["MyTenantResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListRecordResponse: {
             /**
              * Format: uri
@@ -1305,6 +1437,7 @@ export interface components {
             meta: components["schemas"]["Meta"];
         };
         TenantResponse: {
+            access: components["schemas"]["AccessResponse"];
             id: string;
             lifecycleState: string;
             name: string;
@@ -1423,6 +1556,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopePrincipalResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-me-tenants": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListMyTenantResponse"];
                 };
             };
             /** @description Error */
@@ -3280,6 +3452,94 @@ export interface operations {
             };
         };
     };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitiateDirectUploadBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDirectUploadResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads-by-upload-id-complete": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Direct upload ID */
+                uploadId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAttachmentResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
         parameters: {
             query?: never;
@@ -3482,6 +3742,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAttachmentResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-thumbnail": {
+        parameters: {
+            query?: {
+                /** @description Thumbnail variant */
+                variant?: "small";
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Attachment ID */
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Type"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
             /** @description Error */

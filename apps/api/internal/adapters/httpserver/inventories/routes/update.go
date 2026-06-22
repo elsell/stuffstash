@@ -5,7 +5,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/dto"
-	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -30,8 +29,12 @@ func RegisterUpdate(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
+		response, err := inventoryResponse(ctx, application, principal, item)
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
 		return &dto.UpdateInventoryOutput{Body: shared.SuccessEnvelope[dto.InventoryResponse]{
-			Data: mapper.InventoryToResponse(item),
+			Data: response,
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("inventories"), shared.SecuredOperation)

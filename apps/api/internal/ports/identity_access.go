@@ -13,6 +13,12 @@ import (
 type TenantRepository interface {
 	TenantByID(ctx context.Context, tenantID tenant.ID) (tenant.Tenant, bool, error)
 	TenantExists(ctx context.Context, tenantID tenant.ID) (bool, error)
+	ListTenants(ctx context.Context, page TenantListPageRequest) ([]tenant.Tenant, error)
+}
+
+type TenantListPageRequest struct {
+	AfterTenantID tenant.ID
+	Limit         int
 }
 
 type TenantUnitOfWork interface {

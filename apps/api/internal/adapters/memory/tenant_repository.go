@@ -6,6 +6,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"sort"
 	"time"
 )
 
@@ -34,6 +35,25 @@ func (s *Store) TenantExists(_ context.Context, tenantID tenant.ID) (bool, error
 
 	item, ok := s.tenants[tenantID]
 	return ok && item.IsActive(), nil
+}
+
+func (s *Store) ListTenants(_ context.Context, page ports.TenantListPageRequest) ([]tenant.Tenant, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []tenant.Tenant{}
+	for _, item := range s.tenants {
+		if item.IsActive() && item.ID.String() > page.AfterTenantID.String() {
+			items = append(items, item)
+		}
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[left].ID.String() < items[right].ID.String()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
 }
 
 func (s *Store) UpdateTenant(_ context.Context, item tenant.Tenant, auditRecord audit.Record) error {

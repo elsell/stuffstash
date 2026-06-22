@@ -14,6 +14,7 @@ const (
 	EventAuthorizationDenied                  EventName = "authorization.denied"
 	EventTenantCreated                        EventName = "tenant.created"
 	EventTenantViewed                         EventName = "tenant.viewed"
+	EventTenantsListed                        EventName = "tenant.listed"
 	EventTenantUpdated                        EventName = "tenant.updated"
 	EventTenantArchived                       EventName = "tenant.archived"
 	EventTenantRestored                       EventName = "tenant.restored"

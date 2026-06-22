@@ -75,6 +75,32 @@ The first endpoints are:
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
 
+## My Access API
+
+Web, mobile, and future agent clients need a first-class way to discover the authenticated user's accessible tenants and effective permissions without hard-coding authorization rules in the client.
+
+`GET /me/tenants`:
+
+- Requires authentication.
+- Returns only active tenants the authenticated principal can view.
+- Must use the standard response envelope.
+- Must use cursor pagination with `limit` and `cursor`.
+- Must preserve tenant isolation. Hidden tenants must not appear and must not affect response bodies except through pagination cursors.
+- Must include effective tenant access metadata for each tenant:
+  - `relationship`: `owner` when the principal can configure the tenant or create inventories, otherwise `viewer`.
+  - `permissions`: stable permission strings granted to the caller for that tenant, initially `view`, `create_inventory`, and `configure`.
+- Must produce safe tenant-scoped read audit history for each returned tenant.
+- Must emit domain-oriented observability.
+
+Tenant detail responses and `GET /me/tenants` tenant entries must include the same effective tenant access metadata when returned to an authenticated caller.
+
+Inventory create, detail, update, lifecycle, and list responses must include effective inventory access metadata:
+
+- `relationship`: `owner` when the principal can share or configure the inventory, `editor` when the principal can create or edit assets, otherwise `viewer`.
+- `permissions`: stable permission strings granted to the caller for that inventory, initially `view`, `create_asset`, `edit_asset`, `share`, and `configure`.
+
+Effective access metadata is a client display and workflow affordance. It must be derived from authorization checks and must not replace server-side authorization checks for any state-changing operation.
+
 `POST /access-grants`:
 
 - Requires authentication.

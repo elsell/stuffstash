@@ -42,6 +42,7 @@ type Action string
 const (
 	ActionTenantCreated                        Action = "tenant.created"
 	ActionTenantViewed                         Action = "tenant.viewed"
+	ActionTenantListed                         Action = "tenant.listed"
 	ActionTenantUpdated                        Action = "tenant.updated"
 	ActionTenantArchived                       Action = "tenant.archived"
 	ActionTenantRestored                       Action = "tenant.restored"
@@ -104,6 +105,7 @@ func NewAction(value string) (Action, bool) {
 	switch action {
 	case ActionTenantCreated,
 		ActionTenantViewed,
+		ActionTenantListed,
 		ActionTenantUpdated,
 		ActionTenantArchived,
 		ActionTenantRestored,

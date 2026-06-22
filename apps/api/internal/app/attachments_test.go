@@ -438,6 +438,10 @@ func (attachmentTenantRepository) TenantByID(_ context.Context, tenantID tenant.
 	return tenant.Tenant{ID: tenantID, Name: name, LifecycleState: tenant.LifecycleStateActive}, true, nil
 }
 
+func (attachmentTenantRepository) ListTenants(context.Context, ports.TenantListPageRequest) ([]tenant.Tenant, error) {
+	return nil, nil
+}
+
 func (attachmentTenantRepository) UpdateTenant(context.Context, tenant.Tenant, audit.Record) error {
 	return nil
 }

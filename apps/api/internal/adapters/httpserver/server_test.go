@@ -92,6 +92,7 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 		path   string
 		method string
 	}{
+		{"/me/tenants", "get"},
 		{"/tenants/{tenantId}", "get"},
 		{"/tenants/{tenantId}", "patch"},
 		{"/tenants/{tenantId}", "delete"},

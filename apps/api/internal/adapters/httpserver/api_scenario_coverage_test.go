@@ -38,6 +38,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	tenantCreate := coverage.request(t, server, http.MethodPost, "/tenants", "/tenants", "Bearer dev:owner", map[string]any{"name": "Home"}, http.StatusCreated)
 	tenantID := decodeTenant(t, tenantCreate).Data.ID
 	tenantPath := "/tenants/" + tenantID
+	coverage.request(t, server, http.MethodGet, "/me/tenants", "/me/tenants?limit=10", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}", tenantPath, "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}", tenantPath, "Bearer dev:owner", map[string]any{"name": "Updated Home"}, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/archive", tenantPath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
@@ -254,6 +255,7 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 
 	return adversarialFixture{server: server, requests: []scenarioRequest{
 		{method: http.MethodGet, template: "/me", path: "/me"},
+		{method: http.MethodGet, template: "/me/tenants", path: "/me/tenants?limit=10"},
 		{method: http.MethodPost, template: "/tenants", path: "/tenants", body: map[string]any{"name": "Blocked"}},
 		{method: http.MethodGet, template: "/tenants/{tenantId}", path: tenantPath},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}", path: tenantPath, body: map[string]any{"name": "Blocked"}},
