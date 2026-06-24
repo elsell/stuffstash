@@ -89,15 +89,14 @@ The goal is to prove a production-shaped path through:
 - The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
 - Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
-- The web UI does not yet expose full sharing, audit history, custom fields, custom asset types, media attachment management, asset update/move/archive/restore controls in the promoted workspace, or full API-adapter test coverage for workspace selection.
+- The web UI does not yet expose full sharing, audit history, custom fields, custom asset types, media attachment management, archive/restore controls in the promoted workspace, or component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
 
 ## Next Work
 
 1. Deepen the promoted web inventory workspace against real API behavior.
    - Use `specs/platform/web-inventory-workspace.spec.md` as the source of truth.
-   - Add focused API-adapter tests for tenant restoration, empty tenant handling, first-inventory fallback, selected-tenant inventory creation, and session-scoped selection.
-   - Move next into real asset detail/update/move/archive workflows through frontend ports and adapters.
+   - Move next into archive/restore controls, media attachment management, and component-level coverage for detail workflows.
 2. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
    - Keep the no-account local Expo Go path before considering EAS or native development builds.
    - Keep demo data behind an adapter until authentication and generated API integration are specified.

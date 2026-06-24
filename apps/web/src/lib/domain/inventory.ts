@@ -64,6 +64,12 @@ export interface AddAssetDraft {
   photos: SelectedPhoto[];
 }
 
+export interface UpdateAssetDraft {
+  title: string;
+  description: string;
+  parentAssetId: string | null;
+}
+
 export interface SelectedPhoto {
   id: string;
   name: string;
@@ -122,4 +128,8 @@ export function canCreateAsset(inventory: Inventory | null | undefined): boolean
 
 export function canEditInventory(inventory: Inventory | null | undefined): boolean {
   return canCreateAsset(inventory) || hasAccessPermission(inventory?.access, 'edit_asset');
+}
+
+export function canEditAsset(inventory: Inventory | null | undefined): boolean {
+  return hasAccessPermission(inventory?.access, 'edit_asset');
 }

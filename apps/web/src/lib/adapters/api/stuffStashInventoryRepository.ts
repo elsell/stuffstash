@@ -1,7 +1,7 @@
 import { StuffStashAPIError, StuffStashClient } from '@stuff-stash/api-client';
 import type { RuntimeConfig } from '$lib/runtimeConfig';
 import type { TokenProvider } from '@stuff-stash/api-client';
-import type { AddAssetDraft, Asset, SearchResult, WorkspaceData } from '$lib/domain/inventory';
+import type { AddAssetDraft, Asset, SearchResult, UpdateAssetDraft, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import { mapAsset, mapCapability, mapInventory, mapPrincipal, mapSearchResult, mapTenant } from './inventoryMapper';
@@ -104,6 +104,36 @@ export class StuffStashInventoryRepository implements InventoryRepository {
       return asset;
     } catch (error) {
       this.observer.record('workspace.asset_create_failed', { kind: draft.kind });
+      throw safeError(error);
+    }
+  }
+
+  async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    this.observer.record('workspace.asset_detail_load_started');
+    try {
+      const asset = mapAsset(await this.client.getAsset(tenantId, inventoryId, assetId));
+      this.observer.record('workspace.asset_detail_loaded', { kind: asset.kind });
+      return asset;
+    } catch (error) {
+      this.observer.record('workspace.asset_detail_load_failed');
+      throw safeError(error);
+    }
+  }
+
+  async updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset> {
+    this.observer.record('workspace.asset_update_started');
+    try {
+      const asset = mapAsset(
+        await this.client.updateAsset(tenantId, inventoryId, assetId, {
+          title: draft.title,
+          description: draft.description,
+          parentAssetId: draft.parentAssetId
+        })
+      );
+      this.observer.record('workspace.asset_updated', { kind: asset.kind });
+      return asset;
+    } catch (error) {
+      this.observer.record('workspace.asset_update_failed');
       throw safeError(error);
     }
   }

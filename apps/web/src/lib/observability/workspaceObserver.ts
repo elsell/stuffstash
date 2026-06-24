@@ -5,6 +5,12 @@ export type WorkspaceEventName =
   | 'workspace.asset_create_started'
   | 'workspace.asset_created'
   | 'workspace.asset_create_failed'
+  | 'workspace.asset_detail_load_started'
+  | 'workspace.asset_detail_loaded'
+  | 'workspace.asset_detail_load_failed'
+  | 'workspace.asset_update_started'
+  | 'workspace.asset_updated'
+  | 'workspace.asset_update_failed'
   | 'workspace.search_started'
   | 'workspace.search_failed'
   | 'workspace.search_completed';

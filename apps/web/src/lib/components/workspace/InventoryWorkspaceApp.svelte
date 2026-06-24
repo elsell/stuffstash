@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { containedAssets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import {
     canCreateAsset,
+    canEditAsset,
     canCreateInventory,
     type AddAssetDraft,
     type Asset,
     type SearchResult,
+    type UpdateAssetDraft,
     type WorkspaceData,
     type WorkspaceMode
   } from '$lib/domain/inventory';
@@ -43,13 +45,25 @@
   let error = $state('');
   let searchQuery = $state('');
   let searchResults = $state<SearchResult[]>([]);
+  let loadedAssetDetail = $state<Asset | null>(null);
 
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
   let selectedLocation = $derived(data.assets.find((asset) => asset.id === selectedLocationId) ?? null);
-  let selectedAsset = $derived(selectedAssetId ? data.assets.find((asset) => asset.id === selectedAssetId) ?? null : null);
-  let editable = $derived(data.context.capability === 'editor');
+  let detailAssets = $derived(
+    loadedAssetDetail && !data.assets.some((asset) => asset.id === loadedAssetDetail?.id)
+      ? [loadedAssetDetail, ...data.assets]
+      : data.assets
+  );
+  let selectedAsset = $derived(
+    selectedAssetId
+      ? loadedAssetDetail?.id === selectedAssetId
+        ? loadedAssetDetail
+        : data.assets.find((asset) => asset.id === selectedAssetId) ?? null
+      : null
+  );
   let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
+  let editAssetAllowed = $derived(canEditAsset(selectedInventory));
   let canCreateStarter = $derived(!data.context.selectedTenantId || canCreateInventory(selectedTenant));
   let userLabel = $derived(data.context.principal.email ?? data.context.principal.id);
 
@@ -59,6 +73,7 @@
       mode = 'home';
       selectedLocationId = null;
       selectedAssetId = null;
+      loadedAssetDetail = null;
     });
   }
 
@@ -68,6 +83,7 @@
       mode = data.context.inventories.length > 0 ? 'home' : 'settings';
       selectedLocationId = null;
       selectedAssetId = null;
+      loadedAssetDetail = null;
     });
   }
 
@@ -98,6 +114,35 @@
     });
   }
 
+  async function updateAsset(draft: UpdateAssetDraft): Promise<void> {
+    if (!selectedAsset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    busy = true;
+    error = '';
+    message = '';
+    try {
+      const asset = await repository.updateAsset(
+        selectedAsset.tenantId,
+        selectedAsset.inventoryId,
+        selectedAsset.id,
+        draft
+      );
+      replaceWorkspaceAsset(asset);
+      loadedAssetDetail = asset;
+      message = `Saved ${asset.title}.`;
+    } catch (caught) {
+      error = caught instanceof Error ? caught.message : 'Action failed.';
+      throw new Error(error);
+    } finally {
+      busy = false;
+    }
+  }
+
   async function search(): Promise<void> {
     const query = searchQuery.trim();
     if (!query || !data.context.selectedTenantId) {
@@ -126,19 +171,51 @@
   function openLocation(asset: Asset): void {
     selectedLocationId = asset.id;
     selectedAssetId = null;
+    loadedAssetDetail = null;
     mode = 'location';
   }
 
   function openAsset(asset: Asset): void {
-    selectedAssetId = asset.id;
-    mode = 'asset';
+    void loadAssetDetail(asset.tenantId, asset.inventoryId, asset.id);
   }
 
   function openAssetById(assetId: string): void {
-    const asset = data.assets.find((candidate) => candidate.id === assetId);
+    const asset =
+      data.assets.find((candidate) => candidate.id === assetId) ??
+      searchResults.find((result) => result.asset.id === assetId)?.asset;
     if (asset) {
       openAsset(asset);
     }
+  }
+
+  async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    await run(async () => {
+      const asset = await repository.getAsset(tenantId, inventoryId, assetId);
+      replaceWorkspaceAsset(asset);
+      loadedAssetDetail = asset;
+      selectedAssetId = asset.id;
+      mode = 'asset';
+    });
+  }
+
+  function replaceWorkspaceAsset(asset: Asset): void {
+    if (asset.tenantId !== data.context.selectedTenantId || asset.inventoryId !== data.context.selectedInventoryId) {
+      return;
+    }
+    const existing = data.assets.some(
+      (candidate) =>
+        candidate.tenantId === asset.tenantId && candidate.inventoryId === asset.inventoryId && candidate.id === asset.id
+    );
+    data = {
+      ...data,
+      assets: existing
+        ? data.assets.map((candidate) =>
+            candidate.tenantId === asset.tenantId && candidate.inventoryId === asset.inventoryId && candidate.id === asset.id
+              ? asset
+              : candidate
+          )
+        : [asset, ...data.assets]
+    };
   }
 </script>
 
@@ -191,9 +268,12 @@
       />
     {:else if mode === 'asset' && selectedAsset}
       <AssetDetail
-        asset={withTrail(selectedAsset, data.assets)}
-        capability={data.context.capability}
+        asset={withTrail(selectedAsset, detailAssets)}
+        canEdit={editAssetAllowed}
+        parentTargets={moveParentTargets(detailAssets, selectedAsset.id)}
+        saving={busy}
         onBack={() => { mode = selectedLocationId ? 'location' : 'home'; selectedAssetId = null; }}
+        onSave={updateAsset}
       />
     {:else if mode === 'search'}
       <SearchPanel

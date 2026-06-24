@@ -447,6 +447,16 @@ small {
   gap: 10px;
 }
 
+.detail-action-panel {
+  display: grid;
+  gap: 14px;
+  max-width: 560px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
 dt,
 dd {
   margin: 0;

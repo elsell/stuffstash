@@ -236,6 +236,16 @@ Asset detail must support:
 - Viewer or denied states for edit-only actions.
 - Archived state when lifecycle views expose archived assets.
 
+Asset detail loading and actions must use real API-backed boundaries:
+
+- Opening an asset detail must load the selected asset by ID through the frontend repository port and API adapter rather than relying only on the current list row.
+- The API adapter must call the generated client wrapper for `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` and map the DTO into the frontend asset domain model.
+- Editing asset title and description must go through a repository update method backed by the generated client wrapper.
+- Moving an asset must update `parentAssetId` through the same API-backed update path and must use valid parent targets from the current inventory, not free-form IDs.
+- Edit and move affordances must require the exact `edit_asset` permission from the selected inventory access metadata.
+- Save success, save failure, loading, and denied states must be explicit in the detail workflow.
+- Svelte components must not import generated SDK DTOs or call generated client methods directly for detail, edit, or move behavior.
+
 ## Add Flow
 
 The add workflow must have equal product weight with find/browse.

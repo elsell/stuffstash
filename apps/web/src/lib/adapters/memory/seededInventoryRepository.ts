@@ -5,6 +5,7 @@ import {
   type Asset,
   type Inventory,
   type SearchResult,
+  type UpdateAssetDraft,
   type WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
@@ -113,6 +114,36 @@ export class SeededInventoryRepository implements InventoryRepository {
     };
     this.seed = { ...this.seed, assets: [asset, ...this.seed.assets] };
     return asset;
+  }
+
+  async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    const asset = this.seed.assets.find(
+      (candidate) => candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === assetId
+    );
+    if (!asset) {
+      throw new Error('Asset not found.');
+    }
+    return asset;
+  }
+
+  async updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    const updated: Asset = {
+      ...asset,
+      title: draft.title,
+      description: draft.description,
+      parentAssetId: draft.parentAssetId,
+      updatedAt: new Date().toISOString()
+    };
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.map((candidate) =>
+        candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === assetId
+          ? updated
+          : candidate
+      )
+    };
+    return updated;
   }
 
   async searchAssets(_tenantId: string, query: string): Promise<SearchResult[]> {

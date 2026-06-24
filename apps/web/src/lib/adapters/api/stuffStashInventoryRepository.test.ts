@@ -69,6 +69,50 @@ describe('StuffStashInventoryRepository', () => {
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active'
     ]);
   });
+
+  it('loads asset detail by ID through the generated client path', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const asset = await repository.getAsset('tenant-home', 'inventory-household', 'asset-passport');
+
+    expect(asset).toMatchObject({
+      id: 'asset-passport',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      title: 'Passport',
+      parentAssetId: 'asset-closet'
+    });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
+    ]);
+  });
+
+  it('updates asset detail and movement through the generated client path', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const asset = await repository.updateAsset('tenant-home', 'inventory-household', 'asset-passport', {
+      title: 'Updated Passport',
+      description: 'Fire safe',
+      parentAssetId: 'asset-safe'
+    });
+
+    expect(asset).toMatchObject({
+      id: 'asset-passport',
+      title: 'Updated Passport',
+      description: 'Fire safe',
+      parentAssetId: 'asset-safe'
+    });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
+    ]);
+    expect(await requests[0]?.json()).toEqual({
+      title: 'Updated Passport',
+      description: 'Fire safe',
+      parentAssetId: 'asset-safe'
+    });
+  });
 });
 
 function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
@@ -112,6 +156,16 @@ function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/assets') {
         return envelope([]);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
+        return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', 'asset-closet'));
+      }
+      if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
+        const body = (await request.clone().json()) as { title: string; description?: string; parentAssetId?: string | null };
+        return envelope({
+          ...asset('asset-passport', 'tenant-home', 'inventory-household', body.title, body.parentAssetId ?? null),
+          description: body.description ?? ''
+        });
+      }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }
   };
@@ -143,7 +197,7 @@ function inventory(id: string, tenantId: string, name: string, permissions: stri
   };
 }
 
-function asset(id: string, tenantId: string, inventoryId: string, title: string): object {
+function asset(id: string, tenantId: string, inventoryId: string, title: string, parentAssetId: string | null = null): object {
   return {
     id,
     tenantId,
@@ -151,7 +205,7 @@ function asset(id: string, tenantId: string, inventoryId: string, title: string)
     kind: 'item',
     title,
     description: '',
-    parentAssetId: null,
+    parentAssetId,
     lifecycleState: 'active'
   };
 }

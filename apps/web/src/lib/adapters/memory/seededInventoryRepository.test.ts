@@ -102,4 +102,29 @@ describe('SeededInventoryRepository tenant selection', () => {
     expect(data.assets.map((asset) => asset.id)).toEqual(['asset-home']);
     await expect(repository.searchAssets('tenant-home', 'Lantern')).resolves.toEqual([]);
   });
+
+  it('loads and updates asset detail inside the selected inventory', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    await expect(repository.getAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toMatchObject({
+      id: 'asset-home',
+      title: 'Passport'
+    });
+
+    const updated = await repository.updateAsset('tenant-home', 'inventory-household', 'asset-home', {
+      title: 'Updated Passport',
+      description: 'Fire safe',
+      parentAssetId: null
+    });
+
+    expect(updated).toMatchObject({
+      id: 'asset-home',
+      title: 'Updated Passport',
+      description: 'Fire safe',
+      parentAssetId: null
+    });
+    await expect(repository.getAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toMatchObject({
+      title: 'Updated Passport'
+    });
+  });
 });

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { containedAssets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from './workspace';
+import {
+  containedAssets,
+  moveParentTargets,
+  parentTargets,
+  recentlyAddedAssets,
+  topLevelLocations,
+  withTrail
+} from './workspace';
 import type { Asset } from '$lib/domain/inventory';
 
 const assets: Asset[] = [
@@ -45,6 +52,20 @@ const assets: Asset[] = [
   }
 ];
 
+const crossInventoryAssets: Asset[] = [
+  ...assets,
+  {
+    id: 'other-room',
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-two',
+    kind: 'location',
+    title: 'Other inventory room',
+    description: '',
+    parentAssetId: null,
+    lifecycleState: 'active'
+  }
+];
+
 describe('workspace domain helpers', () => {
   it('derives top-level active locations and contained asset counts', () => {
     expect(topLevelLocations(assets)).toEqual([
@@ -63,5 +84,12 @@ describe('workspace domain helpers', () => {
   it('keeps valid parent targets to active containers and locations', () => {
     expect(parentTargets(assets).map((asset) => asset.id)).toEqual(['garage', 'toolbox']);
     expect(recentlyAddedAssets(assets).map((asset) => asset.id)).toEqual(['toolbox', 'drill']);
+  });
+
+  it('excludes the moving asset and descendants from move parent targets', () => {
+    expect(moveParentTargets(assets, 'garage').map((asset) => asset.id)).toEqual([]);
+    expect(moveParentTargets(assets, 'toolbox').map((asset) => asset.id)).toEqual(['garage']);
+    expect(moveParentTargets(assets, 'drill').map((asset) => asset.id)).toEqual(['garage', 'toolbox']);
+    expect(moveParentTargets(crossInventoryAssets, 'other-room').map((asset) => asset.id)).toEqual([]);
   });
 });

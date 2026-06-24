@@ -27,6 +27,19 @@ export function parentTargets(assets: Asset[]): AssetViewModel[] {
     .map((asset) => withTrail(asset, assets));
 }
 
+export function moveParentTargets(assets: Asset[], movingAssetId: string): AssetViewModel[] {
+  const movingAsset = assets.find((asset) => asset.id === movingAssetId);
+  if (!movingAsset) {
+    return [];
+  }
+  const sameInventoryAssets = assets.filter(
+    (asset) => asset.tenantId === movingAsset.tenantId && asset.inventoryId === movingAsset.inventoryId
+  );
+  const excluded = descendantIds(sameInventoryAssets, movingAssetId);
+  excluded.add(movingAssetId);
+  return parentTargets(sameInventoryAssets).filter((asset) => !excluded.has(asset.id));
+}
+
 export function withTrail(asset: Asset, assets: Asset[]): AssetViewModel {
   return {
     ...asset,
@@ -62,4 +75,19 @@ export function filterAssets(assets: Asset[], query: string): Asset[] {
       asset.customAssetTypeLabel?.toLowerCase().includes(normalized)
     );
   });
+}
+
+function descendantIds(assets: Asset[], assetId: string): Set<string> {
+  const descendants = new Set<string>();
+  const queue = [assetId];
+  while (queue.length > 0) {
+    const parentId = queue.shift();
+    for (const asset of assets) {
+      if (asset.parentAssetId === parentId && !descendants.has(asset.id)) {
+        descendants.add(asset.id);
+        queue.push(asset.id);
+      }
+    }
+  }
+  return descendants;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canCreateAsset, canEditInventory } from './inventory';
+import { canCreateAsset, canEditAsset, canEditInventory } from './inventory';
 import type { Inventory } from './inventory';
 
 describe('inventory permissions', () => {
@@ -12,6 +12,7 @@ describe('inventory permissions', () => {
     };
 
     expect(canEditInventory(editOnlyInventory)).toBe(true);
+    expect(canEditAsset(editOnlyInventory)).toBe(true);
     expect(canCreateAsset(editOnlyInventory)).toBe(false);
   });
 });
