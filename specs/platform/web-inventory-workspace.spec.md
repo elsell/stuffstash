@@ -373,6 +373,27 @@ The first promoted implementation should split at least these concerns:
 - API adapter mapping.
 - Observability events.
 
+## First Promotion Implementation Shape
+
+The first promoted `apps/web` implementation must replace the disposable tracer-bullet page composition with production-shaped frontend boundaries from the start.
+
+Required implementation split:
+
+- Frontend domain models live outside Svelte components and represent product concepts such as tenant, inventory, asset, asset kind, lifecycle state, selected photos, workspace mode, and search result.
+- UI-facing data access must go through a frontend repository port with domain-oriented methods.
+- The REST adapter must use the checked generated TypeScript API client package and map API DTOs into frontend domain objects at the adapter boundary.
+- Svelte components must not import generated schema types or API DTOs directly.
+- Route files may compose authentication, runtime configuration, repository construction, and top-level page state, but must not become the place where transport mapping, containment derivation, visual components, and API calls all accumulate.
+- Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
+- Domain-oriented frontend observability must be represented through an explicit helper or port, even when the first implementation records events only in memory.
+
+The first promotion may include a local seeded adapter for unauthenticated browser review and for unavailable backend operations, but it must be truthful:
+
+- Seeded data must be isolated behind the same repository port as the API adapter.
+- Seeded behavior must not be presented as saved backend state.
+- Operations backed by unavailable API capabilities must show unavailable, disabled, local-demo, or otherwise explicit state rather than pretending production persistence exists.
+- Once the corresponding API operations are exposed through the generated client package, the API adapter must replace seeded behavior for those production paths.
+
 ## Data And API Expectations
 
 The UI direction depends on existing domain capabilities:
