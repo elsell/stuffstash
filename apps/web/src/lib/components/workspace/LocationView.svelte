@@ -10,11 +10,13 @@
     location,
     assets,
     onBack,
+    onOpenLocation,
     onOpenAsset
   }: {
     location: Asset;
     assets: AssetViewModel[];
     onBack: () => void;
+    onOpenLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
   } = $props();
 </script>
@@ -38,11 +40,13 @@
   {:else}
     <div class="asset-list">
       {#each assets as asset}
-        <Button.Root variant="ghost" class="asset-row" onclick={() => onOpenAsset(asset)}>
+        <Button.Root variant="ghost" class="asset-row" onclick={() => asset.kind === 'location' ? onOpenLocation(asset) : onOpenAsset(asset)}>
           <AssetThumb {asset} />
           <span class="asset-row-main">
             <strong>{asset.title}</strong>
-            <small>{asset.description || asset.containmentTrail}</small>
+            {#if asset.description}
+              <small>{asset.description}</small>
+            {/if}
           </span>
           <span class="asset-row-meta">
             <Badge variant="outline">{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</Badge>

@@ -9,10 +9,11 @@ export function topLevelLocations(assets: Asset[]): LocationSummary[] {
     }));
 }
 
-export function recentlyAddedAssets(assets: Asset[]): Asset[] {
+export function recentlyAddedAssets(assets: Asset[]): AssetViewModel[] {
   return assets
     .filter((asset) => asset.kind !== 'location' && asset.lifecycleState === 'active')
-    .slice(0, 6);
+    .slice(0, 6)
+    .map((asset) => withTrail(asset, assets));
 }
 
 export function containedAssets(assets: Asset[], parentAssetId: string): AssetViewModel[] {

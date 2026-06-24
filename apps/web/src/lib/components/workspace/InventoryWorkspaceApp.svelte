@@ -552,6 +552,7 @@
         location={selectedLocation}
         assets={containedAssets(assets, selectedLocation.id)}
         onBack={() => { mode = 'home'; selectedLocationId = null; }}
+        onOpenLocation={openLocation}
         onOpenAsset={openAsset}
       />
     {:else if mode === 'asset' && selectedAsset}

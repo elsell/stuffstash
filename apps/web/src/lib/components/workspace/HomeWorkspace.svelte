@@ -2,7 +2,7 @@
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import type { Asset, AssetLifecycleFilter, LocationSummary } from '$lib/domain/inventory';
+  import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
 
@@ -18,7 +18,7 @@
   }: {
     lifecycleState: AssetLifecycleFilter;
     locations: LocationSummary[];
-    recentAssets: Asset[];
+    recentAssets: AssetViewModel[];
     archivedAssets: Asset[];
     onOpenLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
@@ -112,9 +112,14 @@
               <AssetThumb {asset} />
               <span class="asset-row-main">
                 <strong>{asset.title}</strong>
-                <small>{asset.description || assetKindLabel(asset.kind)}</small>
+                {#if asset.description}
+                  <small>{asset.description}</small>
+                {/if}
               </span>
-              <Badge variant="outline">{assetKindLabel(asset.kind)}</Badge>
+              <span class="asset-row-meta">
+                <Badge variant="outline">{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</Badge>
+                <small>{asset.containmentTrail}</small>
+              </span>
             </Button.Root>
           {/each}
         </div>
