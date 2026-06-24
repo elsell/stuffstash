@@ -396,6 +396,143 @@ describe('StuffStashClient', () => {
     );
   });
 
+  it('manages direct inventory access grants through generated paths', async () => {
+    const requests: Request[] = [];
+    const grant = {
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      principalId: 'principal-two',
+      relationship: 'viewer'
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'GET') {
+          return Response.json({
+            data: [grant],
+            meta: { pagination: { limit: 50, nextCursor: null, hasMore: false } }
+          });
+        }
+        if (request.method === 'DELETE') {
+          return new Response(null, { status: 204 });
+        }
+        return Response.json({ data: grant, meta: {} }, { status: 201 });
+      }
+    });
+
+    await expect(client.listInventoryAccessGrants('tenant-one', 'inventory-one')).resolves.toMatchObject({
+      items: [grant]
+    });
+    await expect(
+      client.grantInventoryAccess('tenant-one', 'inventory-one', {
+        principalId: 'principal-two',
+        relationship: 'viewer'
+      })
+    ).resolves.toEqual(grant);
+    await expect(
+      client.revokeInventoryAccess('tenant-one', 'inventory-one', 'principal-two', 'viewer')
+    ).resolves.toBeUndefined();
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/access-grants?limit=50',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-grants',
+      'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/access-grants/principal-two/viewer'
+    ]);
+    expect(await requests[1]?.json()).toEqual({ principalId: 'principal-two', relationship: 'viewer' });
+  });
+
+  it('manages inventory access invitations through generated paths', async () => {
+    const requests: Request[] = [];
+    const invitation = {
+      id: 'invite-one',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      email: 'person@example.test',
+      relationship: 'editor',
+      status: 'pending',
+      isExpired: false,
+      expiresAt: '2026-06-30T00:00:00Z',
+      inviterPrincipalId: 'principal-one',
+      acceptanceToken: 'raw-token'
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'GET') {
+          return Response.json({
+            data: [invitation],
+            meta: { pagination: { limit: 20, nextCursor: null, hasMore: false } }
+          });
+        }
+        if (request.method === 'PATCH' && request.url.endsWith('/cancel')) {
+          return new Response(null, { status: 204 });
+        }
+        if (request.method === 'DELETE') {
+          return new Response(null, { status: 204 });
+        }
+        if (request.url.endsWith('/accept')) {
+          return Response.json({
+            data: {
+              grant: {
+                tenantId: 'tenant-one',
+                inventoryId: 'inventory-one',
+                principalId: 'principal-two',
+                relationship: 'editor'
+              },
+              invitation: { ...invitation, status: 'accepted', acceptedPrincipalId: 'principal-two' }
+            },
+            meta: {}
+          });
+        }
+        return Response.json({ data: invitation, meta: {} }, { status: request.method === 'POST' ? 201 : 200 });
+      }
+    });
+
+    await expect(
+      client.listInventoryAccessInvitations('tenant-one', 'inventory-one', { limit: 20, status: 'pending' })
+    ).resolves.toMatchObject({ items: [invitation] });
+    await expect(
+      client.createInventoryAccessInvitation('tenant-one', 'inventory-one', {
+        email: 'person@example.test',
+        relationship: 'editor'
+      })
+    ).resolves.toEqual(invitation);
+    await expect(
+      client.updateInventoryAccessInvitationExpiration(
+        'tenant-one',
+        'inventory-one',
+        'invite-one',
+        '2026-07-01T00:00:00Z'
+      )
+    ).resolves.toEqual(invitation);
+    await expect(client.cancelInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one')).resolves.toBeUndefined();
+    await expect(client.deleteInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one')).resolves.toBeUndefined();
+    await expect(
+      client.acceptInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one', 'raw-token')
+    ).resolves.toMatchObject({
+      grant: { principalId: 'principal-two', relationship: 'editor' },
+      invitation: { id: 'invite-one', status: 'accepted' }
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations?limit=20&status=pending',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/expiration',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/cancel',
+      'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/accept'
+    ]);
+    expect(await requests[1]?.json()).toEqual({ email: 'person@example.test', relationship: 'editor' });
+    expect(await requests[2]?.json()).toEqual({ expiresAt: '2026-07-01T00:00:00Z' });
+    expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
+  });
+
   it('maps API errors into typed client errors', async () => {
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',

@@ -21,6 +21,36 @@ export interface AccessSummary {
   permissions: string[];
 }
 
+export type InventoryAccessRelationship = 'viewer' | 'editor';
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
+export type InvitationStatusFilter = InvitationStatus | 'all';
+
+export interface InventoryAccessGrant {
+  tenantId: string;
+  inventoryId: string;
+  principalId: string;
+  relationship: InventoryAccessRelationship;
+}
+
+export interface InventoryAccessInvitation {
+  id: string;
+  tenantId: string;
+  inventoryId: string;
+  email: string;
+  relationship: InventoryAccessRelationship;
+  status: InvitationStatus;
+  isExpired: boolean;
+  expiresAt: string;
+  inviterPrincipalId: string;
+  acceptedPrincipalId?: string;
+  acceptanceToken?: string;
+}
+
+export interface InvitationAcceptance {
+  grant: InventoryAccessGrant;
+  invitation: InventoryAccessInvitation;
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -142,6 +172,9 @@ type InventoryResponse = components['schemas']['InventoryResponse'];
 type AssetResponse = components['schemas']['AssetResponse'];
 type AttachmentResponse = components['schemas']['AttachmentResponse'];
 type DirectUploadResponse = components['schemas']['DirectUploadResponse'];
+type GrantResponse = components['schemas']['GrantResponse'];
+type InvitationResponse = components['schemas']['InvitationResponse'];
+type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -308,6 +341,135 @@ export class StuffStashClient {
       })
     );
     return mapPage(envelope, mapAssetSearchResult);
+  }
+
+  async listInventoryAccessGrants(
+    tenantId: string,
+    inventoryId: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<Page<InventoryAccessGrant>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/access-grants', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapGrant);
+  }
+
+  async grantInventoryAccess(
+    tenantId: string,
+    inventoryId: string,
+    input: { principalId: string; relationship: InventoryAccessRelationship }
+  ): Promise<InventoryAccessGrant> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-grants', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: input
+      })
+    );
+    return mapGrant(envelope.data);
+  }
+
+  async revokeInventoryAccess(
+    tenantId: string,
+    inventoryId: string,
+    principalId: string,
+    relationship: InventoryAccessRelationship
+  ): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, principalId, relationship } }
+      })
+    );
+  }
+
+  async listInventoryAccessInvitations(
+    tenantId: string,
+    inventoryId: string,
+    options: { limit?: number; cursor?: string; status?: InvitationStatusFilter } = {}
+  ): Promise<Page<InventoryAccessInvitation>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId },
+          query: { limit: options.limit ?? 50, cursor: options.cursor, status: options.status ?? 'all' }
+        }
+      })
+    );
+    return mapPage(envelope, mapInvitation);
+  }
+
+  async createInventoryAccessInvitation(
+    tenantId: string,
+    inventoryId: string,
+    input: { email: string; relationship: InventoryAccessRelationship }
+  ): Promise<InventoryAccessInvitation> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: input
+      })
+    );
+    return mapInvitation(envelope.data);
+  }
+
+  async updateInventoryAccessInvitationExpiration(
+    tenantId: string,
+    inventoryId: string,
+    invitationId: string,
+    expiresAt: string
+  ): Promise<InventoryAccessInvitation> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, invitationId } },
+        body: { expiresAt }
+      })
+    );
+    return mapInvitation(envelope.data);
+  }
+
+  async cancelInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, invitationId } }
+      })
+    );
+  }
+
+  async deleteInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, invitationId } }
+      })
+    );
+  }
+
+  async acceptInventoryAccessInvitation(
+    tenantId: string,
+    inventoryId: string,
+    invitationId: string,
+    acceptanceToken: string
+  ): Promise<InvitationAcceptance> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, invitationId } },
+        body: { acceptanceToken }
+      })
+    );
+    return mapInvitationAcceptance(envelope.data);
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
@@ -557,6 +719,38 @@ function mapAccess(response: components['schemas']['AccessResponse']): AccessSum
   };
 }
 
+function mapGrant(response: GrantResponse): InventoryAccessGrant {
+  return {
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId,
+    principalId: response.principalId,
+    relationship: mapInventoryAccessRelationship(response.relationship)
+  };
+}
+
+function mapInvitation(response: InvitationResponse): InventoryAccessInvitation {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId,
+    email: response.email,
+    relationship: mapInventoryAccessRelationship(response.relationship),
+    status: mapInvitationStatus(response.status),
+    isExpired: response.isExpired,
+    expiresAt: response.expiresAt,
+    inviterPrincipalId: response.inviterPrincipalId,
+    acceptedPrincipalId: response.acceptedPrincipalId,
+    acceptanceToken: response.acceptanceToken
+  };
+}
+
+function mapInvitationAcceptance(response: InvitationAcceptanceResponse): InvitationAcceptance {
+  return {
+    grant: mapGrant(response.grant),
+    invitation: mapInvitation(response.invitation)
+  };
+}
+
 function mapAsset(response: AssetResponse): Asset {
   return {
     id: response.id,
@@ -607,6 +801,29 @@ function mapAssetLifecycleState(lifecycleState: string): AssetLifecycleState {
       return lifecycleState;
     default:
       throw new StuffStashAPIError(200, 'invalid_asset_lifecycle_state', 'Invalid asset lifecycle state.');
+  }
+}
+
+function mapInventoryAccessRelationship(relationship: string): InventoryAccessRelationship {
+  switch (relationship) {
+    case 'viewer':
+    case 'editor':
+      return relationship;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_inventory_access_relationship', 'Invalid inventory access relationship.');
+  }
+}
+
+function mapInvitationStatus(status: string): InvitationStatus {
+  switch (status) {
+    case 'pending':
+    case 'accepted':
+    case 'revoked':
+    case 'cancelled':
+    case 'expired':
+      return status;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_invitation_status', 'Invalid invitation status.');
   }
 }
 
