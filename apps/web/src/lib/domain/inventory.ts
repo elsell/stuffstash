@@ -6,6 +6,9 @@ export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 
 export type SearchMode = 'fuzzy' | 'exact';
 export type WorkspaceMode = 'home' | 'location' | 'asset' | 'search' | 'settings';
 export type Capability = 'editor' | 'viewer';
+export type InventoryAccessRelationship = 'viewer' | 'editor';
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
+export type InvitationStatusFilter = InvitationStatus | 'all';
 
 export interface Principal {
   id: string;
@@ -47,6 +50,31 @@ export interface AssetAttachment {
   lifecycleState: AssetLifecycleState;
   thumbnailUrl?: string;
   thumbnailHeaders?: Record<string, string>;
+}
+
+export interface InventoryAccessGrant {
+  tenantId: string;
+  inventoryId: string;
+  principalId: string;
+  relationship: InventoryAccessRelationship;
+}
+
+export interface InventoryAccessInvitation {
+  id: string;
+  tenantId: string;
+  inventoryId: string;
+  email: string;
+  relationship: InventoryAccessRelationship;
+  status: InvitationStatus;
+  isExpired: boolean;
+  expiresAt: string;
+  inviterPrincipalId: string;
+  acceptedPrincipalId?: string;
+}
+
+export interface CreatedInventoryAccessInvitation {
+  invitation: InventoryAccessInvitation;
+  acceptanceToken?: string;
 }
 
 export interface MediaUploadPolicy {

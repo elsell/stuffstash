@@ -4,6 +4,8 @@ import type {
   Attachment as ApiAttachment,
   AssetKind as ApiAssetKind,
   AssetSearchResult as ApiSearchResult,
+  InventoryAccessGrant as ApiInventoryAccessGrant,
+  InventoryAccessInvitation as ApiInventoryAccessInvitation,
   Inventory as ApiInventory,
   Principal as ApiPrincipal,
   Tenant as ApiTenant
@@ -15,6 +17,9 @@ import {
   type AssetAttachment,
   type AttachmentContentType,
   type AssetKind,
+  type CreatedInventoryAccessInvitation,
+  type InventoryAccessGrant,
+  type InventoryAccessInvitation,
   type Capability,
   type Inventory,
   type Principal,
@@ -88,6 +93,39 @@ export function mapSearchResult(result: ApiSearchResult): SearchResult {
     asset: mapAsset(result.asset),
     inventory: result.inventory,
     matches: result.matches
+  };
+}
+
+export function mapInventoryAccessGrant(grant: ApiInventoryAccessGrant): InventoryAccessGrant {
+  return {
+    tenantId: grant.tenantId,
+    inventoryId: grant.inventoryId,
+    principalId: grant.principalId,
+    relationship: grant.relationship
+  };
+}
+
+export function mapInventoryAccessInvitation(invitation: ApiInventoryAccessInvitation): InventoryAccessInvitation {
+  return {
+    id: invitation.id,
+    tenantId: invitation.tenantId,
+    inventoryId: invitation.inventoryId,
+    email: invitation.email,
+    relationship: invitation.relationship,
+    status: invitation.status,
+    isExpired: invitation.isExpired,
+    expiresAt: invitation.expiresAt,
+    inviterPrincipalId: invitation.inviterPrincipalId,
+    acceptedPrincipalId: invitation.acceptedPrincipalId
+  };
+}
+
+export function mapCreatedInventoryAccessInvitation(
+  invitation: ApiInventoryAccessInvitation
+): CreatedInventoryAccessInvitation {
+  return {
+    invitation: mapInventoryAccessInvitation(invitation),
+    acceptanceToken: invitation.acceptanceToken
   };
 }
 

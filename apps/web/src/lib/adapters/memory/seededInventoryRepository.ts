@@ -5,8 +5,13 @@ import {
   type AddAssetDraft,
   type Asset,
   type AssetAttachment,
+  type CreatedInventoryAccessInvitation,
   defaultMediaUploadPolicy,
   type Inventory,
+  type InventoryAccessGrant,
+  type InventoryAccessInvitation,
+  type InventoryAccessRelationship,
+  type InvitationStatusFilter,
   type SearchRequest,
   type SearchResult,
   type SelectedPhoto,
@@ -14,11 +19,14 @@ import {
   type WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
+import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import { filterAssets } from '$lib/application/workspace';
 
-export class SeededInventoryRepository implements InventoryRepository {
+export class SeededInventoryRepository implements InventoryRepository, InventoryAccessRepository {
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
+  private grants: InventoryAccessGrant[] = [];
+  private invitations: InventoryAccessInvitation[] = [];
   private selectedTenantId: string;
   private selectedInventoryId: string;
   private selectedLifecycleState: AssetLifecycleFilter = 'active';
@@ -263,6 +271,117 @@ export class SeededInventoryRepository implements InventoryRepository {
     }));
   }
 
+  async listInventoryAccessGrants(
+    tenantId: string,
+    inventoryId: string,
+    cursor?: string
+  ): Promise<InventoryAccessPage<InventoryAccessGrant>> {
+    return page(
+      this.grants.filter((grant) => grant.tenantId === tenantId && grant.inventoryId === inventoryId),
+      cursor
+    );
+  }
+
+  async grantInventoryAccess(
+    tenantId: string,
+    inventoryId: string,
+    principalId: string,
+    relationship: InventoryAccessRelationship
+  ): Promise<InventoryAccessGrant> {
+    const existing = this.grants.find(
+      (grant) =>
+        grant.tenantId === tenantId &&
+        grant.inventoryId === inventoryId &&
+        grant.principalId === principalId &&
+        grant.relationship === relationship
+    );
+    if (existing) {
+      return existing;
+    }
+    const grant: InventoryAccessGrant = { tenantId, inventoryId, principalId, relationship };
+    this.grants = [grant, ...this.grants];
+    return grant;
+  }
+
+  async revokeInventoryAccess(
+    tenantId: string,
+    inventoryId: string,
+    principalId: string,
+    relationship: InventoryAccessRelationship
+  ): Promise<void> {
+    this.grants = this.grants.filter(
+      (grant) =>
+        !(
+          grant.tenantId === tenantId &&
+          grant.inventoryId === inventoryId &&
+          grant.principalId === principalId &&
+          grant.relationship === relationship
+        )
+    );
+  }
+
+  async listInventoryAccessInvitations(
+    tenantId: string,
+    inventoryId: string,
+    status: InvitationStatusFilter = 'all',
+    cursor?: string
+  ): Promise<InventoryAccessPage<InventoryAccessInvitation>> {
+    return page(
+      this.invitations.filter(
+        (invitation) =>
+          invitation.tenantId === tenantId &&
+          invitation.inventoryId === inventoryId &&
+          (status === 'all' || invitation.status === status)
+      ),
+      cursor
+    );
+  }
+
+  async createInventoryAccessInvitation(
+    tenantId: string,
+    inventoryId: string,
+    email: string,
+    relationship: InventoryAccessRelationship
+  ): Promise<CreatedInventoryAccessInvitation> {
+    const acceptanceToken = `local-demo-${Date.now()}`;
+    const invitation: InventoryAccessInvitation = {
+      id: `invitation-${Date.now()}`,
+      tenantId,
+      inventoryId,
+      email: email.trim().toLowerCase(),
+      relationship,
+      status: 'pending',
+      isExpired: false,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      inviterPrincipalId: this.seed.principal.id
+    };
+    this.invitations = [invitation, ...this.invitations];
+    return { invitation, acceptanceToken };
+  }
+
+  async updateInventoryAccessInvitationExpiration(
+    tenantId: string,
+    inventoryId: string,
+    invitationId: string,
+    expiresAt: string
+  ): Promise<InventoryAccessInvitation> {
+    const invitation = this.findInvitation(tenantId, inventoryId, invitationId);
+    const updated: InventoryAccessInvitation = { ...invitation, expiresAt, isExpired: Date.parse(expiresAt) <= Date.now() };
+    this.invitations = this.invitations.map((candidate) => (candidate === invitation ? updated : candidate));
+    return updated;
+  }
+
+  async cancelInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
+    const invitation = this.findInvitation(tenantId, inventoryId, invitationId);
+    const updated: InventoryAccessInvitation = { ...invitation, status: 'cancelled' };
+    this.invitations = this.invitations.map((candidate) => (candidate === invitation ? updated : candidate));
+  }
+
+  async deleteInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
+    const invitation = this.findInvitation(tenantId, inventoryId, invitationId);
+    this.invitations = this.invitations.filter((candidate) => candidate !== invitation);
+  }
+
   private workspace(): WorkspaceData {
     const inventories = this.seed.inventories.filter((inventory) => inventory.tenantId === this.selectedTenantId);
     const selectedInventory = inventories.find((inventory) => inventory.id === this.selectedInventoryId) ?? null;
@@ -340,6 +459,16 @@ export class SeededInventoryRepository implements InventoryRepository {
     return attachment;
   }
 
+  private findInvitation(tenantId: string, inventoryId: string, invitationId: string): InventoryAccessInvitation {
+    const invitation = this.invitations.find(
+      (candidate) => candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === invitationId
+    );
+    if (!invitation) {
+      throw new Error('Invitation not found.');
+    }
+    return invitation;
+  }
+
   private firstInventoryIdForTenant(tenantId: string): string {
     return this.seed.inventories.find((inventory) => inventory.tenantId === tenantId)?.id ?? '';
   }
@@ -363,4 +492,20 @@ function exactAssets(assets: Asset[], query: string): Asset[] {
       asset.description.toLowerCase() === normalized ||
       asset.customAssetTypeLabel?.toLowerCase() === normalized
   );
+}
+
+function page<T>(items: T[], cursor?: string): InventoryAccessPage<T> {
+  const limit = 50;
+  const start = cursor ? Number.parseInt(cursor, 10) : 0;
+  const safeStart = Number.isFinite(start) && start > 0 ? start : 0;
+  const selected = items.slice(safeStart, safeStart + limit);
+  const nextIndex = safeStart + selected.length;
+  return {
+    items: selected,
+    pagination: {
+      limit,
+      nextCursor: nextIndex < items.length ? String(nextIndex) : null,
+      hasMore: nextIndex < items.length
+    }
+  };
 }

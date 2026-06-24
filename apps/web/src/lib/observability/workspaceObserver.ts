@@ -28,7 +28,31 @@ export type WorkspaceEventName =
   | 'workspace.asset_attachment_upload_failed'
   | 'workspace.search_started'
   | 'workspace.search_failed'
-  | 'workspace.search_completed';
+  | 'workspace.search_completed'
+  | 'workspace.access_grants_load_started'
+  | 'workspace.access_grants_loaded'
+  | 'workspace.access_grants_load_failed'
+  | 'workspace.access_grant_started'
+  | 'workspace.access_granted'
+  | 'workspace.access_grant_failed'
+  | 'workspace.access_revoke_started'
+  | 'workspace.access_revoked'
+  | 'workspace.access_revoke_failed'
+  | 'workspace.access_invitations_load_started'
+  | 'workspace.access_invitations_loaded'
+  | 'workspace.access_invitations_load_failed'
+  | 'workspace.access_invitation_create_started'
+  | 'workspace.access_invitation_created'
+  | 'workspace.access_invitation_create_failed'
+  | 'workspace.access_invitation_expiration_started'
+  | 'workspace.access_invitation_expiration_updated'
+  | 'workspace.access_invitation_expiration_failed'
+  | 'workspace.access_invitation_cancel_started'
+  | 'workspace.access_invitation_cancelled'
+  | 'workspace.access_invitation_cancel_failed'
+  | 'workspace.access_invitation_delete_started'
+  | 'workspace.access_invitation_deleted'
+  | 'workspace.access_invitation_delete_failed';
 
 export interface WorkspaceObserver {
   record(eventName: WorkspaceEventName, attributes?: Record<string, string | number | boolean>): void;

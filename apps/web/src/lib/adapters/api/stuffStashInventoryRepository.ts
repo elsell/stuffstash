@@ -6,6 +6,8 @@ import type {
   Asset,
   AssetAttachment,
   AssetLifecycleFilter,
+  InventoryAccessRelationship,
+  InvitationStatusFilter,
   SearchRequest,
   SearchResult,
   SelectedPhoto,
@@ -13,10 +15,21 @@ import type {
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
-import { mapAsset, mapAttachment, mapCapability, mapInventory, mapPrincipal, mapSearchResult, mapTenant } from './inventoryMapper';
+import {
+  mapAsset,
+  mapAttachment,
+  mapCapability,
+  mapCreatedInventoryAccessInvitation,
+  mapInventory,
+  mapPrincipal,
+  mapSearchResult,
+  mapTenant
+} from './inventoryMapper';
+import { mapInventoryAccessGrant, mapInventoryAccessInvitation } from './inventoryMapper';
 
-export class StuffStashInventoryRepository implements InventoryRepository {
+export class StuffStashInventoryRepository implements InventoryRepository, InventoryAccessRepository {
   private readonly client: StuffStashClient;
   private readonly uploadFetch: typeof fetch;
   private readonly config: RuntimeConfig;
@@ -286,6 +299,132 @@ export class StuffStashInventoryRepository implements InventoryRepository {
       return items.map(mapSearchResult);
     } catch (error) {
       this.observer.record('workspace.search_failed');
+      throw safeError(error);
+    }
+  }
+
+  async listInventoryAccessGrants(tenantId: string, inventoryId: string, cursor?: string) {
+    this.observer.record('workspace.access_grants_load_started');
+    try {
+      const page = await this.client.listInventoryAccessGrants(tenantId, inventoryId, 50, cursor);
+      const items = page.items.map(mapInventoryAccessGrant);
+      this.observer.record('workspace.access_grants_loaded', { grantCount: items.length });
+      return { items, pagination: page.pagination };
+    } catch (error) {
+      this.observer.record('workspace.access_grants_load_failed');
+      throw safeError(error);
+    }
+  }
+
+  async grantInventoryAccess(
+    tenantId: string,
+    inventoryId: string,
+    principalId: string,
+    relationship: InventoryAccessRelationship
+  ) {
+    this.observer.record('workspace.access_grant_started', { relationship });
+    try {
+      const grant = mapInventoryAccessGrant(
+        await this.client.grantInventoryAccess(tenantId, inventoryId, { principalId, relationship })
+      );
+      this.observer.record('workspace.access_granted', { relationship });
+      return grant;
+    } catch (error) {
+      this.observer.record('workspace.access_grant_failed', { relationship });
+      throw safeError(error);
+    }
+  }
+
+  async revokeInventoryAccess(
+    tenantId: string,
+    inventoryId: string,
+    principalId: string,
+    relationship: InventoryAccessRelationship
+  ): Promise<void> {
+    this.observer.record('workspace.access_revoke_started', { relationship });
+    try {
+      await this.client.revokeInventoryAccess(tenantId, inventoryId, principalId, relationship);
+      this.observer.record('workspace.access_revoked', { relationship });
+    } catch (error) {
+      this.observer.record('workspace.access_revoke_failed', { relationship });
+      throw safeError(error);
+    }
+  }
+
+  async listInventoryAccessInvitations(
+    tenantId: string,
+    inventoryId: string,
+    status: InvitationStatusFilter = 'all',
+    cursor?: string
+  ) {
+    this.observer.record('workspace.access_invitations_load_started', { status });
+    try {
+      const page = await this.client.listInventoryAccessInvitations(tenantId, inventoryId, { limit: 50, status, cursor });
+      const items = page.items.map(mapInventoryAccessInvitation);
+      this.observer.record('workspace.access_invitations_loaded', { invitationCount: items.length });
+      return { items, pagination: page.pagination };
+    } catch (error) {
+      this.observer.record('workspace.access_invitations_load_failed', { status });
+      throw safeError(error);
+    }
+  }
+
+  async createInventoryAccessInvitation(
+    tenantId: string,
+    inventoryId: string,
+    email: string,
+    relationship: InventoryAccessRelationship
+  ) {
+    this.observer.record('workspace.access_invitation_create_started', { relationship });
+    try {
+      const invitation = mapCreatedInventoryAccessInvitation(
+        await this.client.createInventoryAccessInvitation(tenantId, inventoryId, { email, relationship })
+      );
+      this.observer.record('workspace.access_invitation_created', { relationship });
+      return invitation;
+    } catch (error) {
+      this.observer.record('workspace.access_invitation_create_failed', { relationship });
+      throw safeError(error);
+    }
+  }
+
+  async updateInventoryAccessInvitationExpiration(
+    tenantId: string,
+    inventoryId: string,
+    invitationId: string,
+    expiresAt: string
+  ) {
+    this.observer.record('workspace.access_invitation_expiration_started');
+    try {
+      const invitation = mapInventoryAccessInvitation(
+        await this.client.updateInventoryAccessInvitationExpiration(tenantId, inventoryId, invitationId, expiresAt)
+      );
+      this.observer.record('workspace.access_invitation_expiration_updated');
+      return invitation;
+    } catch (error) {
+      this.observer.record('workspace.access_invitation_expiration_failed');
+      throw safeError(error);
+    }
+  }
+
+  async cancelInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
+    this.observer.record('workspace.access_invitation_cancel_started');
+    try {
+      await this.client.cancelInventoryAccessInvitation(tenantId, inventoryId, invitationId);
+      this.observer.record('workspace.access_invitation_cancelled');
+    } catch (error) {
+      this.observer.record('workspace.access_invitation_cancel_failed');
+      throw safeError(error);
+    }
+  }
+
+  async deleteInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
+    this.observer.record('workspace.access_invitation_delete_started');
+    try {
+      await this.client.deleteInventoryAccessInvitation(tenantId, inventoryId, invitationId);
+      this.observer.record('workspace.access_invitation_deleted');
+    } catch (error) {
+      this.observer.record('workspace.access_invitation_delete_failed');
       throw safeError(error);
     }
   }

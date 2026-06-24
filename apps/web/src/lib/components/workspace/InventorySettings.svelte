@@ -3,20 +3,23 @@
   import Boxes from '@lucide/svelte/icons/boxes';
   import Shield from '@lucide/svelte/icons/shield';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
-  import Users from '@lucide/svelte/icons/users';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
+  import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+  import InventoryAccessManager from './InventoryAccessManager.svelte';
 
   let {
     tenant,
     inventory,
-    inventoryCount
+    inventoryCount,
+    accessRepository
   }: {
     tenant: Tenant | null;
     inventory: Inventory | null;
     inventoryCount: number;
+    accessRepository: InventoryAccessRepository;
   } = $props();
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
@@ -59,20 +62,7 @@
         </dl>
       </section>
 
-      <section class="settings-panel" aria-labelledby="settings-access">
-        <div class="settings-panel-heading">
-          <Users aria-hidden="true" />
-          <div>
-            <h2 id="settings-access">Sharing</h2>
-            <p>
-              {canShare
-                ? 'Direct grants and invitations are planned for the access workflow.'
-                : 'Sharing requires inventory share access.'}
-            </p>
-          </div>
-        </div>
-        <Button.Root variant="outline" disabled={true}>Manage sharing unavailable</Button.Root>
-      </section>
+      <InventoryAccessManager {tenant} {inventory} repository={accessRepository} />
 
       <section class="settings-panel" aria-labelledby="settings-activity">
         <div class="settings-panel-heading">

@@ -15,6 +15,7 @@
     type WorkspaceData,
     type WorkspaceMode
   } from '$lib/domain/inventory';
+  import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
@@ -33,7 +34,7 @@
     initialData,
     onSignOut
   }: {
-    repository: InventoryRepository;
+    repository: InventoryRepository & InventoryAccessRepository;
     initialData: WorkspaceData;
     onSignOut: () => void;
   } = $props();
@@ -525,7 +526,12 @@
         onOpenAsset={openAssetById}
       />
     {:else if mode === 'settings'}
-      <InventorySettings tenant={selectedTenant} inventory={selectedInventory} inventoryCount={data.context.inventories.length} />
+      <InventorySettings
+        tenant={selectedTenant}
+        inventory={selectedInventory}
+        inventoryCount={data.context.inventories.length}
+        accessRepository={repository}
+      />
     {:else}
       <HomeWorkspace
         lifecycleState={data.context.assetLifecycleState}

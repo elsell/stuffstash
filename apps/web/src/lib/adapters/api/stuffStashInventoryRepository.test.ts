@@ -242,6 +242,72 @@ describe('StuffStashInventoryRepository', () => {
       'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&lifecycleState=archived&mode=exact'
     ]);
   });
+
+  it('manages access grants through generated client-backed repository methods', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(repository.listInventoryAccessGrants('tenant-home', 'inventory-household')).resolves.toMatchObject({
+      items: [
+        {
+          tenantId: 'tenant-home',
+          inventoryId: 'inventory-household',
+          principalId: 'principal-two',
+          relationship: 'viewer'
+        }
+      ],
+      pagination: { limit: 50, nextCursor: null, hasMore: false }
+    });
+    await expect(
+      repository.grantInventoryAccess('tenant-home', 'inventory-household', 'principal-three', 'editor')
+    ).resolves.toMatchObject({ principalId: 'principal-three', relationship: 'editor' });
+    await expect(
+      repository.revokeInventoryAccess('tenant-home', 'inventory-household', 'principal-two', 'viewer')
+    ).resolves.toBeUndefined();
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/access-grants?limit=50',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/access-grants',
+      'DELETE http://api.local/tenants/tenant-home/inventories/inventory-household/access-grants/principal-two/viewer'
+    ]);
+    expect(await requests[1]?.json()).toEqual({ principalId: 'principal-three', relationship: 'editor' });
+  });
+
+  it('manages access invitations through generated client-backed repository methods', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(repository.listInventoryAccessInvitations('tenant-home', 'inventory-household', 'pending')).resolves.toMatchObject({
+      items: [expect.objectContaining({ id: 'invite-one', email: 'friend@example.test', relationship: 'viewer' })],
+      pagination: { limit: 50, nextCursor: null, hasMore: false }
+    });
+    await expect(
+      repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'editor@example.test', 'editor')
+    ).resolves.toMatchObject({
+      invitation: { email: 'editor@example.test', relationship: 'editor' },
+      acceptanceToken: 'raw-token'
+    });
+    await expect(
+      repository.updateInventoryAccessInvitationExpiration(
+        'tenant-home',
+        'inventory-household',
+        'invite-one',
+        '2026-07-01T00:00:00Z'
+      )
+    ).resolves.toMatchObject({ id: 'invite-one', expiresAt: '2026-07-01T00:00:00Z' });
+    await expect(repository.cancelInventoryAccessInvitation('tenant-home', 'inventory-household', 'invite-one')).resolves.toBeUndefined();
+    await expect(repository.deleteInventoryAccessInvitation('tenant-home', 'inventory-household', 'invite-one')).resolves.toBeUndefined();
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/access-invitations?limit=50&status=pending',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/access-invitations',
+      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/access-invitations/invite-one/expiration',
+      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/access-invitations/invite-one/cancel',
+      'DELETE http://api.local/tenants/tenant-home/inventories/inventory-household/access-invitations/invite-one'
+    ]);
+    expect(await requests[1]?.json()).toEqual({ email: 'editor@example.test', relationship: 'editor' });
+    expect(await requests[2]?.json()).toEqual({ expiresAt: '2026-07-01T00:00:00Z' });
+  });
 });
 
 function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof fetch; requests: Request[] } {
@@ -351,6 +417,60 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
           }
         ]);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-grants') {
+        return envelope([
+          {
+            tenantId: 'tenant-home',
+            inventoryId: 'inventory-household',
+            principalId: 'principal-two',
+            relationship: 'viewer'
+          }
+        ]);
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/access-grants') {
+        const body = (await request.clone().json()) as { principalId: string; relationship: string };
+        return envelope(
+          {
+            tenantId: 'tenant-home',
+            inventoryId: 'inventory-household',
+            principalId: body.principalId,
+            relationship: body.relationship
+          },
+          201
+        );
+      }
+      if (
+        request.method === 'DELETE' &&
+        path === '/tenants/tenant-home/inventories/inventory-household/access-grants/principal-two/viewer'
+      ) {
+        return new Response(null, { status: 204 });
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-invitations') {
+        return envelope([invitation('invite-one', 'friend@example.test', 'viewer')]);
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/access-invitations') {
+        const body = (await request.clone().json()) as { email: string; relationship: string };
+        return envelope({ ...invitation('invite-created', body.email, body.relationship), acceptanceToken: 'raw-token' }, 201);
+      }
+      if (
+        request.method === 'PATCH' &&
+        path === '/tenants/tenant-home/inventories/inventory-household/access-invitations/invite-one/expiration'
+      ) {
+        const body = (await request.clone().json()) as { expiresAt: string };
+        return envelope({ ...invitation('invite-one', 'friend@example.test', 'viewer'), expiresAt: body.expiresAt });
+      }
+      if (
+        request.method === 'PATCH' &&
+        path === '/tenants/tenant-home/inventories/inventory-household/access-invitations/invite-one/cancel'
+      ) {
+        return new Response(null, { status: 204 });
+      }
+      if (
+        request.method === 'DELETE' &&
+        path === '/tenants/tenant-home/inventories/inventory-household/access-invitations/invite-one'
+      ) {
+        return new Response(null, { status: 204 });
+      }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }
   };
@@ -412,5 +532,19 @@ function attachment(id: string, tenantId: string, inventoryId: string, assetId: 
     contentType: 'image/jpeg',
     sizeBytes: 10,
     lifecycleState: 'active'
+  };
+}
+
+function invitation(id: string, email: string, relationship: string): object {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    email,
+    relationship,
+    status: 'pending',
+    isExpired: false,
+    expiresAt: '2026-06-30T00:00:00Z',
+    inviterPrincipalId: 'principal-one'
   };
 }

@@ -445,6 +445,10 @@ small {
   background: var(--card);
 }
 
+.settings-panel.wide {
+  grid-column: 1 / -1;
+}
+
 .settings-panel-heading {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -458,11 +462,137 @@ small {
   color: var(--color-brand-frame);
 }
 
+.access-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, auto) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.access-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.access-list {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.access-list-header {
+  display: grid;
+  gap: 8px;
+}
+
+.access-list h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.relationship-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.relationship-field legend {
+  width: 100%;
+  margin-bottom: 6px;
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.access-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.invitation-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.access-row span,
+.access-actions {
+  min-width: 0;
+}
+
+.access-row span {
+  display: grid;
+  gap: 2px;
+}
+
+.access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.token-line {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.token-line svg {
+  width: 14px;
+  height: 14px;
+}
+
+.muted-note,
+.success-note {
+  color: var(--muted-foreground);
+  font-size: 0.86rem;
+}
+
+.success-note {
+  color: var(--color-brand-frame);
+}
+
+.one-time-token {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--secondary);
+}
+
 .asset-row-main,
 .asset-row-meta {
   display: grid;
   min-width: 0;
   gap: 3px;
+}
+
+@media (max-width: 760px) {
+  .access-form,
+  .access-columns,
+  .access-row,
+  .invitation-row {
+    grid-template-columns: 1fr;
+  }
+
+  .access-actions {
+    justify-content: flex-start;
+  }
 }
 
 .asset-row-meta {
