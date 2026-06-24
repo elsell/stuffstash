@@ -1,6 +1,7 @@
 export type AssetKind = 'item' | 'container' | 'location';
 export type AssetLifecycleState = 'active' | 'archived';
 export type AssetLifecycleFilter = AssetLifecycleState;
+export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
 export type WorkspaceMode = 'home' | 'location' | 'asset' | 'search' | 'settings';
 export type Capability = 'editor' | 'viewer';
 
@@ -31,6 +32,24 @@ export interface AssetPhoto {
   id: string;
   url: string;
   alt: string;
+}
+
+export interface AssetAttachment {
+  id: string;
+  tenantId: string;
+  inventoryId: string;
+  assetId: string;
+  fileName: string;
+  contentType: AttachmentContentType;
+  sizeBytes: number;
+  lifecycleState: AssetLifecycleState;
+  thumbnailUrl?: string;
+  thumbnailHeaders?: Record<string, string>;
+}
+
+export interface MediaUploadPolicy {
+  supportedContentTypes: AttachmentContentType[];
+  maxBytes: number;
 }
 
 export interface Asset {
@@ -75,8 +94,9 @@ export interface SelectedPhoto {
   id: string;
   name: string;
   sizeBytes: number;
-  contentType: string;
+  contentType: AttachmentContentType;
   previewUrl: string;
+  file: File;
 }
 
 export interface WorkspaceContext {
@@ -86,6 +106,7 @@ export interface WorkspaceContext {
   selectedTenantId: string;
   selectedInventoryId: string;
   assetLifecycleState: AssetLifecycleFilter;
+  mediaUploadPolicy: MediaUploadPolicy;
   capability: Capability;
 }
 
@@ -104,6 +125,10 @@ export interface AssetViewModel extends Asset {
 }
 
 export const assetKinds: AssetKind[] = ['item', 'container', 'location'];
+export const defaultMediaUploadPolicy: MediaUploadPolicy = {
+  supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  maxBytes: 5 * 1024 * 1024
+};
 
 export function assetKindLabel(kind: AssetKind): string {
   switch (kind) {

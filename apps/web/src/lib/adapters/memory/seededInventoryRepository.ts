@@ -4,8 +4,11 @@ import {
   canEditInventory,
   type AddAssetDraft,
   type Asset,
+  type AssetAttachment,
+  defaultMediaUploadPolicy,
   type Inventory,
   type SearchResult,
+  type SelectedPhoto,
   type UpdateAssetDraft,
   type WorkspaceData
 } from '$lib/domain/inventory';
@@ -14,6 +17,7 @@ import { filterAssets } from '$lib/application/workspace';
 
 export class SeededInventoryRepository implements InventoryRepository {
   private seed: WorkspaceSeed;
+  private attachments: AssetAttachment[] = [];
   private selectedTenantId: string;
   private selectedInventoryId: string;
   private selectedLifecycleState: AssetLifecycleFilter = 'active';
@@ -183,6 +187,61 @@ export class SeededInventoryRepository implements InventoryRepository {
     };
   }
 
+  async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]> {
+    return this.attachments.filter(
+      (attachment) =>
+        attachment.tenantId === tenantId &&
+        attachment.inventoryId === inventoryId &&
+        attachment.assetId === assetId &&
+        attachment.lifecycleState === 'active'
+    );
+  }
+
+  async uploadAssetPhoto(tenantId: string, inventoryId: string, assetId: string, photo: SelectedPhoto): Promise<AssetAttachment> {
+    await this.getAsset(tenantId, inventoryId, assetId);
+    const attachment: AssetAttachment = {
+      id: `attachment-${Date.now()}`,
+      tenantId,
+      inventoryId,
+      assetId,
+      fileName: photo.name,
+      contentType: photo.contentType,
+      sizeBytes: photo.sizeBytes,
+      lifecycleState: 'active',
+      thumbnailUrl: photo.previewUrl
+    };
+    this.attachments = [attachment, ...this.attachments];
+    return attachment;
+  }
+
+  async archiveAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<AssetAttachment> {
+    return this.setAttachmentLifecycle(tenantId, inventoryId, assetId, attachmentId, 'archived');
+  }
+
+  async restoreAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<AssetAttachment> {
+    return this.setAttachmentLifecycle(tenantId, inventoryId, assetId, attachmentId, 'active');
+  }
+
+  async deleteAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<void> {
+    const attachment = this.findAttachment(tenantId, inventoryId, assetId, attachmentId);
+    this.attachments = this.attachments.filter((candidate) => candidate !== attachment);
+  }
+
   async searchAssets(_tenantId: string, query: string): Promise<SearchResult[]> {
     const inventory = this.seed.inventories.find((candidate) => candidate.id === this.selectedInventoryId);
     const searchableAssets = this.seed.assets.filter(
@@ -213,6 +272,7 @@ export class SeededInventoryRepository implements InventoryRepository {
         selectedTenantId: this.selectedTenantId,
         selectedInventoryId: this.selectedInventoryId,
         assetLifecycleState: this.selectedLifecycleState,
+        mediaUploadPolicy: defaultMediaUploadPolicy,
         capability: capabilityForInventory(selectedInventory)
       },
       assets: this.workspaceAssets()
@@ -249,6 +309,33 @@ export class SeededInventoryRepository implements InventoryRepository {
       )
     };
     return updated;
+  }
+
+  private setAttachmentLifecycle(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string,
+    lifecycleState: AssetLifecycleFilter
+  ): AssetAttachment {
+    const attachment = this.findAttachment(tenantId, inventoryId, assetId, attachmentId);
+    const updated: AssetAttachment = { ...attachment, lifecycleState };
+    this.attachments = this.attachments.map((candidate) => (candidate === attachment ? updated : candidate));
+    return updated;
+  }
+
+  private findAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): AssetAttachment {
+    const attachment = this.attachments.find(
+      (candidate) =>
+        candidate.tenantId === tenantId &&
+        candidate.inventoryId === inventoryId &&
+        candidate.assetId === assetId &&
+        candidate.id === attachmentId
+    );
+    if (!attachment) {
+      throw new Error('Attachment not found.');
+    }
+    return attachment;
   }
 
   private firstInventoryIdForTenant(tenantId: string): string {

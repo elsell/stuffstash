@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { completeSignIn, getStoredSession, signOut } from './auth';
+import type { RuntimeConfig } from './runtimeConfig';
 
-const config = {
+const config: RuntimeConfig = {
   apiBaseUrl: 'http://localhost:8080',
   oidcIssuer: 'http://localhost:5556/dex',
   oidcClientId: 'stuff-stash-web-local',
-  oidcRedirectUri: 'http://localhost:5173/callback'
+  oidcRedirectUri: 'http://localhost:5173/callback',
+  mediaUploadPolicy: {
+    supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    maxBytes: 5242880
+  }
 };
 
 describe('auth helpers', () => {

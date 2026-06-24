@@ -20,6 +20,12 @@ export type WorkspaceEventName =
   | 'workspace.asset_delete_started'
   | 'workspace.asset_deleted'
   | 'workspace.asset_delete_failed'
+  | 'workspace.asset_attachments_load_started'
+  | 'workspace.asset_attachments_loaded'
+  | 'workspace.asset_attachments_load_failed'
+  | 'workspace.asset_attachment_upload_started'
+  | 'workspace.asset_attachment_uploaded'
+  | 'workspace.asset_attachment_upload_failed'
   | 'workspace.search_started'
   | 'workspace.search_failed'
   | 'workspace.search_completed';

@@ -1,6 +1,7 @@
 import type {
   AccessSummary as ApiAccessSummary,
   Asset as ApiAsset,
+  Attachment as ApiAttachment,
   AssetKind as ApiAssetKind,
   AssetSearchResult as ApiSearchResult,
   Inventory as ApiInventory,
@@ -11,6 +12,8 @@ import {
   canEditInventory,
   type AccessSummary,
   type Asset,
+  type AssetAttachment,
+  type AttachmentContentType,
   type AssetKind,
   type Capability,
   type Inventory,
@@ -64,6 +67,21 @@ export function mapAsset(asset: ApiAsset): Asset {
   };
 }
 
+export function mapAttachment(attachment: ApiAttachment, thumbnailUrl?: string, thumbnailHeaders?: Record<string, string>): AssetAttachment {
+  return {
+    id: attachment.id,
+    tenantId: attachment.tenantId,
+    inventoryId: attachment.inventoryId,
+    assetId: attachment.assetId,
+    fileName: attachment.fileName,
+    contentType: mapAttachmentContentType(attachment.contentType),
+    sizeBytes: attachment.sizeBytes,
+    lifecycleState: attachment.lifecycleState,
+    thumbnailUrl,
+    thumbnailHeaders
+  };
+}
+
 export function mapSearchResult(result: ApiSearchResult): SearchResult {
   return {
     type: 'asset',
@@ -71,6 +89,13 @@ export function mapSearchResult(result: ApiSearchResult): SearchResult {
     inventory: result.inventory,
     matches: result.matches
   };
+}
+
+function mapAttachmentContentType(contentType: string): AttachmentContentType {
+  if (contentType === 'image/jpeg' || contentType === 'image/png' || contentType === 'image/webp' || contentType === 'application/pdf') {
+    return contentType;
+  }
+  throw new Error(`Unsupported attachment content type: ${contentType}`);
 }
 
 function mapAssetKind(kind: ApiAssetKind): AssetKind {

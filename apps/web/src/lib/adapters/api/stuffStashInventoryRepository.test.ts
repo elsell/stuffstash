@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { StuffStashInventoryRepository } from './stuffStashInventoryRepository';
 import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
+import type { RuntimeConfig } from '$lib/runtimeConfig';
 
-const config = {
+const config: RuntimeConfig = {
   apiBaseUrl: 'http://api.local',
   oidcIssuer: 'http://oidc.local',
   oidcClientId: 'web',
-  oidcRedirectUri: 'http://web.local/auth/callback'
+  oidcRedirectUri: 'http://web.local/auth/callback',
+  mediaUploadPolicy: {
+    supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    maxBytes: 5242880
+  }
 };
 
 describe('StuffStashInventoryRepository', () => {
@@ -150,9 +155,78 @@ describe('StuffStashInventoryRepository', () => {
       'DELETE http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
     ]);
   });
+
+  it('direct uploads selected photos before completing attachment metadata', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
+
+    const attachment = await repository.uploadAssetPhoto('tenant-home', 'inventory-household', 'asset-passport', {
+      id: 'photo-one',
+      name: 'photo.jpg',
+      sizeBytes: file.size,
+      contentType: 'image/jpeg',
+      previewUrl: 'blob:photo-one',
+      file
+    });
+
+    expect(attachment).toMatchObject({
+      id: 'attachment-one',
+      assetId: 'asset-passport',
+      fileName: 'photo.jpg',
+      contentType: 'image/jpeg'
+    });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
+      'PUT https://uploads.local/object-one',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads/upload-one/complete',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small'
+    ]);
+    expect(await requests[0]?.json()).toEqual({
+      fileName: 'photo.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: file.size
+    });
+    expect(requests[1]?.headers.get('Content-Type')).toBe('image/jpeg');
+    expect(requests[1]?.body).not.toBeNull();
+    expect(requests[3]?.headers.get('Authorization')).toBe('Bearer id-token');
+  });
+
+  it('rejects direct upload targets that browsers cannot fetch', async () => {
+    const { fetch } = fakeFetch({ directUploadUrl: 'stuffstash-local://direct-uploads/upload-one' });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
+
+    await expect(
+      repository.uploadAssetPhoto('tenant-home', 'inventory-household', 'asset-passport', {
+        id: 'photo-one',
+        name: 'photo.jpg',
+        sizeBytes: file.size,
+        contentType: 'image/jpeg',
+        previewUrl: 'blob:photo-one',
+        file
+      })
+    ).rejects.toThrow('Direct upload target is not available in this browser.');
+  });
+
+  it('lists attachments with authenticated thumbnail object URLs', async () => {
+    const { fetch } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const attachments = await repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-passport');
+
+    expect(attachments).toMatchObject([
+      {
+        id: 'attachment-one',
+        fileName: 'photo.jpg',
+        thumbnailUrl: expect.stringContaining('blob:'),
+        thumbnailHeaders: { Authorization: 'Bearer id-token' }
+      }
+    ]);
+  });
 });
 
-function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
+function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
   return {
     requests,
@@ -215,18 +289,44 @@ function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
       if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
         return new Response(null, { status: 204 });
       }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads') {
+        return envelope(
+          {
+            uploadId: 'upload-one',
+            attachmentId: 'attachment-one',
+            method: 'PUT',
+            url: options.directUploadUrl ?? 'https://uploads.local/object-one',
+            headers: { 'Content-Type': 'image/jpeg' },
+            formFields: {},
+            expiresAt: '2026-06-23T00:15:00Z'
+          },
+          201
+        );
+      }
+      if (request.method === 'PUT' && request.url === 'https://uploads.local/object-one') {
+        return new Response(null, { status: 204 });
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads/upload-one/complete') {
+        return envelope(attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg'), 201);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments') {
+        return envelope([attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg')]);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail') {
+        return new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 });
+      }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }
   };
 }
 
-function envelope(data: unknown): Response {
+function envelope(data: unknown, status = 200): Response {
   return Response.json({
     data,
     meta: {
       pagination: Array.isArray(data) ? { limit: 50, nextCursor: null, hasMore: false } : undefined
     }
-  });
+  }, { status });
 }
 
 function tenant(id: string, name: string, permissions: string[]): object {
@@ -263,5 +363,18 @@ function asset(
     description: '',
     parentAssetId,
     lifecycleState
+  };
+}
+
+function attachment(id: string, tenantId: string, inventoryId: string, assetId: string, fileName: string): object {
+  return {
+    id,
+    tenantId,
+    inventoryId,
+    assetId,
+    fileName,
+    contentType: 'image/jpeg',
+    sizeBytes: 10,
+    lifecycleState: 'active'
   };
 }

@@ -178,4 +178,33 @@ describe('SeededInventoryRepository tenant selection', () => {
     await expect(repository.deleteAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toBeUndefined();
     await expect(repository.getAsset('tenant-home', 'inventory-household', 'asset-home')).rejects.toThrow('Asset not found');
   });
+
+  it('stores uploaded photos as asset attachments with lifecycle controls', async () => {
+    const repository = new SeededInventoryRepository(seed);
+    const file = new File(['fake'], 'photo.jpg', { type: 'image/jpeg' });
+
+    const attachment = await repository.uploadAssetPhoto('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'photo-one',
+      name: 'photo.jpg',
+      sizeBytes: file.size,
+      contentType: 'image/jpeg',
+      previewUrl: 'blob:photo-one',
+      file
+    });
+
+    await expect(repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-home')).resolves.toMatchObject([
+      { id: attachment.id, fileName: 'photo.jpg', lifecycleState: 'active' }
+    ]);
+    await expect(
+      repository.archiveAssetAttachment('tenant-home', 'inventory-household', 'asset-home', attachment.id)
+    ).resolves.toMatchObject({ lifecycleState: 'archived' });
+    await expect(repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-home')).resolves.toEqual([]);
+    await expect(
+      repository.restoreAssetAttachment('tenant-home', 'inventory-household', 'asset-home', attachment.id)
+    ).resolves.toMatchObject({ lifecycleState: 'active' });
+    await expect(
+      repository.deleteAssetAttachment('tenant-home', 'inventory-household', 'asset-home', attachment.id)
+    ).resolves.toBeUndefined();
+    await expect(repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-home')).resolves.toEqual([]);
+  });
 });

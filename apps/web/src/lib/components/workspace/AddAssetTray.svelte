@@ -6,21 +6,23 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import type { AddAssetDraft, AssetKind, AssetViewModel, SelectedPhoto } from '$lib/domain/inventory';
+  import type { AddAssetDraft, AssetKind, AssetViewModel, MediaUploadPolicy, SelectedPhoto } from '$lib/domain/inventory';
   import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
 
   let {
     open,
     parentTargets,
+    mediaPolicy,
     saving,
     onClose,
     onSave
   }: {
     open: boolean;
     parentTargets: AssetViewModel[];
+    mediaPolicy: MediaUploadPolicy;
     saving: boolean;
     onClose: () => void;
-    onSave: (draft: AddAssetDraft) => void;
+    onSave: (draft: AddAssetDraft) => Promise<boolean>;
   } = $props();
 
   let kind = $state<AssetKind>('item');
@@ -28,43 +30,71 @@
   let description = $state('');
   let parentAssetId = $state('');
   let selectedPhotos = $state<SelectedPhoto[]>([]);
+  let photoError = $state('');
   let fileInputKey = $state(0);
 
-  function save(): void {
-    if (!title.trim()) {
+  async function save(): Promise<void> {
+    if (!title.trim() || photoError) {
       return;
     }
-    onSave({
+    const saved = await onSave({
       kind,
       title: title.trim(),
       description: description.trim(),
       parentAssetId: parentAssetId || null,
       photos: selectedPhotos
     });
+    if (!saved) {
+      return;
+    }
     title = '';
     description = '';
     parentAssetId = '';
     selectedPhotos = [];
+    photoError = '';
   }
 
   function captureFiles(files: FileList | undefined): void {
     if (!files) {
       return;
     }
-    selectedPhotos = Array.from(files)
-      .filter((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type))
-      .map((file) => ({
+    const nextPhotos: SelectedPhoto[] = [];
+    const rejected: string[] = [];
+    for (const file of Array.from(files)) {
+      if (!mediaPolicy.supportedContentTypes.includes(file.type as SelectedPhoto['contentType'])) {
+        rejected.push(`${file.name} is not a supported image type.`);
+        continue;
+      }
+      if (file.size <= 0 || file.size > mediaPolicy.maxBytes) {
+        rejected.push(`${file.name} is larger than ${formatBytes(mediaPolicy.maxBytes)}.`);
+        continue;
+      }
+      nextPhotos.push({
         id: `${file.name}-${file.lastModified}`,
         name: file.name,
         sizeBytes: file.size,
-        contentType: file.type,
-        previewUrl: URL.createObjectURL(file)
-      }));
+        contentType: file.type as SelectedPhoto['contentType'],
+        previewUrl: URL.createObjectURL(file),
+        file
+      });
+    }
+    selectedPhotos = nextPhotos;
+    photoError = rejected.join(' ');
     fileInputKey += 1;
   }
 
   function removePhoto(id: string): void {
     selectedPhotos = selectedPhotos.filter((photo) => photo.id !== id);
+    if (selectedPhotos.length === 0) {
+      photoError = '';
+    }
+  }
+
+  function formatBytes(sizeBytes: number): string {
+    if (sizeBytes < 1024 * 1024) {
+      return `${Math.round(sizeBytes / 1024)} KB`;
+    }
+    return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
   }
 </script>
 
@@ -127,10 +157,13 @@
         {/each}
       </div>
     {/if}
+    {#if photoError}
+      <p class="denied-note" role="alert">{photoError}</p>
+    {/if}
 
     <div class="tray-actions">
       <Button.Root variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0} onclick={save}>Save</Button.Root>
+      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError} onclick={() => { void save(); }}>Save</Button.Root>
     </div>
   </div>
 {/if}

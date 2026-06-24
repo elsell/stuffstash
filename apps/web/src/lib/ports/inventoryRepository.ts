@@ -1,10 +1,12 @@
 import type {
   AddAssetDraft,
   Asset,
+  AssetAttachment,
   AssetLifecycleFilter,
   Inventory,
   Principal,
   SearchResult,
+  SelectedPhoto,
   Tenant,
   UpdateAssetDraft,
   WorkspaceData
@@ -23,6 +25,11 @@ export interface InventoryRepository {
   archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void>;
+  listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]>;
+  uploadAssetPhoto(tenantId: string, inventoryId: string, assetId: string, photo: SelectedPhoto): Promise<AssetAttachment>;
+  archiveAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
+  restoreAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
+  deleteAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<void>;
   searchAssets(tenantId: string, query: string): Promise<SearchResult[]>;
 }
 

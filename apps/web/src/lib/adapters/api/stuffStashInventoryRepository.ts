@@ -4,17 +4,21 @@ import type { TokenProvider } from '@stuff-stash/api-client';
 import type {
   AddAssetDraft,
   Asset,
+  AssetAttachment,
   AssetLifecycleFilter,
   SearchResult,
+  SelectedPhoto,
   UpdateAssetDraft,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
-import { mapAsset, mapCapability, mapInventory, mapPrincipal, mapSearchResult, mapTenant } from './inventoryMapper';
+import { mapAsset, mapAttachment, mapCapability, mapInventory, mapPrincipal, mapSearchResult, mapTenant } from './inventoryMapper';
 
 export class StuffStashInventoryRepository implements InventoryRepository {
   private readonly client: StuffStashClient;
+  private readonly uploadFetch: typeof fetch;
+  private readonly config: RuntimeConfig;
   private selectedTenantId = readSessionValue('stuffstash.selectedTenantId');
   private selectedInventoryId = readSessionValue('stuffstash.selectedInventoryId');
 
@@ -24,6 +28,8 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     private readonly observer: WorkspaceObserver,
     fetchImpl?: typeof fetch
   ) {
+    this.config = config;
+    this.uploadFetch = fetchImpl ?? fetch;
     this.client = new StuffStashClient({
       baseUrl: config.apiBaseUrl,
       tokenProvider,
@@ -47,6 +53,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
             selectedTenantId: '',
             selectedInventoryId: '',
             assetLifecycleState: 'active',
+            mediaUploadPolicy: this.config.mediaUploadPolicy,
             capability: 'viewer'
           },
           assets: []
@@ -73,6 +80,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
         selectedTenantId: tenant.id,
         selectedInventoryId: inventory.id,
         assetLifecycleState: 'active',
+        mediaUploadPolicy: this.config.mediaUploadPolicy,
         capability: mapCapability(inventory)
       },
       assets: []
@@ -192,6 +200,79 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     }
   }
 
+  async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]> {
+    this.observer.record('workspace.asset_attachments_load_started');
+    try {
+      const page = await this.client.listAssetAttachments(tenantId, inventoryId, assetId, 50);
+      const attachments = await Promise.all(
+        page.items.map(async (attachment) => {
+          const thumbnail = attachment.contentType.startsWith('image/')
+            ? await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, attachment.id)
+            : undefined;
+          return mapAttachment(attachment, await this.thumbnailObjectUrl(thumbnail), thumbnail?.headers);
+        })
+      );
+      this.observer.record('workspace.asset_attachments_loaded', { attachmentCount: attachments.length });
+      return attachments;
+    } catch (error) {
+      this.observer.record('workspace.asset_attachments_load_failed');
+      throw safeError(error);
+    }
+  }
+
+  async uploadAssetPhoto(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    photo: SelectedPhoto
+  ): Promise<AssetAttachment> {
+    this.observer.record('workspace.asset_attachment_upload_started');
+    try {
+      const upload = await this.client.initiateAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, {
+        fileName: photo.name,
+        contentType: photo.contentType,
+        sizeBytes: photo.sizeBytes
+      });
+      await this.uploadToDirectTarget(upload, photo.file);
+      const attachment = await this.client.completeAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, upload.uploadId);
+      const thumbnail = await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, attachment.id);
+      this.observer.record('workspace.asset_attachment_uploaded');
+      return mapAttachment(attachment, await this.thumbnailObjectUrl(thumbnail), thumbnail.headers);
+    } catch (error) {
+      this.observer.record('workspace.asset_attachment_upload_failed');
+      throw safeError(error);
+    }
+  }
+
+  async archiveAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<AssetAttachment> {
+    const attachment = await this.client.archiveAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+    return mapAttachment(attachment);
+  }
+
+  async restoreAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<AssetAttachment> {
+    const attachment = await this.client.restoreAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+    return mapAttachment(attachment);
+  }
+
+  async deleteAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<void> {
+    await this.client.deleteAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+  }
+
   async searchAssets(tenantId: string, query: string): Promise<SearchResult[]> {
     this.observer.record('workspace.search_started');
     try {
@@ -232,6 +313,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
         selectedTenantId: tenantId,
         selectedInventoryId: this.selectedInventoryId,
         assetLifecycleState: lifecycleState,
+        mediaUploadPolicy: this.config.mediaUploadPolicy,
         capability: mapCapability(selectedInventory)
       },
       assets
@@ -241,6 +323,49 @@ export class StuffStashInventoryRepository implements InventoryRepository {
   private rememberSelection(): void {
     writeSessionValue('stuffstash.selectedTenantId', this.selectedTenantId);
     writeSessionValue('stuffstash.selectedInventoryId', this.selectedInventoryId);
+  }
+
+  private async uploadToDirectTarget(
+    upload: Awaited<ReturnType<StuffStashClient['initiateAssetAttachmentDirectUpload']>>,
+    file: File
+  ): Promise<void> {
+    const method = upload.method.toUpperCase();
+    const target = new URL(upload.url);
+    if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+      throw new Error('Direct upload target is not available in this browser.');
+    }
+    const init: RequestInit = { method, headers: upload.headers };
+    if (method === 'POST' && Object.keys(upload.formFields).length > 0) {
+      const body = new FormData();
+      for (const [key, value] of Object.entries(upload.formFields)) {
+        body.append(key, value);
+      }
+      body.append('file', file);
+      init.body = body;
+      init.headers = upload.headers;
+    } else {
+      init.body = file;
+    }
+    const response = await this.uploadFetch(upload.url, init);
+    if (!response.ok) {
+      throw new Error('Upload failed.');
+    }
+  }
+
+  private async thumbnailObjectUrl(
+    thumbnail: { uri: string; headers: Record<string, string> } | undefined
+  ): Promise<string | undefined> {
+    if (!thumbnail) {
+      return undefined;
+    }
+    if (Object.keys(thumbnail.headers).length === 0) {
+      return thumbnail.uri;
+    }
+    const response = await this.uploadFetch(thumbnail.uri, { headers: thumbnail.headers });
+    if (!response.ok) {
+      return undefined;
+    }
+    return URL.createObjectURL(await response.blob());
   }
 }
 

@@ -6,6 +6,7 @@
     canCreateInventory,
     type AddAssetDraft,
     type Asset,
+    type AssetAttachment,
     type AssetLifecycleFilter,
     type SearchResult,
     type UpdateAssetDraft,
@@ -47,6 +48,8 @@
   let searchQuery = $state('');
   let searchResults = $state<SearchResult[]>([]);
   let loadedAssetDetail = $state<Asset | null>(null);
+  let selectedAssetAttachments = $state<AssetAttachment[]>([]);
+  let assetDetailRequestId = 0;
 
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
@@ -71,20 +74,24 @@
   async function selectInventory(tenantId: string, inventoryId: string): Promise<void> {
     await run(async () => {
       data = await repository.selectInventory(tenantId, inventoryId);
+      invalidateAssetDetailLoad();
       mode = 'home';
       selectedLocationId = null;
       selectedAssetId = null;
       loadedAssetDetail = null;
+      selectedAssetAttachments = [];
     });
   }
 
   async function selectTenant(tenantId: string): Promise<void> {
     await run(async () => {
       data = await repository.selectTenant(tenantId);
+      invalidateAssetDetailLoad();
       mode = data.context.inventories.length > 0 ? 'home' : 'settings';
       selectedLocationId = null;
       selectedAssetId = null;
       loadedAssetDetail = null;
+      selectedAssetAttachments = [];
     });
   }
 
@@ -98,29 +105,68 @@
     });
   }
 
-  async function createAsset(draft: AddAssetDraft): Promise<void> {
+  async function createAsset(draft: AddAssetDraft): Promise<boolean> {
     if (!selectedInventory) {
       error = 'Create an inventory before adding assets.';
-      return;
+      return false;
     }
     if (!createAssetAllowed) {
       error = 'You do not have permission to add assets in this inventory.';
-      return;
+      return false;
     }
-    await run(async () => {
+    busy = true;
+    error = '';
+    message = '';
+    try {
       const asset = await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, draft);
       if (data.context.assetLifecycleState === 'active') {
-        data = { ...data, assets: [asset, ...data.assets] };
+        let uploadFailures = 0;
+        const uploaded = [];
+        for (const photo of draft.photos) {
+          try {
+            uploaded.push(await repository.uploadAssetPhoto(asset.tenantId, asset.inventoryId, asset.id, photo));
+          } catch {
+            uploadFailures += 1;
+          }
+        }
+        const firstPhoto = uploaded[0];
+        const savedAsset = firstPhoto
+          ? {
+              ...asset,
+              photo: {
+                id: firstPhoto.id,
+                url: draft.photos[0]?.previewUrl ?? firstPhoto.thumbnailUrl ?? '',
+                alt: asset.title
+              }
+            }
+          : asset;
+        data = { ...data, assets: [savedAsset, ...data.assets] };
+        message =
+          uploadFailures > 0
+            ? `Saved ${asset.title}. ${uploadFailures} photo upload ${uploadFailures === 1 ? 'failed' : 'failed'}.`
+            : draft.photos.length > 0
+              ? `Saved ${asset.title} with ${draft.photos.length} photo upload.`
+              : `Saved ${asset.title}.`;
+        if (uploadFailures > 0) {
+          return false;
+        }
       } else {
         data = await repository.selectAssetLifecycle(asset.tenantId, asset.inventoryId, 'active');
         mode = 'home';
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
+        selectedAssetAttachments = [];
+        message = `Saved ${asset.title}.`;
       }
       addOpen = false;
-      message = `Saved ${asset.title}.`;
-    });
+      return true;
+    } catch (caught) {
+      error = caught instanceof Error ? caught.message : 'Action failed.';
+      return false;
+    } finally {
+      busy = false;
+    }
   }
 
   async function updateAsset(draft: UpdateAssetDraft): Promise<void> {
@@ -170,10 +216,12 @@
     }
     await run(async () => {
       data = await repository.selectAssetLifecycle(data.context.selectedTenantId, selectedInventory.id, lifecycleState);
+      invalidateAssetDetailLoad();
       mode = 'home';
       selectedLocationId = null;
       selectedAssetId = null;
       loadedAssetDetail = null;
+      selectedAssetAttachments = [];
     });
   }
 
@@ -228,6 +276,30 @@
     });
   }
 
+  async function archiveSelectedAttachment(attachment: AssetAttachment): Promise<void> {
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.archiveAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
+      await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
+      message = `Archived ${attachment.fileName}.`;
+    });
+  }
+
+  async function deleteSelectedAttachment(attachment: AssetAttachment): Promise<void> {
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
+      await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
+      message = `Deleted ${attachment.fileName}.`;
+    });
+  }
+
   async function run(task: () => Promise<void>): Promise<void> {
     busy = true;
     error = '';
@@ -242,9 +314,11 @@
   }
 
   function openLocation(asset: Asset): void {
+    invalidateAssetDetailLoad();
     selectedLocationId = asset.id;
     selectedAssetId = null;
     loadedAssetDetail = null;
+    selectedAssetAttachments = [];
     mode = 'location';
   }
 
@@ -262,8 +336,14 @@
   }
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    const requestId = ++assetDetailRequestId;
     await run(async () => {
       const asset = await repository.getAsset(tenantId, inventoryId, assetId);
+      const attachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
+      if (requestId !== assetDetailRequestId) {
+        return;
+      }
+      selectedAssetAttachments = attachments;
       replaceWorkspaceAsset(asset);
       loadedAssetDetail = asset;
       selectedAssetId = asset.id;
@@ -305,11 +385,29 @@
     );
   }
 
+  async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    selectedAssetAttachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
+  }
+
   function closeDetailToHome(): void {
+    invalidateAssetDetailLoad();
     mode = 'home';
     selectedLocationId = null;
     selectedAssetId = null;
     loadedAssetDetail = null;
+    selectedAssetAttachments = [];
+  }
+
+  function closeDetailToPrevious(): void {
+    invalidateAssetDetailLoad();
+    mode = selectedLocationId ? 'location' : 'home';
+    selectedAssetId = null;
+    loadedAssetDetail = null;
+    selectedAssetAttachments = [];
+  }
+
+  function invalidateAssetDetailLoad(): void {
+    assetDetailRequestId += 1;
   }
 </script>
 
@@ -366,11 +464,14 @@
         canEdit={editAssetAllowed}
         parentTargets={moveParentTargets(detailAssets, selectedAsset.id)}
         saving={busy}
-        onBack={() => { mode = selectedLocationId ? 'location' : 'home'; selectedAssetId = null; }}
+        attachments={selectedAssetAttachments}
+        onBack={closeDetailToPrevious}
         onSave={updateAsset}
         onArchive={archiveSelectedAsset}
         onRestore={restoreSelectedAsset}
         onDelete={deleteSelectedAsset}
+        onArchiveAttachment={archiveSelectedAttachment}
+        onDeleteAttachment={deleteSelectedAttachment}
       />
     {:else if mode === 'search'}
       <SearchPanel
@@ -417,9 +518,10 @@
   <AddAssetTray
     open={addOpen && createAssetAllowed}
     parentTargets={parentTargets(data.assets)}
+    mediaPolicy={data.context.mediaUploadPolicy}
     saving={busy}
     onClose={() => { addOpen = false; }}
-    onSave={(draft) => { void createAsset(draft); }}
+    onSave={createAsset}
   />
 
   {#if message}
