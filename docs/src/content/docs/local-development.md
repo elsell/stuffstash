@@ -1,57 +1,30 @@
 ---
-title: Local Development
-description: How to run Stuff Stash locally.
+title: Development Setup
+description: Commands for working on Stuff Stash locally.
 ---
 
-This page shows the current local workflow.
-
-The app is still early. Today, the local API can create tenants and inventories; define custom asset types and fields; manage assets, attachments, search, and audit history; share inventory access directly or with invite-link tokens; manage pending invitations; revoke access; and run against Postgres, SpiceDB, and Dex through Compose.
+Use this page when you are changing Stuff Stash itself. If you only want to
+evaluate the app, start with [Self-Hosting](../self-hosting/).
 
 ## Requirements
 
-- Go 1.25.8 or newer.
-- Docker with Compose, for container-based local runs.
-- Lefthook, for pre-commit checks.
-- pnpm 11.0.7, for the documentation site, generated API client, and web app.
+- Go `1.25.8` or newer.
+- Docker with Compose.
+- Lefthook.
+- pnpm `11.0.7`.
 
-Dependencies and base images are pinned on purpose. This project treats supply-chain security as part of the security boundary.
+The repository pins dependencies, container images, GitHub Actions, and tooling
+versions intentionally. Supply-chain security is part of the project boundary.
 
-## Run Tests
+## API
 
-From the repository root:
-
-```sh
-make test
-```
-
-For the web app and generated TypeScript API client:
-
-```sh
-make web-install
-make api-client-test
-make api-client-check
-make web-test
-make web-check
-make web-build
-```
-
-## Run The API Fast
-
-From the repository root:
+Run the API with in-memory local adapters:
 
 ```sh
 make run
 ```
 
-This uses local development auth, in-memory authorization, and in-memory persistence.
-
-Visit the base URL to see a small API index:
-
-```sh
-curl http://localhost:8080/
-```
-
-Then check the health endpoint:
+Check health:
 
 ```sh
 curl http://localhost:8080/healthz
@@ -63,455 +36,35 @@ Expected response:
 {"service":"stuff-stash","status":"healthy"}
 ```
 
-## Try The Secure API
-
-Local development auth uses deterministic bearer tokens:
+Run API tests:
 
 ```sh
-Authorization: Bearer dev:user-one
+make test
 ```
 
-Create a tenant:
+## Full Local Stack
 
-```sh
-curl -s http://localhost:8080/tenants \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Home"}'
-```
-
-Create an inventory inside that tenant, replacing the tenant ID with the response from the previous command:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Tools"}'
-```
-
-List visible inventories:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories?limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-Create a location-like asset:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'X-Request-ID: local-asset-create-1' \
-  -H 'Content-Type: application/json' \
-  -d '{"kind":"location","title":"Garage"}'
-```
-
-State-changing REST requests may include `X-Request-ID`. When present, audit history stores it with the emitted audit record.
-
-Create an item inside that location:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>"}'
-```
-
-Create another location under the garage if you want to test movement:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"kind":"location","title":"Shelf","parentAssetId":"<garage-asset-id>"}'
-```
-
-Define custom fields before sending custom values on assets:
-
-Keys use lowercase letters, numbers, and hyphens. Initial field types are `text`, `number`, `boolean`, `date`, `url`, and `enum`.
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/custom-field-definitions \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"key":"serial","displayName":"Serial","type":"text"}'
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"key":"condition","displayName":"Condition","type":"enum","enumOptions":["new","used"]}'
-```
-
-Create an item with custom field values:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"kind":"item","title":"Fertilizer","parentAssetId":"<garage-asset-id>","customFields":{"serial":"bag-1","condition":"new"}}'
-```
-
-Custom asset types let you add fields for a specific kind of asset without changing the base asset model:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-asset-types \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"key":"medicine","displayName":"Medicine"}'
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"key":"expiration-date","displayName":"Expiration Date","type":"date","applicability":"custom_asset_types","customAssetTypeIds":["<medicine-type-id>"]}'
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"kind":"item","title":"Aspirin","customAssetTypeId":"<medicine-type-id>","customFields":{"expiration-date":"2027-01-01"}}'
-```
-
-Rename that custom asset type later without changing the stable key:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-asset-types/<medicine-type-id> \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"displayName":"Medicine and Vitamins"}'
-```
-
-Archive a custom asset type when it should no longer be used for new assets:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-asset-types/<medicine-type-id>/archive \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-Archived custom asset types are hidden from normal lists and blocked for new assets or new field targets. Existing assets and field definitions keep their references.
-
-You can also update a custom field without breaking existing assets. Use the ID returned when you created the field definition.
-
-Allowed changes are intentionally narrow: rename the field, add enum options, add custom asset type targets, or expand a targeted field to all assets. Removing options or narrowing targets is blocked for now so old asset data stays valid.
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions/<field-definition-id> \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"displayName":"Use By Date","enumOptions":["new","used","expired"]}'
-```
-
-Move or edit an asset:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id> \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"Fertilizer Bag","parentAssetId":"<shelf-asset-id>","customFields":{"serial":"bag-1","condition":"used"}}'
-```
-
-Send `parentAssetId` as `null` to move an asset back to the inventory root.
-
-Archive and restore an asset. Use the asset ID returned by the create call.
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/archive \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one'
-
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets?lifecycleState=archived&limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/restore \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-Normal asset lists show active assets. Use `lifecycleState=archived` for archived assets or `lifecycleState=all` for both.
-
-Add a small attachment to an asset:
-
-```sh
-CONTENT_BASE64="iVBORw0KGgo="
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d "{\"fileName\":\"receipt.png\",\"contentType\":\"image/png\",\"contentBase64\":\"${CONTENT_BASE64}\"}"
-```
-
-For larger clients, the API can also expose a direct upload handshake when S3-compatible blob storage is enabled. The returned upload target is adapter-owned and opaque. For Garage/S3, upload the file with the returned `method`, `url`, `headers`, and `formFields`, then call the completion endpoint:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/direct-uploads \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"fileName":"receipt.png","contentType":"image/png","sizeBytes":8}'
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/direct-uploads/<upload-id>/complete \
-  -X POST \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-List and download attachments:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments?limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/<attachment-id>/content \
-  -H 'Authorization: Bearer dev:user-one' \
-  --output attachment.bin
-
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets/<asset-id>/attachments/<attachment-id>/thumbnail?variant=small' \
-  -H 'Authorization: Bearer dev:user-one' \
-  --output thumbnail.bin
-```
-
-Local Postgres runs store blobs under `.stuffstash/blobs` by default. Compose uses a `blob-data` volume mounted at `/var/lib/stuffstash/blobs`. Set `STUFF_STASH_BLOB_STORAGE_PATH` to choose a different local path.
-
-Garage-compatible media storage uses the S3-compatible adapter. To verify that adapter against a real Garage container:
-
-```sh
-make verify-garage-blobstore
-```
-
-To run the API against local Garage, set `STUFF_STASH_BLOB_STORAGE_MODE=s3` plus `STUFF_STASH_S3_ENDPOINT`, `STUFF_STASH_S3_ACCESS_KEY`, `STUFF_STASH_S3_SECRET_KEY`, `STUFF_STASH_S3_BUCKET`, and `STUFF_STASH_S3_SECURE=false`. Garage buckets and keys are deployment setup, not API startup work.
-
-Inventory custom field lists include tenant fields and inventory fields:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/custom-field-definitions?limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-List assets in the inventory:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/assets?limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-Search assets across the inventories you can view:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/search/assets?q=receipt&limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-List inventory audit history:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/audit-records?limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-Grant another local dev user viewer access:
-
-Viewers can list assets and inventory audit history. Editors can list, create, update, and move assets. Neither can share the inventory with someone else.
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-grants \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"principalId":"user-two","relationship":"viewer"}'
-```
-
-Create an invite link for an email address:
-
-The create response includes a time-limited one-time `acceptanceToken`. No email service is required; self-hosted users can copy the token manually. In local-dev auth, include the invitee email after the principal ID so the API can verify the accepting user.
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"user-two@example.com","relationship":"viewer"}'
-```
-
-List pending invite links:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations?status=pending&limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-To test manual expiration, create a separate pending invite and set its expiration in the past:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations/<pending-invitation-id>/expiration \
-  -X PATCH \
-  -H 'Authorization: Bearer dev:user-one' \
-  -H 'Content-Type: application/json' \
-  -d '{"expiresAt":"2024-01-01T00:00:00Z"}'
-```
-
-Invitation lists support `status=all`, `pending`, `accepted`, `revoked`, `cancelled`, or `expired`. List and detail responses do not return the acceptance token after creation.
-
-Accept the invite:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-invitations/<invitation-id>/accept \
-  -H 'Authorization: Bearer dev:user-two:user-two@example.com' \
-  -H 'Content-Type: application/json' \
-  -d '{"acceptanceToken":"<acceptance-token>"}'
-```
-
-Remove that direct grant:
-
-```sh
-curl -s http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-grants/user-two/viewer \
-  -X DELETE \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-List direct inventory access grants:
-
-```sh
-curl -s 'http://localhost:8080/tenants/<tenant-id>/inventories/<inventory-id>/access-grants?limit=50' \
-  -H 'Authorization: Bearer dev:user-one'
-```
-
-OpenAPI JSON is generated by Huma:
-
-```sh
-curl http://localhost:8080/openapi.json
-```
-
-The interactive local API docs are also available at:
-
-```sh
-open http://localhost:8080/docs
-```
-
-You can run the same tenant, inventory, asset, attachment, and access-management flow as a check:
-
-```sh
-make verify-local-api
-```
-
-## Run With Compose
-
-```sh
-make compose-up
-```
-
-Compose starts Postgres, SpiceDB, migrations with the same API image, and the API. By default, the API uses Postgres persistence, local development auth, and in-memory authorization.
-
-To run the API against SpiceDB authorization:
-
-```sh
-make compose-up-spicedb
-```
-
-This starts the same local stack, keeps Postgres persistence, switches authorization to SpiceDB, and bootstraps the checked-in schema.
-Local SpiceDB uses `serve-testing`, so it does not need a preshared key.
-
-To keep the stack running with Dex OIDC and SpiceDB enabled:
+Run Postgres, SpiceDB, Dex, migrations, and the API:
 
 ```sh
 make compose-up-oidc
 ```
 
-This adds local Dex to Compose and switches the API to OIDC mode. For the full automated check, prefer `make verify-dex-oidc-api`.
-
-In another terminal, run:
-
-```sh
-make verify-local-api
-```
-
-If port `8080` is already in use, choose another host port:
-
-```sh
-STUFF_STASH_HTTP_PORT=18080 make compose-up-spicedb
-STUFF_STASH_VERIFY_BASE_URL=http://localhost:18080 make verify-local-api
-```
-
-To run the same user flow with real OIDC tokens from local Dex:
+Verify the OIDC and authorization flow:
 
 ```sh
 make verify-dex-oidc-api
 ```
 
-That command starts an isolated Compose project, asks Dex for two local-only ID tokens, rejects several bad OIDC tokens, runs the full API verification flow against OIDC auth and SpiceDB authz, then removes the containers and volumes.
-
-Stop it with:
+Stop the stack:
 
 ```sh
 make compose-down
 ```
 
-## Run Migrations
+## Web App
 
-The app binary owns migrations too. That keeps local runs and Kubernetes jobs on the same path.
-
-```sh
-make migrate-up
-make migrate-status
-```
-
-Set `STUFF_STASH_DATABASE_DSN` when you need a database other than the local Compose default.
-
-To verify migration behavior against Postgres:
-
-```sh
-make verify-migrations
-```
-
-## Run With SpiceDB Without Compose
-
-If your Docker install does not have Compose, use:
-
-```sh
-make run-spicedb
-```
-
-That starts a local SpiceDB container with `docker run`, runs the API against it, and bootstraps the schema.
-
-In another terminal:
-
-```sh
-make verify-local-api
-```
-
-Stop the SpiceDB container when you are done:
-
-```sh
-make spicedb-down
-```
-
-## Verify The SpiceDB Adapter
-
-Run the real SpiceDB adapter checks with Docker:
-
-```sh
-make verify-spicedb-adapter
-```
-
-This starts the pinned local SpiceDB image, runs the adapter integration test, and removes the test container. If Go is not installed locally, the script runs the test inside the pinned Go builder image.
-
-## Run The Docs
-
-The docs site lives in `docs/`.
-
-```sh
-make docs-install
-make docs-dev
-```
-
-## Run The Web App
-
-The web app lives in `apps/web/`. The first browser flow signs in through local Dex, creates a tenant and inventory, adds an asset, and lists assets.
-
-Start the API and local Dex stack in one terminal:
-
-```sh
-make compose-up-oidc
-```
-
-Then start the web dev server in another terminal:
+Start the web app:
 
 ```sh
 make web-install
@@ -520,52 +73,49 @@ make web-dev
 
 Open `http://localhost:5173`.
 
-Use the local Dex test user:
-
-- Email: `owner@example.com`
-- Password: `password`
-
-The web app reads local runtime settings from `apps/web/static/config.json`. It calls the API at `http://localhost:8080`, signs in through Dex at `http://localhost:5556/dex`, and sends the Dex ID token to the API as a bearer token.
-
-When using `make compose-up-oidc`, the API verifies Dex tokens against the Compose issuer `http://dex:5556/dex` and accepts both the local API verifier client and the browser public client. If you run the API directly on the host instead, keep the Dex issuer and client IDs aligned with that topology.
-
-The browser app calls the public API through the generated TypeScript client in `packages/api-client`.
-
-When the API contract changes, regenerate the TypeScript types:
+Run web checks:
 
 ```sh
-curl -fsS http://localhost:8080/openapi.json -o packages/api-client/openapi.json
-make api-client-generate
+make web-test
+make web-check
+make web-build
 ```
 
-Keep generated DTOs behind the API client adapter. They should not become the web app's domain model.
+## API Client
 
-## Auth Modes
+The browser app uses the generated TypeScript API client at its adapter
+boundary. When the OpenAPI contract changes, regenerate and check it:
 
-Local runs use safe defaults:
+```sh
+make api-client-generate
+make api-client-test
+make api-client-check
+make api-client-check-generated
+```
 
-- `STUFF_STASH_AUTH_MODE=local-dev`
-- `STUFF_STASH_AUTHZ_MODE=memory`
-- `STUFF_STASH_REPOSITORY_MODE=memory`
+## Docs
 
-You can switch to the production-shaped adapters with:
+Run the docs site:
 
-- `STUFF_STASH_AUTH_MODE=oidc`
-- `STUFF_STASH_AUTHZ_MODE=spicedb`
-- `STUFF_STASH_REPOSITORY_MODE=postgres`
+```sh
+make docs-install
+make docs-dev
+```
 
-OIDC needs an issuer and client ID. A secured SpiceDB deployment needs an endpoint and preshared key. Postgres needs `STUFF_STASH_DATABASE_DSN`. Local Compose already starts Postgres and unauthenticated SpiceDB `serve-testing`, but the API does not use SpiceDB unless you choose the `spicedb` mode.
+Build the docs:
 
-With the OIDC Compose override, the API sees Dex at `http://dex:5556/dex`. From your host, Dex is published at `http://localhost:${DEX_HTTP_PORT:-5556}/dex`. The Dex verifier uses an isolated Compose project and defaults the host port to `15556`.
+```sh
+make docs-build
+```
 
-Dex static users and client secrets are only for local verification. They are not a production auth plan.
+## Pre-Commit
 
-## Pre-Commit Checks
-
-Run all configured hooks:
+Run the configured hooks:
 
 ```sh
 lefthook run pre-commit --all-files
 ```
 
-The hook runs Go formatting, Go tests, and structural checks for oversized Go files, ad hoc prints, raw SQL in Go code, HTTP adapter organization drift, and GORM adapter catch-all files. Non-generated Go files over 800 lines must be split into clearer pieces. For the REST adapter, it checks that domain route registration stays out of `httpserver/server.go` and `httpserver/api.go`, route files do not define DTOs or interfaces, DTO files do not import application/domain/port packages, and mapper files do not register routes. For the GORM adapter, it keeps repository behavior out of `gormstore/store.go` and repository tests out of shared `gormstore/store_test.go`.
+The hook runs Go formatting, Go tests, and structural checks for common project
+drift such as raw SQL in Go code, ad hoc prints, oversized Go files, HTTP adapter
+organization drift, and GORM adapter catch-all files.

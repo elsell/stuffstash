@@ -1,48 +1,70 @@
 ---
-title: Specs And Process
-description: How work happens in this repository.
+title: Contributing
+description: How to work on Stuff Stash without losing the product thread.
 ---
 
-Stuff Stash is spec-driven.
+Stuff Stash is spec-driven. Specs are how the project keeps a fast-moving build
+from drifting away from the product it is trying to become.
 
-Before code changes, update the relevant spec in `specs/`. Code follows the spec, not the other way around.
+Before code changes, update the relevant spec in `specs/`. Code follows the
+spec, not the other way around.
 
-## Specs
+## Start With The Spec
 
-Specs live in top-level `specs/`.
+Specs live in the top-level `specs/` directory and end in `.spec.md`.
 
-Each file ends with `.spec.md` and is grouped by domain or platform area. Examples:
+Common areas include:
 
 - `specs/assets/`
 - `specs/locations/`
 - `specs/identity-access/`
+- `specs/agent-model/`
 - `specs/platform/`
 
-If a spec and code disagree, update the spec first.
+If a spec and code disagree, fix the spec first, then update the code.
+
+## Keep Docs Selective
+
+The public docs are not a mirror of every spec. Specs hold detailed product and
+engineering decisions. Docs explain what a reader needs to understand, run,
+self-host, trust, or contribute to Stuff Stash.
 
 ## Testing
 
-This project uses test-driven development.
+Use test-driven development. Write real tests first, then implement the smallest
+correct behavior, then refactor.
 
-Tests should check real behavior. Use fakes instead of mocks. Security-sensitive behavior needs adversarial end-to-end tests at the real boundary.
+Tests should check behavior through the right boundary. Use fakes instead of
+mocks. Security-sensitive behavior needs adversarial end-to-end tests at the real
+interaction point.
 
-## Commits
+## Local Checks
 
-Use atomic Conventional Commits.
+Run the main checks from the repository root:
 
-Each commit should contain one coherent change: the spec, code, tests, docs, and config needed for that change.
+```sh
+make test
+make web-test
+make web-check
+make docs-build
+lefthook run pre-commit --all-files
+```
 
-## Security
+Use narrower checks when you are working in one area, but run the relevant full
+checks before opening a change.
 
-Security is a primary concern.
+## Commit Shape
 
-All dependencies, tools, base images, and generated artifact sources must be pinned to reviewed versions where the ecosystem supports it. Container images must be pinned by digest.
+Use atomic Conventional Commits. A commit should contain one coherent change:
+the spec, tests, code, docs, and configuration needed for that change.
 
-Authentication and authorization behavior must be tested for real. Tests must cover valid access, unauthenticated access, unauthorized access, cross-tenant access, wrong-role access, bad tokens, expired tokens, and privilege escalation attempts where they apply.
+## Security-Sensitive Changes
 
-## Documentation
+Authentication, authorization, tenant isolation, sharing, imports, exports,
+media, and conversational actions are security-sensitive. Changes in those areas
+need adversarial tests for valid access, missing auth, wrong role, cross-tenant
+access, bad tokens, expired tokens, and privilege-escalation attempts where they
+apply.
 
-Docs should help a newcomer understand the project and run it locally.
-
-They should be short, direct, and useful. Do not document code that explains itself.
-
+Do not bypass ports or adapters to make a test pass. That is usually the bug the
+architecture is trying to prevent.

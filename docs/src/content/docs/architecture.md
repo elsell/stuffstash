@@ -1,62 +1,66 @@
 ---
 title: Architecture
-description: The project shape and the rules that matter most.
+description: How Stuff Stash keeps product behavior separate from infrastructure.
 ---
 
-Stuff Stash uses hexagonal architecture, also called ports and adapters.
+Stuff Stash uses hexagonal architecture, also called ports and adapters. The
+point is practical: the same inventory rules should work from the web app,
+mobile app, REST API, conversational flow, future MCP tools, imports, and
+background jobs.
 
-That means domain behavior sits in the center. Frameworks, databases, auth providers, model providers, and HTTP details stay outside the domain behind interfaces.
+Domain behavior sits in the center. Frameworks, databases, auth providers, model
+providers, HTTP details, and blob storage stay outside the domain behind ports.
 
-## The Rule
+## The Core Rule
 
-The core domain should not care how a command arrived.
+Moving an item should follow the same rules no matter how the command arrived.
 
-Moving an item should follow the same rules whether the request came from:
+That matters because Stuff Stash is voice-forward. Model output must never
+bypass authorization, tenancy checks, validation, audit history, or normal
+application services.
 
-- REST.
-- The web app.
-- The mobile app.
-- A voice command.
-- An MCP tool.
-- A future import job.
+## Main Pieces
 
-## Bounded Contexts
-
-The first contexts are:
-
-- Assets.
-- Inventories.
-- Locations.
-- Identity and access.
-- Agent and model.
-- Audit and history.
-- Search.
-- Media.
-- Data portability.
-- Expiration, still under discussion.
+| Piece | Responsibility |
+| --- | --- |
+| Domain | Inventory concepts, rules, typed values, lifecycle behavior |
+| Application services | Commands, queries, authorization checks, audit writes |
+| Ports | Project-owned interfaces for persistence, auth, search, media, models, clocks, and observability |
+| Adapters | Postgres/GORM, SpiceDB, OIDC, HTTP, blob storage, web/mobile clients |
+| Specs | Source of truth for product and engineering decisions |
 
 ## Tenants And Inventories
 
-A tenant is the top-level security boundary.
+A tenant is the top-level security boundary. An inventory lives inside one
+tenant. Users may have access to one or more inventories, with relationships
+such as owner, editor, or viewer.
 
-An inventory lives inside one tenant. Users can belong to more than one tenant and can have access to one or more inventories inside a tenant.
+This lets a self-hosted household support separate inventories for different
+homes, collections, family members, or shared spaces without relying on loose
+application roles.
 
-Authorization is relationship-based and uses the same shape as SpiceDB. The model should feel similar to Google Drive sharing: owners, editors, viewers, direct sharing, and email-scoped invite-link tokens.
+## Assets, Containers, And Locations
 
-The current API slice proves this boundary with local development auth, OIDC token verification, SpiceDB authorization wiring, tenant and inventory management, asset creation and movement, custom asset types, custom fields, audit history, asset attachments, authorized search, direct inventory sharing, invite-link tokens, revocation, and Huma-generated OpenAPI.
+Items, containers, and locations share one containment model.
 
-When the API creates data that needs a SpiceDB relationship, it saves the data and an authorization outbox event in the same database transaction. The API then tries to drain that outbox right away. If SpiceDB is down, the relationship write can be retried instead of being lost. If an event is permanently invalid, it is dead-lettered instead of retried forever. Outbox events are claimed with short leases so more than one API replica can run safely.
-
-State-changing application services also write append-only audit records through a repository port. Selected reads, such as detail and list endpoints, write safe read audit records too. Inventory viewers can read inventory history. Tenant-wide history is limited to tenant configuration access.
-
-## Assets And Locations
-
-Locations are represented as assets with kind `location`.
-
-This gives the app one containment model. A garage shelf can contain an asset. A toolbox can also contain assets. The system can still say "location" to users without keeping a second hierarchy in the code.
+That means a garage can contain a shelf, a shelf can contain a bin, and a bin can
+contain an item. A toolbox can also contain items. The user-facing language stays
+simple while the model stays flexible.
 
 ## Conversational Inventory
 
-Voice and text commands are part of the main product experience. They are not part of the domain core.
+Conversational inventory is an interaction layer, not the domain core.
 
-Speech-to-text, language models, and text-to-speech all sit behind ports. Model output must never bypass authorization, tenancy checks, validation, audit history, or domain services.
+Speech-to-text, language models, and text-to-speech sit behind ports. A
+conversation can search, ask clarifying questions, propose an action plan, and
+execute approved application commands. It cannot write directly to persistence
+or grant itself extra access.
+
+## Why The Split Matters
+
+The API and web app are separate deployables. Auth, authorization, persistence,
+media, and model providers are swappable adapters. Generated OpenAPI types stay
+at client adapter boundaries instead of becoming the frontend domain model.
+
+That gives Stuff Stash room to support web, mobile, voice, imports, and future
+agent workflows without each path inventing its own version of inventory logic.

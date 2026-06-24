@@ -85,6 +85,12 @@ a:not(.sl-link-button):hover {
   color: var(--ss-charcoal-deep);
 }
 
+.sl-markdown-content img {
+  border: 1px solid color-mix(in srgb, var(--ss-dusty-blue) 28%, transparent);
+  border-radius: 0.75rem;
+  box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--ss-charcoal-deep) 12%, transparent);
+}
+
 :focus-visible {
   outline: 2px solid var(--ss-charcoal-deep);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--ss-amber) 45%, transparent);

@@ -18,12 +18,19 @@ export default defineConfig({
       customCss: ['./src/styles/brand.css'],
       sidebar: [
         {
-          label: 'Start Here',
+          label: 'Evaluate',
           items: [
-            { label: 'Overview', slug: 'overview' },
-            { label: 'Local Development', slug: 'local-development' },
+            { label: 'Product', slug: 'product' },
+            { label: 'Self-Hosting', slug: 'self-hosting' },
+            { label: 'Security', slug: 'security' },
             { label: 'Architecture', slug: 'architecture' },
-            { label: 'Specs And Process', slug: 'specs-and-process' },
+          ],
+        },
+        {
+          label: 'Build',
+          items: [
+            { label: 'Development Setup', slug: 'local-development' },
+            { label: 'Contributing', slug: 'specs-and-process' },
           ],
         },
       ],
