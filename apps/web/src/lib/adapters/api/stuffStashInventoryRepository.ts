@@ -1,7 +1,14 @@
 import { StuffStashAPIError, StuffStashClient } from '@stuff-stash/api-client';
 import type { RuntimeConfig } from '$lib/runtimeConfig';
 import type { TokenProvider } from '@stuff-stash/api-client';
-import type { AddAssetDraft, Asset, SearchResult, UpdateAssetDraft, WorkspaceData } from '$lib/domain/inventory';
+import type {
+  AddAssetDraft,
+  Asset,
+  AssetLifecycleFilter,
+  SearchResult,
+  UpdateAssetDraft,
+  WorkspaceData
+} from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import { mapAsset, mapCapability, mapInventory, mapPrincipal, mapSearchResult, mapTenant } from './inventoryMapper';
@@ -39,6 +46,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
             inventories: [],
             selectedTenantId: '',
             selectedInventoryId: '',
+            assetLifecycleState: 'active',
             capability: 'viewer'
           },
           assets: []
@@ -64,6 +72,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
         inventories: [inventory],
         selectedTenantId: tenant.id,
         selectedInventoryId: inventory.id,
+        assetLifecycleState: 'active',
         capability: mapCapability(inventory)
       },
       assets: []
@@ -80,13 +89,23 @@ export class StuffStashInventoryRepository implements InventoryRepository {
   async selectInventory(tenantId: string, inventoryId: string): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
     const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
-    return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId);
+    return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId, 'active');
   }
 
   async selectTenant(tenantId: string): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
     const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
-    return this.loadTenantWorkspace(principal, tenants, tenantId, '');
+    return this.loadTenantWorkspace(principal, tenants, tenantId, '', 'active');
+  }
+
+  async selectAssetLifecycle(
+    tenantId: string,
+    inventoryId: string,
+    lifecycleState: AssetLifecycleFilter
+  ): Promise<WorkspaceData> {
+    const principal = mapPrincipal(await this.client.me());
+    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId, lifecycleState);
   }
 
   async createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
@@ -138,6 +157,41 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     }
   }
 
+  async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    this.observer.record('workspace.asset_archive_started');
+    try {
+      const asset = mapAsset(await this.client.archiveAsset(tenantId, inventoryId, assetId));
+      this.observer.record('workspace.asset_archived', { kind: asset.kind });
+      return asset;
+    } catch (error) {
+      this.observer.record('workspace.asset_archive_failed');
+      throw safeError(error);
+    }
+  }
+
+  async restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    this.observer.record('workspace.asset_restore_started');
+    try {
+      const asset = mapAsset(await this.client.restoreAsset(tenantId, inventoryId, assetId));
+      this.observer.record('workspace.asset_restored', { kind: asset.kind });
+      return asset;
+    } catch (error) {
+      this.observer.record('workspace.asset_restore_failed');
+      throw safeError(error);
+    }
+  }
+
+  async deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    this.observer.record('workspace.asset_delete_started');
+    try {
+      await this.client.deleteAsset(tenantId, inventoryId, assetId);
+      this.observer.record('workspace.asset_deleted');
+    } catch (error) {
+      this.observer.record('workspace.asset_delete_failed');
+      throw safeError(error);
+    }
+  }
+
   async searchAssets(tenantId: string, query: string): Promise<SearchResult[]> {
     this.observer.record('workspace.search_started');
     try {
@@ -154,7 +208,8 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     principal: ReturnType<typeof mapPrincipal>,
     tenants: ReturnType<typeof mapTenant>[],
     tenantId: string,
-    inventoryId: string
+    inventoryId: string,
+    lifecycleState: AssetLifecycleFilter = 'active'
   ): Promise<WorkspaceData> {
     this.selectedTenantId = tenantId;
     const inventories = (await this.client.listInventories(tenantId)).items.map(mapInventory);
@@ -162,7 +217,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     this.selectedInventoryId = selectedInventory?.id ?? '';
     this.rememberSelection();
     const assets = selectedInventory
-      ? (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, 'active')).items.map(mapAsset)
+      ? (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, lifecycleState)).items.map(mapAsset)
       : [];
     this.observer.record('workspace.loaded', {
       tenantCount: tenants.length,
@@ -176,6 +231,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
         inventories,
         selectedTenantId: tenantId,
         selectedInventoryId: this.selectedInventoryId,
+        assetLifecycleState: lifecycleState,
         capability: mapCapability(selectedInventory)
       },
       assets

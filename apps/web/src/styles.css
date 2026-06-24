@@ -315,6 +315,15 @@ small {
   align-items: center;
 }
 
+.heading-actions,
+.lifecycle-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .location-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -455,6 +464,24 @@ small {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
+}
+
+.danger-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 560px;
+  padding: 14px;
+  border: 1px solid color-mix(in oklab, var(--destructive) 30%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--destructive) 5%, var(--card));
+}
+
+.danger-zone p {
+  margin: 3px 0 0;
+  color: var(--muted-foreground);
 }
 
 dt,

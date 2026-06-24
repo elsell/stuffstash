@@ -1,5 +1,6 @@
 export type AssetKind = 'item' | 'container' | 'location';
 export type AssetLifecycleState = 'active' | 'archived';
+export type AssetLifecycleFilter = AssetLifecycleState;
 export type WorkspaceMode = 'home' | 'location' | 'asset' | 'search' | 'settings';
 export type Capability = 'editor' | 'viewer';
 
@@ -84,6 +85,7 @@ export interface WorkspaceContext {
   inventories: Inventory[];
   selectedTenantId: string;
   selectedInventoryId: string;
+  assetLifecycleState: AssetLifecycleFilter;
   capability: Capability;
 }
 

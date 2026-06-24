@@ -113,6 +113,43 @@ describe('StuffStashInventoryRepository', () => {
       parentAssetId: 'asset-safe'
     });
   });
+
+  it('loads archived assets through the generated client lifecycle query', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.selectAssetLifecycle('tenant-home', 'inventory-household', 'archived');
+
+    expect(data.context.assetLifecycleState).toBe('archived');
+    expect(data.assets.map((asset) => asset.id)).toEqual(['asset-archived']);
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/me',
+      'GET http://api.local/me/tenants?limit=50',
+      'GET http://api.local/tenants/tenant-home/inventories?limit=50',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived'
+    ]);
+  });
+
+  it('archives, restores, and deletes assets through generated client lifecycle paths', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(repository.archiveAsset('tenant-home', 'inventory-household', 'asset-passport')).resolves.toMatchObject({
+      id: 'asset-passport',
+      lifecycleState: 'archived'
+    });
+    await expect(repository.restoreAsset('tenant-home', 'inventory-household', 'asset-passport')).resolves.toMatchObject({
+      id: 'asset-passport',
+      lifecycleState: 'active'
+    });
+    await expect(repository.deleteAsset('tenant-home', 'inventory-household', 'asset-passport')).resolves.toBeUndefined();
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/archive',
+      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/restore',
+      'DELETE http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
+    ]);
+  });
 });
 
 function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
@@ -153,6 +190,9 @@ function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
       if (request.method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
         return envelope([asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
+        return envelope([asset('asset-archived', 'tenant-home', 'inventory-household', 'Archived Passport', null, 'archived')]);
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/assets') {
         return envelope([]);
       }
@@ -165,6 +205,15 @@ function fakeFetch(): { fetch: typeof fetch; requests: Request[] } {
           ...asset('asset-passport', 'tenant-home', 'inventory-household', body.title, body.parentAssetId ?? null),
           description: body.description ?? ''
         });
+      }
+      if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/archive') {
+        return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'));
+      }
+      if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/restore') {
+        return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport'));
+      }
+      if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
+        return new Response(null, { status: 204 });
       }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }
@@ -197,7 +246,14 @@ function inventory(id: string, tenantId: string, name: string, permissions: stri
   };
 }
 
-function asset(id: string, tenantId: string, inventoryId: string, title: string, parentAssetId: string | null = null): object {
+function asset(
+  id: string,
+  tenantId: string,
+  inventoryId: string,
+  title: string,
+  parentAssetId: string | null = null,
+  lifecycleState = 'active'
+): object {
   return {
     id,
     tenantId,
@@ -206,6 +262,6 @@ function asset(id: string, tenantId: string, inventoryId: string, title: string,
     title,
     description: '',
     parentAssetId,
-    lifecycleState: 'active'
+    lifecycleState
   };
 }

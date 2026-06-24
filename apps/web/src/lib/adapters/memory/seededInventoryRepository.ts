@@ -1,4 +1,5 @@
 import {
+  type AssetLifecycleFilter,
   canCreateInventory,
   canEditInventory,
   type AddAssetDraft,
@@ -15,6 +16,7 @@ export class SeededInventoryRepository implements InventoryRepository {
   private seed: WorkspaceSeed;
   private selectedTenantId: string;
   private selectedInventoryId: string;
+  private selectedLifecycleState: AssetLifecycleFilter = 'active';
 
   constructor(seed: WorkspaceSeed) {
     this.seed = seed;
@@ -51,6 +53,7 @@ export class SeededInventoryRepository implements InventoryRepository {
     };
     this.selectedTenantId = tenant.id;
     this.selectedInventoryId = inventory.id;
+    this.selectedLifecycleState = 'active';
     return this.workspace();
   }
 
@@ -74,6 +77,7 @@ export class SeededInventoryRepository implements InventoryRepository {
     };
     this.selectedTenantId = tenantId;
     this.selectedInventoryId = inventory.id;
+    this.selectedLifecycleState = 'active';
     return this.workspace();
   }
 
@@ -84,12 +88,29 @@ export class SeededInventoryRepository implements InventoryRepository {
     )
       ? inventoryId
       : this.firstInventoryIdForTenant(tenantId);
+    this.selectedLifecycleState = 'active';
     return this.workspace();
   }
 
   async selectTenant(tenantId: string): Promise<WorkspaceData> {
     this.selectedTenantId = tenantId;
     this.selectedInventoryId = this.firstInventoryIdForTenant(tenantId);
+    this.selectedLifecycleState = 'active';
+    return this.workspace();
+  }
+
+  async selectAssetLifecycle(
+    tenantId: string,
+    inventoryId: string,
+    lifecycleState: AssetLifecycleFilter
+  ): Promise<WorkspaceData> {
+    this.selectedTenantId = tenantId;
+    this.selectedInventoryId = this.seed.inventories.some(
+      (inventory) => inventory.tenantId === tenantId && inventory.id === inventoryId
+    )
+      ? inventoryId
+      : this.firstInventoryIdForTenant(tenantId);
+    this.selectedLifecycleState = lifecycleState;
     return this.workspace();
   }
 
@@ -146,9 +167,31 @@ export class SeededInventoryRepository implements InventoryRepository {
     return updated;
   }
 
+  async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    return this.setAssetLifecycle(tenantId, inventoryId, assetId, 'archived');
+  }
+
+  async restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    return this.setAssetLifecycle(tenantId, inventoryId, assetId, 'active');
+  }
+
+  async deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.filter((candidate) => candidate !== asset)
+    };
+  }
+
   async searchAssets(_tenantId: string, query: string): Promise<SearchResult[]> {
     const inventory = this.seed.inventories.find((candidate) => candidate.id === this.selectedInventoryId);
-    return filterAssets(this.workspaceAssets(), query).map((asset) => ({
+    const searchableAssets = this.seed.assets.filter(
+      (asset) =>
+        asset.tenantId === this.selectedTenantId &&
+        asset.inventoryId === this.selectedInventoryId &&
+        asset.lifecycleState === 'active'
+    );
+    return filterAssets(searchableAssets, query).map((asset) => ({
       type: 'asset',
       asset,
       inventory: {
@@ -169,6 +212,7 @@ export class SeededInventoryRepository implements InventoryRepository {
         inventories,
         selectedTenantId: this.selectedTenantId,
         selectedInventoryId: this.selectedInventoryId,
+        assetLifecycleState: this.selectedLifecycleState,
         capability: capabilityForInventory(selectedInventory)
       },
       assets: this.workspaceAssets()
@@ -177,8 +221,34 @@ export class SeededInventoryRepository implements InventoryRepository {
 
   private workspaceAssets(): Asset[] {
     return this.seed.assets.filter(
-      (asset) => asset.tenantId === this.selectedTenantId && asset.inventoryId === this.selectedInventoryId
+      (asset) =>
+        asset.tenantId === this.selectedTenantId &&
+        asset.inventoryId === this.selectedInventoryId &&
+        asset.lifecycleState === this.selectedLifecycleState
     );
+  }
+
+  private async setAssetLifecycle(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    lifecycleState: AssetLifecycleFilter
+  ): Promise<Asset> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    const updated: Asset = {
+      ...asset,
+      lifecycleState,
+      updatedAt: new Date().toISOString()
+    };
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.map((candidate) =>
+        candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === assetId
+          ? updated
+          : candidate
+      )
+    };
+    return updated;
   }
 
   private firstInventoryIdForTenant(tenantId: string): string {

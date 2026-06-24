@@ -6,6 +6,7 @@
     canCreateInventory,
     type AddAssetDraft,
     type Asset,
+    type AssetLifecycleFilter,
     type SearchResult,
     type UpdateAssetDraft,
     type WorkspaceData,
@@ -108,7 +109,15 @@
     }
     await run(async () => {
       const asset = await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, draft);
-      data = { ...data, assets: [asset, ...data.assets] };
+      if (data.context.assetLifecycleState === 'active') {
+        data = { ...data, assets: [asset, ...data.assets] };
+      } else {
+        data = await repository.selectAssetLifecycle(asset.tenantId, asset.inventoryId, 'active');
+        mode = 'home';
+        selectedLocationId = null;
+        selectedAssetId = null;
+        loadedAssetDetail = null;
+      }
       addOpen = false;
       message = `Saved ${asset.title}.`;
     });
@@ -152,6 +161,70 @@
     await run(async () => {
       searchResults = await repository.searchAssets(data.context.selectedTenantId, query);
       mode = 'search';
+    });
+  }
+
+  async function selectAssetLifecycle(lifecycleState: AssetLifecycleFilter): Promise<void> {
+    if (!selectedInventory) {
+      return;
+    }
+    await run(async () => {
+      data = await repository.selectAssetLifecycle(data.context.selectedTenantId, selectedInventory.id, lifecycleState);
+      mode = 'home';
+      selectedLocationId = null;
+      selectedAssetId = null;
+      loadedAssetDetail = null;
+    });
+  }
+
+  async function archiveSelectedAsset(): Promise<void> {
+    const asset = selectedAsset;
+    if (!asset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
+      await refreshSelectedAssetLifecycle();
+      closeDetailToHome();
+      message = `Archived ${asset.title}.`;
+    });
+  }
+
+  async function restoreSelectedAsset(): Promise<void> {
+    const asset = selectedAsset;
+    if (!asset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
+      await refreshSelectedAssetLifecycle();
+      closeDetailToHome();
+      message = `Restored ${asset.title}.`;
+    });
+  }
+
+  async function deleteSelectedAsset(): Promise<void> {
+    const asset = selectedAsset;
+    if (!asset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.deleteAsset(asset.tenantId, asset.inventoryId, asset.id);
+      await refreshSelectedAssetLifecycle();
+      closeDetailToHome();
+      message = `Deleted ${asset.title}.`;
     });
   }
 
@@ -202,6 +275,9 @@
     if (asset.tenantId !== data.context.selectedTenantId || asset.inventoryId !== data.context.selectedInventoryId) {
       return;
     }
+    if (asset.lifecycleState !== data.context.assetLifecycleState) {
+      return;
+    }
     const existing = data.assets.some(
       (candidate) =>
         candidate.tenantId === asset.tenantId && candidate.inventoryId === asset.inventoryId && candidate.id === asset.id
@@ -216,6 +292,24 @@
           )
         : [asset, ...data.assets]
     };
+  }
+
+  async function refreshSelectedAssetLifecycle(): Promise<void> {
+    if (!selectedInventory) {
+      return;
+    }
+    data = await repository.selectAssetLifecycle(
+      data.context.selectedTenantId,
+      selectedInventory.id,
+      data.context.assetLifecycleState
+    );
+  }
+
+  function closeDetailToHome(): void {
+    mode = 'home';
+    selectedLocationId = null;
+    selectedAssetId = null;
+    loadedAssetDetail = null;
   }
 </script>
 
@@ -240,7 +334,7 @@
       selectedTenantId={data.context.selectedTenantId}
       inventory={selectedInventory}
       bind:query={searchQuery}
-      canCreateAsset={createAssetAllowed}
+      canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
       onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
       onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
       onSearch={() => { void search(); }}
@@ -274,6 +368,9 @@
         saving={busy}
         onBack={() => { mode = selectedLocationId ? 'location' : 'home'; selectedAssetId = null; }}
         onSave={updateAsset}
+        onArchive={archiveSelectedAsset}
+        onRestore={restoreSelectedAsset}
+        onDelete={deleteSelectedAsset}
       />
     {:else if mode === 'search'}
       <SearchPanel
@@ -298,18 +395,21 @@
       </section>
     {:else}
       <HomeWorkspace
+        lifecycleState={data.context.assetLifecycleState}
         locations={topLevelLocations(data.assets)}
         recentAssets={recentlyAddedAssets(data.assets)}
+        archivedAssets={data.assets}
         onOpenLocation={openLocation}
         onOpenAsset={openAsset}
         onOpenAdd={() => { addOpen = true; }}
+        onSelectLifecycle={(lifecycleState) => { void selectAssetLifecycle(lifecycleState); }}
       />
     {/if}
   </div>
 
   <MobileNav
     {mode}
-    canCreateAsset={createAssetAllowed}
+    canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
     onModeChange={(nextMode) => { mode = nextMode; }}
     onOpenAdd={() => { addOpen = true; }}
   />

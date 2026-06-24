@@ -1,8 +1,10 @@
 <script lang="ts">
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-  import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
+  import Archive from '@lucide/svelte/icons/archive';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
+  import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
@@ -18,7 +20,10 @@
     parentTargets,
     saving,
     onBack,
-    onSave
+    onSave,
+    onArchive,
+    onRestore,
+    onDelete
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
@@ -26,9 +31,12 @@
     saving: boolean;
     onBack: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
+    onArchive: () => Promise<void>;
+    onRestore: () => Promise<void>;
+    onDelete: () => Promise<void>;
   } = $props();
 
-  let panel = $state<'none' | 'edit' | 'move'>('none');
+  let panel = $state<'none' | 'edit' | 'move' | 'delete'>('none');
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
@@ -64,6 +72,33 @@
       saveError = caught instanceof Error ? caught.message : 'Unable to save asset.';
     }
   }
+
+  async function archive(): Promise<void> {
+    saveError = '';
+    try {
+      await onArchive();
+    } catch (caught) {
+      saveError = caught instanceof Error ? caught.message : 'Unable to archive asset.';
+    }
+  }
+
+  async function restore(): Promise<void> {
+    saveError = '';
+    try {
+      await onRestore();
+    } catch (caught) {
+      saveError = caught instanceof Error ? caught.message : 'Unable to restore asset.';
+    }
+  }
+
+  async function remove(): Promise<void> {
+    saveError = '';
+    try {
+      await onDelete();
+    } catch (caught) {
+      saveError = caught instanceof Error ? caught.message : 'Unable to delete asset.';
+    }
+  }
 </script>
 
 <section class="workspace-main detail-view" aria-labelledby="asset-title">
@@ -85,9 +120,13 @@
         <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
       </dl>
       <div class="detail-actions">
-        <Button.Root disabled={!canEdit} onclick={openEdit}><Pencil /> Edit</Button.Root>
-        <Button.Root variant="outline" disabled={!canEdit} onclick={openMove}><MoveRight /> Move</Button.Root>
-        <Button.Root variant="ghost" aria-label="More asset actions"><MoreHorizontal /></Button.Root>
+        <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openEdit}><Pencil /> Edit</Button.Root>
+        <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openMove}><MoveRight /> Move</Button.Root>
+        {#if asset.lifecycleState === 'active'}
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archive(); }}><Archive /> Archive</Button.Root>
+        {:else}
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void restore(); }}><RotateCcw /> Restore</Button.Root>
+        {/if}
       </div>
       {#if !canEdit}
         <p class="denied-note">Edit actions require asset edit access.</p>
@@ -141,7 +180,25 @@
             <p class="denied-note" role="alert">{saveError}</p>
           {/if}
         </div>
+      {:else if panel === 'delete'}
+        <div class="detail-action-panel" aria-label="Delete asset">
+          <p>Delete {asset.title} permanently?</p>
+          <div class="tray-actions">
+            <Button.Root variant="outline" onclick={() => { panel = 'none'; }}>Cancel</Button.Root>
+            <Button.Root variant="destructive" disabled={saving} onclick={() => { void remove(); }}>Delete</Button.Root>
+          </div>
+          {#if saveError}
+            <p class="denied-note" role="alert">{saveError}</p>
+          {/if}
+        </div>
       {/if}
+      <div class="danger-zone" aria-label="Danger area">
+        <div>
+          <strong>Permanent deletion</strong>
+          <p>Remove this asset from the inventory permanently.</p>
+        </div>
+        <Button.Root variant="destructive" disabled={!canEdit || saving} onclick={() => { panel = 'delete'; }}><Trash2 /> Delete</Button.Root>
+      </div>
     </div>
   </div>
 </section>

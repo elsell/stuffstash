@@ -44,6 +44,16 @@ const seed: WorkspaceSeed = {
       description: 'Shelf',
       parentAssetId: null,
       lifecycleState: 'active'
+    },
+    {
+      id: 'asset-archived',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'item',
+      title: 'Archived Passport',
+      description: 'Old folder',
+      parentAssetId: null,
+      lifecycleState: 'archived'
     }
   ]
 };
@@ -126,5 +136,46 @@ describe('SeededInventoryRepository tenant selection', () => {
     await expect(repository.getAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toMatchObject({
       title: 'Updated Passport'
     });
+  });
+
+  it('switches between active and archived asset views without mixing lifecycle states', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const archived = await repository.selectAssetLifecycle('tenant-home', 'inventory-household', 'archived');
+    const active = await repository.selectAssetLifecycle('tenant-home', 'inventory-household', 'active');
+
+    expect(archived.context.assetLifecycleState).toBe('archived');
+    expect(archived.assets.map((asset) => asset.id)).toEqual(['asset-archived']);
+    expect(active.context.assetLifecycleState).toBe('active');
+    expect(active.assets.map((asset) => asset.id)).toEqual(['asset-home']);
+  });
+
+  it('keeps search scoped to active assets like the API search adapter', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    await repository.selectAssetLifecycle('tenant-home', 'inventory-household', 'archived');
+
+    await expect(repository.searchAssets('tenant-home', 'Archived Passport')).resolves.toEqual([]);
+    await expect(repository.searchAssets('tenant-home', 'Passport')).resolves.toMatchObject([
+      { asset: { id: 'asset-home', lifecycleState: 'active' } }
+    ]);
+  });
+
+  it('archives, restores, and deletes assets inside the selected inventory', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    await expect(repository.archiveAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toMatchObject({
+      id: 'asset-home',
+      lifecycleState: 'archived'
+    });
+    await expect(repository.selectAssetLifecycle('tenant-home', 'inventory-household', 'active')).resolves.toMatchObject({
+      assets: []
+    });
+    await expect(repository.restoreAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toMatchObject({
+      id: 'asset-home',
+      lifecycleState: 'active'
+    });
+    await expect(repository.deleteAsset('tenant-home', 'inventory-household', 'asset-home')).resolves.toBeUndefined();
+    await expect(repository.getAsset('tenant-home', 'inventory-household', 'asset-home')).rejects.toThrow('Asset not found');
   });
 });
