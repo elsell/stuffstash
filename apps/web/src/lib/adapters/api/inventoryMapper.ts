@@ -4,6 +4,8 @@ import type {
   Asset as ApiAsset,
   Attachment as ApiAttachment,
   AssetKind as ApiAssetKind,
+  CustomAssetType as ApiCustomAssetType,
+  CustomFieldDefinition as ApiCustomFieldDefinition,
   AssetSearchResult as ApiSearchResult,
   InventoryAccessGrant as ApiInventoryAccessGrant,
   InventoryAccessInvitation as ApiInventoryAccessInvitation,
@@ -20,6 +22,8 @@ import {
   type AttachmentContentType,
   type AssetKind,
   type CreatedInventoryAccessInvitation,
+  type CustomAssetType,
+  type CustomFieldDefinition,
   type InventoryAccessGrant,
   type InventoryAccessInvitation,
   type Capability,
@@ -70,6 +74,8 @@ export function mapAsset(asset: ApiAsset): Asset {
     description: asset.description,
     parentAssetId: asset.parentAssetId,
     lifecycleState: asset.lifecycleState,
+    customAssetTypeId: asset.customAssetTypeId,
+    customFields: asset.customFields,
     updatedAt: undefined
   };
 }
@@ -144,6 +150,35 @@ export function mapAuditRecord(record: ApiAuditRecord): AuditRecord {
     occurredAt: record.occurredAt,
     requestId: record.requestId,
     metadata: record.metadata
+  };
+}
+
+export function mapCustomAssetType(assetType: ApiCustomAssetType): CustomAssetType {
+  return {
+    id: assetType.id,
+    tenantId: assetType.tenantId,
+    inventoryId: assetType.inventoryId,
+    scope: assetType.scope,
+    key: assetType.key,
+    displayName: assetType.displayName,
+    description: assetType.description,
+    lifecycleState: assetType.lifecycleState
+  };
+}
+
+export function mapCustomFieldDefinition(definition: ApiCustomFieldDefinition): CustomFieldDefinition {
+  return {
+    id: definition.id,
+    tenantId: definition.tenantId,
+    inventoryId: definition.inventoryId,
+    scope: definition.scope,
+    key: definition.key,
+    displayName: definition.displayName,
+    type: definition.type,
+    enumOptions: definition.enumOptions,
+    applicability: definition.applicability,
+    customAssetTypeIds: definition.customAssetTypeIds,
+    lifecycleState: definition.lifecycleState
   };
 }
 

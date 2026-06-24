@@ -9,6 +9,10 @@ export type Capability = 'editor' | 'viewer';
 export type InventoryAccessRelationship = 'viewer' | 'editor';
 export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
 export type InvitationStatusFilter = InvitationStatus | 'all';
+export type CustomDefinitionScope = 'tenant' | 'inventory';
+export type CustomDefinitionLifecycleState = 'active' | 'archived';
+export type CustomFieldType = 'text' | 'number' | 'boolean' | 'date' | 'url' | 'enum';
+export type CustomFieldApplicability = 'all_assets' | 'custom_asset_types';
 
 export interface Principal {
   id: string;
@@ -93,6 +97,31 @@ export interface AuditRecord {
   metadata: Record<string, string>;
 }
 
+export interface CustomAssetType {
+  id: string;
+  tenantId: string;
+  inventoryId: string | null;
+  scope: CustomDefinitionScope;
+  key: string;
+  displayName: string;
+  description: string;
+  lifecycleState: CustomDefinitionLifecycleState;
+}
+
+export interface CustomFieldDefinition {
+  id: string;
+  tenantId: string;
+  inventoryId: string | null;
+  scope: CustomDefinitionScope;
+  key: string;
+  displayName: string;
+  type: CustomFieldType;
+  enumOptions: string[];
+  applicability: CustomFieldApplicability;
+  customAssetTypeIds: string[];
+  lifecycleState: CustomDefinitionLifecycleState;
+}
+
 export interface MediaUploadPolicy {
   supportedContentTypes: AttachmentContentType[];
   maxBytes: number;
@@ -107,6 +136,8 @@ export interface Asset {
   description: string;
   parentAssetId: string | null;
   lifecycleState: AssetLifecycleState;
+  customAssetTypeId?: string;
+  customFields?: Record<string, unknown>;
   customAssetTypeLabel?: string;
   photo?: AssetPhoto;
   updatedAt?: string;
@@ -135,6 +166,8 @@ export interface AddAssetDraft {
   title: string;
   description: string;
   parentAssetId: string | null;
+  customAssetTypeId?: string;
+  customFields?: Record<string, unknown>;
   photos: SelectedPhoto[];
 }
 
@@ -142,6 +175,7 @@ export interface UpdateAssetDraft {
   title: string;
   description: string;
   parentAssetId: string | null;
+  customFields?: Record<string, unknown>;
 }
 
 export interface SelectedPhoto {
@@ -161,6 +195,8 @@ export interface WorkspaceContext {
   selectedInventoryId: string;
   assetLifecycleState: AssetLifecycleFilter;
   mediaUploadPolicy: MediaUploadPolicy;
+  customAssetTypes: CustomAssetType[];
+  customFieldDefinitions: CustomFieldDefinition[];
   capability: Capability;
 }
 
@@ -213,4 +249,16 @@ export function canEditInventory(inventory: Inventory | null | undefined): boole
 
 export function canEditAsset(inventory: Inventory | null | undefined): boolean {
   return hasAccessPermission(inventory?.access, 'edit_asset');
+}
+
+export function applicableCustomFieldDefinitions(
+  definitions: CustomFieldDefinition[],
+  customAssetTypeId: string | undefined
+): CustomFieldDefinition[] {
+  return definitions.filter(
+    (definition) =>
+      definition.lifecycleState === 'active' &&
+      (definition.applicability === 'all_assets' ||
+        (!!customAssetTypeId && definition.customAssetTypeIds.includes(customAssetTypeId)))
+  );
 }

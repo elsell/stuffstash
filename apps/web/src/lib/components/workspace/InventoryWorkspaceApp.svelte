@@ -8,6 +8,8 @@
     type Asset,
     type AssetAttachment,
     type AssetLifecycleFilter,
+    type CustomAssetType,
+    type CustomFieldDefinition,
     type SearchLifecycleFilter,
     type SearchMode,
     type SearchResult,
@@ -17,6 +19,7 @@
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+  import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
@@ -35,7 +38,7 @@
     initialData,
     onSignOut
   }: {
-    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository;
+    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
     initialData: WorkspaceData;
     onSignOut: () => void;
   } = $props();
@@ -62,17 +65,18 @@
 
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
-  let selectedLocation = $derived(data.assets.find((asset) => asset.id === selectedLocationId) ?? null);
+  let assets = $derived(labelAssets(data.assets, data.context.customAssetTypes));
+  let selectedLocation = $derived(assets.find((asset) => asset.id === selectedLocationId) ?? null);
   let detailAssets = $derived(
-    loadedAssetDetail && !data.assets.some((asset) => asset.id === loadedAssetDetail?.id)
-      ? [loadedAssetDetail, ...data.assets]
-      : data.assets
+    loadedAssetDetail && !assets.some((asset) => asset.id === loadedAssetDetail?.id)
+      ? [labelAsset(loadedAssetDetail, data.context.customAssetTypes), ...assets]
+      : assets
   );
   let selectedAsset = $derived(
     selectedAssetId
       ? loadedAssetDetail?.id === selectedAssetId
-        ? loadedAssetDetail
-        : data.assets.find((asset) => asset.id === selectedAssetId) ?? null
+        ? labelAsset(loadedAssetDetail, data.context.customAssetTypes)
+        : assets.find((asset) => asset.id === selectedAssetId) ?? null
       : null
   );
   let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
@@ -151,7 +155,7 @@
               }
             }
           : asset;
-        data = { ...data, assets: [savedAsset, ...data.assets] };
+      data = { ...data, assets: [savedAsset, ...data.assets] };
         message =
           uploadFailures > 0
             ? `Saved ${asset.title}. ${uploadFailures} photo upload ${uploadFailures === 1 ? 'failed' : 'failed'}.`
@@ -359,7 +363,7 @@
 
   function openAssetById(assetId: string): void {
     const asset =
-      data.assets.find((candidate) => candidate.id === assetId) ??
+      assets.find((candidate) => candidate.id === assetId) ??
       searchResults.find((result) => result.asset.id === assetId)?.asset;
     if (asset) {
       openAsset(asset);
@@ -449,6 +453,31 @@
   function invalidateAssetDetailLoad(): void {
     assetDetailRequestId += 1;
   }
+
+  function updateCustomizationContext(assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]): void {
+    data = {
+      ...data,
+      context: {
+        ...data.context,
+        customAssetTypes: assetTypes,
+        customFieldDefinitions: fieldDefinitions
+      }
+    };
+  }
+
+  function labelAssets(items: Asset[], customAssetTypes: CustomAssetType[]): Asset[] {
+    return items.map((asset) => labelAsset(asset, customAssetTypes));
+  }
+
+  function labelAsset(asset: Asset, customAssetTypes: CustomAssetType[]): Asset {
+    if (asset.customAssetTypeLabel || !asset.customAssetTypeId) {
+      return asset;
+    }
+    return {
+      ...asset,
+      customAssetTypeLabel: customAssetTypes.find((assetType) => assetType.id === asset.customAssetTypeId)?.displayName
+    };
+  }
 </script>
 
 <div class="product-shell">
@@ -495,7 +524,7 @@
     {:else if mode === 'location' && selectedLocation}
       <LocationView
         location={selectedLocation}
-        assets={containedAssets(data.assets, selectedLocation.id)}
+        assets={containedAssets(assets, selectedLocation.id)}
         onBack={() => { mode = 'home'; selectedLocationId = null; }}
         onOpenAsset={openAsset}
       />
@@ -504,6 +533,7 @@
         asset={withTrail(selectedAsset, detailAssets)}
         canEdit={editAssetAllowed}
         parentTargets={moveParentTargets(detailAssets, selectedAsset.id)}
+        customFieldDefinitions={data.context.customFieldDefinitions}
         saving={busy}
         attachments={selectedAssetAttachments}
         onBack={closeDetailToPrevious}
@@ -533,13 +563,17 @@
         inventoryCount={data.context.inventories.length}
         accessRepository={repository}
         auditRepository={repository}
+        customizationRepository={repository}
+        customAssetTypes={data.context.customAssetTypes}
+        customFieldDefinitions={data.context.customFieldDefinitions}
+        onCustomizationChange={updateCustomizationContext}
       />
     {:else}
       <HomeWorkspace
         lifecycleState={data.context.assetLifecycleState}
-        locations={topLevelLocations(data.assets)}
-        recentAssets={recentlyAddedAssets(data.assets)}
-        archivedAssets={data.assets}
+        locations={topLevelLocations(assets)}
+        recentAssets={recentlyAddedAssets(assets)}
+        archivedAssets={assets}
         onOpenLocation={openLocation}
         onOpenAsset={openAsset}
         onOpenAdd={() => { addOpen = true; }}
@@ -557,8 +591,10 @@
 
   <AddAssetTray
     open={addOpen && createAssetAllowed}
-    parentTargets={parentTargets(data.assets)}
+    parentTargets={parentTargets(assets)}
     mediaPolicy={data.context.mediaUploadPolicy}
+    customAssetTypes={data.context.customAssetTypes}
+    customFieldDefinitions={data.context.customFieldDefinitions}
     saving={busy}
     onClose={() => { addOpen = false; }}
     onSave={createAsset}

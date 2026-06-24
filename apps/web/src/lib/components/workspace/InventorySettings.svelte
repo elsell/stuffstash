@@ -1,28 +1,37 @@
 <script lang="ts">
   import Boxes from '@lucide/svelte/icons/boxes';
   import Shield from '@lucide/svelte/icons/shield';
-  import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import type { Inventory, Tenant } from '$lib/domain/inventory';
+  import type { CustomAssetType, CustomFieldDefinition, Inventory, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+  import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import InventoryAccessManager from './InventoryAccessManager.svelte';
   import InventoryAuditPanel from './InventoryAuditPanel.svelte';
+  import InventoryCustomizationManager from './InventoryCustomizationManager.svelte';
 
   let {
     tenant,
     inventory,
     inventoryCount,
     accessRepository,
-    auditRepository
+    auditRepository,
+    customizationRepository,
+    customAssetTypes,
+    customFieldDefinitions,
+    onCustomizationChange
   }: {
     tenant: Tenant | null;
     inventory: Inventory | null;
     inventoryCount: number;
     accessRepository: InventoryAccessRepository;
     auditRepository: InventoryAuditRepository;
+    customizationRepository: InventoryCustomizationRepository;
+    customAssetTypes: CustomAssetType[];
+    customFieldDefinitions: CustomFieldDefinition[];
+    onCustomizationChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
@@ -69,20 +78,14 @@
 
       <InventoryAuditPanel {tenant} {inventory} repository={auditRepository} />
 
-      <section class="settings-panel" aria-labelledby="settings-customization">
-        <div class="settings-panel-heading">
-          <SlidersHorizontal aria-hidden="true" />
-          <div>
-            <h2 id="settings-customization">Customization</h2>
-            <p>
-              {canConfigureInventory
-                ? 'Custom fields and asset types are planned for configuration.'
-                : 'Configuration requires inventory configure access.'}
-            </p>
-          </div>
-        </div>
-        <Button.Root variant="outline" disabled={true}>Manage fields unavailable</Button.Root>
-      </section>
+      <InventoryCustomizationManager
+        {tenant}
+        {inventory}
+        repository={customizationRepository}
+        initialAssetTypes={customAssetTypes}
+        initialFieldDefinitions={customFieldDefinitions}
+        onSchemaChange={onCustomizationChange}
+      />
 
       <section class="settings-panel" aria-labelledby="settings-admin">
         <div class="settings-panel-heading">

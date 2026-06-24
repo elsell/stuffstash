@@ -12,8 +12,9 @@ describe('inventory API mapper', () => {
         title: 'Garage',
         description: 'Main storage',
         parentAssetId: null,
-        lifecycleState: 'active'
-      })
+        lifecycleState: 'active',
+        customFields: {}
+      } as any)
     ).toEqual({
       id: 'asset-one',
       tenantId: 'tenant-one',
@@ -23,6 +24,7 @@ describe('inventory API mapper', () => {
       description: 'Main storage',
       parentAssetId: null,
       lifecycleState: 'active',
+      customFields: {},
       updatedAt: undefined
     });
   });
@@ -40,8 +42,9 @@ describe('inventory API mapper', () => {
         title: 'Passport',
         description: 'Blue folder',
         lifecycleState: 'active',
+        customFields: {},
         parentAssetId: 'hall-closet'
-      },
+      } as any,
       matches: [{ field: 'title', value: 'Passport' }]
     });
 

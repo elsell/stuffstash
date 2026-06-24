@@ -24,6 +24,8 @@ const seed: WorkspaceSeed = {
       access: { relationship: 'viewer', permissions: ['view'] }
     }
   ],
+  customAssetTypes: [],
+  customFieldDefinitions: [],
   assets: [
     {
       id: 'asset-home',
@@ -253,6 +255,50 @@ describe('SeededInventoryRepository tenant selection', () => {
       action: 'inventory.created',
       targetType: 'inventory'
     });
+  });
+
+  it('manages effective custom asset types and field definitions in memory', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const assetType = await repository.createCustomAssetType('tenant-home', 'inventory-household', {
+      scope: 'inventory',
+      key: 'medicine',
+      displayName: 'Medicine',
+      description: 'Medication'
+    });
+    const field = await repository.createCustomFieldDefinition('tenant-home', 'inventory-household', {
+      scope: 'inventory',
+      key: 'expiration-date',
+      displayName: 'Expiration date',
+      type: 'date',
+      enumOptions: [],
+      applicability: 'custom_asset_types',
+      customAssetTypeIds: [assetType.id]
+    });
+
+    await expect(repository.listInventoryCustomAssetTypes('tenant-home', 'inventory-household')).resolves.toMatchObject({
+      items: [{ id: assetType.id, displayName: 'Medicine' }]
+    });
+    await expect(repository.listInventoryCustomFieldDefinitions('tenant-home', 'inventory-household')).resolves.toMatchObject({
+      items: [{ id: field.id, customAssetTypeIds: [assetType.id] }]
+    });
+
+    await repository.archiveCustomFieldDefinition('tenant-home', 'inventory-household', field.id, 'inventory');
+    await repository.archiveCustomAssetType('tenant-home', 'inventory-household', assetType.id, 'inventory');
+
+    await expect(repository.listInventoryCustomAssetTypes('tenant-home', 'inventory-household')).resolves.toMatchObject({ items: [] });
+    await expect(repository.listInventoryCustomFieldDefinitions('tenant-home', 'inventory-household')).resolves.toMatchObject({ items: [] });
+    await expect(
+      repository.createCustomFieldDefinition('tenant-home', 'inventory-household', {
+        scope: 'tenant',
+        key: 'tenant-expiration',
+        displayName: 'Tenant expiration',
+        type: 'date',
+        enumOptions: [],
+        applicability: 'custom_asset_types',
+        customAssetTypeIds: [assetType.id]
+      })
+    ).rejects.toThrow('Custom field target is not available.');
   });
 
   it('appends local audit records for attachments and access mutations', async () => {

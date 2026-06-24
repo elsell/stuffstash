@@ -17,6 +17,11 @@ import type {
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+import type {
+  CustomAssetTypeDraft,
+  CustomFieldDefinitionDraft,
+  InventoryCustomizationRepository
+} from '$lib/ports/inventoryCustomizationRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import {
   mapAsset,
@@ -24,6 +29,8 @@ import {
   mapAuditRecord,
   mapCapability,
   mapCreatedInventoryAccessInvitation,
+  mapCustomAssetType,
+  mapCustomFieldDefinition,
   mapInventory,
   mapPrincipal,
   mapSearchResult,
@@ -31,7 +38,9 @@ import {
 } from './inventoryMapper';
 import { mapInventoryAccessGrant, mapInventoryAccessInvitation } from './inventoryMapper';
 
-export class StuffStashInventoryRepository implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository {
+export class StuffStashInventoryRepository
+  implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+{
   private readonly client: StuffStashClient;
   private readonly uploadFetch: typeof fetch;
   private readonly config: RuntimeConfig;
@@ -70,6 +79,8 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
             selectedInventoryId: '',
             assetLifecycleState: 'active',
             mediaUploadPolicy: this.config.mediaUploadPolicy,
+            customAssetTypes: [],
+            customFieldDefinitions: [],
             capability: 'viewer'
           },
           assets: []
@@ -97,6 +108,8 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
         selectedInventoryId: inventory.id,
         assetLifecycleState: 'active',
         mediaUploadPolicy: this.config.mediaUploadPolicy,
+        customAssetTypes: [],
+        customFieldDefinitions: [],
         capability: mapCapability(inventory)
       },
       assets: []
@@ -140,7 +153,9 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
           kind: draft.kind,
           title: draft.title,
           description: draft.description,
-          parentAssetId: draft.parentAssetId
+          parentAssetId: draft.parentAssetId,
+          customAssetTypeId: draft.customAssetTypeId,
+          customFields: draft.customFields
         })
       );
       this.observer.record('workspace.asset_created', { kind: asset.kind });
@@ -170,7 +185,8 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
         await this.client.updateAsset(tenantId, inventoryId, assetId, {
           title: draft.title,
           description: draft.description,
-          parentAssetId: draft.parentAssetId
+          parentAssetId: draft.parentAssetId,
+          customFields: draft.customFields
         })
       );
       this.observer.record('workspace.asset_updated', { kind: asset.kind });
@@ -463,6 +479,57 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
     }
   }
 
+  async listInventoryCustomAssetTypes(tenantId: string, inventoryId: string, cursor?: string) {
+    const page = await this.client.listInventoryCustomAssetTypes(tenantId, inventoryId, 50, cursor);
+    return { items: page.items.map(mapCustomAssetType), pagination: page.pagination };
+  }
+
+  async createCustomAssetType(tenantId: string, inventoryId: string, draft: CustomAssetTypeDraft) {
+    const input = { key: draft.key, displayName: draft.displayName, description: draft.description };
+    const assetType =
+      draft.scope === 'tenant'
+        ? await this.client.createTenantCustomAssetType(tenantId, input)
+        : await this.client.createInventoryCustomAssetType(tenantId, inventoryId, input);
+    return mapCustomAssetType(assetType);
+  }
+
+  async archiveCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory') {
+    const assetType =
+      scope === 'tenant'
+        ? await this.client.archiveTenantCustomAssetType(tenantId, customAssetTypeId)
+        : await this.client.archiveInventoryCustomAssetType(tenantId, inventoryId, customAssetTypeId);
+    return mapCustomAssetType(assetType);
+  }
+
+  async listInventoryCustomFieldDefinitions(tenantId: string, inventoryId: string, cursor?: string) {
+    const page = await this.client.listInventoryCustomFieldDefinitions(tenantId, inventoryId, 50, cursor);
+    return { items: page.items.map(mapCustomFieldDefinition), pagination: page.pagination };
+  }
+
+  async createCustomFieldDefinition(tenantId: string, inventoryId: string, draft: CustomFieldDefinitionDraft) {
+    const input = {
+      key: draft.key,
+      displayName: draft.displayName,
+      type: draft.type,
+      enumOptions: draft.enumOptions,
+      applicability: draft.applicability,
+      customAssetTypeIds: draft.customAssetTypeIds
+    };
+    const definition =
+      draft.scope === 'tenant'
+        ? await this.client.createTenantCustomFieldDefinition(tenantId, input)
+        : await this.client.createInventoryCustomFieldDefinition(tenantId, inventoryId, input);
+    return mapCustomFieldDefinition(definition);
+  }
+
+  async archiveCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory') {
+    const definition =
+      scope === 'tenant'
+        ? await this.client.archiveTenantCustomFieldDefinition(tenantId, definitionId)
+        : await this.client.archiveInventoryCustomFieldDefinition(tenantId, inventoryId, definitionId);
+    return mapCustomFieldDefinition(definition);
+  }
+
   private async loadTenantWorkspace(
     principal: ReturnType<typeof mapPrincipal>,
     tenants: ReturnType<typeof mapTenant>[],
@@ -475,6 +542,12 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
     const selectedInventory = inventories.find((inventory) => inventory.id === inventoryId) ?? inventories[0] ?? null;
     this.selectedInventoryId = selectedInventory?.id ?? '';
     this.rememberSelection();
+    const customAssetTypes = selectedInventory
+      ? (await this.client.listInventoryCustomAssetTypes(tenantId, selectedInventory.id, 100)).items.map(mapCustomAssetType)
+      : [];
+    const customFieldDefinitions = selectedInventory
+      ? (await this.client.listInventoryCustomFieldDefinitions(tenantId, selectedInventory.id, 100)).items.map(mapCustomFieldDefinition)
+      : [];
     const assets = selectedInventory
       ? (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, lifecycleState)).items.map(mapAsset)
       : [];
@@ -492,6 +565,8 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
         selectedInventoryId: this.selectedInventoryId,
         assetLifecycleState: lifecycleState,
         mediaUploadPolicy: this.config.mediaUploadPolicy,
+        customAssetTypes,
+        customFieldDefinitions,
         capability: mapCapability(selectedInventory)
       },
       assets

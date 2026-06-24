@@ -6,13 +6,23 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import type { AddAssetDraft, AssetKind, AssetViewModel, MediaUploadPolicy, SelectedPhoto } from '$lib/domain/inventory';
-  import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import type {
+    AddAssetDraft,
+    AssetKind,
+    AssetViewModel,
+    CustomAssetType,
+    CustomFieldDefinition,
+    MediaUploadPolicy,
+    SelectedPhoto
+  } from '$lib/domain/inventory';
+  import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
 
   let {
     open,
     parentTargets,
     mediaPolicy,
+    customAssetTypes,
+    customFieldDefinitions,
     saving,
     onClose,
     onSave
@@ -20,6 +30,8 @@
     open: boolean;
     parentTargets: AssetViewModel[];
     mediaPolicy: MediaUploadPolicy;
+    customAssetTypes: CustomAssetType[];
+    customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     onClose: () => void;
     onSave: (draft: AddAssetDraft) => Promise<boolean>;
@@ -29,9 +41,14 @@
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state('');
+  let customAssetTypeId = $state('');
+  let customFieldValues = $state<Record<string, string>>({});
   let selectedPhotos = $state<SelectedPhoto[]>([]);
   let photoError = $state('');
   let fileInputKey = $state(0);
+
+  let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
+  let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
 
   async function save(): Promise<void> {
     if (!title.trim() || photoError) {
@@ -42,6 +59,8 @@
       title: title.trim(),
       description: description.trim(),
       parentAssetId: parentAssetId || null,
+      customAssetTypeId: customAssetTypeId || undefined,
+      customFields: buildCustomFields(),
       photos: selectedPhotos
     });
     if (!saved) {
@@ -50,6 +69,8 @@
     title = '';
     description = '';
     parentAssetId = '';
+    customAssetTypeId = '';
+    customFieldValues = {};
     selectedPhotos = [];
     photoError = '';
   }
@@ -88,6 +109,34 @@
     if (selectedPhotos.length === 0) {
       photoError = '';
     }
+  }
+
+  function setCustomAssetType(nextId: string): void {
+    customAssetTypeId = nextId;
+    customFieldValues = {};
+  }
+
+  function setCustomFieldValue(key: string, value: string): void {
+    customFieldValues = { ...customFieldValues, [key]: value };
+  }
+
+  function buildCustomFields(): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const field of applicableFields) {
+      const value = customFieldValues[field.key] ?? '';
+      if (!value) {
+        continue;
+      }
+      values[field.key] = field.type === 'number' ? Number(value) : field.type === 'boolean' ? value === 'true' : value;
+    }
+    return values;
+  }
+
+  function inputType(field: CustomFieldDefinition): string {
+    if (field.type === 'number') return 'number';
+    if (field.type === 'date') return 'date';
+    if (field.type === 'url') return 'url';
+    return 'text';
   }
 
   function formatBytes(sizeBytes: number): string {
@@ -137,6 +186,69 @@
       <Label for="asset-description">Description</Label>
       <Textarea id="asset-description" bind:value={description} placeholder="Optional notes" />
     </div>
+
+    {#if activeCustomAssetTypes.length > 0}
+      <div class="field-stack">
+        <Label>Custom type</Label>
+        <div class="parent-picker" role="group" aria-label="Custom asset type">
+          <Button.Root variant={customAssetTypeId === '' ? 'secondary' : 'outline'} onclick={() => setCustomAssetType('')}>
+            Base asset
+          </Button.Root>
+          {#each activeCustomAssetTypes as assetType}
+            <Button.Root
+              variant={customAssetTypeId === assetType.id ? 'secondary' : 'outline'}
+              onclick={() => setCustomAssetType(assetType.id)}
+            >
+              {assetType.displayName}
+            </Button.Root>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    {#if applicableFields.length > 0}
+      <div class="custom-field-grid" aria-label="Custom fields">
+        {#each applicableFields as field}
+          <div class="field-stack">
+            <Label for={`custom-field-${field.key}`}>{field.displayName}</Label>
+            {#if field.type === 'boolean'}
+              <div class="kind-segment" role="group" aria-label={field.displayName}>
+                <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
+                  Unset
+                </Button.Root>
+                <Button.Root variant={customFieldValues[field.key] === 'true' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, 'true')}>
+                  Yes
+                </Button.Root>
+                <Button.Root variant={customFieldValues[field.key] === 'false' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, 'false')}>
+                  No
+                </Button.Root>
+              </div>
+            {:else if field.type === 'enum'}
+              <div class="parent-picker" role="group" aria-label={field.displayName}>
+                <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
+                  Unset
+                </Button.Root>
+                {#each field.enumOptions as option}
+                  <Button.Root
+                    variant={customFieldValues[field.key] === option ? 'secondary' : 'outline'}
+                    onclick={() => setCustomFieldValue(field.key, option)}
+                  >
+                    {option}
+                  </Button.Root>
+                {/each}
+              </div>
+            {:else}
+              <Input
+                id={`custom-field-${field.key}`}
+                type={inputType(field)}
+                value={customFieldValues[field.key] ?? ''}
+                oninput={(event) => setCustomFieldValue(field.key, event.currentTarget.value)}
+              />
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {/if}
 
     <div class="photo-actions">
       <Label for="asset-photos" class="photo-label"><Upload /> Upload</Label>

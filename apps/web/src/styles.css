@@ -601,6 +601,40 @@ small {
   justify-items: end;
 }
 
+.customization-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.customization-column,
+.schema-list,
+.custom-field-grid {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.schema-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.schema-row > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.custom-detail-list {
+  margin-top: 8px;
+}
+
 .asset-row-main,
 .asset-row-meta {
   display: grid;
@@ -613,6 +647,8 @@ small {
   .access-columns,
   .access-row,
   .invitation-row,
+  .customization-grid,
+  .schema-row,
   .audit-row {
     grid-template-columns: 1fr;
   }

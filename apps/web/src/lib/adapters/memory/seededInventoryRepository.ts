@@ -7,6 +7,8 @@ import {
   type AssetAttachment,
   type AuditRecord,
   type CreatedInventoryAccessInvitation,
+  type CustomAssetType,
+  type CustomFieldDefinition,
   defaultMediaUploadPolicy,
   type Inventory,
   type InventoryAccessGrant,
@@ -22,9 +24,16 @@ import {
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { AuditRecordPage, InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+import type {
+  CustomAssetTypeDraft,
+  CustomFieldDefinitionDraft,
+  InventoryCustomizationRepository
+} from '$lib/ports/inventoryCustomizationRepository';
 import { filterAssets } from '$lib/application/workspace';
 
-export class SeededInventoryRepository implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository {
+export class SeededInventoryRepository
+  implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+{
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
   private auditRecords: AuditRecord[] = [];
@@ -150,6 +159,9 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       description: draft.description,
       parentAssetId: draft.parentAssetId,
       lifecycleState: 'active',
+      customAssetTypeId: draft.customAssetTypeId,
+      customFields: draft.customFields ?? {},
+      customAssetTypeLabel: this.customAssetTypeLabel(draft.customAssetTypeId),
       photo: draft.photos[0]
         ? {
             id: draft.photos[0].id,
@@ -181,6 +193,7 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       title: draft.title,
       description: draft.description,
       parentAssetId: draft.parentAssetId,
+      customFields: draft.customFields ?? asset.customFields ?? {},
       updatedAt: new Date().toISOString()
     };
     this.seed = {
@@ -338,6 +351,118 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
   ): Promise<AuditRecordPage> {
     const records = this.auditRecords.filter((record) => record.tenantId === tenantId && record.inventoryId === inventoryId);
     return page(records, cursor);
+  }
+
+  async listInventoryCustomAssetTypes(tenantId: string, inventoryId: string, cursor?: string): Promise<InventoryAccessPage<CustomAssetType>> {
+    return page(this.effectiveCustomAssetTypes(tenantId, inventoryId), cursor);
+  }
+
+  async createCustomAssetType(tenantId: string, inventoryId: string, draft: CustomAssetTypeDraft): Promise<CustomAssetType> {
+    const assetType: CustomAssetType = {
+      id: `custom-asset-type-${Date.now()}`,
+      tenantId,
+      inventoryId: draft.scope === 'inventory' ? inventoryId : null,
+      scope: draft.scope,
+      key: draft.key,
+      displayName: draft.displayName,
+      description: draft.description,
+      lifecycleState: 'active'
+    };
+    this.seed = { ...this.seed, customAssetTypes: [assetType, ...this.seed.customAssetTypes] };
+    this.recordAudit({
+      tenantId,
+      inventoryId: assetType.inventoryId,
+      action: 'custom_asset_type.created',
+      targetType: 'custom_asset_type',
+      targetId: assetType.id,
+      metadata: { key: assetType.key, displayName: assetType.displayName }
+    });
+    return assetType;
+  }
+
+  async archiveCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    customAssetTypeId: string,
+    scope: 'tenant' | 'inventory'
+  ): Promise<CustomAssetType> {
+    const assetType = this.findCustomAssetType(tenantId, inventoryId, customAssetTypeId, scope);
+    const updated: CustomAssetType = { ...assetType, lifecycleState: 'archived' };
+    this.seed = {
+      ...this.seed,
+      customAssetTypes: this.seed.customAssetTypes.map((candidate) => (candidate === assetType ? updated : candidate))
+    };
+    this.recordAudit({
+      tenantId,
+      inventoryId: updated.inventoryId,
+      action: 'custom_asset_type.archived',
+      targetType: 'custom_asset_type',
+      targetId: updated.id,
+      metadata: { key: updated.key }
+    });
+    return updated;
+  }
+
+  async listInventoryCustomFieldDefinitions(
+    tenantId: string,
+    inventoryId: string,
+    cursor?: string
+  ): Promise<InventoryAccessPage<CustomFieldDefinition>> {
+    return page(this.effectiveCustomFieldDefinitions(tenantId, inventoryId), cursor);
+  }
+
+  async createCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    draft: CustomFieldDefinitionDraft
+  ): Promise<CustomFieldDefinition> {
+    this.validateCustomFieldTargets(tenantId, inventoryId, draft);
+    const definition: CustomFieldDefinition = {
+      id: `custom-field-${Date.now()}`,
+      tenantId,
+      inventoryId: draft.scope === 'inventory' ? inventoryId : null,
+      scope: draft.scope,
+      key: draft.key,
+      displayName: draft.displayName,
+      type: draft.type,
+      enumOptions: draft.enumOptions,
+      applicability: draft.applicability,
+      customAssetTypeIds: draft.customAssetTypeIds,
+      lifecycleState: 'active'
+    };
+    this.seed = { ...this.seed, customFieldDefinitions: [definition, ...this.seed.customFieldDefinitions] };
+    this.recordAudit({
+      tenantId,
+      inventoryId: definition.inventoryId,
+      action: 'custom_field_definition.created',
+      targetType: 'custom_field_definition',
+      targetId: definition.id,
+      metadata: { key: definition.key, displayName: definition.displayName }
+    });
+    return definition;
+  }
+
+  async archiveCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    definitionId: string,
+    scope: 'tenant' | 'inventory'
+  ): Promise<CustomFieldDefinition> {
+    const definition = this.findCustomFieldDefinition(tenantId, inventoryId, definitionId, scope);
+    const updated: CustomFieldDefinition = { ...definition, lifecycleState: 'archived' };
+    this.seed = {
+      ...this.seed,
+      customFieldDefinitions: this.seed.customFieldDefinitions.map((candidate) => (candidate === definition ? updated : candidate))
+    };
+    this.recordAudit({
+      tenantId,
+      inventoryId: updated.inventoryId,
+      action: 'custom_field_definition.archived',
+      targetType: 'custom_field_definition',
+      targetId: updated.id,
+      metadata: { key: updated.key }
+    });
+    return updated;
   }
 
   async listInventoryAccessGrants(
@@ -520,6 +645,8 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
         selectedInventoryId: this.selectedInventoryId,
         assetLifecycleState: this.selectedLifecycleState,
         mediaUploadPolicy: defaultMediaUploadPolicy,
+        customAssetTypes: this.effectiveCustomAssetTypes(this.selectedTenantId, this.selectedInventoryId),
+        customFieldDefinitions: this.effectiveCustomFieldDefinitions(this.selectedTenantId, this.selectedInventoryId),
         capability: capabilityForInventory(selectedInventory)
       },
       assets: this.workspaceAssets()
@@ -640,6 +767,98 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       throw new Error('Invitation not found.');
     }
     return invitation;
+  }
+
+  private effectiveCustomAssetTypes(tenantId: string, inventoryId: string): CustomAssetType[] {
+    return this.seed.customAssetTypes.filter(
+      (assetType) =>
+        assetType.tenantId === tenantId &&
+        assetType.lifecycleState === 'active' &&
+        (assetType.scope === 'tenant' || assetType.inventoryId === inventoryId)
+    );
+  }
+
+  private effectiveCustomFieldDefinitions(tenantId: string, inventoryId: string): CustomFieldDefinition[] {
+    return this.seed.customFieldDefinitions.filter(
+      (definition) =>
+        definition.tenantId === tenantId &&
+        definition.lifecycleState === 'active' &&
+        (definition.scope === 'tenant' || definition.inventoryId === inventoryId)
+    );
+  }
+
+  private customAssetTypeLabel(customAssetTypeId: string | undefined): string | undefined {
+    if (!customAssetTypeId) {
+      return undefined;
+    }
+    return this.seed.customAssetTypes.find((assetType) => assetType.id === customAssetTypeId)?.displayName;
+  }
+
+  private findCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    customAssetTypeId: string,
+    scope: 'tenant' | 'inventory'
+  ): CustomAssetType {
+    const assetType = this.seed.customAssetTypes.find(
+      (candidate) =>
+        candidate.id === customAssetTypeId &&
+        candidate.tenantId === tenantId &&
+        candidate.scope === scope &&
+        (scope === 'tenant' || candidate.inventoryId === inventoryId)
+    );
+    if (!assetType) {
+      throw new Error('Custom asset type not found.');
+    }
+    return assetType;
+  }
+
+  private findCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    definitionId: string,
+    scope: 'tenant' | 'inventory'
+  ): CustomFieldDefinition {
+    const definition = this.seed.customFieldDefinitions.find(
+      (candidate) =>
+        candidate.id === definitionId &&
+        candidate.tenantId === tenantId &&
+        candidate.scope === scope &&
+        (scope === 'tenant' || candidate.inventoryId === inventoryId)
+    );
+    if (!definition) {
+      throw new Error('Custom field definition not found.');
+    }
+    return definition;
+  }
+
+  private validateCustomFieldTargets(tenantId: string, inventoryId: string, draft: CustomFieldDefinitionDraft): void {
+    if (draft.applicability === 'all_assets') {
+      if (draft.customAssetTypeIds.length > 0) {
+        throw new Error('All-asset fields cannot target custom asset types.');
+      }
+      return;
+    }
+    if (draft.customAssetTypeIds.length === 0) {
+      throw new Error('Custom-type fields require at least one target.');
+    }
+    const seen = new Set<string>();
+    for (const customAssetTypeId of draft.customAssetTypeIds) {
+      if (seen.has(customAssetTypeId)) {
+        throw new Error('Custom field targets must be unique.');
+      }
+      seen.add(customAssetTypeId);
+      const assetType = this.seed.customAssetTypes.find(
+        (candidate) =>
+          candidate.id === customAssetTypeId &&
+          candidate.tenantId === tenantId &&
+          candidate.lifecycleState === 'active' &&
+          (candidate.scope === 'tenant' || candidate.inventoryId === inventoryId)
+      );
+      if (!assetType || (draft.scope === 'tenant' && assetType.scope !== 'tenant')) {
+        throw new Error('Custom field target is not available.');
+      }
+    }
   }
 
   private firstInventoryIdForTenant(tenantId: string): string {

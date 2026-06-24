@@ -3,6 +3,8 @@ import type {
   Asset,
   AssetAttachment,
   AssetLifecycleFilter,
+  CustomAssetType,
+  CustomFieldDefinition,
   Inventory,
   Principal,
   SearchRequest,
@@ -39,4 +41,6 @@ export interface WorkspaceSeed {
   tenants: Tenant[];
   inventories: Inventory[];
   assets: Asset[];
+  customAssetTypes: CustomAssetType[];
+  customFieldDefinitions: CustomFieldDefinition[];
 }

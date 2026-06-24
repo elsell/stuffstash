@@ -34,6 +34,8 @@ describe('StuffStashInventoryRepository', () => {
       'GET http://api.local/me',
       'GET http://api.local/me/tenants?limit=50',
       'GET http://api.local/tenants/tenant-cabin/inventories?limit=50',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-asset-types?limit=100',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-field-definitions?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active'
     ]);
   });
@@ -71,6 +73,8 @@ describe('StuffStashInventoryRepository', () => {
       'GET http://api.local/me/tenants?limit=50',
       'POST http://api.local/tenants/tenant-empty/inventories',
       'GET http://api.local/tenants/tenant-empty/inventories?limit=50',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-asset-types?limit=100',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-field-definitions?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active'
     ]);
   });
@@ -131,6 +135,8 @@ describe('StuffStashInventoryRepository', () => {
       'GET http://api.local/me',
       'GET http://api.local/me/tenants?limit=50',
       'GET http://api.local/tenants/tenant-home/inventories?limit=50',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-asset-types?limit=100',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-field-definitions?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived'
     ]);
   });
@@ -494,6 +500,12 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/audit-records') {
         return envelope([auditRecord()]);
+      }
+      if (request.method === 'GET' && path.endsWith('/custom-asset-types')) {
+        return envelope([]);
+      }
+      if (request.method === 'GET' && path.endsWith('/custom-field-definitions')) {
+        return envelope([]);
       }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }

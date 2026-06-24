@@ -4,6 +4,7 @@ import InventorySettings from './InventorySettings.svelte';
 import type { Inventory, Tenant } from '$lib/domain/inventory';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
 
 let component: ReturnType<typeof mount> | null = null;
 
@@ -34,7 +35,17 @@ describe('InventorySettings', () => {
 
     component = mount(InventorySettings, {
       target: document.body,
-      props: { tenant, inventory, inventoryCount: 2, accessRepository: fakeAccessRepository(), auditRepository: fakeAuditRepository() }
+      props: {
+        tenant,
+        inventory,
+        inventoryCount: 2,
+        accessRepository: fakeAccessRepository(),
+        auditRepository: fakeAuditRepository(),
+        customizationRepository: fakeCustomizationRepository(),
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        onCustomizationChange: () => {}
+      }
     });
 
     expect(document.body.textContent).toContain('Asset editsAllowed');
@@ -45,9 +56,9 @@ describe('InventorySettings', () => {
         disabled: button.disabled
       })).filter((button) => button.text.includes('unavailable'))
     ).toEqual([
-      { text: 'Manage fields unavailable', disabled: true },
       { text: 'Tenant administration unavailable', disabled: true }
     ]);
+    expect(document.body.textContent).toContain('Custom fields');
   });
 
   it('does not treat create-only access as asset edit access', () => {
@@ -63,7 +74,17 @@ describe('InventorySettings', () => {
 
     component = mount(InventorySettings, {
       target: document.body,
-      props: { tenant: null, inventory, inventoryCount: 1, accessRepository: fakeAccessRepository(), auditRepository: fakeAuditRepository() }
+      props: {
+        tenant: null,
+        inventory,
+        inventoryCount: 1,
+        accessRepository: fakeAccessRepository(),
+        auditRepository: fakeAuditRepository(),
+        customizationRepository: fakeCustomizationRepository(),
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        onCustomizationChange: () => {}
+      }
     });
 
     expect(document.body.textContent).toContain('Asset editsView only');
@@ -87,6 +108,17 @@ function fakeAuditRepository(): InventoryAuditRepository {
   return {
     listTenantAuditRecords: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
     listInventoryAuditRecords: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } })
+  };
+}
+
+function fakeCustomizationRepository(): InventoryCustomizationRepository {
+  return {
+    listInventoryCustomAssetTypes: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
+    createCustomAssetType: async () => failRepositoryCall(),
+    archiveCustomAssetType: async () => failRepositoryCall(),
+    listInventoryCustomFieldDefinitions: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
+    createCustomFieldDefinition: async () => failRepositoryCall(),
+    archiveCustomFieldDefinition: async () => failRepositoryCall()
   };
 }
 

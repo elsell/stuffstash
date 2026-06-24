@@ -10,14 +10,15 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import type { AssetAttachment, AssetViewModel, UpdateAssetDraft } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
+  import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, UpdateAssetDraft } from '$lib/domain/inventory';
+  import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
 
   let {
     asset,
     canEdit,
     parentTargets,
+    customFieldDefinitions,
     saving,
     attachments,
     onBack,
@@ -31,6 +32,7 @@
     asset: AssetViewModel;
     canEdit: boolean;
     parentTargets: AssetViewModel[];
+    customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
     onBack: () => void;
@@ -46,13 +48,25 @@
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
+  let customFieldValues = $state<Record<string, string>>({});
   let saveError = $state('');
   let selectedAttachment = $state<AssetAttachment | null>(null);
+  let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
+  let displayFields = $derived(
+    customFieldDefinitions.filter(
+      (definition) =>
+        definition.applicability === 'all_assets' ||
+        (!!asset.customAssetTypeId && definition.customAssetTypeIds.includes(asset.customAssetTypeId))
+    )
+  );
 
   function openEdit(): void {
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
+    customFieldValues = Object.fromEntries(
+      applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
+    );
     panel = 'edit';
   }
 
@@ -60,6 +74,9 @@
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
+    customFieldValues = Object.fromEntries(
+      applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
+    );
     panel = 'move';
   }
 
@@ -72,7 +89,8 @@
       await onSave({
         title: title.trim(),
         description: description.trim(),
-        parentAssetId
+        parentAssetId,
+        customFields: buildCustomFields()
       });
       panel = 'none';
     } catch (caught) {
@@ -139,6 +157,36 @@
     }
     return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
   }
+
+  function setCustomFieldValue(key: string, value: string): void {
+    customFieldValues = { ...customFieldValues, [key]: value };
+  }
+
+  function buildCustomFields(): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const field of applicableFields) {
+      const value = customFieldValues[field.key] ?? '';
+      if (!value) {
+        continue;
+      }
+      values[field.key] = field.type === 'number' ? Number(value) : field.type === 'boolean' ? value === 'true' : value;
+    }
+    return values;
+  }
+
+  function stringifyCustomFieldValue(value: unknown): string {
+    if (value === undefined || value === null) {
+      return '';
+    }
+    return String(value);
+  }
+
+  function inputType(field: CustomFieldDefinition): string {
+    if (field.type === 'number') return 'number';
+    if (field.type === 'date') return 'date';
+    if (field.type === 'url') return 'url';
+    return 'text';
+  }
 </script>
 
 <section class="workspace-main detail-view" aria-labelledby="asset-title">
@@ -159,6 +207,16 @@
         <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
         <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
       </dl>
+      {#if displayFields.length > 0}
+        <dl class="detail-list custom-detail-list" aria-label="Custom field values">
+          {#each displayFields as field}
+            <div>
+              <dt>{field.displayName}</dt>
+              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key]) || 'Not set'}</dd>
+            </div>
+          {/each}
+        </dl>
+      {/if}
       <div class="detail-actions">
         <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openEdit}><Pencil /> Edit</Button.Root>
         <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openMove}><MoveRight /> Move</Button.Root>
@@ -217,6 +275,49 @@
             <Label for="edit-asset-description">Description</Label>
             <Textarea id="edit-asset-description" bind:value={description} />
           </div>
+          {#if applicableFields.length > 0}
+            <div class="custom-field-grid" aria-label="Edit custom fields">
+              {#each applicableFields as field}
+                <div class="field-stack">
+                  <Label for={`edit-custom-field-${field.key}`}>{field.displayName}</Label>
+                  {#if field.type === 'boolean'}
+                    <div class="kind-segment" role="group" aria-label={field.displayName}>
+                      <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
+                        Unset
+                      </Button.Root>
+                      <Button.Root variant={customFieldValues[field.key] === 'true' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, 'true')}>
+                        Yes
+                      </Button.Root>
+                      <Button.Root variant={customFieldValues[field.key] === 'false' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, 'false')}>
+                        No
+                      </Button.Root>
+                    </div>
+                  {:else if field.type === 'enum'}
+                    <div class="parent-picker" role="group" aria-label={field.displayName}>
+                      <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
+                        Unset
+                      </Button.Root>
+                      {#each field.enumOptions as option}
+                        <Button.Root
+                          variant={customFieldValues[field.key] === option ? 'secondary' : 'outline'}
+                          onclick={() => setCustomFieldValue(field.key, option)}
+                        >
+                          {option}
+                        </Button.Root>
+                      {/each}
+                    </div>
+                  {:else}
+                    <Input
+                      id={`edit-custom-field-${field.key}`}
+                      type={inputType(field)}
+                      value={customFieldValues[field.key] ?? ''}
+                      oninput={(event) => setCustomFieldValue(field.key, event.currentTarget.value)}
+                    />
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
           <div class="tray-actions">
             <Button.Root variant="outline" onclick={() => { panel = 'none'; }}>Cancel</Button.Root>
             <Button.Root disabled={saving || title.trim().length === 0} onclick={() => { void save(); }}>Save</Button.Root>
