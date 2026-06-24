@@ -237,6 +237,7 @@ Read audit actions must be explicit action names ending in `.viewed` or `.listed
 Required first actions:
 
 - `tenant.viewed`.
+- `tenant.listed`.
 - `inventory.viewed`.
 - `inventory.listed`.
 - `asset.viewed`.

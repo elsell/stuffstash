@@ -89,7 +89,7 @@ Web, mobile, and future agent clients need a first-class way to discover the aut
 - Must include effective tenant access metadata for each tenant:
   - `relationship`: `owner` when the principal can configure the tenant or create inventories, otherwise `viewer`.
   - `permissions`: stable permission strings granted to the caller for that tenant, initially `view`, `create_inventory`, and `configure`.
-- Must produce safe tenant-scoped read audit history for each returned tenant.
+- Must produce safe tenant-scoped read audit history for each returned tenant using the `tenant.listed` audit action.
 - Must emit domain-oriented observability.
 
 Tenant detail responses and `GET /me/tenants` tenant entries must include the same effective tenant access metadata when returned to an authenticated caller.

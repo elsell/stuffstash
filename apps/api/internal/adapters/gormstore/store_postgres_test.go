@@ -185,6 +185,49 @@ func TestPostgresStoreRestrictsInventoryDeleteWithAuditRecords(t *testing.T) {
 	}
 }
 
+func TestPostgresStorePersistsTenantListedAuditRecord(t *testing.T) {
+	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
+	if dsn == "" {
+		t.Skip("set STUFF_STASH_TEST_POSTGRES_DSN to run Postgres audit action verification")
+	}
+
+	ctx := context.Background()
+	db, err := OpenPostgres(dsn)
+	if err != nil {
+		t.Fatalf("open postgres: %v", err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("postgres db handle: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := sqlDB.Close(); err != nil {
+			t.Fatalf("close postgres: %v", err)
+		}
+	})
+	if err := runEmbeddedPostgresMigrations(db); err != nil {
+		t.Fatalf("migrate postgres: %v", err)
+	}
+
+	store := NewStore(db)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FC0")
+	auditID := "01ARZ3NDEKTSV4RRFFQ69G5FC1"
+	cleanupAuditActionTestRows(t, ctx, store, tenantID, auditID)
+	saveTenant(t, ctx, store, tenantID, "Postgres Tenant Listed")
+
+	if err := store.SaveAuditRecord(ctx, postgresAuditRecord(t, auditID, tenantID, "", audit.ActionTenantListed)); err != nil {
+		t.Fatalf("save tenant listed audit record: %v", err)
+	}
+
+	records, err := store.ListTenantAuditRecords(ctx, tenantID, ports.AuditRecordPageRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list tenant audit records: %v", err)
+	}
+	if len(records) != 1 || records[0].Action != audit.ActionTenantListed {
+		t.Fatalf("expected tenant listed audit record, got %+v", records)
+	}
+}
+
 func TestPostgresStoreSerializesEffectiveCustomFieldKeysAcrossScopes(t *testing.T) {
 	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
 	if dsn == "" {
@@ -335,6 +378,17 @@ func cleanupAuditInventoryDeleteTestRows(t *testing.T, ctx context.Context, stor
 	}
 	if err := store.db.WithContext(ctx).Delete(&inventoryModel{ID: inventoryID.String()}).Error; err != nil {
 		t.Fatalf("clean inventory row: %v", err)
+	}
+	if err := store.db.WithContext(ctx).Delete(&tenantModel{ID: tenantID.String()}).Error; err != nil {
+		t.Fatalf("clean tenant row: %v", err)
+	}
+}
+
+func cleanupAuditActionTestRows(t *testing.T, ctx context.Context, store Store, tenantID tenant.ID, auditID string) {
+	t.Helper()
+
+	if err := store.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()}).Delete(&auditRecordModel{}).Error; err != nil {
+		t.Fatalf("clean audit record rows: %v", err)
 	}
 	if err := store.db.WithContext(ctx).Delete(&tenantModel{ID: tenantID.String()}).Error; err != nil {
 		t.Fatalf("clean tenant row: %v", err)
