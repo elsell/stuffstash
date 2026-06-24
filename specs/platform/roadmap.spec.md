@@ -75,6 +75,10 @@ The goal is to prove a production-shaped path through:
 - `0c8d7d4 feat(web): add asset lifecycle controls` added the first web lifecycle controls and focused frontend interaction tests.
 - The current web screens are disposable tracer-bullet UI. Do not expand them into the real product UI before a dedicated UI spec and design workshop.
 - `cac140c feat(web): adopt shadcn component primitives` added the Svelte-compatible shadcn foundation and dependency freshness checks.
+- `182b7fb feat(web): add audit history viewing` exposed tenant and inventory audit history through the promoted web settings surface.
+- `a265e47 feat(web): add custom schema management` added promoted custom asset type and custom field management, create integration, edit integration, and focused web tests behind frontend ports.
+- `7daca8e feat(web): add parent quick-create flow`, `63cd859 feat(web): improve containment browsing`, and `ce98824 feat(web): expose location editing` deepened web location browsing, parent quick-create, duplicate-name-safe active rows, nested location navigation, and permission-gated location edit entry.
+- `798927d test(web): add browser smoke coverage` added pinned Playwright browser smoke coverage for the seeded local web workspace, covering desktop shell load, mobile add tray, desktop search, and location/detail/back navigation.
 - Sharing and user-management backend hardening now includes an explicit inventory access repository port, paginated invitation listing with status filters, pending-invitation expiration management, generated OpenAPI/client updates, documentation updates, and adversarial API tests for token redaction, tenant/inventory boundaries, and role denial.
 - The first audit-backed undo/redo slice now supports asset create, update, move, archive, and restore through operation-scoped compensating commands, dedicated undoable-operation persistence, generated OpenAPI/client updates, and adversarial API coverage.
 - Asset state-changing application commands now use a dedicated transactional asset unit-of-work port instead of overloading the read repository port with audit and undoable-operation write concerns.
@@ -89,17 +93,17 @@ The goal is to prove a production-shaped path through:
 - The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
 - Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
-- The web UI does not yet expose full sharing, audit history, custom fields, custom asset types, media attachment management, archive/restore controls in the promoted workspace, or component-level tests for the asset detail edit and move panels.
+- The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
 
 ## Next Work
 
-1. Add promoted web asset lifecycle controls.
-   - Use `specs/platform/web-frontend-tracer-bullet.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, and `specs/assets/asset-model.spec.md` as the source of truth.
-   - Expose active and archived asset views, asset archive, asset restore, hard delete, safe API errors, and refreshed list state through the web repository port and generated API adapter.
-2. Add promoted web media attachment management.
+1. Add promoted web media attachment management and direct-upload UX.
    - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/media/media-attachments.spec.md` as the source of truth.
-   - Convert add-flow photo previews into real attachment uploads after asset creation, then expose attachment listing, thumbnail/content display where available, validation, and removal/lifecycle states behind media-aware frontend ports and adapters.
+   - Finish direct-upload initiation/completion UX, attachment listing, thumbnail/content display where available, validation, and removal/lifecycle states behind media-aware frontend ports and adapters.
+2. Deepen browser-level web coverage.
+   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/platform/web-frontend-tracer-bullet.spec.md` as the source of truth.
+   - Expand seeded browser smoke into more flows, add viewer-denied coverage, and add authenticated API/Dex smoke once the local topology can run reliably in automation.
 3. Deepen the tenant-first web context switcher.
    - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Implement the approved tenant header, `Switch Tenant` path, inventory list replacement behavior, inventory settings entry, and mobile sheet-quality context switching without leaking generated DTOs into components.
@@ -112,19 +116,7 @@ The goal is to prove a production-shaped path through:
 6. Implement web sharing and access management.
    - Use `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Expose direct grants, invitations, revocation, expiration/cancel/delete behavior, permission denial states, and generated-client-backed adapter tests.
-7. Implement web audit/history viewing.
-   - Use `specs/audit-history/audit-and-undo.spec.md` and `specs/platform/resource-lifecycle.spec.md` as the source of truth.
-   - Expose tenant/inventory audit history from settings or focused detail surfaces, with pagination, safe read audit behavior, and authorization-aware empty/error states.
-8. Implement custom fields and custom asset types in the web workspace.
-   - Use `specs/assets/custom-asset-types.spec.md` and `specs/assets/flexible-asset-fields.spec.md` as the source of truth.
-   - Add management surfaces, asset create/edit integration, type-specific field rendering, validation errors, and adapter tests without treating generated DTOs as frontend domain models.
-9. Deepen location browsing and containment workflows.
-   - Use `specs/locations/location-model.spec.md`, `specs/assets/containment-model.spec.md`, and `specs/assets/asset-model.spec.md` as the source of truth.
-   - Add richer hierarchy navigation, parent quick-create, duplicate-name-safe display, location movement/rename flows, and deeper containment tests.
-10. Add automated browser-level web coverage.
-    - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/platform/web-frontend-tracer-bullet.spec.md` as the source of truth.
-    - Cover desktop and mobile shell load, tenant/inventory switching, search, add, location navigation, asset detail, lifecycle actions, denied states, and local Dex/OIDC smoke where practical.
-11. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
+7. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
    - Keep the no-account local Expo Go path before considering EAS or native development builds.
    - Keep demo data behind an adapter until authentication and generated API integration are specified.
 
