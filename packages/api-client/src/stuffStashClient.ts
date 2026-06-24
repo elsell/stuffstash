@@ -91,6 +91,8 @@ export interface Asset {
   description: string;
   parentAssetId: string | null;
   lifecycleState: AssetLifecycleState;
+  customAssetTypeId?: string;
+  customFields: Record<string, unknown>;
 }
 
 export interface Attachment {
@@ -136,12 +138,15 @@ export interface CreateAssetInput {
   title: string;
   description?: string;
   parentAssetId?: string | null;
+  customAssetTypeId?: string;
+  customFields?: Record<string, unknown>;
 }
 
 export interface UpdateAssetInput {
-  title: string;
+  title?: string;
   description?: string;
   parentAssetId?: string | null;
+  customFields?: Record<string, unknown>;
 }
 
 export interface AssetSearchResult {
@@ -167,6 +172,63 @@ export interface SearchAssetsOptions {
   mode?: SearchMode;
 }
 
+export type CustomDefinitionScope = 'tenant' | 'inventory';
+export type CustomDefinitionLifecycleState = 'active' | 'archived';
+export type CustomFieldType = 'text' | 'number' | 'boolean' | 'date' | 'url' | 'enum';
+export type CustomFieldApplicability = 'all_assets' | 'custom_asset_types';
+
+export interface CustomAssetType {
+  id: string;
+  tenantId: string;
+  inventoryId: string | null;
+  scope: CustomDefinitionScope;
+  key: string;
+  displayName: string;
+  description: string;
+  lifecycleState: CustomDefinitionLifecycleState;
+}
+
+export interface CustomFieldDefinition {
+  id: string;
+  tenantId: string;
+  inventoryId: string | null;
+  scope: CustomDefinitionScope;
+  key: string;
+  displayName: string;
+  type: CustomFieldType;
+  enumOptions: string[];
+  applicability: CustomFieldApplicability;
+  customAssetTypeIds: string[];
+  lifecycleState: CustomDefinitionLifecycleState;
+}
+
+export interface CreateCustomAssetTypeInput {
+  key: string;
+  displayName: string;
+  description?: string;
+}
+
+export interface UpdateCustomAssetTypeInput {
+  displayName?: string;
+  description?: string;
+}
+
+export interface CreateCustomFieldDefinitionInput {
+  key: string;
+  displayName: string;
+  type: CustomFieldType;
+  enumOptions?: string[];
+  applicability?: CustomFieldApplicability;
+  customAssetTypeIds?: string[];
+}
+
+export interface UpdateCustomFieldDefinitionInput {
+  displayName?: string;
+  enumOptions?: string[];
+  applicability?: CustomFieldApplicability;
+  customAssetTypeIds?: string[];
+}
+
 export interface Pagination {
   limit: number;
   nextCursor: string | null;
@@ -190,6 +252,8 @@ type GrantResponse = components['schemas']['GrantResponse'];
 type InvitationResponse = components['schemas']['InvitationResponse'];
 type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceResponse'];
 type RecordResponse = components['schemas']['RecordResponse'];
+type AssetTypeResponse = components['schemas']['AssetTypeResponse'];
+type DefinitionResponse = components['schemas']['DefinitionResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -356,6 +420,225 @@ export class StuffStashClient {
       })
     );
     return mapPage(envelope, mapAssetSearchResult);
+  }
+
+  async listTenantCustomAssetTypes(tenantId: string, limit = 50, cursor?: string): Promise<Page<CustomAssetType>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/custom-asset-types', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId }, query: { limit, cursor } }
+      })
+    );
+    return mapPage(envelope, mapCustomAssetType);
+  }
+
+  async createTenantCustomAssetType(tenantId: string, input: CreateCustomAssetTypeInput): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/custom-asset-types', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } },
+        body: input
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async updateTenantCustomAssetType(
+    tenantId: string,
+    customAssetTypeId: string,
+    input: UpdateCustomAssetTypeInput
+  ): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, customAssetTypeId } },
+        body: input
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async archiveTenantCustomAssetType(tenantId: string, customAssetTypeId: string): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/archive', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, customAssetTypeId } }
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async listInventoryCustomAssetTypes(
+    tenantId: string,
+    inventoryId: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<Page<CustomAssetType>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId }, query: { limit, cursor } }
+      })
+    );
+    return mapPage(envelope, mapCustomAssetType);
+  }
+
+  async createInventoryCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    input: CreateCustomAssetTypeInput
+  ): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: input
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async updateInventoryCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    customAssetTypeId: string,
+    input: UpdateCustomAssetTypeInput
+  ): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, customAssetTypeId } },
+        body: input
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async archiveInventoryCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    customAssetTypeId: string
+  ): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/archive', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, customAssetTypeId } }
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async listTenantCustomFieldDefinitions(
+    tenantId: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<Page<CustomFieldDefinition>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/custom-field-definitions', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId }, query: { limit, cursor } }
+      })
+    );
+    return mapPage(envelope, mapCustomFieldDefinition);
+  }
+
+  async createTenantCustomFieldDefinition(
+    tenantId: string,
+    input: CreateCustomFieldDefinitionInput
+  ): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/custom-field-definitions', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } },
+        body: mapCreateCustomFieldDefinitionInput(input)
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async updateTenantCustomFieldDefinition(
+    tenantId: string,
+    definitionId: string,
+    input: UpdateCustomFieldDefinitionInput
+  ): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/custom-field-definitions/{definitionId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, definitionId } },
+        body: input
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async archiveTenantCustomFieldDefinition(tenantId: string, definitionId: string): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/custom-field-definitions/{definitionId}/archive', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, definitionId } }
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async listInventoryCustomFieldDefinitions(
+    tenantId: string,
+    inventoryId: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<Page<CustomFieldDefinition>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId }, query: { limit, cursor } }
+      })
+    );
+    return mapPage(envelope, mapCustomFieldDefinition);
+  }
+
+  async createInventoryCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    input: CreateCustomFieldDefinitionInput
+  ): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: mapCreateCustomFieldDefinitionInput(input)
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async updateInventoryCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    definitionId: string,
+    input: UpdateCustomFieldDefinitionInput
+  ): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, definitionId } },
+        body: input
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async archiveInventoryCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    definitionId: string
+  ): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/archive', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, definitionId } }
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
   }
 
   async listInventoryAccessGrants(
@@ -830,7 +1113,9 @@ function mapAsset(response: AssetResponse): Asset {
     title: response.title,
     description: response.description,
     parentAssetId: response.parentAssetId ?? null,
-    lifecycleState: mapAssetLifecycleState(response.lifecycleState)
+    lifecycleState: mapAssetLifecycleState(response.lifecycleState),
+    customAssetTypeId: response.customAssetTypeId,
+    customFields: response.customFields ?? {}
   };
 }
 
@@ -847,9 +1132,50 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
       title: response.asset.title,
       description: response.asset.description,
       parentAssetId: response.asset.parentAssetId ?? null,
-      lifecycleState: mapAssetLifecycleState(response.asset.lifecycleState)
+      lifecycleState: mapAssetLifecycleState(response.asset.lifecycleState),
+      customAssetTypeId: response.asset.customAssetTypeId,
+      customFields: response.asset.customFields ?? {}
     },
     matches: response.matches ?? []
+  };
+}
+
+function mapCustomAssetType(response: AssetTypeResponse): CustomAssetType {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId ?? null,
+    scope: mapCustomDefinitionScope(response.scope),
+    key: response.key,
+    displayName: response.displayName,
+    description: response.description,
+    lifecycleState: mapCustomDefinitionLifecycleState(response.lifecycleState)
+  };
+}
+
+function mapCustomFieldDefinition(response: DefinitionResponse): CustomFieldDefinition {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId ?? null,
+    scope: mapCustomDefinitionScope(response.scope),
+    key: response.key,
+    displayName: response.displayName,
+    type: mapCustomFieldType(response.type),
+    enumOptions: response.enumOptions ?? [],
+    applicability: mapCustomFieldApplicability(response.applicability),
+    customAssetTypeIds: response.customAssetTypeIds ?? [],
+    lifecycleState: mapCustomDefinitionLifecycleState(response.lifecycleState)
+  };
+}
+
+function mapCreateCustomFieldDefinitionInput(
+  input: CreateCustomFieldDefinitionInput
+): components['schemas']['CreateDefinitionBody'] {
+  return {
+    ...input,
+    enumOptions: input.enumOptions,
+    customAssetTypeIds: input.customAssetTypeIds
   };
 }
 
@@ -871,6 +1197,50 @@ function mapAssetLifecycleState(lifecycleState: string): AssetLifecycleState {
       return lifecycleState;
     default:
       throw new StuffStashAPIError(200, 'invalid_asset_lifecycle_state', 'Invalid asset lifecycle state.');
+  }
+}
+
+function mapCustomDefinitionScope(scope: string): CustomDefinitionScope {
+  switch (scope) {
+    case 'tenant':
+    case 'inventory':
+      return scope;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_custom_definition_scope', 'Invalid custom definition scope.');
+  }
+}
+
+function mapCustomDefinitionLifecycleState(lifecycleState: string): CustomDefinitionLifecycleState {
+  switch (lifecycleState) {
+    case 'active':
+    case 'archived':
+      return lifecycleState;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_custom_definition_lifecycle_state', 'Invalid custom definition lifecycle state.');
+  }
+}
+
+function mapCustomFieldType(type: string): CustomFieldType {
+  switch (type) {
+    case 'text':
+    case 'number':
+    case 'boolean':
+    case 'date':
+    case 'url':
+    case 'enum':
+      return type;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_custom_field_type', 'Invalid custom field type.');
+  }
+}
+
+function mapCustomFieldApplicability(applicability: string): CustomFieldApplicability {
+  switch (applicability) {
+    case 'all_assets':
+    case 'custom_asset_types':
+      return applicability;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_custom_field_applicability', 'Invalid custom field applicability.');
   }
 }
 

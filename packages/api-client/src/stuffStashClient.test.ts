@@ -77,6 +77,66 @@ describe('StuffStashClient', () => {
     expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets?limit=1&lifecycleState=archived');
   });
 
+  it('maps asset custom type and custom field values through create and update', async () => {
+    const requests: Request[] = [];
+    const assetEnvelope = {
+      data: {
+        id: 'asset-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        kind: 'item',
+        title: 'Ibuprofen',
+        description: '',
+        lifecycleState: 'active',
+        customAssetTypeId: 'type-medicine',
+        customFields: { 'expiration-date': '2027-01-01', count: 2 }
+      },
+      meta: {}
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json(assetEnvelope);
+      }
+    });
+
+    await expect(
+      client.createAsset('tenant-one', 'inventory-one', {
+        kind: 'item',
+        title: 'Ibuprofen',
+        customAssetTypeId: 'type-medicine',
+        customFields: { 'expiration-date': '2027-01-01', count: 2 }
+      })
+    ).resolves.toMatchObject({
+      customAssetTypeId: 'type-medicine',
+      customFields: { 'expiration-date': '2027-01-01', count: 2 }
+    });
+    await expect(
+      client.updateAsset('tenant-one', 'inventory-one', 'asset-one', {
+        title: 'Ibuprofen',
+        customFields: { count: 3 }
+      })
+    ).resolves.toMatchObject({
+      customAssetTypeId: 'type-medicine',
+      customFields: { 'expiration-date': '2027-01-01', count: 2 }
+    });
+
+    expect(await requests[0]?.json()).toEqual({
+      kind: 'item',
+      title: 'Ibuprofen',
+      parentAssetId: undefined,
+      customAssetTypeId: 'type-medicine',
+      customFields: { 'expiration-date': '2027-01-01', count: 2 }
+    });
+    expect(await requests[1]?.json()).toEqual({
+      title: 'Ibuprofen',
+      customFields: { count: 3 }
+    });
+  });
+
   it('fetches tenants by ID', async () => {
     const requests: Request[] = [];
     const client = new StuffStashClient({
@@ -573,6 +633,102 @@ describe('StuffStashClient', () => {
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'GET http://api.local/tenants/tenant-one/audit-records?limit=1',
       'GET http://api.local/tenants/tenant-one/inventories/inventory-one/audit-records?limit=1&cursor=next-page'
+    ]);
+  });
+
+  it('manages custom asset types and field definitions through generated paths', async () => {
+    const requests: Request[] = [];
+    const assetType = {
+      id: 'type-medicine',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      scope: 'inventory',
+      key: 'medicine',
+      displayName: 'Medicine',
+      description: 'Medication and vitamins',
+      lifecycleState: 'active'
+    };
+    const definition = {
+      id: 'field-expiration',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      scope: 'inventory',
+      key: 'expiration-date',
+      displayName: 'Expiration date',
+      type: 'date',
+      applicability: 'custom_asset_types',
+      customAssetTypeIds: ['type-medicine'],
+      enumOptions: null,
+      lifecycleState: 'active'
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        const path = new URL(request.url).pathname;
+        if (path.includes('custom-asset-types')) {
+          return Response.json({
+            data: request.method === 'GET' ? [assetType] : assetType,
+            meta: request.method === 'GET' ? { pagination: { limit: 25, nextCursor: null, hasMore: false } } : {}
+          });
+        }
+        return Response.json({
+          data: request.method === 'GET' ? [definition] : definition,
+          meta: request.method === 'GET' ? { pagination: { limit: 25, nextCursor: null, hasMore: false } } : {}
+        });
+      }
+    });
+
+    await expect(client.listInventoryCustomAssetTypes('tenant-one', 'inventory-one', 25)).resolves.toMatchObject({
+      items: [{ id: 'type-medicine', displayName: 'Medicine', scope: 'inventory' }]
+    });
+    await expect(
+      client.createInventoryCustomAssetType('tenant-one', 'inventory-one', {
+        key: 'medicine',
+        displayName: 'Medicine',
+        description: 'Medication and vitamins'
+      })
+    ).resolves.toMatchObject({ id: 'type-medicine' });
+    await expect(
+      client.updateInventoryCustomAssetType('tenant-one', 'inventory-one', 'type-medicine', {
+        displayName: 'Medicine and Vitamins'
+      })
+    ).resolves.toMatchObject({ id: 'type-medicine' });
+    await expect(client.archiveInventoryCustomAssetType('tenant-one', 'inventory-one', 'type-medicine')).resolves.toMatchObject({
+      id: 'type-medicine'
+    });
+    await expect(client.listInventoryCustomFieldDefinitions('tenant-one', 'inventory-one', 25)).resolves.toMatchObject({
+      items: [{ id: 'field-expiration', type: 'date', customAssetTypeIds: ['type-medicine'] }]
+    });
+    await expect(
+      client.createInventoryCustomFieldDefinition('tenant-one', 'inventory-one', {
+        key: 'expiration-date',
+        displayName: 'Expiration date',
+        type: 'date',
+        applicability: 'custom_asset_types',
+        customAssetTypeIds: ['type-medicine']
+      })
+    ).resolves.toMatchObject({ id: 'field-expiration' });
+    await expect(
+      client.updateInventoryCustomFieldDefinition('tenant-one', 'inventory-one', 'field-expiration', {
+        displayName: 'Use by'
+      })
+    ).resolves.toMatchObject({ id: 'field-expiration' });
+    await expect(client.archiveInventoryCustomFieldDefinition('tenant-one', 'inventory-one', 'field-expiration')).resolves.toMatchObject({
+      id: 'field-expiration'
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types?limit=25',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types/type-medicine',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types/type-medicine/archive',
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions?limit=25',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration/archive'
     ]);
   });
 
