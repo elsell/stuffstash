@@ -1,17 +1,18 @@
 ---
 title: Architecture
-description: How Stuff Stash keeps product behavior separate from infrastructure.
+description: How the product keeps inventory behavior separate from infrastructure.
 ---
 
-Stuff Stash uses hexagonal architecture, also called ports and adapters. The
-point is practical: the same inventory rules should work from the web app,
+Stuff Stash uses hexagonal architecture, also called ports and adapters.
+
+The point is practical: the same inventory rules should work from the web app,
 mobile app, REST API, conversational flow, future MCP tools, imports, and
 background jobs.
 
 Domain behavior sits in the center. Frameworks, databases, auth providers, model
 providers, HTTP details, and blob storage stay outside the domain behind ports.
 
-## The Core Rule
+## Core Rule
 
 Moving an item should follow the same rules no matter how the command arrived.
 
@@ -35,7 +36,7 @@ A tenant is the top-level security boundary. An inventory lives inside one
 tenant. Users may have access to one or more inventories, with relationships
 such as owner, editor, or viewer.
 
-This lets a self-hosted household support separate inventories for different
+This lets a household support separate inventories for different
 homes, collections, family members, or shared spaces without relying on loose
 application roles.
 

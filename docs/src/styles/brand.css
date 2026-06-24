@@ -85,6 +85,48 @@ a:not(.sl-link-button):hover {
   color: var(--ss-charcoal-deep);
 }
 
+.ss-card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  margin: 2rem 0;
+}
+
+.ss-card {
+  background: var(--sl-color-bg);
+  border: 1px solid color-mix(in srgb, var(--ss-dusty-blue) 24%, transparent);
+  border-radius: 0.5rem;
+  color: var(--sl-color-white);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.1rem;
+  text-decoration: none;
+}
+
+.ss-card:hover {
+  border-color: color-mix(in srgb, var(--ss-dusty-blue) 65%, transparent);
+  color: var(--sl-color-white);
+}
+
+.ss-card strong {
+  color: var(--ss-charcoal-deep);
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.ss-card span:last-child {
+  color: var(--sl-color-gray-3);
+}
+
+.ss-card-kicker {
+  color: var(--ss-dusty-blue);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .sl-markdown-content img {
   border: 1px solid color-mix(in srgb, var(--ss-dusty-blue) 28%, transparent);
   border-radius: 0.75rem;

@@ -4,7 +4,7 @@ description: Commands for working on Stuff Stash locally.
 ---
 
 Use this page when you are changing Stuff Stash itself. If you only want to
-evaluate the app, start with [Self-Hosting](../self-hosting/).
+evaluate the app, start with [Run Stuff Stash](../self-hosting/).
 
 ## Requirements
 

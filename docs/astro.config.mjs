@@ -20,15 +20,17 @@ export default defineConfig({
         {
           label: 'Evaluate',
           items: [
-            { label: 'Product', slug: 'product' },
-            { label: 'Self-Hosting', slug: 'self-hosting' },
-            { label: 'Security', slug: 'security' },
-            { label: 'Architecture', slug: 'architecture' },
+            { label: 'What It Does', slug: 'product' },
+            { label: 'Run Stuff Stash', slug: 'self-hosting' },
+            { label: 'First Inventory', slug: 'first-inventory' },
+            { label: 'Concepts', slug: 'concepts' },
+            { label: 'Trust And Security', slug: 'security' },
           ],
         },
         {
           label: 'Build',
           items: [
+            { label: 'Architecture', slug: 'architecture' },
             { label: 'Development Setup', slug: 'local-development' },
             { label: 'Contributing', slug: 'specs-and-process' },
           ],

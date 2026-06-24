@@ -1,60 +1,57 @@
 ---
-title: Security
-description: The trust model for self-hosted household inventory.
+title: Trust And Security
+description: Why Stuff Stash is shaped for private household data.
 ---
 
-Stuff Stash can hold private household data: photos, receipts, documents,
-medicine, serial numbers, and shared access for other people. The security model
-is part of the product, not a later hardening pass.
+Home inventory can include sensitive details: medicine, receipts, serial
+numbers, documents, photos, and who has access to shared spaces.
 
-## Native SSO
+Stuff Stash treats that data like it matters.
 
-Stuff Stash uses OIDC for authentication. The local stack uses Dex so the same
-OIDC path can be tested without a real external provider.
+## Your Sign-In System
 
-The API verifies bearer ID tokens and fails closed when issuer, audience,
-signature, expiry, or token shape is wrong. Provider-specific claims are
-normalized at the adapter edge before they reach application behavior.
+Stuff Stash uses OIDC for SSO. The API verifies bearer ID tokens and fails closed
+when issuer, audience, signature, expiry, or token shape is wrong.
 
-Google is the first planned external provider profile, and the architecture is
-designed for standards-compliant OIDC issuers.
+The local stack uses Dex so the OIDC path can be tested without wiring a real
+provider. Google is the first planned external provider profile, and the same
+adapter shape supports standards-compliant OIDC issuers.
 
-## Relationship-Based Access
+## Scoped Household Access
 
-Stuff Stash uses SpiceDB-style relationship authorization. Tenants are the
-top-level boundary. Inventories live inside tenants and can be shared with
-viewer or editor access.
+Tenants are the top-level security boundary. Inventories live inside tenants and
+can be shared with viewer or editor access.
 
-Authorization checks happen at application boundaries. The same rules apply
-whether a request comes from the web app, mobile app, REST API, a future agent
-flow, or an import job.
+Relationship-based authorization keeps access checks explicit. A person can help
+maintain one inventory without seeing every other inventory in the household.
 
-Conversational inventory does not get special power. A model-assisted action can
-only do what the signed-in user is allowed to do.
+Conversational actions use the signed-in user's permissions. The model-assisted
+path does not get elevated access.
 
-## Supply-Chain Discipline
+## A Safer Build Chain
 
-The project keeps dependency and build inputs tight:
+Self-hosted software still depends on the build chain that produced it. Stuff
+Stash keeps that chain tight:
 
-- Go, Node, pnpm, Astro, SvelteKit, Expo, OpenAPI tooling, and container images
-  are pinned.
+- Dependencies, tools, base images, and GitHub Actions are pinned.
 - Container base images are pinned by immutable digest.
-- GitHub Actions are pinned to commit SHAs.
 - npm installs ignore lifecycle scripts by default.
 - npm and Go dependency updates must pass a minimum package-age check.
 - Release images are built with SBOM and provenance metadata.
-- Release images are signed and their signatures are verified in the pipeline.
+- Release images are signed and verified in the pipeline.
 - Build provenance attestations are published for release images.
 
-## Local Secrets Are Local Only
+## Local Fixtures Stay Local
 
-Compose fixtures such as Dex users, local Postgres credentials, and local
-SpiceDB `serve-testing` configuration exist for development and evaluation.
-They are not production secrets and should not be reused in a deployed system.
+The Compose stack includes local-only Dex users, local Postgres credentials, and
+SpiceDB `serve-testing` configuration. They exist so you can evaluate the app
+without setting up production identity infrastructure first.
 
-## Data Portability
+Do not reuse those values in a deployed system.
 
-Security also includes exit. Stuff Stash is designed for JSON and CSV import and
-export behind project-owned ports, so file formats and migration paths do not
-leak into domain logic. Export must preserve tenant and inventory authorization
-boundaries.
+## Exit Is Part Of Trust
+
+Stuff Stash is designed for JSON and CSV import/export behind project-owned
+ports. Export must preserve tenant and inventory authorization boundaries.
+
+Data portability is not a bonus feature. It is part of the trust story.

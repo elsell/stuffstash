@@ -1,50 +1,59 @@
 ---
 title: Stuff Stash
-description: Home inventory that is easy enough to keep current.
+description: Find your stuff without turning inventory into a chore.
 template: splash
 hero:
   tagline: Find the thing you put in a storage bin last year.
   actions:
     - text: See it in action (coming soon)
       link: product/
-    - text: Read the docs
+    - text: Run it yourself
       link: self-hosting/
 ---
 
-Stuff Stash is a self-hosted home inventory app built around the moment that
-usually makes inventory software fail: you need one thing, you know you own it,
-and you do not remember where you put it.
+Stuff Stash is a self-hosted home inventory app for people who do not want to
+maintain a database every time they clean a shelf.
 
-The goal is simple: open the app, start voice mode, and ask where the thing is.
-The app should understand your household language, search what you are allowed
-to see, and help you update the inventory without turning every move, refill,
-or cleanup into a data-entry chore.
+Open the app. Start voice mode. Ask where the thing is. When you move something,
+review the plan and save the update before you forget.
 
-## Built For Real Homes
+<div class="ss-card-grid">
+  <a class="ss-card" href="product/">
+    <span class="ss-card-kicker">See the product</span>
+    <strong>Ask, add, search, and review</strong>
+    <span>The main flows Stuff Stash is built around.</span>
+  </a>
+  <a class="ss-card" href="self-hosting/">
+    <span class="ss-card-kicker">Run it</span>
+    <strong>Pick a self-hosting path</strong>
+    <span>Start with Docker Compose or plan a split API and web deployment.</span>
+  </a>
+  <a class="ss-card" href="first-inventory/">
+    <span class="ss-card-kicker">Try it</span>
+    <strong>Create your first inventory</strong>
+    <span>Add a location, add an item, find it, then move it safely.</span>
+  </a>
+</div>
 
-- Add items, containers, locations, and photos quickly.
-- Ask where something is instead of remembering exact labels.
-- Move and update items conversationally, with review before anything saves.
-- Search manually when voice is not the fastest path.
-- Sign in with SSO and share inventories with the right people.
-- Import and export your data so the inventory is not trapped in one tool.
+## Why It Exists
 
-## Self-Hosted By Design
+Home inventory fails when upkeep is slower than real life.
 
-Stuff Stash separates the Go API from the SvelteKit web app. That makes the
-deployment shape explicit: run the API, run the web app, and connect them to
-Postgres, SpiceDB, and your OIDC provider.
+Stuff Stash is built to make the small updates easy: add the new bottle of
+medicine, snap a photo of a receipt, move the drill from one bin to another, and
+ask where something ended up months later.
 
-Docker Compose is the easiest path. The same split also fits Kubernetes
-deployments: run the API, run the web app, and wire each service through runtime
-configuration.
+## What Matters
 
-## Trust Matters
+- **Low-friction upkeep:** voice and text workflows are first-class, not a side
+  feature.
+- **Local control:** the app is designed for self-hosting with separate API and
+  web deployables.
+- **Native SSO:** authentication uses OIDC from the beginning.
+- **Scoped sharing:** tenants and inventories protect household boundaries.
+- **Portable data:** import and export are core trust promises.
 
-Household inventory can include receipts, photos, medicine, documents, serial
-numbers, and access for family members or guests. Stuff Stash treats that as a
-security boundary, not an afterthought.
+## Start Here
 
-The project uses native OIDC/SSO, relationship-based authorization, pinned
-dependencies and base images, dependency-age checks, signed container images,
-and provenance attestations.
+If you are evaluating Stuff Stash, start with [Run Stuff Stash](self-hosting/).
+If you want the product shape first, start with [What It Does](product/).
