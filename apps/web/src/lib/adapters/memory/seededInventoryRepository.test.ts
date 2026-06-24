@@ -207,6 +207,97 @@ describe('SeededInventoryRepository tenant selection', () => {
     await expect(repository.getAsset('tenant-home', 'inventory-household', 'asset-home')).rejects.toThrow('Asset not found');
   });
 
+  it('appends local audit records for mutations and preserves them after deletion', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const created = await repository.createAsset('tenant-home', 'inventory-household', {
+      kind: 'item',
+      title: 'Fire extinguisher',
+      description: 'Kitchen',
+      parentAssetId: null,
+      photos: []
+    });
+    await repository.updateAsset('tenant-home', 'inventory-household', created.id, {
+      title: 'Updated fire extinguisher',
+      description: 'Kitchen cabinet',
+      parentAssetId: null
+    });
+    await repository.archiveAsset('tenant-home', 'inventory-household', created.id);
+    await repository.restoreAsset('tenant-home', 'inventory-household', created.id);
+    await repository.deleteAsset('tenant-home', 'inventory-household', created.id);
+
+    const audit = await repository.listInventoryAuditRecords('tenant-home', 'inventory-household');
+
+    expect(audit.items.map((record) => record.action)).toEqual([
+      'asset.deleted',
+      'asset.restored',
+      'asset.archived',
+      'asset.updated',
+      'asset.created'
+    ]);
+    expect(audit.items.every((record) => record.targetId === created.id)).toBe(true);
+    await expect(repository.getAsset('tenant-home', 'inventory-household', created.id)).rejects.toThrow('Asset not found');
+  });
+
+  it('appends local audit records for tenant and inventory creation', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const workspace = await repository.createTenantWithInventory({ tenantName: 'Studio', inventoryName: 'Equipment' });
+    const createdTenantId = workspace.context.selectedTenantId;
+    await repository.createInventory(createdTenantId, 'Attic');
+    const tenantAudit = await repository.listTenantAuditRecords(createdTenantId);
+
+    expect(tenantAudit.items.map((record) => record.action)).toEqual(['inventory.created', 'inventory.created', 'tenant.created']);
+    expect(tenantAudit.items[0]).toMatchObject({
+      tenantId: createdTenantId,
+      action: 'inventory.created',
+      targetType: 'inventory'
+    });
+  });
+
+  it('appends local audit records for attachments and access mutations', async () => {
+    const repository = new SeededInventoryRepository(seed);
+    const uploaded = await repository.uploadAssetPhoto('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-photo-one',
+      file: new File(['fake'], 'photo.jpg', { type: 'image/jpeg' }),
+      name: 'photo.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 4,
+      previewUrl: 'blob:photo'
+    });
+
+    await repository.archiveAssetAttachment('tenant-home', 'inventory-household', 'asset-home', uploaded.id);
+    await repository.restoreAssetAttachment('tenant-home', 'inventory-household', 'asset-home', uploaded.id);
+    await repository.deleteAssetAttachment('tenant-home', 'inventory-household', 'asset-home', uploaded.id);
+    await repository.grantInventoryAccess('tenant-home', 'inventory-household', 'principal-two', 'viewer');
+    await repository.revokeInventoryAccess('tenant-home', 'inventory-household', 'principal-two', 'viewer');
+    const invitation = await repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'new@example.test', 'editor');
+    await repository.updateInventoryAccessInvitationExpiration(
+      'tenant-home',
+      'inventory-household',
+      invitation.invitation.id,
+      '2026-07-01T00:00:00Z'
+    );
+    await repository.cancelInventoryAccessInvitation('tenant-home', 'inventory-household', invitation.invitation.id);
+    await repository.deleteInventoryAccessInvitation('tenant-home', 'inventory-household', invitation.invitation.id);
+
+    const audit = await repository.listInventoryAuditRecords('tenant-home', 'inventory-household');
+
+    expect(audit.items.map((record) => record.action)).toEqual([
+      'inventory_access_invitation.deleted',
+      'inventory_access_invitation.cancelled',
+      'inventory_access_invitation.expiration_updated',
+      'inventory_access_invitation.created',
+      'inventory_access.revoked',
+      'inventory_access.granted',
+      'asset_photo.deleted',
+      'asset_photo.restored',
+      'asset_photo.archived',
+      'asset_photo.uploaded'
+    ]);
+    expect(audit.items.every((record) => record.source === 'local_demo')).toBe(true);
+  });
+
   it('stores uploaded photos as asset attachments with lifecycle controls', async () => {
     const repository = new SeededInventoryRepository(seed);
     const file = new File(['fake'], 'photo.jpg', { type: 'image/jpeg' });

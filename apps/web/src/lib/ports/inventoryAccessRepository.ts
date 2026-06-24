@@ -5,12 +5,7 @@ import type {
   InventoryAccessRelationship,
   InvitationStatusFilter
 } from '$lib/domain/inventory';
-
-export interface Pagination {
-  limit: number;
-  nextCursor: string | null;
-  hasMore: boolean;
-}
+import type { Pagination } from './pagination';
 
 export interface InventoryAccessPage<T> {
   items: T[];

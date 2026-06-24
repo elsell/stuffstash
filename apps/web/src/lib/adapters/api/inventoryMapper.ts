@@ -1,5 +1,6 @@
 import type {
   AccessSummary as ApiAccessSummary,
+  AuditRecord as ApiAuditRecord,
   Asset as ApiAsset,
   Attachment as ApiAttachment,
   AssetKind as ApiAssetKind,
@@ -15,6 +16,7 @@ import {
   type AccessSummary,
   type Asset,
   type AssetAttachment,
+  type AuditRecord,
   type AttachmentContentType,
   type AssetKind,
   type CreatedInventoryAccessInvitation,
@@ -126,6 +128,22 @@ export function mapCreatedInventoryAccessInvitation(
   return {
     invitation: mapInventoryAccessInvitation(invitation),
     acceptanceToken: invitation.acceptanceToken
+  };
+}
+
+export function mapAuditRecord(record: ApiAuditRecord): AuditRecord {
+  return {
+    id: record.id,
+    tenantId: record.tenantId,
+    inventoryId: record.inventoryId,
+    principalId: record.principalId,
+    action: record.action,
+    source: record.source,
+    targetType: record.targetType,
+    targetId: record.targetId,
+    occurredAt: record.occurredAt,
+    requestId: record.requestId,
+    metadata: record.metadata
   };
 }
 

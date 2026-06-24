@@ -308,6 +308,24 @@ describe('StuffStashInventoryRepository', () => {
     expect(await requests[1]?.json()).toEqual({ email: 'editor@example.test', relationship: 'editor' });
     expect(await requests[2]?.json()).toEqual({ expiresAt: '2026-07-01T00:00:00Z' });
   });
+
+  it('lists tenant and inventory audit records through generated client paths', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(repository.listTenantAuditRecords('tenant-home')).resolves.toMatchObject({
+      items: [{ id: 'audit-one', action: 'asset.created', inventoryId: 'inventory-household' }],
+      pagination: { limit: 50, nextCursor: null, hasMore: false }
+    });
+    await expect(repository.listInventoryAuditRecords('tenant-home', 'inventory-household', 'next-page')).resolves.toMatchObject({
+      items: [{ id: 'audit-one', action: 'asset.created', inventoryId: 'inventory-household' }]
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/audit-records?limit=50',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/audit-records?limit=50&cursor=next-page'
+    ]);
+  });
 });
 
 function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof fetch; requests: Request[] } {
@@ -471,6 +489,12 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
       ) {
         return new Response(null, { status: 204 });
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/audit-records') {
+        return envelope([auditRecord()]);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/audit-records') {
+        return envelope([auditRecord()]);
+      }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }
   };
@@ -546,5 +570,21 @@ function invitation(id: string, email: string, relationship: string): object {
     isExpired: false,
     expiresAt: '2026-06-30T00:00:00Z',
     inviterPrincipalId: 'principal-one'
+  };
+}
+
+function auditRecord(): object {
+  return {
+    id: 'audit-one',
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    principalId: 'principal-one',
+    action: 'asset.created',
+    source: 'api',
+    targetType: 'asset',
+    targetId: 'asset-passport',
+    occurredAt: '2026-06-24T12:00:00Z',
+    requestId: 'request-one',
+    metadata: { operation_id: 'operation-one' }
   };
 }

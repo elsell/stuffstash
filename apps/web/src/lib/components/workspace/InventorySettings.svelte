@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Activity from '@lucide/svelte/icons/activity';
   import Boxes from '@lucide/svelte/icons/boxes';
   import Shield from '@lucide/svelte/icons/shield';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
@@ -8,18 +7,22 @@
   import type { Inventory, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+  import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import InventoryAccessManager from './InventoryAccessManager.svelte';
+  import InventoryAuditPanel from './InventoryAuditPanel.svelte';
 
   let {
     tenant,
     inventory,
     inventoryCount,
-    accessRepository
+    accessRepository,
+    auditRepository
   }: {
     tenant: Tenant | null;
     inventory: Inventory | null;
     inventoryCount: number;
     accessRepository: InventoryAccessRepository;
+    auditRepository: InventoryAuditRepository;
   } = $props();
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
@@ -64,16 +67,7 @@
 
       <InventoryAccessManager {tenant} {inventory} repository={accessRepository} />
 
-      <section class="settings-panel" aria-labelledby="settings-activity">
-        <div class="settings-panel-heading">
-          <Activity aria-hidden="true" />
-          <div>
-            <h2 id="settings-activity">Activity</h2>
-            <p>Audit history and undoable operations are not connected yet.</p>
-          </div>
-        </div>
-        <Button.Root variant="outline" disabled={true}>View activity unavailable</Button.Root>
-      </section>
+      <InventoryAuditPanel {tenant} {inventory} repository={auditRepository} />
 
       <section class="settings-panel" aria-labelledby="settings-customization">
         <div class="settings-panel-heading">

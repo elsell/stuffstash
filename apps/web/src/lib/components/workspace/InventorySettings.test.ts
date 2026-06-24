@@ -3,6 +3,7 @@ import { mount, unmount } from 'svelte';
 import InventorySettings from './InventorySettings.svelte';
 import type { Inventory, Tenant } from '$lib/domain/inventory';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 
 let component: ReturnType<typeof mount> | null = null;
 
@@ -33,7 +34,7 @@ describe('InventorySettings', () => {
 
     component = mount(InventorySettings, {
       target: document.body,
-      props: { tenant, inventory, inventoryCount: 2, accessRepository: fakeRepository() }
+      props: { tenant, inventory, inventoryCount: 2, accessRepository: fakeAccessRepository(), auditRepository: fakeAuditRepository() }
     });
 
     expect(document.body.textContent).toContain('Asset editsAllowed');
@@ -42,9 +43,8 @@ describe('InventorySettings', () => {
       Array.from(document.body.querySelectorAll('button')).map((button) => ({
         text: button.textContent,
         disabled: button.disabled
-      }))
+      })).filter((button) => button.text.includes('unavailable'))
     ).toEqual([
-      { text: 'View activity unavailable', disabled: true },
       { text: 'Manage fields unavailable', disabled: true },
       { text: 'Tenant administration unavailable', disabled: true }
     ]);
@@ -63,14 +63,14 @@ describe('InventorySettings', () => {
 
     component = mount(InventorySettings, {
       target: document.body,
-      props: { tenant: null, inventory, inventoryCount: 1, accessRepository: fakeRepository() }
+      props: { tenant: null, inventory, inventoryCount: 1, accessRepository: fakeAccessRepository(), auditRepository: fakeAuditRepository() }
     });
 
     expect(document.body.textContent).toContain('Asset editsView only');
   });
 });
 
-function fakeRepository(): InventoryAccessRepository {
+function fakeAccessRepository(): InventoryAccessRepository {
   return {
     listInventoryAccessGrants: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
     grantInventoryAccess: async () => failRepositoryCall(),
@@ -80,6 +80,13 @@ function fakeRepository(): InventoryAccessRepository {
     updateInventoryAccessInvitationExpiration: async () => failRepositoryCall(),
     cancelInventoryAccessInvitation: async () => failRepositoryCall(),
     deleteInventoryAccessInvitation: async () => failRepositoryCall()
+  };
+}
+
+function fakeAuditRepository(): InventoryAuditRepository {
+  return {
+    listTenantAuditRecords: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
+    listInventoryAuditRecords: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } })
   };
 }
 

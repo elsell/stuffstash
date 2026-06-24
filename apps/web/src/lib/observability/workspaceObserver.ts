@@ -52,7 +52,10 @@ export type WorkspaceEventName =
   | 'workspace.access_invitation_cancel_failed'
   | 'workspace.access_invitation_delete_started'
   | 'workspace.access_invitation_deleted'
-  | 'workspace.access_invitation_delete_failed';
+  | 'workspace.access_invitation_delete_failed'
+  | 'workspace.audit_load_started'
+  | 'workspace.audit_loaded'
+  | 'workspace.audit_load_failed';
 
 export interface WorkspaceObserver {
   record(eventName: WorkspaceEventName, attributes?: Record<string, string | number | boolean>): void;

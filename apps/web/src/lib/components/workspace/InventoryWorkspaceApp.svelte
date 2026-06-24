@@ -16,6 +16,7 @@
     type WorkspaceMode
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+  import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
@@ -34,7 +35,7 @@
     initialData,
     onSignOut
   }: {
-    repository: InventoryRepository & InventoryAccessRepository;
+    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository;
     initialData: WorkspaceData;
     onSignOut: () => void;
   } = $props();
@@ -531,6 +532,7 @@
         inventory={selectedInventory}
         inventoryCount={data.context.inventories.length}
         accessRepository={repository}
+        auditRepository={repository}
       />
     {:else}
       <HomeWorkspace

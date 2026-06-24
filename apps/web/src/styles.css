@@ -575,6 +575,32 @@ small {
   background: var(--secondary);
 }
 
+.audit-list {
+  display: grid;
+  gap: 8px;
+}
+
+.audit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.audit-row > div,
+.audit-meta {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.audit-meta {
+  justify-items: end;
+}
+
 .asset-row-main,
 .asset-row-meta {
   display: grid;
@@ -586,12 +612,15 @@ small {
   .access-form,
   .access-columns,
   .access-row,
-  .invitation-row {
+  .invitation-row,
+  .audit-row {
     grid-template-columns: 1fr;
   }
 
-  .access-actions {
+  .access-actions,
+  .audit-meta {
     justify-content: flex-start;
+    justify-items: start;
   }
 }
 

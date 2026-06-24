@@ -16,10 +16,12 @@ import type {
 } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import {
   mapAsset,
   mapAttachment,
+  mapAuditRecord,
   mapCapability,
   mapCreatedInventoryAccessInvitation,
   mapInventory,
@@ -29,7 +31,7 @@ import {
 } from './inventoryMapper';
 import { mapInventoryAccessGrant, mapInventoryAccessInvitation } from './inventoryMapper';
 
-export class StuffStashInventoryRepository implements InventoryRepository, InventoryAccessRepository {
+export class StuffStashInventoryRepository implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository {
   private readonly client: StuffStashClient;
   private readonly uploadFetch: typeof fetch;
   private readonly config: RuntimeConfig;
@@ -429,6 +431,38 @@ export class StuffStashInventoryRepository implements InventoryRepository, Inven
     }
   }
 
+  async listTenantAuditRecords(tenantId: string, cursor?: string, signal?: AbortSignal) {
+    this.observer.record('workspace.audit_load_started', { scope: 'tenant' });
+    try {
+      const page = await this.client.listTenantAuditRecords(tenantId, 50, cursor, signal);
+      const items = page.items.map(mapAuditRecord);
+      this.observer.record('workspace.audit_loaded', { scope: 'tenant', recordCount: items.length });
+      return { items, pagination: page.pagination };
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
+      this.observer.record('workspace.audit_load_failed', { scope: 'tenant' });
+      throw safeError(error);
+    }
+  }
+
+  async listInventoryAuditRecords(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal) {
+    this.observer.record('workspace.audit_load_started', { scope: 'inventory' });
+    try {
+      const page = await this.client.listInventoryAuditRecords(tenantId, inventoryId, 50, cursor, signal);
+      const items = page.items.map(mapAuditRecord);
+      this.observer.record('workspace.audit_loaded', { scope: 'inventory', recordCount: items.length });
+      return { items, pagination: page.pagination };
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
+      this.observer.record('workspace.audit_load_failed', { scope: 'inventory' });
+      throw safeError(error);
+    }
+  }
+
   private async loadTenantWorkspace(
     principal: ReturnType<typeof mapPrincipal>,
     tenants: ReturnType<typeof mapTenant>[],
@@ -521,6 +555,10 @@ function safeError(error: unknown): Error {
     return error;
   }
   return new Error('Request failed.');
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 function readSessionValue(key: string): string {

@@ -12,11 +12,12 @@
   import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
   import { workspaceSeed } from '$lib/adapters/memory/workspaceSeed';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+  import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
-  let repository = $state<(InventoryRepository & InventoryAccessRepository) | null>(null);
+  let repository = $state<(InventoryRepository & InventoryAccessRepository & InventoryAuditRepository) | null>(null);
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
   let error = $state('');

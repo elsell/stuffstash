@@ -77,6 +77,22 @@ export interface CreatedInventoryAccessInvitation {
   acceptanceToken?: string;
 }
 
+export type AuditScope = 'inventory' | 'tenant';
+
+export interface AuditRecord {
+  id: string;
+  tenantId: string;
+  inventoryId: string | null;
+  principalId: string;
+  action: string;
+  source: string;
+  targetType: string;
+  targetId: string;
+  occurredAt: string;
+  requestId?: string;
+  metadata: Record<string, string>;
+}
+
 export interface MediaUploadPolicy {
   supportedContentTypes: AttachmentContentType[];
   maxBytes: number;

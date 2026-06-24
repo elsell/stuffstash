@@ -5,6 +5,7 @@ import {
   type AddAssetDraft,
   type Asset,
   type AssetAttachment,
+  type AuditRecord,
   type CreatedInventoryAccessInvitation,
   defaultMediaUploadPolicy,
   type Inventory,
@@ -20,11 +21,13 @@ import {
 } from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+import type { AuditRecordPage, InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import { filterAssets } from '$lib/application/workspace';
 
-export class SeededInventoryRepository implements InventoryRepository, InventoryAccessRepository {
+export class SeededInventoryRepository implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository {
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
+  private auditRecords: AuditRecord[] = [];
   private grants: InventoryAccessGrant[] = [];
   private invitations: InventoryAccessInvitation[] = [];
   private selectedTenantId: string;
@@ -67,6 +70,15 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     this.selectedTenantId = tenant.id;
     this.selectedInventoryId = inventory.id;
     this.selectedLifecycleState = 'active';
+    this.recordAudit({
+      tenantId: tenant.id,
+      inventoryId: null,
+      action: 'tenant.created',
+      targetType: 'tenant',
+      targetId: tenant.id,
+      metadata: { name: tenant.name }
+    });
+    this.recordInventoryAudit(inventory, 'inventory.created');
     return this.workspace();
   }
 
@@ -91,6 +103,7 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     this.selectedTenantId = tenantId;
     this.selectedInventoryId = inventory.id;
     this.selectedLifecycleState = 'active';
+    this.recordInventoryAudit(inventory, 'inventory.created');
     return this.workspace();
   }
 
@@ -147,6 +160,7 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       updatedAt: new Date().toISOString()
     };
     this.seed = { ...this.seed, assets: [asset, ...this.seed.assets] };
+    this.recordAssetAudit(asset, 'asset.created');
     return asset;
   }
 
@@ -177,15 +191,20 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
           : candidate
       )
     };
+    this.recordAssetAudit(updated, updated.parentAssetId !== asset.parentAssetId ? 'asset.moved' : 'asset.updated');
     return updated;
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
-    return this.setAssetLifecycle(tenantId, inventoryId, assetId, 'archived');
+    const asset = await this.setAssetLifecycle(tenantId, inventoryId, assetId, 'archived');
+    this.recordAssetAudit(asset, 'asset.archived');
+    return asset;
   }
 
   async restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
-    return this.setAssetLifecycle(tenantId, inventoryId, assetId, 'active');
+    const asset = await this.setAssetLifecycle(tenantId, inventoryId, assetId, 'active');
+    this.recordAssetAudit(asset, 'asset.restored');
+    return asset;
   }
 
   async deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
@@ -194,6 +213,7 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       ...this.seed,
       assets: this.seed.assets.filter((candidate) => candidate !== asset)
     };
+    this.recordAssetAudit(asset, 'asset.deleted');
   }
 
   async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]> {
@@ -220,6 +240,14 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       thumbnailUrl: photo.previewUrl
     };
     this.attachments = [attachment, ...this.attachments];
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'asset_photo.uploaded',
+      targetType: 'attachment',
+      targetId: attachment.id,
+      metadata: { assetId, fileName: attachment.fileName }
+    });
     return attachment;
   }
 
@@ -229,7 +257,16 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     assetId: string,
     attachmentId: string
   ): Promise<AssetAttachment> {
-    return this.setAttachmentLifecycle(tenantId, inventoryId, assetId, attachmentId, 'archived');
+    const attachment = await this.setAttachmentLifecycle(tenantId, inventoryId, assetId, attachmentId, 'archived');
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'asset_photo.archived',
+      targetType: 'attachment',
+      targetId: attachment.id,
+      metadata: { assetId, fileName: attachment.fileName }
+    });
+    return attachment;
   }
 
   async restoreAssetAttachment(
@@ -238,7 +275,16 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     assetId: string,
     attachmentId: string
   ): Promise<AssetAttachment> {
-    return this.setAttachmentLifecycle(tenantId, inventoryId, assetId, attachmentId, 'active');
+    const attachment = await this.setAttachmentLifecycle(tenantId, inventoryId, assetId, attachmentId, 'active');
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'asset_photo.restored',
+      targetType: 'attachment',
+      targetId: attachment.id,
+      metadata: { assetId, fileName: attachment.fileName }
+    });
+    return attachment;
   }
 
   async deleteAssetAttachment(
@@ -249,6 +295,14 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
   ): Promise<void> {
     const attachment = this.findAttachment(tenantId, inventoryId, assetId, attachmentId);
     this.attachments = this.attachments.filter((candidate) => candidate !== attachment);
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'asset_photo.deleted',
+      targetType: 'attachment',
+      targetId: attachment.id,
+      metadata: { assetId, fileName: attachment.fileName }
+    });
   }
 
   async searchAssets(request: SearchRequest): Promise<SearchResult[]> {
@@ -269,6 +323,21 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       },
       matches: [{ field: 'title', value: asset.title }]
     }));
+  }
+
+  async listTenantAuditRecords(tenantId: string, cursor?: string, _signal?: AbortSignal): Promise<AuditRecordPage> {
+    const records = this.auditRecords.filter((record) => record.tenantId === tenantId);
+    return page(records, cursor);
+  }
+
+  async listInventoryAuditRecords(
+    tenantId: string,
+    inventoryId: string,
+    cursor?: string,
+    _signal?: AbortSignal
+  ): Promise<AuditRecordPage> {
+    const records = this.auditRecords.filter((record) => record.tenantId === tenantId && record.inventoryId === inventoryId);
+    return page(records, cursor);
   }
 
   async listInventoryAccessGrants(
@@ -300,6 +369,14 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     }
     const grant: InventoryAccessGrant = { tenantId, inventoryId, principalId, relationship };
     this.grants = [grant, ...this.grants];
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'inventory_access.granted',
+      targetType: 'principal',
+      targetId: principalId,
+      metadata: { relationship }
+    });
     return grant;
   }
 
@@ -309,6 +386,13 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     principalId: string,
     relationship: InventoryAccessRelationship
   ): Promise<void> {
+    const revoked = this.grants.some(
+      (grant) =>
+        grant.tenantId === tenantId &&
+        grant.inventoryId === inventoryId &&
+        grant.principalId === principalId &&
+        grant.relationship === relationship
+    );
     this.grants = this.grants.filter(
       (grant) =>
         !(
@@ -318,6 +402,16 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
           grant.relationship === relationship
         )
     );
+    if (revoked) {
+      this.recordAudit({
+        tenantId,
+        inventoryId,
+        action: 'inventory_access.revoked',
+        targetType: 'principal',
+        targetId: principalId,
+        metadata: { relationship }
+      });
+    }
   }
 
   async listInventoryAccessInvitations(
@@ -356,6 +450,14 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       inviterPrincipalId: this.seed.principal.id
     };
     this.invitations = [invitation, ...this.invitations];
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'inventory_access_invitation.created',
+      targetType: 'access_invitation',
+      targetId: invitation.id,
+      metadata: { email: invitation.email, relationship }
+    });
     return { invitation, acceptanceToken };
   }
 
@@ -368,6 +470,14 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     const invitation = this.findInvitation(tenantId, inventoryId, invitationId);
     const updated: InventoryAccessInvitation = { ...invitation, expiresAt, isExpired: Date.parse(expiresAt) <= Date.now() };
     this.invitations = this.invitations.map((candidate) => (candidate === invitation ? updated : candidate));
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'inventory_access_invitation.expiration_updated',
+      targetType: 'access_invitation',
+      targetId: invitationId,
+      metadata: { expiresAt }
+    });
     return updated;
   }
 
@@ -375,11 +485,27 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
     const invitation = this.findInvitation(tenantId, inventoryId, invitationId);
     const updated: InventoryAccessInvitation = { ...invitation, status: 'cancelled' };
     this.invitations = this.invitations.map((candidate) => (candidate === invitation ? updated : candidate));
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'inventory_access_invitation.cancelled',
+      targetType: 'access_invitation',
+      targetId: invitationId,
+      metadata: { email: invitation.email }
+    });
   }
 
   async deleteInventoryAccessInvitation(tenantId: string, inventoryId: string, invitationId: string): Promise<void> {
     const invitation = this.findInvitation(tenantId, inventoryId, invitationId);
     this.invitations = this.invitations.filter((candidate) => candidate !== invitation);
+    this.recordAudit({
+      tenantId,
+      inventoryId,
+      action: 'inventory_access_invitation.deleted',
+      targetType: 'access_invitation',
+      targetId: invitationId,
+      metadata: { email: invitation.email }
+    });
   }
 
   private workspace(): WorkspaceData {
@@ -398,6 +524,53 @@ export class SeededInventoryRepository implements InventoryRepository, Inventory
       },
       assets: this.workspaceAssets()
     };
+  }
+
+  private recordAssetAudit(asset: Asset, action: string): void {
+    this.recordAudit({
+      tenantId: asset.tenantId,
+      inventoryId: asset.inventoryId,
+      action,
+      targetType: 'asset',
+      targetId: asset.id,
+      metadata: { title: asset.title }
+    });
+  }
+
+  private recordInventoryAudit(inventory: Inventory, action: string): void {
+    this.recordAudit({
+      tenantId: inventory.tenantId,
+      inventoryId: inventory.id,
+      action,
+      targetType: 'inventory',
+      targetId: inventory.id,
+      metadata: { name: inventory.name }
+    });
+  }
+
+  private recordAudit(event: {
+    tenantId: string;
+    inventoryId: string | null;
+    action: string;
+    targetType: string;
+    targetId: string;
+    metadata: Record<string, string>;
+  }): void {
+    this.auditRecords = [
+      {
+        id: `local-audit-${this.auditRecords.length + 1}-${Date.now()}`,
+        tenantId: event.tenantId,
+        inventoryId: event.inventoryId,
+        principalId: this.seed.principal.id,
+        action: event.action,
+        source: 'local_demo',
+        targetType: event.targetType,
+        targetId: event.targetId,
+        occurredAt: new Date().toISOString(),
+        metadata: event.metadata
+      },
+      ...this.auditRecords
+    ];
   }
 
   private workspaceAssets(): Asset[] {

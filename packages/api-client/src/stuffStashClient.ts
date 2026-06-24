@@ -487,14 +487,20 @@ export class StuffStashClient {
     return mapInvitationAcceptance(envelope.data);
   }
 
-  async listTenantAuditRecords(tenantId: string, limit = 50, cursor?: string): Promise<Page<AuditRecord>> {
+  async listTenantAuditRecords(
+    tenantId: string,
+    limit = 50,
+    cursor?: string,
+    signal?: AbortSignal
+  ): Promise<Page<AuditRecord>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/audit-records', {
         headers: await this.authHeaders(),
         params: {
           path: { tenantId },
           query: { limit, cursor }
-        }
+        },
+        signal
       })
     );
     return mapPage(envelope, mapAuditRecord);
@@ -504,7 +510,8 @@ export class StuffStashClient {
     tenantId: string,
     inventoryId: string,
     limit = 50,
-    cursor?: string
+    cursor?: string,
+    signal?: AbortSignal
   ): Promise<Page<AuditRecord>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/audit-records', {
@@ -512,7 +519,8 @@ export class StuffStashClient {
         params: {
           path: { tenantId, inventoryId },
           query: { limit, cursor }
-        }
+        },
+        signal
       })
     );
     return mapPage(envelope, mapAuditRecord);
