@@ -14,7 +14,11 @@ describe('StuffStashClient', () => {
           data: {
             id: 'inventory-one',
             tenantId: 'tenant-one',
-            name: 'Garage'
+            name: 'Garage',
+            access: {
+              relationship: 'editor',
+              permissions: ['view', 'create_asset', 'edit_asset']
+            }
           },
           meta: {}
         });
@@ -24,6 +28,10 @@ describe('StuffStashClient', () => {
     const inventory = await client.createInventory('tenant-one', 'Garage');
 
     expect(inventory.name).toBe('Garage');
+    expect(inventory.access).toEqual({
+      relationship: 'editor',
+      permissions: ['view', 'create_asset', 'edit_asset']
+    });
     expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories');
     expect(requests[0]?.headers.get('Authorization')).toBe('Bearer id-token');
     expect(await requests[0]?.json()).toEqual({ name: 'Garage' });
@@ -69,6 +77,39 @@ describe('StuffStashClient', () => {
     expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets?limit=1&lifecycleState=archived');
   });
 
+  it('fetches tenants by ID', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({
+          data: {
+            id: 'tenant-one',
+            name: 'Home',
+            access: {
+              relationship: 'owner',
+              permissions: ['view', 'create_inventory', 'configure']
+            }
+          },
+          meta: {}
+        });
+      }
+    });
+
+    await expect(client.getTenant('tenant-one')).resolves.toEqual({
+      id: 'tenant-one',
+      name: 'Home',
+      access: {
+        relationship: 'owner',
+        permissions: ['view', 'create_inventory', 'configure']
+      }
+    });
+    expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one');
+  });
+
   it('calls asset lifecycle endpoints', async () => {
     const requests: Request[] = [];
     const assetResponse = {
@@ -111,6 +152,93 @@ describe('StuffStashClient', () => {
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/restore',
       'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one'
     ]);
+  });
+
+  it('creates and lists asset attachments through generated paths', async () => {
+    const requests: Request[] = [];
+    const attachmentEnvelope = {
+      data: {
+        id: 'attachment-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        assetId: 'asset-one',
+        fileName: 'photo.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 12,
+        sha256: 'hash',
+        createdAt: '2026-06-23T00:00:00Z',
+        lifecycleState: 'active'
+      },
+      meta: {}
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'GET') {
+          return Response.json({
+            data: [attachmentEnvelope.data],
+            meta: {
+              pagination: {
+                limit: 1,
+                nextCursor: null,
+                hasMore: false
+              }
+            }
+          });
+        }
+        return Response.json(attachmentEnvelope);
+      }
+    });
+
+    await expect(
+      client.createAssetAttachment('tenant-one', 'inventory-one', 'asset-one', {
+        fileName: 'photo.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'ZmFrZQ=='
+      })
+    ).resolves.toMatchObject({
+      id: 'attachment-one',
+      fileName: 'photo.jpg',
+      contentType: 'image/jpeg'
+    });
+    await expect(
+      client.listAssetAttachments('tenant-one', 'inventory-one', 'asset-one', 1)
+    ).resolves.toMatchObject({
+      items: [{ id: 'attachment-one', lifecycleState: 'active' }],
+      pagination: { limit: 1, nextCursor: null, hasMore: false }
+    });
+
+    expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments');
+    expect(requests[0]?.headers.get('Authorization')).toBe('Bearer id-token');
+    expect(await requests[0]?.json()).toEqual({
+      fileName: 'photo.jpg',
+      contentType: 'image/jpeg',
+      contentBase64: 'ZmFrZQ=='
+    });
+    expect(requests[1]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments?limit=1');
+  });
+
+  it('builds authenticated thumbnail references', async () => {
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local/',
+      tokenProvider: () => 'id-token',
+      fetch: async () => Response.json({ data: {}, meta: {} })
+    });
+
+    await expect(
+      client.assetAttachmentThumbnailReference(
+        'tenant one',
+        'inventory/one',
+        'asset one',
+        'attachment/one'
+      )
+    ).resolves.toEqual({
+      uri: 'http://api.local/tenants/tenant%20one/inventories/inventory%2Fone/assets/asset%20one/attachments/attachment%2Fone/thumbnail?variant=small',
+      headers: { Authorization: 'Bearer id-token' }
+    });
   });
 
   it('maps API errors into typed client errors', async () => {

@@ -23,12 +23,13 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is validating the first Expo mobile scaffold on a real iPhone before deeper mobile product work.
+The current focus is turning the verified Expo Go scaffold into the first properly organized mobile app foundation before deeper mobile product work.
 
 The goal is to prove a production-shaped path through:
 
-- no-account Expo Go local development,
+- no-account Expo Go local development with a running hot-reload server,
 - a separate React Native and Expo mobile app in the monorepo,
+- mobile source organized around domain, application, adapter, bootstrap, and UI boundaries,
 - pinned mobile dependencies and reproducible local setup,
 - a minimal first screen that can be loaded on a physical iPhone,
 - user-centered inventory creation, asset creation, browsing, and sharing workflows,
@@ -96,9 +97,9 @@ The goal is to prove a production-shaped path through:
 
 ## Next Work
 
-1. Validate the minimal Expo mobile app on a real iPhone through Expo Go.
-   - Use the no-account local Expo Go path before considering EAS or native development builds.
-   - Keep the first mobile screen static until the iPhone development loop is proven.
+1. Build the first mobile app foundation behind domain/application/adapter boundaries.
+   - Keep the no-account local Expo Go path before considering EAS or native development builds.
+   - Keep demo data behind an adapter until authentication and generated API integration are specified.
 2. Promote the approved web inventory workspace direction into `apps/web` after implementation planning.
    - Use `specs/platform/web-inventory-workspace.spec.md` as the source of truth.
    - Treat the current tracer-bullet screens as disposable until replaced through the approved SvelteKit/shadcn architecture.

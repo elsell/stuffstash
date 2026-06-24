@@ -1,4 +1,6 @@
 .cache/
+.stuffstash/seed-data/
+.stuffstash/seed-media/
 /stuff-stash
 docs/node_modules/
 docs/dist/

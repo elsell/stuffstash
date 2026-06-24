@@ -19,13 +19,36 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 ## Pinned Web And Client Tooling
 
 - pnpm for web/client workspaces: `11.0.7`.
-- Expo: `expo 54.0.34`.
-- Expo status bar: `expo-status-bar 3.0.9`.
-- React Native: `react-native 0.81.5`.
-- React for mobile: `react 19.1.0`.
+- Expo: `expo 55.0.26`.
+- Expo status bar: `expo-status-bar 55.0.6`.
+- React Native: `react-native 0.83.6`.
+- React for mobile: `react 19.2.0`.
+- React DOM for Expo Router web peer alignment: `react-dom 19.2.0`.
 - TypeScript for mobile: `typescript 5.9.2`.
-- React types for mobile: `@types/react 19.1.0`.
-- Expo/Metro transitive overrides required by the dependency-age gate: `@0no-co/graphql.web 1.2.0`, `baseline-browser-mapping 2.10.34`, `caniuse-lite 1.0.30001797`, `electron-to-chromium 1.5.368`, `node-releases 2.0.47`, `regjsparser 0.13.1`, `semver 7.8.2`, and `yargs 17.7.2`.
+- React types for mobile: `@types/react 19.2.17`.
+- Vitest for mobile application tests: `vitest 4.1.8`.
+- Mobile generated API client workspace dependency: `@stuff-stash/api-client workspace:*`.
+- Expo Router for native mobile navigation: `expo-router 55.0.16`.
+- Expo development client for local physical-device SDK 55 testing: `expo-dev-client 55.0.35`.
+- Expo Metro runtime for Expo Router: `@expo/metro-runtime 55.0.11`.
+- Expo Linking for Expo Router: `expo-linking 55.0.15`.
+- Expo Constants for Expo Router: `expo-constants 55.0.16`.
+- Expo Image Picker for mobile create-form photo selection: `expo-image-picker 17.0.10`.
+- React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
+- React Native Worklets for Expo SDK 55 Reanimated: `react-native-worklets 0.7.4`.
+- React Navigation native runtime transitive dependency for Expo Router: `@react-navigation/native 7.2.6`.
+- React Navigation bottom tabs transitive dependency for Expo Router: `@react-navigation/bottom-tabs 7.17.0`.
+- React Navigation native stack transitive override for Expo Router peer alignment: `@react-navigation/native-stack 7.3.16`.
+- React Navigation core transitive override for dependency freshness: `@react-navigation/core 7.18.0`.
+- React Navigation elements transitive override for native peer alignment: `@react-navigation/elements 2.9.20`.
+- React Navigation routers transitive override for dependency freshness: `@react-navigation/routers 7.5.5`.
+- Radix transitive overrides pulled by Expo Router web support for dependency freshness: `@radix-ui/react-collection 1.1.9`, `@radix-ui/react-dialog 1.1.16`, `@radix-ui/react-dismissable-layer 1.1.12`, `@radix-ui/react-focus-scope 1.1.9`, `@radix-ui/react-portal 1.1.11`, `@radix-ui/react-primitive 2.1.5`, `@radix-ui/react-roving-focus 1.1.12`, `@radix-ui/react-slot 1.2.5`, and `@radix-ui/react-tabs 1.1.14`.
+- Expo vector icons for mobile tab icons: `@expo/vector-icons 15.1.1`.
+- Lucide React Native for mobile product UI icons: `lucide-react-native 1.17.0`.
+- React Native SVG runtime for Expo SDK 55 icon rendering: `react-native-svg 15.15.3`.
+- React Native screens for Expo SDK 55 navigation: `react-native-screens 4.23.0`.
+- React Native safe area context for Expo SDK 55 navigation: `react-native-safe-area-context 5.6.2`.
+- Expo/Metro transitive overrides required by the dependency-age gate: `@0no-co/graphql.web 1.2.0`, `baseline-browser-mapping 2.10.34`, `caniuse-lite 1.0.30001797`, `dnssd-advertise 1.1.4`, `electron-to-chromium 1.5.368`, `node-releases 2.0.47`, `regjsparser 0.13.1`, `semver 7.8.2`, and `yargs 17.7.2`.
 - SvelteKit: `@sveltejs/kit 2.63.0`.
 - Svelte: `svelte 5.56.2`.
 - Svelte Vite plugin: `@sveltejs/vite-plugin-svelte 7.1.2`.

@@ -16,15 +16,22 @@ export interface Principal {
   email?: string;
 }
 
+export interface AccessSummary {
+  relationship: string;
+  permissions: string[];
+}
+
 export interface Tenant {
   id: string;
   name: string;
+  access: AccessSummary;
 }
 
 export interface Inventory {
   id: string;
   tenantId: string;
   name: string;
+  access: AccessSummary;
 }
 
 export type AssetKind = 'item' | 'container' | 'location';
@@ -38,13 +45,57 @@ export interface Asset {
   kind: AssetKind;
   title: string;
   description: string;
+  parentAssetId: string | null;
   lifecycleState: AssetLifecycleState;
+}
+
+export interface Attachment {
+  id: string;
+  tenantId: string;
+  inventoryId: string;
+  assetId: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  lifecycleState: AssetLifecycleState;
+}
+
+export interface CreateAttachmentInput {
+  fileName: string;
+  contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+  contentBase64: string;
+}
+
+export interface AssetPhotoReference {
+  uri: string;
+  headers: Record<string, string>;
 }
 
 export interface CreateAssetInput {
   kind: AssetKind;
   title: string;
   description?: string;
+  parentAssetId?: string | null;
+}
+
+export interface UpdateAssetInput {
+  title: string;
+  description?: string;
+  parentAssetId?: string | null;
+}
+
+export interface AssetSearchResult {
+  type: 'asset';
+  tenantId: string;
+  inventory: {
+    id: string;
+    name: string;
+  };
+  asset: Asset;
+  matches: Array<{
+    field: string;
+    value: string;
+  }>;
 }
 
 export interface Pagination {
@@ -64,6 +115,7 @@ type PrincipalResponse = components['schemas']['PrincipalResponse'];
 type TenantResponse = components['schemas']['TenantResponse'];
 type InventoryResponse = components['schemas']['InventoryResponse'];
 type AssetResponse = components['schemas']['AssetResponse'];
+type AttachmentResponse = components['schemas']['AttachmentResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -84,12 +136,14 @@ export class StuffStashAPIError extends Error {
 
 export class StuffStashClient {
   private readonly client: Client<paths>;
+  private readonly baseUrl: string;
   private readonly tokenProvider: TokenProvider;
 
   constructor(options: StuffStashClientOptions) {
+    this.baseUrl = options.baseUrl.replace(/\/+$/, '');
     this.tokenProvider = options.tokenProvider;
     this.client = createClient<paths>({
-      baseUrl: options.baseUrl.replace(/\/+$/, ''),
+      baseUrl: this.baseUrl,
       fetch: options.fetch
     });
   }
@@ -108,6 +162,28 @@ export class StuffStashClient {
       this.client.POST('/tenants', {
         headers: await this.authHeaders(),
         body: { name }
+      })
+    );
+    return mapTenant(envelope.data);
+  }
+
+  async listMyTenants(limit = 50, cursor?: string): Promise<Page<Tenant>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/me/tenants', {
+        headers: await this.authHeaders(),
+        params: {
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapTenant);
+  }
+
+  async getTenant(tenantId: string): Promise<Tenant> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } }
       })
     );
     return mapTenant(envelope.data);
@@ -161,10 +237,44 @@ export class StuffStashClient {
       this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets', {
         headers: await this.authHeaders(),
         params: { path: { tenantId, inventoryId } },
+        body: { ...input, parentAssetId: input.parentAssetId ?? undefined }
+      })
+    );
+    return mapAsset(envelope.data);
+  }
+
+  async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } }
+      })
+    );
+    return mapAsset(envelope.data);
+  }
+
+  async updateAsset(tenantId: string, inventoryId: string, assetId: string, input: UpdateAssetInput): Promise<Asset> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } },
         body: input
       })
     );
     return mapAsset(envelope.data);
+  }
+
+  async searchAssets(tenantId: string, query: string, limit = 20, cursor?: string): Promise<Page<AssetSearchResult>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/search/assets', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId },
+          query: { q: query, limit, cursor, lifecycleState: 'active', mode: 'fuzzy' }
+        }
+      })
+    );
+    return mapPage(envelope, mapAssetSearchResult);
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
@@ -194,6 +304,64 @@ export class StuffStashClient {
         params: { path: { tenantId, inventoryId, assetId } }
       })
     );
+  }
+
+  async listAssetAttachments(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    limit = 10,
+    cursor?: string
+  ): Promise<Page<Attachment>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId, assetId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapAttachment);
+  }
+
+  async createAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    input: CreateAttachmentInput
+  ): Promise<Attachment> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } },
+        body: input
+      })
+    );
+    return mapAttachment(envelope.data);
+  }
+
+  async assetAttachmentThumbnailReference(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<AssetPhotoReference> {
+    return {
+      uri: [
+        this.baseUrl,
+        'tenants',
+        encodeURIComponent(tenantId),
+        'inventories',
+        encodeURIComponent(inventoryId),
+        'assets',
+        encodeURIComponent(assetId),
+        'attachments',
+        encodeURIComponent(attachmentId),
+        'thumbnail?variant=small'
+      ].join('/'),
+      headers: await this.authHeaders()
+    };
   }
 
   private async authHeaders(): Promise<Record<string, string>> {
@@ -232,16 +400,41 @@ export class StuffStashClient {
   }
 }
 
+function mapAttachment(response: AttachmentResponse): Attachment {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId,
+    assetId: response.assetId,
+    fileName: response.fileName,
+    contentType: response.contentType,
+    sizeBytes: response.sizeBytes,
+    lifecycleState: mapAssetLifecycleState(response.lifecycleState)
+  };
+}
+
 function mapPrincipal(response: PrincipalResponse): Principal {
   return { id: response.id, email: response.email };
 }
 
 function mapTenant(response: TenantResponse): Tenant {
-  return { id: response.id, name: response.name };
+  return { id: response.id, name: response.name, access: mapAccess(response.access) };
 }
 
 function mapInventory(response: InventoryResponse): Inventory {
-  return { id: response.id, tenantId: response.tenantId, name: response.name };
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    name: response.name,
+    access: mapAccess(response.access)
+  };
+}
+
+function mapAccess(response: components['schemas']['AccessResponse']): AccessSummary {
+  return {
+    relationship: response.relationship,
+    permissions: response.permissions ?? []
+  };
 }
 
 function mapAsset(response: AssetResponse): Asset {
@@ -252,7 +445,27 @@ function mapAsset(response: AssetResponse): Asset {
     kind: mapAssetKind(response.kind),
     title: response.title,
     description: response.description,
+    parentAssetId: response.parentAssetId ?? null,
     lifecycleState: mapAssetLifecycleState(response.lifecycleState)
+  };
+}
+
+function mapAssetSearchResult(response: components['schemas']['AssetSearchResultResponse']): AssetSearchResult {
+  return {
+    type: 'asset',
+    tenantId: response.tenantId,
+    inventory: response.inventory,
+    asset: {
+      id: response.asset.id,
+      tenantId: response.tenantId,
+      inventoryId: response.asset.inventoryId,
+      kind: mapAssetKind(response.asset.kind),
+      title: response.asset.title,
+      description: response.asset.description,
+      parentAssetId: response.asset.parentAssetId ?? null,
+      lifecycleState: mapAssetLifecycleState(response.asset.lifecycleState)
+    },
+    matches: response.matches ?? []
   };
 }
 
