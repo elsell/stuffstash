@@ -533,6 +533,49 @@ describe('StuffStashClient', () => {
     expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
   });
 
+  it('lists tenant and inventory audit records through generated paths', async () => {
+    const requests: Request[] = [];
+    const record = {
+      id: 'audit-one',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      principalId: 'principal-one',
+      action: 'asset.created',
+      source: 'api',
+      targetType: 'asset',
+      targetId: 'asset-one',
+      occurredAt: '2026-06-24T12:00:00Z',
+      requestId: 'request-one',
+      metadata: { operation_id: 'operation-one' }
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({
+          data: [record],
+          meta: { pagination: { limit: 1, nextCursor: 'next-page', hasMore: true } }
+        });
+      }
+    });
+
+    await expect(client.listTenantAuditRecords('tenant-one', 1)).resolves.toEqual({
+      items: [record],
+      pagination: { limit: 1, nextCursor: 'next-page', hasMore: true }
+    });
+    await expect(client.listInventoryAuditRecords('tenant-one', 'inventory-one', 1, 'next-page')).resolves.toEqual({
+      items: [record],
+      pagination: { limit: 1, nextCursor: 'next-page', hasMore: true }
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/audit-records?limit=1',
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/audit-records?limit=1&cursor=next-page'
+    ]);
+  });
+
   it('maps API errors into typed client errors', async () => {
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',

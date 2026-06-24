@@ -51,6 +51,20 @@ export interface InvitationAcceptance {
   invitation: InventoryAccessInvitation;
 }
 
+export interface AuditRecord {
+  id: string;
+  tenantId: string;
+  inventoryId: string | null;
+  principalId: string;
+  action: string;
+  source: string;
+  targetType: string;
+  targetId: string;
+  occurredAt: string;
+  requestId?: string;
+  metadata: Record<string, string>;
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -175,6 +189,7 @@ type DirectUploadResponse = components['schemas']['DirectUploadResponse'];
 type GrantResponse = components['schemas']['GrantResponse'];
 type InvitationResponse = components['schemas']['InvitationResponse'];
 type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceResponse'];
+type RecordResponse = components['schemas']['RecordResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -472,6 +487,37 @@ export class StuffStashClient {
     return mapInvitationAcceptance(envelope.data);
   }
 
+  async listTenantAuditRecords(tenantId: string, limit = 50, cursor?: string): Promise<Page<AuditRecord>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/audit-records', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapAuditRecord);
+  }
+
+  async listInventoryAuditRecords(
+    tenantId: string,
+    inventoryId: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<Page<AuditRecord>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/audit-records', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapAuditRecord);
+  }
+
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     const envelope = await this.unwrap(
       this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive', {
@@ -748,6 +794,22 @@ function mapInvitationAcceptance(response: InvitationAcceptanceResponse): Invita
   return {
     grant: mapGrant(response.grant),
     invitation: mapInvitation(response.invitation)
+  };
+}
+
+function mapAuditRecord(response: RecordResponse): AuditRecord {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId ?? null,
+    principalId: response.principalId,
+    action: response.action,
+    source: response.source,
+    targetType: response.targetType,
+    targetId: response.targetId,
+    occurredAt: response.occurredAt,
+    requestId: response.requestId,
+    metadata: response.metadata ?? {}
   };
 }
 
