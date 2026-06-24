@@ -114,6 +114,15 @@ export interface AssetSearchResult {
   }>;
 }
 
+export type SearchMode = 'fuzzy' | 'exact';
+
+export interface SearchAssetsOptions {
+  limit?: number;
+  cursor?: string;
+  lifecycleState?: AssetLifecycleFilter;
+  mode?: SearchMode;
+}
+
 export interface Pagination {
   limit: number;
   nextCursor: string | null;
@@ -281,13 +290,20 @@ export class StuffStashClient {
     return mapAsset(envelope.data);
   }
 
-  async searchAssets(tenantId: string, query: string, limit = 20, cursor?: string): Promise<Page<AssetSearchResult>> {
+  async searchAssets(tenantId: string, query: string, options: SearchAssetsOptions = {}): Promise<Page<AssetSearchResult>> {
+    const limit = options.limit ?? 20;
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/search/assets', {
         headers: await this.authHeaders(),
         params: {
           path: { tenantId },
-          query: { q: query, limit, cursor, lifecycleState: 'active', mode: 'fuzzy' }
+          query: {
+            q: query,
+            limit,
+            cursor: options.cursor,
+            lifecycleState: options.lifecycleState ?? 'active',
+            mode: options.mode ?? 'fuzzy'
+          }
         }
       })
     );

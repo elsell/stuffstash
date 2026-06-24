@@ -355,6 +355,47 @@ describe('StuffStashClient', () => {
     ]);
   });
 
+  it('passes search mode and lifecycle filters through generated paths', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({
+          data: [
+            {
+              type: 'asset',
+              tenantId: 'tenant-one',
+              inventory: { id: 'inventory-one', name: 'Household' },
+              asset: {
+                id: 'asset-one',
+                kind: 'item',
+                title: 'Passport',
+                description: '',
+                parentAssetId: null,
+                lifecycleState: 'archived'
+              },
+              matches: [{ field: 'title', value: 'Passport' }]
+            }
+          ],
+          meta: { pagination: { limit: 5, nextCursor: null, hasMore: false } }
+        });
+      }
+    });
+
+    await expect(
+      client.searchAssets('tenant-one', 'Passport', { limit: 5, lifecycleState: 'archived', mode: 'exact' })
+    ).resolves.toMatchObject({
+      items: [{ asset: { id: 'asset-one', lifecycleState: 'archived' } }]
+    });
+
+    expect(requests[0]?.url).toBe(
+      'http://api.local/tenants/tenant-one/search/assets?q=Passport&limit=5&lifecycleState=archived&mode=exact'
+    );
+  });
+
   it('maps API errors into typed client errors', async () => {
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',
