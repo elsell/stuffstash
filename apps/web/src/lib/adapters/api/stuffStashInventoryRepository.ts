@@ -6,6 +6,7 @@ import type {
   Asset,
   AssetAttachment,
   AssetLifecycleFilter,
+  SearchRequest,
   SearchResult,
   SelectedPhoto,
   UpdateAssetDraft,
@@ -273,12 +274,16 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     await this.client.deleteAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
   }
 
-  async searchAssets(tenantId: string, query: string): Promise<SearchResult[]> {
+  async searchAssets(request: SearchRequest): Promise<SearchResult[]> {
     this.observer.record('workspace.search_started');
     try {
-      const page = await this.client.searchAssets(tenantId, query);
-      this.observer.record('workspace.search_completed', { resultCount: page.items.length });
-      return page.items.map(mapSearchResult);
+      const page = await this.client.searchAssets(request.tenantId, request.query, {
+        lifecycleState: request.lifecycleState,
+        mode: request.mode
+      });
+      const items = page.items.filter((result) => result.inventory.id === request.inventoryId);
+      this.observer.record('workspace.search_completed', { resultCount: items.length });
+      return items.map(mapSearchResult);
     } catch (error) {
       this.observer.record('workspace.search_failed');
       throw safeError(error);

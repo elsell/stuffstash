@@ -7,6 +7,7 @@ import {
   type AssetAttachment,
   defaultMediaUploadPolicy,
   type Inventory,
+  type SearchRequest,
   type SearchResult,
   type SelectedPhoto,
   type UpdateAssetDraft,
@@ -242,15 +243,16 @@ export class SeededInventoryRepository implements InventoryRepository {
     this.attachments = this.attachments.filter((candidate) => candidate !== attachment);
   }
 
-  async searchAssets(_tenantId: string, query: string): Promise<SearchResult[]> {
+  async searchAssets(request: SearchRequest): Promise<SearchResult[]> {
     const inventory = this.seed.inventories.find((candidate) => candidate.id === this.selectedInventoryId);
     const searchableAssets = this.seed.assets.filter(
       (asset) =>
-        asset.tenantId === this.selectedTenantId &&
-        asset.inventoryId === this.selectedInventoryId &&
-        asset.lifecycleState === 'active'
+        asset.tenantId === request.tenantId &&
+        asset.inventoryId === request.inventoryId &&
+        (request.lifecycleState === 'all' || asset.lifecycleState === request.lifecycleState)
     );
-    return filterAssets(searchableAssets, query).map((asset) => ({
+    const matches = request.mode === 'exact' ? exactAssets(searchableAssets, request.query) : filterAssets(searchableAssets, request.query);
+    return matches.map((asset) => ({
       type: 'asset',
       asset,
       inventory: {
@@ -348,4 +350,17 @@ function capabilityForInventory(inventory: Inventory | null): 'editor' | 'viewer
     return 'editor';
   }
   return 'viewer';
+}
+
+function exactAssets(assets: Asset[], query: string): Asset[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) {
+    return [];
+  }
+  return assets.filter(
+    (asset) =>
+      asset.title.toLowerCase() === normalized ||
+      asset.description.toLowerCase() === normalized ||
+      asset.customAssetTypeLabel?.toLowerCase() === normalized
+  );
 }

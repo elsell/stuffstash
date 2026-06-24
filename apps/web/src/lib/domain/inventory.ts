@@ -1,7 +1,9 @@
 export type AssetKind = 'item' | 'container' | 'location';
 export type AssetLifecycleState = 'active' | 'archived';
 export type AssetLifecycleFilter = AssetLifecycleState;
+export type SearchLifecycleFilter = AssetLifecycleFilter | 'all';
 export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+export type SearchMode = 'fuzzy' | 'exact';
 export type WorkspaceMode = 'home' | 'location' | 'asset' | 'search' | 'settings';
 export type Capability = 'editor' | 'viewer';
 
@@ -74,6 +76,14 @@ export interface SearchResult {
     field: string;
     value: string;
   }>;
+}
+
+export interface SearchRequest {
+  tenantId: string;
+  inventoryId: string;
+  query: string;
+  lifecycleState: SearchLifecycleFilter;
+  mode: SearchMode;
 }
 
 export interface AddAssetDraft {

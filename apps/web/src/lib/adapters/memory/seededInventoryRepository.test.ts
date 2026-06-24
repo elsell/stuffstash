@@ -110,7 +110,9 @@ describe('SeededInventoryRepository tenant selection', () => {
     expect(data.context.selectedTenantId).toBe('tenant-home');
     expect(data.context.selectedInventoryId).toBe('inventory-household');
     expect(data.assets.map((asset) => asset.id)).toEqual(['asset-home']);
-    await expect(repository.searchAssets('tenant-home', 'Lantern')).resolves.toEqual([]);
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Lantern', lifecycleState: 'active', mode: 'fuzzy' })
+    ).resolves.toEqual([]);
   });
 
   it('loads and updates asset detail inside the selected inventory', async () => {
@@ -155,9 +157,35 @@ describe('SeededInventoryRepository tenant selection', () => {
 
     await repository.selectAssetLifecycle('tenant-home', 'inventory-household', 'archived');
 
-    await expect(repository.searchAssets('tenant-home', 'Archived Passport')).resolves.toEqual([]);
-    await expect(repository.searchAssets('tenant-home', 'Passport')).resolves.toMatchObject([
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Archived Passport', lifecycleState: 'active', mode: 'fuzzy' })
+    ).resolves.toEqual([]);
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Passport', lifecycleState: 'active', mode: 'fuzzy' })
+    ).resolves.toMatchObject([
       { asset: { id: 'asset-home', lifecycleState: 'active' } }
+    ]);
+  });
+
+  it('supports exact archived search in the selected inventory', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Archived Passport', lifecycleState: 'archived', mode: 'exact' })
+    ).resolves.toMatchObject([{ asset: { id: 'asset-archived', lifecycleState: 'archived' } }]);
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Passport', lifecycleState: 'archived', mode: 'exact' })
+    ).resolves.toEqual([]);
+  });
+
+  it('supports all-lifecycle fuzzy search in the selected inventory', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Passport', lifecycleState: 'all', mode: 'fuzzy' })
+    ).resolves.toMatchObject([
+      { asset: { id: 'asset-home', lifecycleState: 'active' } },
+      { asset: { id: 'asset-archived', lifecycleState: 'archived' } }
     ]);
   });
 

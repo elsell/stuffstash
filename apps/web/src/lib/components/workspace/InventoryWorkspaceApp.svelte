@@ -8,6 +8,8 @@
     type Asset,
     type AssetAttachment,
     type AssetLifecycleFilter,
+    type SearchLifecycleFilter,
+    type SearchMode,
     type SearchResult,
     type UpdateAssetDraft,
     type WorkspaceData,
@@ -46,7 +48,11 @@
   let message = $state('');
   let error = $state('');
   let searchQuery = $state('');
+  let searchLifecycleState = $state<SearchLifecycleFilter>('active');
+  let searchMode = $state<SearchMode>('fuzzy');
   let searchResults = $state<SearchResult[]>([]);
+  let searchSubmitted = $state(false);
+  let searchError = $state('');
   let loadedAssetDetail = $state<Asset | null>(null);
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let assetDetailRequestId = 0;
@@ -75,6 +81,7 @@
     await run(async () => {
       data = await repository.selectInventory(tenantId, inventoryId);
       invalidateAssetDetailLoad();
+      resetSearchState();
       mode = 'home';
       selectedLocationId = null;
       selectedAssetId = null;
@@ -87,6 +94,7 @@
     await run(async () => {
       data = await repository.selectTenant(tenantId);
       invalidateAssetDetailLoad();
+      resetSearchState();
       mode = data.context.inventories.length > 0 ? 'home' : 'settings';
       selectedLocationId = null;
       selectedAssetId = null;
@@ -202,12 +210,32 @@
     const query = searchQuery.trim();
     if (!query || !data.context.selectedTenantId) {
       searchResults = [];
+      searchSubmitted = false;
+      searchError = '';
       return;
     }
-    await run(async () => {
-      searchResults = await repository.searchAssets(data.context.selectedTenantId, query);
+    busy = true;
+    error = '';
+    message = '';
+    searchError = '';
+    searchResults = [];
+    searchSubmitted = true;
+    try {
+      searchResults = await repository.searchAssets({
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        query,
+        lifecycleState: searchLifecycleState,
+        mode: searchMode
+      });
       mode = 'search';
-    });
+    } catch (caught) {
+      searchError = caught instanceof Error ? caught.message : 'Search failed.';
+      error = searchError;
+      mode = 'search';
+    } finally {
+      busy = false;
+    }
   }
 
   async function selectAssetLifecycle(lifecycleState: AssetLifecycleFilter): Promise<void> {
@@ -333,6 +361,15 @@
     if (asset) {
       openAsset(asset);
     }
+  }
+
+  function resetSearchState(): void {
+    searchQuery = '';
+    searchResults = [];
+    searchSubmitted = false;
+    searchError = '';
+    searchLifecycleState = 'active';
+    searchMode = 'fuzzy';
   }
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
@@ -477,7 +514,11 @@
     {:else if mode === 'search'}
       <SearchPanel
         bind:query={searchQuery}
+        bind:lifecycleState={searchLifecycleState}
+        bind:searchMode={searchMode}
         results={searchResults}
+        submitted={searchSubmitted}
+        error={searchError}
         {busy}
         onSearch={() => { void search(); }}
         onOpenAsset={openAssetById}

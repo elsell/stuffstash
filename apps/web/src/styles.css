@@ -308,6 +308,13 @@ small {
   max-width: 720px;
 }
 
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
 .workspace-main {
   display: grid;
   gap: 20px;

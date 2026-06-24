@@ -5,6 +5,7 @@ import type {
   AssetLifecycleFilter,
   Inventory,
   Principal,
+  SearchRequest,
   SearchResult,
   SelectedPhoto,
   Tenant,
@@ -30,7 +31,7 @@ export interface InventoryRepository {
   archiveAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
   restoreAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
   deleteAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<void>;
-  searchAssets(tenantId: string, query: string): Promise<SearchResult[]>;
+  searchAssets(request: SearchRequest): Promise<SearchResult[]>;
 }
 
 export interface WorkspaceSeed {

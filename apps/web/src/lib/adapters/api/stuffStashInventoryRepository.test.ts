@@ -224,6 +224,24 @@ describe('StuffStashInventoryRepository', () => {
       }
     ]);
   });
+
+  it('searches with lifecycle and mode options through the generated client path', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const results = await repository.searchAssets({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      query: 'Passport',
+      lifecycleState: 'archived',
+      mode: 'exact'
+    });
+
+    expect(results).toMatchObject([{ asset: { id: 'asset-passport', lifecycleState: 'archived' } }]);
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&lifecycleState=archived&mode=exact'
+    ]);
+  });
 });
 
 function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof fetch; requests: Request[] } {
@@ -314,6 +332,24 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail') {
         return new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 });
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/search/assets') {
+        return envelope([
+          {
+            type: 'asset',
+            tenantId: 'tenant-home',
+            inventory: { id: 'inventory-other', name: 'Other' },
+            asset: asset('asset-other', 'tenant-home', 'inventory-other', 'Passport', null, 'archived'),
+            matches: [{ field: 'title', value: 'Passport' }]
+          },
+          {
+            type: 'asset',
+            tenantId: 'tenant-home',
+            inventory: { id: 'inventory-household', name: 'Household' },
+            asset: asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'),
+            matches: [{ field: 'title', value: 'Passport' }]
+          }
+        ]);
       }
       return Response.json({ error: { code: 'not_found', message: `Unhandled ${request.method} ${path}` } }, { status: 404 });
     }
