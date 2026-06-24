@@ -94,10 +94,37 @@ The goal is to prove a production-shaped path through:
 
 ## Next Work
 
-1. Deepen the promoted web inventory workspace against real API behavior.
-   - Use `specs/platform/web-inventory-workspace.spec.md` as the source of truth.
-   - Move next into archive/restore controls, media attachment management, and component-level coverage for detail workflows.
-2. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
+1. Add promoted web asset lifecycle controls.
+   - Use `specs/platform/web-frontend-tracer-bullet.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, and `specs/assets/asset-model.spec.md` as the source of truth.
+   - Expose active and archived asset views, asset archive, asset restore, hard delete, safe API errors, and refreshed list state through the web repository port and generated API adapter.
+2. Add promoted web media attachment management.
+   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/media/media-attachments.spec.md` as the source of truth.
+   - Convert add-flow photo previews into real attachment uploads after asset creation, then expose attachment listing, thumbnail/content display where available, validation, and removal/lifecycle states behind media-aware frontend ports and adapters.
+3. Deepen the tenant-first web context switcher.
+   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
+   - Implement the approved tenant header, `Switch Tenant` path, inventory list replacement behavior, inventory settings entry, and mobile sheet-quality context switching without leaking generated DTOs into components.
+4. Deepen web search into a primary workflow.
+   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/search/search.spec.md` as the source of truth.
+   - Add explicit loading, no-results, denied/error states, lifecycle-aware result treatment, and result opening behavior while preserving tenant and inventory authorization boundaries.
+5. Implement inventory settings surfaces.
+   - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/identity-access/tenant-inventory-access.spec.md`, and `specs/audit-history/audit-and-undo.spec.md` as the source of truth.
+   - Create the settings workspace for inventory metadata, access management entry points, audit/activity entry points, and tenant/inventory administrative context without turning the home workspace into a dashboard.
+6. Implement web sharing and access management.
+   - Use `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
+   - Expose direct grants, invitations, revocation, expiration/cancel/delete behavior, permission denial states, and generated-client-backed adapter tests.
+7. Implement web audit/history viewing.
+   - Use `specs/audit-history/audit-and-undo.spec.md` and `specs/platform/resource-lifecycle.spec.md` as the source of truth.
+   - Expose tenant/inventory audit history from settings or focused detail surfaces, with pagination, safe read audit behavior, and authorization-aware empty/error states.
+8. Implement custom fields and custom asset types in the web workspace.
+   - Use `specs/assets/custom-asset-types.spec.md` and `specs/assets/flexible-asset-fields.spec.md` as the source of truth.
+   - Add management surfaces, asset create/edit integration, type-specific field rendering, validation errors, and adapter tests without treating generated DTOs as frontend domain models.
+9. Deepen location browsing and containment workflows.
+   - Use `specs/locations/location-model.spec.md`, `specs/assets/containment-model.spec.md`, and `specs/assets/asset-model.spec.md` as the source of truth.
+   - Add richer hierarchy navigation, parent quick-create, duplicate-name-safe display, location movement/rename flows, and deeper containment tests.
+10. Add automated browser-level web coverage.
+    - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/platform/web-frontend-tracer-bullet.spec.md` as the source of truth.
+    - Cover desktop and mobile shell load, tenant/inventory switching, search, add, location navigation, asset detail, lifecycle actions, denied states, and local Dex/OIDC smoke where practical.
+11. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
    - Keep the no-account local Expo Go path before considering EAS or native development builds.
    - Keep demo data behind an adapter until authentication and generated API integration are specified.
 
