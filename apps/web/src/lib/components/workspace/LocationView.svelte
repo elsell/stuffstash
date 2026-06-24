@@ -1,5 +1,6 @@
 <script lang="ts">
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+  import Pencil from '@lucide/svelte/icons/pencil';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import type { Asset, AssetViewModel } from '$lib/domain/inventory';
@@ -9,14 +10,18 @@
   let {
     location,
     assets,
+    canEdit,
     onBack,
     onOpenLocation,
+    onEditLocation,
     onOpenAsset
   }: {
     location: Asset;
     assets: AssetViewModel[];
+    canEdit: boolean;
     onBack: () => void;
     onOpenLocation: (asset: Asset) => void;
+    onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
   } = $props();
 </script>
@@ -30,6 +35,9 @@
       <p>{location.description}</p>
       <Badge variant="secondary">{assets.length} visible assets</Badge>
     </div>
+    {#if canEdit}
+      <Button.Root variant="outline" onclick={() => onEditLocation(location)}><Pencil /> Edit location</Button.Root>
+    {/if}
   </div>
 
   {#if assets.length === 0}

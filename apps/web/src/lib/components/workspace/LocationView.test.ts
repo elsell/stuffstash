@@ -57,10 +57,12 @@ describe('LocationView', () => {
       props: {
         location,
         assets: [nestedLocation, item],
+        canEdit: true,
         onBack: () => {},
         onOpenLocation: (asset) => {
           openedLocationId = asset.id;
         },
+        onEditLocation: () => {},
         onOpenAsset: (asset) => {
           openedAssetId = asset.id;
         }
@@ -72,6 +74,47 @@ describe('LocationView', () => {
 
     expect(openedLocationId).toBe('garage-shelf');
     expect(openedAssetId).toBe('tape');
+  });
+
+  it('opens the current location for editing', () => {
+    let editedLocationId = '';
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [],
+        canEdit: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: (asset) => {
+          editedLocationId = asset.id;
+        },
+        onOpenAsset: () => {}
+      }
+    });
+
+    click('Edit location');
+
+    expect(editedLocationId).toBe('garage');
+  });
+
+  it('hides location editing when edit access is missing', () => {
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [],
+        canEdit: false,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {
+          throw new Error('Edit should not be available.');
+        },
+        onOpenAsset: () => {}
+      }
+    });
+
+    expect(document.body.textContent).not.toContain('Edit location');
   });
 });
 

@@ -551,8 +551,10 @@
       <LocationView
         location={selectedLocation}
         assets={containedAssets(assets, selectedLocation.id)}
+        canEdit={editAssetAllowed}
         onBack={() => { mode = 'home'; selectedLocationId = null; }}
         onOpenLocation={openLocation}
+        onEditLocation={openAsset}
         onOpenAsset={openAsset}
       />
     {:else if mode === 'asset' && selectedAsset}
