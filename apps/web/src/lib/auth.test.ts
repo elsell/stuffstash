@@ -37,10 +37,14 @@ describe('auth helpers', () => {
   it('removes stored auth state on sign out', () => {
     const storage = new MapStorage();
     storage.setItem('stuffstash.oidc.session', JSON.stringify({ idToken: 'token', expiresAt: Date.now() + 1000 }));
+    storage.setItem('stuffstash.selectedTenantId', 'tenant-one');
+    storage.setItem('stuffstash.selectedInventoryId', 'inventory-one');
 
     signOut(storage);
 
     expect(getStoredSession(storage)).toBeNull();
+    expect(storage.getItem('stuffstash.selectedTenantId')).toBeNull();
+    expect(storage.getItem('stuffstash.selectedInventoryId')).toBeNull();
   });
 });
 

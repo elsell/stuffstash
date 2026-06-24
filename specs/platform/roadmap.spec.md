@@ -23,22 +23,20 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is turning the verified Expo Go scaffold into the first properly organized mobile app foundation before deeper mobile product work.
+The current focus is deepening the promoted SvelteKit web inventory workspace against real tenant and inventory API data before moving into broader asset management screens.
 
 The goal is to prove a production-shaped path through:
 
-- no-account Expo Go local development with a running hot-reload server,
-- a separate React Native and Expo mobile app in the monorepo,
-- mobile source organized around domain, application, adapter, bootstrap, and UI boundaries,
-- pinned mobile dependencies and reproducible local setup,
-- a minimal first screen that can be loaded on a physical iPhone,
-- user-centered inventory creation, asset creation, browsing, and sharing workflows,
-- mobile-first interaction patterns that can later support conversational inventory,
 - a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
 - clear separation between generated API DTOs and frontend domain models,
 - performance-conscious frontend choices,
 - generated OpenAPI/client integration without hand-written API clients,
-- a frontend direction that does not overfit the disposable tracer-bullet screens.
+- tenant-first inventory switching through frontend ports and adapters,
+- real tenant and inventory loading from authenticated API discovery,
+- session-scoped tenant and inventory selection without cross-principal bleed,
+- permission-aware empty states and add/create affordances,
+- mobile and desktop access to the same tenant-first context switching model,
+- focused web adapter tests for tenant selection, empty tenants, and selected-tenant inventory creation.
 
 ## Current Evidence
 
@@ -87,22 +85,22 @@ The goal is to prove a production-shaped path through:
 - Changing custom field type, removing custom field enum options or targets, durable thumbnail caching, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
 - Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
-- The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md`, but it has not yet been promoted from the temporary candidate into `apps/web`.
+- The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md` and has been promoted into `apps/web` with frontend domain, port, API adapter, seeded adapter, and focused workspace components.
 - The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
 - Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
-- The web UI can create inventories, create assets, browse active and archived assets, archive assets, restore assets, and hard-delete assets, but it does not yet expose sharing, search, audit history, custom fields, custom asset types, or media.
-- The web UI still uses hand-written tracer-bullet components; introduce the Svelte-compatible shadcn component foundation before broad UI expansion.
+- The web UI does not yet expose full sharing, audit history, custom fields, custom asset types, media attachment management, asset update/move/archive/restore controls in the promoted workspace, or full API-adapter test coverage for workspace selection.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
 
 ## Next Work
 
-1. Build the first mobile app foundation behind domain/application/adapter boundaries.
+1. Deepen the promoted web inventory workspace against real API behavior.
+   - Use `specs/platform/web-inventory-workspace.spec.md` as the source of truth.
+   - Add focused API-adapter tests for tenant restoration, empty tenant handling, first-inventory fallback, selected-tenant inventory creation, and session-scoped selection.
+   - Move next into real asset detail/update/move/archive workflows through frontend ports and adapters.
+2. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
    - Keep the no-account local Expo Go path before considering EAS or native development builds.
    - Keep demo data behind an adapter until authentication and generated API integration are specified.
-2. Promote the approved web inventory workspace direction into `apps/web` after implementation planning.
-   - Use `specs/platform/web-inventory-workspace.spec.md` as the source of truth.
-   - Treat the current tracer-bullet screens as disposable until replaced through the approved SvelteKit/shadcn architecture.
 
 ## Later Work
 

@@ -7,7 +7,17 @@ import type {
   Principal as ApiPrincipal,
   Tenant as ApiTenant
 } from '@stuff-stash/api-client';
-import type { AccessSummary, Asset, AssetKind, Capability, Inventory, Principal, SearchResult, Tenant } from '$lib/domain/inventory';
+import {
+  canEditInventory,
+  type AccessSummary,
+  type Asset,
+  type AssetKind,
+  type Capability,
+  type Inventory,
+  type Principal,
+  type SearchResult,
+  type Tenant
+} from '$lib/domain/inventory';
 
 export function mapPrincipal(principal: ApiPrincipal): Principal {
   return {
@@ -34,7 +44,7 @@ export function mapInventory(inventory: ApiInventory): Inventory {
 }
 
 export function mapCapability(inventory: Inventory | null | undefined): Capability {
-  if (inventory?.access.permissions.includes('create_asset') || inventory?.access.permissions.includes('edit_asset')) {
+  if (canEditInventory(inventory)) {
     return 'editor';
   }
   return 'viewer';

@@ -403,7 +403,22 @@ Authenticated workspace loading must use real API discovery:
 - The API adapter must list active assets for the selected inventory through the generated client wrapper.
 - Tenant and inventory names in the context switcher must come from API responses, not placeholder labels.
 - Edit/add affordances must derive from effective inventory permissions in the API response, not from hard-coded editor assumptions.
+- Add/create asset affordances must require `create_asset`; broader edit affordances may use `edit_asset` or a separate edit capability.
 - If the authenticated user has no visible tenants or no visible inventories, the workspace must show the existing create/setup empty state rather than local seeded data.
+
+Tenant and inventory switching must preserve the API boundary:
+
+- Switching tenants must go through a frontend repository port method instead of requiring components to know or synthesize inventory IDs.
+- Selecting a tenant must load that tenant's inventories from `GET /tenants/{tenantId}/inventories`.
+- If the newly selected tenant has visible inventories, the first visible inventory should become selected and active assets should be loaded for that inventory.
+- If the newly selected tenant has no visible inventories, the workspace must keep the tenant selected, clear the selected inventory, and show the setup empty state.
+- Creating from an empty selected tenant must create an inventory in that tenant rather than creating a second tenant.
+- Creating from a no-tenant state may create the first tenant and starter inventory together.
+- The empty-tenant create action must be hidden or replaced by an explicit denied state when the selected tenant does not grant inventory creation permission.
+- Switching inventories within the selected tenant must continue to load active assets through the generated client wrapper.
+- The current tenant and inventory selection may be remembered only for the current browser session until a dedicated preferences spec exists.
+- Mobile must expose the same tenant-first context switching path through the compact header or an equivalent mobile menu.
+- Svelte components must not hold generated DTOs, call generated client methods directly, or construct tenant/inventory fallbacks outside the frontend domain model.
 
 ## Data And API Expectations
 

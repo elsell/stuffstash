@@ -194,6 +194,23 @@ small {
   gap: 6px;
 }
 
+.tenant-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+.tenant-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .nav-button {
   justify-content: flex-start;
   width: 100%;
@@ -229,7 +246,42 @@ small {
 }
 
 .mobile-context {
+  position: relative;
   display: none;
+}
+
+.mobile-context-trigger {
+  width: 100%;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.mobile-context-trigger span {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+}
+
+.mobile-context-trigger strong,
+.mobile-context-trigger small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-context-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 28px));
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-panel);
 }
 
 .global-search,
@@ -560,6 +612,10 @@ dd {
 
 .muted {
   color: var(--muted-foreground);
+}
+
+.small-copy {
+  font-size: 0.83rem;
 }
 
 .mobile-nav {

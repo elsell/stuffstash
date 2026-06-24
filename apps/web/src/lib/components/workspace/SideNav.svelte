@@ -13,6 +13,7 @@
     selectedInventoryId,
     mode,
     userLabel,
+    onSelectTenant,
     onSelectInventory,
     onModeChange,
     onSignOut
@@ -23,6 +24,7 @@
     selectedInventoryId: string;
     mode: WorkspaceMode;
     userLabel: string;
+    onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onModeChange: (mode: WorkspaceMode) => void;
     onSignOut: () => void;
@@ -30,6 +32,7 @@
 
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId));
   let selectedInventory = $derived(inventories.find((inventory) => inventory.id === selectedInventoryId));
+  let showingTenants = $state(false);
 </script>
 
 <aside class="side-nav" aria-label="Workspace navigation">
@@ -44,7 +47,30 @@
   <section class="context-switcher" aria-label="Inventory context">
     <p class="eyebrow">Inventory</p>
     <strong>{selectedInventory?.name ?? 'No inventory'}</strong>
-    {#if inventories.length > 0}
+    <div class="tenant-row">
+      <span>{selectedTenant?.name ?? 'No tenant'}</span>
+      {#if tenants.length > 1}
+        <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
+          {showingTenants ? 'Inventories' : 'Switch tenant'}
+        </Button.Root>
+      {/if}
+    </div>
+    {#if showingTenants}
+      <div class="inventory-menu" aria-label="Tenants">
+        {#each tenants as tenant}
+          <Button.Root
+            variant={tenant.id === selectedTenantId ? 'secondary' : 'ghost'}
+            class="nav-button"
+            onclick={() => {
+              showingTenants = false;
+              onSelectTenant(tenant.id);
+            }}
+          >
+            {tenant.name}
+          </Button.Root>
+        {/each}
+      </div>
+    {:else if inventories.length > 0}
       <div class="inventory-menu">
         {#each inventories as inventory}
           <Button.Root
@@ -56,6 +82,8 @@
           </Button.Root>
         {/each}
       </div>
+    {:else}
+      <p class="muted small-copy">No inventories in this tenant.</p>
     {/if}
   </section>
 

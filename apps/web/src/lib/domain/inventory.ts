@@ -107,3 +107,19 @@ export function assetKindLabel(kind: AssetKind): string {
       return 'Location';
   }
 }
+
+export function hasAccessPermission(access: AccessSummary | null | undefined, permission: string): boolean {
+  return access?.permissions.includes(permission) ?? false;
+}
+
+export function canCreateInventory(tenant: Tenant | null | undefined): boolean {
+  return hasAccessPermission(tenant?.access, 'create_inventory');
+}
+
+export function canCreateAsset(inventory: Inventory | null | undefined): boolean {
+  return hasAccessPermission(inventory?.access, 'create_asset');
+}
+
+export function canEditInventory(inventory: Inventory | null | undefined): boolean {
+  return canCreateAsset(inventory) || hasAccessPermission(inventory?.access, 'edit_asset');
+}

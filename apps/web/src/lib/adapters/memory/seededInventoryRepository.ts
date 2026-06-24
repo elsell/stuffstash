@@ -1,4 +1,12 @@
-import type { AddAssetDraft, Asset, SearchResult, WorkspaceData } from '$lib/domain/inventory';
+import {
+  canCreateInventory,
+  canEditInventory,
+  type AddAssetDraft,
+  type Asset,
+  type Inventory,
+  type SearchResult,
+  type WorkspaceData
+} from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import { filterAssets } from '$lib/application/workspace';
 
@@ -10,7 +18,7 @@ export class SeededInventoryRepository implements InventoryRepository {
   constructor(seed: WorkspaceSeed) {
     this.seed = seed;
     this.selectedTenantId = seed.tenants[0]?.id ?? '';
-    this.selectedInventoryId = seed.inventories[0]?.id ?? '';
+    this.selectedInventoryId = this.firstInventoryIdForTenant(this.selectedTenantId);
   }
 
   async loadWorkspace(): Promise<WorkspaceData> {
@@ -45,9 +53,42 @@ export class SeededInventoryRepository implements InventoryRepository {
     return this.workspace();
   }
 
+  async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {
+    const tenant = this.seed.tenants.find((candidate) => candidate.id === tenantId);
+    if (!canCreateInventory(tenant)) {
+      throw new Error('You do not have permission to create inventories in this tenant.');
+    }
+    const inventory: Inventory = {
+      id: `inventory-${Date.now()}`,
+      tenantId,
+      name: inventoryName,
+      access: {
+        relationship: 'owner',
+        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure']
+      }
+    };
+    this.seed = {
+      ...this.seed,
+      inventories: [inventory, ...this.seed.inventories]
+    };
+    this.selectedTenantId = tenantId;
+    this.selectedInventoryId = inventory.id;
+    return this.workspace();
+  }
+
   async selectInventory(tenantId: string, inventoryId: string): Promise<WorkspaceData> {
     this.selectedTenantId = tenantId;
-    this.selectedInventoryId = inventoryId;
+    this.selectedInventoryId = this.seed.inventories.some(
+      (inventory) => inventory.tenantId === tenantId && inventory.id === inventoryId
+    )
+      ? inventoryId
+      : this.firstInventoryIdForTenant(tenantId);
+    return this.workspace();
+  }
+
+  async selectTenant(tenantId: string): Promise<WorkspaceData> {
+    this.selectedTenantId = tenantId;
+    this.selectedInventoryId = this.firstInventoryIdForTenant(tenantId);
     return this.workspace();
   }
 
@@ -88,20 +129,35 @@ export class SeededInventoryRepository implements InventoryRepository {
   }
 
   private workspace(): WorkspaceData {
+    const inventories = this.seed.inventories.filter((inventory) => inventory.tenantId === this.selectedTenantId);
+    const selectedInventory = inventories.find((inventory) => inventory.id === this.selectedInventoryId) ?? null;
     return {
       context: {
         principal: this.seed.principal,
         tenants: this.seed.tenants,
-        inventories: this.seed.inventories.filter((inventory) => inventory.tenantId === this.selectedTenantId),
+        inventories,
         selectedTenantId: this.selectedTenantId,
         selectedInventoryId: this.selectedInventoryId,
-        capability: 'editor'
+        capability: capabilityForInventory(selectedInventory)
       },
       assets: this.workspaceAssets()
     };
   }
 
   private workspaceAssets(): Asset[] {
-    return this.seed.assets.filter((asset) => asset.inventoryId === this.selectedInventoryId);
+    return this.seed.assets.filter(
+      (asset) => asset.tenantId === this.selectedTenantId && asset.inventoryId === this.selectedInventoryId
+    );
   }
+
+  private firstInventoryIdForTenant(tenantId: string): string {
+    return this.seed.inventories.find((inventory) => inventory.tenantId === tenantId)?.id ?? '';
+  }
+}
+
+function capabilityForInventory(inventory: Inventory | null): 'editor' | 'viewer' {
+  if (canEditInventory(inventory)) {
+    return 'editor';
+  }
+  return 'viewer';
 }

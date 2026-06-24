@@ -8,8 +8,8 @@ import { mapAsset, mapCapability, mapInventory, mapPrincipal, mapSearchResult, m
 
 export class StuffStashInventoryRepository implements InventoryRepository {
   private readonly client: StuffStashClient;
-  private selectedTenantId = '';
-  private selectedInventoryId = '';
+  private selectedTenantId = readSessionValue('stuffstash.selectedTenantId');
+  private selectedInventoryId = readSessionValue('stuffstash.selectedInventoryId');
 
   constructor(
     config: RuntimeConfig,
@@ -56,6 +56,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     const inventory = mapInventory(await this.client.createInventory(tenant.id, input.inventoryName));
     this.selectedTenantId = tenant.id;
     this.selectedInventoryId = inventory.id;
+    this.rememberSelection();
     return {
       context: {
         principal: mapPrincipal(await this.client.me()),
@@ -69,10 +70,23 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     };
   }
 
+  async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {
+    const principal = mapPrincipal(await this.client.me());
+    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    const inventory = mapInventory(await this.client.createInventory(tenantId, inventoryName));
+    return this.loadTenantWorkspace(principal, tenants, tenantId, inventory.id);
+  }
+
   async selectInventory(tenantId: string, inventoryId: string): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
     const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
     return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId);
+  }
+
+  async selectTenant(tenantId: string): Promise<WorkspaceData> {
+    const principal = mapPrincipal(await this.client.me());
+    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    return this.loadTenantWorkspace(principal, tenants, tenantId, '');
   }
 
   async createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
@@ -116,6 +130,7 @@ export class StuffStashInventoryRepository implements InventoryRepository {
     const inventories = (await this.client.listInventories(tenantId)).items.map(mapInventory);
     const selectedInventory = inventories.find((inventory) => inventory.id === inventoryId) ?? inventories[0] ?? null;
     this.selectedInventoryId = selectedInventory?.id ?? '';
+    this.rememberSelection();
     const assets = selectedInventory
       ? (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, 'active')).items.map(mapAsset)
       : [];
@@ -136,6 +151,11 @@ export class StuffStashInventoryRepository implements InventoryRepository {
       assets
     };
   }
+
+  private rememberSelection(): void {
+    writeSessionValue('stuffstash.selectedTenantId', this.selectedTenantId);
+    writeSessionValue('stuffstash.selectedInventoryId', this.selectedInventoryId);
+  }
 }
 
 function safeError(error: unknown): Error {
@@ -146,4 +166,22 @@ function safeError(error: unknown): Error {
     return error;
   }
   return new Error('Request failed.');
+}
+
+function readSessionValue(key: string): string {
+  if (typeof sessionStorage === 'undefined') {
+    return '';
+  }
+  return sessionStorage.getItem(key) ?? '';
+}
+
+function writeSessionValue(key: string, value: string): void {
+  if (typeof sessionStorage === 'undefined') {
+    return;
+  }
+  if (value) {
+    sessionStorage.setItem(key, value);
+  } else {
+    sessionStorage.removeItem(key);
+  }
 }

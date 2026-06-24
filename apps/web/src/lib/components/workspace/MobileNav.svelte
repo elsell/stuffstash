@@ -9,12 +9,12 @@
 
   let {
     mode,
-    canEdit,
+    canCreateAsset,
     onModeChange,
     onOpenAdd
   }: {
     mode: WorkspaceMode;
-    canEdit: boolean;
+    canCreateAsset: boolean;
     onModeChange: (mode: WorkspaceMode) => void;
     onOpenAdd: () => void;
   } = $props();
@@ -23,7 +23,7 @@
 <nav class="mobile-nav" aria-label="Mobile navigation">
   <Button.Root variant={mode === 'home' ? 'secondary' : 'ghost'} size="sm" onclick={() => onModeChange('home')}><Home /> Home</Button.Root>
   <Button.Root variant={mode === 'search' ? 'secondary' : 'ghost'} size="sm" onclick={() => onModeChange('search')}><Search /> Search</Button.Root>
-  <Button.Root class="mobile-add" disabled={!canEdit} aria-label="Add asset" onclick={onOpenAdd}><Plus /></Button.Root>
+  <Button.Root class="mobile-add" disabled={!canCreateAsset} aria-label="Add asset" onclick={onOpenAdd}><Plus /></Button.Root>
   <Button.Root variant="ghost" size="sm" onclick={() => onModeChange('home')}><MapPin /> Places</Button.Root>
   <Button.Root variant={mode === 'settings' ? 'secondary' : 'ghost'} size="sm" onclick={() => onModeChange('settings')}><Settings /> Settings</Button.Root>
 </nav>

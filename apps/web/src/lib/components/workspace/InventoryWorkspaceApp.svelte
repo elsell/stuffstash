@@ -1,6 +1,14 @@
 <script lang="ts">
   import { containedAssets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
-  import type { AddAssetDraft, Asset, SearchResult, WorkspaceData, WorkspaceMode } from '$lib/domain/inventory';
+  import {
+    canCreateAsset,
+    canCreateInventory,
+    type AddAssetDraft,
+    type Asset,
+    type SearchResult,
+    type WorkspaceData,
+    type WorkspaceMode
+  } from '$lib/domain/inventory';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
@@ -37,9 +45,12 @@
   let searchResults = $state<SearchResult[]>([]);
 
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
+  let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
   let selectedLocation = $derived(data.assets.find((asset) => asset.id === selectedLocationId) ?? null);
   let selectedAsset = $derived(selectedAssetId ? data.assets.find((asset) => asset.id === selectedAssetId) ?? null : null);
   let editable = $derived(data.context.capability === 'editor');
+  let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
+  let canCreateStarter = $derived(!data.context.selectedTenantId || canCreateInventory(selectedTenant));
   let userLabel = $derived(data.context.principal.email ?? data.context.principal.id);
 
   async function selectInventory(tenantId: string, inventoryId: string): Promise<void> {
@@ -51,9 +62,20 @@
     });
   }
 
+  async function selectTenant(tenantId: string): Promise<void> {
+    await run(async () => {
+      data = await repository.selectTenant(tenantId);
+      mode = data.context.inventories.length > 0 ? 'home' : 'settings';
+      selectedLocationId = null;
+      selectedAssetId = null;
+    });
+  }
+
   async function createStarterInventory(): Promise<void> {
     await run(async () => {
-      data = await repository.createTenantWithInventory({ tenantName: 'Home', inventoryName: 'Household' });
+      data = data.context.selectedTenantId
+        ? await repository.createInventory(data.context.selectedTenantId, 'Household')
+        : await repository.createTenantWithInventory({ tenantName: 'Home', inventoryName: 'Household' });
       mode = 'home';
       message = 'Created Household.';
     });
@@ -62,6 +84,10 @@
   async function createAsset(draft: AddAssetDraft): Promise<void> {
     if (!selectedInventory) {
       error = 'Create an inventory before adding assets.';
+      return;
+    }
+    if (!createAssetAllowed) {
+      error = 'You do not have permission to add assets in this inventory.';
       return;
     }
     await run(async () => {
@@ -124,6 +150,7 @@
     selectedInventoryId={data.context.selectedInventoryId}
     {mode}
     {userLabel}
+    onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
     onModeChange={(nextMode) => { mode = nextMode; }}
     {onSignOut}
@@ -131,9 +158,14 @@
 
   <div class="workspace-column">
     <TopHeader
+      tenants={data.context.tenants}
+      inventories={data.context.inventories}
+      selectedTenantId={data.context.selectedTenantId}
       inventory={selectedInventory}
       bind:query={searchQuery}
-      canEdit={editable}
+      canCreateAsset={createAssetAllowed}
+      onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
+      onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
       onSearch={() => { void search(); }}
       onOpenAdd={() => { addOpen = true; }}
     />
@@ -142,8 +174,12 @@
       <section class="workspace-main">
         <div class="empty-state spacious">
           <h1>No inventory yet</h1>
-          <p>Create the first inventory for this tenant.</p>
-          <Button.Root onclick={() => { void createStarterInventory(); }}>Create Household</Button.Root>
+          {#if canCreateStarter}
+            <p>{data.context.selectedTenantId ? 'Create the first inventory for this tenant.' : 'Create your first tenant and inventory.'}</p>
+            <Button.Root onclick={() => { void createStarterInventory(); }}>Create Household</Button.Root>
+          {:else}
+            <p>You can view this tenant, but you cannot create inventories in it.</p>
+          {/if}
         </div>
       </section>
     {:else if mode === 'location' && selectedLocation}
@@ -193,13 +229,13 @@
 
   <MobileNav
     {mode}
-    canEdit={editable}
+    canCreateAsset={createAssetAllowed}
     onModeChange={(nextMode) => { mode = nextMode; }}
     onOpenAdd={() => { addOpen = true; }}
   />
 
   <AddAssetTray
-    open={addOpen}
+    open={addOpen && createAssetAllowed}
     parentTargets={parentTargets(data.assets)}
     saving={busy}
     onClose={() => { addOpen = false; }}

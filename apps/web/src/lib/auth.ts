@@ -4,6 +4,8 @@ const verifierKey = 'stuffstash.oidc.verifier';
 const stateKey = 'stuffstash.oidc.state';
 const returnToKey = 'stuffstash.oidc.returnTo';
 const sessionKey = 'stuffstash.oidc.session';
+const selectedTenantKey = 'stuffstash.selectedTenantId';
+const selectedInventoryKey = 'stuffstash.selectedInventoryId';
 
 export interface AuthSession {
   idToken: string;
@@ -37,6 +39,8 @@ export function signOut(storage: Storage = window.sessionStorage): void {
   storage.removeItem(verifierKey);
   storage.removeItem(stateKey);
   storage.removeItem(returnToKey);
+  storage.removeItem(selectedTenantKey);
+  storage.removeItem(selectedInventoryKey);
 }
 
 export async function startSignIn(
