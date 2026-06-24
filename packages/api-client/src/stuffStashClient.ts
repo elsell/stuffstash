@@ -66,6 +66,22 @@ export interface CreateAttachmentInput {
   contentBase64: string;
 }
 
+export interface InitiateDirectUploadInput {
+  fileName: string;
+  contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+  sizeBytes: number;
+}
+
+export interface DirectUpload {
+  uploadId: string;
+  attachmentId: string;
+  method: string;
+  url: string;
+  headers: Record<string, string>;
+  formFields: Record<string, string>;
+  expiresAt: string;
+}
+
 export interface AssetPhotoReference {
   uri: string;
   headers: Record<string, string>;
@@ -116,6 +132,7 @@ type TenantResponse = components['schemas']['TenantResponse'];
 type InventoryResponse = components['schemas']['InventoryResponse'];
 type AssetResponse = components['schemas']['AssetResponse'];
 type AttachmentResponse = components['schemas']['AttachmentResponse'];
+type DirectUploadResponse = components['schemas']['DirectUploadResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -341,6 +358,81 @@ export class StuffStashClient {
     return mapAttachment(envelope.data);
   }
 
+  async initiateAssetAttachmentDirectUpload(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    input: InitiateDirectUploadInput
+  ): Promise<DirectUpload> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } },
+        body: input
+      })
+    );
+    return mapDirectUpload(envelope.data);
+  }
+
+  async completeAssetAttachmentDirectUpload(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    uploadId: string
+  ): Promise<Attachment> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads/{uploadId}/complete', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId, uploadId } }
+      })
+    );
+    return mapAttachment(envelope.data);
+  }
+
+  async archiveAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<Attachment> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/archive', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId, attachmentId } }
+      })
+    );
+    return mapAttachment(envelope.data);
+  }
+
+  async restoreAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<Attachment> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/restore', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId, attachmentId } }
+      })
+    );
+    return mapAttachment(envelope.data);
+  }
+
+  async deleteAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId, attachmentId } }
+      })
+    );
+  }
+
   async assetAttachmentThumbnailReference(
     tenantId: string,
     inventoryId: string,
@@ -410,6 +502,18 @@ function mapAttachment(response: AttachmentResponse): Attachment {
     contentType: response.contentType,
     sizeBytes: response.sizeBytes,
     lifecycleState: mapAssetLifecycleState(response.lifecycleState)
+  };
+}
+
+function mapDirectUpload(response: DirectUploadResponse): DirectUpload {
+  return {
+    uploadId: response.uploadId,
+    attachmentId: response.attachmentId,
+    method: response.method,
+    url: response.url,
+    headers: response.headers ?? {},
+    formFields: response.formFields ?? {},
+    expiresAt: response.expiresAt
   };
 }
 

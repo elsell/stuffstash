@@ -241,6 +241,120 @@ describe('StuffStashClient', () => {
     });
   });
 
+  it('initiates and completes direct attachment uploads through generated paths', async () => {
+    const requests: Request[] = [];
+    const attachmentEnvelope = {
+      data: {
+        id: 'attachment-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        assetId: 'asset-one',
+        fileName: 'photo.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 12,
+        sha256: 'hash',
+        createdAt: '2026-06-23T00:00:00Z',
+        lifecycleState: 'active'
+      },
+      meta: {}
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.url.endsWith('/direct-uploads')) {
+          return Response.json({
+            data: {
+              uploadId: 'upload-one',
+              attachmentId: 'attachment-one',
+              method: 'PUT',
+              url: 'https://uploads.local/object-one',
+              headers: { 'Content-Type': 'image/jpeg' },
+              formFields: {},
+              expiresAt: '2026-06-23T00:15:00Z'
+            },
+            meta: {}
+          });
+        }
+        return Response.json(attachmentEnvelope, { status: 201 });
+      }
+    });
+
+    await expect(
+      client.initiateAssetAttachmentDirectUpload('tenant-one', 'inventory-one', 'asset-one', {
+        fileName: 'photo.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 12
+      })
+    ).resolves.toMatchObject({
+      uploadId: 'upload-one',
+      attachmentId: 'attachment-one',
+      method: 'PUT'
+    });
+    await expect(
+      client.completeAssetAttachmentDirectUpload('tenant-one', 'inventory-one', 'asset-one', 'upload-one')
+    ).resolves.toMatchObject({ id: 'attachment-one', fileName: 'photo.jpg' });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/direct-uploads',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/direct-uploads/upload-one/complete'
+    ]);
+    expect(await requests[0]?.json()).toEqual({
+      fileName: 'photo.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 12
+    });
+  });
+
+  it('calls attachment lifecycle endpoints through generated paths', async () => {
+    const requests: Request[] = [];
+    const attachmentEnvelope = {
+      data: {
+        id: 'attachment-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        assetId: 'asset-one',
+        fileName: 'photo.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 12,
+        sha256: 'hash',
+        createdAt: '2026-06-23T00:00:00Z',
+        lifecycleState: 'archived'
+      },
+      meta: {}
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'DELETE') {
+          return new Response(null, { status: 204 });
+        }
+        return Response.json(attachmentEnvelope);
+      }
+    });
+
+    await expect(
+      client.archiveAssetAttachment('tenant-one', 'inventory-one', 'asset-one', 'attachment-one')
+    ).resolves.toMatchObject({ id: 'attachment-one', lifecycleState: 'archived' });
+    await expect(
+      client.restoreAssetAttachment('tenant-one', 'inventory-one', 'asset-one', 'attachment-one')
+    ).resolves.toMatchObject({ id: 'attachment-one' });
+    await expect(
+      client.deleteAssetAttachment('tenant-one', 'inventory-one', 'asset-one', 'attachment-one')
+    ).resolves.toBeUndefined();
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/attachment-one/archive',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/attachment-one/restore',
+      'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/attachment-one'
+    ]);
+  });
+
   it('maps API errors into typed client errors', async () => {
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',
