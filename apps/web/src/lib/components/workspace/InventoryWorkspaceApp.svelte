@@ -19,6 +19,7 @@
   import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
+  import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
   import MobileNav from './MobileNav.svelte';
   import SearchPanel from './SearchPanel.svelte';
@@ -524,18 +525,7 @@
         onOpenAsset={openAssetById}
       />
     {:else if mode === 'settings'}
-      <section class="workspace-main">
-        <div class="section-heading">
-          <div>
-            <h1>Inventory settings</h1>
-            <p>Sharing, activity, and administrative details belong here as those APIs are exposed.</p>
-          </div>
-        </div>
-        <div class="empty-state spacious">
-          <h2>Settings unavailable</h2>
-          <p>This slice keeps settings visible without inventing unsupported controls.</p>
-        </div>
-      </section>
+      <InventorySettings tenant={selectedTenant} inventory={selectedInventory} inventoryCount={data.context.inventories.length} />
     {:else}
       <HomeWorkspace
         lifecycleState={data.context.assetLifecycleState}
