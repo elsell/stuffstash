@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -69,6 +71,7 @@ export function AddAssetScreen({
   const [isCreatingLocation, setIsCreatingLocation] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<readonly SelectedAssetPhoto[]>([]);
   const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' });
+  const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
   useEffect(() => {
     let isCurrent = true;
@@ -122,6 +125,34 @@ export function AddAssetScreen({
       isCurrent = false;
     };
   }, [locationLookupQuery, locationQuery]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return undefined;
+    }
+
+    const showSubscription = Keyboard.addListener('keyboardWillShow', (event) => {
+      setKeyboardBar({
+        isVisible: true,
+        keyboardHeight: event.endCoordinates.height
+      });
+    });
+    const changeSubscription = Keyboard.addListener('keyboardWillChangeFrame', (event) => {
+      setKeyboardBar({
+        isVisible: true,
+        keyboardHeight: event.endCoordinates.height
+      });
+    });
+    const hideSubscription = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardBar({ isVisible: false, keyboardHeight: 0 });
+    });
+
+    return () => {
+      showSubscription.remove();
+      changeSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   async function saveAsset(): Promise<void> {
     setSaveState({ status: 'saving' });
@@ -203,7 +234,11 @@ export function AddAssetScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+      >
         {loadState.status === 'loading' ? (
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} />
@@ -355,6 +390,10 @@ export function AddAssetScreen({
           </View>
         ) : null}
       </ScrollView>
+      <KeyboardDismissBar
+        keyboardHeight={keyboardBar.keyboardHeight}
+        visible={keyboardBar.isVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -427,6 +466,32 @@ function LocationPicker({
           )}
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+function KeyboardDismissBar({
+  keyboardHeight,
+  visible
+}: {
+  readonly keyboardHeight: number;
+  readonly visible: boolean;
+}) {
+  if (Platform.OS !== 'ios' || !visible) {
+    return null;
+  }
+
+  return (
+    <View style={[styles.keyboardDismissBar, { bottom: keyboardHeight }]}>
+      <Pressable
+        accessibilityLabel="Dismiss keyboard"
+        accessibilityRole="button"
+        hitSlop={8}
+        onPress={Keyboard.dismiss}
+        style={styles.keyboardDoneButton}
+      >
+        <Text style={styles.keyboardDoneText}>Done</Text>
+      </Pressable>
     </View>
   );
 }
@@ -625,6 +690,30 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 96,
     textAlignVertical: 'top'
+  },
+  keyboardDismissBar: {
+    alignItems: 'flex-end',
+    backgroundColor: colors.surface,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    justifyContent: 'center',
+    left: 0,
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    position: 'absolute',
+    right: 0
+  },
+  keyboardDoneButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 36,
+    minWidth: 56
+  },
+  keyboardDoneText: {
+    color: colors.action,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0
   },
   sectionTitle: {
     color: colors.text,

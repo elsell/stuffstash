@@ -194,6 +194,8 @@ PODS:
     - SDWebImageAVIFCoder (~> 0.11.0)
     - SDWebImageSVGCoder (~> 1.7.0)
     - SDWebImageWebPCoder (~> 0.14.6)
+  - ExpoImagePicker (55.0.20):
+    - ExpoModulesCore
   - ExpoKeepAwake (55.0.8):
     - ExpoModulesCore
   - ExpoLinking (55.0.15):
@@ -2370,6 +2372,7 @@ DEPENDENCIES:
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2._d7eb2e6a545916bc4cce529ec13c7272/node_modules/expo-font/ios`)"
   - "ExpoGlassEffect (from `../../../node_modules/.pnpm/expo-glass-effect@55.0.11_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+re_788a44e74588995ead12152f34abc15d/node_modules/expo-glass-effect/ios`)"
   - "ExpoImage (from `../../../node_modules/.pnpm/expo-image@55.0.11_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19._a79606338554ea65466d8fc420780013/node_modules/expo-image/ios`)"
+  - "ExpoImagePicker (from `../../../node_modules/.pnpm/expo-image-picker@55.0.20_expo@55.0.26/node_modules/expo-image-picker/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@55.0.8_expo@55.0.26_react@19.2.0/node_modules/expo-keep-awake/ios`)"
   - "ExpoLinking (from `../../../node_modules/.pnpm/expo-linking@55.0.15_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@1_181a2bf75d750a558712a08fa685afc1/node_modules/expo-linking/ios`)"
   - "ExpoLogBox (from `../../../node_modules/.pnpm/@expo+log-box@55.0.12_@expo+dom-webview@55.0.6_expo@55.0.26_react-native@0.83.6_@babel+_ee3a694a8ce5c0b60469fa1f2e2f4d38/node_modules/@expo/log-box`)"
@@ -2497,6 +2500,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-glass-effect@55.0.11_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+re_788a44e74588995ead12152f34abc15d/node_modules/expo-glass-effect/ios"
   ExpoImage:
     :path: "../../../node_modules/.pnpm/expo-image@55.0.11_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19._a79606338554ea65466d8fc420780013/node_modules/expo-image/ios"
+  ExpoImagePicker:
+    :path: "../../../node_modules/.pnpm/expo-image-picker@55.0.20_expo@55.0.26/node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../../../node_modules/.pnpm/expo-keep-awake@55.0.8_expo@55.0.26_react@19.2.0/node_modules/expo-keep-awake/ios"
   ExpoLinking:
@@ -2686,6 +2691,7 @@ SPEC CHECKSUMS:
   ExpoFont: a7e34a75bdfb703fa07a0e87807f836236608c76
   ExpoGlassEffect: 2dedac2fe817f9b02d0dad29ce0aef7afebc5cd4
   ExpoImage: 5854bd51edd7c0a775755473598f9daeb3fde4e3
+  ExpoImagePicker: 7c75b2f076d6f45598fcbd035908aebc4c2eb257
   ExpoKeepAwake: d0eb7a0719500d2a43fbf29b6f79e84d70c75ebf
   ExpoLinking: 40f36cf134ea6930f37867858c0643877b865d53
   ExpoLogBox: a678d36477ab9544fe63e0b5328a0716539b6774

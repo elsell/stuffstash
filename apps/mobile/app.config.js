@@ -7,10 +7,27 @@ module.exports = {
     orientation: 'portrait',
     icon: './assets/brand/stuff-stash-glyph.png',
     userInterfaceStyle: 'automatic',
-    plugins: ['expo-router'],
+    plugins: [
+      'expo-router',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Stuff Stash uses your photo library so you can attach household item photos.',
+          cameraPermission: 'Stuff Stash may use the camera for future item photos.',
+          microphonePermission: 'Stuff Stash may use the microphone for future video attachments.'
+        }
+      ]
+    ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'app.stuffstash.mobile'
+      bundleIdentifier: 'app.stuffstash.mobile',
+      infoPlist: {
+        NSPhotoLibraryUsageDescription:
+          'Stuff Stash uses your photo library so you can attach household item photos.',
+        NSCameraUsageDescription: 'Stuff Stash may use the camera for future item photos.',
+        NSMicrophoneUsageDescription:
+          'Stuff Stash may use the microphone for future video attachments.'
+      }
     },
     android: {
       package: 'app.stuffstash.mobile',
