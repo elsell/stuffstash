@@ -84,7 +84,12 @@
   {:else}
     <div class="location-grid">
       {#each locations as summary}
-        <Button.Root variant="ghost" class="location-tile" onclick={() => onOpenLocation(summary.location)}>
+        <Button.Root
+          variant="ghost"
+          class="location-tile"
+          aria-label={`Open location ${summary.location.title}`}
+          onclick={() => onOpenLocation(summary.location)}
+        >
           <AssetThumb asset={summary.location} size="lg" />
           <span>
             <strong>{summary.location.title}</strong>

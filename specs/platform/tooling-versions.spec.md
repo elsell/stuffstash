@@ -57,6 +57,8 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - TypeScript: `typescript 5.9.3`.
 - Svelte check: `svelte-check 4.6.0`.
 - Vitest: `vitest 4.1.8`.
+- Playwright browser smoke runner: `@playwright/test 1.60.0`.
+- Playwright Chromium browser runtime must be installed through `pnpm --dir apps/web install:e2e-browsers`, which uses the pinned Playwright package to select the browser revision.
 - jsdom: `jsdom 29.1.1`.
 - nanoid transitive override for Vite/PostCSS tooling: `nanoid 3.3.12`.
 - Undici test-environment override for jsdom: `undici 7.27.1`.
