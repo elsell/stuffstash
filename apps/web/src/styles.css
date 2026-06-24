@@ -284,6 +284,18 @@ small {
   box-shadow: var(--shadow-panel);
 }
 
+.context-caption {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-backdrop {
+  display: none;
+}
+
 .global-search,
 .search-panel {
   display: grid;
@@ -707,6 +719,27 @@ dd {
 
   .mobile-context {
     display: block;
+  }
+
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    display: block;
+    border: 0;
+    background: rgb(15 23 42 / 0.24);
+  }
+
+  .mobile-context-menu {
+    position: fixed;
+    right: 10px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    left: 10px;
+    top: auto;
+    z-index: 40;
+    width: auto;
+    max-height: min(520px, calc(100vh - 110px));
+    overflow: auto;
   }
 
   .global-search {
