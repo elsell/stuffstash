@@ -142,6 +142,97 @@ describe('SeededInventoryRepository tenant selection', () => {
     });
   });
 
+  it('creates assets inside active locations and containers only', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const shelf = await repository.createAsset('tenant-home', 'inventory-household', {
+      kind: 'container',
+      title: 'Garage shelf',
+      description: '',
+      parentAssetId: null,
+      photos: []
+    });
+    const tape = await repository.createAsset('tenant-home', 'inventory-household', {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: shelf.id,
+      photos: []
+    });
+
+    expect(tape).toMatchObject({
+      title: 'Tape measure',
+      parentAssetId: shelf.id
+    });
+    expect(tape.id).not.toBe(shelf.id);
+  });
+
+  it('rejects invalid containment parents in the local adapter', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    await expect(
+      repository.createAsset('tenant-home', 'inventory-household', {
+        kind: 'item',
+        title: 'Folder tab',
+        description: '',
+        parentAssetId: 'asset-home',
+        photos: []
+      })
+    ).rejects.toThrow('Parent asset must be a container or location');
+    await expect(
+      repository.createAsset('tenant-home', 'inventory-household', {
+        kind: 'item',
+        title: 'Old folder tab',
+        description: '',
+        parentAssetId: 'asset-archived',
+        photos: []
+      })
+    ).rejects.toThrow('Parent asset must be active');
+    await expect(
+      repository.createAsset('tenant-home', 'inventory-household', {
+        kind: 'item',
+        title: 'Lost tab',
+        description: '',
+        parentAssetId: 'missing-parent',
+        photos: []
+      })
+    ).rejects.toThrow('Parent asset not found');
+  });
+
+  it('rejects containment cycles on asset moves', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const shelf = await repository.createAsset('tenant-home', 'inventory-household', {
+      kind: 'container',
+      title: 'Garage shelf',
+      description: '',
+      parentAssetId: null,
+      photos: []
+    });
+    const bin = await repository.createAsset('tenant-home', 'inventory-household', {
+      kind: 'container',
+      title: 'Garage bin',
+      description: '',
+      parentAssetId: shelf.id,
+      photos: []
+    });
+
+    await expect(
+      repository.updateAsset('tenant-home', 'inventory-household', shelf.id, {
+        title: shelf.title,
+        description: shelf.description,
+        parentAssetId: shelf.id
+      })
+    ).rejects.toThrow('Asset cannot contain itself');
+    await expect(
+      repository.updateAsset('tenant-home', 'inventory-household', shelf.id, {
+        title: shelf.title,
+        description: shelf.description,
+        parentAssetId: bin.id
+      })
+    ).rejects.toThrow('Asset cannot be moved inside its own contents');
+  });
+
   it('switches between active and archived asset views without mixing lifecycle states', async () => {
     const repository = new SeededInventoryRepository(seed);
 

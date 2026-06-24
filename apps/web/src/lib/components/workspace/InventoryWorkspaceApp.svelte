@@ -5,6 +5,8 @@
     canEditAsset,
     canCreateInventory,
     type AddAssetDraft,
+    type AddAssetSaveResult,
+    type AddAssetSubmission,
     type Asset,
     type AssetAttachment,
     type AssetLifecycleFilter,
@@ -120,20 +122,36 @@
     });
   }
 
-  async function createAsset(draft: AddAssetDraft): Promise<boolean> {
+  async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
     if (!selectedInventory) {
       error = 'Create an inventory before adding assets.';
-      return false;
+      return { saved: false };
     }
     if (!createAssetAllowed) {
       error = 'You do not have permission to add assets in this inventory.';
-      return false;
+      return { saved: false };
     }
     busy = true;
     error = '';
     message = '';
+    let createdParent: Asset | null = null;
     try {
-      const asset = await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, draft);
+      createdParent = draft.parentQuickCreate
+        ? await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, {
+            kind: draft.parentQuickCreate.kind,
+            title: draft.parentQuickCreate.title,
+            description: '',
+            parentAssetId: draft.parentAssetId,
+            customFields: {},
+            photos: []
+          })
+        : null;
+      const { parentQuickCreate: _parentQuickCreate, ...assetDraft } = draft;
+      const childDraft: AddAssetDraft = {
+        ...assetDraft,
+        parentAssetId: createdParent?.id ?? draft.parentAssetId
+      };
+      const asset = await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, childDraft);
       if (data.context.assetLifecycleState === 'active') {
         let uploadFailures = 0;
         const uploaded = [];
@@ -155,15 +173,17 @@
               }
             }
           : asset;
-      data = { ...data, assets: [savedAsset, ...data.assets] };
+        data = { ...data, assets: createdParent ? [savedAsset, createdParent, ...data.assets] : [savedAsset, ...data.assets] };
         message =
           uploadFailures > 0
             ? `Saved ${asset.title}. ${uploadFailures} photo upload ${uploadFailures === 1 ? 'failed' : 'failed'}.`
             : draft.photos.length > 0
               ? `Saved ${asset.title} with ${draft.photos.length} photo upload.`
-              : `Saved ${asset.title}.`;
+              : createdParent
+                ? `Saved ${asset.title} in ${createdParent.title}.`
+                : `Saved ${asset.title}.`;
         if (uploadFailures > 0) {
-          return false;
+          return { saved: false };
         }
       } else {
         data = await repository.selectAssetLifecycle(asset.tenantId, asset.inventoryId, 'active');
@@ -175,10 +195,16 @@
         message = `Saved ${asset.title}.`;
       }
       addOpen = false;
-      return true;
+      return { saved: true };
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Action failed.';
-      return false;
+      const failure = caught instanceof Error ? caught.message : 'Action failed.';
+      if (createdParent && data.context.assetLifecycleState === 'active' && !data.assets.some((asset) => asset.id === createdParent?.id)) {
+        data = { ...data, assets: [createdParent, ...data.assets] };
+      }
+      error = createdParent
+        ? `Created ${createdParent.title}, but could not save ${draft.title}. ${failure}`
+        : failure;
+      return createdParent ? { saved: false, createdParentId: createdParent.id } : { saved: false };
     } finally {
       busy = false;
     }

@@ -42,6 +42,7 @@ export class SeededInventoryRepository
   private selectedTenantId: string;
   private selectedInventoryId: string;
   private selectedLifecycleState: AssetLifecycleFilter = 'active';
+  private nextAssetSequence = 1;
 
   constructor(seed: WorkspaceSeed) {
     this.seed = seed;
@@ -150,8 +151,10 @@ export class SeededInventoryRepository
   }
 
   async createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
+    this.validateInventoryScope(tenantId, inventoryId);
+    this.validateAssetParent(tenantId, inventoryId, null, draft.parentAssetId);
     const asset: Asset = {
-      id: `asset-${Date.now()}`,
+      id: this.nextAssetId(),
       tenantId,
       inventoryId,
       kind: draft.kind,
@@ -188,6 +191,7 @@ export class SeededInventoryRepository
 
   async updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset> {
     const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    this.validateAssetParent(tenantId, inventoryId, assetId, draft.parentAssetId);
     const updated: Asset = {
       ...asset,
       title: draft.title,
@@ -859,6 +863,70 @@ export class SeededInventoryRepository
         throw new Error('Custom field target is not available.');
       }
     }
+  }
+
+  private validateInventoryScope(tenantId: string, inventoryId: string): void {
+    const inventory = this.seed.inventories.find(
+      (candidate) => candidate.tenantId === tenantId && candidate.id === inventoryId
+    );
+    if (!inventory) {
+      throw new Error('Inventory not found.');
+    }
+  }
+
+  private validateAssetParent(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string | null,
+    parentAssetId: string | null
+  ): void {
+    if (!parentAssetId) {
+      return;
+    }
+    if (parentAssetId === assetId) {
+      throw new Error('Asset cannot contain itself.');
+    }
+    const parent = this.seed.assets.find(
+      (candidate) => candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === parentAssetId
+    );
+    if (!parent) {
+      throw new Error('Parent asset not found.');
+    }
+    if (parent.lifecycleState !== 'active') {
+      throw new Error('Parent asset must be active.');
+    }
+    if (parent.kind !== 'container' && parent.kind !== 'location') {
+      throw new Error('Parent asset must be a container or location.');
+    }
+    if (assetId && this.isDescendant(parent, assetId)) {
+      throw new Error('Asset cannot be moved inside its own contents.');
+    }
+  }
+
+  private isDescendant(candidate: Asset, ancestorAssetId: string): boolean {
+    let parentAssetId = candidate.parentAssetId;
+    while (parentAssetId) {
+      if (parentAssetId === ancestorAssetId) {
+        return true;
+      }
+      const parent = this.seed.assets.find(
+        (asset) =>
+          asset.tenantId === candidate.tenantId &&
+          asset.inventoryId === candidate.inventoryId &&
+          asset.id === parentAssetId
+      );
+      parentAssetId = parent?.parentAssetId ?? null;
+    }
+    return false;
+  }
+
+  private nextAssetId(): string {
+    let id = '';
+    do {
+      id = `asset-local-${this.nextAssetSequence}`;
+      this.nextAssetSequence += 1;
+    } while (this.seed.assets.some((asset) => asset.id === id));
+    return id;
   }
 
   private firstInventoryIdForTenant(tenantId: string): string {

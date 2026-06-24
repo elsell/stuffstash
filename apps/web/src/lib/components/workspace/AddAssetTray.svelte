@@ -7,7 +7,8 @@
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
   import type {
-    AddAssetDraft,
+    AddAssetSubmission,
+    AddAssetSaveResult,
     AssetKind,
     AssetViewModel,
     CustomAssetType,
@@ -34,13 +35,15 @@
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     onClose: () => void;
-    onSave: (draft: AddAssetDraft) => Promise<boolean>;
+    onSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
   } = $props();
 
   let kind = $state<AssetKind>('item');
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state('');
+  let quickParentTitle = $state('');
+  let quickParentKind = $state<'location' | 'container'>('location');
   let customAssetTypeId = $state('');
   let customFieldValues = $state<Record<string, string>>({});
   let selectedPhotos = $state<SelectedPhoto[]>([]);
@@ -54,21 +57,31 @@
     if (!title.trim() || photoError) {
       return;
     }
-    const saved = await onSave({
+    const result = await onSave({
       kind,
       title: title.trim(),
       description: description.trim(),
       parentAssetId: parentAssetId || null,
+      parentQuickCreate: quickParentTitle.trim()
+        ? { kind: quickParentKind, title: quickParentTitle.trim() }
+        : undefined,
       customAssetTypeId: customAssetTypeId || undefined,
       customFields: buildCustomFields(),
       photos: selectedPhotos
     });
-    if (!saved) {
+    if (!result.saved) {
+      if (result.createdParentId) {
+        parentAssetId = result.createdParentId;
+        quickParentTitle = '';
+        quickParentKind = 'location';
+      }
       return;
     }
     title = '';
     description = '';
     parentAssetId = '';
+    quickParentTitle = '';
+    quickParentKind = 'location';
     customAssetTypeId = '';
     customFieldValues = {};
     selectedPhotos = [];
@@ -169,7 +182,7 @@
     </div>
 
     <div class="field-stack">
-      <Label>Parent</Label>
+      <Label>Place in existing parent</Label>
       <div class="parent-picker" role="listbox" aria-label="Parent target">
         <Button.Root variant={parentAssetId === '' ? 'secondary' : 'outline'} onclick={() => { parentAssetId = ''; }}>
           Inventory root
@@ -179,6 +192,19 @@
             {target.title}
           </Button.Root>
         {/each}
+      </div>
+    </div>
+
+    <div class="field-stack">
+      <Label for="quick-parent-title">Create a new parent inside that place</Label>
+      <Input id="quick-parent-title" bind:value={quickParentTitle} placeholder="Laundry shelf" />
+      <div class="kind-segment" role="group" aria-label="New parent kind">
+        <Button.Root variant={quickParentKind === 'location' ? 'secondary' : 'outline'} onclick={() => { quickParentKind = 'location'; }}>
+          Location
+        </Button.Root>
+        <Button.Root variant={quickParentKind === 'container' ? 'secondary' : 'outline'} onclick={() => { quickParentKind = 'container'; }}>
+          Container
+        </Button.Root>
       </div>
     </div>
 

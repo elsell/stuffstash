@@ -171,6 +171,20 @@ export interface AddAssetDraft {
   photos: SelectedPhoto[];
 }
 
+export interface AddAssetSubmission extends AddAssetDraft {
+  parentQuickCreate?: {
+    kind: 'location' | 'container';
+    title: string;
+  };
+}
+
+export type AddAssetSaveResult =
+  | { saved: true }
+  | {
+      saved: false;
+      createdParentId?: string;
+    };
+
 export interface UpdateAssetDraft {
   title: string;
   description: string;
