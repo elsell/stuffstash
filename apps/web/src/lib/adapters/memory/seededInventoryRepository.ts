@@ -18,8 +18,23 @@ export class SeededInventoryRepository implements InventoryRepository {
   }
 
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
-    const tenant = { id: `tenant-${Date.now()}`, name: input.tenantName };
-    const inventory = { id: `inventory-${Date.now()}`, tenantId: tenant.id, name: input.inventoryName };
+    const tenant = {
+      id: `tenant-${Date.now()}`,
+      name: input.tenantName,
+      access: {
+        relationship: 'owner',
+        permissions: ['view', 'create_inventory', 'configure']
+      }
+    };
+    const inventory = {
+      id: `inventory-${Date.now()}`,
+      tenantId: tenant.id,
+      name: input.inventoryName,
+      access: {
+        relationship: 'owner',
+        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure']
+      }
+    };
     this.seed = {
       ...this.seed,
       tenants: [tenant, ...this.seed.tenants],

@@ -34,8 +34,10 @@
       }
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Unable to load Stuff Stash.';
-      repository = new SeededInventoryRepository(workspaceSeed);
-      workspaceData = await repository.loadWorkspace();
+      if (!session) {
+        repository = new SeededInventoryRepository(workspaceSeed);
+        workspaceData = await repository.loadWorkspace();
+      }
     } finally {
       loading = false;
     }
@@ -77,9 +79,17 @@
     </div>
   {/if}
   <InventoryWorkspaceApp {repository} initialData={workspaceData} onSignOut={signOutAndReset} />
+{:else if error}
+  <main class="loading-shell">
+    <Card.Root>
+      <Card.Content>
+        <p class="muted">{error}</p>
+      </Card.Content>
+    </Card.Root>
+  </main>
 {/if}
 
-{#if error}
+{#if error && repository}
   <Alert.Root class="toast" variant="destructive">
     <Alert.Description>{error}</Alert.Description>
   </Alert.Root>

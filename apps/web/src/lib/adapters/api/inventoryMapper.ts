@@ -1,4 +1,5 @@
 import type {
+  AccessSummary as ApiAccessSummary,
   Asset as ApiAsset,
   AssetKind as ApiAssetKind,
   AssetSearchResult as ApiSearchResult,
@@ -6,7 +7,7 @@ import type {
   Principal as ApiPrincipal,
   Tenant as ApiTenant
 } from '@stuff-stash/api-client';
-import type { Asset, AssetKind, Inventory, Principal, SearchResult, Tenant } from '$lib/domain/inventory';
+import type { AccessSummary, Asset, AssetKind, Capability, Inventory, Principal, SearchResult, Tenant } from '$lib/domain/inventory';
 
 export function mapPrincipal(principal: ApiPrincipal): Principal {
   return {
@@ -18,7 +19,8 @@ export function mapPrincipal(principal: ApiPrincipal): Principal {
 export function mapTenant(tenant: ApiTenant): Tenant {
   return {
     id: tenant.id,
-    name: tenant.name
+    name: tenant.name,
+    access: mapAccess(tenant.access)
   };
 }
 
@@ -26,8 +28,16 @@ export function mapInventory(inventory: ApiInventory): Inventory {
   return {
     id: inventory.id,
     tenantId: inventory.tenantId,
-    name: inventory.name
+    name: inventory.name,
+    access: mapAccess(inventory.access)
   };
+}
+
+export function mapCapability(inventory: Inventory | null | undefined): Capability {
+  if (inventory?.access.permissions.includes('create_asset') || inventory?.access.permissions.includes('edit_asset')) {
+    return 'editor';
+  }
+  return 'viewer';
 }
 
 export function mapAsset(asset: ApiAsset): Asset {
@@ -55,4 +65,11 @@ export function mapSearchResult(result: ApiSearchResult): SearchResult {
 
 function mapAssetKind(kind: ApiAssetKind): AssetKind {
   return kind;
+}
+
+function mapAccess(access: ApiAccessSummary): AccessSummary {
+  return {
+    relationship: access.relationship,
+    permissions: access.permissions ?? []
+  };
 }

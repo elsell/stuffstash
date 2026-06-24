@@ -394,6 +394,17 @@ The first promotion may include a local seeded adapter for unauthenticated brows
 - Operations backed by unavailable API capabilities must show unavailable, disabled, local-demo, or otherwise explicit state rather than pretending production persistence exists.
 - Once the corresponding API operations are exposed through the generated client package, the API adapter must replace seeded behavior for those production paths.
 
+Authenticated workspace loading must use real API discovery:
+
+- The API adapter must call `GET /me/tenants` to discover active tenants visible to the authenticated principal.
+- The initial selected tenant should be the first visible tenant unless the user has already selected a tenant in the current browser session.
+- The API adapter must list inventories through `GET /tenants/{tenantId}/inventories` for the selected tenant.
+- The initial selected inventory should be the first visible inventory unless the user has already selected an inventory in the current browser session and it is still visible.
+- The API adapter must list active assets for the selected inventory through the generated client wrapper.
+- Tenant and inventory names in the context switcher must come from API responses, not placeholder labels.
+- Edit/add affordances must derive from effective inventory permissions in the API response, not from hard-coded editor assumptions.
+- If the authenticated user has no visible tenants or no visible inventories, the workspace must show the existing create/setup empty state rather than local seeded data.
+
 ## Data And API Expectations
 
 The UI direction depends on existing domain capabilities:

@@ -8,14 +8,22 @@ export const workspaceSeed: WorkspaceSeed = {
   tenants: [
     {
       id: 'tenant-home',
-      name: 'Home'
+      name: 'Home',
+      access: {
+        relationship: 'owner',
+        permissions: ['view', 'create_inventory', 'configure']
+      }
     }
   ],
   inventories: [
     {
       id: 'inventory-household',
       tenantId: 'tenant-home',
-      name: 'Household'
+      name: 'Household',
+      access: {
+        relationship: 'owner',
+        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure']
+      }
     }
   ],
   assets: [

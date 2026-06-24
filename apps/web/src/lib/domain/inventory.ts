@@ -8,15 +8,22 @@ export interface Principal {
   email?: string;
 }
 
+export interface AccessSummary {
+  relationship: string;
+  permissions: string[];
+}
+
 export interface Tenant {
   id: string;
   name: string;
+  access: AccessSummary;
 }
 
 export interface Inventory {
   id: string;
   tenantId: string;
   name: string;
+  access: AccessSummary;
 }
 
 export interface AssetPhoto {
