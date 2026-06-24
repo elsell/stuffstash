@@ -16,7 +16,7 @@ describe('parseRuntimeConfig', () => {
       oidcClientId: 'stuff-stash-web-local',
       oidcRedirectUri: 'http://localhost:5173/callback',
       mediaUploadPolicy: {
-        supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
         maxBytes: 5242880
       }
     });

@@ -9,6 +9,7 @@ import type {
   Principal,
   SearchRequest,
   SearchResult,
+  SelectedAttachment,
   SelectedPhoto,
   Tenant,
   UpdateAssetDraft,
@@ -29,6 +30,12 @@ export interface InventoryRepository {
   restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void>;
   listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]>;
+  uploadAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachment: SelectedAttachment
+  ): Promise<AssetAttachment>;
   uploadAssetPhoto(tenantId: string, inventoryId: string, assetId: string, photo: SelectedPhoto): Promise<AssetAttachment>;
   archiveAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
   restoreAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;

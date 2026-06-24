@@ -201,6 +201,15 @@ export interface SelectedPhoto {
   file: File;
 }
 
+export interface SelectedAttachment {
+  id: string;
+  name: string;
+  sizeBytes: number;
+  contentType: AttachmentContentType;
+  previewUrl?: string;
+  file: File;
+}
+
 export interface WorkspaceContext {
   principal: Principal;
   tenants: Tenant[];
@@ -230,7 +239,7 @@ export interface AssetViewModel extends Asset {
 
 export const assetKinds: AssetKind[] = ['item', 'container', 'location'];
 export const defaultMediaUploadPolicy: MediaUploadPolicy = {
-  supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
   maxBytes: 5 * 1024 * 1024
 };
 

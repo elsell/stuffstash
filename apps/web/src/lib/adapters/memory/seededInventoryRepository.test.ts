@@ -430,7 +430,7 @@ describe('SeededInventoryRepository tenant selection', () => {
       'asset_photo.deleted',
       'asset_photo.restored',
       'asset_photo.archived',
-      'asset_photo.uploaded'
+      'attachment.created'
     ]);
     expect(audit.items.every((record) => record.source === 'local_demo')).toBe(true);
   });

@@ -17,6 +17,7 @@ import {
   type InvitationStatusFilter,
   type SearchRequest,
   type SearchResult,
+  type SelectedAttachment,
   type SelectedPhoto,
   type UpdateAssetDraft,
   type WorkspaceData
@@ -243,29 +244,38 @@ export class SeededInventoryRepository
     );
   }
 
-  async uploadAssetPhoto(tenantId: string, inventoryId: string, assetId: string, photo: SelectedPhoto): Promise<AssetAttachment> {
+  async uploadAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentInput: SelectedAttachment
+  ): Promise<AssetAttachment> {
     await this.getAsset(tenantId, inventoryId, assetId);
     const attachment: AssetAttachment = {
       id: `attachment-${Date.now()}`,
       tenantId,
       inventoryId,
       assetId,
-      fileName: photo.name,
-      contentType: photo.contentType,
-      sizeBytes: photo.sizeBytes,
+      fileName: attachmentInput.name,
+      contentType: attachmentInput.contentType,
+      sizeBytes: attachmentInput.sizeBytes,
       lifecycleState: 'active',
-      thumbnailUrl: photo.previewUrl
+      thumbnailUrl: attachmentInput.contentType.startsWith('image/') ? attachmentInput.previewUrl : undefined
     };
     this.attachments = [attachment, ...this.attachments];
     this.recordAudit({
       tenantId,
       inventoryId,
-      action: 'asset_photo.uploaded',
+      action: 'attachment.created',
       targetType: 'attachment',
       targetId: attachment.id,
       metadata: { assetId, fileName: attachment.fileName }
     });
     return attachment;
+  }
+
+  async uploadAssetPhoto(tenantId: string, inventoryId: string, assetId: string, photo: SelectedPhoto): Promise<AssetAttachment> {
+    return this.uploadAssetAttachment(tenantId, inventoryId, assetId, photo);
   }
 
   async archiveAssetAttachment(

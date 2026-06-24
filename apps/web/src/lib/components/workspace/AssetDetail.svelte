@@ -5,12 +5,20 @@
   import Pencil from '@lucide/svelte/icons/pencil';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import Trash2 from '@lucide/svelte/icons/trash-2';
+  import Upload from '@lucide/svelte/icons/upload';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, UpdateAssetDraft } from '$lib/domain/inventory';
+  import type {
+    AssetAttachment,
+    AssetViewModel,
+    CustomFieldDefinition,
+    MediaUploadPolicy,
+    SelectedAttachment,
+    UpdateAssetDraft
+  } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
 
@@ -21,11 +29,13 @@
     customFieldDefinitions,
     saving,
     attachments,
+    mediaPolicy,
     onBack,
     onSave,
     onArchive,
     onRestore,
     onDelete,
+    onUploadAttachment,
     onArchiveAttachment,
     onDeleteAttachment
   }: {
@@ -35,11 +45,13 @@
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
+    mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
     onDelete: () => Promise<void>;
+    onUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
   } = $props();
@@ -50,6 +62,8 @@
   let parentAssetId = $state<string | null>(null);
   let customFieldValues = $state<Record<string, string>>({});
   let saveError = $state('');
+  let uploadError = $state('');
+  let attachmentInput = $state<HTMLInputElement | null>(null);
   let selectedAttachment = $state<AssetAttachment | null>(null);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let displayFields = $derived(
@@ -134,6 +148,39 @@
     }
   }
 
+  async function uploadAttachment(event: Event): Promise<void> {
+    uploadError = '';
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    const contentType = file.type;
+    if (!isSupportedAttachmentContentType(contentType)) {
+      uploadError = 'Unsupported file type.';
+      input.value = '';
+      return;
+    }
+    if (file.size > mediaPolicy.maxBytes) {
+      uploadError = `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.`;
+      input.value = '';
+      return;
+    }
+    try {
+      await onUploadAttachment({
+        id: createClientAttachmentId(),
+        name: file.name,
+        sizeBytes: file.size,
+        contentType,
+        file
+      });
+      input.value = '';
+    } catch (caught) {
+      uploadError = caught instanceof Error ? caught.message : 'Unable to upload attachment.';
+      input.value = '';
+    }
+  }
+
   async function removeAttachment(): Promise<void> {
     if (!selectedAttachment) {
       return;
@@ -187,6 +234,16 @@
     if (field.type === 'url') return 'url';
     return 'text';
   }
+
+  function isSupportedAttachmentContentType(contentType: string): contentType is SelectedAttachment['contentType'] {
+    return mediaPolicy.supportedContentTypes.includes(contentType as SelectedAttachment['contentType']);
+  }
+
+  function createClientAttachmentId(): string {
+    return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `attachment-${Date.now()}`;
+  }
 </script>
 
 <section class="workspace-main detail-view" aria-labelledby="asset-title">
@@ -232,7 +289,28 @@
       <section class="attachment-section" aria-labelledby="attachments-title">
         <div class="section-heading compact">
           <h2 id="attachments-title">Attachments</h2>
+          <div class="attachment-upload">
+            <Input
+              bind:ref={attachmentInput}
+              aria-label="Choose attachment"
+              class="visually-hidden"
+              type="file"
+              accept={mediaPolicy.supportedContentTypes.join(',')}
+              disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
+              onchange={(event) => { void uploadAttachment(event); }}
+            />
+            <Button.Root
+              variant="outline"
+              disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
+              onclick={() => attachmentInput?.click()}
+            >
+              <Upload /> Upload
+            </Button.Root>
+          </div>
         </div>
+        {#if uploadError}
+          <p class="denied-note" role="alert">{uploadError}</p>
+        {/if}
         {#if attachments.length === 0}
           <div class="empty-state">
             <p>No active attachments.</p>

@@ -10,6 +10,7 @@ import type {
   InvitationStatusFilter,
   SearchRequest,
   SearchResult,
+  SelectedAttachment,
   SelectedPhoto,
   UpdateAssetDraft,
   WorkspaceData
@@ -252,26 +253,58 @@ export class StuffStashInventoryRepository
     }
   }
 
+  async uploadAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachment: SelectedAttachment
+  ): Promise<AssetAttachment> {
+    this.observer.record('workspace.asset_attachment_upload_started');
+    try {
+      const upload = await this.client.initiateAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, {
+        fileName: attachment.name,
+        contentType: attachment.contentType,
+        sizeBytes: attachment.sizeBytes
+      });
+      await this.uploadToDirectTarget(upload, attachment.file);
+      const uploaded = await this.client.completeAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, upload.uploadId);
+      const thumbnail = uploaded.contentType.startsWith('image/')
+        ? await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, uploaded.id)
+        : undefined;
+      this.observer.record('workspace.asset_attachment_uploaded');
+      return mapAttachment(uploaded, await this.thumbnailObjectUrl(thumbnail), thumbnail?.headers);
+    } catch (error) {
+      if (!isDirectUploadTargetUnavailable(error)) {
+        this.observer.record('workspace.asset_attachment_upload_failed');
+        throw safeError(error);
+      }
+      try {
+        const uploaded = await this.client.createAssetAttachment(tenantId, inventoryId, assetId, {
+          fileName: attachment.name,
+          contentType: attachment.contentType,
+          contentBase64: await fileToBase64(attachment.file)
+        });
+        const thumbnail = uploaded.contentType.startsWith('image/')
+          ? await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, uploaded.id)
+          : undefined;
+        this.observer.record('workspace.asset_attachment_uploaded');
+        return mapAttachment(uploaded, await this.thumbnailObjectUrl(thumbnail), thumbnail?.headers);
+      } catch (fallbackError) {
+        this.observer.record('workspace.asset_attachment_upload_failed');
+        throw safeError(fallbackError);
+      }
+    }
+  }
+
   async uploadAssetPhoto(
     tenantId: string,
     inventoryId: string,
     assetId: string,
     photo: SelectedPhoto
   ): Promise<AssetAttachment> {
-    this.observer.record('workspace.asset_attachment_upload_started');
     try {
-      const upload = await this.client.initiateAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, {
-        fileName: photo.name,
-        contentType: photo.contentType,
-        sizeBytes: photo.sizeBytes
-      });
-      await this.uploadToDirectTarget(upload, photo.file);
-      const attachment = await this.client.completeAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, upload.uploadId);
-      const thumbnail = await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, attachment.id);
-      this.observer.record('workspace.asset_attachment_uploaded');
-      return mapAttachment(attachment, await this.thumbnailObjectUrl(thumbnail), thumbnail.headers);
+      return await this.uploadAssetAttachment(tenantId, inventoryId, assetId, photo);
     } catch (error) {
-      this.observer.record('workspace.asset_attachment_upload_failed');
       throw safeError(error);
     }
   }
@@ -585,7 +618,7 @@ export class StuffStashInventoryRepository
     const method = upload.method.toUpperCase();
     const target = new URL(upload.url);
     if (target.protocol !== 'http:' && target.protocol !== 'https:') {
-      throw new Error('Direct upload target is not available in this browser.');
+      throw new DirectUploadTargetUnavailableError();
     }
     const init: RequestInit = { method, headers: upload.headers };
     if (method === 'POST' && Object.keys(upload.formFields).length > 0) {
@@ -630,6 +663,27 @@ function safeError(error: unknown): Error {
     return error;
   }
   return new Error('Request failed.');
+}
+
+class DirectUploadTargetUnavailableError extends Error {
+  constructor() {
+    super('Direct upload target is not available in this browser.');
+  }
+}
+
+function isDirectUploadTargetUnavailable(error: unknown): boolean {
+  return error instanceof DirectUploadTargetUnavailableError;
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return btoa(binary);
 }
 
 function isAbortError(error: unknown): boolean {

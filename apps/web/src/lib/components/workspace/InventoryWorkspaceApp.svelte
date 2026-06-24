@@ -15,6 +15,7 @@
     type SearchLifecycleFilter,
     type SearchMode,
     type SearchResult,
+    type SelectedAttachment,
     type UpdateAssetDraft,
     type WorkspaceData,
     type WorkspaceMode
@@ -361,6 +362,22 @@
     });
   }
 
+  async function uploadSelectedAttachment(attachment: SelectedAttachment): Promise<void> {
+    const asset = selectedAsset;
+    if (!asset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.uploadAssetAttachment(asset.tenantId, asset.inventoryId, asset.id, attachment);
+      await refreshSelectedAttachments(asset.tenantId, asset.inventoryId, asset.id);
+      message = `Uploaded ${attachment.name}.`;
+    });
+  }
+
   async function run(task: () => Promise<void>): Promise<void> {
     busy = true;
     error = '';
@@ -565,11 +582,13 @@
         customFieldDefinitions={data.context.customFieldDefinitions}
         saving={busy}
         attachments={selectedAssetAttachments}
+        mediaPolicy={data.context.mediaUploadPolicy}
         onBack={closeDetailToPrevious}
         onSave={updateAsset}
         onArchive={archiveSelectedAsset}
         onRestore={restoreSelectedAsset}
         onDelete={deleteSelectedAsset}
+        onUploadAttachment={uploadSelectedAttachment}
         onArchiveAttachment={archiveSelectedAttachment}
         onDeleteAttachment={deleteSelectedAttachment}
       />
