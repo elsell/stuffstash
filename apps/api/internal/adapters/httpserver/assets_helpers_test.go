@@ -16,6 +16,8 @@ type assetResponse struct {
 	Description       string                 `json:"description"`
 	CustomFields      map[string]interface{} `json:"customFields"`
 	LifecycleState    string                 `json:"lifecycleState"`
+	CreatedAt         string                 `json:"createdAt"`
+	UpdatedAt         string                 `json:"updatedAt"`
 }
 
 type assetBody struct {

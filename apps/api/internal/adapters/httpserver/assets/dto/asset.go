@@ -77,6 +77,7 @@ type ListAssetsInput struct {
 	Limit          int    `query:"limit" minimum:"1" doc:"Requested page size"`
 	Cursor         string `query:"cursor" doc:"Opaque cursor from the previous page"`
 	LifecycleState string `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
+	Sort           string `query:"sort" enum:"id_asc,updated_desc" doc:"Sort order; defaults to id_asc"`
 }
 
 type ListAssetsOutput struct {
@@ -94,4 +95,6 @@ type AssetResponse struct {
 	Description       string         `json:"description"`
 	CustomFields      map[string]any `json:"customFields"`
 	LifecycleState    string         `json:"lifecycleState"`
+	CreatedAt         string         `json:"createdAt"`
+	UpdatedAt         string         `json:"updatedAt"`
 }

@@ -40,6 +40,8 @@ type AssetSummary struct {
 	Description       string         `json:"description"`
 	CustomFields      map[string]any `json:"customFields"`
 	LifecycleState    string         `json:"lifecycleState"`
+	CreatedAt         string         `json:"createdAt"`
+	UpdatedAt         string         `json:"updatedAt"`
 }
 
 type SearchMatch struct {

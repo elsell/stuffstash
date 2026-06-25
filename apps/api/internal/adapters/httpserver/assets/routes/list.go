@@ -29,6 +29,7 @@ func RegisterList(api huma.API, application app.App) {
 			Limit:          input.Limit,
 			Cursor:         input.Cursor,
 			LifecycleState: input.LifecycleState,
+			Sort:           input.Sort,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

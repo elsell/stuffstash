@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 )
@@ -17,6 +19,8 @@ func AssetToResponse(item asset.Asset) dto.AssetResponse {
 		Description:       item.Description.String(),
 		CustomFields:      item.CustomFields.Values(),
 		LifecycleState:    item.LifecycleState.String(),
+		CreatedAt:         item.CreatedAt.UTC().Format(time.RFC3339Nano),
+		UpdatedAt:         item.UpdatedAt.UTC().Format(time.RFC3339Nano),
 	}
 }
 

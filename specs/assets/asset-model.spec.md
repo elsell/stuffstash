@@ -30,6 +30,8 @@ This spec does not define the full lifecycle model, consumable model, search beh
   - Parent asset reference.
   - Custom field values.
   - Lifecycle state.
+  - Created timestamp.
+  - Updated timestamp.
 - Assets must support custom field values.
 - Assets may have an optional custom asset type.
 - Custom asset types are user-defined metadata/classification overlays on normal assets. They must not replace the base asset kind enumeration.
@@ -52,6 +54,8 @@ This spec does not define the full lifecycle model, consumable model, search beh
 - The domain model may expose location-friendly language to users, but persistence must store location-like nodes as assets.
 - The initial lifecycle states are `active` and `archived`.
 - New assets are created as `active`.
+- New assets must set `createdAt` and `updatedAt` to the same application time.
+- Asset update, movement, archive, and restore must advance `updatedAt`.
 - Archived assets must not be valid containment targets.
 - Asset archive and restore are explicit lifecycle operations, not generic asset update fields.
 
@@ -90,6 +94,7 @@ Persistence rules:
 - Domain and application code must not manipulate raw JSONB.
 - Generic asset update persistence must preserve the same tenant, inventory, kind, and lifecycle state for the target asset.
 - Archive/restore persistence may change only lifecycle state.
+- Create, update, archive, and restore persistence must preserve domain timestamps and expose them back through repository reads.
 - Update persistence must defensively reject cross-tenant and cross-inventory parent references.
 
 ## Lifecycle
@@ -131,6 +136,9 @@ Asset listing:
 - May request `lifecycleState=archived` to list archived assets.
 - May request `lifecycleState=all` to list active and archived assets.
 - Must include lifecycle filter information in cursor validation so cursors cannot be reused across different lifecycle list scopes.
+- Must support an explicit updated-descending list order for recency surfaces.
+- Updated-descending cursors must preserve both `updatedAt` and asset ID so assets with identical update times paginate deterministically.
+- Cursor validation must include sort information so cursors cannot be reused across different asset list orders.
 
 ## Containment
 

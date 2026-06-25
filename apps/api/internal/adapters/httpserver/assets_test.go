@@ -104,6 +104,64 @@ func TestUnrelatedUserCannotCreateOrListAssets(t *testing.T) {
 	assertSafeError(t, listAssets, "forbidden", "Forbidden.")
 }
 
+func TestAssetListSupportsUpdatedDescendingSortAndTimestamps(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Home Inventory", owner: "owner"},
+		},
+		ids: []string{
+			"old-item", "op-old-item", "audit-old-item",
+			"new-item", "op-new-item", "audit-new-item",
+			"op-old-item-update", "audit-old-item-update",
+		},
+	}))
+
+	oldItemResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Old item",
+	})
+	if oldItemResponse.Code != http.StatusCreated {
+		t.Fatalf("expected old item create status %d, got %d with body %s", http.StatusCreated, oldItemResponse.Code, oldItemResponse.Body.String())
+	}
+	oldItem := decodeAsset(t, oldItemResponse)
+	if oldItem.Data.CreatedAt == "" || oldItem.Data.UpdatedAt == "" {
+		t.Fatalf("expected create response timestamps, got %+v", oldItem.Data)
+	}
+
+	newItemResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "New item",
+	})
+	if newItemResponse.Code != http.StatusCreated {
+		t.Fatalf("expected new item create status %d, got %d with body %s", http.StatusCreated, newItemResponse.Code, newItemResponse.Body.String())
+	}
+
+	updateOldItem := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+oldItem.Data.ID, "Bearer dev:owner", map[string]any{
+		"title": "Recently updated old item",
+	})
+	if updateOldItem.Code != http.StatusOK {
+		t.Fatalf("expected update status %d, got %d with body %s", http.StatusOK, updateOldItem.Code, updateOldItem.Body.String())
+	}
+	updatedOldItem := decodeAsset(t, updateOldItem)
+	if updatedOldItem.Data.UpdatedAt == oldItem.Data.UpdatedAt {
+		t.Fatalf("expected update to advance updatedAt, got create=%s update=%s", oldItem.Data.UpdatedAt, updatedOldItem.Data.UpdatedAt)
+	}
+
+	recentList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?lifecycleState=all&sort=updated_desc&limit=10", "Bearer dev:owner", nil)
+	if recentList.Code != http.StatusOK {
+		t.Fatalf("expected recent list status %d, got %d with body %s", http.StatusOK, recentList.Code, recentList.Body.String())
+	}
+	recent := decodeAssetList(t, recentList)
+	if len(recent.Data) < 2 || recent.Data[0].ID != oldItem.Data.ID {
+		t.Fatalf("expected recently updated item first, got %+v", recent.Data)
+	}
+}
+
 func TestAssetUpdateFlowAndMovement(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"

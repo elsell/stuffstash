@@ -72,6 +72,15 @@ const (
 
 type AssetListPageRequest struct {
 	AfterAssetID    asset.ID
+	AfterUpdatedAt  time.Time
 	Limit           int
 	LifecycleFilter AssetLifecycleFilter
+	Sort            AssetListSort
 }
+
+type AssetListSort string
+
+const (
+	AssetListSortIDAsc       AssetListSort = "id_asc"
+	AssetListSortUpdatedDesc AssetListSort = "updated_desc"
+)

@@ -85,6 +85,8 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord au
 			Description:       item.Description.String(),
 			CustomFields:      string(customFields),
 			LifecycleState:    item.LifecycleState.String(),
+			CreatedAt:         item.CreatedAt,
+			UpdatedAt:         item.UpdatedAt,
 		}).Error; err != nil {
 			return err
 		}
@@ -149,6 +151,7 @@ func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords [
 			"title":                item.Title.String(),
 			"description":          item.Description.String(),
 			"custom_fields":        string(customFields),
+			"updated_at":           item.UpdatedAt,
 		}
 		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
 			return err
@@ -218,6 +221,7 @@ func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, audit
 		}
 		if err := tx.Model(&existing).Updates(map[string]any{
 			"lifecycle_state": item.LifecycleState.String(),
+			"updated_at":      item.UpdatedAt,
 		}).Error; err != nil {
 			return err
 		}
@@ -290,13 +294,39 @@ func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, in
 	default:
 		return nil, ports.ErrForbidden
 	}
-	if page.AfterAssetID.String() != "" {
+	sort := page.Sort
+	if sort == "" {
+		sort = ports.AssetListSortIDAsc
+	}
+	if page.AfterAssetID.String() != "" && sort == ports.AssetListSortIDAsc {
 		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterAssetID.String()})
+	}
+	if page.AfterAssetID.String() != "" && sort == ports.AssetListSortUpdatedDesc {
+		query = query.Where(clause.Or(
+			clause.Lt{Column: clause.Column{Name: "updated_at"}, Value: page.AfterUpdatedAt},
+			clause.And(
+				clause.Eq{Column: clause.Column{Name: "updated_at"}, Value: page.AfterUpdatedAt},
+				clause.Lt{Column: clause.Column{Name: "id"}, Value: page.AfterAssetID.String()},
+			),
+		))
 	}
 	if page.Limit > 0 {
 		query = query.Limit(page.Limit)
 	}
-	if err := query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Find(&models).Error; err != nil {
+	switch sort {
+	case ports.AssetListSortIDAsc:
+		query = query.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}})
+	case ports.AssetListSortUpdatedDesc:
+		query = query.Order(clause.OrderBy{
+			Columns: []clause.OrderByColumn{
+				{Column: clause.Column{Name: "updated_at"}, Desc: true},
+				{Column: clause.Column{Name: "id"}, Desc: true},
+			},
+		})
+	default:
+		return nil, ports.ErrForbidden
+	}
+	if err := query.Find(&models).Error; err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -32,6 +34,8 @@ func AssetSearchResultToResponse(result ports.AssetSearchResult) dto.AssetSearch
 			Description:       result.Asset.Description.String(),
 			CustomFields:      result.Asset.CustomFields.Values(),
 			LifecycleState:    result.Asset.LifecycleState.String(),
+			CreatedAt:         result.Asset.CreatedAt.UTC().Format(time.RFC3339Nano),
+			UpdatedAt:         result.Asset.UpdatedAt.UTC().Format(time.RFC3339Nano),
 		},
 		Matches: searchMatchesToResponse(result.Matches),
 	}

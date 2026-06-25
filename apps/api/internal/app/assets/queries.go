@@ -69,15 +69,21 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	if err != nil {
 		return ListAssetsResult{}, apperrors.ErrInvalidInput
 	}
-	afterAssetID, err := decodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, input.Cursor)
+	sort, err := AssetSort(input.Sort)
+	if err != nil {
+		return ListAssetsResult{}, apperrors.ErrInvalidInput
+	}
+	cursorPosition, err := decodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, input.Cursor)
 	if err != nil {
 		return ListAssetsResult{}, apperrors.ErrInvalidInput
 	}
 
 	items, err := s.assets.ListAssetsByInventory(ctx, input.TenantID, input.InventoryID, ports.AssetListPageRequest{
-		AfterAssetID:    afterAssetID,
+		AfterAssetID:    cursorPosition.AssetID,
+		AfterUpdatedAt:  cursorPosition.UpdatedAt,
 		Limit:           limit + 1,
 		LifecycleFilter: lifecycleFilter,
+		Sort:            sort,
 	})
 	if err != nil {
 		return ListAssetsResult{}, err
@@ -87,7 +93,7 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, items[len(items)-1].ID)
+		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, items[len(items)-1])
 	}
 
 	s.observer.Record(ctx, ports.Event{
@@ -99,6 +105,7 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 			"principal_id": input.Principal.ID.String(),
 			"limit":        strconv.Itoa(limit),
 			"lifecycle":    string(lifecycleFilter),
+			"sort":         string(sort),
 		},
 	})
 	if err := s.saveReadAuditRecord(ctx, auditRecordInput{
@@ -113,6 +120,7 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 		Metadata: map[string]string{
 			"limit":     strconv.Itoa(limit),
 			"lifecycle": string(lifecycleFilter),
+			"sort":      string(sort),
 		},
 	}); err != nil {
 		return ListAssetsResult{}, err

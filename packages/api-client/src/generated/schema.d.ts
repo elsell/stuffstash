@@ -899,6 +899,7 @@ export interface components {
             relationship: string;
         };
         AssetResponse: {
+            createdAt: string;
             customAssetTypeId?: string;
             customFields: {
                 [key: string]: unknown;
@@ -911,6 +912,7 @@ export interface components {
             parentAssetId?: string;
             tenantId: string;
             title: string;
+            updatedAt: string;
         };
         AssetSearchResultResponse: {
             asset: components["schemas"]["AssetSummary"];
@@ -920,6 +922,7 @@ export interface components {
             type: string;
         };
         AssetSummary: {
+            createdAt: string;
             customAssetTypeId?: string;
             customFields: {
                 [key: string]: unknown;
@@ -931,6 +934,7 @@ export interface components {
             lifecycleState: string;
             parentAssetId?: string;
             title: string;
+            updatedAt: string;
         };
         AssetTypeResponse: {
             description: string;
@@ -3115,6 +3119,8 @@ export interface operations {
                 cursor?: string;
                 /** @description Lifecycle filter; defaults to active */
                 lifecycleState?: "active" | "archived" | "all";
+                /** @description Sort order; defaults to id_asc */
+                sort?: "id_asc" | "updated_desc";
             };
             header?: {
                 /** @description Bearer dev:<principal-id> */

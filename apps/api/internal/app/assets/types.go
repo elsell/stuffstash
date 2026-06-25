@@ -31,6 +31,7 @@ type ListAssetsInput struct {
 	Limit          int
 	Cursor         string
 	LifecycleState string
+	Sort           string
 }
 
 type GetAssetInput struct {

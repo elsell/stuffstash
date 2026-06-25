@@ -221,18 +221,44 @@ func (s *Store) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inv
 	defer s.mu.RUnlock()
 
 	items := []asset.Asset{}
+	sortOrder := page.Sort
+	if sortOrder == "" {
+		sortOrder = ports.AssetListSortIDAsc
+	}
 	for _, item := range s.assets {
-		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && item.ID.String() > page.AfterAssetID.String() && assetLifecycleMatches(item.LifecycleState, page.LifecycleFilter) {
+		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && assetListCursorMatches(item, page, sortOrder) && assetLifecycleMatches(item.LifecycleState, page.LifecycleFilter) {
 			items = append(items, item)
 		}
 	}
-	sort.Slice(items, func(left int, right int) bool {
-		return items[left].ID.String() < items[right].ID.String()
-	})
+	switch sortOrder {
+	case ports.AssetListSortIDAsc:
+		sort.Slice(items, func(left int, right int) bool {
+			return items[left].ID.String() < items[right].ID.String()
+		})
+	case ports.AssetListSortUpdatedDesc:
+		sort.Slice(items, func(left int, right int) bool {
+			if items[left].UpdatedAt.Equal(items[right].UpdatedAt) {
+				return items[left].ID.String() > items[right].ID.String()
+			}
+			return items[left].UpdatedAt.After(items[right].UpdatedAt)
+		})
+	default:
+		return nil, ports.ErrForbidden
+	}
 	if page.Limit > 0 && len(items) > page.Limit {
 		items = items[:page.Limit]
 	}
 	return items, nil
+}
+
+func assetListCursorMatches(item asset.Asset, page ports.AssetListPageRequest, sortOrder ports.AssetListSort) bool {
+	if page.AfterAssetID.String() == "" {
+		return true
+	}
+	if sortOrder == ports.AssetListSortUpdatedDesc {
+		return item.UpdatedAt.Before(page.AfterUpdatedAt) || (item.UpdatedAt.Equal(page.AfterUpdatedAt) && item.ID.String() < page.AfterAssetID.String())
+	}
+	return item.ID.String() > page.AfterAssetID.String()
 }
 
 func assetLifecycleMatches(state asset.LifecycleState, filter ports.AssetLifecycleFilter) bool {

@@ -81,5 +81,7 @@ func (m assetModel) toDomain() (asset.Asset, bool) {
 		Description:       asset.NewDescription(m.Description),
 		CustomFields:      customFields,
 		LifecycleState:    lifecycleState,
+		CreatedAt:         m.CreatedAt,
+		UpdatedAt:         m.UpdatedAt,
 	}, true
 }

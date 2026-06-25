@@ -55,7 +55,9 @@ describe('StuffStashClient', () => {
               title: 'Fertilizer',
               description: '',
               lifecycleState: 'active',
-              customFields: {}
+              customFields: {},
+              createdAt: '2026-06-23T10:00:00Z',
+              updatedAt: '2026-06-24T10:00:00Z'
             }
           ],
           meta: {
@@ -73,8 +75,13 @@ describe('StuffStashClient', () => {
 
     expect(page.items).toHaveLength(1);
     expect(page.items[0]?.title).toBe('Fertilizer');
+    expect(page.items[0]?.updatedAt).toBe('2026-06-24T10:00:00Z');
     expect(page.pagination).toEqual({ limit: 1, nextCursor: 'next-page', hasMore: true });
     expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets?limit=1&lifecycleState=archived');
+
+    await client.listAssets('tenant-one', 'inventory-one', 5, undefined, 'all', 'updated_desc');
+
+    expect(requests[1]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets?limit=5&lifecycleState=all&sort=updated_desc');
   });
 
   it('maps asset custom type and custom field values through create and update', async () => {

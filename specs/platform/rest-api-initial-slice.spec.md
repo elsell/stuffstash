@@ -113,6 +113,9 @@ The first protected REST slice includes:
 - Asset listing must support cursor pagination with `limit` and `cursor` query parameters.
 - Asset listing must include pagination metadata in the response envelope.
 - Asset listing defaults to active assets and may request `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all`.
+- Asset listing defaults to stable ID-ascending order and may request `sort=updated_desc` for most recently changed assets.
+- Asset listing cursors must include lifecycle and sort scope validation.
+- Asset list responses, asset detail responses, and asset mutation responses must include `createdAt` and `updatedAt` timestamps in RFC 3339 format.
 - Asset update must support replacing title, description, parent asset reference, and custom field values.
 - Asset update must not support kind changes, lifecycle changes, tenant changes, or inventory changes.
 - Asset movement is represented by `parentAssetId` updates.

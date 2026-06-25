@@ -40,6 +40,7 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 	if !ok {
 		return asset.Asset{}, apperrors.ErrInvalidInput
 	}
+	now := s.now().UTC()
 
 	parentAssetID := asset.ID("")
 	if strings.TrimSpace(input.ParentAssetID) != "" {
@@ -71,6 +72,8 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 		Description:       asset.NewDescription(input.Description),
 		CustomFields:      customFields,
 		LifecycleState:    asset.LifecycleStateActive,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 
 	undoableOperation, err := s.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetCreated, nil, item)
@@ -187,6 +190,9 @@ func (s Service) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset
 		if updated.ParentAssetID != current.ParentAssetID {
 			parentChanged = true
 		}
+	}
+	if fieldsChanged || parentChanged {
+		updated.UpdatedAt = s.now().UTC()
 	}
 
 	var undoableOperation *ports.UndoableOperation
@@ -381,6 +387,7 @@ func (s Service) updateAssetLifecycle(ctx context.Context, input UpdateAssetLife
 
 	updated := current
 	updated.LifecycleState = to
+	updated.UpdatedAt = s.now().UTC()
 	undoableOperation, err := s.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, action, &current, updated)
 	if err != nil {
 		return asset.Asset{}, err

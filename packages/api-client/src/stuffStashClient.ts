@@ -81,6 +81,7 @@ export interface Inventory {
 export type AssetKind = 'item' | 'container' | 'location';
 export type AssetLifecycleState = 'active' | 'archived';
 export type AssetLifecycleFilter = AssetLifecycleState | 'all';
+export type AssetListSort = 'id_asc' | 'updated_desc';
 
 export interface Asset {
   id: string;
@@ -93,6 +94,8 @@ export interface Asset {
   lifecycleState: AssetLifecycleState;
   customAssetTypeId?: string;
   customFields: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Attachment {
@@ -356,14 +359,15 @@ export class StuffStashClient {
     inventoryId: string,
     limit = 50,
     cursor?: string,
-    lifecycleState: AssetLifecycleFilter = 'active'
+    lifecycleState: AssetLifecycleFilter = 'active',
+    sort: AssetListSort = 'id_asc'
   ): Promise<Page<Asset>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets', {
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId },
-          query: { limit, cursor, lifecycleState }
+          query: { limit, cursor, lifecycleState, sort: sort === 'id_asc' ? undefined : sort }
         }
       })
     );
@@ -1115,7 +1119,9 @@ function mapAsset(response: AssetResponse): Asset {
     parentAssetId: response.parentAssetId ?? null,
     lifecycleState: mapAssetLifecycleState(response.lifecycleState),
     customAssetTypeId: response.customAssetTypeId,
-    customFields: response.customFields ?? {}
+    customFields: response.customFields ?? {},
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt
   };
 }
 
@@ -1134,7 +1140,9 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
       parentAssetId: response.asset.parentAssetId ?? null,
       lifecycleState: mapAssetLifecycleState(response.asset.lifecycleState),
       customAssetTypeId: response.asset.customAssetTypeId,
-      customFields: response.asset.customFields ?? {}
+      customFields: response.asset.customFields ?? {},
+      createdAt: response.asset.createdAt,
+      updatedAt: response.asset.updatedAt
     },
     matches: response.matches ?? []
   };

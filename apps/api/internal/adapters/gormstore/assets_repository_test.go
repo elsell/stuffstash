@@ -10,6 +10,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
+	"time"
 )
 
 func TestStorePersistsAssetsAndLocationParents(t *testing.T) {
@@ -246,6 +247,62 @@ func TestStorePaginatesAssetsAndRejectsDuplicateCreate(t *testing.T) {
 	}
 	if err := createAsset(t, ctx, store, first); err == nil {
 		t.Fatalf("expected duplicate asset create to fail")
+	}
+}
+
+func TestStoreListsAssetsByUpdatedDescending(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	firstUpdatedAt := time.Date(2026, 6, 21, 10, 0, 0, 0, time.UTC)
+	secondUpdatedAt := time.Date(2026, 6, 22, 10, 0, 0, 0, time.UTC)
+	tieUpdatedAt := time.Date(2026, 6, 23, 10, 0, 0, 0, time.UTC)
+	oldest := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	oldest.CreatedAt = firstUpdatedAt
+	oldest.UpdatedAt = firstUpdatedAt
+	middle := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	middle.CreatedAt = secondUpdatedAt
+	middle.UpdatedAt = secondUpdatedAt
+	tieLowID := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	tieLowID.CreatedAt = tieUpdatedAt
+	tieLowID.UpdatedAt = tieUpdatedAt
+	tieHighID := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	tieHighID.CreatedAt = tieUpdatedAt
+	tieHighID.UpdatedAt = tieUpdatedAt
+	for _, item := range []asset.Asset{oldest, middle, tieLowID, tieHighID} {
+		if err := createAsset(t, ctx, store, item); err != nil {
+			t.Fatalf("create asset %s: %v", item.ID, err)
+		}
+	}
+
+	firstPage, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{
+		Limit:           2,
+		LifecycleFilter: ports.AssetLifecycleFilterAll,
+		Sort:            ports.AssetListSortUpdatedDesc,
+	})
+	if err != nil {
+		t.Fatalf("list first updated-desc page: %v", err)
+	}
+	if len(firstPage) != 2 || firstPage[0].ID != tieHighID.ID || firstPage[1].ID != tieLowID.ID {
+		t.Fatalf("expected timestamp tie to sort by descending id, got %+v", firstPage)
+	}
+
+	nextPage, err := store.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{
+		AfterAssetID:    firstPage[1].ID,
+		AfterUpdatedAt:  firstPage[1].UpdatedAt,
+		Limit:           2,
+		LifecycleFilter: ports.AssetLifecycleFilterAll,
+		Sort:            ports.AssetListSortUpdatedDesc,
+	})
+	if err != nil {
+		t.Fatalf("list second updated-desc page: %v", err)
+	}
+	if len(nextPage) != 2 || nextPage[0].ID != middle.ID || nextPage[1].ID != oldest.ID {
+		t.Fatalf("expected cursor to continue updated-desc order, got %+v", nextPage)
 	}
 }
 

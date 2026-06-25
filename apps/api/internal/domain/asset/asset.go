@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"strings"
+	"time"
 )
 
 type ID string
@@ -195,4 +196,6 @@ type Asset struct {
 	Description       Description
 	CustomFields      CustomFields
 	LifecycleState    LifecycleState
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
