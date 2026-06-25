@@ -61,6 +61,12 @@ Realtime sessions may persist durable metadata needed for audit, debugging, time
 
 Action plans created during a realtime session must be stored through the action plan persistence boundary and linked to the session by ID. Approval of a plan must still authorize and execute commands at execution time.
 
+## Initial Transport Dependency
+
+The first Go realtime WebSocket adapter uses `nhooyr.io/websocket v1.8.17`.
+
+The dependency is allowed because the Go standard library does not include a WebSocket implementation, realtime voice requires actual WebSocket upgrade behavior at the HTTP boundary, and tests must exercise that real boundary. The adapter must keep `nhooyr.io/websocket` types inside the HTTP adapter package. Application services, domain code, provider ports, mobile application services, and tests outside the transport adapter must use project-owned message and session types.
+
 ## Provider Interfaces
 
 - Speech-to-text, language inference, and text-to-speech must be separate ports.

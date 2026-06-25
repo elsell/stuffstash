@@ -34,6 +34,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo Linking for Expo Router: `expo-linking 55.0.15`.
 - Expo Constants for Expo Router: `expo-constants 55.0.16`.
 - Expo Image Picker for mobile create-form photo selection: `expo-image-picker 55.0.20`.
+- React Native Image Viewing for mobile draft photo preview carousel: `react-native-image-viewing 0.2.2`.
 - React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
 - React Native Worklets for Expo SDK 55 Reanimated: `react-native-worklets 0.7.4`.
 - React Navigation native runtime transitive dependency for Expo Router: `@react-navigation/native 7.2.6`.
@@ -92,6 +93,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - pgx Postgres driver: `github.com/jackc/pgx/v5 v5.6.0`.
 - golang-migrate: `github.com/golang-migrate/migrate/v4 v4.19.1`.
 - MinIO Go S3-compatible client: `github.com/minio/minio-go/v7 v7.2.0`.
+- WebSocket transport for API-mediated realtime voice: `nhooyr.io/websocket v1.8.17`.
 
 ## Pinned Container Images
 

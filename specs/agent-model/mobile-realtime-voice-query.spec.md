@@ -125,18 +125,68 @@ The server must reject the session before audio streaming begins when:
 - The requested audio format is unsupported.
 - The server is unable to enforce timeout, cancellation, or safe observability behavior.
 
+## First Wire Protocol
+
+The first realtime voice wire protocol uses WebSocket over HTTPS or HTTP in local development.
+
+The WebSocket path is:
+
+- `/v1/realtime/voice`
+
+The client authenticates with the same bearer token header used by REST:
+
+- `Authorization: Bearer <token>`
+
+The first implementation uses text WebSocket frames containing JSON messages. Binary frames may be introduced later for lower overhead after the JSON protocol is proven.
+
+Every client and server message contains:
+
+- `type`: stable message type enumeration.
+- `sessionId`: omitted only on `session.start` because the server has not created the session yet.
+- `seq`: monotonic sender sequence number.
+
+Client message fields:
+
+- `session.start`: `seq`, `tenantId`, `inventoryId`, `source`, `requestedCapabilities`, `inputAudio`, `outputAudio`, optional `clientCorrelationId`.
+- `audio.chunk`: `seq`, `sessionId`, `chunkId`, `audioBase64`, `isFinalChunk`.
+- `audio.end`: `seq`, `sessionId`.
+- `session.cancel`: `seq`, `sessionId`, optional safe `reason`.
+- `client.ack`: `seq`, `sessionId`, `ackSeq`.
+
+Server message fields:
+
+- `session.started`: `seq`, `sessionId`, `acceptedInputAudio`, `acceptedOutputAudio`.
+- `session.failed`: `seq`, optional `sessionId`, `code`, safe `message`.
+- `transcript.delta`: `seq`, `sessionId`, `text`.
+- `transcript.final`: `seq`, `sessionId`, `text`.
+- `agent.progress`: `seq`, `sessionId`, `status`, safe `message`.
+- `tool.call.started`: `seq`, `sessionId`, `toolCallId`, `toolLabel`, `status`.
+- `tool.call.completed`: `seq`, `sessionId`, `toolCallId`, `toolLabel`, `status`.
+- `tool.call.failed`: `seq`, `sessionId`, `toolCallId`, `toolLabel`, `code`, safe `message`.
+- `assistant.response.started`: `seq`, `sessionId`, `responseId`.
+- `assistant.response.delta`: reserved and must not be emitted by the first implementation.
+- `assistant.response.completed`: `seq`, `sessionId`, structured final response.
+- `tts.audio.started`: `seq`, `sessionId`, `format`.
+- `tts.audio.chunk`: `seq`, `sessionId`, `chunkId`, `audioBase64`, `isFinalChunk`.
+- `tts.audio.completed`: `seq`, `sessionId`.
+- `session.completed`: `seq`, `sessionId`.
+- `session.cancelled`: `seq`, `sessionId`.
+- `session.failed`: `seq`, `sessionId`, `code`, safe `message`.
+
+The first implementation may use a development provider profile set supplied at API composition time. Tenant-managed provider-profile persistence and UI management remain separate implementation work, but the realtime application service must still depend on project-owned provider ports and must not depend on concrete provider adapters.
+
 ## Client Audio Input
 
-The first mobile implementation must choose one Expo-compatible audio capture format that can be streamed in chunks to the API and consumed by the selected speech-to-text adapter.
+The first mobile implementation records audio through Expo's standard audio recording API and sends the completed recording to the API as one or more `audio.chunk` messages. This preserves the chunked server protocol while acknowledging that the standard Expo audio API records to a local cache file rather than exposing low-latency PCM callbacks to JavaScript.
 
-The exact format remains an implementation choice for the first slice, but it must be specified before coding begins and must include:
+The first accepted input format is:
 
-- Container or raw encoding.
-- Sample rate.
-- Channel count.
-- Chunk duration target.
-- Maximum chunk byte size.
-- End-of-utterance behavior.
+- Container or raw encoding: platform-recorded MPEG-4 AAC (`audio/mp4`) for native mobile; deterministic text fixtures may be used only in tests through fake microphone and speech-to-text adapters.
+- Sample rate: requested 44.1 kHz when the Expo adapter supports specifying it.
+- Channel count: mono.
+- Chunk duration target: mobile should flush chunks of approximately 256 KiB after recording completes; future low-latency adapters may target 100-250 ms chunks.
+- Maximum chunk byte size: 512 KiB before base64 encoding.
+- End-of-utterance behavior: tap-to-stop sends the final audio chunk followed by `audio.end`.
 
 The mobile app must not record audio before the user intentionally starts a voice session.
 
