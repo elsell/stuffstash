@@ -52,6 +52,9 @@ type App struct {
 	maxAttachmentBytes        int
 	assetService              assetapp.Service
 	customFieldService        customfieldapp.Service
+	speechToText              ports.SpeechToTextProvider
+	languageInference         ports.LanguageInferenceProvider
+	textToSpeech              ports.TextToSpeechProvider
 }
 
 type Dependencies struct {
@@ -91,6 +94,9 @@ type Dependencies struct {
 	DefaultPageLimit              int
 	MaxPageLimit                  int
 	MaxAttachmentBytes            int
+	SpeechToText                  ports.SpeechToTextProvider
+	LanguageInference             ports.LanguageInferenceProvider
+	TextToSpeech                  ports.TextToSpeechProvider
 }
 
 func New(deps Dependencies) App {
@@ -141,6 +147,9 @@ func New(deps Dependencies) App {
 		defaultPageLimit:          defaultPageLimit,
 		maxPageLimit:              maxPageLimit,
 		maxAttachmentBytes:        normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
+		speechToText:              deps.SpeechToText,
+		languageInference:         deps.LanguageInference,
+		textToSpeech:              deps.TextToSpeech,
 	}
 	app.assetService = assetapp.New(assetapp.Dependencies{
 		Observer:         app.observer,

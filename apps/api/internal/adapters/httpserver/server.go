@@ -40,6 +40,7 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("GET /healthz", handleHealth(application))
+	mux.HandleFunc("GET "+realtimeVoicePath, handleRealtimeVoice(application))
 
 	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")
 	config.DocsPath = "/docs"
