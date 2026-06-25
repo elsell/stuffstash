@@ -58,7 +58,7 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Expo Dev Launcher uses the local network to discover and connect to development servers running on your computer.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Stuff Stash may use the camera for future item photos.</string>
+	<string>Stuff Stash uses your camera so you can attach household item photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Stuff Stash may use the microphone for future video attachments.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

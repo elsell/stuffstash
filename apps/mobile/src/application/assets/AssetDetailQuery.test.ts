@@ -13,6 +13,36 @@ import type {
 import { AssetDetailQuery } from './AssetDetailQuery';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
+  private readonly inventory: InventorySummary;
+
+  constructor(permissions: InventorySummary['permissions'] = ['view', 'create_asset', 'edit_asset']) {
+    this.inventory = {
+      id: inventoryId('inventory-home'),
+      tenantId: tenantId('tenant-home'),
+      name: 'Home',
+      role: 'editor',
+      permissions,
+      description: 'Home inventory.',
+      updatedAtLabel: 'Updated today',
+      locationCount: 0,
+      locations: [],
+      assets: [
+        {
+          id: assetId('asset-passport'),
+          title: 'Passport folder',
+          kind: 'container',
+          lifecycleState: 'active',
+          locationLabel: 'Office closet',
+          locationTrail: ['Home', 'Office closet', 'Passport folder'],
+          customType: 'Documents',
+          description: 'Travel documents and copies.',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        }
+      ]
+    };
+  }
+
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
       tenants: [{ id: tenantId('tenant-home'), name: 'Home tenant' }],
@@ -43,6 +73,16 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   async addAssetPhoto(): Promise<void> {}
 
+  async archiveAsset(): Promise<void> {}
+
+  async restoreAsset(): Promise<void> {}
+
+  async deleteAsset(): Promise<void> {}
+
+  async browseAssets() {
+    return { assets: [], hasMore: false };
+  }
+
   async searchAssets(): Promise<readonly AssetSummary[]> {
     return [];
   }
@@ -51,31 +91,6 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
     return [];
   }
 
-  private readonly inventory: InventorySummary = {
-    id: inventoryId('inventory-home'),
-    tenantId: tenantId('tenant-home'),
-    name: 'Home',
-    role: 'editor',
-    permissions: ['view', 'create_asset', 'edit_asset'],
-    description: 'Home inventory.',
-    updatedAtLabel: 'Updated today',
-    locationCount: 0,
-    locations: [],
-    assets: [
-      {
-        id: assetId('asset-passport'),
-        title: 'Passport folder',
-        kind: 'container',
-        lifecycleState: 'active',
-        locationLabel: 'Office closet',
-        locationTrail: ['Home', 'Office closet', 'Passport folder'],
-        customType: 'Documents',
-        description: 'Travel documents and copies.',
-        updatedAtLabel: 'Updated today',
-        hasPhoto: false
-      }
-    ]
-  };
 }
 
 describe('AssetDetailQuery', () => {
@@ -90,6 +105,9 @@ describe('AssetDetailQuery', () => {
       description: 'Travel documents and copies.',
       locationTrailLabel: 'Office closet / Passport folder',
       lifecycleLabel: 'Active',
+      canArchive: true,
+      canRestore: false,
+      canDeletePermanently: false,
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
       imagePlaceholderLabel: 'Box'
@@ -102,5 +120,15 @@ describe('AssetDetailQuery', () => {
     await expect(query.execute('asset-missing')).rejects.toThrow(
       'Asset is not available in the selected inventory.'
     );
+  });
+
+  it('does not expose lifecycle controls without edit permission', async () => {
+    const query = new AssetDetailQuery(new FakeInventorySummaryRepository(['view']));
+
+    await expect(query.execute('asset-passport')).resolves.toMatchObject({
+      canArchive: false,
+      canRestore: false,
+      canDeletePermanently: false
+    });
   });
 });

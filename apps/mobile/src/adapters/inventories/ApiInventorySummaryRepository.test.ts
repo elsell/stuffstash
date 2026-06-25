@@ -35,7 +35,7 @@ class FakeInventoryApiClient {
     name: 'Cabin Inventory',
     access: { relationship: 'viewer', permissions: ['view'] }
   };
-  readonly assets: readonly Asset[] = [
+  assets: Asset[] = [
     {
       id: 'asset-garage',
       tenantId: 'tenant-home',
@@ -44,7 +44,10 @@ class FakeInventoryApiClient {
       title: 'Garage',
       description: 'Shelves and bins.',
       parentAssetId: null,
-      lifecycleState: 'active'
+      lifecycleState: 'active',
+      customFields: {},
+      createdAt: '2026-06-20T10:00:00Z',
+      updatedAt: '2026-06-22T10:00:00Z'
     },
     {
       id: 'asset-filters',
@@ -54,9 +57,19 @@ class FakeInventoryApiClient {
       title: 'Furnace filters',
       description: 'Three-pack of filters.',
       parentAssetId: 'asset-garage',
-      lifecycleState: 'active'
+      lifecycleState: 'active',
+      customFields: {},
+      createdAt: '2026-06-21T10:00:00Z',
+      updatedAt: '2026-06-23T10:00:00Z'
     }
   ];
+  listAssetRequests: Array<{
+    readonly inventoryId: string;
+    readonly limit?: number;
+    readonly cursor?: string;
+    readonly lifecycleState?: string;
+    readonly sort?: string;
+  }> = [];
   createdAssetInput:
     | {
         readonly tenantId: string;
@@ -73,6 +86,12 @@ class FakeInventoryApiClient {
         readonly fileName: string;
       }
     | undefined;
+  lifecycleInputs: Array<{
+    readonly action: 'archive' | 'restore' | 'delete';
+    readonly tenantId: string;
+    readonly inventoryId: string;
+    readonly assetId: string;
+  }> = [];
   searchedQuery: string | undefined;
   shouldFailAttachmentLookup = false;
 
@@ -88,12 +107,26 @@ class FakeInventoryApiClient {
     return page([this.inventory]);
   }
 
-  async listAssets(_tenantId: string, inventoryId: string): Promise<Page<Asset>> {
+  async listAssets(
+    _tenantId: string,
+    inventoryId: string,
+    limit = 50,
+    cursor?: string,
+    lifecycleState?: string,
+    sort?: string
+  ): Promise<Page<Asset>> {
+    this.listAssetRequests.push({ inventoryId, limit, cursor, lifecycleState, sort });
     if (inventoryId === this.cabinInventory.id) {
       return page([]);
     }
 
-    return page(this.assets);
+    const sortedAssets = sort === 'updated_desc' ? sortAssetsByUpdatedDesc(this.assets) : this.assets;
+    const start = cursor ? Number.parseInt(cursor, 10) : 0;
+    const items = sortedAssets.slice(start, start + limit);
+    const nextCursor =
+      start + limit < sortedAssets.length ? (start + limit).toString() : null;
+
+    return pageWithCursor(items, nextCursor);
   }
 
   async listAssetAttachments(
@@ -155,7 +188,10 @@ class FakeInventoryApiClient {
       title: input.title,
       description: input.description ?? '',
       parentAssetId: input.parentAssetId ?? null,
-      lifecycleState: 'active'
+      lifecycleState: 'active',
+      customFields: {},
+      createdAt: '2026-06-24T10:00:00Z',
+      updatedAt: '2026-06-24T10:00:00Z'
     };
   }
 
@@ -184,12 +220,95 @@ class FakeInventoryApiClient {
     };
   }
 
-  async searchAssets(tenantId: string, query: string): Promise<Page<AssetSearchResult>> {
+  async archiveAsset(tenantId: string, inventoryId: string, assetIdValue: string): Promise<Asset> {
+    this.lifecycleInputs.push({
+      action: 'archive',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue
+    });
+
+    return lifecycleAsset(this.assets, assetIdValue, 'archived');
+  }
+
+  async restoreAsset(tenantId: string, inventoryId: string, assetIdValue: string): Promise<Asset> {
+    this.lifecycleInputs.push({
+      action: 'restore',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue
+    });
+
+    return lifecycleAsset(this.assets, assetIdValue, 'active');
+  }
+
+  async deleteAsset(tenantId: string, inventoryId: string, assetIdValue: string): Promise<void> {
+    this.lifecycleInputs.push({
+      action: 'delete',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue
+    });
+  }
+
+  async searchAssets(
+    tenantId: string,
+    query: string,
+    options?: { readonly cursor?: string }
+  ): Promise<Page<AssetSearchResult>> {
     this.searchedQuery = `${tenantId}:${query}`;
     const asset = this.assets[1];
 
     if (!asset) {
       return page([]);
+    }
+
+    if (query === 'paged' && options?.cursor === undefined) {
+      return pageWithCursor(
+        [
+          {
+            type: 'asset',
+            tenantId,
+            inventory: {
+              id: 'inventory-other',
+              name: 'Other inventory'
+            },
+            asset: {
+              ...asset,
+              id: 'asset-other-inventory',
+              inventoryId: 'inventory-other',
+              title: 'Other inventory paged result'
+            },
+            matches: []
+          }
+        ],
+        'next-page'
+      );
+    }
+    if (query === 'sixth-page') {
+      const cursorNumber = options?.cursor ? Number.parseInt(options.cursor, 10) : 0;
+      if (cursorNumber < 5) {
+        return pageWithCursor(
+          [
+            {
+              type: 'asset',
+              tenantId,
+              inventory: {
+                id: 'inventory-other',
+                name: 'Other inventory'
+              },
+              asset: {
+                ...asset,
+                id: `asset-other-page-${cursorNumber.toString()}`,
+                inventoryId: 'inventory-other',
+                title: 'Other inventory page result'
+              },
+              matches: []
+            }
+          ],
+          (cursorNumber + 1).toString()
+        );
+      }
     }
 
     return page([
@@ -201,6 +320,21 @@ class FakeInventoryApiClient {
           name: this.inventory.name
         },
         asset,
+        matches: []
+      },
+      {
+        type: 'asset',
+        tenantId,
+        inventory: {
+          id: 'inventory-other',
+          name: 'Other inventory'
+        },
+        asset: {
+          ...asset,
+          id: 'asset-other-inventory',
+          inventoryId: 'inventory-other',
+          title: 'Other inventory filters'
+        },
         matches: []
       }
     ]);
@@ -237,11 +371,6 @@ describe('ApiInventorySummaryRepository', () => {
           ],
           assets: [
             {
-              id: 'asset-garage',
-              locationLabel: 'Inventory root',
-              locationTrail: ['Home Inventory', 'Garage']
-            },
-            {
               id: 'asset-filters',
               locationLabel: 'Garage',
               locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
@@ -249,6 +378,11 @@ describe('ApiInventorySummaryRepository', () => {
               photo: {
                 uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small'
               }
+            },
+            {
+              id: 'asset-garage',
+              locationLabel: 'Inventory root',
+              locationTrail: ['Home Inventory', 'Garage']
             }
           ]
         },
@@ -288,10 +422,161 @@ describe('ApiInventorySummaryRepository', () => {
     await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
       id: 'inventory-home',
       assets: [
-        { id: 'asset-garage', hasPhoto: false },
-        { id: 'asset-filters', hasPhoto: false }
+        { id: 'asset-filters', hasPhoto: false },
+        { id: 'asset-garage', hasPhoto: false }
       ]
     });
+  });
+
+  it('requests API-owned updated-descending asset order for mobile recency', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.getDefaultInventorySummary();
+
+    expect(client.listAssetRequests).toContainEqual({
+      inventoryId: 'inventory-home',
+      limit: 100,
+      cursor: undefined,
+      lifecycleState: 'all',
+      sort: 'updated_desc'
+    });
+  });
+
+  it('preserves API-provided recency order across asset kinds', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-new-batteries',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Fresh batteries',
+        description: 'Just created from the Add sheet.',
+        parentAssetId: 'asset-garage',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-24T11:00:00Z',
+        updatedAt: '2026-06-24T11:00:00Z'
+      },
+      ...client.assets
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-new-batteries',
+          kind: 'item',
+          title: 'Fresh batteries'
+        },
+        {
+          id: 'asset-filters',
+          kind: 'item',
+          title: 'Furnace filters'
+        },
+        {
+          id: 'asset-garage',
+          kind: 'location',
+          title: 'Garage'
+        }
+      ]
+    });
+  });
+
+  it('lists paged selected-inventory assets for browse mode', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(
+      repository.browseAssets({
+        query: '',
+        cursor: undefined,
+        limit: 1,
+        lifecycleState: 'active',
+        kind: 'item',
+        sort: 'updated_desc'
+      })
+    ).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-filters',
+          kind: 'item',
+          title: 'Furnace filters'
+        }
+      ],
+      hasMore: true
+    });
+    expect(client.listAssetRequests).toContainEqual({
+      inventoryId: 'inventory-home',
+      limit: 1,
+      cursor: undefined,
+      lifecycleState: 'active',
+      sort: 'updated_desc'
+    });
+  });
+
+  it('continues list pagination until a kind-filtered browse page has matches', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(
+      repository.browseAssets({
+        query: '',
+        limit: 1,
+        lifecycleState: 'active',
+        kind: 'item',
+        sort: 'id_asc'
+      })
+    ).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-filters',
+          kind: 'item',
+          title: 'Furnace filters'
+        }
+      ],
+      hasMore: false
+    });
+    expect(client.listAssetRequests).toContainEqual({
+      inventoryId: 'inventory-home',
+      limit: 1,
+      cursor: undefined,
+      lifecycleState: 'active',
+      sort: 'id_asc'
+    });
+    expect(client.listAssetRequests).toContainEqual({
+      inventoryId: 'inventory-home',
+      limit: 1,
+      cursor: '1',
+      lifecycleState: 'active',
+      sort: 'id_asc'
+    });
+  });
+
+  it('searches paged selected-inventory assets with lifecycle filtering', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(
+      repository.browseAssets({
+        query: 'filters',
+        cursor: 'next-page',
+        limit: 10,
+        lifecycleState: 'all',
+        kind: 'item',
+        sort: 'updated_desc'
+      })
+    ).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-filters',
+          kind: 'item',
+          title: 'Furnace filters'
+        }
+      ]
+    });
+    expect(client.searchedQuery).toBe('tenant-home:filters');
   });
 
   it('creates and searches assets through the generated client wrapper', async () => {
@@ -335,17 +620,111 @@ describe('ApiInventorySummaryRepository', () => {
         title: 'Furnace filters'
       }
     ]);
+    await expect(repository.searchAssets('filters')).resolves.toHaveLength(1);
     expect(client.searchedQuery).toBe('tenant-home:filters');
+  });
+
+  it('updates asset lifecycle through the generated client wrapper', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.archiveAsset(assetId('asset-filters'));
+    await repository.restoreAsset(assetId('asset-filters'));
+    await repository.deleteAsset(assetId('asset-filters'));
+
+    expect(client.lifecycleInputs).toEqual([
+      {
+        action: 'archive',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-filters'
+      },
+      {
+        action: 'restore',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-filters'
+      },
+      {
+        action: 'delete',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-filters'
+      }
+    ]);
+  });
+
+  it('continues paged tenant search until selected-inventory asset results are found', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.searchAssets('paged')).resolves.toMatchObject([
+      {
+        id: 'asset-filters',
+        title: 'Furnace filters'
+      }
+    ]);
+  });
+
+  it('does not stop selected-inventory search at five tenant search pages', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.searchAssets('sixth-page')).resolves.toMatchObject([
+      {
+        id: 'asset-filters',
+        title: 'Furnace filters'
+      }
+    ]);
   });
 });
 
 function page<T>(items: readonly T[]): Page<T> {
+  return pageWithCursor(items, null);
+}
+
+function pageWithCursor<T>(items: readonly T[], nextCursor: string | null): Page<T> {
   return {
     items: [...items],
     pagination: {
       limit: items.length,
-      nextCursor: null,
-      hasMore: false
+      nextCursor,
+      hasMore: nextCursor !== null
     }
+  };
+}
+
+function sortAssetsByUpdatedDesc(assets: readonly Asset[]): readonly Asset[] {
+  return [...assets].sort((left, right) => {
+    const rightTime = Date.parse(right.updatedAt || right.createdAt || '');
+    const leftTime = Date.parse(left.updatedAt || left.createdAt || '');
+    const timeComparison = safeTimestamp(rightTime) - safeTimestamp(leftTime);
+
+    if (timeComparison !== 0) {
+      return timeComparison;
+    }
+
+    return right.id.localeCompare(left.id);
+  });
+}
+
+function safeTimestamp(timestamp: number): number {
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function lifecycleAsset(
+  assets: readonly Asset[],
+  assetIdValue: string,
+  lifecycleState: Asset['lifecycleState']
+): Asset {
+  const asset = assets.find((candidate) => candidate.id === assetIdValue);
+
+  if (!asset) {
+    throw new Error('Asset not found.');
+  }
+
+  return {
+    ...asset,
+    lifecycleState
   };
 }

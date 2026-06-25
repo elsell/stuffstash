@@ -7,13 +7,18 @@ export type SelectedAssetPhoto = {
 };
 
 export interface PhotoSelectionProvider {
-  selectPhotos(existingCount: number): Promise<readonly SelectedAssetPhoto[]>;
+  selectFromLibrary(existingCount: number): Promise<readonly SelectedAssetPhoto[]>;
+  captureFromCamera(existingCount: number): Promise<readonly SelectedAssetPhoto[]>;
 }
 
 export class PhotoSelectionQuery {
   constructor(private readonly provider: PhotoSelectionProvider) {}
 
-  async execute(existingCount: number): Promise<readonly SelectedAssetPhoto[]> {
-    return this.provider.selectPhotos(existingCount);
+  async selectFromLibrary(existingCount: number): Promise<readonly SelectedAssetPhoto[]> {
+    return this.provider.selectFromLibrary(existingCount);
+  }
+
+  async captureFromCamera(existingCount: number): Promise<readonly SelectedAssetPhoto[]> {
+    return this.provider.captureFromCamera(existingCount);
   }
 }

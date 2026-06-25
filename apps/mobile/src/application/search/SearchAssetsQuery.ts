@@ -1,32 +1,55 @@
 import {
-  AssetDetailViewModel,
   AssetCardViewModel,
-  toAssetCardViewModel,
-  toAssetDetailViewModel
+  toAssetCardViewModel
 } from '../assets/AssetViewModels';
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type {
+  AssetBrowseKindFilter,
+  AssetBrowseLifecycleFilter,
+  AssetBrowseSort,
+  InventorySummaryRepository
+} from '../home/InventorySummaryRepository';
+
+export type SearchAssetsMode = 'browse' | 'search';
+
+export type SearchAssetsQueryInput = {
+  readonly query: string;
+  readonly cursor?: string;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly kind: AssetBrowseKindFilter;
+  readonly sort: AssetBrowseSort;
+  readonly limit?: number;
+};
 
 export type SearchAssetsViewModel = {
   readonly query: string;
+  readonly mode: SearchAssetsMode;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly kind: AssetBrowseKindFilter;
+  readonly sort: AssetBrowseSort;
   readonly assets: readonly AssetCardViewModel[];
-  readonly assetDetails: readonly AssetDetailViewModel[];
+  readonly nextCursor?: string;
+  readonly hasMore: boolean;
 };
 
 export class SearchAssetsQuery {
   constructor(private readonly inventories: InventorySummaryRepository) {}
 
-  async execute(query: string): Promise<SearchAssetsViewModel> {
-    const trimmed = query.trim();
-    if (trimmed.length === 0) {
-      return { query: trimmed, assets: [], assetDetails: [] };
-    }
-
-    const assets = await this.inventories.searchAssets(trimmed);
+  async execute(input: SearchAssetsQueryInput): Promise<SearchAssetsViewModel> {
+    const trimmed = input.query.trim();
+    const page = await this.inventories.browseAssets({
+      ...input,
+      query: trimmed
+    });
 
     return {
       query: trimmed,
-      assets: assets.map(toAssetCardViewModel),
-      assetDetails: assets.map(toAssetDetailViewModel)
+      mode: trimmed.length > 0 ? 'search' : 'browse',
+      lifecycleState: input.lifecycleState,
+      kind: input.kind,
+      sort: input.sort,
+      assets: page.assets.map(toAssetCardViewModel),
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore
     };
   }
 }

@@ -54,6 +54,16 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
     this.addedPhotos.push({ assetId: assetIdValue, fileName: input.fileName });
   }
 
+  async archiveAsset(): Promise<void> {}
+
+  async restoreAsset(): Promise<void> {}
+
+  async deleteAsset(): Promise<void> {}
+
+  async browseAssets() {
+    return { assets: [], hasMore: false };
+  }
+
   async searchAssets(): Promise<readonly AssetSummary[]> {
     return [];
   }
@@ -144,6 +154,23 @@ describe('CreateAssetCommand', () => {
       id: 'asset-created',
       title: 'Flashlight',
       message: 'Saved Flashlight, but 1 photo upload failed.'
+    });
+  });
+
+  it('creates regular additions as items when the UI does not expose item versus container', async () => {
+    const repository = new FakeInventorySummaryRepository();
+    const command = new CreateAssetCommand(repository);
+
+    await command.execute({
+      title: 'Socket set',
+      description: '',
+      parentAssetId: 'asset-toolbox'
+    });
+
+    expect(repository.createdInput).toMatchObject({
+      kind: 'item',
+      title: 'Socket set',
+      parentAssetId: 'asset-toolbox'
     });
   });
 });

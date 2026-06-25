@@ -3,17 +3,21 @@ import { AddAssetScreen } from '../../ui/screens/AddAssetScreen';
 
 export default function AddRoute() {
   const {
+    addAssetDraftStore,
+    addDraftScopeQuery,
     createAssetCommand,
     homeDashboardQuery,
-    locationLookupQuery,
+    parentLookupQuery,
     photoSelectionQuery
   } = useAppServices();
 
   return (
     <AddAssetScreen
+      addAssetDraftStore={addAssetDraftStore}
+      addDraftScopeQuery={addDraftScopeQuery}
       createAssetCommand={createAssetCommand}
       dashboardQuery={homeDashboardQuery}
-      locationLookupQuery={locationLookupQuery}
+      parentLookupQuery={parentLookupQuery}
       photoSelectionQuery={photoSelectionQuery}
     />
   );

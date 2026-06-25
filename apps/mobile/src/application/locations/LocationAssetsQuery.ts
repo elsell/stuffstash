@@ -42,7 +42,7 @@ export class LocationAssetsQuery {
       locationTitle: location.title,
       inventoryName: inventory.name,
       assets: assets.map(toAssetCardViewModel),
-      assetDetails: assets.map(toAssetDetailViewModel)
+      assetDetails: assets.map((asset) => toAssetDetailViewModel(asset))
     };
   }
 }

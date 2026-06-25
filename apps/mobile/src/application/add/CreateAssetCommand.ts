@@ -2,7 +2,7 @@ import { assetId, type AssetKind } from '../../domain/assets/AssetSummary';
 import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
 
 export type CreateAssetCommandInput = {
-  readonly kind: AssetKind;
+  readonly kind?: AssetKind;
   readonly title: string;
   readonly description: string;
   readonly parentAssetId?: string;
@@ -31,7 +31,7 @@ export class CreateAssetCommand {
     }
 
     const asset = await this.inventories.createAsset({
-      kind: input.kind,
+      kind: input.kind ?? 'item',
       title,
       description: input.description.trim(),
       parentAssetId: input.parentAssetId ? assetId(input.parentAssetId) : undefined

@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   StyleSheet,
   Text,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
 import { AssetDetailView } from '../components/AssetDetailView';
+import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import { colors, spacing } from '../theme/tokens';
 
 type AssetDetailRouteScreenProps = {
   readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly assetId: string;
 };
 
@@ -25,10 +29,12 @@ type ScreenState =
 
 export function AssetDetailRouteScreen({
   assetDetailQuery,
+  assetLifecycleCommand,
   assetId
 }: AssetDetailRouteScreenProps) {
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'archive' | 'restore' | 'delete' | undefined>();
 
   useEffect(() => {
     let isCurrent = true;
@@ -70,6 +76,72 @@ export function AssetDetailRouteScreen({
     }
   }
 
+  function confirmArchive(): void {
+    Alert.alert(
+      'Archive asset?',
+      'Archived assets are hidden from normal inventory work and can be restored later.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Archive',
+          style: 'destructive',
+          onPress: () => {
+            void runLifecycleAction('archive');
+          }
+        }
+      ]
+    );
+  }
+
+  function confirmRestore(): void {
+    Alert.alert('Restore asset?', 'This returns the asset to active inventory work.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Restore',
+        onPress: () => {
+          void runLifecycleAction('restore');
+        }
+      }
+    ]);
+  }
+
+  function confirmDelete(): void {
+    Alert.alert(
+      'Delete permanently?',
+      'This removes the asset permanently. Audit history is preserved.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void runLifecycleAction('delete');
+          }
+        }
+      ]
+    );
+  }
+
+  async function runLifecycleAction(action: 'archive' | 'restore' | 'delete'): Promise<void> {
+    setPendingAction(action);
+
+    try {
+      await assetLifecycleCommand.execute({ action, assetId });
+
+      if (action === 'delete') {
+        navigateAfterDeletedAsset(router);
+        return;
+      }
+
+      const asset = await assetDetailQuery.execute(assetId);
+      setScreenState({ status: 'ready', asset });
+    } catch (error) {
+      Alert.alert('Could not update asset', readableError(error, 'Lifecycle action failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {screenState.status === 'loading' ? <LoadingState /> : null}
@@ -79,6 +151,10 @@ export function AssetDetailRouteScreen({
           <Stack.Screen options={{ title: screenState.asset.title }} />
           <AssetDetailView
             asset={screenState.asset}
+            isLifecycleActionPending={pendingAction !== undefined}
+            onArchive={confirmArchive}
+            onRestore={confirmRestore}
+            onDeletePermanently={confirmDelete}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}

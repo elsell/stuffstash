@@ -13,11 +13,23 @@ import { colors, radius, spacing } from '../theme/tokens';
 
 type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
+  readonly isLifecycleActionPending?: boolean;
   readonly onBack?: () => void;
+  readonly onArchive?: () => void;
+  readonly onRestore?: () => void;
+  readonly onDeletePermanently?: () => void;
   readonly refreshControl?: ReactElement<RefreshControlProps>;
 };
 
-export function AssetDetailView({ asset, onBack, refreshControl }: AssetDetailViewProps) {
+export function AssetDetailView({
+  asset,
+  isLifecycleActionPending = false,
+  onArchive,
+  onBack,
+  onDeletePermanently,
+  onRestore,
+  refreshControl
+}: AssetDetailViewProps) {
   return (
     <ScrollView contentContainerStyle={styles.content} refreshControl={refreshControl}>
       {onBack ? (
@@ -26,12 +38,33 @@ export function AssetDetailView({ asset, onBack, refreshControl }: AssetDetailVi
         </Pressable>
       ) : null}
 
-      <AssetDetailPanel asset={asset} />
+      <AssetDetailPanel
+        asset={asset}
+        isLifecycleActionPending={isLifecycleActionPending}
+        onArchive={onArchive}
+        onDeletePermanently={onDeletePermanently}
+        onRestore={onRestore}
+      />
     </ScrollView>
   );
 }
 
-export function AssetDetailPanel({ asset }: { readonly asset: AssetDetailViewModel }) {
+export function AssetDetailPanel({
+  asset,
+  isLifecycleActionPending = false,
+  onArchive,
+  onDeletePermanently,
+  onRestore
+}: {
+  readonly asset: AssetDetailViewModel;
+  readonly isLifecycleActionPending?: boolean;
+  readonly onArchive?: () => void;
+  readonly onRestore?: () => void;
+  readonly onDeletePermanently?: () => void;
+}) {
+  const showLifecycleActions =
+    asset.canArchive || asset.canRestore || asset.canDeletePermanently;
+
   return (
     <View style={styles.stack}>
       <View style={styles.photoHero}>
@@ -60,6 +93,60 @@ export function AssetDetailPanel({ asset }: { readonly asset: AssetDetailViewMod
           <MetadataRow label="Status" value={asset.lifecycleLabel} />
           <MetadataRow label="Updated" value={asset.updatedAtLabel} />
         </View>
+
+        {showLifecycleActions ? (
+          <View style={styles.lifecycleActions}>
+            {asset.canArchive ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLifecycleActionPending || !onArchive }}
+                disabled={isLifecycleActionPending || !onArchive}
+                onPress={onArchive}
+                style={[
+                  styles.lifecycleAction,
+                  styles.archiveAction,
+                  isLifecycleActionPending || !onArchive ? styles.disabledAction : null
+                ]}
+              >
+                <Text style={styles.archiveActionText}>Archive</Text>
+              </Pressable>
+            ) : null}
+            {asset.canRestore ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLifecycleActionPending || !onRestore }}
+                disabled={isLifecycleActionPending || !onRestore}
+                onPress={onRestore}
+                style={[
+                  styles.lifecycleAction,
+                  styles.restoreAction,
+                  isLifecycleActionPending || !onRestore ? styles.disabledAction : null
+                ]}
+              >
+                <Text style={styles.restoreActionText}>Restore</Text>
+              </Pressable>
+            ) : null}
+            {asset.canDeletePermanently ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{
+                  disabled: isLifecycleActionPending || !onDeletePermanently
+                }}
+                disabled={isLifecycleActionPending || !onDeletePermanently}
+                onPress={onDeletePermanently}
+                style={[
+                  styles.lifecycleAction,
+                  styles.deleteAction,
+                  isLifecycleActionPending || !onDeletePermanently
+                    ? styles.disabledAction
+                    : null
+                ]}
+              >
+                <Text style={styles.deleteActionText}>Delete permanently</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={styles.actionRow}>
           <Pressable
@@ -226,6 +313,50 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
     paddingTop: spacing.md
+  },
+  lifecycleActions: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    paddingTop: spacing.md
+  },
+  lifecycleAction: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.md
+  },
+  archiveAction: {
+    backgroundColor: colors.warningSurface,
+    borderColor: colors.warning,
+    borderWidth: 1
+  },
+  archiveActionText: {
+    color: colors.warning,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0
+  },
+  restoreAction: {
+    backgroundColor: colors.action
+  },
+  restoreActionText: {
+    color: colors.onAction,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0
+  },
+  deleteAction: {
+    borderColor: colors.danger,
+    borderWidth: 1
+  },
+  deleteActionText: {
+    color: colors.danger,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0
   },
   primaryAction: {
     alignItems: 'center',

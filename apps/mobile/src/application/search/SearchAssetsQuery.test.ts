@@ -6,6 +6,8 @@ import {
   tenantId
 } from '../../domain/inventories/InventorySummary';
 import type {
+  AssetBrowsePage,
+  AssetBrowsePageInput,
   CreateInventoryAssetInput,
   InventorySummaryRepository,
   InventoryWorkspace
@@ -13,9 +15,9 @@ import type {
 import { SearchAssetsQuery } from './SearchAssetsQuery';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
-  searchedQuery: string | undefined;
+  browseInputs: AssetBrowsePageInput[] = [];
 
-  constructor(private readonly results: readonly AssetSummary[]) {}
+  constructor(private readonly pages: readonly AssetBrowsePage[]) {}
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
@@ -32,24 +34,24 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
   async selectInventory(): Promise<void> {}
 
   async createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary> {
-    return {
-      id: assetId('created-asset'),
-      title: input.title,
-      kind: input.kind,
-      lifecycleState: 'active',
-      locationLabel: 'Inventory root',
-      locationTrail: ['Home', input.title],
-      description: input.description,
-      updatedAtLabel: 'Updated now',
-      hasPhoto: false
-    };
+    return asset('created-asset', input.title, input.kind, 'Inventory root');
   }
 
   async addAssetPhoto(): Promise<void> {}
 
-  async searchAssets(query: string): Promise<readonly AssetSummary[]> {
-    this.searchedQuery = query;
-    return this.results;
+  async archiveAsset(): Promise<void> {}
+
+  async restoreAsset(): Promise<void> {}
+
+  async deleteAsset(): Promise<void> {}
+
+  async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
+    this.browseInputs.push(input);
+    return this.pages[this.browseInputs.length - 1] ?? { assets: [], hasMore: false };
+  }
+
+  async searchAssets(): Promise<readonly AssetSummary[]> {
+    return [];
   }
 
   async searchLocations() {
@@ -71,65 +73,102 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 }
 
 describe('SearchAssetsQuery', () => {
-  it('searches assets through the repository and maps result rows', async () => {
+  it('loads a filtered browse page and maps asset cards', async () => {
     const repository = new FakeInventorySummaryRepository([
       {
-        id: assetId('asset-passport'),
-        title: 'Passport folder',
-        kind: 'container',
-        lifecycleState: 'active',
-        locationLabel: 'Office closet',
-        locationTrail: ['Home', 'Office closet', 'Passport folder'],
-        customType: 'Documents',
-        description: 'Travel documents and copies.',
-        updatedAtLabel: 'Updated today',
-        hasPhoto: false
+        assets: [asset('asset-passport', 'Passport folder', 'container', 'Office closet')],
+        nextCursor: 'next-page',
+        hasMore: true
       }
     ]);
     const query = new SearchAssetsQuery(repository);
 
-    await expect(query.execute(' passport ')).resolves.toEqual({
-      query: 'passport',
+    await expect(
+      query.execute({
+        query: '',
+        lifecycleState: 'active',
+        kind: 'container',
+        sort: 'updated_desc',
+        limit: 20
+      })
+    ).resolves.toMatchObject({
+      query: '',
+      mode: 'browse',
+      nextCursor: 'next-page',
+      hasMore: true,
       assets: [
         {
           id: 'asset-passport',
           title: 'Passport folder',
           kindLabel: 'Container',
-          customTypeLabel: 'Documents',
-          description: 'Travel documents and copies.',
-          locationTrailLabel: 'Office closet / Passport folder',
-          updatedAtLabel: 'Updated today',
-          photoLabel: 'Needs photo',
-          imagePlaceholderLabel: 'Box'
-        }
-      ],
-      assetDetails: [
-        {
-          id: 'asset-passport',
-          title: 'Passport folder',
-          kindLabel: 'Container',
-          customTypeLabel: 'Documents',
-          description: 'Travel documents and copies.',
-          locationTrailLabel: 'Office closet / Passport folder',
-          lifecycleLabel: 'Active',
-          updatedAtLabel: 'Updated today',
-          photoLabel: 'Needs photo',
-          imagePlaceholderLabel: 'Box'
+          locationTrailLabel: 'Office closet / Passport folder'
         }
       ]
     });
-    expect(repository.searchedQuery).toBe('passport');
+    expect(repository.browseInputs).toEqual([
+      {
+        query: '',
+        lifecycleState: 'active',
+        kind: 'container',
+        sort: 'updated_desc',
+        limit: 20
+      }
+    ]);
   });
 
-  it('returns no rows without calling the repository for an empty query', async () => {
-    const repository = new FakeInventorySummaryRepository([]);
+  it('passes query, cursor, lifecycle, and kind filters for paged search', async () => {
+    const repository = new FakeInventorySummaryRepository([
+      {
+        assets: [asset('asset-ibuprofen', 'Ibuprofen', 'item', 'Medicine Bin')],
+        hasMore: false
+      }
+    ]);
     const query = new SearchAssetsQuery(repository);
 
-    await expect(query.execute('   ')).resolves.toEqual({
-      query: '',
-      assets: [],
-      assetDetails: []
+    await expect(
+      query.execute({
+        query: ' ibu ',
+        cursor: 'cursor-1',
+        lifecycleState: 'all',
+        kind: 'item',
+        sort: 'id_asc',
+        limit: 10
+      })
+    ).resolves.toMatchObject({
+      query: 'ibu',
+      mode: 'search',
+      hasMore: false,
+      assets: [{ id: 'asset-ibuprofen', title: 'Ibuprofen', kindLabel: 'Item' }]
     });
-    expect(repository.searchedQuery).toBeUndefined();
+    expect(repository.browseInputs).toEqual([
+      {
+        query: 'ibu',
+        cursor: 'cursor-1',
+        lifecycleState: 'all',
+        kind: 'item',
+        sort: 'id_asc',
+        limit: 10
+      }
+    ]);
   });
 });
+
+function asset(
+  id: string,
+  title: string,
+  kind: AssetSummary['kind'],
+  locationLabel: string
+): AssetSummary {
+  return {
+    id: assetId(id),
+    title,
+    kind,
+    lifecycleState: 'active',
+    locationLabel,
+    locationTrail: ['Home', locationLabel, title],
+    customType: kind === 'container' ? 'Documents' : undefined,
+    description: `${title} description.`,
+    updatedAtLabel: 'Updated today',
+    hasPhoto: false
+  };
+}

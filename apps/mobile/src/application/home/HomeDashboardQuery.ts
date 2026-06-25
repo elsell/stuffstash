@@ -33,6 +33,7 @@ export type HomeDashboardLocationViewModel = {
 };
 
 export type HomeDashboardViewModel = {
+  readonly tenantId: string;
   readonly tenantName: string;
   readonly inventoryId: string;
   readonly inventoryName: string;
@@ -66,6 +67,7 @@ export class HomeDashboardQuery {
     const overview = createInventoryOverview(tenant, inventory, workspace.inventories);
 
     return {
+      tenantId: tenant.id,
       tenantName: overview.tenantName,
       inventoryId: inventory.id,
       inventoryName: overview.inventoryName,

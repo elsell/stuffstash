@@ -6,6 +6,7 @@ import {
 import type {
   AssetId,
   AssetKind,
+  AssetLifecycleState,
   AssetSummary
 } from '../../domain/assets/AssetSummary';
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
@@ -22,9 +23,34 @@ export interface InventorySummaryRepository {
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   addAssetPhoto(assetId: AssetId, input: CreateInventoryAssetPhotoInput): Promise<void>;
+  archiveAsset(assetId: AssetId): Promise<void>;
+  restoreAsset(assetId: AssetId): Promise<void>;
+  deleteAsset(assetId: AssetId): Promise<void>;
+  browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage>;
   searchAssets(query: string): Promise<readonly AssetSummary[]>;
   searchLocations(query: string): Promise<readonly LocationSummary[]>;
 }
+
+export type AssetBrowseLifecycleFilter = AssetLifecycleState | 'all';
+
+export type AssetBrowseKindFilter = AssetKind | 'all';
+
+export type AssetBrowseSort = 'updated_desc' | 'id_asc';
+
+export type AssetBrowsePageInput = {
+  readonly query: string;
+  readonly cursor?: string;
+  readonly limit?: number;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly kind: AssetBrowseKindFilter;
+  readonly sort: AssetBrowseSort;
+};
+
+export type AssetBrowsePage = {
+  readonly assets: readonly AssetSummary[];
+  readonly nextCursor?: string;
+  readonly hasMore: boolean;
+};
 
 export type CreateInventoryAssetInput = {
   readonly kind: AssetKind;

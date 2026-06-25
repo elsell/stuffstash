@@ -1,11 +1,14 @@
 import type {
   Asset,
   AssetPhotoReference,
+  AssetSearchResult,
   Inventory,
   StuffStashClient,
   Tenant
 } from '@stuff-stash/api-client';
 import {
+  AssetBrowsePage,
+  AssetBrowsePageInput,
   CreateInventoryAssetInput,
   CreateInventoryAssetPhotoInput,
   InventorySummaryRepository,
@@ -27,11 +30,16 @@ type InventoryApiClient = Pick<
   | 'listInventories'
   | 'listAssets'
   | 'createAsset'
+  | 'archiveAsset'
+  | 'restoreAsset'
+  | 'deleteAsset'
   | 'createAssetAttachment'
   | 'searchAssets'
   | 'listAssetAttachments'
   | 'assetAttachmentThumbnailReference'
 >;
+
+const inventoryAssetPageSize = 100;
 
 export class ApiInventorySummaryRepository implements InventorySummaryRepository {
   private selectedInventoryId: InventoryId | undefined;
@@ -123,6 +131,39 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     });
   }
 
+  async archiveAsset(assetIdValue: AssetSummary['id']): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.archiveAsset(inventory.tenantId, inventory.id, assetIdValue);
+  }
+
+  async restoreAsset(assetIdValue: AssetSummary['id']): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.restoreAsset(inventory.tenantId, inventory.id, assetIdValue);
+  }
+
+  async deleteAsset(assetIdValue: AssetSummary['id']): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.deleteAsset(inventory.tenantId, inventory.id, assetIdValue);
+  }
+
+  async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
+    const workspace = await this.getInventoryWorkspace();
+    const inventory =
+      workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
+      workspace.inventories[0];
+
+    if (!inventory) {
+      throw new Error('API workspace did not include an inventory.');
+    }
+
+    const knownAssets = inventory.assets.map((item) =>
+      summaryToApiAsset(inventory.tenantId, inventory.id, item)
+    );
+    return input.query.trim().length > 0
+      ? await this.searchInventoryAssetPage(inventory, input, knownAssets)
+      : await this.listInventoryAssetPage(inventory, input, knownAssets);
+  }
+
   async searchAssets(query: string): Promise<readonly AssetSummary[]> {
     const workspace = await this.getInventoryWorkspace();
     const inventory =
@@ -133,12 +174,12 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       throw new Error('API workspace did not include an inventory.');
     }
 
-    const page = await this.client.searchAssets(inventory.tenantId, query, 50);
+    const page = await this.searchSelectedInventoryAssets(inventory.tenantId, inventory.id, query, 50);
     const siblings = inventory.assets.map((item) =>
       summaryToApiAsset(inventory.tenantId, inventory.id, item)
     );
     return Promise.all(
-      page.items.map((item) => this.mapAssetWithPhoto(inventory.name, item.asset, siblings))
+      page.map((item) => this.mapAssetWithPhoto(inventory.name, item.asset, siblings))
     );
   }
 
@@ -152,7 +193,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       throw new Error('API workspace did not include an inventory.');
     }
 
-    const page = await this.client.searchAssets(inventory.tenantId, query, 50);
+    const page = await this.client.searchAssets(inventory.tenantId, query, { limit: 50 });
     const locationAssets = page.items
       .filter((item) => item.inventory.id === inventory.id && item.asset.kind === 'location')
       .map((item) => item.asset);
@@ -171,8 +212,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     tenant: Tenant,
     inventory: Inventory
   ): Promise<InventorySummary> {
-    const assetsPage = await this.client.listAssets(tenant.id, inventory.id, 100, undefined, 'all');
-    const assets = assetsPage.items;
+    const assets = await this.listRecentInventoryAssets(tenant.id, inventory.id);
     const locations = await Promise.all(
       assets
         .filter((asset) => asset.kind === 'location')
@@ -195,6 +235,21 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       locations,
       assets: mappedAssets
     };
+  }
+
+  private async listRecentInventoryAssets(
+    tenantID: string,
+    inventoryID: string
+  ): Promise<readonly Asset[]> {
+    const page = await this.client.listAssets(
+      tenantID,
+      inventoryID,
+      inventoryAssetPageSize,
+      undefined,
+      'all',
+      'updated_desc'
+    );
+    return page.items;
   }
 
   private async mapAssetWithPhoto(
@@ -230,6 +285,107 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       asset.id,
       attachment.id
     );
+  }
+
+  private async searchSelectedInventoryAssets(
+    tenantID: string,
+    inventoryID: string,
+    query: string,
+    desiredMatches: number
+  ) {
+    const matches: AssetSearchResult[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const page = await this.client.searchAssets(tenantID, query, {
+        limit: 50,
+        cursor
+      });
+      matches.push(...page.items.filter((item) => item.inventory.id === inventoryID));
+      cursor = page.pagination.nextCursor ?? undefined;
+    } while (matches.length < desiredMatches && cursor);
+
+    return matches.slice(0, desiredMatches);
+  }
+
+  private async listInventoryAssetPage(
+    inventory: InventorySummary,
+    input: AssetBrowsePageInput,
+    knownAssets: readonly Asset[]
+  ): Promise<AssetBrowsePage> {
+    const desiredMatches = input.limit ?? 20;
+    const selectedAssets: Asset[] = [];
+    let cursor = input.cursor;
+    let nextCursor: string | undefined;
+    let hasMore = false;
+
+    do {
+      const pageSize = desiredMatches - selectedAssets.length;
+      const page = await this.client.listAssets(
+        inventory.tenantId,
+        inventory.id,
+        pageSize,
+        cursor,
+        input.lifecycleState,
+        input.sort
+      );
+      selectedAssets.push(...filterAssetsByKind(page.items, input.kind));
+      nextCursor = page.pagination.nextCursor ?? undefined;
+      hasMore = page.pagination.hasMore;
+      cursor = nextCursor;
+    } while (selectedAssets.length < desiredMatches && hasMore);
+
+    const assets = await Promise.all(
+      selectedAssets
+        .slice(0, desiredMatches)
+        .map((asset) => this.mapAssetWithPhoto(inventory.name, asset, knownAssets))
+    );
+
+    return {
+      assets,
+      nextCursor,
+      hasMore
+    };
+  }
+
+  private async searchInventoryAssetPage(
+    inventory: InventorySummary,
+    input: AssetBrowsePageInput,
+    knownAssets: readonly Asset[]
+  ): Promise<AssetBrowsePage> {
+    const desiredMatches = input.limit ?? 20;
+    const selectedAssets: Asset[] = [];
+    let cursor = input.cursor;
+    let nextCursor: string | undefined;
+    let hasMore = false;
+
+    do {
+      const pageSize = desiredMatches - selectedAssets.length;
+      const page = await this.client.searchAssets(inventory.tenantId, input.query, {
+        limit: pageSize,
+        cursor,
+        lifecycleState: input.lifecycleState
+      });
+      const inventoryAssets = page.items
+        .filter((item) => item.inventory.id === inventory.id)
+        .map((item) => item.asset);
+      selectedAssets.push(...filterAssetsByKind(inventoryAssets, input.kind));
+      nextCursor = page.pagination.nextCursor ?? undefined;
+      hasMore = page.pagination.hasMore;
+      cursor = nextCursor;
+    } while (selectedAssets.length < desiredMatches && hasMore);
+
+    const assets = await Promise.all(
+      selectedAssets
+        .slice(0, desiredMatches)
+        .map((asset) => this.mapAssetWithPhoto(inventory.name, asset, knownAssets))
+    );
+
+    return {
+      assets,
+      nextCursor,
+      hasMore
+    };
   }
 }
 
@@ -270,6 +426,17 @@ function mapLocation(
   };
 }
 
+function filterAssetsByKind(
+  assets: readonly Asset[],
+  kind: AssetBrowsePageInput['kind']
+): readonly Asset[] {
+  if (kind === 'all') {
+    return assets;
+  }
+
+  return assets.filter((asset) => asset.kind === kind);
+}
+
 function mapAsset(
   inventoryName: string,
   asset: Asset,
@@ -288,7 +455,7 @@ function mapAsset(
     locationLabel: parent?.title ?? 'Inventory root',
     locationTrail: [inventoryName, parent?.title, asset.title].filter(isString),
     description: asset.description,
-    updatedAtLabel: 'Loaded from API',
+    updatedAtLabel: updatedAtLabel(asset),
     hasPhoto: photo !== undefined,
     photo
   };
@@ -296,6 +463,22 @@ function mapAsset(
 
 function isString(value: string | undefined): value is string {
   return typeof value === 'string' && value.length > 0;
+}
+
+function updatedAtLabel(asset: Asset): string {
+  const timestamp = asset.updatedAt || asset.createdAt;
+  if (!timestamp) {
+    return 'Loaded from API';
+  }
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return 'Loaded from API';
+  }
+  return `Updated ${date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })}`;
 }
 
 function summaryToApiAsset(
@@ -311,6 +494,9 @@ function summaryToApiAsset(
     title: asset.title,
     description: asset.description,
     parentAssetId: null,
-    lifecycleState: asset.lifecycleState
+    lifecycleState: asset.lifecycleState,
+    customFields: {},
+    createdAt: '',
+    updatedAt: ''
   };
 }

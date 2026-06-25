@@ -24,6 +24,9 @@ export type AssetDetailViewModel = {
   readonly description: string;
   readonly locationTrailLabel: string;
   readonly lifecycleLabel: string;
+  readonly canArchive: boolean;
+  readonly canRestore: boolean;
+  readonly canDeletePermanently: boolean;
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
   readonly imagePlaceholderLabel: string;
@@ -48,10 +51,18 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
   };
 }
 
-export function toAssetDetailViewModel(asset: AssetSummary): AssetDetailViewModel {
+export function toAssetDetailViewModel(
+  asset: AssetSummary,
+  options: { readonly canManageLifecycle?: boolean } = {}
+): AssetDetailViewModel {
+  const canManageLifecycle = options.canManageLifecycle ?? true;
+
   return {
     ...toAssetCardViewModel(asset),
-    lifecycleLabel: asset.lifecycleState === 'active' ? 'Active' : 'Archived'
+    lifecycleLabel: asset.lifecycleState === 'active' ? 'Active' : 'Archived',
+    canArchive: canManageLifecycle && asset.lifecycleState === 'active',
+    canRestore: canManageLifecycle && asset.lifecycleState === 'archived',
+    canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived'
   };
 }
 

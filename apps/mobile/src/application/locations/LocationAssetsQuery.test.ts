@@ -43,6 +43,16 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   async addAssetPhoto(): Promise<void> {}
 
+  async archiveAsset(): Promise<void> {}
+
+  async restoreAsset(): Promise<void> {}
+
+  async deleteAsset(): Promise<void> {}
+
+  async browseAssets() {
+    return { assets: [], hasMore: false };
+  }
+
   async searchAssets(): Promise<readonly AssetSummary[]> {
     return [];
   }
@@ -128,6 +138,9 @@ describe('LocationAssetsQuery', () => {
           description: 'MERV 11 three-pack.',
           locationTrailLabel: 'Garage / Furnace filters',
           lifecycleLabel: 'Active',
+          canArchive: true,
+          canRestore: false,
+          canDeletePermanently: false,
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           imagePlaceholderLabel: 'Item'

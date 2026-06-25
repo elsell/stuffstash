@@ -13,7 +13,7 @@ module.exports = {
         'expo-image-picker',
         {
           photosPermission: 'Stuff Stash uses your photo library so you can attach household item photos.',
-          cameraPermission: 'Stuff Stash may use the camera for future item photos.',
+          cameraPermission: 'Stuff Stash uses your camera so you can attach household item photos.',
           microphonePermission: 'Stuff Stash may use the microphone for future video attachments.'
         }
       ]
@@ -24,7 +24,7 @@ module.exports = {
       infoPlist: {
         NSPhotoLibraryUsageDescription:
           'Stuff Stash uses your photo library so you can attach household item photos.',
-        NSCameraUsageDescription: 'Stuff Stash may use the camera for future item photos.',
+        NSCameraUsageDescription: 'Stuff Stash uses your camera so you can attach household item photos.',
         NSMicrophoneUsageDescription:
           'Stuff Stash may use the microphone for future video attachments.'
       }

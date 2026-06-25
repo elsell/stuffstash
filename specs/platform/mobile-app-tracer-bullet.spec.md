@@ -16,7 +16,7 @@ This spec covers the first mobile application foundation and the first mobile pa
 - A mobile API adapter that consumes the generated `@stuff-stash/api-client` package behind application ports.
 - Local development commands for Expo Go.
 
-This spec does not define camera behavior, functional voice capture, realtime conversational transport, release signing, TestFlight, EAS builds, or production mobile distribution. Those behaviors must be introduced through their own specs before implementation.
+This spec defines camera behavior only for attaching still photos during the Add flow. The first functional realtime voice query slice is specified in `specs/agent-model/mobile-realtime-voice-query.spec.md`. This spec does not define video capture, release signing, TestFlight, EAS builds, or production mobile distribution. Those behaviors must be introduced through their own specs before implementation.
 
 ## Decisions
 
@@ -70,7 +70,8 @@ This spec does not define camera behavior, functional voice capture, realtime co
 - Home must not show dashboard metric tiles. The inventory home workspace is a browse and recency surface, not an analytics dashboard.
 - The Home locations preview must intentionally show only a few top-level locations. The full location browser remains the `Locations` tab.
 - The Home recent-assets ticker must open asset detail routes. Its `See all` action must open a native stack asset list for the selected inventory.
-- Until the API exposes sortable created/updated timestamps in the mobile summary contract, the mobile app may treat the selected inventory asset summary order as the most-recent order and may display the API-provided `updatedAtLabel`.
+- The Home recent-assets ticker must use the API asset recency contract, requesting assets in updated-descending order and deriving labels from API-provided timestamps. Mobile must not infer recency from asset IDs or page through an entire inventory only to sort locally.
+- The Home recent-assets ticker must include all asset kinds in API-provided recency order. After a successful Add flow, switching to Home or pulling to refresh must make the newly created item eligible to appear ahead of older locations and containers.
 - The mobile app may keep Expo Router Native Tabs as the platform-native bottom navigation mechanism, but the on-screen content hierarchy must follow the web candidate's mobile hub layout.
 - Inventory switching in the first mobile slice must operate over the authenticated principal's API-visible tenants and inventories. It must not imply tenant membership management.
 - The configured tenant ID remains a local-development default selection hint only. It must not prevent other API-visible tenants from appearing in the mobile switcher.
@@ -80,16 +81,35 @@ This spec does not define camera behavior, functional voice capture, realtime co
   - Inventory contains locations and assets.
   - Locations are assets with kind `location`.
   - Recently added, full asset lists, and search results open the same asset-detail language.
-  - Add creates one asset in the selected inventory and optional parent location/container.
+  - Add creates one asset in the selected inventory and optional parent asset.
 - The first mobile asset detail view must support selecting an API-backed asset and showing a read-only detail route based on the web asset-detail candidate:
   - A photo-first hero area.
   - Asset kind and optional custom type badges.
   - Title and description.
   - Location, lifecycle state, and updated-at metadata.
-  - Edit and move affordances that are visibly unavailable until state-changing commands are specified.
-- The read-only asset detail view must remain in the mobile UI/application layer. It must not introduce editing commands, move commands, media upload, camera behavior, or archive behavior.
-- Search must call the API search endpoint through the generated API client wrapper and render asset results using the same asset row language as `Recently added`.
-- Search results must render as image-first asset cards and open the same read-only mobile asset detail view as other asset entry points.
+  - Edit and move affordances remain unavailable until editing and movement commands are specified.
+- Mobile asset detail must expose the asset lifecycle controls currently supported by the API for items, containers, and locations:
+  - Active assets show an `Archive` action.
+  - Archived assets show a `Restore` action and a destructive `Delete permanently` action.
+  - Archive, restore, and permanent delete must call the generated API client through mobile application ports and commands. UI code must not call generated DTO clients directly.
+  - Archive, restore, and permanent delete must use native confirmation before mutation.
+  - Archive and restore must refresh the asset detail view from the application query after success so lifecycle state, updated-at labels, and downstream lists converge with API state.
+  - Permanent delete must navigate away from the deleted asset detail after success because the asset is no longer readable.
+  - API validation failures, including attempts to archive or delete assets with active children or restore assets whose parent is archived, must be shown as safe user-facing errors without client-side lifecycle workarounds.
+- The asset detail view remains mobile UI/application-layer behavior. It must not introduce editing commands, move commands, recursive lifecycle changes, media upload from detail, or camera behavior.
+- Search must be a combined browse-and-search asset surface for the selected inventory:
+  - With an empty query it must browse selected-inventory assets through the API asset list endpoint.
+  - With a non-empty query it must call the API search endpoint through the generated API client wrapper.
+  - Activating the Search tab must focus the search field and open the keyboard when platform navigation makes the screen current. Pressing the in-screen Search action must also focus the field so the user can immediately refine the query.
+  - The focused search field must have a visible focus state that is consistent with the Stuff Stash brand tokens.
+  - Search refinement controls must follow native search hierarchy: the search field comes first, lifecycle is the primary scope control, and secondary refinement controls such as type and sort are grouped under a compact refinement area rather than stacked as unrelated button rows.
+  - It must render result rows using the same image-first asset card language as `Recently changed`.
+  - It must lazy-load additional result pages as the user scrolls instead of assuming the first API page contains the whole inventory.
+  - Pull-to-refresh must reload the first page for the current query, filters, and sort.
+  - Browse mode must support lifecycle filtering (`Active`, `Archived`, `All`), kind filtering (`All`, `Items`, `Containers`, `Locations`), and API-backed sorting (`Recently changed`, `Stable`). Alphabetical title sorting must wait until the API exposes that sort contract.
+  - Search mode must support lifecycle and kind filters. Search result order remains API relevance order until the search API exposes explicit sort controls.
+  - Sort controls may remain visible in search mode if clearly disabled or described by compact state language; the client must not fake sorted search by loading every result page locally.
+- Search and browse results must render as image-first asset cards and open the same mobile asset detail view as other asset entry points.
 - Location cards must open a location-scoped asset list for the selected inventory. The first location list may be assembled from the selected inventory asset summary by selecting assets whose current location or immediate parent is the selected location.
 - Location-scoped asset lists must render image-first asset cards and open the same read-only mobile asset detail view as search results.
 - Search result details, location-scoped asset lists, and location asset details must be native stack routes above the native tab shell so iOS owns the standard edge-swipe back gesture.
@@ -99,10 +119,29 @@ This spec does not define camera behavior, functional voice capture, realtime co
 - The selected-inventory asset list must render image-first asset cards and open the same read-only mobile asset detail view as search results and location-scoped lists.
 - The first mobile asset detail view must be reusable across Home recent assets, selected-inventory asset lists, Search results, and Location asset lists. It remains read-only until editing, move, media, and archive commands are specified.
 - Add must call the API create asset endpoint through the generated API client wrapper for base asset fields supported by the current API: kind, title, description, and optional parent asset ID.
-- Add must not fully enumerate every location as the primary location picker. It must provide a typed location field that shows a small set of matching existing locations and keeps `Inventory root` available without turning large inventories into long forms.
-- If the typed location field does not exactly match an existing location, Add must let the user create a minimal location asset with one action, then use that new location as the parent for the asset being created.
-- Add must support selected-photo management before save: add photos from the device library, preview selected photos, remove selected photos, and upload the remaining photos as asset attachments after the asset is created. The first slice may use the existing JSON base64 attachment endpoint and must keep picker/transport details behind application/adapters.
-- Mobile photo selection must declare iOS photo-library usage in the Expo config and generated native project before invoking the native picker. Camera and microphone usage strings may be present only to satisfy the Expo image-picker module's native plist validation; the Add flow must still not expose camera capture, video capture, or microphone behavior until those behaviors are specified.
+- Add is a fallback for moments when voice is not usable and must optimize for low-friction capture over taxonomy-first data entry.
+- Add must not ask users to choose between `item` and `container` before capture. New non-location assets start as items; container behavior is inferred later when another asset is placed inside them. If the current API still requires `kind`, the mobile command may send `item` by default while keeping the UI free of the item/container distinction.
+- Add may still allow explicit location creation because locations remain user-facing places, but location creation must be expressed through parent placement language rather than a top-level required type selector.
+- Add must be photo-first without consuming excessive vertical space. The first interactive region after inventory context must be a compact `Photos` strip whose first square is always an add-photo tile with a plus icon. Tapping the add tile must open the native platform source chooser for camera or photo library. The strip must preview selected photos and support removing photos. Camera and library must not appear as two always-visible sibling buttons in the form.
+- Adding or capturing photos must return to the Add form with the new photos in the strip. It must not automatically open the full-screen preview carousel.
+- Tapping a selected photo in the Add photo strip must open a full-screen preview carousel for the selected draft photos. The preview must support native-feeling swipe navigation across all selected photos, double-tap zoom, pinch zoom, swipe-down dismissal, closing back to the Add form, and removing the current photo from the draft after confirmation.
+- Selected photos must support user-controlled ordering before save. Because draft photos already live in a horizontal strip, the Add form must provide a reorder mode that does not fight normal strip scrolling. The command must upload photos in the user-visible order.
+- Description must be hidden behind a secondary `More details` disclosure by default. Users must be able to add a description when needed, but the base Add path must not require encountering a multiline field.
+- Save must remain reachable at the bottom of the Add sheet without being obscured by the native bottom navigation. Because Add is designed to stay compact, the first implementation should prefer an in-sheet bottom action over an absolute footer that can collide with the tab bar.
+- Add must preserve in-flight draft state for the current app session and selected inventory context. Navigating away from and back to Add must not clear the name, description, selected parent, selected photos, details disclosure, or recently created/selected parent unless the user successfully saves or explicitly clears the draft. Draft state must not bleed across tenants, inventories, principals, or service compositions.
+- Add draft persistence must live behind a mobile application draft-store port supplied by bootstrap composition. UI modules must not use module-level singleton draft maps for preservation.
+- Add must expose an explicit `Clear draft` action inside secondary details/actions so users can intentionally discard in-flight work without making the primary capture path feel destructive or cluttered.
+- After a successful save, Add should keep the most recently created or selected parent preselected for the next asset so batch entry into the same box, shelf, room, or container is low-friction.
+- The parent picker must be labeled with user-facing placement language such as `Put in`, not implementation language such as `Location` or `parent asset ID`.
+- `No parent` must be the label for top-level inventory placement. `Inventory root` must not appear in the Add form.
+- The parent picker must search every searchable asset in the selected inventory, including locations, containers, and items. It must not be restricted to locations.
+- Parent search results must render inside a collapsed select-menu style control rather than as a full always-visible list. Empty-query results should show a bounded set of recent and likely parents from current inventory context only after the control is opened.
+- If a typed parent name has no exact match, Add must show the create-parent affordance directly below the parent input, above `No parent` and all search results, so it is the first available action while the keyboard is open.
+- Creating a missing parent from the Add form must be one action. The first implementation may create it as a `location` until the API supports explicit parent-intent selection, but the UI must make the creation affordance visible before the user finishes typing. After creation, the newly created place must be inserted into the open picker results, selected immediately, and acknowledged inline with a `Place created` state so the user can see what happened.
+- If the user selects an item as the parent, the UI must clearly communicate that Stuff Stash will treat that item as a container for this placement. The first implementation may show a non-blocking inline explanation because the current API does not yet expose an explicit promotion command; future API work must implement actual item-to-container promotion behind application services rather than client-side mutation.
+- The Add form must not fully enumerate every parent candidate in large inventories. Parent candidates must be query-bounded, recent/contextual, and compact.
+- Add must support selected-photo management before save: add photos from the device library, preview selected photos, reorder selected photos, remove selected photos, and upload the remaining photos as asset attachments after the asset is created. The first slice may use the existing JSON base64 attachment endpoint and must keep picker/transport details behind application/adapters.
+- Mobile photo selection must declare iOS photo-library and camera usage in the Expo config and generated native project before invoking native photo or camera capture. The microphone usage string may be present only to satisfy the Expo image-picker module's native plist validation; the Add flow must not expose video capture or microphone behavior until those behaviors are specified.
 - The Add form must provide an iOS keyboard accessory dismissal control for text inputs, including the multiline description field, so the keyboard cannot trap users away from lower sheet controls. Scrolling may also dismiss the keyboard where the platform supports it, but it must not be the only dismissal mechanism.
 - The mobile API adapter must map API effective access metadata into mobile inventory role and capability state at the adapter boundary. It must use inventory `access.relationship` for display labels and inventory `access.permissions` for workflow affordances such as whether Add is reachable. The API remains the authorization authority for every state-changing operation.
 - Local mobile validation datasets may live under `.stuffstash/seed-data/` and `.stuffstash/seed-media/`, must be ignored by Git, and must seed the in-memory API only through public REST endpoints for tenants, inventories, assets, and attachments.

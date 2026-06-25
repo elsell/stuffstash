@@ -15,6 +15,8 @@ export class AssetDetailQuery {
       throw new Error('Asset is not available in the selected inventory.');
     }
 
-    return toAssetDetailViewModel(asset);
+    return toAssetDetailViewModel(asset, {
+      canManageLifecycle: inventory.permissions.includes('edit_asset')
+    });
   }
 }

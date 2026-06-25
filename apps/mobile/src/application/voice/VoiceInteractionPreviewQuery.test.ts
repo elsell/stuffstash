@@ -43,6 +43,16 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   async addAssetPhoto(): Promise<void> {}
 
+  async archiveAsset(): Promise<void> {}
+
+  async restoreAsset(): Promise<void> {}
+
+  async deleteAsset(): Promise<void> {}
+
+  async browseAssets() {
+    return { assets: [], hasMore: false };
+  }
+
   async searchAssets(): Promise<readonly AssetSummary[]> {
     return [];
   }

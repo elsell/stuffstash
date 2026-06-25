@@ -50,6 +50,16 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   async addAssetPhoto(): Promise<void> {}
 
+  async archiveAsset(): Promise<void> {}
+
+  async restoreAsset(): Promise<void> {}
+
+  async deleteAsset(): Promise<void> {}
+
+  async browseAssets() {
+    return { assets: [], hasMore: false };
+  }
+
   async searchAssets(): Promise<readonly AssetSummary[]> {
     return [];
   }
@@ -90,6 +100,17 @@ describe('HomeDashboardQuery', () => {
               }
             ],
             assets: [
+              {
+                id: assetId('asset-fresh-batteries'),
+                title: 'Fresh batteries',
+                kind: 'item',
+                lifecycleState: 'active',
+                locationLabel: 'Utility drawer',
+                locationTrail: ['Home', 'Kitchen', 'Utility drawer'],
+                description: 'AA batteries just added from the Add sheet.',
+                updatedAtLabel: 'Updated just now',
+                hasPhoto: false
+              },
               {
                 id: assetId('asset-kitchen'),
                 title: 'Kitchen',
@@ -144,6 +165,7 @@ describe('HomeDashboardQuery', () => {
     const dashboard = await query.execute();
 
     expect(dashboard.tenantName).toBe('Ksell Household');
+    expect(dashboard.tenantId).toBe('tenant-home');
     expect(dashboard.inventoryId).toBe('inventory-home');
     expect(dashboard.inventoryName).toBe('Home');
     expect(dashboard.canAdd).toBe(true);
@@ -190,38 +212,49 @@ describe('HomeDashboardQuery', () => {
       }
     ]);
     expect(dashboard.recentAssets).toEqual([
-        {
-          id: 'asset-kitchen',
-          title: 'Kitchen',
-          kindLabel: 'Location',
-          customTypeLabel: undefined,
-          description: 'Main household location.',
-          locationTrailLabel: 'Home',
-          updatedAtLabel: 'Updated today',
-          photoLabel: 'Photo ready',
-          imagePlaceholderLabel: 'Place'
-        },
-        {
-          id: 'asset-camera-bag',
-          title: 'Camera bag',
-          kindLabel: 'Container',
-          customTypeLabel: undefined,
-          description: 'Camera kit and accessories.',
-          locationTrailLabel: 'Hall closet',
-          updatedAtLabel: 'Updated yesterday',
-          photoLabel: 'Needs photo',
-          imagePlaceholderLabel: 'Box'
-        },
-        {
-          id: 'asset-old-router',
-          title: 'Old router',
-          kindLabel: 'Item',
-          customTypeLabel: undefined,
-          description: 'Retired network hardware.',
-          locationTrailLabel: 'Office / Office bin',
-          updatedAtLabel: 'Updated last week',
-          photoLabel: 'Photo ready',
-          imagePlaceholderLabel: 'Item'
+      {
+        id: 'asset-fresh-batteries',
+        title: 'Fresh batteries',
+        kindLabel: 'Item',
+        customTypeLabel: undefined,
+        description: 'AA batteries just added from the Add sheet.',
+        locationTrailLabel: 'Kitchen / Utility drawer',
+        updatedAtLabel: 'Updated just now',
+        photoLabel: 'Needs photo',
+        imagePlaceholderLabel: 'Item'
+      },
+      {
+        id: 'asset-kitchen',
+        title: 'Kitchen',
+        kindLabel: 'Location',
+        customTypeLabel: undefined,
+        description: 'Main household location.',
+        locationTrailLabel: 'Home',
+        updatedAtLabel: 'Updated today',
+        photoLabel: 'Photo ready',
+        imagePlaceholderLabel: 'Place'
+      },
+      {
+        id: 'asset-camera-bag',
+        title: 'Camera bag',
+        kindLabel: 'Container',
+        customTypeLabel: undefined,
+        description: 'Camera kit and accessories.',
+        locationTrailLabel: 'Hall closet',
+        updatedAtLabel: 'Updated yesterday',
+        photoLabel: 'Needs photo',
+        imagePlaceholderLabel: 'Box'
+      },
+      {
+        id: 'asset-old-router',
+        title: 'Old router',
+        kindLabel: 'Item',
+        customTypeLabel: undefined,
+        description: 'Retired network hardware.',
+        locationTrailLabel: 'Office / Office bin',
+        updatedAtLabel: 'Updated last week',
+        photoLabel: 'Photo ready',
+        imagePlaceholderLabel: 'Item'
       }
     ]);
   });

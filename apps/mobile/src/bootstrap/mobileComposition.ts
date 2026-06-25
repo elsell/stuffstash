@@ -3,10 +3,13 @@ import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPr
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
+import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
 import { CreateAssetCommand } from '../application/add/CreateAssetCommand';
-import { LocationLookupQuery } from '../application/add/LocationLookupQuery';
+import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
+import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
+import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
 import {
@@ -35,9 +38,12 @@ export type MobileComposition = {
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
   readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly inventoryAssetsQuery: InventoryAssetsQuery;
   readonly createAssetCommand: CreateAssetCommand;
-  readonly locationLookupQuery: LocationLookupQuery;
+  readonly addDraftScopeQuery: AddDraftScopeQuery;
+  readonly addAssetDraftStore: InMemoryAddAssetDraftStore;
+  readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly locationsQuery: LocationsQuery;
   readonly locationAssetsQuery: LocationAssetsQuery;
@@ -65,15 +71,19 @@ export function createMobileComposition(): MobileComposition {
     inventorySummaries = new UnavailableInventorySummaryRepository(unavailableError);
     principals = new UnavailableCurrentPrincipalRepository(unavailableError);
   }
+  const addAssetDraftStore = new InMemoryAddAssetDraftStore(createServiceScopeId());
 
   return {
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries),
+    assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     inventoryAssetsQuery: new InventoryAssetsQuery(inventorySummaries),
     createAssetCommand: new CreateAssetCommand(inventorySummaries),
-    locationLookupQuery: new LocationLookupQuery(inventorySummaries),
+    addDraftScopeQuery: new AddDraftScopeQuery(principals),
+    addAssetDraftStore,
+    parentLookupQuery: new ParentLookupQuery(inventorySummaries),
     photoSelectionQuery: new PhotoSelectionQuery(new ExpoPhotoSelectionProvider()),
     locationsQuery: new LocationsQuery(inventorySummaries),
     locationAssetsQuery: new LocationAssetsQuery(inventorySummaries),
@@ -108,6 +118,22 @@ class UnavailableInventorySummaryRepository implements InventorySummaryRepositor
     throw this.error;
   }
 
+  async archiveAsset(): Promise<void> {
+    throw this.error;
+  }
+
+  async restoreAsset(): Promise<void> {
+    throw this.error;
+  }
+
+  async deleteAsset(): Promise<void> {
+    throw this.error;
+  }
+
+  async browseAssets(): Promise<never> {
+    throw this.error;
+  }
+
   async searchAssets(): Promise<readonly AssetSummary[]> {
     throw this.error;
   }
@@ -127,6 +153,10 @@ class UnavailableCurrentPrincipalRepository implements CurrentPrincipalRepositor
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error('Mobile API configuration is unavailable.');
+}
+
+function createServiceScopeId(): string {
+  return `mobile-composition-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 function createTimeoutFetch(timeoutMs: number): typeof fetch {
