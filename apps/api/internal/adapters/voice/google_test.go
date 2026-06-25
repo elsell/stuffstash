@@ -67,8 +67,14 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	t.Parallel()
 
 	calls := 0
+	requests := []map[string]any{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		requests = append(requests, request)
 		w.Header().Set("Content-Type", "application/json")
 		if calls == 1 {
 			_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"toolCalls":[{"id":"call-1","name":"search_authorized_assets","arguments":{"query":"tools"}}]}`))
@@ -86,8 +92,13 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 		TokenSource: staticTokenSource{},
 		HTTPClient:  server.Client(),
 	})
+	tools := []ports.AgentToolDescriptor{{
+		Name:        "search_authorized_assets",
+		Description: "Search visible assets.",
+		ReadOnly:    true,
+	}}
 
-	toolTurn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Where are my tools?"})
+	toolTurn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Where are my tools?", Tools: tools})
 	if err != nil {
 		t.Fatalf("first turn: %v", err)
 	}
@@ -97,6 +108,7 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 
 	finalTurn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
 		Transcript:    "Where are my tools?",
+		Tools:         tools,
 		ToolResults:   []ports.AgentToolResult{{CallID: "call-1", Name: "search_authorized_assets", Content: "Tools (container)"}},
 		PreviousTurns: 1,
 	})
@@ -105,6 +117,31 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	}
 	if finalTurn.Final == nil || finalTurn.Final.SpokenResponse != "Your tools are in Garage." {
 		t.Fatalf("unexpected final turn: %+v", finalTurn)
+	}
+	requestPayload, _ := json.Marshal(requests[0])
+	if !strings.Contains(string(requestPayload), "Search visible assets.") {
+		t.Fatalf("prompt did not include tool descriptor: %s", string(requestPayload))
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRejectsMalformedTurns(t *testing.T) {
+	t.Parallel()
+
+	tools := []ports.AgentToolDescriptor{{Name: "search_authorized_assets", ReadOnly: true}}
+	cases := map[string]string{
+		"unknown field":     `{"final":{"kind":"answer","spokenResponse":"ok","displayResponse":"ok","secret":"id"}}`,
+		"unknown kind":      `{"final":{"kind":"delete","spokenResponse":"ok","displayResponse":"ok"}}`,
+		"mixed turn":        `{"toolCalls":[{"id":"call-1","name":"search_authorized_assets","arguments":{"query":"tools"}}],"final":{"kind":"answer","spokenResponse":"ok","displayResponse":"ok"}}`,
+		"unknown tool":      `{"toolCalls":[{"id":"call-1","name":"delete_asset","arguments":{"id":"asset-1"}}]}`,
+		"oversized speech":  `{"final":{"kind":"answer","spokenResponse":"` + strings.Repeat("a", 501) + `","displayResponse":"ok"}}`,
+		"missing tool args": `{"toolCalls":[{"id":"call-1","name":"search_authorized_assets"}]}`,
+	}
+	for name, payload := range cases {
+		t.Run(name, func(t *testing.T) {
+			if _, err := parseLanguageTurn(payload, tools); err == nil {
+				t.Fatalf("expected malformed turn to be rejected")
+			}
+		})
 	}
 }
 

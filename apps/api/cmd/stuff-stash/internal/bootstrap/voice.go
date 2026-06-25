@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
@@ -13,6 +14,14 @@ import (
 )
 
 const googleCloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
+var (
+	googleProjectPattern   = regexp.MustCompile(`^[a-z][a-z0-9-]{4,61}[a-z0-9]$`)
+	googleLocationPattern  = regexp.MustCompile(`^[a-z0-9-]+$`)
+	googleModelPattern     = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+	googleLanguagePattern  = regexp.MustCompile(`^[A-Za-z]{2,3}(-[A-Za-z0-9]+)*$`)
+	googleVoiceNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
+)
 
 func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.SpeechToTextProvider, ports.LanguageInferenceProvider, ports.TextToSpeechProvider, error) {
 	if cfg.VoiceGoogleEnabled {
@@ -38,6 +47,9 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 	if strings.TrimSpace(cfg.GoogleCloudProject) == "" {
 		return nil, nil, nil, errors.New("google cloud project is required for realtime voice providers")
 	}
+	if err := validateGoogleVoiceConfig(cfg); err != nil {
+		return nil, nil, nil, err
+	}
 	geminiConfig := voice.GoogleGeminiConfig{
 		ProjectID:   strings.TrimSpace(cfg.GoogleCloudProject),
 		Location:    cfg.GoogleCloudLocation,
@@ -51,4 +63,24 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 			VoiceName:    cfg.GoogleTTSVoiceName,
 			TokenSource:  tokenSource,
 		}), nil
+}
+
+func validateGoogleVoiceConfig(cfg config.Config) error {
+	fields := []struct {
+		name    string
+		value   string
+		pattern *regexp.Regexp
+	}{
+		{name: "google cloud project", value: strings.TrimSpace(cfg.GoogleCloudProject), pattern: googleProjectPattern},
+		{name: "google cloud location", value: strings.TrimSpace(cfg.GoogleCloudLocation), pattern: googleLocationPattern},
+		{name: "google gemini model", value: strings.TrimSpace(cfg.GoogleGeminiModel), pattern: googleModelPattern},
+		{name: "google tts language code", value: strings.TrimSpace(cfg.GoogleTTSLanguageCode), pattern: googleLanguagePattern},
+		{name: "google tts voice name", value: strings.TrimSpace(cfg.GoogleTTSVoiceName), pattern: googleVoiceNamePattern},
+	}
+	for _, field := range fields {
+		if !field.pattern.MatchString(field.value) {
+			return errors.New(field.name + " is invalid for realtime voice providers")
+		}
+	}
+	return nil
 }

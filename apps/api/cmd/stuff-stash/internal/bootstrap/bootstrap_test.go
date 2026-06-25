@@ -194,6 +194,20 @@ func TestBuildRealtimeVoiceProvidersRejectsGoogleWithoutProject(t *testing.T) {
 	}
 }
 
+func TestBuildRealtimeVoiceProvidersRejectsMalformedGoogleConfig(t *testing.T) {
+	_, _, _, err := buildRealtimeVoiceProvidersWithTokenSource(config.Config{
+		VoiceGoogleEnabled:    true,
+		GoogleCloudProject:    "pianotechpros",
+		GoogleCloudLocation:   "us/central1",
+		GoogleGeminiModel:     "gemini-test",
+		GoogleTTSLanguageCode: "en-US",
+		GoogleTTSVoiceName:    "en-US-Neural2-F",
+	}, staticBootstrapTokenSource{})
+	if err == nil {
+		t.Fatalf("expected malformed Google config error")
+	}
+}
+
 func TestBuildRealtimeVoiceProvidersPrefersGoogleWhenEnabled(t *testing.T) {
 	stt, lm, tts, err := buildRealtimeVoiceProvidersWithTokenSource(config.Config{
 		VoiceGoogleEnabled:    true,

@@ -1,9 +1,11 @@
 package voice
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -94,14 +96,19 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
 		return ports.LanguageInferenceTurn{}, err
 	}
-	return parseLanguageTurn(firstGeminiText(response))
+	return parseLanguageTurn(firstGeminiText(response), input.Tools)
 }
 
 func languagePrompt(input ports.LanguageInferenceInput) string {
 	toolResults, _ := json.Marshal(input.ToolResults)
+	tools := make([]string, 0, len(input.Tools))
+	for _, tool := range input.Tools {
+		tools = append(tools, fmt.Sprintf("%s: %s Read-only: %t.", tool.Name, tool.Description, tool.ReadOnly))
+	}
 	return strings.Join([]string{
 		"You are the Stuff Stash inventory voice agent.",
-		"Use only these tools: search_authorized_assets.",
+		"Use only these tools:",
+		strings.Join(tools, "\n"),
 		"Return strict JSON only.",
 		"If you need to search, return {\"toolCalls\":[{\"id\":\"call-1\",\"name\":\"search_authorized_assets\",\"arguments\":{\"query\":\"short query\"}}]}.",
 		"If you can answer, return {\"final\":{\"kind\":\"answer\",\"spokenResponse\":\"short spoken answer\",\"displayResponse\":\"short display answer\"}}.",
@@ -111,35 +118,42 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 	}, "\n")
 }
 
-func parseLanguageTurn(raw string) (ports.LanguageInferenceTurn, error) {
+func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor) (ports.LanguageInferenceTurn, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
-	var decoded struct {
-		ToolCalls []struct {
-			ID        string         `json:"id"`
-			Name      string         `json:"name"`
-			Arguments map[string]any `json:"arguments"`
-		} `json:"toolCalls"`
-		Final *struct {
-			Kind            string `json:"kind"`
-			SpokenResponse  string `json:"spokenResponse"`
-			DisplayResponse string `json:"displayResponse"`
-		} `json:"final"`
-	}
-	if err := json.Unmarshal([]byte(raw), &decoded); err != nil {
+	var decoded languageTurnJSON
+	decoder := json.NewDecoder(bytes.NewReader([]byte(raw)))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&decoded); err != nil {
 		return ports.LanguageInferenceTurn{}, err
 	}
+	if decoder.More() {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	if decoded.Final != nil && len(decoded.ToolCalls) > 0 {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
 	if decoded.Final != nil {
+		kind := ports.StructuredAgentResponseKind(decoded.Final.Kind)
+		if !isAllowedStructuredResponseKind(kind) ||
+			!boundedNonEmpty(decoded.Final.SpokenResponse, 500) ||
+			!boundedOptional(decoded.Final.DisplayResponse, 1000) {
+			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+		}
 		return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKind(decoded.Final.Kind),
+			Kind:            kind,
 			SpokenResponse:  decoded.Final.SpokenResponse,
 			DisplayResponse: decoded.Final.DisplayResponse,
 		}}, nil
 	}
+	allowedTools := allowedToolNames(tools)
 	toolCalls := make([]ports.AgentToolCall, 0, len(decoded.ToolCalls))
 	for _, call := range decoded.ToolCalls {
+		if !boundedNonEmpty(call.ID, 100) || !allowedTools[call.Name] || call.Arguments == nil {
+			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+		}
 		toolCalls = append(toolCalls, ports.AgentToolCall{
 			ID:        call.ID,
 			Name:      call.Name,
@@ -150,6 +164,54 @@ func parseLanguageTurn(raw string) (ports.LanguageInferenceTurn, error) {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
 	return ports.LanguageInferenceTurn{ToolCalls: toolCalls}, nil
+}
+
+type languageTurnJSON struct {
+	ToolCalls []languageToolCallJSON `json:"toolCalls,omitempty"`
+	Final     *languageFinalJSON     `json:"final,omitempty"`
+}
+
+type languageToolCallJSON struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Arguments map[string]any `json:"arguments"`
+}
+
+type languageFinalJSON struct {
+	Kind            string `json:"kind"`
+	SpokenResponse  string `json:"spokenResponse"`
+	DisplayResponse string `json:"displayResponse"`
+}
+
+func allowedToolNames(tools []ports.AgentToolDescriptor) map[string]bool {
+	allowed := make(map[string]bool, len(tools))
+	for _, tool := range tools {
+		if tool.ReadOnly {
+			allowed[tool.Name] = true
+		}
+	}
+	return allowed
+}
+
+func isAllowedStructuredResponseKind(kind ports.StructuredAgentResponseKind) bool {
+	switch kind {
+	case ports.StructuredAgentResponseKindAnswer,
+		ports.StructuredAgentResponseKindClarification,
+		ports.StructuredAgentResponseKindUnsupportedAction,
+		ports.StructuredAgentResponseKindSafeFailure:
+		return true
+	default:
+		return false
+	}
+}
+
+func boundedNonEmpty(value string, max int) bool {
+	trimmed := strings.TrimSpace(value)
+	return trimmed != "" && len(trimmed) <= max
+}
+
+func boundedOptional(value string, max int) bool {
+	return strings.TrimSpace(value) == "" || len(value) <= max
 }
 
 func googleGeminiBaseURL(cfg GoogleGeminiConfig) string {
