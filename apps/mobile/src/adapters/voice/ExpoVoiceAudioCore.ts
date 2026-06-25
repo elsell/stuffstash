@@ -12,6 +12,10 @@ export type NativeAudioRecorder = {
 };
 
 export type NativeAudioPlayer = {
+  addListener?(
+    event: 'playbackStatusUpdate',
+    listener: (status: { readonly didJustFinish?: boolean }) => void
+  ): { remove(): void };
   play(): void;
   pause(): void;
   remove(): void;
@@ -34,6 +38,8 @@ export type ExpoVoiceFileSystem = {
   writeAsStringAsync(uri: string, contents: string, options: { readonly encoding: 'base64' }): Promise<void>;
   deleteAsync?(uri: string, options?: { readonly idempotent?: boolean }): Promise<void>;
 };
+
+const targetAudioChunkRawBytes = 256 * 1024;
 
 export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
   private recorder: NativeAudioRecorder | null = null;
@@ -77,16 +83,21 @@ export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
       throw new Error('Voice recording did not produce an audio file.');
     }
 
-    const audioBase64 = await this.fileSystem.readAsStringAsync(recorder.uri, { encoding: 'base64' });
-    if (audioBase64.length === 0) {
-      throw new Error('Voice recording produced an empty audio file.');
+    let audioBase64 = '';
+    try {
+      audioBase64 = await this.fileSystem.readAsStringAsync(recorder.uri, { encoding: 'base64' });
+      if (audioBase64.length === 0) {
+        throw new Error('Voice recording produced an empty audio file.');
+      }
+    } finally {
+      await this.fileSystem.deleteAsync?.(recorder.uri, { idempotent: true });
     }
 
     return {
       mimeType: 'audio/mp4',
       sampleRate: 44100,
       channels: 1,
-      chunksBase64: [audioBase64]
+      chunksBase64: chunkBase64Audio(audioBase64)
     };
   }
 }
@@ -110,20 +121,64 @@ export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {
     const player = this.audio.createAudioPlayer(uri);
     this.players.push(player);
     this.tempUris.push(uri);
-    player.play();
+    try {
+      await playUntilFinished(player);
+    } finally {
+      await this.disposePlayer(player);
+      await this.deleteTempUri(uri);
+    }
   }
 
   async stop(): Promise<void> {
-    for (const player of this.players.splice(0)) {
-      player.pause();
-      player.remove();
-    }
-
     const uris = this.tempUris.splice(0);
-    await Promise.all(uris.map((uri) => this.fileSystem.deleteAsync?.(uri, { idempotent: true }) ?? Promise.resolve()));
+    const players = this.players.splice(0);
+    await Promise.all(players.map((player) => this.disposePlayer(player)));
+    await Promise.all(uris.map((uri) => this.deleteTempUri(uri)));
   }
+
+  private async disposePlayer(player: NativeAudioPlayer): Promise<void> {
+    removeFromArray(this.players, player);
+    player.pause();
+    player.remove();
+  }
+
+  private async deleteTempUri(uri: string): Promise<void> {
+    removeFromArray(this.tempUris, uri);
+    await this.fileSystem.deleteAsync?.(uri, { idempotent: true });
+  }
+}
+
+function playUntilFinished(player: NativeAudioPlayer): Promise<void> {
+  return new Promise((resolve) => {
+    const subscription = player.addListener?.('playbackStatusUpdate', (status) => {
+      if (status.didJustFinish) {
+        subscription?.remove();
+        resolve();
+      }
+    });
+    player.play();
+    if (!subscription) {
+      resolve();
+    }
+  });
+}
+
+function chunkBase64Audio(audioBase64: string): readonly string[] {
+  const chunkBase64Chars = Math.floor(targetAudioChunkRawBytes / 3) * 4;
+  const chunks: string[] = [];
+  for (let index = 0; index < audioBase64.length; index += chunkBase64Chars) {
+    chunks.push(audioBase64.slice(index, index + chunkBase64Chars));
+  }
+  return chunks;
 }
 
 function audioExtension(mimeType: string): string {
   return mimeType === 'audio/mpeg' ? '.mp3' : '.audio';
+}
+
+function removeFromArray<T>(items: T[], item: T): void {
+  const index = items.indexOf(item);
+  if (index >= 0) {
+    items.splice(index, 1);
+  }
 }

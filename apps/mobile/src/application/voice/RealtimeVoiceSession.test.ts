@@ -72,6 +72,7 @@ describe('RealtimeVoiceSessionController', () => {
       spokenResponse: 'Your tools are in Garage.'
     });
     expect(player.played).toEqual([{ audioBase64: 'YXVkaW8tMQ==', mimeType: 'audio/mpeg' }]);
+    expect(player.stops).toBe(2);
   });
 });
 
@@ -107,12 +108,15 @@ class FakeTransport implements RealtimeVoiceTransport {
 
 class FakePlayer implements VoiceAudioPlayer {
   readonly played: Array<{ readonly audioBase64: string; readonly mimeType: string }> = [];
+  stops = 0;
 
   async playChunk(audioBase64: string, mimeType: string): Promise<void> {
     this.played.push({ audioBase64, mimeType });
   }
 
-  async stop(): Promise<void> {}
+  async stop(): Promise<void> {
+    this.stops++;
+  }
 }
 
 class FakeInventoryRepository implements InventorySummaryRepository {

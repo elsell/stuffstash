@@ -170,8 +170,10 @@ export class RealtimeVoiceSessionController {
       case 'tts.audio.completed':
         return { ...state, status: 'speaking', progressLabel: 'Speech complete' };
       case 'session.completed':
+        await this.player.stop();
         return { ...state, status: 'completed', progressLabel: 'Done' };
       case 'session.failed':
+        await this.player.stop();
         return { ...state, status: 'failed', errorMessage: event.message, progressLabel: 'Voice failed' };
     }
   }

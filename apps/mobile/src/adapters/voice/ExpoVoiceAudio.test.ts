@@ -23,6 +23,20 @@ describe('ExpoVoiceAudioRecorder', () => {
       channels: 1,
       chunksBase64: ['YXVkaW8=']
     });
+    expect(fileSystem.deleted).toEqual(['file:///recording.m4a']);
+  });
+
+  it('splits recorded audio into protocol-sized chunks and still deletes the recorder file', async () => {
+    const recorder = new FakeRecorder('file:///large-recording.m4a');
+    const fileSystem = new FakeFileSystem({ 'file:///large-recording.m4a': 'A'.repeat(700_000) });
+    const voiceRecorder = new ExpoVoiceAudioRecorderCore(new FakeAudio(recorder), fileSystem);
+
+    await voiceRecorder.start();
+    const recorded = await voiceRecorder.stop();
+
+    expect(recorded.chunksBase64).toHaveLength(3);
+    expect(recorded.chunksBase64[0]?.length).toBeLessThanOrEqual(349_524);
+    expect(fileSystem.deleted).toEqual(['file:///large-recording.m4a']);
   });
 
   it('rejects recording when microphone permission is denied', async () => {
@@ -48,11 +62,12 @@ describe('ExpoVoiceAudioPlayer', () => {
       encoding: 'base64'
     });
     expect(fileSystem.writes[0]?.uri).toMatch(/stuffstash-voice-.+\.mp3$/);
-    expect(audio.players[0]?.playing).toBe(true);
+    expect(audio.players[0]?.finished).toBe(true);
+    expect(audio.players[0]?.removed).toBe(true);
+    expect(fileSystem.deleted).toEqual([fileSystem.writes[0]?.uri]);
 
     await player.stop();
 
-    expect(audio.players[0]?.removed).toBe(true);
     expect(fileSystem.deleted).toEqual([fileSystem.writes[0]?.uri]);
   });
 });
@@ -78,12 +93,28 @@ class FakeRecorder {
 
 class FakePlayer {
   playing = false;
+  finished = false;
   removed = false;
+  private listener: ((status: { readonly didJustFinish?: boolean }) => void) | null = null;
 
   constructor(readonly uri: string) {}
 
+  addListener(_event: 'playbackStatusUpdate', listener: (status: { readonly didJustFinish?: boolean }) => void): { remove(): void } {
+    this.listener = listener;
+    return {
+      remove: () => {
+        this.listener = null;
+      }
+    };
+  }
+
   play(): void {
     this.playing = true;
+    queueMicrotask(() => {
+      this.finished = true;
+      this.playing = false;
+      this.listener?.({ didJustFinish: true });
+    });
   }
 
   pause(): void {
