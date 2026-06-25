@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"nhooyr.io/websocket"
 
@@ -19,7 +20,7 @@ import (
 
 const realtimeVoicePath = "/v1/realtime/voice"
 
-func handleRealtimeVoice(application app.App) http.HandlerFunc {
+func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.NotFound(w, r)
@@ -37,7 +38,8 @@ func handleRealtimeVoice(application app.App) http.HandlerFunc {
 		}
 		defer connection.Close(websocket.StatusInternalError, "voice session ended")
 
-		ctx := r.Context()
+		ctx, cancelSession := context.WithTimeout(r.Context(), sessionTimeout)
+		defer cancelSession()
 		start, err := readRealtimeClientMessage(ctx, connection)
 		if err != nil {
 			_ = connection.Close(websocket.StatusPolicyViolation, "invalid start message")
@@ -138,6 +140,7 @@ type realtimeServerMessage struct {
 	Status               string                       `json:"status,omitempty"`
 	ToolCallID           string                       `json:"toolCallId,omitempty"`
 	ToolLabel            string                       `json:"toolLabel,omitempty"`
+	ResponseID           string                       `json:"responseId,omitempty"`
 	Response             *realtimeStructuredResponse  `json:"response,omitempty"`
 	Format               *realtimeAudioFormatResponse `json:"format,omitempty"`
 	ChunkID              string                       `json:"chunkId,omitempty"`
@@ -252,7 +255,7 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 	switch event.Type {
 	case app.RealtimeVoiceEventAssistantResponseStarted:
 		if event.Response != nil {
-			message.Response = realtimeStructuredResponseFromPort(*event.Response)
+			message.ResponseID = event.Response.ResponseID
 		}
 	case app.RealtimeVoiceEventAssistantResponseCompleted:
 		if event.Response != nil {

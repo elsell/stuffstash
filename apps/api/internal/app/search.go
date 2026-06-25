@@ -17,6 +17,7 @@ import (
 type SearchAssetsInput struct {
 	Principal         identity.Principal
 	TenantID          tenant.ID
+	InventoryIDs      []inventory.InventoryID
 	Query             string
 	Mode              string
 	CustomAssetTypeID string
@@ -73,6 +74,9 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	if err != nil {
 		return SearchAssetsResult{}, err
 	}
+	if len(input.InventoryIDs) > 0 {
+		candidateInventoryIDs = intersectInventoryCandidates(candidateInventoryIDs, input.InventoryIDs)
+	}
 	inventoryIDs, err := a.authorizer.ListViewableInventoryIDs(ctx, input.Principal, input.TenantID, candidateInventoryIDs)
 	if err != nil {
 		return SearchAssetsResult{}, err
@@ -121,6 +125,26 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		NextCursor: nextCursor,
 		HasMore:    hasMore,
 	}, nil
+}
+
+func intersectInventoryCandidates(tenantCandidates []inventory.InventoryID, requested []inventory.InventoryID) []inventory.InventoryID {
+	allowed := map[inventory.InventoryID]struct{}{}
+	for _, id := range tenantCandidates {
+		allowed[id] = struct{}{}
+	}
+	result := []inventory.InventoryID{}
+	seen := map[inventory.InventoryID]struct{}{}
+	for _, id := range requested {
+		if _, ok := allowed[id]; !ok {
+			continue
+		}
+		if _, duplicate := seen[id]; duplicate {
+			continue
+		}
+		seen[id] = struct{}{}
+		result = append(result, id)
+	}
+	return result
 }
 
 func (a App) inventoryIDsForTenant(ctx context.Context, tenantID tenant.ID) ([]inventory.InventoryID, error) {

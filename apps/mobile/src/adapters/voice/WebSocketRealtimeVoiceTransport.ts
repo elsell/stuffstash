@@ -130,18 +130,20 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         status: stringField(message, 'status'),
         message: stringField(message, 'message')
       };
-    case 'tool.call.started':
-    case 'tool.call.completed':
-    case 'tool.call.failed':
+		case 'tool.call.started':
+		case 'tool.call.completed':
+		case 'tool.call.failed':
       return {
         type: message.type,
         toolCallId: stringField(message, 'toolCallId'),
         toolLabel: stringField(message, 'toolLabel'),
         status: optionalStringField(message, 'status'),
         code: optionalStringField(message, 'code'),
-        message: optionalStringField(message, 'message')
-      };
-    case 'assistant.response.completed': {
+				message: optionalStringField(message, 'message')
+			};
+		case 'assistant.response.started':
+			return { type: 'assistant.response.started', responseId: stringField(message, 'responseId') };
+		case 'assistant.response.completed': {
       const response = objectField(message, 'response');
       return {
         type: 'assistant.response.completed',

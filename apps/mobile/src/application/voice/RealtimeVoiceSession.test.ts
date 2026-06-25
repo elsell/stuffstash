@@ -39,11 +39,12 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
     const player = new FakePlayer();
     const controller = new RealtimeVoiceSessionController(
-      new FakeInventoryRepository(),
-      recorder,
-      transport,
-      player
-    );
+	  new FakeInventoryRepository(),
+	  recorder,
+	  transport,
+	  player,
+	  { diagnosticsEnabled: true }
+	);
 
     const listening = await controller.start();
     expect(listening).toMatchObject({

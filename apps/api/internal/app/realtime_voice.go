@@ -215,6 +215,7 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	results, err := a.SearchAssets(ctx, SearchAssetsInput{
 		Principal:      session.Principal,
 		TenantID:       session.TenantID,
+		InventoryIDs:   []inventory.InventoryID{session.InventoryID},
 		Query:          query,
 		Mode:           "fuzzy",
 		LifecycleState: "active",

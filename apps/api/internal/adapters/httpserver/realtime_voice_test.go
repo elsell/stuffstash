@@ -187,6 +187,90 @@ func TestRealtimeVoiceQueryRejectsWrongInventory(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceQuerySearchesOnlySelectedInventory(t *testing.T) {
+	t.Parallel()
+
+	language := &capturingLanguageModel{}
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{
+			{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"},
+			{id: "inventory-shop", tenantID: "tenant-home", name: "Shop inventory", owner: "user-1"},
+		},
+		ids: []string{"home-tools-id", "shop-tools-id"},
+	}, fakeSpeechToText{transcript: "Where are my tools?"}, language, fakeTextToSpeech{
+		chunks: [][]byte{[]byte("spoken-audio")},
+	})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "container", "Home Tools", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-shop", "container", "Shop Tools", "")
+
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
+		HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:user-1"}},
+	})
+	if err != nil {
+		t.Fatalf("dial realtime voice websocket: %v", err)
+	}
+	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":        "session.start",
+		"seq":         1,
+		"tenantId":    "tenant-home",
+		"inventoryId": "inventory-home",
+		"source":      "mobile_voice",
+		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
+		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
+	})
+	started := readRealtimeMessage(t, ctx, connection)
+	sessionID, _ := started["sessionId"].(string)
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":         "audio.chunk",
+		"seq":          2,
+		"sessionId":    sessionID,
+		"chunkId":      "chunk-1",
+		"audioBase64":  base64.StdEncoding.EncodeToString([]byte("fake-audio")),
+		"isFinalChunk": true,
+	})
+	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
+	_ = readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+
+	if !strings.Contains(language.lastToolResult, "Home Tools") {
+		t.Fatalf("expected selected inventory result, got %q", language.lastToolResult)
+	}
+	if strings.Contains(language.lastToolResult, "Shop Tools") {
+		t.Fatalf("expected voice search to exclude other inventory result, got %q", language.lastToolResult)
+	}
+}
+
+type capturingLanguageModel struct {
+	lastToolResult string
+}
+
+func (m *capturingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "tool-call-id",
+				Name:      "search_authorized_assets",
+				Arguments: map[string]any{"query": "tools"},
+			}},
+		}, nil
+	}
+	m.lastToolResult = input.ToolResults[0].Content
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindAnswer,
+			SpokenResponse:  "I found the tools.",
+			DisplayResponse: "I found the tools.",
+		},
+	}, nil
+}
+
 func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) app.App {
 	t.Helper()
 

@@ -31,24 +31,29 @@ export type RealtimeVoiceTransportInput = {
 };
 
 export interface RealtimeVoiceTransport {
-  run(input: RealtimeVoiceTransportInput, onEvent: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void>;
+	run(input: RealtimeVoiceTransportInput, onEvent: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void>;
 }
 
+export type RealtimeVoiceSessionControllerOptions = {
+	readonly diagnosticsEnabled?: boolean;
+};
+
 export type VoiceRealtimeEvent =
-  | { readonly type: 'session.started'; readonly sessionId: string }
-  | { readonly type: 'session.failed'; readonly code: string; readonly message: string }
-  | { readonly type: 'transcript.final'; readonly text: string }
-  | { readonly type: 'agent.progress'; readonly status: string; readonly message: string }
+	| { readonly type: 'session.started'; readonly sessionId: string }
+	| { readonly type: 'session.failed'; readonly code: string; readonly message: string }
+	| { readonly type: 'transcript.final'; readonly text: string }
+	| { readonly type: 'agent.progress'; readonly status: string; readonly message: string }
   | {
       readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed';
       readonly toolCallId: string;
       readonly toolLabel: string;
       readonly status?: string;
       readonly code?: string;
-      readonly message?: string;
-    }
-  | {
-      readonly type: 'assistant.response.completed';
+			readonly message?: string;
+		}
+	| { readonly type: 'assistant.response.started'; readonly responseId: string }
+	| {
+			readonly type: 'assistant.response.completed';
       readonly response: {
         readonly kind: string;
         readonly spokenResponse: string;
@@ -72,15 +77,16 @@ export type VoiceRealtimeState = {
 };
 
 export class RealtimeVoiceSessionController {
-  private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
-  private ttsMimeType = 'audio/mpeg';
+	private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
+	private ttsMimeType = 'audio/mpeg';
 
   constructor(
-    private readonly inventories: InventorySummaryRepository,
-    private readonly recorder: VoiceAudioRecorder,
-    private readonly transport: RealtimeVoiceTransport,
-    private readonly player: VoiceAudioPlayer
-  ) {}
+		private readonly inventories: InventorySummaryRepository,
+		private readonly recorder: VoiceAudioRecorder,
+		private readonly transport: RealtimeVoiceTransport,
+		private readonly player: VoiceAudioPlayer,
+		private readonly options: RealtimeVoiceSessionControllerOptions = {}
+	) {}
 
   async start(): Promise<VoiceRealtimeState> {
     const context = await this.selectedInventoryContext();
@@ -128,7 +134,7 @@ export class RealtimeVoiceSessionController {
   }
 
   private async reduceEvent(state: VoiceRealtimeState, event: VoiceRealtimeEvent): Promise<VoiceRealtimeState> {
-    switch (event.type) {
+		switch (event.type) {
       case 'session.started':
         return { ...state, status: 'processing', progressLabel: 'Connected' };
       case 'transcript.final':
@@ -137,13 +143,17 @@ export class RealtimeVoiceSessionController {
         return { ...state, status: 'processing', progressLabel: event.message };
       case 'tool.call.started':
       case 'tool.call.completed':
-      case 'tool.call.failed':
-        return {
-          ...state,
-          status: 'processing',
-          debugEvents: [...state.debugEvents, `${event.toolLabel}: ${event.status ?? event.code ?? 'updated'}`],
-          progressLabel: event.toolLabel
-        };
+			case 'tool.call.failed':
+				return {
+					...state,
+					status: 'processing',
+					debugEvents: this.options.diagnosticsEnabled
+						? [...state.debugEvents, `${event.toolLabel}: ${event.status ?? event.code ?? 'updated'}`]
+						: state.debugEvents,
+					progressLabel: event.toolLabel
+				};
+			case 'assistant.response.started':
+				return { ...state, status: 'processing', progressLabel: 'Preparing response' };
       case 'assistant.response.completed':
         return {
           ...state,

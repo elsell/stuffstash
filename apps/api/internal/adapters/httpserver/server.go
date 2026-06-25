@@ -18,18 +18,19 @@ func init() {
 }
 
 type Options struct {
-	CORSAllowedOrigins []string
-	MaxJSONBodyBytes   int64
-	RateLimitDisabled  bool
-	RateLimiter        ports.RateLimiter
-	RateLimitRequests  int
-	RateLimitWindow    time.Duration
-	RateLimitBurst     int
-	Observer           ports.Observer
-	ReadHeaderTimeout  time.Duration
-	ReadTimeout        time.Duration
-	WriteTimeout       time.Duration
-	IdleTimeout        time.Duration
+	CORSAllowedOrigins          []string
+	MaxJSONBodyBytes            int64
+	RateLimitDisabled           bool
+	RateLimiter                 ports.RateLimiter
+	RateLimitRequests           int
+	RateLimitWindow             time.Duration
+	RateLimitBurst              int
+	Observer                    ports.Observer
+	ReadHeaderTimeout           time.Duration
+	ReadTimeout                 time.Duration
+	WriteTimeout                time.Duration
+	IdleTimeout                 time.Duration
+	RealtimeVoiceSessionTimeout time.Duration
 }
 
 func NewServer(addr string, application app.App) *http.Server {
@@ -40,7 +41,7 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("GET /healthz", handleHealth(application))
-	mux.HandleFunc("GET "+realtimeVoicePath, handleRealtimeVoice(application))
+	mux.HandleFunc("GET "+realtimeVoicePath, handleRealtimeVoice(application, normalizeDuration(options.RealtimeVoiceSessionTimeout, 60*time.Second)))
 
 	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")
 	config.DocsPath = "/docs"

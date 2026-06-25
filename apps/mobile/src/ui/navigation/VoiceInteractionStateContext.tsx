@@ -85,16 +85,26 @@ export function VoiceInteractionStateProvider({
       state,
       setStage,
       startRealtime: async () => {
-        const next = await realtimeController.start();
-        setRealtime(next);
-        setStage('listening');
+        try {
+          const next = await realtimeController.start();
+          setRealtime(next);
+          setStage('listening');
+        } catch (error) {
+          setRealtime(failedRealtimeState(error));
+          setStage('failed');
+        }
       },
       stopRealtime: async () => {
         setStage('processing');
-        const states = await realtimeController.stop();
-        const finalState = states[states.length - 1] ?? null;
-        setRealtime(finalState);
-        setStage(finalState?.status ?? 'failed');
+        try {
+          const states = await realtimeController.stop();
+          const finalState = states[states.length - 1] ?? null;
+          setRealtime(finalState);
+          setStage(finalState?.status ?? 'failed');
+        } catch (error) {
+          setRealtime(failedRealtimeState(error));
+          setStage('failed');
+        }
       },
       reset: () => {
         setRealtime(null);
@@ -122,4 +132,15 @@ export function useVoiceInteractionState(): VoiceInteractionStateContextValue {
 
 function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function failedRealtimeState(error: unknown): VoiceRealtimeState {
+  return {
+    status: 'failed',
+    tenantName: '',
+    inventoryName: '',
+    progressLabel: 'Voice failed',
+    debugEvents: [],
+    errorMessage: readableError(error, 'Voice failed safely.')
+  };
 }
