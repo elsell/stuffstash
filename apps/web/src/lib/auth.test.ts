@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { completeSignIn, getStoredSession, signOut } from './auth';
+import { completeSignIn, getStoredSession, sha256URLSafe, signOut } from './auth';
 import type { RuntimeConfig } from './runtimeConfig';
 
 const config: RuntimeConfig = {
@@ -37,6 +37,18 @@ describe('auth helpers', () => {
 
     expect(returnTo).toBe('/');
     expect(getStoredSession(storage)?.idToken).toBe('id-token');
+  });
+
+  it('creates a PKCE challenge when Web Crypto digest is unavailable', async () => {
+    const originalSubtle = crypto.subtle;
+    Object.defineProperty(crypto, 'subtle', { configurable: true, value: undefined });
+    try {
+      await expect(sha256URLSafe('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).resolves.toBe(
+        'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM'
+      );
+    } finally {
+      Object.defineProperty(crypto, 'subtle', { configurable: true, value: originalSubtle });
+    }
   });
 
   it('removes stored auth state on sign out', () => {
