@@ -49,6 +49,22 @@ describe('ExpoVoiceAudioRecorder', () => {
 });
 
 describe('ExpoVoiceAudioPlayer', () => {
+  it('cleans stale voice cache files before playback and after stop', async () => {
+    const audio = new FakeAudio(new FakeRecorder('file:///recording.m4a'));
+    const fileSystem = new FakeFileSystem({
+      'file:///cache/stuffstash-voice-old.mp3': 'old',
+      'file:///cache/unrelated.mp3': 'keep'
+    });
+    const player = new ExpoVoiceAudioPlayerCore(audio, fileSystem);
+
+    await player.playChunk('c3BlZWNo', 'audio/mpeg');
+    await player.stop();
+
+    expect(fileSystem.deleted).toContain('file:///cache/stuffstash-voice-old.mp3');
+    expect(fileSystem.deleted).not.toContain('file:///cache/unrelated.mp3');
+    expect(fileSystem.files['file:///cache/unrelated.mp3']).toBe('keep');
+  });
+
   it('writes tts chunks to cache files and plays them with Expo Audio', async () => {
     const audio = new FakeAudio(new FakeRecorder('file:///recording.m4a'));
     const fileSystem = new FakeFileSystem({});
@@ -92,6 +108,7 @@ class FakeRecorder {
 }
 
 class FakePlayer {
+  readonly currentStatus = { duration: 1 };
   playing = false;
   finished = false;
   removed = false;
@@ -157,10 +174,16 @@ class FakeFileSystem {
   readonly writes: Array<{ readonly uri: string; readonly contents: string; readonly encoding: string }> = [];
   readonly deleted: string[] = [];
 
-  constructor(private readonly files: Record<string, string>) {}
+  constructor(readonly files: Record<string, string>) {}
 
   async readAsStringAsync(uri: string): Promise<string> {
     return this.files[uri] ?? '';
+  }
+
+  async readDirectoryAsync(uri: string): Promise<string[]> {
+    return Object.keys(this.files)
+      .filter((fileUri) => fileUri.startsWith(uri))
+      .map((fileUri) => fileUri.slice(uri.length));
   }
 
   async writeAsStringAsync(uri: string, contents: string, options: { readonly encoding: string }): Promise<void> {

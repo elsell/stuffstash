@@ -12,6 +12,7 @@ export type NativeAudioRecorder = {
 };
 
 export type NativeAudioPlayer = {
+  readonly currentStatus?: { readonly duration?: number };
   addListener?(
     event: 'playbackStatusUpdate',
     listener: (status: { readonly didJustFinish?: boolean }) => void
@@ -35,11 +36,14 @@ export type ExpoVoiceAudioNative = {
 export type ExpoVoiceFileSystem = {
   readonly cacheDirectory: string | null;
   readAsStringAsync(uri: string, options: { readonly encoding: 'base64' }): Promise<string>;
+  readDirectoryAsync?(uri: string): Promise<string[]>;
   writeAsStringAsync(uri: string, contents: string, options: { readonly encoding: 'base64' }): Promise<void>;
   deleteAsync?(uri: string, options?: { readonly idempotent?: boolean }): Promise<void>;
 };
 
 const targetAudioChunkRawBytes = 256 * 1024;
+const voiceTempFilePrefix = 'stuffstash-voice-';
+const playbackCompletionTimeoutMs = 120_000;
 
 export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
   private recorder: NativeAudioRecorder | null = null;
@@ -112,19 +116,23 @@ export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {
   ) {}
 
   async playChunk(audioBase64: string, mimeType: string): Promise<void> {
+    await cleanupStaleVoiceTempFiles(this.fileSystem);
     const cacheDirectory = this.fileSystem.cacheDirectory;
     if (!cacheDirectory) {
       throw new Error('Audio cache directory is unavailable.');
     }
-    const uri = `${cacheDirectory}stuffstash-voice-${Date.now().toString(36)}-${this.tempUris.length + 1}${audioExtension(mimeType)}`;
+    const uri = `${cacheDirectory}${voiceTempFilePrefix}${Date.now().toString(36)}-${this.tempUris.length + 1}${audioExtension(mimeType)}`;
     await this.fileSystem.writeAsStringAsync(uri, audioBase64, { encoding: 'base64' });
-    const player = this.audio.createAudioPlayer(uri);
-    this.players.push(player);
     this.tempUris.push(uri);
+    let player: NativeAudioPlayer | null = null;
     try {
+      player = this.audio.createAudioPlayer(uri);
+      this.players.push(player);
       await playUntilFinished(player);
     } finally {
-      await this.disposePlayer(player);
+      if (player !== null) {
+        await this.disposePlayer(player);
+      }
       await this.deleteTempUri(uri);
     }
   }
@@ -134,6 +142,7 @@ export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {
     const players = this.players.splice(0);
     await Promise.all(players.map((player) => this.disposePlayer(player)));
     await Promise.all(uris.map((uri) => this.deleteTempUri(uri)));
+    await cleanupStaleVoiceTempFiles(this.fileSystem);
   }
 
   private async disposePlayer(player: NativeAudioPlayer): Promise<void> {
@@ -150,17 +159,48 @@ export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {
 
 function playUntilFinished(player: NativeAudioPlayer): Promise<void> {
   return new Promise((resolve) => {
+    let resolved = false;
+    const finish = () => {
+      if (resolved) {
+        return;
+      }
+      resolved = true;
+      subscription?.remove();
+      clearTimeout(timeout);
+      resolve();
+    };
+    const timeout = setTimeout(finish, playbackTimeoutMs(player));
     const subscription = player.addListener?.('playbackStatusUpdate', (status) => {
       if (status.didJustFinish) {
-        subscription?.remove();
-        resolve();
+        finish();
       }
     });
     player.play();
     if (!subscription) {
-      resolve();
+      finish();
     }
   });
+}
+
+function playbackTimeoutMs(player: NativeAudioPlayer): number {
+  const durationSeconds = player.currentStatus?.duration;
+  if (typeof durationSeconds === 'number' && durationSeconds > 0) {
+    return Math.max(playbackCompletionTimeoutMs, Math.ceil(durationSeconds * 1000) + 5000);
+  }
+  return playbackCompletionTimeoutMs;
+}
+
+async function cleanupStaleVoiceTempFiles(fileSystem: ExpoVoiceFileSystem): Promise<void> {
+  const cacheDirectory = fileSystem.cacheDirectory;
+  if (!cacheDirectory || !fileSystem.readDirectoryAsync || !fileSystem.deleteAsync) {
+    return;
+  }
+  const entries = await fileSystem.readDirectoryAsync(cacheDirectory);
+  await Promise.all(
+    entries
+      .filter((entry) => entry.startsWith(voiceTempFilePrefix))
+      .map((entry) => fileSystem.deleteAsync?.(cacheDirectory + entry, { idempotent: true }) ?? Promise.resolve())
+  );
 }
 
 function chunkBase64Audio(audioBase64: string): readonly string[] {
