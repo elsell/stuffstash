@@ -52,6 +52,12 @@ const (
 	envS3Secure                      = "STUFF_STASH_S3_SECURE"
 	envMaxAttachmentBytes            = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
 	envVoiceDevFakeEnabled           = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
+	envVoiceGoogleEnabled            = "STUFF_STASH_VOICE_GOOGLE_ENABLED"
+	envGoogleCloudProject            = "STUFF_STASH_GOOGLE_CLOUD_PROJECT"
+	envGoogleCloudLocation           = "STUFF_STASH_GOOGLE_CLOUD_LOCATION"
+	envGoogleGeminiModel             = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
+	envGoogleTTSLanguageCode         = "STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE"
+	envGoogleTTSVoiceName            = "STUFF_STASH_GOOGLE_TTS_VOICE_NAME"
 	defaultHTTPAddr                  = ":8080"
 	defaultHTTPReadHeader            = 5 * time.Second
 	defaultHTTPRead                  = 15 * time.Second
@@ -84,6 +90,11 @@ const (
 	defaultSpiceDBTLSEnabled         = true
 	defaultSpiceDBBootstrapMode      = false
 	defaultVoiceDevFakeEnabled       = false
+	defaultVoiceGoogleEnabled        = false
+	defaultGoogleCloudLocation       = "us-central1"
+	defaultGoogleGeminiModel         = "gemini-2.5-flash"
+	defaultGoogleTTSLanguageCode     = "en-US"
+	defaultGoogleTTSVoiceName        = "en-US-Neural2-F"
 )
 
 type Config struct {
@@ -131,6 +142,12 @@ type Config struct {
 	S3Secure                         bool
 	MaxAttachmentBytes               int
 	VoiceDevFakeEnabled              bool
+	VoiceGoogleEnabled               bool
+	GoogleCloudProject               string
+	GoogleCloudLocation              string
+	GoogleGeminiModel                string
+	GoogleTTSLanguageCode            string
+	GoogleTTSVoiceName               string
 }
 
 func Load() Config {
@@ -179,6 +196,12 @@ func Load() Config {
 		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 		VoiceDevFakeEnabled:              boolEnvOrDefault(envVoiceDevFakeEnabled, defaultVoiceDevFakeEnabled),
+		VoiceGoogleEnabled:               boolEnvOrDefault(envVoiceGoogleEnabled, defaultVoiceGoogleEnabled),
+		GoogleCloudProject:               os.Getenv(envGoogleCloudProject),
+		GoogleCloudLocation:              envOrDefault(envGoogleCloudLocation, defaultGoogleCloudLocation),
+		GoogleGeminiModel:                envOrDefault(envGoogleGeminiModel, defaultGoogleGeminiModel),
+		GoogleTTSLanguageCode:            envOrDefault(envGoogleTTSLanguageCode, defaultGoogleTTSLanguageCode),
+		GoogleTTSVoiceName:               envOrDefault(envGoogleTTSVoiceName, defaultGoogleTTSVoiceName),
 	}
 }
 

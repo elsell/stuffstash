@@ -42,6 +42,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envS3Secure, "")
 	t.Setenv(envMaxAttachmentBytes, "")
 	t.Setenv(envVoiceDevFakeEnabled, "")
+	t.Setenv(envVoiceGoogleEnabled, "")
+	t.Setenv(envGoogleCloudProject, "")
+	t.Setenv(envGoogleCloudLocation, "")
+	t.Setenv(envGoogleGeminiModel, "")
+	t.Setenv(envGoogleTTSLanguageCode, "")
+	t.Setenv(envGoogleTTSVoiceName, "")
 
 	cfg := Load()
 
@@ -135,6 +141,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.VoiceDevFakeEnabled {
 		t.Fatalf("expected voice dev fake providers disabled by default")
 	}
+	if cfg.VoiceGoogleEnabled {
+		t.Fatalf("expected Google voice providers disabled by default")
+	}
+	if cfg.GoogleCloudProject != "" || cfg.GoogleCloudLocation != defaultGoogleCloudLocation || cfg.GoogleGeminiModel != defaultGoogleGeminiModel || cfg.GoogleTTSLanguageCode != defaultGoogleTTSLanguageCode || cfg.GoogleTTSVoiceName != defaultGoogleTTSVoiceName {
+		t.Fatalf("unexpected Google voice defaults: %+v", cfg)
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -181,6 +193,12 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envS3Secure, "false")
 	t.Setenv(envMaxAttachmentBytes, "12345")
 	t.Setenv(envVoiceDevFakeEnabled, "true")
+	t.Setenv(envVoiceGoogleEnabled, "true")
+	t.Setenv(envGoogleCloudProject, "pianotechpros")
+	t.Setenv(envGoogleCloudLocation, "us-east5")
+	t.Setenv(envGoogleGeminiModel, "gemini-test-model")
+	t.Setenv(envGoogleTTSLanguageCode, "en-GB")
+	t.Setenv(envGoogleTTSVoiceName, "en-GB-Neural2-A")
 
 	cfg := Load()
 
@@ -270,5 +288,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if !cfg.VoiceDevFakeEnabled {
 		t.Fatalf("expected voice dev fake providers enabled")
+	}
+	if !cfg.VoiceGoogleEnabled || cfg.GoogleCloudProject != "pianotechpros" || cfg.GoogleCloudLocation != "us-east5" || cfg.GoogleGeminiModel != "gemini-test-model" || cfg.GoogleTTSLanguageCode != "en-GB" || cfg.GoogleTTSVoiceName != "en-GB-Neural2-A" {
+		t.Fatalf("unexpected Google voice config: %+v", cfg)
 	}
 }

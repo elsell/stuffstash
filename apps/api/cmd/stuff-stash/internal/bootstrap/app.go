@@ -1,14 +1,19 @@
 package bootstrap
 
 import (
+	"context"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func buildApplication(cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) app.App {
-	stt, languageInference, tts := buildRealtimeVoiceProviders(cfg)
+func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+	stt, languageInference, tts, err := buildRealtimeVoiceProviders(ctx, cfg)
+	if err != nil {
+		return app.App{}, err
+	}
 	return app.New(app.Dependencies{
 		Observer:                      observer,
 		Auth:                          authenticator,
@@ -47,5 +52,5 @@ func buildApplication(cfg config.Config, observer ports.Observer, authenticator 
 		SpeechToText:                  stt,
 		LanguageInference:             languageInference,
 		TextToSpeech:                  tts,
-	})
+	}), nil
 }

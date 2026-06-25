@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"golang.org/x/oauth2"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/dbmigrations"
 	"github.com/stuffstash/stuff-stash/internal/config"
 )
@@ -166,16 +168,47 @@ func TestBuildBlobStorageRejectsIncompleteS3Config(t *testing.T) {
 }
 
 func TestBuildRealtimeVoiceProvidersDisabledByDefault(t *testing.T) {
-	stt, lm, tts := buildRealtimeVoiceProviders(config.Config{})
+	stt, lm, tts, err := buildRealtimeVoiceProviders(context.Background(), config.Config{})
+	if err != nil {
+		t.Fatalf("build providers: %v", err)
+	}
 	if stt != nil || lm != nil || tts != nil {
 		t.Fatalf("expected no realtime voice providers by default")
 	}
 }
 
 func TestBuildRealtimeVoiceProvidersAcceptsExplicitDevelopmentFakes(t *testing.T) {
-	stt, lm, tts := buildRealtimeVoiceProviders(config.Config{VoiceDevFakeEnabled: true})
+	stt, lm, tts, err := buildRealtimeVoiceProviders(context.Background(), config.Config{VoiceDevFakeEnabled: true})
+	if err != nil {
+		t.Fatalf("build providers: %v", err)
+	}
 	if stt == nil || lm == nil || tts == nil {
 		t.Fatalf("expected development fake realtime voice providers")
+	}
+}
+
+func TestBuildRealtimeVoiceProvidersRejectsGoogleWithoutProject(t *testing.T) {
+	_, _, _, err := buildRealtimeVoiceProviders(context.Background(), config.Config{VoiceGoogleEnabled: true})
+	if err == nil {
+		t.Fatalf("expected missing Google project error")
+	}
+}
+
+func TestBuildRealtimeVoiceProvidersPrefersGoogleWhenEnabled(t *testing.T) {
+	stt, lm, tts, err := buildRealtimeVoiceProvidersWithTokenSource(config.Config{
+		VoiceGoogleEnabled:    true,
+		VoiceDevFakeEnabled:   true,
+		GoogleCloudProject:    "pianotechpros",
+		GoogleCloudLocation:   "us-central1",
+		GoogleGeminiModel:     "gemini-test",
+		GoogleTTSLanguageCode: "en-US",
+		GoogleTTSVoiceName:    "en-US-Neural2-F",
+	}, staticBootstrapTokenSource{})
+	if err != nil {
+		t.Fatalf("build providers: %v", err)
+	}
+	if stt == nil || lm == nil || tts == nil {
+		t.Fatalf("expected Google realtime voice providers")
 	}
 }
 
@@ -215,6 +248,12 @@ type fakeSchemaBootstrapper struct {
 	failuresRemaining int
 	calls             int
 	schema            string
+}
+
+type staticBootstrapTokenSource struct{}
+
+func (staticBootstrapTokenSource) Token() (*oauth2.Token, error) {
+	return &oauth2.Token{AccessToken: "test-token", TokenType: "Bearer"}, nil
 }
 
 func (f *fakeSchemaBootstrapper) BootstrapSchema(_ context.Context, schema string) error {

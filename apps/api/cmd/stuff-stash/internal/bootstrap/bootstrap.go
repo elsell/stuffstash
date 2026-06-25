@@ -29,7 +29,10 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	}
 	defer recordCloseFailure(observer, closeRepositories)
 
-	application := buildApplication(cfg, observer, authenticator, authorizer, repositories)
+	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories)
+	if err != nil {
+		return err
+	}
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
 		MaxJSONBodyBytes:   cfg.HTTPMaxJSONBodyBytes,
