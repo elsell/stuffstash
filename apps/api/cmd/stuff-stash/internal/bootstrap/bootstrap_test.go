@@ -165,6 +165,20 @@ func TestBuildBlobStorageRejectsIncompleteS3Config(t *testing.T) {
 	}
 }
 
+func TestBuildRealtimeVoiceProvidersDisabledByDefault(t *testing.T) {
+	stt, lm, tts := buildRealtimeVoiceProviders(config.Config{})
+	if stt != nil || lm != nil || tts != nil {
+		t.Fatalf("expected no realtime voice providers by default")
+	}
+}
+
+func TestBuildRealtimeVoiceProvidersAcceptsExplicitDevelopmentFakes(t *testing.T) {
+	stt, lm, tts := buildRealtimeVoiceProviders(config.Config{VoiceDevFakeEnabled: true})
+	if stt == nil || lm == nil || tts == nil {
+		t.Fatalf("expected development fake realtime voice providers")
+	}
+}
+
 func TestBootstrapSpiceDBSchemaReadsSchemaFile(t *testing.T) {
 	schemaPath := filepath.Join(t.TempDir(), "schema.zed")
 	if err := os.WriteFile(schemaPath, []byte("definition user {}"), 0o600); err != nil {

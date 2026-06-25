@@ -51,6 +51,7 @@ const (
 	envS3Region                      = "STUFF_STASH_S3_REGION"
 	envS3Secure                      = "STUFF_STASH_S3_SECURE"
 	envMaxAttachmentBytes            = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
+	envVoiceDevFakeEnabled           = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
 	defaultHTTPAddr                  = ":8080"
 	defaultHTTPReadHeader            = 5 * time.Second
 	defaultHTTPRead                  = 15 * time.Second
@@ -82,6 +83,7 @@ const (
 	defaultMaxAttachmentBytes        = 5 * 1024 * 1024
 	defaultSpiceDBTLSEnabled         = true
 	defaultSpiceDBBootstrapMode      = false
+	defaultVoiceDevFakeEnabled       = false
 )
 
 type Config struct {
@@ -128,6 +130,7 @@ type Config struct {
 	S3Region                         string
 	S3Secure                         bool
 	MaxAttachmentBytes               int
+	VoiceDevFakeEnabled              bool
 }
 
 func Load() Config {
@@ -175,6 +178,7 @@ func Load() Config {
 		S3Region:                         envOrDefault(envS3Region, defaultS3Region),
 		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
+		VoiceDevFakeEnabled:              boolEnvOrDefault(envVoiceDevFakeEnabled, defaultVoiceDevFakeEnabled),
 	}
 }
 

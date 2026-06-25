@@ -41,6 +41,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envS3Region, "")
 	t.Setenv(envS3Secure, "")
 	t.Setenv(envMaxAttachmentBytes, "")
+	t.Setenv(envVoiceDevFakeEnabled, "")
 
 	cfg := Load()
 
@@ -131,6 +132,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.MaxAttachmentBytes != defaultMaxAttachmentBytes {
 		t.Fatalf("expected max attachment bytes %d, got %d", defaultMaxAttachmentBytes, cfg.MaxAttachmentBytes)
 	}
+	if cfg.VoiceDevFakeEnabled {
+		t.Fatalf("expected voice dev fake providers disabled by default")
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -176,6 +180,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envS3Region, "local")
 	t.Setenv(envS3Secure, "false")
 	t.Setenv(envMaxAttachmentBytes, "12345")
+	t.Setenv(envVoiceDevFakeEnabled, "true")
 
 	cfg := Load()
 
@@ -262,5 +267,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.MaxAttachmentBytes != 12345 {
 		t.Fatalf("expected max attachment bytes 12345, got %d", cfg.MaxAttachmentBytes)
+	}
+	if !cfg.VoiceDevFakeEnabled {
+		t.Fatalf("expected voice dev fake providers enabled")
 	}
 }

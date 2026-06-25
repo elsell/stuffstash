@@ -8,6 +8,7 @@ import (
 )
 
 func buildApplication(cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) app.App {
+	stt, languageInference, tts := buildRealtimeVoiceProviders(cfg)
 	return app.New(app.Dependencies{
 		Observer:                      observer,
 		Auth:                          authenticator,
@@ -43,5 +44,8 @@ func buildApplication(cfg config.Config, observer ports.Observer, authenticator 
 		DefaultPageLimit:              cfg.DefaultPageLimit,
 		MaxPageLimit:                  cfg.MaxPageLimit,
 		MaxAttachmentBytes:            cfg.MaxAttachmentBytes,
+		SpeechToText:                  stt,
+		LanguageInference:             languageInference,
+		TextToSpeech:                  tts,
 	})
 }

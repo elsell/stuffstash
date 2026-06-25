@@ -173,7 +173,11 @@ Server message fields:
 - `session.cancelled`: `seq`, `sessionId`.
 - `session.failed`: `seq`, `sessionId`, `code`, safe `message`.
 
-The first implementation may use a development provider profile set supplied at API composition time. Tenant-managed provider-profile persistence and UI management remain separate implementation work, but the realtime application service must still depend on project-owned provider ports and must not depend on concrete provider adapters.
+The first implementation may use a development provider profile set supplied at API composition time. The development provider set must be disabled by default and enabled only through explicit runtime configuration such as `STUFF_STASH_VOICE_DEV_FAKE_ENABLED=true`.
+
+Development fake providers may return deterministic transcript, language, and speech-like byte chunks for local end-to-end testing. They must live behind the same project-owned provider ports as real adapters and must not be enabled implicitly in production-shaped configuration.
+
+Tenant-managed provider-profile persistence and UI management remain separate implementation work, but the realtime application service must still depend on project-owned provider ports and must not depend on concrete provider adapters.
 
 ## Client Audio Input
 
