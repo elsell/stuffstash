@@ -226,6 +226,24 @@ func TestBuildRealtimeVoiceProvidersPrefersGoogleWhenEnabled(t *testing.T) {
 	}
 }
 
+func TestBuildRealtimeVoiceProvidersAcceptsGoogleAccessToken(t *testing.T) {
+	stt, lm, tts, err := buildRealtimeVoiceProviders(context.Background(), config.Config{
+		VoiceGoogleEnabled:    true,
+		GoogleCloudProject:    "pianotechpros",
+		GoogleCloudLocation:   "us-central1",
+		GoogleGeminiModel:     "gemini-test",
+		GoogleTTSLanguageCode: "en-US",
+		GoogleTTSVoiceName:    "en-US-Neural2-F",
+		GoogleAccessToken:     "ya29.test",
+	})
+	if err != nil {
+		t.Fatalf("build providers: %v", err)
+	}
+	if stt == nil || lm == nil || tts == nil {
+		t.Fatalf("expected Google realtime voice providers")
+	}
+}
+
 func TestBootstrapSpiceDBSchemaReadsSchemaFile(t *testing.T) {
 	schemaPath := filepath.Join(t.TempDir(), "schema.zed")
 	if err := os.WriteFile(schemaPath, []byte("definition user {}"), 0o600); err != nil {

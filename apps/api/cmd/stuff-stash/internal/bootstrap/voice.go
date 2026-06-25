@@ -25,6 +25,12 @@ var (
 
 func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.SpeechToTextProvider, ports.LanguageInferenceProvider, ports.TextToSpeechProvider, error) {
 	if cfg.VoiceGoogleEnabled {
+		if token := strings.TrimSpace(cfg.GoogleAccessToken); token != "" {
+			return buildRealtimeVoiceProvidersWithTokenSource(cfg, oauth2.StaticTokenSource(&oauth2.Token{
+				AccessToken: token,
+				TokenType:   "Bearer",
+			}))
+		}
 		tokenSource, err := google.DefaultTokenSource(ctx, googleCloudPlatformScope)
 		if err != nil {
 			return nil, nil, nil, err

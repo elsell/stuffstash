@@ -180,6 +180,7 @@ Development fake providers may return deterministic transcript, language, and sp
 The first real Google-hosted provider bridge may be enabled through explicit runtime configuration while tenant-managed provider profiles are still pending. This bridge must:
 
 - Use Google Application Default Credentials or equivalent OAuth credentials resolved only in the API process.
+- For local smoke testing, the API may accept a short-lived Google OAuth bearer token through runtime configuration. This token path is process-local, must not be persisted, and is not a tenant-managed provider-profile mechanism.
 - Require an explicit Google Cloud project ID.
 - Use Vertex AI Gemini through the speech-to-text port for the first mobile native audio path because Expo SDK 55 native recording defaults to MPEG-4 AAC (`.m4a`), while Google Cloud Speech-to-Text does not support M4A/AAC as a direct input encoding.
 - Use Vertex AI Gemini through the language inference port for the agent loop.

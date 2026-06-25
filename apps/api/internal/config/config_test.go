@@ -48,6 +48,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envGoogleGeminiModel, "")
 	t.Setenv(envGoogleTTSLanguageCode, "")
 	t.Setenv(envGoogleTTSVoiceName, "")
+	t.Setenv(envGoogleAccessToken, "")
 
 	cfg := Load()
 
@@ -147,6 +148,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.GoogleCloudProject != "" || cfg.GoogleCloudLocation != defaultGoogleCloudLocation || cfg.GoogleGeminiModel != defaultGoogleGeminiModel || cfg.GoogleTTSLanguageCode != defaultGoogleTTSLanguageCode || cfg.GoogleTTSVoiceName != defaultGoogleTTSVoiceName {
 		t.Fatalf("unexpected Google voice defaults: %+v", cfg)
 	}
+	if cfg.GoogleAccessToken != "" {
+		t.Fatalf("expected empty Google access token by default")
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -199,6 +203,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envGoogleGeminiModel, "gemini-test-model")
 	t.Setenv(envGoogleTTSLanguageCode, "en-GB")
 	t.Setenv(envGoogleTTSVoiceName, "en-GB-Neural2-A")
+	t.Setenv(envGoogleAccessToken, "ya29.test")
 
 	cfg := Load()
 
@@ -291,5 +296,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if !cfg.VoiceGoogleEnabled || cfg.GoogleCloudProject != "pianotechpros" || cfg.GoogleCloudLocation != "us-east5" || cfg.GoogleGeminiModel != "gemini-test-model" || cfg.GoogleTTSLanguageCode != "en-GB" || cfg.GoogleTTSVoiceName != "en-GB-Neural2-A" {
 		t.Fatalf("unexpected Google voice config: %+v", cfg)
+	}
+	if cfg.GoogleAccessToken != "ya29.test" {
+		t.Fatalf("expected Google access token config")
 	}
 }

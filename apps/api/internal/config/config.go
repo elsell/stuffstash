@@ -58,6 +58,7 @@ const (
 	envGoogleGeminiModel             = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
 	envGoogleTTSLanguageCode         = "STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE"
 	envGoogleTTSVoiceName            = "STUFF_STASH_GOOGLE_TTS_VOICE_NAME"
+	envGoogleAccessToken             = "STUFF_STASH_GOOGLE_ACCESS_TOKEN"
 	defaultHTTPAddr                  = ":8080"
 	defaultHTTPReadHeader            = 5 * time.Second
 	defaultHTTPRead                  = 15 * time.Second
@@ -148,6 +149,7 @@ type Config struct {
 	GoogleGeminiModel                string
 	GoogleTTSLanguageCode            string
 	GoogleTTSVoiceName               string
+	GoogleAccessToken                string
 }
 
 func Load() Config {
@@ -202,6 +204,7 @@ func Load() Config {
 		GoogleGeminiModel:                envOrDefault(envGoogleGeminiModel, defaultGoogleGeminiModel),
 		GoogleTTSLanguageCode:            envOrDefault(envGoogleTTSLanguageCode, defaultGoogleTTSLanguageCode),
 		GoogleTTSVoiceName:               envOrDefault(envGoogleTTSVoiceName, defaultGoogleTTSVoiceName),
+		GoogleAccessToken:                os.Getenv(envGoogleAccessToken),
 	}
 }
 
