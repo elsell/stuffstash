@@ -177,6 +177,16 @@ The first implementation may use a development provider profile set supplied at 
 
 Development fake providers may return deterministic transcript, language, and speech-like byte chunks for local end-to-end testing. They must live behind the same project-owned provider ports as real adapters and must not be enabled implicitly in production-shaped configuration.
 
+The first real Google-hosted provider bridge may be enabled through explicit runtime configuration while tenant-managed provider profiles are still pending. This bridge must:
+
+- Use Google Application Default Credentials or equivalent OAuth credentials resolved only in the API process.
+- Require an explicit Google Cloud project ID.
+- Use Vertex AI Gemini through the speech-to-text port for the first mobile native audio path because Expo SDK 55 native recording defaults to MPEG-4 AAC (`.m4a`), while Google Cloud Speech-to-Text does not support M4A/AAC as a direct input encoding.
+- Use Vertex AI Gemini through the language inference port for the agent loop.
+- Use Google Cloud Text-to-Speech through the text-to-speech port and return MP3 chunks to the mobile app.
+- Keep Google SDK, REST, OAuth, endpoint, and response-shape details inside provider adapters.
+- Fail closed at startup or session start when required Google configuration or credentials are unavailable.
+
 Tenant-managed provider-profile persistence and UI management remain separate implementation work, but the realtime application service must still depend on project-owned provider ports and must not depend on concrete provider adapters.
 
 ## Client Audio Input

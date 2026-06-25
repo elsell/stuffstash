@@ -33,6 +33,8 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo Metro runtime for Expo Router: `@expo/metro-runtime 55.0.11`.
 - Expo Linking for Expo Router: `expo-linking 55.0.15`.
 - Expo Constants for Expo Router: `expo-constants 55.0.16`.
+- Expo Audio for mobile voice recording and playback: `expo-audio 55.0.14`.
+- Expo FileSystem for mobile durable connection profile storage: `expo-file-system 55.0.22`.
 - Expo Image Picker for mobile create-form photo selection: `expo-image-picker 55.0.20`.
 - React Native Image Viewing for mobile draft photo preview carousel: `react-native-image-viewing 0.2.2`.
 - React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
