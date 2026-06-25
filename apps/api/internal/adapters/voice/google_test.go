@@ -154,6 +154,12 @@ func TestGoogleTextToSpeechSynthesizesMP3(t *testing.T) {
 	t.Parallel()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer test-token" {
+			t.Fatalf("missing bearer token: %q", r.Header.Get("Authorization"))
+		}
+		if r.Header.Get("X-Goog-User-Project") != "project" {
+			t.Fatalf("missing quota project: %q", r.Header.Get("X-Goog-User-Project"))
+		}
 		if r.URL.Path != "/v1/text:synthesize" {
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}

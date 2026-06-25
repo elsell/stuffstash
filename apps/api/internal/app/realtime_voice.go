@@ -98,8 +98,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
 		return RealtimeVoiceSession{}, err
 	}
-	if err := a.authorizer.CheckInventory(ctx, input.Principal, ports.InventoryPermissionView, input.InventoryID); err != nil {
-		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
 

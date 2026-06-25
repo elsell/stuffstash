@@ -121,6 +121,7 @@ The server must reject the session before audio streaming begins when:
 - The token is missing, malformed, expired, invalid, or unauthorized.
 - The tenant is hidden from the principal.
 - The inventory is hidden from the principal.
+- The inventory does not belong to the requested tenant, even if the principal can view both resources independently.
 - Required provider profiles are missing, disabled, archived, unsupported, malformed, or have unusable credentials.
 - The requested audio format is unsupported.
 - The server is unable to enforce timeout, cancellation, or safe observability behavior.
@@ -212,6 +213,8 @@ The mobile app must stop audio capture when the user cancels, the session ends, 
 
 Raw audio must not be durably persisted by the mobile app or API in this first slice.
 
+When a platform audio API requires file-backed recording or playback, the adapter may use the platform cache directory only as a transient implementation detail. The adapter must delete recorder and playback files after use, must perform best-effort stale cleanup on later voice operations, and must not let a failed player disposal or stale-file delete prevent cleanup of other voice temp files.
+
 ## Realtime Message Families
 
 The exact serialized schema must be specified before coding begins. The first slice must support these message families.
@@ -247,6 +250,8 @@ Server-to-client messages:
 All message names must be stable enumerations in implementation code.
 
 All server messages must include session ID and safe sequence metadata so the mobile app can order events and ignore late events from cancelled sessions.
+
+The mobile transport must validate server event sequence monotonicity and session binding before forwarding events to application state. `session.failed` may omit `sessionId` only before `session.started`; after a session is established, server events with missing, stale, or mismatched session metadata must fail the local session safely and must not update UI or play audio.
 
 Every client message after `session.start` must be bound to the authenticated WebSocket connection and server-created session. The server must reject forged session IDs, stale client sequence numbers, replayed audio chunks, messages from cancelled sessions, messages from completed sessions, and any attempt to change tenant or inventory scope after session authorization.
 

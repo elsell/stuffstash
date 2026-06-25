@@ -19,6 +19,8 @@ import (
 )
 
 const realtimeVoicePath = "/v1/realtime/voice"
+const maxRealtimeAudioChunkBytes = 512 * 1024
+const maxRealtimeVoiceFrameBytes = 710 * 1024
 
 func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +39,7 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 			return
 		}
 		defer connection.Close(websocket.StatusInternalError, "voice session ended")
+		connection.SetReadLimit(maxRealtimeVoiceFrameBytes)
 
 		ctx, cancelSession := context.WithTimeout(r.Context(), sessionTimeout)
 		defer cancelSession()
@@ -218,11 +221,8 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 				return nil, ports.ErrInvalidProviderInput
 			}
 			seenChunks[chunkID] = struct{}{}
-			if len(message.AudioBase64) > 700*1024 {
-				return nil, ports.ErrInvalidProviderInput
-			}
 			chunk, err := base64.StdEncoding.DecodeString(message.AudioBase64)
-			if err != nil || len(chunk) == 0 {
+			if err != nil || len(chunk) == 0 || len(chunk) > maxRealtimeAudioChunkBytes {
 				return nil, ports.ErrInvalidProviderInput
 			}
 			chunks = append(chunks, chunk)

@@ -187,6 +187,100 @@ func TestRealtimeVoiceQueryRejectsWrongInventory(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceQueryRejectsInventoryFromDifferentTenantEvenWhenPrincipalCanViewBoth(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants: []seedTenant{
+			{id: "tenant-home", name: "Home", owner: "user-1"},
+			{id: "tenant-shop", name: "Shop", owner: "user-1"},
+		},
+		inventories: []seedInventory{
+			{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"},
+			{id: "inventory-shop", tenantID: "tenant-shop", name: "Shop inventory", owner: "user-1"},
+		},
+		ids: []string{"voice-session-id"},
+	}, fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{})
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
+		HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:user-1"}},
+	})
+	if err != nil {
+		t.Fatalf("dial realtime voice websocket: %v", err)
+	}
+	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":        "session.start",
+		"seq":         1,
+		"tenantId":    "tenant-home",
+		"inventoryId": "inventory-shop",
+		"source":      "mobile_voice",
+		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
+		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
+	})
+	failed := readRealtimeMessage(t, ctx, connection)
+	if failed["type"] != "session.failed" {
+		t.Fatalf("expected session.failed, got %+v", failed)
+	}
+	if failed["code"] != "forbidden" {
+		t.Fatalf("expected forbidden, got %+v", failed)
+	}
+}
+
+func TestRealtimeVoiceQueryRejectsDecodedAudioChunkLargerThanLimit(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id"},
+	}, fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{})
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
+		HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:user-1"}},
+	})
+	if err != nil {
+		t.Fatalf("dial realtime voice websocket: %v", err)
+	}
+	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":        "session.start",
+		"seq":         1,
+		"tenantId":    "tenant-home",
+		"inventoryId": "inventory-home",
+		"source":      "mobile_voice",
+		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
+		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
+	})
+	started := readRealtimeMessage(t, ctx, connection)
+	sessionID, _ := started["sessionId"].(string)
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":        "audio.chunk",
+		"seq":         2,
+		"sessionId":   sessionID,
+		"chunkId":     "oversized",
+		"audioBase64": base64.StdEncoding.EncodeToString(make([]byte, 512*1024+1)),
+	})
+	failed := readRealtimeMessage(t, ctx, connection)
+	if failed["type"] != "session.failed" {
+		t.Fatalf("expected session.failed, got %+v", failed)
+	}
+	if failed["code"] != "invalid_request" {
+		t.Fatalf("expected invalid request, got %+v", failed)
+	}
+}
+
 func TestRealtimeVoiceQuerySearchesOnlySelectedInventory(t *testing.T) {
 	t.Parallel()
 
