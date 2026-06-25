@@ -1,5 +1,7 @@
 import { createAudioPlayer, requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import type { AudioPlayer } from 'expo-audio';
+// Expo Audio 55 exposes recorder construction publicly through a React hook only.
+// Keep this private constructor import isolated to the native voice adapter.
 import AudioModule from 'expo-audio/src/AudioModule';
 import { RecordingPresets } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
