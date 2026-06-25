@@ -83,6 +83,7 @@ The agent and model context owns:
 - Language model ports.
 - Conversational action planning.
 - Provider adapters.
+- MCP adapter and project-owned agent tool catalog.
 - Real-time voice and text interaction mechanics once specified.
 
 ### Expiration

@@ -124,5 +124,5 @@ The goal is to prove a production-shaped path through:
 
 - Google OIDC adapter end-to-end verification.
 - Mobile inventory/auth tracer bullet after the Expo Go development loop is proven.
-- Conversational inventory ports and action plan execution.
+- Conversational inventory provider profiles (`specs/agent-model/provider-profiles.spec.md`), MCP read tools (`specs/agent-model/mcp-agent-tools.spec.md`), mobile realtime voice query (`specs/agent-model/mobile-realtime-voice-query.spec.md`), API-mediated realtime sessions, credential sealing, ports, and action plan execution. Public MCP write tools must wait for the external approval/action-plan contract.
 - Import and export.

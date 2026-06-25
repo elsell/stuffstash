@@ -30,6 +30,8 @@ This spec does not define prompts, provider-specific structured output formats, 
 - Every executable command in the plan must be authorized at execution time.
 - The action plan must be auditable.
 - The action plan must be reproducible in tests with deterministic fake model responses.
+- The action plan must be independent of provider-specific model response formats, tool call formats, prompt templates, and streaming protocols.
+- The action plan must be produced and executed by the core API conversational application services, not by clients or provider-hosted agents.
 
 ## Initial Shape
 
@@ -40,7 +42,7 @@ The exact serialized format remains open, but the initial structure must include
 - `inventoryIds`: inventories in scope.
 - `principalId`: authenticated user who initiated the flow.
 - `source`: interaction source, such as mobile voice, mobile text, web text, web voice, REST, or MCP.
-- `transcript`: optional safe transcript reference, not raw audio.
+- `transcript`: optional safe transcript artifact reference governed by a specified retention and redaction policy, not raw audio.
 - `intent`: interpreted action intent.
 - `confidence`: coarse confidence value if useful to the UI.
 - `matches`: existing assets, locations, inventories, or custom fields matched by the flow.
@@ -50,6 +52,10 @@ The exact serialized format remains open, but the initial structure must include
 - `clarification`: question and options when the system cannot safely proceed.
 - `risks`: safe user-facing reasons why approval or clarification is needed.
 - `auditMetadata`: safe metadata for audit and observability.
+
+The action plan may reference the realtime session that produced it, but it must not contain provider credentials, raw provider prompts, raw provider responses, raw audio, raw transcripts, generated speech bytes, or provider-specific session identifiers.
+
+Until a transcript retention and redaction policy is specified, action plans must not reference persisted transcript artifacts. They may use only ephemeral transcript text during planning and safe derived metadata in persisted records.
 
 ## Command Rules
 

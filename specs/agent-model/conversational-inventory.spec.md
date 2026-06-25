@@ -21,6 +21,27 @@ This spec covers the first product direction for language-model-assisted invento
 
 This spec does not define a specific model provider, prompt format, streaming protocol, mobile screen layout, or persistence schema.
 
+## Realtime Architecture Decision
+
+Conversational inventory realtime interaction must be mediated by the Stuff Stash core API.
+
+Clients must not stream conversational audio, transcripts, prompts, model context, tool calls, or generated speech directly to speech-to-text, language model, or text-to-speech providers as part of the Stuff Stash product flow.
+
+The core API owns:
+
+- Realtime client connection authentication.
+- Tenant and inventory authorization checks.
+- Tenant provider profile resolution.
+- Speech-to-text, language model, and text-to-speech adapter selection.
+- Streaming proxy behavior to configured providers.
+- Agent loop orchestration.
+- Action plan creation, clarification, confirmation, cancellation, and execution.
+- Audit history, undo metadata, and safe observability.
+
+This decision keeps provider credentials out of clients, keeps all model-assisted actions inside the same authorization boundary as REST and future MCP interactions, and makes self-hosted Docker deployments viable without provider-specific client credential flows.
+
+Provider adapters may stream to local or remote providers from the API process, but those provider streams are infrastructure details behind ports. Provider streaming protocols, SDKs, request types, response types, and authentication mechanisms must not leak into domain, application command, REST, realtime transport, web, or mobile client code.
+
 ## Architectural Boundary
 
 - Conversational inventory is part of the core product experience, not the domain core.
@@ -65,14 +86,42 @@ Example command:
 - Provider implementations must be adapters.
 - The domain and application layers must not depend on provider SDKs, HTTP APIs, model-specific types, or prompt framework types.
 - Provider and prompt details must not leak into asset, location, identity, expiration, or other product domain models.
-- Users or operators should be able to choose model providers through environment-backed configuration.
-- The design must support remote providers such as Gemini API.
-- Gemini is the first remote model provider target.
+- Tenant administrators must be able to configure conversational provider profiles through Stuff Stash UI and API surfaces once those management surfaces are specified.
+- Provider profiles must be scoped to a tenant.
+- Provider profiles must identify the supported capability: speech-to-text, language inference, or text-to-speech.
+- Provider profiles must capture endpoint, model name, provider kind, non-secret runtime options, capability metadata, and encrypted credential material where the provider requires credentials.
+- Provider profiles must support local HTTP endpoints for self-hosted speech-to-text, language model, and text-to-speech runtimes.
+- Provider profiles must support remote provider endpoints.
+- Gemini remains a planned remote provider target, but the first common language inference adapter should support OpenAI-compatible endpoints because common local model runtimes expose that shape.
 - The design must support OpenAI-compatible local endpoints.
 - The design must support local models where practical.
 - Provider selection must not require changing domain logic.
-- Provider credentials, endpoints, model names, and runtime options must come from configuration, not hard-coded values.
+- Provider credentials, endpoints, model names, and runtime options must come from tenant provider profiles and runtime configuration, not hard-coded values.
 - Provider adapters must expose enough metadata for observability, debugging, and cost/performance analysis without leaking secrets or sensitive user content.
+- Provider profile management, lifecycle, authorization, audit, credential sealing, and provider testing are specified in `specs/agent-model/provider-profiles.spec.md`.
+
+## Provider Profile Credential Handling
+
+Provider credentials entered through the UI must be encrypted before persistence.
+
+The first design uses a credential-sealing port owned by the application layer and implemented by infrastructure adapters. The default adapter may store encrypted credential material in the database so Docker-based self-hosted deployments can manage providers through the UI without a separate secret manager.
+
+Credential storage must follow these rules:
+
+- Raw provider credentials must never be returned by API responses after creation or update.
+- Raw provider credentials must never be logged, audited, included in observability metadata, or exposed in generated OpenAPI examples.
+- The persistence layer may store ciphertext, nonce or initialization vector material, key identifier, encryption algorithm identifier, creation timestamp, update timestamp, and safe credential status metadata.
+- The encryption scheme must provide authenticated encryption, not only confidentiality.
+- Encrypted credential material must be authenticated to tenant ID, provider profile ID, capability, provider kind, and credential purpose so ciphertext cannot be moved across tenants, profiles, capabilities, provider kinds, or purposes.
+- The root encryption key or key-encryption key must come from environment-backed runtime configuration or a mounted runtime secret.
+- The service must fail closed at startup when encrypted provider credentials exist but no usable decryption key is configured.
+- Profile create, update, credential replacement, and provider test operations that require credentials must fail before accepting raw credentials when the credential-sealing adapter is unavailable or misconfigured.
+- Key rotation must be supported by recording a key identifier with each encrypted credential and by providing a re-encryption path before production use.
+- UI and API responses may show safe metadata such as whether a credential is configured, when it was last updated, and which provider profile uses it.
+- Deleting or replacing a credential must remove or supersede the prior encrypted credential material so inactive credentials are not accidentally used.
+- Tests must use deterministic fake credential sealers rather than real provider secrets.
+
+External secret managers may be added later behind the same credential-sealing or credential-store port, but the product architecture must not require Kubernetes secret references or operator-managed environment variables for tenant-level provider configuration.
 
 ## Agent Boundary
 
@@ -148,12 +197,14 @@ Domain specs must define the exact commands, entities, lifecycle states, and aut
 - Tests must cover successful commands, ambiguous commands, missing assets, missing locations, confirmation, cancellation, provider failure, malformed model output, unauthorized access, unauthenticated access, cross-tenant attempts, and privilege escalation attempts.
 - Model-dependent flows must be testable with deterministic fake model responses.
 - Security-sensitive flows must include adversarial end-to-end tests for mobile, web, REST, and future MCP entry points where applicable.
+- Tests must verify raw transcripts are not durably persisted before a transcript retention and redaction policy is specified.
 
 ## Open Questions
 
 - Which local speech-to-text, language model, and text-to-speech runtimes should be supported first?
 - Is an external agent-loop framework needed, or are direct application-level orchestration services enough?
 - Which actions are safe enough for one-tap confirmation?
-- Should voice audio ever be sent through the backend, or should clients call speech-to-text providers directly through short-lived credentials?
+- What audio formats and chunk sizes should the API-mediated realtime transport accept first?
+- What provider profile management API shape should tenant configuration screens use?
 - What retention policy should apply to transcripts, action plans, and audit events?
 - How should the UI show confidence without making the user think too hard?
