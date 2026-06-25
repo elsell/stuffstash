@@ -3,8 +3,7 @@ import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPr
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
-import { DevelopmentVoiceAudioRecorder } from '../adapters/voice/DevelopmentVoiceAudioRecorder';
-import { NoopVoiceAudioPlayer } from '../adapters/voice/NoopVoiceAudioPlayer';
+import { ExpoVoiceAudioPlayer, ExpoVoiceAudioRecorder } from '../adapters/voice/ExpoVoiceAudio';
 import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketRealtimeVoiceTransport';
 import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
 import { CreateAssetCommand } from '../application/add/CreateAssetCommand';
@@ -99,12 +98,12 @@ export function createMobileComposition(): MobileComposition {
     voiceInteractionPreviewQuery: new VoiceInteractionPreviewQuery(inventorySummaries),
     realtimeVoiceSessionController: new RealtimeVoiceSessionController(
       inventorySummaries,
-      new DevelopmentVoiceAudioRecorder(),
+      new ExpoVoiceAudioRecorder(),
       new WebSocketRealtimeVoiceTransport({
         apiBaseUrl: config?.apiBaseUrl ?? 'http://127.0.0.1:8080',
         tokenProvider: () => config?.devToken ?? ''
       }),
-      new NoopVoiceAudioPlayer()
+      new ExpoVoiceAudioPlayer()
     )
   };
 }
