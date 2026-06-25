@@ -284,6 +284,7 @@ The agent loop must:
 - Authorize every tool execution through the owning application service and authorization port.
 - Allow multiple tool-call iterations when needed.
 - Stop when the model produces a structured final response, a safe failure occurs, cancellation is requested, or the session times out.
+- Instruct the model to use tool results as the source of truth and to avoid inventing locations, quantities, or inventory contents that are not present in tool results.
 
 The first loop must expose only read-only tools to the model.
 
@@ -293,8 +294,32 @@ The first read-only tools are:
 - Get asset detail.
 - List assets in a location.
 - List root-level assets in an inventory.
+- List authorized assets by safe filters such as kind, lifecycle state, and optional parent or location title.
 
 The loop must not expose write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access.
+
+Tool results provided to the language model must be structured, safe, and useful enough for accurate answers. For visible assets, read-only tool output should include:
+
+- Title.
+- Kind.
+- Description when present.
+- Inventory name.
+- Lifecycle state.
+- Parent title and parent kind when present.
+- Nearest containing location title when present.
+- Human-readable containment path from outermost visible container or location to the asset.
+- Custom fields only after a field sensitivity and provider-disclosure policy exists. The first improved catalog must omit custom field values from cloud-provider tool results.
+- Match metadata that helps the model understand why a result was returned.
+
+Tool results must not include raw authorization decisions, hidden resources, bearer tokens, provider credentials, raw prompts, raw model responses, raw audio, generated speech, custom field values before a sensitivity policy exists, internal stack traces, or infrastructure details. Internal resource identifiers may be provided to the in-process agent loop only when needed to chain read-only tool calls, and final user-facing responses must not speak or display those identifiers.
+
+The first implementation may expose structured tool results as compact JSON strings through the language inference port while provider-native tool schemas are still evolving. The JSON shape must remain project-owned and provider-independent.
+
+The first improved implementation may expose a generic filtered list tool that covers list-by-location, list-root-level, and list-by-kind behavior before separate public tool names are added. The first voice tool catalog must support at least these user intents accurately for visible inventory data:
+
+- "Where is my water bottle?" returns the containing location or containment path when available.
+- "What items do I have?" returns visible item-kind assets in the selected inventory.
+- "What is in the office?" returns visible children of the matching location or container when available.
 
 ## Tool Progress Events
 
@@ -348,6 +373,24 @@ The model must be instructed that `spokenResponse` is what the user will hear. I
 `displayResponse` may be the same as `spokenResponse` in the first slice.
 
 The final response must not include raw chain-of-thought, raw model reasoning, raw prompts, raw provider responses, raw transcripts, raw audio, credentials, bearer tokens, hidden resource data, or stack traces.
+
+## Prompt Templates
+
+The first real provider adapters may use a fixed project-owned prompt template for the voice loop.
+
+Future tenant-managed provider profiles must support model-specific prompt template configuration because smaller or local models may need different instructions, output examples, or schema wording. Prompt templates must be configuration data resolved through the provider-profile/application boundary, not hard-coded provider adapter behavior.
+
+Prompt template customization must preserve required security and product guardrails:
+
+- The structured response contract.
+- The allowed tool catalog.
+- Tenant and inventory scope.
+- Read-only/write confirmation boundaries.
+- Safe error behavior.
+- Redaction and retention rules.
+- Prohibition on exposing hidden identifiers, credentials, raw prompts, raw transcripts, raw audio, generated speech, or hidden resources.
+
+Provider-specific prompt templates may tune wording and examples, but they must not loosen authorization, tenancy, tool validation, action-plan, confirmation, or audit requirements.
 
 ## Final Response Streaming
 

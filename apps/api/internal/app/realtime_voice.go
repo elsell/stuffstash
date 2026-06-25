@@ -28,7 +28,9 @@ const (
 	RealtimeVoiceEventTextToSpeechAudioCompleted  = "tts.audio.completed"
 	RealtimeVoiceEventSessionCompleted            = "session.completed"
 	RealtimeVoiceToolSearchAuthorizedAssets       = "search_authorized_assets"
+	RealtimeVoiceToolListAuthorizedAssets         = "list_authorized_assets"
 	realtimeVoiceSearchAuthorizedAssetsPublicName = "Search inventory"
+	realtimeVoiceListAuthorizedAssetsPublicName   = "List inventory"
 )
 
 type RealtimeVoiceSessionInput struct {
@@ -162,6 +164,9 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			return err
 		}
 		if modelTurn.Final != nil {
+			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
+				return err
+			}
 			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, emit)
 		}
 		if len(modelTurn.ToolCalls) == 0 {
@@ -172,8 +177,9 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			if toolCallID == "" {
 				toolCallID = a.newRealtimeVoiceID()
 			}
+			toolLabel := realtimeVoiceToolLabel(call.Name)
 			toolCallIDs = append(toolCallIDs, toolCallID)
-			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: realtimeVoiceSearchAuthorizedAssetsPublicName, Status: "searching"}); err != nil {
+			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "searching"}); err != nil {
 				return err
 			}
 			result, err := a.executeRealtimeVoiceTool(ctx, input.Session, ports.AgentToolCall{
@@ -182,11 +188,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				Arguments: call.Arguments,
 			})
 			if err != nil {
-				_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: realtimeVoiceSearchAuthorizedAssetsPublicName, Code: "tool_failed", Message: "I could not check that safely."})
+				_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
 				return err
 			}
 			toolResults = append(toolResults, result)
-			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: realtimeVoiceSearchAuthorizedAssetsPublicName, Status: "completed"}); err != nil {
+			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "completed"}); err != nil {
 				return err
 			}
 		}
@@ -195,52 +201,13 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 }
 
 func (a App) ensureRealtimeVoiceDependencies() error {
-	if a.authorizer == nil || a.speechToText == nil || a.languageInference == nil || a.textToSpeech == nil {
+	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.speechToText == nil || a.languageInference == nil || a.textToSpeech == nil {
 		return apperrors.ErrInvalidInput
 	}
 	return nil
 }
 
-func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
-	if call.Name != RealtimeVoiceToolSearchAuthorizedAssets {
-		return ports.AgentToolResult{}, ports.ErrForbidden
-	}
-	query, _ := call.Arguments["query"].(string)
-	query = strings.TrimSpace(query)
-	if query == "" {
-		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
-	}
-
-	results, err := a.SearchAssets(ctx, SearchAssetsInput{
-		Principal:      session.Principal,
-		TenantID:       session.TenantID,
-		InventoryIDs:   []inventory.InventoryID{session.InventoryID},
-		Query:          query,
-		Mode:           "fuzzy",
-		LifecycleState: "active",
-		Limit:          5,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, err
-	}
-	safeSummaries := make([]string, 0, len(results.Items))
-	for _, item := range results.Items {
-		safeSummaries = append(safeSummaries, fmt.Sprintf("%s (%s)", item.Asset.Title.String(), item.Asset.Kind.String()))
-	}
-	if len(safeSummaries) == 0 {
-		safeSummaries = append(safeSummaries, "No visible matches.")
-	}
-	return ports.AgentToolResult{
-		CallID:  call.ID,
-		Name:    call.Name,
-		Content: strings.Join(safeSummaries, "\n"),
-	}, nil
-}
-
 func (a App) completeRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
-	if strings.TrimSpace(response.SpokenResponse) == "" {
-		return ports.ErrInvalidProviderInput
-	}
 	if response.Kind == "" {
 		response.Kind = ports.StructuredAgentResponseKindAnswer
 	}
@@ -291,13 +258,31 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
 }
 
-func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
-	return []ports.AgentToolDescriptor{{
-		Name:        RealtimeVoiceToolSearchAuthorizedAssets,
-		Label:       realtimeVoiceSearchAuthorizedAssetsPublicName,
-		Description: "Search visible assets in the selected inventory.",
-		ReadOnly:    true,
-	}}
+func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) error {
+	kind := response.Kind
+	if kind == "" {
+		kind = ports.StructuredAgentResponseKindAnswer
+	}
+	switch kind {
+	case ports.StructuredAgentResponseKindAnswer,
+		ports.StructuredAgentResponseKindClarification,
+		ports.StructuredAgentResponseKindUnsupportedAction,
+		ports.StructuredAgentResponseKindSafeFailure:
+	default:
+		return ports.ErrInvalidProviderInput
+	}
+	if !boundedRealtimeVoiceText(response.SpokenResponse, 500) {
+		return ports.ErrInvalidProviderInput
+	}
+	if strings.TrimSpace(response.DisplayResponse) != "" && !boundedRealtimeVoiceText(response.DisplayResponse, 1000) {
+		return ports.ErrInvalidProviderInput
+	}
+	return nil
+}
+
+func boundedRealtimeVoiceText(value string, limit int) bool {
+	value = strings.TrimSpace(value)
+	return value != "" && len(value) <= limit
 }
 
 func realtimeVoiceErrorCode(err error) string {

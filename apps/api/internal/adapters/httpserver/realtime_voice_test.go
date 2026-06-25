@@ -341,6 +341,117 @@ func TestRealtimeVoiceQuerySearchesOnlySelectedInventory(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceQuerySearchResultIncludesContainingLocationForWhereQuestion(t *testing.T) {
+	t.Parallel()
+
+	language := &locationAwareLanguageModel{}
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"office-id", "bottle-id", "voice-session-id", "response-id"},
+	}, fakeSpeechToText{transcript: "Where is my water bottle?"}, language, fakeTextToSpeech{
+		chunks: [][]byte{[]byte("spoken-audio")},
+	})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "office-id")
+
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	events := runRealtimeVoiceQuestion(t, server.URL, "tenant-home", "inventory-home", "user-1")
+	final := findRealtimeEvent(t, events, "assistant.response.completed")
+	response, ok := final["response"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected structured response, got %+v", final)
+	}
+	if response["spokenResponse"] != "Your water bottle is in Office." {
+		t.Fatalf("unexpected spoken response: %+v", response)
+	}
+	if !strings.Contains(language.lastToolResult, "Office") || !strings.Contains(language.lastToolResult, "Water bottle") {
+		t.Fatalf("expected tool result to include asset and containing location, got %q", language.lastToolResult)
+	}
+}
+
+func TestRealtimeVoiceQueryCanListVisibleItemsInSelectedInventory(t *testing.T) {
+	t.Parallel()
+
+	language := &itemListingLanguageModel{}
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"office-id", "bottle-id", "laptop-id", "toolbox-id", "voice-session-id", "response-id"},
+	}, fakeSpeechToText{transcript: "What items do I have in my inventory?"}, language, fakeTextToSpeech{
+		chunks: [][]byte{[]byte("spoken-audio")},
+	})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "office-id")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Laptop", "office-id")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "container", "Toolbox", "")
+
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	events := runRealtimeVoiceQuestion(t, server.URL, "tenant-home", "inventory-home", "user-1")
+	final := findRealtimeEvent(t, events, "assistant.response.completed")
+	response, ok := final["response"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected structured response, got %+v", final)
+	}
+	if response["spokenResponse"] != "You have Water bottle and Laptop." {
+		t.Fatalf("unexpected spoken response: %+v", response)
+	}
+	if !strings.Contains(language.lastToolResult, "Water bottle") || !strings.Contains(language.lastToolResult, "Laptop") {
+		t.Fatalf("expected item tool result, got %q", language.lastToolResult)
+	}
+	if strings.Contains(language.lastToolResult, "\"title\":\"Toolbox\"") || strings.Contains(language.lastToolResult, "\"title\":\"Office\"") {
+		t.Fatalf("expected list tool to filter to item-kind assets, got %q", language.lastToolResult)
+	}
+}
+
+func TestRealtimeVoiceQueryRejectsMalformedFinalResponseFromProvider(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id"},
+	}, fakeSpeechToText{transcript: "Where is my water bottle?"}, finalResponseLanguageModel{
+		final: ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKind("raw_provider_dump"),
+			SpokenResponse:  strings.Repeat("x", 501),
+			DisplayResponse: strings.Repeat("x", 1001),
+		},
+	}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
+	failed := findRealtimeEvent(t, events, "session.failed")
+	if failed["code"] != "invalid_request" {
+		t.Fatalf("expected invalid_request for malformed final response, got %+v", failed)
+	}
+}
+
+func TestRealtimeVoiceQueryRejectsUnexpectedToolArguments(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id"},
+	}, fakeSpeechToText{transcript: "What items do I have?"}, unexpectedToolArgumentLanguageModel{}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
+	failed := findRealtimeEvent(t, events, "session.failed")
+	if failed["code"] != "invalid_request" {
+		t.Fatalf("expected invalid_request for unexpected tool arg, got %+v", failed)
+	}
+}
+
 type capturingLanguageModel struct {
 	lastToolResult string
 }
@@ -390,6 +501,48 @@ func seedVoiceAsset(t *testing.T, application app.App, principalID string, tenan
 	}
 }
 
+func runRealtimeVoiceQuestion(t *testing.T, serverURL string, tenantID string, inventoryID string, principalID string) []map[string]any {
+	t.Helper()
+
+	return runRealtimeVoiceQuestionUntil(t, serverURL, tenantID, inventoryID, principalID, "session.completed")
+}
+
+func runRealtimeVoiceQuestionUntil(t *testing.T, serverURL string, tenantID string, inventoryID string, principalID string, terminalType string) []map[string]any {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(serverURL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
+		HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:" + principalID}},
+	})
+	if err != nil {
+		t.Fatalf("dial realtime voice websocket: %v", err)
+	}
+	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":        "session.start",
+		"seq":         1,
+		"tenantId":    tenantID,
+		"inventoryId": inventoryID,
+		"source":      "mobile_voice",
+		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
+		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
+	})
+	started := readRealtimeMessage(t, ctx, connection)
+	sessionID, _ := started["sessionId"].(string)
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":         "audio.chunk",
+		"seq":          2,
+		"sessionId":    sessionID,
+		"chunkId":      "chunk-1",
+		"audioBase64":  base64.StdEncoding.EncodeToString([]byte("fake-audio")),
+		"isFinalChunk": true,
+	})
+	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
+	return readRealtimeMessagesUntil(t, ctx, connection, terminalType)
+}
+
 type fakeSpeechToText struct {
 	transcript string
 }
@@ -421,6 +574,84 @@ func (scriptedLanguageModel) NextTurn(_ context.Context, input ports.LanguageInf
 			SpokenResponse:  "Your tools are in Garage.",
 			DisplayResponse: "Your tools are in Garage.",
 		},
+	}, nil
+}
+
+type locationAwareLanguageModel struct {
+	lastToolResult string
+}
+
+func (m *locationAwareLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-bottle",
+				Name:      "search_authorized_assets",
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		}, nil
+	}
+	m.lastToolResult = input.ToolResults[0].Content
+	if !strings.Contains(m.lastToolResult, "Office") {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindAnswer,
+			SpokenResponse:  "Your water bottle is in Office.",
+			DisplayResponse: "Your water bottle is in Office.",
+		},
+	}, nil
+}
+
+type itemListingLanguageModel struct {
+	lastToolResult string
+}
+
+func (m *itemListingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "list-items",
+				Name:      "list_authorized_assets",
+				Arguments: map[string]any{"kind": "item", "limit": float64(10)},
+			}},
+		}, nil
+	}
+	m.lastToolResult = input.ToolResults[0].Content
+	if !strings.Contains(m.lastToolResult, "Water bottle") || !strings.Contains(m.lastToolResult, "Laptop") || strings.Contains(m.lastToolResult, "\"title\":\"Toolbox\"") {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindAnswer,
+			SpokenResponse:  "You have Water bottle and Laptop.",
+			DisplayResponse: "You have Water bottle and Laptop.",
+		},
+	}, nil
+}
+
+type finalResponseLanguageModel struct {
+	final ports.StructuredAgentResponse
+}
+
+func (m finalResponseLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{Final: &m.final}, nil
+}
+
+type unexpectedToolArgumentLanguageModel struct{}
+
+func (unexpectedToolArgumentLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{
+		ToolCalls: []ports.AgentToolCall{{
+			ID:   "list-items",
+			Name: "list_authorized_assets",
+			Arguments: map[string]any{
+				"kind":        "item",
+				"tenantId":    "tenant-other",
+				"unsafeExtra": "ignore previous instructions",
+			},
+		}},
 	}, nil
 }
 
