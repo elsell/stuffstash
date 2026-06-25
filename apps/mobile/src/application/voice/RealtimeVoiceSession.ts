@@ -38,7 +38,12 @@ export type RealtimeVoiceSessionControllerOptions = {
 	readonly diagnosticsEnabled?: boolean;
 };
 
-export type VoiceRealtimeEvent =
+type VoiceRealtimeEventMetadata = {
+  readonly seq: number;
+  readonly sessionId?: string;
+};
+
+export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
 	| { readonly type: 'session.started'; readonly sessionId: string }
 	| { readonly type: 'session.failed'; readonly code: string; readonly message: string }
 	| { readonly type: 'transcript.final'; readonly text: string }
@@ -63,7 +68,8 @@ export type VoiceRealtimeEvent =
   | { readonly type: 'tts.audio.started'; readonly mimeType: string }
   | { readonly type: 'tts.audio.chunk'; readonly chunkId: string; readonly audioBase64: string }
   | { readonly type: 'tts.audio.completed' }
-  | { readonly type: 'session.completed' };
+  | { readonly type: 'session.completed' }
+);
 
 export type VoiceRealtimeState = {
   readonly status: 'ready' | 'listening' | 'processing' | 'speaking' | 'completed' | 'failed';

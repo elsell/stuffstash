@@ -20,22 +20,24 @@ describe('RealtimeVoiceSessionController', () => {
   it('records the selected inventory context, streams safe progress, and plays TTS chunks', async () => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([
-      { type: 'session.started', sessionId: 'session-1' },
-      { type: 'transcript.final', text: 'Where are my tools?' },
-      { type: 'tool.call.started', toolCallId: 'tool-1', toolLabel: 'Search inventory', status: 'searching' },
-      { type: 'tool.call.completed', toolCallId: 'tool-1', toolLabel: 'Search inventory', status: 'completed' },
+      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      { type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' },
+      { type: 'tool.call.started', seq: 3, sessionId: 'session-1', toolCallId: 'tool-1', toolLabel: 'Search inventory', status: 'searching' },
+      { type: 'tool.call.completed', seq: 4, sessionId: 'session-1', toolCallId: 'tool-1', toolLabel: 'Search inventory', status: 'completed' },
       {
         type: 'assistant.response.completed',
+        seq: 5,
+        sessionId: 'session-1',
         response: {
           spokenResponse: 'Your tools are in Garage.',
           displayResponse: 'Your tools are in Garage.',
           kind: 'answer'
         }
       },
-      { type: 'tts.audio.started', mimeType: 'audio/mpeg' },
-      { type: 'tts.audio.chunk', audioBase64: 'YXVkaW8tMQ==', chunkId: 'tts-1' },
-      { type: 'tts.audio.completed' },
-      { type: 'session.completed' }
+      { type: 'tts.audio.started', seq: 6, sessionId: 'session-1', mimeType: 'audio/mpeg' },
+      { type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', audioBase64: 'YXVkaW8tMQ==', chunkId: 'tts-1' },
+      { type: 'tts.audio.completed', seq: 8, sessionId: 'session-1' },
+      { type: 'session.completed', seq: 9, sessionId: 'session-1' }
     ]);
     const player = new FakePlayer();
     const controller = new RealtimeVoiceSessionController(
@@ -73,6 +75,24 @@ describe('RealtimeVoiceSessionController', () => {
     });
     expect(player.played).toEqual([{ audioBase64: 'YXVkaW8tMQ==', mimeType: 'audio/mpeg' }]);
     expect(player.stops).toBe(2);
+  });
+
+  it('returns the server failure state when the realtime session fails safely', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{ type: 'session.failed', seq: 1, code: 'invalid_request', message: 'Voice is not configured.' }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      errorMessage: 'Voice is not configured.',
+      progressLabel: 'Voice failed'
+    });
   });
 });
 

@@ -86,6 +86,33 @@ describe('ExpoVoiceAudioPlayer', () => {
 
     expect(fileSystem.deleted).toEqual([fileSystem.writes[0]?.uri]);
   });
+
+  it('deletes playback files even when disposing the player fails', async () => {
+    const audio = new FakeAudio(new FakeRecorder('file:///recording.m4a'));
+    audio.failRemove = true;
+    const fileSystem = new FakeFileSystem({});
+    const player = new ExpoVoiceAudioPlayerCore(audio, fileSystem);
+
+    await expect(player.playChunk('c3BlZWNo', 'audio/mpeg')).rejects.toThrow('remove failed');
+
+    expect(fileSystem.deleted).toEqual([fileSystem.writes[0]?.uri]);
+  });
+
+  it('continues stale cleanup when one temp file delete fails', async () => {
+    const audio = new FakeAudio(new FakeRecorder('file:///recording.m4a'));
+    const fileSystem = new FakeFileSystem({
+      'file:///cache/stuffstash-voice-one.mp3': 'old',
+      'file:///cache/stuffstash-voice-two.mp3': 'old',
+      'file:///cache/unrelated.mp3': 'keep'
+    });
+    fileSystem.failDeleteUris.add('file:///cache/stuffstash-voice-one.mp3');
+    const player = new ExpoVoiceAudioPlayerCore(audio, fileSystem);
+
+    await player.stop();
+
+    expect(fileSystem.deleted).toContain('file:///cache/stuffstash-voice-two.mp3');
+    expect(fileSystem.files['file:///cache/unrelated.mp3']).toBe('keep');
+  });
 });
 
 class FakeRecorder {
@@ -114,7 +141,7 @@ class FakePlayer {
   removed = false;
   private listener: ((status: { readonly didJustFinish?: boolean }) => void) | null = null;
 
-  constructor(readonly uri: string) {}
+  constructor(readonly uri: string, private readonly shouldFailRemove = false) {}
 
   addListener(_event: 'playbackStatusUpdate', listener: (status: { readonly didJustFinish?: boolean }) => void): { remove(): void } {
     this.listener = listener;
@@ -139,12 +166,16 @@ class FakePlayer {
   }
 
   remove(): void {
+    if (this.shouldFailRemove) {
+      throw new Error('remove failed');
+    }
     this.removed = true;
   }
 }
 
 class FakeAudio {
   granted = true;
+  failRemove = false;
   readonly modes: Array<Record<string, boolean>> = [];
   readonly players: FakePlayer[] = [];
 
@@ -163,7 +194,7 @@ class FakeAudio {
   }
 
   createAudioPlayer(uri: string): FakePlayer {
-    const player = new FakePlayer(uri);
+    const player = new FakePlayer(uri, this.failRemove);
     this.players.push(player);
     return player;
   }
@@ -173,6 +204,7 @@ class FakeFileSystem {
   readonly cacheDirectory = 'file:///cache/';
   readonly writes: Array<{ readonly uri: string; readonly contents: string; readonly encoding: string }> = [];
   readonly deleted: string[] = [];
+  readonly failDeleteUris = new Set<string>();
 
   constructor(readonly files: Record<string, string>) {}
 
@@ -192,6 +224,9 @@ class FakeFileSystem {
   }
 
   async deleteAsync(uri: string): Promise<void> {
+    if (this.failDeleteUris.has(uri)) {
+      throw new Error(`delete failed: ${uri}`);
+    }
     delete this.files[uri];
     this.deleted.push(uri);
   }

@@ -130,18 +130,31 @@ export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {
       this.players.push(player);
       await playUntilFinished(player);
     } finally {
-      if (player !== null) {
-        await this.disposePlayer(player);
+      let cleanupError: unknown;
+      try {
+        if (player !== null) {
+          await this.disposePlayer(player);
+        }
+      } catch (error) {
+        cleanupError = error;
+      } finally {
+        try {
+          await this.deleteTempUri(uri);
+        } catch (error) {
+          cleanupError ??= error;
+        }
       }
-      await this.deleteTempUri(uri);
+      if (cleanupError) {
+        throw cleanupError;
+      }
     }
   }
 
   async stop(): Promise<void> {
     const uris = this.tempUris.splice(0);
     const players = this.players.splice(0);
-    await Promise.all(players.map((player) => this.disposePlayer(player)));
-    await Promise.all(uris.map((uri) => this.deleteTempUri(uri)));
+    await Promise.allSettled(players.map((player) => this.disposePlayer(player)));
+    await Promise.allSettled(uris.map((uri) => this.deleteTempUri(uri)));
     await cleanupStaleVoiceTempFiles(this.fileSystem);
   }
 
@@ -196,7 +209,7 @@ async function cleanupStaleVoiceTempFiles(fileSystem: ExpoVoiceFileSystem): Prom
     return;
   }
   const entries = await fileSystem.readDirectoryAsync(cacheDirectory);
-  await Promise.all(
+  await Promise.allSettled(
     entries
       .filter((entry) => entry.startsWith(voiceTempFilePrefix))
       .map((entry) => fileSystem.deleteAsync?.(cacheDirectory + entry, { idempotent: true }) ?? Promise.resolve())
