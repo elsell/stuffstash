@@ -14,7 +14,7 @@ import { useVoiceInteractionState, VoiceInteractionStage } from '../navigation/V
 import { colors, radius, spacing } from '../theme/tokens';
 
 export function VoiceInteractionScreen() {
-  const { setStage, state } = useVoiceInteractionState();
+  const { reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
@@ -23,8 +23,11 @@ export function VoiceInteractionScreen() {
       {state.status === 'ready' ? (
         <VoicePreview
           preview={state.preview}
+          realtime={state.realtime}
+          onReset={reset}
+          onStart={startRealtime}
+          onStop={stopRealtime}
           stage={state.stage}
-          onChangeStage={setStage}
         />
       ) : null}
     </SafeAreaView>
@@ -50,16 +53,31 @@ function ErrorState({ message }: { readonly message: string }) {
 }
 
 function VoicePreview({
-  onChangeStage,
+  onReset,
+  onStart,
+  onStop,
   preview,
+  realtime,
   stage
 }: {
-  readonly onChangeStage: (stage: VoiceInteractionStage) => void;
+  readonly onReset: () => void;
+  readonly onStart: () => Promise<void>;
+  readonly onStop: () => Promise<void>;
   readonly preview: VoiceInteractionPreviewViewModel;
+  readonly realtime: {
+    readonly status: string;
+    readonly transcript?: string;
+    readonly spokenResponse?: string;
+    readonly progressLabel?: string;
+    readonly debugEvents: readonly string[];
+    readonly errorMessage?: string;
+  } | null;
   readonly stage: VoiceInteractionStage;
 }) {
   const isListening = stage === 'listening';
   const isReviewing = stage === 'review';
+  const isProcessing = stage === 'processing' || stage === 'speaking';
+  const hasRealtimeResult = stage === 'completed' || stage === 'failed' || realtime?.transcript || realtime?.spokenResponse;
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -83,7 +101,13 @@ function VoicePreview({
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ selected: isListening }}
-          onPress={() => onChangeStage(isListening ? 'review' : 'listening')}
+          onPress={() => {
+            if (isListening) {
+              void onStop();
+            } else {
+              void onStart();
+            }
+          }}
           style={[styles.micButton, isListening ? styles.micButtonActive : null]}
         >
           {isListening ? (
@@ -93,17 +117,42 @@ function VoicePreview({
           )}
         </Pressable>
         <Text style={styles.voiceStatus}>
-          {isListening ? 'Listening' : isReviewing ? 'Ready to review' : 'Ready'}
+          {isListening ? 'Listening' : isProcessing ? 'Working' : stage === 'completed' ? 'Done' : stage === 'failed' ? 'Could not finish' : isReviewing ? 'Ready to review' : 'Ready'}
         </Text>
         <Text style={styles.voiceSubstatus}>
-          {isListening ? 'Realtime voice is not connected yet.' : 'Preview mode'}
+          {realtime?.progressLabel ?? (isListening ? 'Tap again to stop.' : 'Tap to ask about this inventory.')}
         </Text>
       </View>
 
-      {stage !== 'ready' ? (
+      {hasRealtimeResult ? (
         <View style={styles.transcriptCard}>
           <Text style={styles.cardLabel}>You said</Text>
-          <Text style={styles.transcriptText}>{preview.sampleUtterance}</Text>
+          <Text style={styles.transcriptText}>{realtime?.transcript ?? preview.sampleUtterance}</Text>
+        </View>
+      ) : null}
+
+      {realtime?.debugEvents.length ? (
+        <View style={styles.planCard}>
+          <Text style={styles.cardLabel}>Tool progress</Text>
+          {realtime.debugEvents.map((event) => (
+            <Text key={event} style={styles.stepText}>{event}</Text>
+          ))}
+        </View>
+      ) : null}
+
+      {realtime?.spokenResponse ? (
+        <View style={styles.assistantCard}>
+          <View style={styles.assistantIcon}>
+            <MessageCircle color={colors.accentStrong} size={18} strokeWidth={2.4} />
+          </View>
+          <Text style={styles.assistantText}>{realtime.spokenResponse}</Text>
+        </View>
+      ) : null}
+
+      {realtime?.errorMessage ? (
+        <View style={styles.transcriptCard}>
+          <Text style={styles.cardLabel}>Voice failed</Text>
+          <Text style={styles.transcriptText}>{realtime.errorMessage}</Text>
         </View>
       ) : null}
 
@@ -147,17 +196,11 @@ function VoicePreview({
       ) : null}
 
       {stage === 'ready' ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => onChangeStage('review')}
-          style={styles.previewButton}
-        >
-          <Text style={styles.previewButtonText}>Preview review flow</Text>
-        </Pressable>
+        null
       ) : (
         <Pressable
           accessibilityRole="button"
-          onPress={() => onChangeStage('ready')}
+          onPress={onReset}
           style={styles.resetButton}
         >
           <Text style={styles.resetButtonText}>Reset</Text>

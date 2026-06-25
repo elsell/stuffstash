@@ -18,6 +18,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     <AppServicesContext.Provider value={mobileComposition}>
       <VoiceInteractionStateProvider
         previewQuery={mobileComposition.voiceInteractionPreviewQuery}
+        realtimeController={mobileComposition.realtimeVoiceSessionController}
       >
         {children}
       </VoiceInteractionStateProvider>

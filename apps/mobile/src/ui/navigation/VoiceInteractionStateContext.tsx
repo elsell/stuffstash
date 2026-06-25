@@ -3,8 +3,12 @@ import {
   VoiceInteractionPreviewQuery,
   VoiceInteractionPreviewViewModel
 } from '../../application/voice/VoiceInteractionPreviewQuery';
+import {
+  RealtimeVoiceSessionController,
+  VoiceRealtimeState
+} from '../../application/voice/RealtimeVoiceSession';
 
-export type VoiceInteractionStage = 'ready' | 'listening' | 'review';
+export type VoiceInteractionStage = 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'failed';
 
 type VoiceInteractionState =
   | { readonly status: 'loading'; readonly stage: VoiceInteractionStage }
@@ -13,11 +17,14 @@ type VoiceInteractionState =
       readonly status: 'ready';
       readonly stage: VoiceInteractionStage;
       readonly preview: VoiceInteractionPreviewViewModel;
+      readonly realtime: VoiceRealtimeState | null;
     };
 
 type VoiceInteractionStateContextValue = {
   readonly state: VoiceInteractionState;
   readonly setStage: (stage: VoiceInteractionStage) => void;
+  readonly startRealtime: () => Promise<void>;
+  readonly stopRealtime: () => Promise<void>;
   readonly reset: () => void;
 };
 
@@ -26,13 +33,16 @@ const VoiceInteractionStateContext = createContext<VoiceInteractionStateContextV
 type VoiceInteractionStateProviderProps = {
   readonly children: ReactNode;
   readonly previewQuery: VoiceInteractionPreviewQuery;
+  readonly realtimeController: RealtimeVoiceSessionController;
 };
 
 export function VoiceInteractionStateProvider({
   children,
-  previewQuery
+  previewQuery,
+  realtimeController
 }: VoiceInteractionStateProviderProps) {
   const [stage, setStage] = useState<VoiceInteractionStage>('ready');
+  const [realtime, setRealtime] = useState<VoiceRealtimeState | null>(null);
   const [previewState, setPreviewState] = useState<
     | { readonly status: 'loading' }
     | { readonly status: 'error'; readonly message: string }
@@ -66,7 +76,7 @@ export function VoiceInteractionStateProvider({
   const value = useMemo<VoiceInteractionStateContextValue>(() => {
     const state: VoiceInteractionState =
       previewState.status === 'ready'
-        ? { status: 'ready', stage, preview: previewState.preview }
+        ? { status: 'ready', stage, preview: previewState.preview, realtime }
         : previewState.status === 'error'
           ? { status: 'error', stage, message: previewState.message }
           : { status: 'loading', stage };
@@ -74,9 +84,24 @@ export function VoiceInteractionStateProvider({
     return {
       state,
       setStage,
-      reset: () => setStage('ready')
+      startRealtime: async () => {
+        const next = await realtimeController.start();
+        setRealtime(next);
+        setStage('listening');
+      },
+      stopRealtime: async () => {
+        setStage('processing');
+        const states = await realtimeController.stop();
+        const finalState = states[states.length - 1] ?? null;
+        setRealtime(finalState);
+        setStage(finalState?.status ?? 'failed');
+      },
+      reset: () => {
+        setRealtime(null);
+        setStage('ready');
+      }
     };
-  }, [previewState, stage]);
+  }, [previewState, realtime, realtimeController, stage]);
 
   return (
     <VoiceInteractionStateContext.Provider value={value}>

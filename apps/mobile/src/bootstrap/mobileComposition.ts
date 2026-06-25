@@ -3,6 +3,9 @@ import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPr
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
+import { DevelopmentVoiceAudioRecorder } from '../adapters/voice/DevelopmentVoiceAudioRecorder';
+import { NoopVoiceAudioPlayer } from '../adapters/voice/NoopVoiceAudioPlayer';
+import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketRealtimeVoiceTransport';
 import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
 import { CreateAssetCommand } from '../application/add/CreateAssetCommand';
 import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
@@ -27,6 +30,7 @@ import {
   SettingsQuery
 } from '../application/settings/SettingsQuery';
 import { VoiceInteractionPreviewQuery } from '../application/voice/VoiceInteractionPreviewQuery';
+import { RealtimeVoiceSessionController } from '../application/voice/RealtimeVoiceSession';
 import { loadMobileRuntimeConfig } from '../config/mobileRuntimeConfig';
 import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
 import { AssetSummary } from '../domain/assets/AssetSummary';
@@ -49,6 +53,7 @@ export type MobileComposition = {
   readonly locationAssetsQuery: LocationAssetsQuery;
   readonly settingsQuery: SettingsQuery;
   readonly voiceInteractionPreviewQuery: VoiceInteractionPreviewQuery;
+  readonly realtimeVoiceSessionController: RealtimeVoiceSessionController;
 };
 
 export function createMobileComposition(): MobileComposition {
@@ -91,7 +96,16 @@ export function createMobileComposition(): MobileComposition {
       principals,
       new ExpoSettingsDiagnosticsProvider(config)
     ),
-    voiceInteractionPreviewQuery: new VoiceInteractionPreviewQuery(inventorySummaries)
+    voiceInteractionPreviewQuery: new VoiceInteractionPreviewQuery(inventorySummaries),
+    realtimeVoiceSessionController: new RealtimeVoiceSessionController(
+      inventorySummaries,
+      new DevelopmentVoiceAudioRecorder(),
+      new WebSocketRealtimeVoiceTransport({
+        apiBaseUrl: config?.apiBaseUrl ?? 'http://127.0.0.1:8080',
+        tokenProvider: () => config?.devToken ?? ''
+      }),
+      new NoopVoiceAudioPlayer()
+    )
   };
 }
 

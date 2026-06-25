@@ -9,18 +9,18 @@ export function VoiceBottomAccessory() {
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const isInline = placement === 'inline';
   const pathname = usePathname();
-  const { reset, setStage, state } = useVoiceInteractionState();
+  const { reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const contextLabel = describeVoiceContext(pathname);
   const status = describeVoiceStatus(state.stage);
 
   function advanceVoiceStage(): void {
     if (state.stage === 'ready') {
-      setStage('listening');
+      void startRealtime();
       return;
     }
 
     if (state.stage === 'listening') {
-      setStage('review');
+      void stopRealtime();
       return;
     }
 
@@ -70,7 +70,7 @@ export function VoiceBottomAccessory() {
         </View>
       ) : null}
       <Pressable
-        accessibilityLabel={state.stage === 'listening' ? 'Stop listening preview' : 'Start Voice'}
+        accessibilityLabel={state.stage === 'listening' ? 'Stop listening' : 'Start Voice'}
         accessibilityRole="button"
         accessibilityState={{ selected: state.stage === 'listening' }}
         onPress={advanceVoiceStage}
@@ -110,6 +110,34 @@ function describeVoiceStatus(stage: VoiceInteractionStage): {
       dotStyle: styles.reviewDot,
       subtitle: 'Plan needs approval',
       title: 'Review voice plan'
+    };
+  }
+  if (stage === 'processing') {
+    return {
+      dotStyle: styles.reviewDot,
+      subtitle: 'Checking inventory',
+      title: 'Thinking'
+    };
+  }
+  if (stage === 'speaking') {
+    return {
+      dotStyle: styles.listeningDot,
+      subtitle: 'Playing response',
+      title: 'Speaking'
+    };
+  }
+  if (stage === 'completed') {
+    return {
+      dotStyle: styles.readyDot,
+      subtitle: 'Response complete',
+      title: 'Voice complete'
+    };
+  }
+  if (stage === 'failed') {
+    return {
+      dotStyle: styles.reviewDot,
+      subtitle: 'Tap to inspect',
+      title: 'Voice failed'
     };
   }
 
