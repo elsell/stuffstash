@@ -90,6 +90,7 @@ The mobile app must show:
 - Current tenant and inventory context.
 - Recording or listening state.
 - Transcription progress when available.
+- The full final transcript in the active voice session view when available.
 - Safe agent progress events.
 - Safe tool-call debug events.
 - Final text response.
@@ -97,6 +98,8 @@ The mobile app must show:
 - Cancellation and failure states.
 
 Tool-call events may be displayed in a simple developer/debug panel for the first slice only when developer diagnostics are explicitly enabled. They must not expose hidden resource data, raw query text, raw transcripts, raw prompts, raw model responses, provider credentials, internal IDs, or internal stack details.
+
+The active voice session view may display the final transcript to the user as ephemeral UI state. This transcript display is not debug history and must not be written to local storage, logs, crash reports, analytics, audit records, or observability metadata before a transcript retention and redaction policy is specified.
 
 Mobile realtime voice is local-development testable before production mobile authentication exists. A production mobile rollout requires a specified mobile authentication flow and must not rely on `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`.
 

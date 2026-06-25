@@ -124,18 +124,21 @@ function VoicePreview({
         </Text>
       </View>
 
-      {hasRealtimeResult ? (
-        <View style={styles.transcriptCard}>
-          <Text style={styles.cardLabel}>You said</Text>
-          <Text style={styles.transcriptText}>{realtime?.transcript ?? preview.sampleUtterance}</Text>
+      {realtime?.transcript ? (
+        <View style={styles.transcriptDetailCard}>
+          <Text style={styles.cardLabel}>Full transcript</Text>
+          <Text selectable style={styles.fullTranscriptText}>{realtime.transcript}</Text>
         </View>
       ) : null}
 
       {realtime?.debugEvents.length ? (
-        <View style={styles.planCard}>
+        <View style={styles.debugPanel}>
           <Text style={styles.cardLabel}>Tool progress</Text>
-          {realtime.debugEvents.map((event) => (
-            <Text key={event} style={styles.stepText}>{event}</Text>
+          {realtime.debugEvents.map((event, index) => (
+            <View key={`${event}-${index.toString()}`} style={styles.debugEventRow}>
+              <Text style={styles.debugEventDot}>{(index + 1).toString()}</Text>
+              <Text style={styles.debugEventText}>{event}</Text>
+            </View>
           ))}
         </View>
       ) : null}
@@ -313,6 +316,50 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0,
     lineHeight: 24
+  },
+  transcriptDetailCard: {
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.sm,
+    marginBottom: spacing.md,
+    padding: spacing.md
+  },
+  fullTranscriptText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 24
+  },
+  debugPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+    padding: spacing.md
+  },
+  debugEventRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs
+  },
+  debugEventDot: {
+    color: colors.accentStrong,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0,
+    lineHeight: 21,
+    textAlign: 'center',
+    width: 18
+  },
+  debugEventText: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 21
   },
   assistantCard: {
     alignItems: 'center',
