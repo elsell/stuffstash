@@ -15,19 +15,21 @@ import (
 const googleCloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 
 type googleHTTPClient struct {
-	baseURL     string
-	httpClient  *http.Client
-	tokenSource oauth2.TokenSource
+	baseURL      string
+	httpClient   *http.Client
+	tokenSource  oauth2.TokenSource
+	quotaProject string
 }
 
-func newGoogleHTTPClient(baseURL string, httpClient *http.Client, tokenSource oauth2.TokenSource) googleHTTPClient {
+func newGoogleHTTPClient(baseURL string, httpClient *http.Client, tokenSource oauth2.TokenSource, quotaProject string) googleHTTPClient {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 30 * time.Second}
 	}
 	return googleHTTPClient{
-		baseURL:     strings.TrimRight(baseURL, "/"),
-		httpClient:  httpClient,
-		tokenSource: tokenSource,
+		baseURL:      strings.TrimRight(baseURL, "/"),
+		httpClient:   httpClient,
+		tokenSource:  tokenSource,
+		quotaProject: strings.TrimSpace(quotaProject),
 	}
 }
 
@@ -49,6 +51,9 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 	}
 	httpRequest.Header.Set("Authorization", "Bearer "+token.AccessToken)
 	httpRequest.Header.Set("Content-Type", "application/json")
+	if c.quotaProject != "" {
+		httpRequest.Header.Set("X-Goog-User-Project", c.quotaProject)
+	}
 	httpResponse, err := c.httpClient.Do(httpRequest)
 	if err != nil {
 		return err

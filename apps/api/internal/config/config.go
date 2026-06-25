@@ -93,9 +93,9 @@ const (
 	defaultVoiceDevFakeEnabled       = false
 	defaultVoiceGoogleEnabled        = false
 	defaultGoogleCloudLocation       = "us-central1"
-	defaultGoogleGeminiModel         = "gemini-2.5-flash"
+	defaultGoogleGeminiModel         = "gemini-2.5-flash-lite"
 	defaultGoogleTTSLanguageCode     = "en-US"
-	defaultGoogleTTSVoiceName        = "en-US-Neural2-F"
+	defaultGoogleTTSVoiceName        = "en-US-Standard-C"
 )
 
 type Config struct {

@@ -185,6 +185,7 @@ The first real Google-hosted provider bridge may be enabled through explicit run
 - Use Vertex AI Gemini through the speech-to-text port for the first mobile native audio path because Expo SDK 55 native recording defaults to MPEG-4 AAC (`.m4a`), while Google Cloud Speech-to-Text does not support M4A/AAC as a direct input encoding.
 - Use Vertex AI Gemini through the language inference port for the agent loop.
 - Use Google Cloud Text-to-Speech through the text-to-speech port and return MP3 chunks to the mobile app.
+- Prefer the cheapest fit-for-purpose Google models for local smoke testing: Gemini Flash-Lite for Gemini calls and Standard Cloud Text-to-Speech voices unless quality requirements justify a more expensive provider profile.
 - Keep Google SDK, REST, OAuth, endpoint, and response-shape details inside provider adapters.
 - Fail closed at startup or session start when required Google configuration or credentials are unavailable.
 

@@ -13,6 +13,7 @@ import (
 type GoogleTextToSpeechConfig struct {
 	LanguageCode string
 	VoiceName    string
+	QuotaProject string
 	BaseURL      string
 	TokenSource  oauth2.TokenSource
 	HTTPClient   *http.Client
@@ -30,7 +31,7 @@ func NewGoogleTextToSpeech(cfg GoogleTextToSpeechConfig) GoogleTextToSpeech {
 		baseURL = "https://texttospeech.googleapis.com"
 	}
 	return GoogleTextToSpeech{
-		client:       newGoogleHTTPClient(baseURL, cfg.HTTPClient, cfg.TokenSource),
+		client:       newGoogleHTTPClient(baseURL, cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject),
 		languageCode: cfg.LanguageCode,
 		voiceName:    cfg.VoiceName,
 	}

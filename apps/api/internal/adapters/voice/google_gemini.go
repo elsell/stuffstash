@@ -15,12 +15,13 @@ import (
 )
 
 type GoogleGeminiConfig struct {
-	ProjectID   string
-	Location    string
-	Model       string
-	BaseURL     string
-	TokenSource oauth2.TokenSource
-	HTTPClient  *http.Client
+	ProjectID    string
+	Location     string
+	Model        string
+	QuotaProject string
+	BaseURL      string
+	TokenSource  oauth2.TokenSource
+	HTTPClient   *http.Client
 }
 
 type GoogleGeminiSpeechToText struct {
@@ -30,7 +31,7 @@ type GoogleGeminiSpeechToText struct {
 
 func NewGoogleGeminiSpeechToText(cfg GoogleGeminiConfig) GoogleGeminiSpeechToText {
 	return GoogleGeminiSpeechToText{
-		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.TokenSource),
+		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject),
 		path:   googleGeminiPath(cfg),
 	}
 }
@@ -76,7 +77,7 @@ type GoogleGeminiLanguageInference struct {
 
 func NewGoogleGeminiLanguageInference(cfg GoogleGeminiConfig) GoogleGeminiLanguageInference {
 	return GoogleGeminiLanguageInference{
-		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.TokenSource),
+		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject),
 		path:   googleGeminiPath(cfg),
 	}
 }

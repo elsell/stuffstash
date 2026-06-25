@@ -21,6 +21,9 @@ func TestGoogleGeminiSpeechToTextTranscribesInlineAudio(t *testing.T) {
 		if r.Header.Get("Authorization") != "Bearer test-token" {
 			t.Fatalf("missing bearer token: %q", r.Header.Get("Authorization"))
 		}
+		if r.Header.Get("X-Goog-User-Project") != "project" {
+			t.Fatalf("missing quota project: %q", r.Header.Get("X-Goog-User-Project"))
+		}
 		if !strings.Contains(r.URL.Path, "/publishers/google/models/gemini-test:generateContent") {
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}
@@ -43,12 +46,13 @@ func TestGoogleGeminiSpeechToTextTranscribesInlineAudio(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	provider := NewGoogleGeminiSpeechToText(GoogleGeminiConfig{
-		ProjectID:   "project",
-		Location:    "us-central1",
-		Model:       "gemini-test",
-		BaseURL:     server.URL,
-		TokenSource: staticTokenSource{},
-		HTTPClient:  server.Client(),
+		ProjectID:    "project",
+		Location:     "us-central1",
+		Model:        "gemini-test",
+		QuotaProject: "project",
+		BaseURL:      server.URL,
+		TokenSource:  staticTokenSource{},
+		HTTPClient:   server.Client(),
 	})
 
 	result, err := provider.Transcribe(context.Background(), ports.SpeechToTextInput{
@@ -85,12 +89,13 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
-		ProjectID:   "project",
-		Location:    "us-central1",
-		Model:       "gemini-test",
-		BaseURL:     server.URL,
-		TokenSource: staticTokenSource{},
-		HTTPClient:  server.Client(),
+		ProjectID:    "project",
+		Location:     "us-central1",
+		Model:        "gemini-test",
+		QuotaProject: "project",
+		BaseURL:      server.URL,
+		TokenSource:  staticTokenSource{},
+		HTTPClient:   server.Client(),
 	})
 	tools := []ports.AgentToolDescriptor{{
 		Name:        "search_authorized_assets",
@@ -169,6 +174,7 @@ func TestGoogleTextToSpeechSynthesizesMP3(t *testing.T) {
 	provider := NewGoogleTextToSpeech(GoogleTextToSpeechConfig{
 		LanguageCode: "en-US",
 		VoiceName:    "en-US-Neural2-F",
+		QuotaProject: "project",
 		BaseURL:      server.URL,
 		TokenSource:  staticTokenSource{},
 		HTTPClient:   server.Client(),

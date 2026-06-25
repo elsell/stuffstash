@@ -57,16 +57,18 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 		return nil, nil, nil, err
 	}
 	geminiConfig := voice.GoogleGeminiConfig{
-		ProjectID:   strings.TrimSpace(cfg.GoogleCloudProject),
-		Location:    cfg.GoogleCloudLocation,
-		Model:       cfg.GoogleGeminiModel,
-		TokenSource: tokenSource,
+		ProjectID:    strings.TrimSpace(cfg.GoogleCloudProject),
+		Location:     cfg.GoogleCloudLocation,
+		Model:        cfg.GoogleGeminiModel,
+		QuotaProject: strings.TrimSpace(cfg.GoogleCloudProject),
+		TokenSource:  tokenSource,
 	}
 	return voice.NewGoogleGeminiSpeechToText(geminiConfig),
 		voice.NewGoogleGeminiLanguageInference(geminiConfig),
 		voice.NewGoogleTextToSpeech(voice.GoogleTextToSpeechConfig{
 			LanguageCode: cfg.GoogleTTSLanguageCode,
 			VoiceName:    cfg.GoogleTTSVoiceName,
+			QuotaProject: strings.TrimSpace(cfg.GoogleCloudProject),
 			TokenSource:  tokenSource,
 		}), nil
 }
