@@ -94,6 +94,33 @@ describe('RealtimeVoiceSessionController', () => {
       progressLabel: 'Voice failed'
     });
   });
+
+  it('sanitizes diagnostic tool events before they reach mobile UI state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'tool.call.started',
+          seq: 1,
+          sessionId: 'session-1',
+          toolCallId: 'tool-1',
+          toolLabel: 'raw prompt bearer secret stack trace',
+          status: 'raw query text'
+        },
+        { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+      ]),
+      new FakePlayer(),
+      { diagnosticsEnabled: true }
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)?.debugEvents).toEqual([
+      { label: 'Inventory lookup', status: 'Updated' }
+    ]);
+  });
 });
 
 class FakeRecorder implements VoiceAudioRecorder {

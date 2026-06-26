@@ -78,9 +78,29 @@ export type VoiceRealtimeState = {
   readonly transcript?: string;
   readonly spokenResponse?: string;
   readonly progressLabel?: string;
-  readonly debugEvents: readonly string[];
+  readonly debugEvents: readonly VoiceSafeDiagnosticEvent[];
   readonly errorMessage?: string;
 };
+
+export type VoiceSafeDiagnosticEvent = {
+  readonly label: VoiceSafeDiagnosticLabel;
+  readonly status: VoiceSafeDiagnosticStatus;
+};
+
+export type VoiceSafeDiagnosticLabel =
+  | 'Asset lookup'
+  | 'Inventory list'
+  | 'Inventory lookup'
+  | 'Inventory search'
+  | 'Location contents';
+
+export type VoiceSafeDiagnosticStatus =
+  | 'Completed'
+  | 'Failed safely'
+  | 'Looking'
+  | 'Needs more context'
+  | 'No visible match'
+  | 'Updated';
 
 export class RealtimeVoiceSessionController {
 	private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
@@ -154,7 +174,7 @@ export class RealtimeVoiceSessionController {
 					...state,
 					status: 'processing',
 					debugEvents: this.options.diagnosticsEnabled
-						? [...state.debugEvents, `${event.toolLabel}: ${event.status ?? event.code ?? 'updated'}`]
+						? [...state.debugEvents, safeDiagnosticEvent(event)]
 						: state.debugEvents,
 					progressLabel: event.toolLabel
 				};
@@ -205,5 +225,56 @@ export class RealtimeVoiceSessionController {
       tenantName: tenant.name,
       inventoryName: inventory.name
     };
+  }
+}
+
+function safeDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed' }>): VoiceSafeDiagnosticEvent {
+  return {
+    label: safeDiagnosticLabel(event.toolLabel),
+    status: safeDiagnosticStatus(event.status ?? event.code)
+  };
+}
+
+function safeDiagnosticLabel(toolLabel: string): VoiceSafeDiagnosticLabel {
+  const normalized = toolLabel.toLowerCase();
+
+  if (normalized.includes('search')) {
+    return 'Inventory search';
+  }
+
+  if (normalized.includes('asset') || normalized.includes('detail')) {
+    return 'Asset lookup';
+  }
+
+  if (normalized.includes('location')) {
+    return 'Location contents';
+  }
+
+  if (normalized.includes('list')) {
+    return 'Inventory list';
+  }
+
+  return 'Inventory lookup';
+}
+
+function safeDiagnosticStatus(status: string | undefined): VoiceSafeDiagnosticStatus {
+  switch (status) {
+    case 'completed':
+      return 'Completed';
+    case 'failed':
+    case 'invalid_request':
+    case 'unauthorized':
+    case 'forbidden':
+      return 'Failed safely';
+    case 'needs_more_context':
+      return 'Needs more context';
+    case 'no_visible_match':
+      return 'No visible match';
+    case 'looking_up_item':
+    case 'searching':
+    case 'checking_location':
+      return 'Looking';
+    default:
+      return 'Updated';
   }
 }

@@ -1,30 +1,62 @@
-import { router, usePathname } from 'expo-router';
+import { useState } from 'react';
+import { usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { Check, Mic, Pause, X } from 'lucide-react-native';
+import { Mic, Pause } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../theme/tokens';
-import { useVoiceInteractionState, VoiceInteractionStage } from './VoiceInteractionStateContext';
+import { useVoiceInteractionState } from './VoiceInteractionStateContext';
+import { VoiceSessionOverlay } from './VoiceSessionOverlay';
+import { buildVoiceAccessoryPresentation } from './VoiceSessionPresentation';
 
 export function VoiceBottomAccessory() {
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const isInline = placement === 'inline';
   const pathname = usePathname();
   const { reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
-  const contextLabel = describeVoiceContext(pathname);
-  const status = describeVoiceStatus(state.stage);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
+  const presentation = buildVoiceAccessoryPresentation({
+    pathname,
+    stage: state.stage,
+    status: state.status
+  });
 
-  function advanceVoiceStage(): void {
-    if (state.stage === 'ready') {
-      void startRealtime();
+  async function handlePrimaryAction(): Promise<void> {
+    if (state.status !== 'ready') {
+      setIsExpanded(true);
+      return;
+    }
+
+    if (presentation.primaryAction === 'start') {
+      setIsExpanded(true);
+      await startRealtime();
+      return;
+    }
+
+    if (presentation.primaryAction === 'stop') {
+      setIsExpanded(true);
+      await stopRealtime();
+      return;
+    }
+
+    setIsExpanded(true);
+  }
+
+  async function handleSessionMic(): Promise<void> {
+    if (state.status !== 'ready') {
       return;
     }
 
     if (state.stage === 'listening') {
-      void stopRealtime();
+      await stopRealtime();
       return;
     }
 
-    router.push('/voice');
+    if (state.stage !== 'ready') {
+      reset();
+    }
+
+    await startRealtime();
   }
 
   return (
@@ -34,51 +66,36 @@ export function VoiceBottomAccessory() {
     >
       {isInline ? null : (
         <Pressable
+          accessibilityLabel="Open voice session"
           accessibilityRole="button"
-          onPress={() => router.push('/voice')}
+          onPress={() => setIsExpanded(true)}
           style={styles.statusRegion}
         >
-          <View style={[styles.statusDot, status.dotStyle]} />
+          <View style={[styles.statusDot, dotStyleForTone(presentation.tone)]} />
           <View style={styles.statusText}>
             <Text numberOfLines={1} style={styles.statusTitle}>
-              {status.title}
+              {presentation.title}
             </Text>
             <Text numberOfLines={1} style={styles.statusSubtitle}>
-              {status.subtitle} · {contextLabel}
+              {presentation.subtitle}
             </Text>
           </View>
         </Pressable>
       )}
-      {state.stage === 'review' && !isInline ? (
-        <View style={styles.reviewActions}>
-          <Pressable
-            accessibilityLabel="Cancel voice plan preview"
-            accessibilityRole="button"
-            onPress={reset}
-            style={styles.smallAction}
-          >
-            <X color={colors.textMuted} size={17} strokeWidth={2.5} />
-          </Pressable>
-          <Pressable
-            accessibilityLabel="Review voice plan"
-            accessibilityRole="button"
-            onPress={() => router.push('/voice')}
-            style={[styles.smallAction, styles.reviewAction]}
-          >
-            <Check color={colors.onAction} size={17} strokeWidth={2.5} />
-          </Pressable>
-        </View>
-      ) : null}
+
       <Pressable
-        accessibilityLabel={state.stage === 'listening' ? 'Stop listening' : 'Start Voice'}
+        accessibilityLabel={presentation.accessibilityLabel}
         accessibilityRole="button"
         accessibilityState={{ selected: state.stage === 'listening' }}
-        onPress={advanceVoiceStage}
+        onPress={() => {
+          void handlePrimaryAction();
+        }}
         style={({ pressed }) => [
           styles.button,
           isInline ? styles.inlineButton : styles.regularButton,
-          state.stage === 'listening' && styles.listeningButton,
-          state.stage === 'review' && styles.reviewButton,
+          presentation.tone === 'active' && styles.activeButton,
+          presentation.tone === 'attention' && styles.attentionButton,
+          presentation.tone === 'failed' && styles.failedButton,
           pressed && styles.buttonPressed
         ]}
       >
@@ -88,88 +105,36 @@ export function VoiceBottomAccessory() {
           <Mic color={colors.onAction} size={isInline ? 22 : 23} strokeWidth={2.5} />
         )}
       </Pressable>
+
+      <VoiceSessionOverlay
+        diagnosticsExpanded={diagnosticsExpanded}
+        isVisible={isExpanded}
+        onClose={() => setIsExpanded(false)}
+        onReset={() => {
+          reset();
+          setDiagnosticsExpanded(false);
+        }}
+        onSessionMic={() => {
+          void handleSessionMic();
+        }}
+        onToggleDiagnostics={() => setDiagnosticsExpanded((current) => !current)}
+        state={state}
+      />
     </View>
   );
 }
 
-function describeVoiceStatus(stage: VoiceInteractionStage): {
-  readonly dotStyle: object;
-  readonly subtitle: string;
-  readonly title: string;
-} {
-  if (stage === 'listening') {
-    return {
-      dotStyle: styles.listeningDot,
-      subtitle: 'Capturing preview audio',
-      title: 'Listening'
-    };
+function dotStyleForTone(tone: 'ready' | 'active' | 'attention' | 'failed') {
+  switch (tone) {
+    case 'active':
+      return styles.activeDot;
+    case 'attention':
+      return styles.attentionDot;
+    case 'failed':
+      return styles.failedDot;
+    case 'ready':
+      return styles.readyDot;
   }
-
-  if (stage === 'review') {
-    return {
-      dotStyle: styles.reviewDot,
-      subtitle: 'Plan needs approval',
-      title: 'Review voice plan'
-    };
-  }
-  if (stage === 'processing') {
-    return {
-      dotStyle: styles.reviewDot,
-      subtitle: 'Checking inventory',
-      title: 'Thinking'
-    };
-  }
-  if (stage === 'speaking') {
-    return {
-      dotStyle: styles.listeningDot,
-      subtitle: 'Playing response',
-      title: 'Speaking'
-    };
-  }
-  if (stage === 'completed') {
-    return {
-      dotStyle: styles.readyDot,
-      subtitle: 'Response complete',
-      title: 'Voice complete'
-    };
-  }
-  if (stage === 'failed') {
-    return {
-      dotStyle: styles.reviewDot,
-      subtitle: 'Tap to inspect',
-      title: 'Voice failed'
-    };
-  }
-
-  return {
-    dotStyle: styles.readyDot,
-    subtitle: 'Tap mic to start',
-    title: 'Voice ready'
-  };
-}
-
-function describeVoiceContext(pathname: string): string {
-  if (pathname.startsWith('/assets/')) {
-    return 'asset context';
-  }
-
-  if (pathname.startsWith('/locations/')) {
-    return 'location context';
-  }
-
-  if (pathname === '/search') {
-    return 'search context';
-  }
-
-  if (pathname === '/add') {
-    return 'add context';
-  }
-
-  if (pathname === '/voice') {
-    return 'voice workspace';
-  }
-
-  return 'current inventory';
 }
 
 const styles = StyleSheet.create({
@@ -178,52 +143,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     gap: spacing.sm,
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
-  inlineArea: {
-    justifyContent: 'flex-end',
-    paddingRight: spacing.sm
-  },
-  regularArea: {
-    paddingHorizontal: spacing.md
-  },
-  statusRegion: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 52,
-    minWidth: 0
-  },
-  statusText: {
-    flex: 1,
-    minWidth: 0
-  },
-  statusTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  statusSubtitle: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
-    marginTop: 2
-  },
-  statusDot: {
-    borderRadius: 5,
-    height: 10,
-    width: 10
-  },
-  readyDot: {
-    backgroundColor: colors.accent
-  },
-  listeningDot: {
+  activeButton: {
     backgroundColor: colors.success
   },
-  reviewDot: {
+  activeDot: {
+    backgroundColor: colors.success
+  },
+  attentionButton: {
+    backgroundColor: colors.brandAmber
+  },
+  attentionDot: {
     backgroundColor: colors.brandAmber
   },
   button: {
@@ -235,39 +166,64 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 8
   },
-  listeningButton: {
-    backgroundColor: colors.success
+  buttonPressed: {
+    opacity: 0.84,
+    transform: [{ scale: 0.98 }]
   },
-  reviewButton: {
-    backgroundColor: colors.brandAmber
+  failedButton: {
+    backgroundColor: colors.danger
+  },
+  failedDot: {
+    backgroundColor: colors.danger
+  },
+  inlineArea: {
+    justifyContent: 'flex-end',
+    paddingRight: spacing.sm
   },
   inlineButton: {
-    borderRadius: 14,
+    borderRadius: 22,
     height: 44,
     width: 44
   },
+  readyDot: {
+    backgroundColor: colors.accent
+  },
+  regularArea: {
+    paddingHorizontal: spacing.md
+  },
   regularButton: {
-    borderRadius: 16,
-    height: 52,
-    width: 52
+    borderRadius: 27,
+    height: 54,
+    width: 54
   },
-  buttonPressed: {
-    backgroundColor: colors.actionPressed,
-    transform: [{ scale: 0.96 }]
+  statusDot: {
+    borderRadius: 5,
+    height: 10,
+    width: 10
   },
-  reviewActions: {
-    flexDirection: 'row',
-    gap: spacing.xs
-  },
-  smallAction: {
+  statusRegion: {
     alignItems: 'center',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: 14,
-    height: 34,
-    justifyContent: 'center',
-    width: 34
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 52,
+    minWidth: 0
   },
-  reviewAction: {
-    backgroundColor: colors.action
+  statusSubtitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0,
+    marginTop: 2
+  },
+  statusText: {
+    flex: 1,
+    minWidth: 0
+  },
+  statusTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
   }
 });

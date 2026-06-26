@@ -10,7 +10,7 @@ import {
 
 export type VoiceInteractionStage = 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'failed';
 
-type VoiceInteractionState =
+export type VoiceInteractionState =
   | { readonly status: 'loading'; readonly stage: VoiceInteractionStage }
   | { readonly status: 'error'; readonly stage: VoiceInteractionStage; readonly message: string }
   | {

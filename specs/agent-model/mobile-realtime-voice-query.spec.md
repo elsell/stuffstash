@@ -81,9 +81,20 @@ If the user asks for a state-changing action during this first slice, the system
 
 ## Mobile Interaction
 
-The mobile app must expose the first realtime voice query from the existing Voice bottom accessory or full Voice route.
+The mobile app must expose realtime voice as a global interaction layer anchored to the native bottom voice accessory. Voice is not a primary navigation destination in the production mobile experience.
 
-The first interaction may use tap-to-start and tap-to-stop recording. Push-to-talk may be added later if the UI spec chooses it.
+The collapsed voice accessory is the persistent voice affordance. Activating it must expand an active voice session surface over the current mobile screen without leaving the user's current tab, asset, location, search, or add context. On platforms where the native bottom accessory is unavailable or constrained, the app may render the same collapsed voice control through an equivalent custom bottom accessory, but the product behavior must remain the same.
+
+The expanded session surface must:
+
+- Visually read as an expansion of the bottom voice accessory.
+- Keep the current screen context behind the session surface.
+- Provide a clear close/collapse control that does not reset a completed answer unless the user starts a new session.
+- Support tap-to-start and tap-to-stop recording for the first slice.
+- Keep the primary mic control reachable with one thumb.
+- Avoid using a standalone full-screen Voice route for normal user interaction.
+
+The standalone Voice route may exist only as a development or diagnostics route while the first slice is being built. It must not be linked from the main product navigation once the bottom-accessory session surface exists.
 
 The mobile app must show:
 
@@ -97,7 +108,7 @@ The mobile app must show:
 - Audio playback state.
 - Cancellation and failure states.
 
-Tool-call events may be displayed in a simple developer/debug panel for the first slice only when developer diagnostics are explicitly enabled. They must not expose hidden resource data, raw query text, raw transcripts, raw prompts, raw model responses, provider credentials, internal IDs, or internal stack details.
+Safe agent progress events should be summarized as user-facing progress steps rather than exposed as raw event logs. Tool-call events may be displayed in a developer diagnostics panel only when developer diagnostics are explicitly enabled. Diagnostics must be visually secondary, collapsed by default, and must not expose hidden resource data, raw query text, raw transcripts, raw prompts, raw model responses, provider credentials, internal IDs, or internal stack details.
 
 The active voice session view may display the final transcript to the user as ephemeral UI state. This transcript display is not debug history and must not be written to local storage, logs, crash reports, analytics, audit records, or observability metadata before a transcript retention and redaction policy is specified.
 

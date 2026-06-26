@@ -19,7 +19,6 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="voice" options={{ title: 'Voice' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
         <Stack.Screen
           name="tenant-switcher"
