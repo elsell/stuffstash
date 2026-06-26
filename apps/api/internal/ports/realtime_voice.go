@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -161,4 +162,41 @@ type RealtimeVoiceProviderSet struct {
 
 type RealtimeVoiceProviderResolver interface {
 	ResolveRealtimeVoiceProviders(ctx context.Context, input RealtimeVoiceProviderResolutionInput) (RealtimeVoiceProviderSet, error)
+}
+
+type RealtimeSessionState string
+
+const (
+	RealtimeSessionStateStarted   RealtimeSessionState = "started"
+	RealtimeSessionStateCompleted RealtimeSessionState = "completed"
+	RealtimeSessionStateFailed    RealtimeSessionState = "failed"
+	RealtimeSessionStateCancelled RealtimeSessionState = "cancelled"
+)
+
+type RealtimeSessionRecord struct {
+	ID                         string
+	TenantID                   tenant.ID
+	InventoryID                inventory.InventoryID
+	PrincipalID                identity.PrincipalID
+	Source                     string
+	State                      RealtimeSessionState
+	SpeechToTextProfileID      string
+	LanguageInferenceProfileID string
+	TextToSpeechProfileID      string
+	StartedAt                  time.Time
+	LastActivityAt             time.Time
+	EndedAt                    time.Time
+	SafeFailureCode            string
+}
+
+type RealtimeSessionOutcome struct {
+	State           RealtimeSessionState
+	At              time.Time
+	SafeFailureCode string
+}
+
+type RealtimeSessionRepository interface {
+	SaveRealtimeSession(ctx context.Context, record RealtimeSessionRecord) error
+	UpdateRealtimeSessionOutcome(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, sessionID string, outcome RealtimeSessionOutcome) error
+	RealtimeSessionByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, sessionID string) (RealtimeSessionRecord, bool, error)
 }

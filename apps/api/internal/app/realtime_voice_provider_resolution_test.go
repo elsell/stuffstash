@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -30,14 +31,7 @@ func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 	}
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
 
-	session, err := application.StartRealtimeVoiceSession(context.Background(), RealtimeVoiceSessionInput{
-		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
-		TenantID:    tenant.ID("tenant-home"),
-		InventoryID: inventory.InventoryID("inventory-home"),
-		Source:      RealtimeVoiceSourceMobile,
-		InputAudio:  ports.RealtimeAudioFormat{MimeType: "audio/mp4", Channels: 1},
-		OutputAudio: RealtimeVoiceOutputAudio{MimeTypes: []string{"audio/mpeg"}},
-	})
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {
 		t.Fatalf("start realtime voice session: %v", err)
 	}
@@ -71,6 +65,17 @@ func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 	}
 }
 
+func defaultRealtimeVoiceSessionInput() RealtimeVoiceSessionInput {
+	return RealtimeVoiceSessionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		Source:      RealtimeVoiceSourceMobile,
+		InputAudio:  ports.RealtimeAudioFormat{MimeType: "audio/mp4", Channels: 1},
+		OutputAudio: RealtimeVoiceOutputAudio{MimeTypes: []string{"audio/mpeg"}},
+	}
+}
+
 func TestRealtimeVoiceSessionFailsWhenProviderResolverUnavailable(t *testing.T) {
 	t.Parallel()
 
@@ -89,6 +94,10 @@ func TestRealtimeVoiceSessionFailsWhenProviderResolverUnavailable(t *testing.T) 
 }
 
 func newRealtimeVoiceResolutionTestApp(t *testing.T, resolver ports.RealtimeVoiceProviderResolver) App {
+	return newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, newFakeRealtimeSessionRepository())
+}
+
+func newRealtimeVoiceResolutionTestAppWithSessions(t *testing.T, resolver ports.RealtimeVoiceProviderResolver, sessions ports.RealtimeSessionRepository) App {
 	t.Helper()
 
 	ctx := context.Background()
@@ -127,7 +136,9 @@ func newRealtimeVoiceResolutionTestApp(t *testing.T, resolver ports.RealtimeVoic
 		Assets:                        store,
 		Search:                        store,
 		RealtimeVoiceProviderResolver: resolver,
+		RealtimeSessions:              sessions,
 		IDs:                           &realtimeVoiceResolutionIDGenerator{},
+		Clock:                         fixedRealtimeClock{now: time.Date(2026, 6, 26, 16, 0, 0, 0, time.UTC)},
 	})
 }
 
@@ -145,9 +156,13 @@ func (f *fakeRealtimeVoiceProviderResolver) ResolveRealtimeVoiceProviders(_ cont
 
 type resolvedSpeechToText struct {
 	transcript string
+	err        error
 }
 
 func (r resolvedSpeechToText) Transcribe(context.Context, ports.SpeechToTextInput) (ports.SpeechToTextResult, error) {
+	if r.err != nil {
+		return ports.SpeechToTextResult{}, r.err
+	}
 	return ports.SpeechToTextResult{Transcript: r.transcript}, nil
 }
 

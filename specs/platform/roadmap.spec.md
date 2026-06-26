@@ -98,6 +98,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Tenant-scoped language-inference provider profiles now support bounded prompt templates that round-trip through the management API, persist through GORM migrations, resolve with the selected provider set, and are passed into realtime language model calls while the API appends the mandatory agent contract.
 - Tenant-scoped provider-profile management now supports non-secret PATCH updates for display name, endpoint URL, model name, runtime options, capability metadata, and prompt template, with partial-update semantics, audit/observability, generated client coverage, and `lastTestedAt` reset when configuration changes.
 - Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, use the local-development token only from runtime configuration, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance from Settings.
+- Realtime voice sessions now persist durable safe session metadata through a repository port with memory and GORM adapters, including session scope, selected provider profile IDs, lifecycle state, timestamps, and safe failure codes without storing raw audio, transcripts, prompts, model responses, generated speech, credentials, bearer tokens, or provider session IDs.
 
 ## Known Gaps
 
@@ -110,7 +111,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- Mobile provider-profile management/testing UX, API-key-backed speech synthesis adapters, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
+- Mobile provider-profile management/testing UX, API-key-backed speech synthesis adapters, write action plans with approval, and the external MCP server are not yet complete.
 
 ## Next Work
 
@@ -126,13 +127,10 @@ The web goal remains important but is not the immediate starting point. It still
 4. Add approval-backed write action plans.
    - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Keep action execution behind application services, tenant/inventory authorization, audit history, and explicit user confirmation.
-5. Add durable safe realtime session metadata.
-   - Use `specs/agent-model/realtime-interaction.spec.md` as the source of truth.
-   - Persist safe session state and action-plan metadata without storing raw audio, raw transcripts, raw prompts, raw model responses, or provider credentials before retention policy is specified.
-6. Implement the external Stuff Stash MCP server.
+5. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-7. Resume promoted web workspace work after the mobile voice path is testable from the app.
+6. Resume promoted web workspace work after the mobile voice path is testable from the app.
    - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Prioritize media attachment management, browser-level coverage, tenant-first switching, search, inventory settings, and sharing/access management.
 

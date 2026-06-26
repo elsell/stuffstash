@@ -61,6 +61,22 @@ Realtime sessions may persist durable metadata needed for audit, debugging, time
 
 Action plans created during a realtime session must be stored through the action plan persistence boundary and linked to the session by ID. Approval of a plan must still authorize and execute commands at execution time.
 
+The first durable realtime session metadata slice persists only safe operational metadata:
+
+- Session ID.
+- Tenant ID.
+- Inventory ID.
+- Principal ID.
+- Source.
+- Lifecycle state: `started`, `completed`, `failed`, or `cancelled`.
+- Selected provider profile IDs for speech-to-text, language inference, and text-to-speech.
+- Start, last-activity, and end timestamps.
+- Safe failure code when a session fails.
+
+The first session metadata repository must live behind a project-owned port. Application services may save the initial record after authorization and provider resolution succeed, and may update the final outcome when the session completes, fails, or is cancelled. The repository must not store raw audio, raw transcripts, raw provider prompts, raw provider responses, generated speech bytes, provider credentials, bearer tokens, provider-specific session identifiers, or hidden inventory data.
+
+The first implementation may persist only sessions that pass startup authorization and provider resolution. Pre-start failures such as unauthenticated, unauthorized, malformed start messages, or missing provider profiles may remain transient until a future security analytics spec defines safe failure telemetry for rejected sessions.
+
 ## Initial Transport Dependency
 
 The first Go realtime WebSocket adapter uses `nhooyr.io/websocket v1.8.17`.

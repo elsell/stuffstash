@@ -132,7 +132,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if strings.TrimSpace(sessionID) == "" {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
-	return RealtimeVoiceSession{
+	session := RealtimeVoiceSession{
 		ID:                         sessionID,
 		TenantID:                   input.TenantID,
 		InventoryID:                input.InventoryID,
@@ -147,10 +147,32 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		speechToText:               providers.SpeechToText,
 		languageInference:          providers.LanguageInference,
 		textToSpeech:               providers.TextToSpeech,
-	}, nil
+	}
+	now := a.clock.Now()
+	if err := a.realtimeSessions.SaveRealtimeSession(ctx, ports.RealtimeSessionRecord{
+		ID:                         session.ID,
+		TenantID:                   session.TenantID,
+		InventoryID:                session.InventoryID,
+		PrincipalID:                session.Principal.ID,
+		Source:                     session.Source,
+		State:                      ports.RealtimeSessionStateStarted,
+		SpeechToTextProfileID:      session.SpeechToTextProfileID,
+		LanguageInferenceProfileID: session.LanguageInferenceProfileID,
+		TextToSpeechProfileID:      session.TextToSpeechProfileID,
+		StartedAt:                  now,
+		LastActivityAt:             now,
+	}); err != nil {
+		return RealtimeVoiceSession{}, err
+	}
+	return session, nil
 }
 
-func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) error {
+func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
+	defer func() {
+		if err != nil && strings.TrimSpace(input.Session.ID) != "" {
+			_ = a.markRealtimeVoiceSessionOutcome(ctx, input.Session, ports.RealtimeSessionStateFailed, realtimeVoiceErrorCode(err))
+		}
+	}()
 	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
 		return err
 	}
@@ -281,7 +303,7 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 }
 
 func (a App) ensureRealtimeVoiceDependencies() error {
-	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.realtimeVoiceProviders == nil {
+	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.realtimeVoiceProviders == nil || a.realtimeSessions == nil {
 		return apperrors.ErrInvalidInput
 	}
 	return nil
@@ -335,7 +357,35 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioCompleted, SessionID: session.ID}); err != nil {
 		return err
 	}
+	if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
+		return err
+	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
+}
+
+func (a App) MarkRealtimeVoiceSessionFailed(ctx context.Context, session RealtimeVoiceSession, safeFailureCode string) error {
+	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
+		return err
+	}
+	return a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateFailed, safeFailureCode)
+}
+
+func (a App) MarkRealtimeVoiceSessionCancelled(ctx context.Context, session RealtimeVoiceSession) error {
+	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
+		return err
+	}
+	return a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCancelled, "")
+}
+
+func (a App) markRealtimeVoiceSessionOutcome(ctx context.Context, session RealtimeVoiceSession, state ports.RealtimeSessionState, safeFailureCode string) error {
+	if a.realtimeSessions == nil || strings.TrimSpace(session.ID) == "" {
+		return apperrors.ErrInvalidInput
+	}
+	return a.realtimeSessions.UpdateRealtimeSessionOutcome(ctx, session.TenantID, session.InventoryID, session.ID, ports.RealtimeSessionOutcome{
+		State:           state,
+		At:              a.clock.Now(),
+		SafeFailureCode: strings.TrimSpace(safeFailureCode),
+	})
 }
 
 func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) error {

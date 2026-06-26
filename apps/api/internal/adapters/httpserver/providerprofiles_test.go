@@ -262,6 +262,7 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		ProviderProfileUnitOfWork: store,
 		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
 		ProviderProfileTester:     httpTestProviderProfileTester{},
+		RealtimeSessions:          store,
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
 }

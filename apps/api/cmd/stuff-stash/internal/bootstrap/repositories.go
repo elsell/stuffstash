@@ -43,13 +43,14 @@ type repositories struct {
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
 	providerCredentials       ports.ProviderCredentialRepository
+	realtimeSessions          ports.RealtimeSessionRepository
 }
 
 func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, providerCredentials: store}, func() error { return nil }, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, providerCredentials: store, realtimeSessions: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -79,7 +80,7 @@ func repositoriesFromGORMStore(cfg config.Config, store gormstore.Store, closeSt
 		_ = closeStore()
 		return repositories{}, nil, err
 	}
-	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, providerCredentials: store}, closeStore, nil
+	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, providerCredentials: store, realtimeSessions: store}, closeStore, nil
 }
 
 func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {

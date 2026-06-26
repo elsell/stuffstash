@@ -22,6 +22,8 @@ const realtimeVoicePath = "/v1/realtime/voice"
 const maxRealtimeAudioChunkBytes = 512 * 1024
 const maxRealtimeVoiceFrameBytes = 710 * 1024
 
+var errRealtimeVoiceCancelled = errors.New("voice session cancelled")
+
 func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -84,6 +86,11 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 
 		audioChunks, err := readRealtimeAudio(ctx, connection, session.ID, start.Seq)
 		if err != nil {
+			if errors.Is(err, errRealtimeVoiceCancelled) {
+				_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
+			} else {
+				_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
+			}
 			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
 			_ = connection.Close(websocket.StatusPolicyViolation, "voice session failed")
 			return
@@ -232,7 +239,7 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 			}
 			return chunks, nil
 		case "session.cancel":
-			return nil, errors.New("voice session cancelled")
+			return nil, errRealtimeVoiceCancelled
 		default:
 			return nil, ports.ErrInvalidProviderInput
 		}
