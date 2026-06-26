@@ -90,6 +90,7 @@ const (
 	EventProviderProfileDisabled              EventName = "provider_profile.disabled"
 	EventProviderProfileArchived              EventName = "provider_profile.archived"
 	EventProviderProfileCredentialReplaced    EventName = "provider_profile.credential_replaced"
+	EventProviderProfileTested                EventName = "provider_profile.tested"
 )
 
 type Event struct {

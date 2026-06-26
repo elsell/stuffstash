@@ -72,12 +72,17 @@ The first REST management API must live under the tenant scope:
 - `POST /tenants/{tenantId}/provider-profiles/{providerProfileId}/disable`
 - `POST /tenants/{tenantId}/provider-profiles/{providerProfileId}/archive`
 - `PUT /tenants/{tenantId}/provider-profiles/{providerProfileId}/credential`
+- `POST /tenants/{tenantId}/provider-profiles/{providerProfileId}/test`
 
 All provider-profile management endpoints must require the same bearer-token authentication boundary as the rest of the API and tenant configuration permission for the requested tenant. Viewers, editors, unrelated users, unauthenticated users, wrong-tenant users, expired-token users, and malformed-token users must be rejected.
 
 Provider profile responses must include safe profile metadata only: profile ID, tenant ID, capability, provider kind, display name, endpoint URL, model name, non-secret runtime options, capability metadata, credential status, lifecycle state, and timestamps. Responses must never include raw credentials, sealed credential ciphertext, nonce material, encryption key IDs, provider account details, provider session tokens, provider-specific realtime URLs, raw prompts, raw transcripts, raw model responses, raw audio, or generated speech.
 
 Credential replacement requests must accept raw credential material only in the request body for the duration of that request. The application service must seal the credential through the configured credential-sealing port before persistence, store it through the credential repository boundary, supersede prior active credentials for the same tenant/profile/capability/provider-kind/purpose, update the provider profile credential status to `configured`, and return only safe profile metadata.
+
+Provider test requests must require tenant configuration permission and return safe metadata only: provider profile ID, capability, provider kind, status, safe message, and test timestamp. Provider test requests may be run for `enabled` or `disabled` configured profiles so tenant administrators can verify a profile before enabling it for realtime sessions. Provider test requests must reject archived, missing, unsupported, malformed, credential-missing, or credential-unusable profiles safely. Successful tests must update the provider profile `lastTestedAt` timestamp and write audit history. Failed tests must return a safe failure and must not expose provider credentials, raw provider responses, stack traces, endpoint internals, prompts, transcripts, audio, generated speech, hidden inventory data, or provider account details.
+
+Provider test credential selection must be based on the provider profile capability and provider kind, not incidental repository order. Gemini provider profiles must prefer active `oauth_bearer` credentials before `api_key` credentials because the first Google adapter implementation authenticates through Google OAuth access tokens.
 
 ## Authorization
 
@@ -163,6 +168,7 @@ Test operations must:
 
 - Require tenant configuration permission.
 - Use sealed credentials only after successful unseal.
+- Use a project-owned provider test port so the application layer never imports concrete provider adapters.
 - Avoid sending real tenant inventory data unless a future spec explicitly permits a scoped test.
 - Return safe success or failure metadata.
 - Avoid exposing provider credentials, account details, raw provider responses, endpoint internals, stack traces, prompts, transcripts, or hidden inventory data.

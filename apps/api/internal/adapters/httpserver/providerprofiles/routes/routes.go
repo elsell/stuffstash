@@ -11,4 +11,5 @@ func Register(api huma.API, application app.App) {
 	RegisterDetail(api, application)
 	RegisterLifecycle(api, application)
 	RegisterCredential(api, application)
+	RegisterTest(api, application)
 }

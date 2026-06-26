@@ -96,7 +96,7 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 }
 
 func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID tenant.ID, profile agentmodel.ProviderProfile) (ProviderProfileProviderConfig, error) {
-	for _, purpose := range []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer} {
+	for _, purpose := range providerCredentialPurposes(profile) {
 		scope := ports.ProviderCredentialScope{
 			TenantID:          tenantID,
 			ProviderProfileID: profile.ID.String(),
@@ -121,6 +121,13 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 		return ProviderProfileProviderConfig{Profile: profile, CredentialPurpose: purpose, Credential: raw}, nil
 	}
 	return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput
+}
+
+func providerCredentialPurposes(profile agentmodel.ProviderProfile) []ports.ProviderCredentialPurpose {
+	if profile.ProviderKind == agentmodel.ProviderKindGemini {
+		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer, ports.ProviderCredentialPurposeAPIKey}
+	}
+	return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
 }
 
 func selectProviderProfile(profiles []agentmodel.ProviderProfile, capability agentmodel.ProviderCapability) (agentmodel.ProviderProfile, bool) {

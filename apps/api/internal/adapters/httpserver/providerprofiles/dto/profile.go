@@ -61,6 +61,26 @@ type ReplaceProviderProfileCredentialBody struct {
 	Credential string `json:"credential" doc:"Raw provider credential for this request only"`
 }
 
+type TestProviderProfileInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	ProviderProfileID string `path:"providerProfileId" doc:"Provider profile ID"`
+}
+
+type TestProviderProfileOutput struct {
+	Body shared.SuccessEnvelope[TestProviderProfileResponse]
+}
+
+type TestProviderProfileResponse struct {
+	ProviderProfileID string `json:"providerProfileId"`
+	Capability        string `json:"capability"`
+	ProviderKind      string `json:"providerKind"`
+	Status            string `json:"status"`
+	Message           string `json:"message"`
+	TestedAt          string `json:"testedAt"`
+}
+
 type ProviderProfileResponse struct {
 	ID                 string         `json:"id"`
 	TenantID           string         `json:"tenantId"`

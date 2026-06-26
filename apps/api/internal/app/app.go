@@ -42,7 +42,9 @@ type App struct {
 	outbox                    ports.AuthorizationOutbox
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	providerCredentials       ports.ProviderCredentialRepository
 	providerCredentialSealer  ports.ProviderCredentialSealer
+	providerProfileTester     ports.ProviderProfileTester
 	ids                       ports.IDGenerator
 	clock                     ports.Clock
 	outboxDrainLimit          int
@@ -91,7 +93,9 @@ type Dependencies struct {
 	Outbox                        ports.AuthorizationOutbox
 	ProviderProfiles              ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork     ports.ProviderProfileUnitOfWork
+	ProviderCredentials           ports.ProviderCredentialRepository
 	ProviderCredentialSealer      ports.ProviderCredentialSealer
+	ProviderProfileTester         ports.ProviderProfileTester
 	IDs                           ports.IDGenerator
 	Clock                         ports.Clock
 	AuthorizationOutboxDrainLimit int
@@ -156,7 +160,9 @@ func New(deps Dependencies) App {
 		outbox:                    deps.Outbox,
 		providerProfiles:          deps.ProviderProfiles,
 		providerProfileUnitOfWork: deps.ProviderProfileUnitOfWork,
+		providerCredentials:       deps.ProviderCredentials,
 		providerCredentialSealer:  deps.ProviderCredentialSealer,
+		providerProfileTester:     deps.ProviderProfileTester,
 		ids:                       ids,
 		clock:                     clock,
 		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,
@@ -209,7 +215,9 @@ func New(deps Dependencies) App {
 		Authorizer:                app.authorizer,
 		ProviderProfiles:          app.providerProfiles,
 		ProviderProfileUnitOfWork: app.providerProfileUnitOfWork,
+		ProviderCredentials:       app.providerCredentials,
 		ProviderCredentialSealer:  app.providerCredentialSealer,
+		ProviderProfileTester:     app.providerProfileTester,
 		IDs:                       app.ids,
 		Clock:                     app.clock,
 	})

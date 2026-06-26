@@ -40,7 +40,7 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if len(sealer.unsealedScopes) != 3 {
 		t.Fatalf("expected three credential unseal calls, got %+v", sealer.unsealedScopes)
 	}
-	if got := factory.configs["stt-profile"]; string(got.Credential) != "raw-stt-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeAPIKey {
+	if got := factory.configs["stt-profile"]; string(got.Credential) != "raw-stt-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
 		t.Fatalf("unexpected stt factory config: %+v", got)
 	}
 }
@@ -134,17 +134,19 @@ type providerResolverCredentialRepository struct {
 func newProviderResolverCredentialRepository(profiles ...agentmodel.ProviderProfile) providerResolverCredentialRepository {
 	repository := providerResolverCredentialRepository{credentials: map[ports.ProviderCredentialScope]ports.ProviderCredentialRecord{}}
 	for _, profile := range profiles {
-		scope := ports.ProviderCredentialScope{
-			TenantID:          tenant.ID(profile.TenantID.String()),
-			ProviderProfileID: profile.ID.String(),
-			Capability:        ports.ProviderCapability(profile.Capability.String()),
-			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
-			Purpose:           ports.ProviderCredentialPurposeAPIKey,
-		}
-		repository.credentials[scope] = ports.ProviderCredentialRecord{
-			ID:     "credential-" + profile.ID.String(),
-			Scope:  scope,
-			Sealed: ports.SealedProviderCredential{KeyID: profile.ID.String(), Algorithm: ports.ProviderCredentialAlgorithmAES256GCM, Nonce: []byte("123456789012"), Ciphertext: []byte("sealed")},
+		for _, purpose := range []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer} {
+			scope := ports.ProviderCredentialScope{
+				TenantID:          tenant.ID(profile.TenantID.String()),
+				ProviderProfileID: profile.ID.String(),
+				Capability:        ports.ProviderCapability(profile.Capability.String()),
+				ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
+				Purpose:           purpose,
+			}
+			repository.credentials[scope] = ports.ProviderCredentialRecord{
+				ID:     "credential-" + profile.ID.String() + "-" + string(purpose),
+				Scope:  scope,
+				Sealed: ports.SealedProviderCredential{KeyID: profile.ID.String(), Algorithm: ports.ProviderCredentialAlgorithmAES256GCM, Nonce: []byte("123456789012"), Ciphertext: []byte("sealed")},
+			}
 		}
 	}
 	return repository

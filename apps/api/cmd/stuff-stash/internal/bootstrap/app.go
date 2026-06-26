@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
+	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -50,7 +51,9 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Outbox:                        repositories.outbox,
 		ProviderProfiles:              repositories.providerProfiles,
 		ProviderProfileUnitOfWork:     repositories.providerProfileUnitOfWork,
+		ProviderCredentials:           repositories.providerCredentials,
 		ProviderCredentialSealer:      providerCredentialSealer,
+		ProviderProfileTester:         voice.NewProviderProfileTester(voice.GoogleProviderProfileFactory{}),
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,

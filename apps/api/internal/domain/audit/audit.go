@@ -105,6 +105,7 @@ const (
 	ActionProviderProfileDisabled              Action = "provider_profile.disabled"
 	ActionProviderProfileArchived              Action = "provider_profile.archived"
 	ActionProviderProfileCredentialReplaced    Action = "provider_profile.credential_replaced"
+	ActionProviderProfileTested                Action = "provider_profile.tested"
 )
 
 func NewAction(value string) (Action, bool) {
@@ -174,7 +175,8 @@ func NewAction(value string) (Action, bool) {
 		ActionProviderProfileEnabled,
 		ActionProviderProfileDisabled,
 		ActionProviderProfileArchived,
-		ActionProviderProfileCredentialReplaced:
+		ActionProviderProfileCredentialReplaced,
+		ActionProviderProfileTested:
 		return action, true
 	default:
 		return "", false

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -62,6 +63,14 @@ type ReplaceProviderProfileCredentialInput struct {
 	ProfileID domain.ProviderProfileID
 	Purpose   string
 	Raw       []byte
+}
+
+type TestProviderProfileInput struct {
+	Principal identity.Principal
+	Source    audit.Source
+	RequestID string
+	TenantID  tenant.ID
+	ProfileID domain.ProviderProfileID
 }
 
 func (s Service) CreateProviderProfile(ctx context.Context, input CreateProviderProfileInput) (domain.ProviderProfile, error) {
@@ -243,6 +252,112 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 	}
 	s.recordProviderProfileEvent(ctx, ports.EventProviderProfileCredentialReplaced, input.Principal, updated)
 	return updated, nil
+}
+
+func (s Service) TestProviderProfile(ctx context.Context, input TestProviderProfileInput) (ports.ProviderProfileTestResult, error) {
+	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
+		return ports.ProviderProfileTestResult{}, err
+	}
+	if s.providerCredentials == nil || s.providerCredentialSealer == nil || s.providerProfileTester == nil {
+		return ports.ProviderProfileTestResult{}, apperrors.ErrPrecondition
+	}
+	current, found, err := s.providerProfiles.ProviderProfileByID(ctx, input.TenantID, input.ProfileID)
+	if err != nil {
+		return ports.ProviderProfileTestResult{}, err
+	}
+	if !found {
+		return ports.ProviderProfileTestResult{}, apperrors.ErrNotFound
+	}
+	if current.LifecycleState == domain.ProviderProfileArchived || current.CredentialStatus != domain.CredentialStatusConfigured {
+		return ports.ProviderProfileTestResult{}, apperrors.ErrPrecondition
+	}
+	purpose, raw, err := s.activeProviderCredential(ctx, input.TenantID, current)
+	if err != nil {
+		return ports.ProviderProfileTestResult{}, err
+	}
+	now := s.clock.Now()
+	result, err := s.providerProfileTester.TestProviderProfile(ctx, ports.ProviderProfileTestInput{
+		Profile:           current,
+		CredentialPurpose: purpose,
+		Credential:        raw,
+		TestedAt:          now,
+	})
+	result = safeProviderProfileTestResult(current, result, err, now)
+	profileForAudit := current
+	if result.Status == ports.ProviderProfileTestStatusSucceeded {
+		updated, ok := current.WithLastTested(now)
+		if !ok {
+			return ports.ProviderProfileTestResult{}, apperrors.ErrPrecondition
+		}
+		profileForAudit = updated
+	}
+	auditRecord, err := s.auditRecord(providerProfileAuditInput{
+		Principal: input.Principal,
+		Source:    input.Source,
+		RequestID: input.RequestID,
+		TenantID:  input.TenantID,
+		Profile:   profileForAudit,
+		Action:    audit.ActionProviderProfileTested,
+	})
+	if err != nil {
+		return ports.ProviderProfileTestResult{}, err
+	}
+	if err := s.providerProfileUnitOfWork.UpdateProviderProfile(ctx, profileForAudit, auditRecord); err != nil {
+		return ports.ProviderProfileTestResult{}, err
+	}
+	s.recordProviderProfileEvent(ctx, ports.EventProviderProfileTested, input.Principal, profileForAudit)
+	return result, nil
+}
+
+func safeProviderProfileTestResult(profile domain.ProviderProfile, result ports.ProviderProfileTestResult, testErr error, testedAt time.Time) ports.ProviderProfileTestResult {
+	status := result.Status
+	message := strings.TrimSpace(result.Message)
+	if testErr != nil || status != ports.ProviderProfileTestStatusSucceeded {
+		status = ports.ProviderProfileTestStatusFailed
+		message = "Provider profile test failed safely. Check the profile configuration and credential."
+	} else if message == "" {
+		message = "Provider profile test succeeded."
+	}
+	return ports.ProviderProfileTestResult{
+		ProfileID:    profile.ID.String(),
+		Capability:   profile.Capability.String(),
+		ProviderKind: profile.ProviderKind.String(),
+		Status:       status,
+		Message:      message,
+		TestedAt:     testedAt,
+	}
+}
+
+func (s Service) activeProviderCredential(ctx context.Context, tenantID tenant.ID, profile domain.ProviderProfile) (ports.ProviderCredentialPurpose, []byte, error) {
+	for _, purpose := range providerCredentialPurposes(profile) {
+		scope := ports.ProviderCredentialScope{
+			TenantID:          tenantID,
+			ProviderProfileID: profile.ID.String(),
+			Capability:        ports.ProviderCapability(profile.Capability.String()),
+			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
+			Purpose:           purpose,
+		}
+		record, found, err := s.providerCredentials.ActiveProviderCredential(ctx, scope)
+		if err != nil {
+			return "", nil, err
+		}
+		if !found {
+			continue
+		}
+		raw, err := s.providerCredentialSealer.UnsealProviderCredential(ctx, scope, record.Sealed)
+		if err != nil || len(bytes.TrimSpace(raw)) == 0 {
+			return "", nil, apperrors.ErrPrecondition
+		}
+		return purpose, raw, nil
+	}
+	return "", nil, apperrors.ErrPrecondition
+}
+
+func providerCredentialPurposes(profile domain.ProviderProfile) []ports.ProviderCredentialPurpose {
+	if profile.ProviderKind == domain.ProviderKindGemini {
+		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer, ports.ProviderCredentialPurposeAPIKey}
+	}
+	return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
 }
 
 func (s Service) updateLifecycle(ctx context.Context, input ProviderProfileLifecycleInput, action audit.Action, eventName ports.EventName, transition func(domain.ProviderProfile) (domain.ProviderProfile, bool)) (domain.ProviderProfile, error) {

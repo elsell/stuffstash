@@ -6,6 +6,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/providerprofiles/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func ProviderProfileToResponse(profile agentmodel.ProviderProfile) dto.ProviderProfileResponse {
@@ -38,6 +39,17 @@ func ProviderProfilesToResponse(profiles []agentmodel.ProviderProfile) []dto.Pro
 		data = append(data, ProviderProfileToResponse(profile))
 	}
 	return data
+}
+
+func ProviderProfileTestToResponse(result ports.ProviderProfileTestResult) dto.TestProviderProfileResponse {
+	return dto.TestProviderProfileResponse{
+		ProviderProfileID: result.ProfileID,
+		Capability:        result.Capability,
+		ProviderKind:      result.ProviderKind,
+		Status:            string(result.Status),
+		Message:           result.Message,
+		TestedAt:          result.TestedAt.UTC().Format(time.RFC3339Nano),
+	}
 }
 
 func jsonObject(raw string) map[string]any {

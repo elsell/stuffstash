@@ -5,6 +5,7 @@ import (
 
 	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type CreateProviderProfileInput = agentmodelapp.CreateProviderProfileInput
@@ -12,6 +13,7 @@ type ListProviderProfilesInput = agentmodelapp.ListProviderProfilesInput
 type GetProviderProfileInput = agentmodelapp.GetProviderProfileInput
 type ProviderProfileLifecycleInput = agentmodelapp.ProviderProfileLifecycleInput
 type ReplaceProviderProfileCredentialInput = agentmodelapp.ReplaceProviderProfileCredentialInput
+type TestProviderProfileInput = agentmodelapp.TestProviderProfileInput
 
 func (a App) CreateProviderProfile(ctx context.Context, input CreateProviderProfileInput) (agentmodel.ProviderProfile, error) {
 	return a.providerProfileService.CreateProviderProfile(ctx, input)
@@ -39,4 +41,8 @@ func (a App) ArchiveProviderProfile(ctx context.Context, input ProviderProfileLi
 
 func (a App) ReplaceProviderProfileCredential(ctx context.Context, input ReplaceProviderProfileCredentialInput) (agentmodel.ProviderProfile, error) {
 	return a.providerProfileService.ReplaceProviderProfileCredential(ctx, input)
+}
+
+func (a App) TestProviderProfile(ctx context.Context, input TestProviderProfileInput) (ports.ProviderProfileTestResult, error) {
+	return a.providerProfileService.TestProviderProfile(ctx, input)
 }

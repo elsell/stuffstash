@@ -20,7 +20,7 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 		ids: []string{
 			"01ARZ3NDEKTSV4RRFFQ69G5FAW", "audit-create-profile",
 			"credential-one", "audit-replace-credential",
-			"audit-enable-profile", "audit-disable-profile", "audit-archive-profile",
+			"audit-test-profile", "audit-enable-profile", "audit-disable-profile", "audit-archive-profile",
 		},
 	}))
 
@@ -30,7 +30,7 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 		"displayName":        "Google Gemini",
 		"endpointUrl":        "https://generativelanguage.googleapis.com",
 		"modelName":          "gemini-2.5-flash-lite",
-		"runtimeOptions":     map[string]any{"temperature": 0.1},
+		"runtimeOptions":     map[string]any{"projectId": "pianotechpros", "location": "us-central1", "temperature": 0.1},
 		"capabilityMetadata": map[string]any{"toolCalls": true},
 	})
 	if create.Code != http.StatusCreated {
@@ -42,7 +42,7 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 	}
 
 	replaceCredential := performRequest(server, http.MethodPut, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/credential", "Bearer dev:tenant-owner", map[string]any{
-		"purpose":    "api_key",
+		"purpose":    "oauth_bearer",
 		"credential": "raw-provider-secret",
 	})
 	if replaceCredential.Code != http.StatusOK {
@@ -54,6 +54,18 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 	withCredential := decodeProviderProfile(t, replaceCredential)
 	if withCredential.Data.CredentialStatus != "configured" {
 		t.Fatalf("expected configured credential status, got %+v", withCredential.Data)
+	}
+
+	testProfile := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/test", "Bearer dev:tenant-owner", nil)
+	if testProfile.Code != http.StatusOK {
+		t.Fatalf("expected provider profile test status %d, got %d with body %s", http.StatusOK, testProfile.Code, testProfile.Body.String())
+	}
+	if strings.Contains(testProfile.Body.String(), "raw-provider-secret") || strings.Contains(testProfile.Body.String(), "sealed") || strings.Contains(testProfile.Body.String(), "test-key") {
+		t.Fatalf("provider profile test leaked secret material: %s", testProfile.Body.String())
+	}
+	tested := decodeProviderProfileTest(t, testProfile)
+	if tested.Data.ProviderProfileID != created.Data.ID || tested.Data.Status != "succeeded" || tested.Data.TestedAt == "" {
+		t.Fatalf("unexpected provider profile test response: %+v", tested.Data)
 	}
 
 	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/provider-profiles", "Bearer dev:tenant-owner", nil)
@@ -138,6 +150,7 @@ func TestProviderProfileEndpointsRejectUnauthorizedUsers(t *testing.T) {
 		{name: "list", method: http.MethodGet, path: "/tenants/" + tenantID + "/provider-profiles"},
 		{name: "detail", method: http.MethodGet, path: profilePath},
 		{name: "replace credential", method: http.MethodPut, path: profilePath + "/credential", body: credentialBody},
+		{name: "test", method: http.MethodPost, path: profilePath + "/test"},
 		{name: "enable", method: http.MethodPost, path: profilePath + "/enable"},
 		{name: "disable", method: http.MethodPost, path: profilePath + "/disable"},
 		{name: "archive", method: http.MethodPost, path: profilePath + "/archive"},
@@ -206,7 +219,9 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		Outbox:                    store,
 		ProviderProfiles:          store,
 		ProviderProfileUnitOfWork: store,
+		ProviderCredentials:       store,
 		ProviderCredentialSealer:  httpTestCredentialSealer{},
+		ProviderProfileTester:     httpTestProviderProfileTester{},
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
 }
@@ -222,8 +237,21 @@ func (httpTestCredentialSealer) SealProviderCredential(_ context.Context, scope 
 	}, nil
 }
 
-func (httpTestCredentialSealer) UnsealProviderCredential(context.Context, ports.ProviderCredentialScope, ports.SealedProviderCredential) ([]byte, error) {
-	return nil, nil
+func (httpTestCredentialSealer) UnsealProviderCredential(_ context.Context, scope ports.ProviderCredentialScope, _ ports.SealedProviderCredential) ([]byte, error) {
+	return []byte("raw:" + scope.ProviderProfileID), nil
+}
+
+type httpTestProviderProfileTester struct{}
+
+func (httpTestProviderProfileTester) TestProviderProfile(_ context.Context, input ports.ProviderProfileTestInput) (ports.ProviderProfileTestResult, error) {
+	return ports.ProviderProfileTestResult{
+		ProfileID:    input.Profile.ID.String(),
+		Capability:   input.Profile.Capability.String(),
+		ProviderKind: input.Profile.ProviderKind.String(),
+		Status:       ports.ProviderProfileTestStatusSucceeded,
+		Message:      "Provider profile test succeeded.",
+		TestedAt:     input.TestedAt,
+	}, nil
 }
 
 type providerProfileBody struct {
@@ -234,6 +262,11 @@ type providerProfileBody struct {
 type providerProfileListBody struct {
 	Data []providerProfileResponse `json:"data"`
 	Meta responseMeta              `json:"meta"`
+}
+
+type providerProfileTestBody struct {
+	Data providerProfileTestResponse `json:"data"`
+	Meta responseMeta                `json:"meta"`
 }
 
 type providerProfileResponse struct {
@@ -250,10 +283,27 @@ type providerProfileResponse struct {
 	LifecycleState     string         `json:"lifecycleState"`
 }
 
+type providerProfileTestResponse struct {
+	ProviderProfileID string `json:"providerProfileId"`
+	Capability        string `json:"capability"`
+	ProviderKind      string `json:"providerKind"`
+	Status            string `json:"status"`
+	Message           string `json:"message"`
+	TestedAt          string `json:"testedAt"`
+}
+
 func decodeProviderProfile(t *testing.T, response *httptest.ResponseRecorder) providerProfileBody {
 	t.Helper()
 
 	var body providerProfileBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeProviderProfileTest(t *testing.T, response *httptest.ResponseRecorder) providerProfileTestBody {
+	t.Helper()
+
+	var body providerProfileTestBody
 	decodeBody(t, response, &body)
 	return body
 }
