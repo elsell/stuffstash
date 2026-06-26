@@ -739,6 +739,16 @@ func findRealtimeEvent(t *testing.T, events []map[string]any, eventType string) 
 	return nil
 }
 
+func countRealtimeEvents(events []map[string]any, eventType string) int {
+	count := 0
+	for _, event := range events {
+		if event["type"] == eventType {
+			count++
+		}
+	}
+	return count
+}
+
 func assertSafeRealtimeEvents(t *testing.T, events []map[string]any, forbidden []string) {
 	t.Helper()
 

@@ -159,6 +159,9 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	if functionResponse["name"] != "search_authorized_assets" || response["tool"] != "search_authorized_assets" || response["count"] != float64(1) {
 		t.Fatalf("unexpected structured function response: %+v", functionResponse)
 	}
+	if !requestHasFunctionDeclaration(requests[1], "search_authorized_assets") {
+		t.Fatalf("second turn should keep usable native tool declarations for distinct follow-up calls: %+v", requests[1]["tools"])
+	}
 }
 
 func TestGoogleGeminiLanguageInferenceRejectsMalformedTurns(t *testing.T) {
@@ -325,6 +328,30 @@ func objectFromAny(t *testing.T, value any) map[string]any {
 		t.Fatalf("value is not an object: %+v", value)
 	}
 	return item
+}
+
+func requestHasFunctionDeclaration(request map[string]any, name string) bool {
+	tools, ok := request["tools"].([]any)
+	if !ok {
+		return false
+	}
+	for _, rawTool := range tools {
+		tool, ok := rawTool.(map[string]any)
+		if !ok {
+			continue
+		}
+		declarations, ok := tool["functionDeclarations"].([]any)
+		if !ok {
+			continue
+		}
+		for _, rawDeclaration := range declarations {
+			declaration, ok := rawDeclaration.(map[string]any)
+			if ok && declaration["name"] == name {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func geminiFunctionCallResponse(name string, args map[string]any) map[string]any {

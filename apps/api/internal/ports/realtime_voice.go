@@ -39,6 +39,7 @@ type LanguageInferenceInput struct {
 	Tools         []AgentToolDescriptor
 	ToolResults   []AgentToolResult
 	PreviousTurns int
+	FinalOnly     bool
 }
 
 type AgentToolDescriptor struct {

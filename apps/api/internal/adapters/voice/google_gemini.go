@@ -90,7 +90,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 	}
 	request := geminiGenerateContentRequest{
 		Contents: contents,
-		Tools:    geminiTools(input.Tools),
+		Tools:    geminiToolsForTurn(input),
 		GenerationConfig: &geminiGenerationConfig{
 			Temperature:      0,
 			ResponseMimeType: "application/json",
@@ -104,6 +104,13 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		return parseGeminiFunctionCalls(calls, input.Tools)
 	}
 	return parseLanguageTurn(firstGeminiText(response), input.Tools)
+}
+
+func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {
+	if input.FinalOnly {
+		return nil
+	}
+	return geminiTools(input.Tools)
 }
 
 func languagePrompt(input ports.LanguageInferenceInput) string {

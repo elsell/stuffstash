@@ -402,6 +402,8 @@ Provider adapters that support native tool or function calling must use the prov
 
 Native provider tool calling is an adapter concern. Application services, domain services, REST adapters, mobile clients, and tool execution code must continue to use project-owned tool descriptors, tool calls, tool results, and structured final responses. Provider-native tool declaration, function-call, and function-response shapes must not leak across the language inference port.
 
+The agent loop must allow multiple distinct read-only tool calls across turns when needed to answer the user accurately. Loop control must be owned by the application agent loop rather than provider-specific adapter shortcuts. If the model asks for an identical tool name and argument set that has already been executed in the same session, the loop must not execute the duplicate call again, but it must continue executing other unseen tool calls in the same model turn. It may request one explicit finalization-only model turn using the existing tool results and no tool catalog; if the model still does not produce a valid final response, the session must fail safely.
+
 Provider adapters may continue to use structured JSON output for final responses when the provider supports it. Native tool calling must not loosen the final response validator, read-only/write boundaries, tenant and inventory scoping, or redaction rules.
 
 Future tenant-managed provider profiles must support model-specific prompt template configuration because smaller or local models may need different instructions, output examples, or schema wording. Prompt templates must be configuration data resolved through the provider-profile/application boundary, not hard-coded provider adapter behavior.

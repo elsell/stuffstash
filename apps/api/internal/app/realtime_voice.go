@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -150,6 +151,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 
 	toolResults := []ports.AgentToolResult{}
 	toolCallIDs := []string{}
+	executedToolCalls := map[string]struct{}{}
 	for turn := 0; turn < 4; turn++ {
 		modelTurn, err := a.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:      input.Session.TenantID,
@@ -172,7 +174,16 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		if len(modelTurn.ToolCalls) == 0 {
 			return ports.ErrInvalidProviderInput
 		}
+		duplicateToolCallSeen := false
 		for _, call := range modelTurn.ToolCalls {
+			signature, err := realtimeVoiceToolCallSignature(call)
+			if err != nil {
+				return err
+			}
+			if _, duplicate := executedToolCalls[signature]; duplicate {
+				duplicateToolCallSeen = true
+				continue
+			}
 			toolCallID := strings.TrimSpace(call.ID)
 			if toolCallID == "" {
 				toolCallID = a.newRealtimeVoiceID()
@@ -191,13 +202,47 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
 				return err
 			}
+			executedToolCalls[signature] = struct{}{}
 			toolResults = append(toolResults, result)
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "completed"}); err != nil {
 				return err
 			}
 		}
+		if duplicateToolCallSeen {
+			return a.finalizeRealtimeVoiceAfterDuplicateToolCall(ctx, input.Session, transcript, toolResults, toolCallIDs, turn+1, emit)
+		}
 	}
 	return ports.ErrInvalidProviderInput
+}
+
+func (a App) finalizeRealtimeVoiceAfterDuplicateToolCall(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
+	modelTurn, err := a.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
+		TenantID:      session.TenantID,
+		InventoryID:   session.InventoryID,
+		Principal:     session.Principal,
+		Transcript:    transcript,
+		ToolResults:   toolResults,
+		PreviousTurns: previousTurns,
+		FinalOnly:     true,
+	})
+	if err != nil {
+		return err
+	}
+	if modelTurn.Final == nil {
+		return ports.ErrInvalidProviderInput
+	}
+	if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
+		return err
+	}
+	return a.completeRealtimeVoiceResponse(ctx, session, *modelTurn.Final, toolCallIDs, emit)
+}
+
+func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
+	payload, err := json.Marshal(call.Arguments)
+	if err != nil {
+		return "", ports.ErrInvalidProviderInput
+	}
+	return strings.TrimSpace(call.Name) + ":" + string(payload), nil
 }
 
 func (a App) ensureRealtimeVoiceDependencies() error {
