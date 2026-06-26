@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -64,6 +66,31 @@ func (s *Store) UpdateActionPlanState(_ context.Context, tenantID tenant.ID, inv
 	}
 	s.actionPlans[planID] = record
 	return cloneActionPlanRecord(record), true, nil
+}
+
+func (s *Store) ExecuteCreateAssetActionPlan(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, found := s.actionPlans[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From || record.State.Terminal() || transition.At.Before(record.CreatedAt) {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	if err := s.createAssetLocked(item, auditRecord, undoableOperation); err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	s.actionPlans[planID] = updated
+	return cloneActionPlanRecord(updated), true, nil
 }
 
 func validateActionPlanRecord(record ports.ActionPlanRecord) error {

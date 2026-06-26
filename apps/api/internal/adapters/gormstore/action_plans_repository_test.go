@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -121,6 +123,62 @@ func TestActionPlanRepositoryAllowsApprovedPlanToExecuteOrFail(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryExecutesCreateAssetAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	successRecord := gormActionPlanRecord("plan-execute-create", time.Date(2026, 6, 26, 18, 0, 0, 0, time.UTC))
+	rollbackRecord := gormActionPlanRecord("plan-rollback-create", time.Date(2026, 6, 26, 18, 1, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, successRecord); err != nil {
+		t.Fatalf("save successful execution plan: %v", err)
+	}
+	if err := store.SaveActionPlan(ctx, rollbackRecord); err != nil {
+		t.Fatalf("save rollback execution plan: %v", err)
+	}
+	approveActionPlanForGormTest(t, ctx, store, successRecord)
+	approveActionPlanForGormTest(t, ctx, store, rollbackRecord)
+
+	item := assetItem("asset-from-plan", successRecord.TenantID.String(), successRecord.InventoryID.String(), asset.KindItem, "")
+	executed, found, err := store.ExecuteCreateAssetActionPlan(ctx, successRecord.TenantID, successRecord.InventoryID, successRecord.ID, ports.ActionPlanStateTransition{
+		PrincipalID: successRecord.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          successRecord.CreatedAt.Add(2 * time.Second),
+	}, item, auditRecord(t, "audit-plan-create", successRecord.TenantID, successRecord.InventoryID, audit.ActionAssetCreated), nil)
+	if err != nil {
+		t.Fatalf("execute create asset action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	if _, found, err := store.AssetByID(ctx, successRecord.TenantID, successRecord.InventoryID, item.ID); err != nil || !found {
+		t.Fatalf("expected atomically created asset found=%t err=%v", found, err)
+	}
+
+	duplicate := assetItem("asset-duplicate", rollbackRecord.TenantID.String(), rollbackRecord.InventoryID.String(), asset.KindItem, "")
+	if err := createAsset(t, ctx, store, duplicate); err != nil {
+		t.Fatalf("seed duplicate asset: %v", err)
+	}
+	if _, _, err := store.ExecuteCreateAssetActionPlan(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, rollbackRecord.ID, ports.ActionPlanStateTransition{
+		PrincipalID: rollbackRecord.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          rollbackRecord.CreatedAt.Add(2 * time.Second),
+	}, duplicate, auditRecord(t, "audit-plan-rollback", rollbackRecord.TenantID, rollbackRecord.InventoryID, audit.ActionAssetCreated), nil); err == nil {
+		t.Fatalf("expected duplicate asset execution to fail")
+	}
+	rolledBack, found, err := store.ActionPlanByID(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, rollbackRecord.ID)
+	if err != nil {
+		t.Fatalf("read rolled back action plan: %v", err)
+	}
+	if !found || rolledBack.State != actionplan.StateApproved || !rolledBack.ExecutedAt.IsZero() {
+		t.Fatalf("expected plan to remain approved after rolled back execution found=%t record=%+v", found, rolledBack)
+	}
+}
+
 func TestActionPlanRepositoryStoresOnlySafeColumns(t *testing.T) {
 	t.Parallel()
 
@@ -143,6 +201,19 @@ func TestActionPlanRepositoryStoresOnlySafeColumns(t *testing.T) {
 		if store.db.WithContext(ctx).Migrator().HasColumn(&actionPlanModel{}, column) {
 			t.Fatalf("action plan model must not persist unsafe column %q", column)
 		}
+	}
+}
+
+func approveActionPlanForGormTest(t *testing.T, ctx context.Context, store Store, record ports.ActionPlanRecord) {
+	t.Helper()
+
+	if _, _, err := store.UpdateActionPlanState(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{
+		PrincipalID: record.PrincipalID,
+		From:        actionplan.StateProposed,
+		To:          actionplan.StateApproved,
+		At:          record.CreatedAt.Add(time.Second),
+	}); err != nil {
+		t.Fatalf("approve %s: %v", record.ID, err)
 	}
 }
 

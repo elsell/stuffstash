@@ -48,6 +48,14 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     await transport.approveActionPlan('plan-1');
     await expect(transport.cancelActionPlan('plan-1')).rejects.toThrow('not active');
     socket.receive({ type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved' });
+    socket.receive({
+      type: 'action.plan.executed',
+      seq: 9,
+      sessionId: 'session-1',
+      planId: 'plan-1',
+      status: 'executed',
+      message: 'The approved change was applied.'
+    });
 
     await run;
 
@@ -87,10 +95,18 @@ describe('WebSocketRealtimeVoiceTransport', () => {
           risks: ['Adds a new item to this inventory.']
         }
       },
-			{ type: 'tts.audio.started', seq: 5, sessionId: 'session-1', mimeType: 'audio/mpeg' },
+      { type: 'tts.audio.started', seq: 5, sessionId: 'session-1', mimeType: 'audio/mpeg' },
       { type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
       { type: 'session.completed', seq: 7, sessionId: 'session-1' },
-      { type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved' }
+      { type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved', message: undefined },
+      {
+        type: 'action.plan.executed',
+        seq: 9,
+        sessionId: 'session-1',
+        planId: 'plan-1',
+        status: 'executed',
+        message: 'The approved change was applied.'
+      }
     ]);
   });
 

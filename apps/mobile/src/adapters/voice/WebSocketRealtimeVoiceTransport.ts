@@ -178,7 +178,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             socket.close();
             settleResolve();
           }
-          if (message.type === 'action.plan.approved' || message.type === 'action.plan.cancelled') {
+          if (message.type === 'action.plan.cancelled' || message.type === 'action.plan.executed' || message.type === 'action.plan.failed') {
             completed = true;
             this.activeReviewSession = null;
             socket.close();
@@ -282,20 +282,16 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         actionPlan: actionPlanField(message)
       };
     case 'action.plan.approved':
-      return {
-        ...metadata,
-        type: 'action.plan.approved',
-        sessionId: stringField(message, 'sessionId'),
-        planId: stringField(message, 'planId'),
-        status: 'approved'
-      };
     case 'action.plan.cancelled':
+    case 'action.plan.executed':
+    case 'action.plan.failed':
       return {
         ...metadata,
-        type: 'action.plan.cancelled',
+        type: message.type,
         sessionId: stringField(message, 'sessionId'),
         planId: stringField(message, 'planId'),
-        status: 'cancelled'
+        status: actionPlanStatusField(message, message.type),
+        message: optionalStringField(message, 'message')
       };
 		case 'assistant.response.started':
 			return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
@@ -412,6 +408,36 @@ function actionPlanField(message: Record<string, unknown>) {
       return item;
     })
   };
+}
+
+function actionPlanStatusField(
+  message: Record<string, unknown>,
+  type: 'action.plan.approved' | 'action.plan.cancelled' | 'action.plan.executed' | 'action.plan.failed'
+): 'approved' | 'cancelled' | 'executed' | 'failed' {
+  const status = stringField(message, 'status');
+  switch (type) {
+    case 'action.plan.approved':
+      if (status === 'approved') {
+        return status;
+      }
+      break;
+    case 'action.plan.cancelled':
+      if (status === 'cancelled') {
+        return status;
+      }
+      break;
+    case 'action.plan.executed':
+      if (status === 'executed') {
+        return status;
+      }
+      break;
+    case 'action.plan.failed':
+      if (status === 'failed') {
+        return status;
+      }
+      break;
+  }
+  throw new Error('Voice action plan event status did not match the event type.');
 }
 
 function arrayField(message: Record<string, unknown>, field: string): readonly unknown[] {

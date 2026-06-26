@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -97,6 +98,35 @@ func (a App) CancelActionPlan(ctx context.Context, input ActionPlanDecisionInput
 	return a.transitionActionPlan(ctx, input, actionplan.StateCancelled)
 }
 
+func (a App) ExecuteActionPlan(ctx context.Context, input ActionPlanDecisionInput) (ports.ActionPlanRecord, error) {
+	if err := a.ensureActionPlanDependencies(); err != nil {
+		return ports.ActionPlanRecord{}, err
+	}
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
+		return ports.ActionPlanRecord{}, err
+	}
+	record, found, err := a.actionPlans.ActionPlanByID(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID))
+	if err != nil {
+		return ports.ActionPlanRecord{}, err
+	}
+	if !found {
+		return ports.ActionPlanRecord{}, ErrNotFound
+	}
+	if record.PrincipalID != input.Principal.ID || record.State != actionplan.StateApproved {
+		return ports.ActionPlanRecord{}, ErrConflict
+	}
+
+	executed, err := a.executeApprovedActionPlanCommands(ctx, input, record)
+	if err != nil {
+		failed, failErr := a.transitionActionPlan(ctx, input, actionplan.StateFailed)
+		if failErr != nil {
+			return ports.ActionPlanRecord{}, failErr
+		}
+		return failed, err
+	}
+	return executed, nil
+}
+
 func (a App) transitionActionPlan(ctx context.Context, input ActionPlanDecisionInput, to actionplan.State) (ports.ActionPlanRecord, error) {
 	if err := a.ensureActionPlanDependencies(); err != nil {
 		return ports.ActionPlanRecord{}, err
@@ -104,13 +134,15 @@ func (a App) transitionActionPlan(ctx context.Context, input ActionPlanDecisionI
 	permission := ports.InventoryPermissionEditAsset
 	if to == actionplan.StateCancelled {
 		permission = ports.InventoryPermissionView
+	} else if to == actionplan.StateExecuted || to == actionplan.StateFailed {
+		permission = ports.InventoryPermissionCreateAsset
 	}
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, permission); err != nil {
 		return ports.ActionPlanRecord{}, err
 	}
 	record, found, err := a.actionPlans.UpdateActionPlanState(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
 		PrincipalID: input.Principal.ID,
-		From:        actionplan.StateProposed,
+		From:        actionPlanTransitionFromState(to),
 		To:          to,
 		At:          a.clock.Now(),
 	})
@@ -124,6 +156,142 @@ func (a App) transitionActionPlan(ctx context.Context, input ActionPlanDecisionI
 		return ports.ActionPlanRecord{}, ErrNotFound
 	}
 	return record, nil
+}
+
+func actionPlanTransitionFromState(to actionplan.State) actionplan.State {
+	switch to {
+	case actionplan.StateExecuted, actionplan.StateFailed:
+		return actionplan.StateApproved
+	default:
+		return actionplan.StateProposed
+	}
+}
+
+func (a App) executeApprovedActionPlanCommands(ctx context.Context, input ActionPlanDecisionInput, record ports.ActionPlanRecord) (ports.ActionPlanRecord, error) {
+	if len(record.Commands) != 1 {
+		return ports.ActionPlanRecord{}, ErrValidation
+	}
+	command := record.Commands[0]
+	switch command.Kind {
+	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
+		assetInput, err := actionPlanCreateAssetInput(input, command)
+		if err != nil {
+			return ports.ActionPlanRecord{}, err
+		}
+		prepared, err := a.assetService.PrepareCreateAsset(ctx, assetInput)
+		if err != nil {
+			return ports.ActionPlanRecord{}, err
+		}
+		executed, found, err := a.actionPlans.ExecuteCreateAssetActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
+			PrincipalID: input.Principal.ID,
+			From:        actionplan.StateApproved,
+			To:          actionplan.StateExecuted,
+			At:          a.clock.Now(),
+		}, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
+		if err != nil {
+			if errors.Is(err, ports.ErrConflict) {
+				return ports.ActionPlanRecord{}, ErrConflict
+			}
+			return ports.ActionPlanRecord{}, err
+		}
+		if !found {
+			return ports.ActionPlanRecord{}, ErrNotFound
+		}
+		a.assetService.RecordAssetCreated(ctx, prepared.Asset, input.Principal.ID)
+		return executed, nil
+	default:
+		return ports.ActionPlanRecord{}, ErrValidation
+	}
+}
+
+func actionPlanCreateAssetInput(input ActionPlanDecisionInput, command ports.ActionPlanCommandRecord) (CreateAssetInput, error) {
+	args, err := parseActionPlanCreateArguments(command)
+	if err != nil {
+		return CreateAssetInput{}, err
+	}
+	kind := args.Kind
+	if command.Kind == actionplan.CommandKindCreateLocation {
+		kind = "location"
+	}
+	if strings.TrimSpace(kind) == "" {
+		kind = "item"
+	}
+	return CreateAssetInput{
+		Principal:     input.Principal,
+		Source:        audit.SourceConversation,
+		RequestID:     command.ID,
+		TenantID:      input.TenantID,
+		InventoryID:   input.InventoryID,
+		Kind:          kind,
+		Title:         args.Title,
+		Description:   args.Description,
+		ParentAssetID: args.ParentAssetID,
+		CustomFields:  map[string]any{},
+	}, nil
+}
+
+type actionPlanCreateArguments struct {
+	Title         string
+	Kind          string
+	Description   string
+	ParentAssetID string
+}
+
+func parseActionPlanCreateArguments(command ports.ActionPlanCommandRecord) (actionPlanCreateArguments, error) {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(command.ArgumentsJSON, &raw); err != nil {
+		return actionPlanCreateArguments{}, ErrValidation
+	}
+	args := actionPlanCreateArguments{}
+	for key, value := range raw {
+		switch key {
+		case "title", "name":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanCreateArguments{}, err
+			}
+			if strings.TrimSpace(args.Title) == "" {
+				args.Title = text
+			}
+		case "kind":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanCreateArguments{}, err
+			}
+			args.Kind = text
+		case "description":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanCreateArguments{}, err
+			}
+			args.Description = text
+		case "parentAssetId":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanCreateArguments{}, err
+			}
+			args.ParentAssetID = text
+		default:
+			return actionPlanCreateArguments{}, ErrValidation
+		}
+	}
+	if strings.TrimSpace(args.Title) == "" {
+		return actionPlanCreateArguments{}, ErrValidation
+	}
+	switch strings.TrimSpace(args.Kind) {
+	case "", "item", "container", "location":
+		return args, nil
+	default:
+		return actionPlanCreateArguments{}, ErrValidation
+	}
+}
+
+func actionPlanStringArgument(raw json.RawMessage) (string, error) {
+	var value string
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return "", ErrValidation
+	}
+	return strings.TrimSpace(value), nil
 }
 
 func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.ActionPlanCommandRecord, error) {

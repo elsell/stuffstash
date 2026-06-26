@@ -203,14 +203,15 @@ describe('RealtimeVoiceSessionController', () => {
     expect(transport.approvedPlanIds).toEqual(['plan-1']);
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
-      progressLabel: 'Change approved',
+      progressLabel: 'Change applied',
       actionPlan: {
         planId: 'plan-1',
-        status: 'approved'
+        status: 'executed'
       }
     });
     expect(observed).toContain('review:Review needed:proposed');
-    expect(observed.at(-1)).toBe('completed:Change approved:approved');
+    expect(observed).toContain('processing:Applying change:approved');
+    expect(observed.at(-1)).toBe('completed:Change applied:executed');
   });
 
   it('cancels a proposed action plan through the active realtime transport', async () => {
@@ -238,6 +239,35 @@ describe('RealtimeVoiceSessionController', () => {
         status: 'cancelled'
       }
     });
+  });
+
+  it('shows a safe failure when approved action plan execution fails', async () => {
+    const transport = new FailedReviewDecisionTransport();
+    const player = new FakePlayer();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      player
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1');
+    const states = await stop;
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      progressLabel: 'Change failed',
+      errorMessage: 'The approved change could not be applied safely.',
+      actionPlan: {
+        planId: 'plan-1',
+        status: 'failed'
+      }
+    });
+    expect(player.stops).toBeGreaterThan(0);
   });
 
   it('returns the server failure state when the realtime session fails safely', async () => {
@@ -482,9 +512,9 @@ class FakeTransport implements RealtimeVoiceTransport {
 class ReviewDecisionTransport implements RealtimeVoiceTransport {
   readonly approvedPlanIds: string[] = [];
   readonly cancelledPlanIds: string[] = [];
-  private onEvent: ((event: VoiceRealtimeEvent) => Promise<void>) | undefined;
+  protected onEvent: ((event: VoiceRealtimeEvent) => Promise<void>) | undefined;
   private reviewReadyResolve: (() => void) | undefined;
-  private finishResolve: (() => void) | undefined;
+  protected finishResolve: (() => void) | undefined;
   readonly reviewReady = new Promise<void>((resolve) => {
     this.reviewReadyResolve = resolve;
   });
@@ -523,6 +553,14 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
       planId,
       status: 'approved'
     });
+    await this.onEvent?.({
+      type: 'action.plan.executed',
+      seq: 5,
+      sessionId: 'session-1',
+      planId,
+      status: 'executed',
+      message: 'The approved change was applied.'
+    });
     this.finishResolve?.();
   }
 
@@ -536,6 +574,36 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
       status: 'cancelled'
     });
     this.finishResolve?.();
+  }
+
+  protected async emitReviewEvent(event: VoiceRealtimeEvent): Promise<void> {
+    await this.onEvent?.(event);
+  }
+
+  protected finish(): void {
+    this.finishResolve?.();
+  }
+}
+
+class FailedReviewDecisionTransport extends ReviewDecisionTransport {
+  override async approveActionPlan(planId: string): Promise<void> {
+    this.approvedPlanIds.push(planId);
+    await this.emitReviewEvent({
+      type: 'action.plan.approved',
+      seq: 4,
+      sessionId: 'session-1',
+      planId,
+      status: 'approved'
+    });
+    await this.emitReviewEvent({
+      type: 'action.plan.failed',
+      seq: 5,
+      sessionId: 'session-1',
+      planId,
+      status: 'failed',
+      message: 'The approved change could not be applied safely.'
+    });
+    this.finish();
   }
 }
 

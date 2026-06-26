@@ -74,7 +74,11 @@ The first lifecycle states are:
 
 The first slice may implement creation, approval, and cancellation before command execution. Approval must be explicit, tied to the initiating principal and plan ID, and must not execute commands until an execution service is implemented. Cancelling or approving a terminal plan must fail safely. Repository reads and state transitions must be scoped by tenant ID and inventory ID.
 
-Mobile realtime approval and cancellation must use the same action-plan application service methods as any future REST, web, or MCP review surface. The realtime adapter may translate `action.plan.approve` and `action.plan.cancel` WebSocket messages into application-service calls, but it must not update action-plan persistence directly and must not execute command records in this review slice.
+Mobile realtime approval and cancellation must use the same action-plan application service methods as any future REST, web, or MCP review surface. The realtime adapter may translate `action.plan.approve` and `action.plan.cancel` WebSocket messages into application-service calls, but it must not update action-plan persistence directly.
+
+The first execution slice may execute approved plans only when they contain exactly one `create_asset` or `create_location` command. Execution must use the existing asset application service boundary so tenant and inventory authorization, domain validation, audit history, undoable operations, observability, and persistence continue to behave exactly like equivalent REST or UI commands. `create_location` is executed as asset creation with kind `location`; `create_asset` is executed as asset creation with kind `item` unless the validated command arguments explicitly provide `item`, `container`, or `location`. Unsupported command kinds or multi-command plans must transition the plan to `failed` without applying inventory changes.
+
+Execution must require the plan to be in `approved` state, must be scoped by tenant ID, inventory ID, principal ID, and plan ID, and must re-authorize the initiating principal at execution time before exposing plan existence or state. Successful execution transitions the plan to `executed`; failed execution transitions it to `failed`. For executable create commands, applying the inventory change, audit history, undoable operation, and terminal `executed` plan transition must be one repository unit of work so a failed terminal transition cannot leave duplicate-prone inventory mutations behind. Execution must not trust prior approval as authorization and must not execute commands from `proposed`, `cancelled`, `executed`, or `failed` plans.
 
 The first persisted plan must not store raw transcript text. A safe `userIntentSummary` and `modelInterpretationSummary` may be stored only when they are bounded, user-renderable, and free of provider-specific raw output.
 
@@ -94,7 +98,7 @@ The proposal tool must accept only:
 
 The proposal tool must reject unknown arguments, unknown command kinds, empty confirmation summaries, unsafe command arguments, approval claims, provider credentials, raw prompts, raw provider responses, raw transcripts, bearer tokens, provider session IDs, and hidden resource data. The persisted plan must be scoped to the active tenant, inventory, principal, and realtime session.
 
-The first realtime proposal slice must not approve, execute, or cancel the proposed plan automatically. Approval and cancellation require explicit later client messages and application-service handling. Execution requires a later execution service and must not be implied by approval.
+The first realtime proposal slice must not approve, execute, or cancel the proposed plan automatically. Approval and cancellation require explicit later client messages and application-service handling. Execution may happen only after approval through the action-plan execution service.
 
 ## Initial Command Enumeration
 
@@ -108,6 +112,15 @@ The first command enumeration is:
 - `restore_asset`
 
 Commands must be stored as project-owned typed command records with a command ID, command kind, safe human summary, and bounded JSON arguments. The first persistence slice may store command arguments as reviewed JSON while application services still validate the command kind and safe summary. Command arguments must not contain provider-specific model output, raw prompts, credentials, bearer tokens, hidden resource data, or approval claims.
+
+The first executable `create_asset` and `create_location` argument shape is:
+
+- `title` or `name`: required non-empty user-facing asset title.
+- `kind`: optional for `create_asset`, restricted to `item`, `container`, or `location`; ignored for `create_location`, which always creates a location.
+- `description`: optional safe user-facing description.
+- `parentAssetId`: optional existing parent asset ID in the same inventory.
+
+The execution service must reject command arguments outside this shape for executable create commands until richer command schemas are specified.
 
 ## Command Rules
 

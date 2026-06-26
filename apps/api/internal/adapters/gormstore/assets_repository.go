@@ -17,85 +17,89 @@ import (
 
 func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var containingInventory inventoryModel
-		err := tx.Where(&inventoryModel{
-			ID:       item.InventoryID.String(),
-			TenantID: item.TenantID.String(),
-		}).First(&containingInventory).Error
+		return createAssetInTx(tx, item, auditRecord, undoableOperation)
+	})
+}
+
+func createAssetInTx(tx *gorm.DB, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	var containingInventory inventoryModel
+	err := tx.Where(&inventoryModel{
+		ID:       item.InventoryID.String(),
+		TenantID: item.TenantID.String(),
+	}).First(&containingInventory).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.ErrForbidden
+	}
+	if err != nil {
+		return err
+	}
+
+	if item.ParentAssetID.String() != "" {
+		var parent assetModel
+		err = tx.Where(&assetModel{
+			ID:          item.ParentAssetID.String(),
+			TenantID:    item.TenantID.String(),
+			InventoryID: item.InventoryID.String(),
+		}).First(&parent).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ports.ErrForbidden
 		}
 		if err != nil {
 			return err
 		}
-
-		if item.ParentAssetID.String() != "" {
-			var parent assetModel
-			err = tx.Where(&assetModel{
-				ID:          item.ParentAssetID.String(),
-				TenantID:    item.TenantID.String(),
-				InventoryID: item.InventoryID.String(),
-			}).First(&parent).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ports.ErrForbidden
-			}
-			if err != nil {
-				return err
-			}
-			parentKind, ok := asset.NewKind(parent.Kind)
-			if !ok || !parentKind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive.String() || parent.ID == item.ID.String() {
-				return ports.ErrForbidden
-			}
-			if err := rejectAssetContainmentCycle(tx, item.ID, parent); err != nil {
-				return err
-			}
+		parentKind, ok := asset.NewKind(parent.Kind)
+		if !ok || !parentKind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive.String() || parent.ID == item.ID.String() {
+			return ports.ErrForbidden
 		}
-		if item.CustomAssetTypeID.String() != "" {
-			var assetType customAssetTypeModel
-			err = tx.Where(&customAssetTypeModel{
-				ID:             item.CustomAssetTypeID.String(),
-				TenantID:       item.TenantID.String(),
-				LifecycleState: customfield.AssetTypeLifecycleActive.String(),
-			}).Where(clause.Or(
-				clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
-				clause.Eq{Column: "inventory_id", Value: item.InventoryID.String()},
-			)).First(&assetType).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ports.ErrForbidden
-			}
-			if err != nil {
-				return err
-			}
+		if err := rejectAssetContainmentCycle(tx, item.ID, parent); err != nil {
+			return err
 		}
-
-		parentAssetID := stringPtrFromAssetID(item.ParentAssetID)
-		customAssetTypeID := stringPtrFromCustomAssetTypeID(item.CustomAssetTypeID)
-		customFields, err := json.Marshal(item.CustomFields.Values())
+	}
+	if item.CustomAssetTypeID.String() != "" {
+		var assetType customAssetTypeModel
+		err = tx.Where(&customAssetTypeModel{
+			ID:             item.CustomAssetTypeID.String(),
+			TenantID:       item.TenantID.String(),
+			LifecycleState: customfield.AssetTypeLifecycleActive.String(),
+		}).Where(clause.Or(
+			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
+			clause.Eq{Column: "inventory_id", Value: item.InventoryID.String()},
+		)).First(&assetType).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
 		if err != nil {
 			return err
 		}
-		if err := tx.Create(&assetModel{
-			ID:                item.ID.String(),
-			TenantID:          item.TenantID.String(),
-			InventoryID:       item.InventoryID.String(),
-			ParentAssetID:     parentAssetID,
-			CustomAssetTypeID: customAssetTypeID,
-			Kind:              item.Kind.String(),
-			Title:             item.Title.String(),
-			Description:       item.Description.String(),
-			CustomFields:      string(customFields),
-			LifecycleState:    item.LifecycleState.String(),
-			CreatedAt:         item.CreatedAt,
-			UpdatedAt:         item.UpdatedAt,
-		}).Error; err != nil {
-			return err
-		}
+	}
 
-		if err := createAuditRecord(tx, auditRecord); err != nil {
-			return err
-		}
-		return createUndoableOperation(tx, undoableOperation)
-	})
+	parentAssetID := stringPtrFromAssetID(item.ParentAssetID)
+	customAssetTypeID := stringPtrFromCustomAssetTypeID(item.CustomAssetTypeID)
+	customFields, err := json.Marshal(item.CustomFields.Values())
+	if err != nil {
+		return err
+	}
+	if err := tx.Create(&assetModel{
+		ID:                item.ID.String(),
+		TenantID:          item.TenantID.String(),
+		InventoryID:       item.InventoryID.String(),
+		ParentAssetID:     parentAssetID,
+		CustomAssetTypeID: customAssetTypeID,
+		Kind:              item.Kind.String(),
+		Title:             item.Title.String(),
+		Description:       item.Description.String(),
+		CustomFields:      string(customFields),
+		LifecycleState:    item.LifecycleState.String(),
+		CreatedAt:         item.CreatedAt,
+		UpdatedAt:         item.UpdatedAt,
+	}).Error; err != nil {
+		return err
+	}
+
+	if err := createAuditRecord(tx, auditRecord); err != nil {
+		return err
+	}
+	return createUndoableOperation(tx, undoableOperation)
 }
 
 func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {

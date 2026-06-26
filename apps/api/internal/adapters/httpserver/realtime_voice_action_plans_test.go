@@ -62,7 +62,33 @@ func TestRealtimeVoiceActionPlanApprovalUsesOpenReviewSession(t *testing.T) {
 	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
 		t.Fatalf("expected safe approval event, got %+v", approved)
 	}
-	assertSafeRealtimeEvents(t, []map[string]any{approved}, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
+	executed := readRealtimeMessage(t, ctx, connection)
+	if executed["type"] != "action.plan.executed" || executed["planId"] != "plan-id" || executed["status"] != "executed" {
+		t.Fatalf("expected safe execution event, got %+v", executed)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
+}
+
+func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) {
+	t.Parallel()
+
+	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithModel(t, unsupportedActionPlanProposalLanguageModel{})
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.approve",
+		"seq":       4,
+		"sessionId": sessionID,
+		"planId":    "plan-id",
+	})
+	approved := readRealtimeMessage(t, ctx, connection)
+	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+		t.Fatalf("expected safe approval event, got %+v", approved)
+	}
+	failed := readRealtimeMessage(t, ctx, connection)
+	if failed["type"] != "action.plan.failed" || failed["planId"] != "plan-id" || failed["status"] != "failed" {
+		t.Fatalf("expected safe execution failure event, got %+v", failed)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{approved, failed}, []string{"asset-1", "location-1", "apiKey", "Bearer", "provider_session_id"})
 }
 
 func TestRealtimeVoiceActionPlanCancellationUsesOpenReviewSession(t *testing.T) {
@@ -156,11 +182,17 @@ func TestRealtimeVoiceActionPlanDecisionRejectsUnsafeMessages(t *testing.T) {
 func openRealtimeVoiceReviewSession(t *testing.T) (context.Context, *websocket.Conn, string) {
 	t.Helper()
 
+	return openRealtimeVoiceReviewSessionWithModel(t, actionPlanProposalLanguageModel{})
+}
+
+func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.LanguageInferenceProvider) (context.Context, *websocket.Conn, string) {
+	t.Helper()
+
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "plan-id", "command-id", "response-id"},
-	}, fakeSpeechToText{transcript: "Add a water bottle."}, actionPlanProposalLanguageModel{}, fakeTextToSpeech{
+		ids:         []string{"voice-session-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"},
+	}, fakeSpeechToText{transcript: "Add a water bottle."}, languageInference, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
 	})
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
@@ -221,6 +253,35 @@ func (m actionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports
 					"commandSummary":             "Create item water bottle",
 					"argumentsJson":              `{"kind":"item","name":"water bottle"}`,
 					"riskSummary":                "Adds a new item to this inventory.",
+				},
+			}},
+		}, nil
+	}
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindClarification,
+			SpokenResponse:  "I prepared that change for review.",
+			DisplayResponse: "I prepared that change for review.",
+		},
+	}, nil
+}
+
+type unsupportedActionPlanProposalLanguageModel struct{}
+
+func (m unsupportedActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "plan-tool-call",
+				Name: "propose_action_plan",
+				Arguments: map[string]any{
+					"commandKind":                "move_asset",
+					"intentSummary":              "Move a visible item.",
+					"modelInterpretationSummary": "The user wants to move an item.",
+					"confirmationSummary":        "Move item?",
+					"commandSummary":             "Move item",
+					"argumentsJson":              `{"assetId":"asset-1","parentAssetId":"location-1"}`,
+					"riskSummary":                "Moves an item in this inventory.",
 				},
 			}},
 		}, nil

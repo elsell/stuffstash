@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -249,6 +251,172 @@ func TestCancelActionPlanFreezesProposedPlan(t *testing.T) {
 	}
 }
 
+func TestExecuteActionPlanCreatesAssetAndMarksExecuted(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindCreateAsset, `{"title":"Water bottle","kind":"item","description":"Blue bottle"}`),
+		},
+	}
+	assets := &fakeAssetRepository{}
+	application := newActionPlanExecutionTestApp(repository, assets, &fakeIDGenerator{ids: []string{"asset-1", "undo-1", "audit-1"}})
+
+	executed, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if err != nil {
+		t.Fatalf("execute action plan: %v", err)
+	}
+	if executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan: %+v", executed)
+	}
+	created := assets.items[asset.ID("asset-1")]
+	if created.ID != asset.ID("asset-1") || created.Kind != asset.KindItem || created.Title.String() != "Water bottle" || created.Description.String() != "Blue bottle" {
+		t.Fatalf("unexpected created asset: %+v", created)
+	}
+	if len(assets.auditRecords) != 1 || assets.auditRecords[0].Action != audit.ActionAssetCreated {
+		t.Fatalf("expected audited create through asset service, got %+v", assets.auditRecords)
+	}
+}
+
+func TestExecuteActionPlanCreatesLocationAndMarksExecuted(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindCreateLocation, `{"name":"Office"}`),
+		},
+	}
+	assets := &fakeAssetRepository{}
+	application := newActionPlanExecutionTestApp(repository, assets, &fakeIDGenerator{ids: []string{"location-1", "undo-1", "audit-1"}})
+
+	executed, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if err != nil {
+		t.Fatalf("execute action plan: %v", err)
+	}
+	if executed.State != actionplan.StateExecuted {
+		t.Fatalf("expected executed plan, got %+v", executed)
+	}
+	created := assets.items[asset.ID("location-1")]
+	if created.Kind != asset.KindLocation || created.Title.String() != "Office" {
+		t.Fatalf("expected created location, got %+v", created)
+	}
+}
+
+func TestExecuteActionPlanRejectsUnapprovedPlanWithoutCreatingAsset(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecordWithCommand("plan-1", actionplan.StateProposed, actionplan.CommandKindCreateAsset, `{"title":"Water bottle"}`),
+		},
+	}
+	assets := &fakeAssetRepository{}
+	application := newActionPlanExecutionTestApp(repository, assets, &fakeIDGenerator{ids: []string{"asset-1", "undo-1", "audit-1"}})
+
+	_, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if !errors.Is(err, ErrConflict) {
+		t.Fatalf("expected conflict for unapproved plan, got %v", err)
+	}
+	if repository.records["plan-1"].State != actionplan.StateProposed {
+		t.Fatalf("expected plan to remain proposed, got %+v", repository.records["plan-1"])
+	}
+	if len(assets.items) != 0 {
+		t.Fatalf("expected no created assets, got %+v", assets.items)
+	}
+}
+
+func TestExecuteActionPlanAuthorizesBeforeReadingPlanState(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecord("plan-1", actionplan.StateApproved),
+		},
+	}
+	application := newActionPlanTestApp(repository, &fakeIDGenerator{}, ports.ErrForbidden)
+
+	_, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected forbidden before plan lookup, got %v", err)
+	}
+	if repository.reads != 0 {
+		t.Fatalf("expected no plan reads before execution authorization, got %d", repository.reads)
+	}
+}
+
+func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutCreatingAsset(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		record ports.ActionPlanRecord
+	}{
+		{
+			name:   "unsupported command",
+			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindMoveAsset, `{"assetId":"asset-1","parentAssetId":"location-1"}`),
+		},
+		{
+			name: "multi command",
+			record: func() ports.ActionPlanRecord {
+				record := actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindCreateAsset, `{"title":"Water bottle"}`)
+				record.Commands = append(record.Commands, ports.ActionPlanCommandRecord{
+					ID:            "command-2",
+					Kind:          actionplan.CommandKindCreateLocation,
+					Summary:       "Create Office",
+					ArgumentsJSON: []byte(`{"name":"Office"}`),
+				})
+				return record
+			}(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repository := &fakeActionPlanRepository{records: map[string]ports.ActionPlanRecord{"plan-1": tt.record}}
+			assets := &fakeAssetRepository{}
+			application := newActionPlanExecutionTestApp(repository, assets, &fakeIDGenerator{ids: []string{"asset-1", "undo-1", "audit-1"}})
+
+			failed, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+				Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+				TenantID:    tenant.ID("tenant-home"),
+				InventoryID: inventory.InventoryID("inventory-home"),
+				PlanID:      "plan-1",
+			})
+			if err == nil {
+				t.Fatalf("expected execution error")
+			}
+			if failed.State != actionplan.StateFailed || failed.FailedAt.IsZero() {
+				t.Fatalf("expected failed action plan state, got %+v", failed)
+			}
+			if len(assets.items) != 0 {
+				t.Fatalf("expected no created assets, got %+v", assets.items)
+			}
+		})
+	}
+}
+
 func newActionPlanTestApp(repository ports.ActionPlanRepository, ids ports.IDGenerator, checkInventoryErr error) App {
 	name, _ := inventory.NewName("Home")
 	return New(Dependencies{
@@ -267,9 +435,37 @@ func newActionPlanTestApp(repository ports.ActionPlanRepository, ids ports.IDGen
 	})
 }
 
+func newActionPlanExecutionTestApp(repository ports.ActionPlanRepository, assetRepository *fakeAssetRepository, ids ports.IDGenerator) App {
+	name, _ := inventory.NewName("Home")
+	if fakeRepository, ok := repository.(*fakeActionPlanRepository); ok && fakeRepository.assetUnitOfWork == nil {
+		fakeRepository.assetUnitOfWork = assetRepository
+	}
+	return New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &fakeAuthorizer{},
+		Tenants:    &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{{
+			ID:             inventory.InventoryID("inventory-home"),
+			TenantID:       inventory.TenantID("tenant-home"),
+			Name:           name,
+			LifecycleState: inventory.LifecycleStateActive,
+		}}},
+		Assets:          assetRepository,
+		AssetUnitOfWork: assetRepository,
+		Undoables:       assetRepository,
+		ActionPlans:     repository,
+		IDs:             ids,
+		Clock:           fakeClock{now: time.Date(2026, 6, 26, 17, 30, 0, 0, time.UTC)},
+	})
+}
+
 func actionPlanRecord(id string, state actionplan.State) ports.ActionPlanRecord {
+	return actionPlanRecordWithCommand(id, state, actionplan.CommandKindCreateAsset, `{"name":"water bottle"}`)
+}
+
+func actionPlanRecordWithCommand(id string, state actionplan.State, kind actionplan.CommandKind, argumentsJSON string) ports.ActionPlanRecord {
 	createdAt := time.Date(2026, 6, 26, 17, 30, 0, 0, time.UTC)
-	return ports.ActionPlanRecord{
+	record := ports.ActionPlanRecord{
 		ID:                  id,
 		TenantID:            tenant.ID("tenant-home"),
 		InventoryID:         inventory.InventoryID("inventory-home"),
@@ -279,18 +475,25 @@ func actionPlanRecord(id string, state actionplan.State) ports.ActionPlanRecord 
 		ConfirmationSummary: "Create item?",
 		Commands: []ports.ActionPlanCommandRecord{{
 			ID:            "command-1",
-			Kind:          actionplan.CommandKindCreateAsset,
+			Kind:          kind,
 			Summary:       "Create item",
-			ArgumentsJSON: []byte(`{"name":"water bottle"}`),
+			ArgumentsJSON: []byte(argumentsJSON),
 		}},
 		CreatedAt: createdAt,
 		UpdatedAt: createdAt,
 	}
+	if state == actionplan.StateApproved {
+		record.ApprovedAt = createdAt.Add(time.Second)
+		record.UpdatedAt = record.ApprovedAt
+	}
+	return record
 }
 
 type fakeActionPlanRepository struct {
-	saved   []ports.ActionPlanRecord
-	records map[string]ports.ActionPlanRecord
+	saved           []ports.ActionPlanRecord
+	records         map[string]ports.ActionPlanRecord
+	assetUnitOfWork ports.AssetUnitOfWork
+	reads           int
 }
 
 func (f *fakeActionPlanRepository) SaveActionPlan(_ context.Context, record ports.ActionPlanRecord) error {
@@ -303,6 +506,7 @@ func (f *fakeActionPlanRepository) SaveActionPlan(_ context.Context, record port
 }
 
 func (f *fakeActionPlanRepository) ActionPlanByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string) (ports.ActionPlanRecord, bool, error) {
+	f.reads++
 	record, found := f.records[planID]
 	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
 		return ports.ActionPlanRecord{}, false, nil
@@ -325,7 +529,36 @@ func (f *fakeActionPlanRepository) UpdateActionPlanState(_ context.Context, tena
 		record.ApprovedAt = transition.At
 	case actionplan.StateCancelled:
 		record.CancelledAt = transition.At
+	case actionplan.StateExecuted:
+		record.ExecutedAt = transition.At
+	case actionplan.StateFailed:
+		record.FailedAt = transition.At
 	}
 	f.records[planID] = record
 	return record, true, nil
+}
+
+func (f *fakeActionPlanRepository) ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
+	if transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	record, found := f.records[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	if f.assetUnitOfWork == nil {
+		return ports.ActionPlanRecord{}, true, ErrInvalidInput
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	if err := f.assetUnitOfWork.CreateAsset(ctx, item, auditRecord, undoableOperation); err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	f.records[planID] = updated
+	return updated, true, nil
 }

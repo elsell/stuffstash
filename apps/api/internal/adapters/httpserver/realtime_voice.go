@@ -13,6 +13,7 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -348,6 +349,38 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		}
 		eventType = app.RealtimeVoiceEventActionPlanApproved
 		status = string(record.State)
+		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: eventType, Seq: *serverSeq, SessionID: session.ID, PlanID: planID, Status: status}); err != nil {
+			return err
+		}
+		*serverSeq = *serverSeq + 1
+
+		executed, err := application.ExecuteActionPlan(ctx, app.ActionPlanDecisionInput{
+			Principal:   session.Principal,
+			TenantID:    session.TenantID,
+			InventoryID: session.InventoryID,
+			PlanID:      planID,
+		})
+		outcomeType := app.RealtimeVoiceEventActionPlanExecuted
+		outcomeMessage := "The approved change was applied."
+		if err != nil {
+			if executed.State != actionplan.StateFailed {
+				return err
+			}
+			outcomeType = app.RealtimeVoiceEventActionPlanFailed
+			outcomeMessage = "The approved change could not be applied safely."
+		}
+		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{
+			Type:      outcomeType,
+			Seq:       *serverSeq,
+			SessionID: session.ID,
+			PlanID:    planID,
+			Status:    string(executed.State),
+			Message:   outcomeMessage,
+		}); err != nil {
+			return err
+		}
+		*serverSeq = *serverSeq + 1
+		return nil
 	case "action.plan.cancel":
 		record, err := application.CancelActionPlan(ctx, app.ActionPlanDecisionInput{
 			Principal:   session.Principal,

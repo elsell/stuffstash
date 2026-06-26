@@ -192,10 +192,16 @@ function VoiceSessionSheet({
                   </Text>
                 ))}
                 {session.actionPlan.status === 'approved' ? (
-                  <Text style={styles.actionPlanStatus}>Approved. Execution is not wired yet.</Text>
+                  <Text style={styles.actionPlanStatus}>Approved. Applying change.</Text>
                 ) : null}
                 {session.actionPlan.status === 'cancelled' ? (
                   <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
+                ) : null}
+                {session.actionPlan.status === 'executed' ? (
+                  <Text style={styles.actionPlanStatus}>Applied.</Text>
+                ) : null}
+                {session.actionPlan.status === 'failed' ? (
+                  <Text style={styles.actionPlanStatus}>Could not apply this change.</Text>
                 ) : null}
                 {session.canApproveActionPlan || session.canCancelActionPlan ? (
                   <View style={styles.actionPlanActions}>

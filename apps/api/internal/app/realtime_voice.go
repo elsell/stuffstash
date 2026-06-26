@@ -25,6 +25,8 @@ const (
 	RealtimeVoiceEventActionPlanProposed          = "action.plan.proposed"
 	RealtimeVoiceEventActionPlanApproved          = "action.plan.approved"
 	RealtimeVoiceEventActionPlanCancelled         = "action.plan.cancelled"
+	RealtimeVoiceEventActionPlanExecuted          = "action.plan.executed"
+	RealtimeVoiceEventActionPlanFailed            = "action.plan.failed"
 	RealtimeVoiceEventAssistantResponseStarted    = "assistant.response.started"
 	RealtimeVoiceEventAssistantResponseCompleted  = "assistant.response.completed"
 	RealtimeVoiceEventTextToSpeechAudioStarted    = "tts.audio.started"

@@ -15,7 +15,10 @@ import (
 func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.createAssetLocked(item, auditRecord, undoableOperation)
+}
 
+func (s *Store) createAssetLocked(item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	containingInventory, ok := s.inventories[inventory.InventoryID(item.InventoryID.String())]
 	if !ok || containingInventory.TenantID.String() != item.TenantID.String() {
 		return ports.ErrForbidden

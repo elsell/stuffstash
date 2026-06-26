@@ -127,7 +127,7 @@ export function buildVoiceAccessoryPresentation({
 export type VoiceSessionPresentation = {
   readonly actionPlan?: {
     readonly planId: string;
-    readonly status: 'proposed' | 'approved' | 'cancelled';
+    readonly status: 'proposed' | 'approved' | 'cancelled' | 'executed' | 'failed';
     readonly confirmationSummary: string;
     readonly commands: readonly string[];
     readonly risks: readonly string[];

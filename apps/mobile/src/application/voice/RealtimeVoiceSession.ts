@@ -73,7 +73,12 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       readonly message?: string;
     }
   | { readonly type: 'action.plan.proposed'; readonly actionPlan: VoiceActionPlanProposal }
-  | { readonly type: 'action.plan.approved' | 'action.plan.cancelled'; readonly planId: string; readonly status: 'approved' | 'cancelled' }
+  | {
+      readonly type: 'action.plan.approved' | 'action.plan.cancelled' | 'action.plan.executed' | 'action.plan.failed';
+      readonly planId: string;
+      readonly status: 'approved' | 'cancelled' | 'executed' | 'failed';
+      readonly message?: string;
+    }
   | { readonly type: 'assistant.response.started'; readonly responseId: string }
   | {
       readonly type: 'assistant.response.completed';
@@ -92,11 +97,13 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
 
 export type VoiceActionPlanProposal = {
   readonly planId: string;
-  readonly status: 'proposed' | 'approved' | 'cancelled';
+  readonly status: 'proposed' | 'approved' | 'cancelled' | 'executed' | 'failed';
   readonly confirmationSummary: string;
   readonly commands: readonly VoiceActionPlanCommand[];
   readonly risks: readonly string[];
 };
+
+type VoiceActionPlanStatus = VoiceActionPlanProposal['status'];
 
 export type VoiceActionPlanCommand = {
   readonly kind: string;
@@ -297,11 +304,12 @@ export class RealtimeVoiceSessionController {
       case 'action.plan.approved':
         return {
           ...state,
-          status: 'completed',
+          status: 'processing',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'approved' }
             : state.actionPlan,
-          progressLabel: 'Change approved'
+          reviewDecisionPending: true,
+          progressLabel: 'Applying change'
         };
       case 'action.plan.cancelled':
         return {
@@ -311,6 +319,28 @@ export class RealtimeVoiceSessionController {
             ? { ...state.actionPlan, status: 'cancelled' }
             : state.actionPlan,
           progressLabel: 'Change cancelled'
+        };
+      case 'action.plan.executed':
+        return {
+          ...state,
+          status: 'completed',
+          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
+            ? { ...state.actionPlan, status: 'executed' }
+            : state.actionPlan,
+          reviewDecisionPending: false,
+          progressLabel: 'Change applied'
+        };
+      case 'action.plan.failed':
+        await this.player.stop();
+        return {
+          ...state,
+          status: 'failed',
+          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
+            ? { ...state.actionPlan, status: 'failed' }
+            : state.actionPlan,
+          reviewDecisionPending: false,
+          errorMessage: event.message ?? 'The approved change could not be applied safely.',
+          progressLabel: 'Change failed'
         };
       case 'assistant.response.started':
         return { ...state, status: state.actionPlan ? 'review' : 'processing', progressLabel: 'Preparing response' };
@@ -419,9 +449,13 @@ function safeDiagnosticStatus(status: string | undefined): VoiceSafeDiagnosticSt
 }
 
 function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionPlanProposal {
+  const terminalStatuses: readonly VoiceActionPlanStatus[] = ['approved', 'cancelled', 'executed', 'failed'];
+  const safeStatus: VoiceActionPlanStatus = terminalStatuses.includes(proposal.status)
+    ? proposal.status
+    : 'proposed';
   return {
     planId: safeBoundedText(proposal.planId, 80),
-    status: proposal.status === 'approved' || proposal.status === 'cancelled' ? proposal.status : 'proposed',
+    status: safeStatus,
     confirmationSummary: safeBoundedText(proposal.confirmationSummary, 180),
     commands: proposal.commands.slice(0, 6).map((command) => ({
       kind: safeBoundedText(command.kind, 40),

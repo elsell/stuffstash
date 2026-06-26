@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -49,4 +51,5 @@ type ActionPlanRepository interface {
 	SaveActionPlan(ctx context.Context, record ActionPlanRecord) error
 	ActionPlanByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string) (ActionPlanRecord, bool, error)
 	UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition) (ActionPlanRecord, bool, error)
+	ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 }

@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -46,23 +48,9 @@ func (s Store) UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, in
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
 	}
-	updates := map[string]any{
-		"state":      string(transition.To),
-		"updated_at": transition.At,
-	}
-	switch transition.To {
-	case actionplan.StateApproved:
-		updates["approved_at"] = transition.At
-	case actionplan.StateCancelled:
-		updates["cancelled_at"] = transition.At
-	case actionplan.StateExecuted:
-		updates["executed_at"] = transition.At
-	case actionplan.StateFailed:
-		updates["failed_at"] = transition.At
-	}
 	result := s.db.WithContext(ctx).Model(&actionPlanModel{}).
 		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND principal_id = ? AND state = ? AND created_at <= ?", tenantID.String(), inventoryID.String(), planID, transition.PrincipalID.String(), string(transition.From), transition.At).
-		Updates(updates)
+		Updates(actionPlanStateUpdates(transition))
 	if result.Error != nil {
 		return ports.ActionPlanRecord{}, false, result.Error
 	}
@@ -78,6 +66,60 @@ func (s Store) UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, in
 		return ports.ActionPlanRecord{}, true, ports.ErrConflict
 	}
 	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
+}
+
+func (s Store) ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	found := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&actionPlanModel{}).
+			Where("tenant_id = ? AND inventory_id = ? AND id = ? AND principal_id = ? AND state = ? AND created_at <= ?", tenantID.String(), inventoryID.String(), planID, transition.PrincipalID.String(), string(transition.From), transition.At).
+			Updates(actionPlanStateUpdates(transition))
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			var existing actionPlanModel
+			err := tx.Where("tenant_id = ? AND inventory_id = ? AND id = ?", tenantID.String(), inventoryID.String(), planID).First(&existing).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			found = true
+			return ports.ErrConflict
+		}
+		found = true
+		return createAssetInTx(tx, item, auditRecord, undoableOperation)
+	})
+	if err != nil {
+		return ports.ActionPlanRecord{}, found, err
+	}
+	if !found {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
+}
+
+func actionPlanStateUpdates(transition ports.ActionPlanStateTransition) map[string]any {
+	updates := map[string]any{
+		"state":      string(transition.To),
+		"updated_at": transition.At,
+	}
+	switch transition.To {
+	case actionplan.StateApproved:
+		updates["approved_at"] = transition.At
+	case actionplan.StateCancelled:
+		updates["cancelled_at"] = transition.At
+	case actionplan.StateExecuted:
+		updates["executed_at"] = transition.At
+	case actionplan.StateFailed:
+		updates["failed_at"] = transition.At
+	}
+	return updates
 }
 
 type persistedActionPlanCommand struct {

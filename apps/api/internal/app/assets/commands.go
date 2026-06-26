@@ -8,37 +8,56 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
-	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
+	prepared, err := s.PrepareCreateAsset(ctx, input)
+	if err != nil {
 		return asset.Asset{}, err
 	}
-	if err := s.ensureAssetRepository(); err != nil {
+	if err := s.persistPreparedCreateAsset(ctx, prepared); err != nil {
 		return asset.Asset{}, err
+	}
+	s.RecordAssetCreated(ctx, prepared.Asset, input.Principal.ID)
+	return prepared.Asset, nil
+}
+
+type PreparedCreateAsset struct {
+	Asset             asset.Asset
+	AuditRecord       audit.Record
+	UndoableOperation ports.UndoableOperation
+}
+
+func (s Service) PrepareCreateAsset(ctx context.Context, input CreateAssetInput) (PreparedCreateAsset, error) {
+	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
+		return PreparedCreateAsset{}, err
+	}
+	if err := s.ensureAssetRepository(); err != nil {
+		return PreparedCreateAsset{}, err
 	}
 
 	kind, ok := asset.NewKind(input.Kind)
 	if !ok {
-		return asset.Asset{}, apperrors.ErrInvalidInput
+		return PreparedCreateAsset{}, apperrors.ErrInvalidInput
 	}
 	title, ok := asset.NewTitle(input.Title)
 	if !ok {
-		return asset.Asset{}, apperrors.ErrInvalidInput
+		return PreparedCreateAsset{}, apperrors.ErrInvalidInput
 	}
 	customAssetTypeID, err := s.validatedAssetCustomAssetTypeID(ctx, input.TenantID, input.InventoryID, input.CustomAssetTypeID)
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedCreateAsset{}, err
 	}
 	customFields, err := s.validatedCustomFields(ctx, input.TenantID, input.InventoryID, customAssetTypeID, input.CustomFields)
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedCreateAsset{}, err
 	}
 
 	id, ok := asset.NewID(s.newID())
 	if !ok {
-		return asset.Asset{}, apperrors.ErrInvalidInput
+		return PreparedCreateAsset{}, apperrors.ErrInvalidInput
 	}
 	now := s.now().UTC()
 
@@ -46,17 +65,17 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 	if strings.TrimSpace(input.ParentAssetID) != "" {
 		parsedParentID, ok := asset.NewID(input.ParentAssetID)
 		if !ok {
-			return asset.Asset{}, apperrors.ErrInvalidInput
+			return PreparedCreateAsset{}, apperrors.ErrInvalidInput
 		}
 		parent, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, parsedParentID)
 		if err != nil {
-			return asset.Asset{}, err
+			return PreparedCreateAsset{}, err
 		}
 		if !found {
-			return asset.Asset{}, apperrors.ErrNotFound
+			return PreparedCreateAsset{}, apperrors.ErrNotFound
 		}
 		if !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
-			return asset.Asset{}, apperrors.ErrInvalidInput
+			return PreparedCreateAsset{}, apperrors.ErrInvalidInput
 		}
 		parentAssetID = parsedParentID
 	}
@@ -78,7 +97,7 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 
 	undoableOperation, err := s.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetCreated, nil, item)
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedCreateAsset{}, err
 	}
 
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
@@ -97,35 +116,40 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 		},
 	})
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedCreateAsset{}, err
 	}
 	if item.CustomAssetTypeID.String() != "" {
 		auditRecord.Metadata["custom_asset_type_id"] = item.CustomAssetTypeID.String()
 	}
 
-	if s.assetUnitOfWork == nil {
-		return asset.Asset{}, apperrors.ErrInvalidInput
-	}
-	if err := s.assetUnitOfWork.CreateAsset(ctx, item, auditRecord, &undoableOperation); err != nil {
-		if errors.Is(err, ports.ErrForbidden) {
-			return asset.Asset{}, apperrors.ErrInvalidInput
-		}
-		return asset.Asset{}, err
-	}
+	return PreparedCreateAsset{Asset: item, AuditRecord: auditRecord, UndoableOperation: undoableOperation}, nil
+}
 
+func (s Service) persistPreparedCreateAsset(ctx context.Context, prepared PreparedCreateAsset) error {
+	if s.assetUnitOfWork == nil {
+		return apperrors.ErrInvalidInput
+	}
+	if err := s.assetUnitOfWork.CreateAsset(ctx, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation); err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return apperrors.ErrInvalidInput
+		}
+		return err
+	}
+	return nil
+}
+
+func (s Service) RecordAssetCreated(ctx context.Context, item asset.Asset, principalID identity.PrincipalID) {
 	s.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAssetCreated,
 		Message: "asset created",
 		Fields: map[string]string{
-			"tenant_id":    input.TenantID.String(),
-			"inventory_id": input.InventoryID.String(),
+			"tenant_id":    item.TenantID.String(),
+			"inventory_id": item.InventoryID.String(),
 			"asset_id":     item.ID.String(),
 			"asset_kind":   item.Kind.String(),
-			"principal_id": input.Principal.ID.String(),
+			"principal_id": principalID.String(),
 		},
 	})
-
-	return item, nil
 }
 
 func (s Service) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Asset, error) {
