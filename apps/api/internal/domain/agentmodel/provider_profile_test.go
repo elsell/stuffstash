@@ -105,14 +105,89 @@ func TestProviderProfileLifecycleTransitions(t *testing.T) {
 	}
 }
 
+func TestProviderProfileUpdatesConfigurationAndClearsLastTestedAt(t *testing.T) {
+	t.Parallel()
+
+	profile := newTestProviderProfile(t, ProviderProfileEnabled)
+	testedAt := time.Date(2026, 6, 26, 11, 0, 0, 0, time.UTC)
+	profile.LastTestedAt = &testedAt
+	updatedAt := testedAt.Add(time.Hour)
+
+	updated, ok := profile.UpdateConfiguration(ProviderProfileConfigurationUpdate{
+		DisplayName:        DisplayName("Gemini tuned"),
+		EndpointURL:        EndpointURL("https://generativelanguage.googleapis.com"),
+		ModelName:          ModelName("gemini-2.5-flash-lite"),
+		RuntimeOptionsJSON: []byte(`{"temperature":0.2}`),
+		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     "Prefer concise spoken answers.",
+		UpdatedAt:          updatedAt,
+	})
+
+	if !ok {
+		t.Fatalf("expected configuration update to validate")
+	}
+	if updated.ID != profile.ID || updated.Capability != profile.Capability || updated.ProviderKind != profile.ProviderKind || updated.CredentialStatus != profile.CredentialStatus || updated.LifecycleState != profile.LifecycleState {
+		t.Fatalf("configuration update changed stable fields: before=%+v after=%+v", profile, updated)
+	}
+	if updated.DisplayName.String() != "Gemini tuned" || updated.RuntimeOptionsJSON.String() != `{"temperature":0.2}` || updated.PromptTemplate.String() != "Prefer concise spoken answers." {
+		t.Fatalf("configuration update did not preserve editable fields: %+v", updated)
+	}
+	if updated.LastTestedAt != nil || !updated.UpdatedAt.Equal(updatedAt) {
+		t.Fatalf("expected last tested reset and updated timestamp, got lastTested=%+v updatedAt=%s", updated.LastTestedAt, updated.UpdatedAt)
+	}
+}
+
+func TestProviderProfileRejectsInvalidConfigurationUpdates(t *testing.T) {
+	t.Parallel()
+
+	profile := newTestProviderProfile(t, ProviderProfileEnabled)
+	now := time.Date(2026, 6, 26, 12, 0, 0, 0, time.UTC)
+
+	invalidMetadata := ProviderProfileConfigurationUpdate{
+		DisplayName:        DisplayName("Gemini tuned"),
+		RuntimeOptionsJSON: []byte(`[]`),
+		CapabilityJSON:     []byte(`{}`),
+		UpdatedAt:          now,
+	}
+	if _, ok := profile.UpdateConfiguration(invalidMetadata); ok {
+		t.Fatalf("expected invalid runtime options rejection")
+	}
+
+	archived, ok := profile.Archive(now)
+	if !ok {
+		t.Fatalf("archive profile")
+	}
+	valid := ProviderProfileConfigurationUpdate{
+		DisplayName:        DisplayName("Gemini tuned"),
+		RuntimeOptionsJSON: []byte(`{}`),
+		CapabilityJSON:     []byte(`{}`),
+		UpdatedAt:          now.Add(time.Hour),
+	}
+	if _, ok := archived.UpdateConfiguration(valid); ok {
+		t.Fatalf("expected archived profile update rejection")
+	}
+
+	tts := newTestProviderProfileWithCapability(t, ProviderCapabilityTextToSpeech, ProviderProfileEnabled)
+	valid.PromptTemplate = "Prefer concise spoken answers."
+	if _, ok := tts.UpdateConfiguration(valid); ok {
+		t.Fatalf("expected prompt template on non-language profile rejection")
+	}
+}
+
 func newTestProviderProfile(t *testing.T, lifecycle ProviderProfileLifecycleState) ProviderProfile {
+	t.Helper()
+
+	return newTestProviderProfileWithCapability(t, ProviderCapabilityLanguageInference, lifecycle)
+}
+
+func newTestProviderProfileWithCapability(t *testing.T, capability ProviderCapability, lifecycle ProviderProfileLifecycleState) ProviderProfile {
 	t.Helper()
 
 	now := time.Date(2026, 6, 26, 10, 0, 0, 0, time.UTC)
 	profile, ok := NewProviderProfile(ProviderProfileInput{
 		ID:                 ProviderProfileID("profile-google"),
 		TenantID:           TenantID("tenant-home"),
-		Capability:         ProviderCapabilityLanguageInference,
+		Capability:         capability,
 		ProviderKind:       ProviderKindGemini,
 		DisplayName:        DisplayName("Google Gemini"),
 		ModelName:          ModelName("gemini-2.5-flash-lite"),

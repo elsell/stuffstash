@@ -878,7 +878,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Patch tenants by tenant ID provider profiles by provider profile ID */
+        patch: operations["patch-tenants-by-tenant-id-provider-profiles-by-provider-profile-id"];
         trace?: never;
     };
     "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive": {
@@ -1742,6 +1743,30 @@ export interface components {
              * @description New invitation expiration timestamp
              */
             expiresAt: string;
+        };
+        UpdateProviderProfileBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateProviderProfileBody.json
+             */
+            readonly $schema?: string;
+            /** @description Safe provider capability metadata */
+            capabilityMetadata?: {
+                [key: string]: unknown;
+            };
+            /** @description User-facing provider profile name */
+            displayName?: string;
+            /** @description Provider endpoint URL when required */
+            endpointUrl?: string;
+            /** @description Provider model or deployment name */
+            modelName?: string;
+            /** @description Tenant-managed prompt template for language inference profiles */
+            promptTemplate?: string;
+            /** @description Non-secret runtime options */
+            runtimeOptions?: {
+                [key: string]: unknown;
+            };
         };
         UpdateTenantBody: {
             /**
@@ -4917,6 +4942,49 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-provider-profiles-by-provider-profile-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProviderProfileBody"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

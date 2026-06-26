@@ -86,6 +86,7 @@ const (
 	EventProviderProfileCreated               EventName = "provider_profile.created"
 	EventProviderProfileViewed                EventName = "provider_profile.viewed"
 	EventProviderProfilesListed               EventName = "provider_profile.listed"
+	EventProviderProfileUpdated               EventName = "provider_profile.updated"
 	EventProviderProfileEnabled               EventName = "provider_profile.enabled"
 	EventProviderProfileDisabled              EventName = "provider_profile.disabled"
 	EventProviderProfileArchived              EventName = "provider_profile.archived"

@@ -89,6 +89,39 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 		t.Fatalf("expected detail prompt template to round-trip, got %+v", decoded.Data)
 	}
 
+	update := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"displayName":        "Google Gemini tuned",
+		"endpointUrl":        "https://generativelanguage.googleapis.com",
+		"modelName":          "gemini-2.5-flash-lite",
+		"runtimeOptions":     map[string]any{"projectId": "pianotechpros", "location": "us-central1", "temperature": 0.2},
+		"capabilityMetadata": map[string]any{"toolCalls": true},
+		"promptTemplate":     "Answer naturally and briefly.",
+	})
+	if update.Code != http.StatusOK {
+		t.Fatalf("expected provider profile update status %d, got %d with body %s", http.StatusOK, update.Code, update.Body.String())
+	}
+	updated := decodeProviderProfile(t, update)
+	if updated.Data.DisplayName != "Google Gemini tuned" || updated.Data.PromptTemplate != "Answer naturally and briefly." {
+		t.Fatalf("unexpected updated provider profile: %+v", updated.Data)
+	}
+	if updated.Data.LastTestedAt != nil {
+		t.Fatalf("expected provider profile update to clear lastTestedAt, got %+v", updated.Data.LastTestedAt)
+	}
+	if strings.Contains(update.Body.String(), "raw-provider-secret") || strings.Contains(update.Body.String(), "sealed") || strings.Contains(update.Body.String(), "test-key") {
+		t.Fatalf("provider profile update leaked secret material: %s", update.Body.String())
+	}
+
+	promptOnlyUpdate := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID, "Bearer dev:tenant-owner", map[string]any{
+		"promptTemplate": "Speak in one sentence.",
+	})
+	if promptOnlyUpdate.Code != http.StatusOK {
+		t.Fatalf("expected provider profile prompt-only update status %d, got %d with body %s", http.StatusOK, promptOnlyUpdate.Code, promptOnlyUpdate.Body.String())
+	}
+	promptOnly := decodeProviderProfile(t, promptOnlyUpdate)
+	if promptOnly.Data.DisplayName != "Google Gemini tuned" || promptOnly.Data.ModelName != "gemini-2.5-flash-lite" || promptOnly.Data.PromptTemplate != "Speak in one sentence." {
+		t.Fatalf("expected prompt-only update to preserve omitted fields, got %+v", promptOnly.Data)
+	}
+
 	enable := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/enable", "Bearer dev:tenant-owner", nil)
 	if enable.Code != http.StatusOK || decodeProviderProfile(t, enable).Data.LifecycleState != "enabled" {
 		t.Fatalf("expected enabled provider profile, got status %d body %s", enable.Code, enable.Body.String())
@@ -156,6 +189,7 @@ func TestProviderProfileEndpointsRejectUnauthorizedUsers(t *testing.T) {
 		{name: "create", method: http.MethodPost, path: "/tenants/" + tenantID + "/provider-profiles", body: map[string]any{"capability": "language_inference", "providerKind": "gemini", "displayName": "Blocked"}},
 		{name: "list", method: http.MethodGet, path: "/tenants/" + tenantID + "/provider-profiles"},
 		{name: "detail", method: http.MethodGet, path: profilePath},
+		{name: "update", method: http.MethodPatch, path: profilePath, body: map[string]any{"displayName": "Blocked", "runtimeOptions": map[string]any{}, "capabilityMetadata": map[string]any{}}},
 		{name: "replace credential", method: http.MethodPut, path: profilePath + "/credential", body: credentialBody},
 		{name: "test", method: http.MethodPost, path: profilePath + "/test"},
 		{name: "enable", method: http.MethodPost, path: profilePath + "/enable"},
@@ -289,6 +323,7 @@ type providerProfileResponse struct {
 	PromptTemplate     string         `json:"promptTemplate"`
 	CredentialStatus   string         `json:"credentialStatus"`
 	LifecycleState     string         `json:"lifecycleState"`
+	LastTestedAt       *string        `json:"lastTestedAt"`
 }
 
 type providerProfileTestResponse struct {

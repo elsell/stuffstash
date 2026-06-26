@@ -101,6 +101,7 @@ const (
 	ActionProviderProfileCreated               Action = "provider_profile.created"
 	ActionProviderProfileViewed                Action = "provider_profile.viewed"
 	ActionProviderProfileListed                Action = "provider_profile.listed"
+	ActionProviderProfileUpdated               Action = "provider_profile.updated"
 	ActionProviderProfileEnabled               Action = "provider_profile.enabled"
 	ActionProviderProfileDisabled              Action = "provider_profile.disabled"
 	ActionProviderProfileArchived              Action = "provider_profile.archived"
@@ -172,6 +173,7 @@ func NewAction(value string) (Action, bool) {
 		ActionProviderProfileCreated,
 		ActionProviderProfileViewed,
 		ActionProviderProfileListed,
+		ActionProviderProfileUpdated,
 		ActionProviderProfileEnabled,
 		ActionProviderProfileDisabled,
 		ActionProviderProfileArchived,

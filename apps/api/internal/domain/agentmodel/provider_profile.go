@@ -242,6 +242,16 @@ type ProviderProfileInput struct {
 	UpdatedAt          time.Time
 }
 
+type ProviderProfileConfigurationUpdate struct {
+	DisplayName        DisplayName
+	EndpointURL        EndpointURL
+	ModelName          ModelName
+	RuntimeOptionsJSON []byte
+	CapabilityJSON     []byte
+	PromptTemplate     string
+	UpdatedAt          time.Time
+}
+
 func NewProviderProfile(input ProviderProfileInput) (ProviderProfile, bool) {
 	if _, ok := NewProviderProfileID(input.ID.String()); !ok {
 		return ProviderProfile{}, false
@@ -312,6 +322,48 @@ func NewProviderProfile(input ProviderProfileInput) (ProviderProfile, bool) {
 		CreatedAt:          input.CreatedAt,
 		UpdatedAt:          input.UpdatedAt,
 	}, true
+}
+
+func (p ProviderProfile) UpdateConfiguration(input ProviderProfileConfigurationUpdate) (ProviderProfile, bool) {
+	if input.UpdatedAt.IsZero() || p.LifecycleState == ProviderProfileArchived {
+		return ProviderProfile{}, false
+	}
+	displayName, ok := NewDisplayName(input.DisplayName.String())
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	endpointURL, ok := NewEndpointURL(input.EndpointURL.String())
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	modelName, ok := NewModelName(input.ModelName.String())
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	runtimeOptions, ok := NewJSONObject(input.RuntimeOptionsJSON)
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	capabilityJSON, ok := NewJSONObject(input.CapabilityJSON)
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	promptTemplate, ok := NewPromptTemplate(input.PromptTemplate)
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	if p.Capability != ProviderCapabilityLanguageInference && promptTemplate.String() != "" {
+		return ProviderProfile{}, false
+	}
+	p.DisplayName = displayName
+	p.EndpointURL = endpointURL
+	p.ModelName = modelName
+	p.RuntimeOptionsJSON = runtimeOptions
+	p.CapabilityJSON = capabilityJSON
+	p.PromptTemplate = promptTemplate
+	p.LastTestedAt = nil
+	p.UpdatedAt = input.UpdatedAt
+	return p, true
 }
 
 func (p ProviderProfile) Enable(now time.Time) (ProviderProfile, bool) {

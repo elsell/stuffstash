@@ -42,6 +42,23 @@ type GetProviderProfileInput struct {
 	ProviderProfileID string `path:"providerProfileId" doc:"Provider profile ID"`
 }
 
+type UpdateProviderProfileInput struct {
+	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	ProviderProfileID string `path:"providerProfileId" doc:"Provider profile ID"`
+	Body              UpdateProviderProfileBody
+}
+
+type UpdateProviderProfileBody struct {
+	DisplayName        *string         `json:"displayName,omitempty" maxLength:"120" doc:"User-facing provider profile name"`
+	EndpointURL        *string         `json:"endpointUrl,omitempty" maxLength:"2048" doc:"Provider endpoint URL when required"`
+	ModelName          *string         `json:"modelName,omitempty" maxLength:"256" doc:"Provider model or deployment name"`
+	RuntimeOptions     *map[string]any `json:"runtimeOptions,omitempty" doc:"Non-secret runtime options"`
+	CapabilityMetadata *map[string]any `json:"capabilityMetadata,omitempty" doc:"Safe provider capability metadata"`
+	PromptTemplate     *string         `json:"promptTemplate,omitempty" maxLength:"8192" doc:"Tenant-managed prompt template for language inference profiles"`
+}
+
 type ProviderProfileLifecycleInput struct {
 	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`

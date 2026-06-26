@@ -11,6 +11,7 @@ import (
 type CreateProviderProfileInput = agentmodelapp.CreateProviderProfileInput
 type ListProviderProfilesInput = agentmodelapp.ListProviderProfilesInput
 type GetProviderProfileInput = agentmodelapp.GetProviderProfileInput
+type UpdateProviderProfileInput = agentmodelapp.UpdateProviderProfileInput
 type ProviderProfileLifecycleInput = agentmodelapp.ProviderProfileLifecycleInput
 type ReplaceProviderProfileCredentialInput = agentmodelapp.ReplaceProviderProfileCredentialInput
 type TestProviderProfileInput = agentmodelapp.TestProviderProfileInput
@@ -25,6 +26,10 @@ func (a App) ListProviderProfiles(ctx context.Context, input ListProviderProfile
 
 func (a App) GetProviderProfile(ctx context.Context, input GetProviderProfileInput) (agentmodel.ProviderProfile, error) {
 	return a.providerProfileService.GetProviderProfile(ctx, input)
+}
+
+func (a App) UpdateProviderProfile(ctx context.Context, input UpdateProviderProfileInput) (agentmodel.ProviderProfile, error) {
+	return a.providerProfileService.UpdateProviderProfile(ctx, input)
 }
 
 func (a App) EnableProviderProfile(ctx context.Context, input ProviderProfileLifecycleInput) (agentmodel.ProviderProfile, error) {

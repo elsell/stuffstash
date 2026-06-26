@@ -221,6 +221,123 @@ func TestServiceListsAndGetsProviderProfilesByTenant(t *testing.T) {
 	}
 }
 
+func TestServiceUpdatesProviderProfileConfiguration(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	service := newProviderProfileTestService(repository, allowTenantConfigureAuthorizer{})
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileEnabled)
+	lastTestedAt := time.Date(2026, 6, 26, 11, 0, 0, 0, time.UTC)
+	profile.LastTestedAt = &lastTestedAt
+	profile.CredentialStatus = domain.CredentialStatusConfigured
+	repository.saved[profile.ID.String()] = profile
+
+	updated, err := service.UpdateProviderProfile(ctx, UpdateProviderProfileInput{
+		Principal:          testPrincipal(),
+		Source:             audit.SourceAPI,
+		RequestID:          "request-1",
+		TenantID:           tenant.ID("tenant-home"),
+		ProfileID:          profile.ID,
+		DisplayName:        stringPtr("Gemini tuned"),
+		EndpointURL:        stringPtr("https://generativelanguage.googleapis.com"),
+		ModelName:          stringPtr("gemini-2.5-flash-lite"),
+		RuntimeOptionsJSON: []byte(`{"temperature":0.2}`),
+		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     stringPtr("Prefer concise spoken answers."),
+	})
+	if err != nil {
+		t.Fatalf("update provider profile: %v", err)
+	}
+	if updated.DisplayName.String() != "Gemini tuned" || updated.RuntimeOptionsJSON.String() != `{"temperature":0.2}` || updated.PromptTemplate.String() != "Prefer concise spoken answers." {
+		t.Fatalf("unexpected updated profile configuration: %+v", updated)
+	}
+	if updated.LastTestedAt != nil || updated.CredentialStatus != domain.CredentialStatusConfigured || updated.LifecycleState != domain.ProviderProfileEnabled {
+		t.Fatalf("expected last tested reset without changing status/lifecycle, got %+v", updated)
+	}
+	if repository.lastAuditAction != audit.ActionProviderProfileUpdated {
+		t.Fatalf("expected provider profile updated audit action, got %s", repository.lastAuditAction)
+	}
+
+	promptOnly, err := service.UpdateProviderProfile(ctx, UpdateProviderProfileInput{
+		Principal:      testPrincipal(),
+		Source:         audit.SourceAPI,
+		RequestID:      "request-2",
+		TenantID:       tenant.ID("tenant-home"),
+		ProfileID:      profile.ID,
+		PromptTemplate: stringPtr("Speak in one sentence."),
+	})
+	if err != nil {
+		t.Fatalf("update provider profile prompt only: %v", err)
+	}
+	if promptOnly.DisplayName.String() != "Gemini tuned" || promptOnly.RuntimeOptionsJSON.String() != `{"temperature":0.2}` || promptOnly.PromptTemplate.String() != "Speak in one sentence." {
+		t.Fatalf("expected partial update to preserve omitted fields, got %+v", promptOnly)
+	}
+}
+
+func TestServiceRejectsProviderProfileUpdateWithoutTenantConfigurePermission(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileEnabled)
+	repository.saved[profile.ID.String()] = profile
+	service := newProviderProfileTestService(repository, denyTenantAuthorizer{})
+
+	_, err := service.UpdateProviderProfile(ctx, UpdateProviderProfileInput{
+		Principal:          testPrincipal(),
+		Source:             audit.SourceAPI,
+		RequestID:          "request-1",
+		TenantID:           tenant.ID("tenant-home"),
+		ProfileID:          profile.ID,
+		DisplayName:        stringPtr("Gemini tuned"),
+		RuntimeOptionsJSON: []byte(`{}`),
+		CapabilityJSON:     []byte(`{}`),
+	})
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected forbidden, got %v", err)
+	}
+}
+
+func TestServiceRejectsRawCredentialMaterialInProviderProfileUpdate(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileEnabled)
+	repository.saved[profile.ID.String()] = profile
+	service := newProviderProfileTestService(repository, allowTenantConfigureAuthorizer{})
+
+	_, err := service.UpdateProviderProfile(ctx, UpdateProviderProfileInput{
+		Principal:          testPrincipal(),
+		Source:             audit.SourceAPI,
+		RequestID:          "request-1",
+		TenantID:           tenant.ID("tenant-home"),
+		ProfileID:          profile.ID,
+		DisplayName:        stringPtr("Gemini tuned"),
+		RuntimeOptionsJSON: []byte(`{"token":"secret"}`),
+		CapabilityJSON:     []byte(`{}`),
+	})
+	if !errors.Is(err, apperrors.ErrValidation) {
+		t.Fatalf("expected validation rejection, got %v", err)
+	}
+
+	_, err = service.UpdateProviderProfile(ctx, UpdateProviderProfileInput{
+		Principal:          testPrincipal(),
+		Source:             audit.SourceAPI,
+		RequestID:          "request-2",
+		TenantID:           tenant.ID("tenant-home"),
+		ProfileID:          profile.ID,
+		DisplayName:        stringPtr("Gemini tuned"),
+		RuntimeOptionsJSON: []byte(`{}`),
+		CapabilityJSON:     []byte(`{}`),
+		PromptTemplate:     stringPtr("Use secret value."),
+	})
+	if !errors.Is(err, apperrors.ErrValidation) {
+		t.Fatalf("expected prompt template credential rejection, got %v", err)
+	}
+}
+
 func TestServiceLifecycleCommandsRespectArchivedBoundary(t *testing.T) {
 	t.Parallel()
 
@@ -605,6 +722,10 @@ func (f *fakeProviderProfileTester) TestProviderProfile(_ context.Context, input
 
 func testPrincipal() identity.Principal {
 	return identity.Principal{ID: identity.PrincipalID("user-one")}
+}
+
+func stringPtr(value string) *string {
+	return &value
 }
 
 func mustProviderProfile(t *testing.T, id string, tenantID string, capability domain.ProviderCapability, lifecycle domain.ProviderProfileLifecycleState) domain.ProviderProfile {

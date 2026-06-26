@@ -95,6 +95,7 @@ The web goal remains to prove a production-shaped path through:
 - `b60bbe8d feat(api): add provider profile test operation` and `eca22004 feat(api): run safe provider diagnostic probes` added a tenant-scoped provider profile test endpoint, safe success/failure metadata, audit/observability hooks, provider-aware credential selection, and capability-specific diagnostic probes for Google-backed language inference, text-to-speech, and speech-to-text endpoint validation.
 - `a69d3f12 feat(api): support api-key Gemini profiles` added Google AI Gemini API-key support for speech-to-text and language-inference provider profiles using `x-goog-api-key`, while keeping Google Cloud Text-to-Speech OAuth-only.
 - Tenant-scoped language-inference provider profiles now support bounded prompt templates that round-trip through the management API, persist through GORM migrations, resolve with the selected provider set, and are passed into realtime language model calls while the API appends the mandatory agent contract.
+- Tenant-scoped provider-profile management now supports non-secret PATCH updates for display name, endpoint URL, model name, runtime options, capability metadata, and prompt template, with partial-update semantics, audit/observability, generated client coverage, and `lastTestedAt` reset when configuration changes.
 
 ## Known Gaps
 

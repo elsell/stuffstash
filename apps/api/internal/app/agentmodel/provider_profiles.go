@@ -48,6 +48,20 @@ type GetProviderProfileInput struct {
 	ProfileID domain.ProviderProfileID
 }
 
+type UpdateProviderProfileInput struct {
+	Principal          identity.Principal
+	Source             audit.Source
+	RequestID          string
+	TenantID           tenant.ID
+	ProfileID          domain.ProviderProfileID
+	DisplayName        *string
+	EndpointURL        *string
+	ModelName          *string
+	RuntimeOptionsJSON []byte
+	CapabilityJSON     []byte
+	PromptTemplate     *string
+}
+
 type ProviderProfileLifecycleInput struct {
 	Principal identity.Principal
 	Source    audit.Source
@@ -176,6 +190,76 @@ func (s Service) GetProviderProfile(ctx context.Context, input GetProviderProfil
 	}
 	s.recordProviderProfileEvent(ctx, ports.EventProviderProfileViewed, input.Principal, profile)
 	return profile, nil
+}
+
+func (s Service) UpdateProviderProfile(ctx context.Context, input UpdateProviderProfileInput) (domain.ProviderProfile, error) {
+	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	if (input.RuntimeOptionsJSON != nil && rejectsCredentialMaterial(input.RuntimeOptionsJSON)) ||
+		(input.CapabilityJSON != nil && rejectsCredentialMaterial(input.CapabilityJSON)) ||
+		(input.PromptTemplate != nil && rejectsCredentialText(*input.PromptTemplate)) {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
+	}
+	current, found, err := s.providerProfiles.ProviderProfileByID(ctx, input.TenantID, input.ProfileID)
+	if err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	if !found {
+		return domain.ProviderProfile{}, apperrors.ErrNotFound
+	}
+	displayName := current.DisplayName.String()
+	if input.DisplayName != nil {
+		displayName = *input.DisplayName
+	}
+	endpointURL := current.EndpointURL.String()
+	if input.EndpointURL != nil {
+		endpointURL = *input.EndpointURL
+	}
+	modelName := current.ModelName.String()
+	if input.ModelName != nil {
+		modelName = *input.ModelName
+	}
+	runtimeOptionsJSON := []byte(current.RuntimeOptionsJSON.String())
+	if input.RuntimeOptionsJSON != nil {
+		runtimeOptionsJSON = input.RuntimeOptionsJSON
+	}
+	capabilityJSON := []byte(current.CapabilityJSON.String())
+	if input.CapabilityJSON != nil {
+		capabilityJSON = input.CapabilityJSON
+	}
+	promptTemplate := current.PromptTemplate.String()
+	if input.PromptTemplate != nil {
+		promptTemplate = *input.PromptTemplate
+	}
+	updated, ok := current.UpdateConfiguration(domain.ProviderProfileConfigurationUpdate{
+		DisplayName:        domain.DisplayName(displayName),
+		EndpointURL:        domain.EndpointURL(endpointURL),
+		ModelName:          domain.ModelName(modelName),
+		RuntimeOptionsJSON: runtimeOptionsJSON,
+		CapabilityJSON:     capabilityJSON,
+		PromptTemplate:     promptTemplate,
+		UpdatedAt:          s.clock.Now(),
+	})
+	if !ok {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
+	}
+	auditRecord, err := s.auditRecord(providerProfileAuditInput{
+		Principal: input.Principal,
+		Source:    input.Source,
+		RequestID: input.RequestID,
+		TenantID:  input.TenantID,
+		Profile:   updated,
+		Action:    audit.ActionProviderProfileUpdated,
+	})
+	if err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	if err := s.providerProfileUnitOfWork.UpdateProviderProfile(ctx, updated, auditRecord); err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	s.recordProviderProfileEvent(ctx, ports.EventProviderProfileUpdated, input.Principal, updated)
+	return updated, nil
 }
 
 func (s Service) EnableProviderProfile(ctx context.Context, input ProviderProfileLifecycleInput) (domain.ProviderProfile, error) {

@@ -2,45 +2,43 @@ package routes
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/providerprofiles/dto"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/providerprofiles/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
-func RegisterCreate(api huma.API, application app.App) {
-	huma.Post(api, "/tenants/{tenantId}/provider-profiles", func(ctx context.Context, input *dto.CreateProviderProfileInput) (*dto.ProviderProfileOutput, error) {
+func RegisterUpdate(api huma.API, application app.App) {
+	huma.Patch(api, "/tenants/{tenantId}/provider-profiles/{providerProfileId}", func(ctx context.Context, input *dto.UpdateProviderProfileInput) (*dto.ProviderProfileOutput, error) {
 		principal, err := shared.Authenticate(ctx, application, input.Authorization)
 		if err != nil {
 			return nil, err
 		}
-		runtimeOptions, err := marshalObject(input.Body.RuntimeOptions)
+		runtimeOptions, err := marshalOptionalObject(input.Body.RuntimeOptions)
 		if err != nil {
 			return nil, shared.ToHumaError(app.ErrValidation)
 		}
-		capabilityMetadata, err := marshalObject(input.Body.CapabilityMetadata)
+		capabilityMetadata, err := marshalOptionalObject(input.Body.CapabilityMetadata)
 		if err != nil {
 			return nil, shared.ToHumaError(app.ErrValidation)
 		}
-		profile, err := application.CreateProviderProfile(ctx, app.CreateProviderProfileInput{
+		profile, err := application.UpdateProviderProfile(ctx, app.UpdateProviderProfileInput{
 			Principal:          principal,
 			Source:             audit.SourceAPI,
 			RequestID:          input.RequestID,
 			TenantID:           tenant.ID(input.TenantID),
-			Capability:         input.Body.Capability,
-			ProviderKind:       input.Body.ProviderKind,
+			ProfileID:          agentmodel.ProviderProfileID(input.ProviderProfileID),
 			DisplayName:        input.Body.DisplayName,
 			EndpointURL:        input.Body.EndpointURL,
 			ModelName:          input.Body.ModelName,
 			RuntimeOptionsJSON: runtimeOptions,
 			CapabilityJSON:     capabilityMetadata,
 			PromptTemplate:     input.Body.PromptTemplate,
-			Enable:             input.Body.Enable,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)
@@ -51,19 +49,5 @@ func RegisterCreate(api huma.API, application app.App) {
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
-	}, huma.OperationTags("provider profiles"), shared.CreatedOperation, shared.SecuredOperation)
-}
-
-func marshalObject(value map[string]any) ([]byte, error) {
-	if value == nil {
-		value = map[string]any{}
-	}
-	return json.Marshal(value)
-}
-
-func marshalOptionalObject(value *map[string]any) ([]byte, error) {
-	if value == nil {
-		return nil, nil
-	}
-	return json.Marshal(*value)
+	}, huma.OperationTags("provider profiles"), shared.SecuredOperation)
 }

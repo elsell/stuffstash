@@ -99,6 +99,31 @@ func TestProviderProfileRepositoryUpdatesLifecycleAndPreservesAuditAtomicity(t *
 	if !found || got.LifecycleState != agentmodel.ProviderProfileEnabled {
 		t.Fatalf("expected enabled provider profile: found=%t profile=%+v", found, got)
 	}
+
+	lastTestedAt := enabled.UpdatedAt.Add(time.Minute)
+	enabled.LastTestedAt = &lastTestedAt
+	configured, ok := enabled.UpdateConfiguration(agentmodel.ProviderProfileConfigurationUpdate{
+		DisplayName:        agentmodel.DisplayName("Google Gemini tuned"),
+		EndpointURL:        agentmodel.EndpointURL("https://generativelanguage.googleapis.com"),
+		ModelName:          agentmodel.ModelName("gemini-2.5-flash-lite"),
+		RuntimeOptionsJSON: []byte(`{"temperature":0.3}`),
+		CapabilityJSON:     []byte(`{"toolCalls":true,"json":true}`),
+		PromptTemplate:     "Answer briefly.",
+		UpdatedAt:          lastTestedAt.Add(time.Minute),
+	})
+	if !ok {
+		t.Fatalf("update provider profile configuration")
+	}
+	if err := store.UpdateProviderProfile(ctx, configured, auditRecord(t, "audit-profile-four", tenant.ID("tenant-home"), "", audit.ActionProviderProfileUpdated)); err != nil {
+		t.Fatalf("update provider profile configuration: %v", err)
+	}
+	got, found, err = store.ProviderProfileByID(ctx, tenant.ID("tenant-home"), profile.ID)
+	if err != nil {
+		t.Fatalf("get provider profile after configuration update: %v", err)
+	}
+	if !found || got.DisplayName.String() != "Google Gemini tuned" || got.RuntimeOptionsJSON.String() != `{"temperature":0.3}` || got.CapabilityJSON.String() != `{"toolCalls":true,"json":true}` || got.PromptTemplate.String() != "Answer briefly." || got.LastTestedAt != nil {
+		t.Fatalf("expected updated provider profile configuration: found=%t profile=%+v", found, got)
+	}
 }
 
 func TestProviderProfileRepositoryReplacesCredentialAndUpdatesProfileStatus(t *testing.T) {
