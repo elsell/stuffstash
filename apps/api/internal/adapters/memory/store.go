@@ -26,6 +26,7 @@ type Store struct {
 	providerProfiles map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
 	providerCreds    map[string]ports.ProviderCredentialRecord
 	realtimeSessions map[string]ports.RealtimeSessionRecord
+	actionPlans      map[string]ports.ActionPlanRecord
 	blobs            map[media.StorageKey][]byte
 	blobDeletions    map[string]ports.BlobDeletionEvent
 	auditRecords     map[audit.ID]audit.Record
@@ -46,6 +47,7 @@ func NewStore() *Store {
 		providerProfiles: map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile{},
 		providerCreds:    map[string]ports.ProviderCredentialRecord{},
 		realtimeSessions: map[string]ports.RealtimeSessionRecord{},
+		actionPlans:      map[string]ports.ActionPlanRecord{},
 		blobs:            map[media.StorageKey][]byte{},
 		blobDeletions:    map[string]ports.BlobDeletionEvent{},
 		auditRecords:     map[audit.ID]audit.Record{},

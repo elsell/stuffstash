@@ -45,6 +45,7 @@ type App struct {
 	providerCredentialVault   ports.ProviderCredentialVault
 	providerProfileTester     ports.ProviderProfileTester
 	realtimeSessions          ports.RealtimeSessionRepository
+	actionPlans               ports.ActionPlanRepository
 	ids                       ports.IDGenerator
 	clock                     ports.Clock
 	outboxDrainLimit          int
@@ -96,6 +97,7 @@ type Dependencies struct {
 	ProviderCredentialVault       ports.ProviderCredentialVault
 	ProviderProfileTester         ports.ProviderProfileTester
 	RealtimeSessions              ports.RealtimeSessionRepository
+	ActionPlans                   ports.ActionPlanRepository
 	IDs                           ports.IDGenerator
 	Clock                         ports.Clock
 	AuthorizationOutboxDrainLimit int
@@ -163,6 +165,7 @@ func New(deps Dependencies) App {
 		providerCredentialVault:   deps.ProviderCredentialVault,
 		providerProfileTester:     deps.ProviderProfileTester,
 		realtimeSessions:          deps.RealtimeSessions,
+		actionPlans:               deps.ActionPlans,
 		ids:                       ids,
 		clock:                     clock,
 		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,

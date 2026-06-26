@@ -56,6 +56,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		ProviderCredentialVault:       providerCredentialVault,
 		ProviderProfileTester:         voice.NewProviderProfileTester(voice.GoogleProviderProfileFactory{}),
 		RealtimeSessions:              repositories.realtimeSessions,
+		ActionPlans:                   repositories.actionPlans,
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,

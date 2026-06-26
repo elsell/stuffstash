@@ -35,14 +35,14 @@ This spec does not define prompts, provider-specific structured output formats, 
 
 ## Initial Shape
 
-The exact serialized format remains open, but the initial structure must include these concepts:
+The complete action-plan model is expected to include:
 
 - `planId`: stable ULID for the plan.
 - `tenantId`: tenant security boundary.
-- `inventoryIds`: inventories in scope.
+- `inventoryId`: first inventory in scope. Multi-inventory plans are deferred until cross-inventory conversational behavior is specified.
 - `principalId`: authenticated user who initiated the flow.
 - `source`: interaction source, such as mobile voice, mobile text, web text, web voice, REST, or MCP.
-- `transcript`: optional safe transcript artifact reference governed by a specified retention and redaction policy, not raw audio.
+- `realtimeSessionId`: optional safe Stuff Stash realtime session ID that produced the plan.
 - `intent`: interpreted action intent.
 - `confidence`: coarse confidence value if useful to the UI.
 - `matches`: existing assets, locations, inventories, or custom fields matched by the flow.
@@ -52,10 +52,42 @@ The exact serialized format remains open, but the initial structure must include
 - `clarification`: question and options when the system cannot safely proceed.
 - `risks`: safe user-facing reasons why approval or clarification is needed.
 - `auditMetadata`: safe metadata for audit and observability.
+- `createdAt`, `updatedAt`, and optional `approvedAt`, `cancelledAt`, `executedAt`, or `failedAt` timestamps.
+
+The first persisted foundation may store the safe subset needed for durable approval boundaries: plan ID, tenant ID, inventory ID, principal ID, source, optional realtime session ID, state, bounded safe intent and interpretation summaries, confirmation summary, typed command records, bounded risks, and lifecycle timestamps. The deferred complete shape must be added before clarification UI, rich plan display, match visualization, confidence display, proposed-create previews, or audit metadata depend on those fields.
 
 The action plan may reference the realtime session that produced it, but it must not contain provider credentials, raw provider prompts, raw provider responses, raw audio, raw transcripts, generated speech bytes, or provider-specific session identifiers.
 
 Until a transcript retention and redaction policy is specified, action plans must not reference persisted transcript artifacts. They may use only ephemeral transcript text during planning and safe derived metadata in persisted records.
+
+## First Persisted Lifecycle
+
+The first implementation must persist action plans behind a project-owned repository port with memory and database-backed adapters.
+
+The first lifecycle states are:
+
+- `proposed`: the plan has been created and is awaiting user approval, cancellation, or clarification.
+- `approved`: the initiating principal approved this specific plan, but commands have not necessarily executed yet.
+- `cancelled`: the user cancelled the plan before execution.
+- `executed`: all executable commands in the plan completed successfully.
+- `failed`: the plan could not be executed safely.
+
+The first slice may implement creation, approval, and cancellation before command execution. Approval must be explicit, tied to the initiating principal and plan ID, and must not execute commands until an execution service is implemented. Cancelling or approving a terminal plan must fail safely. Repository reads and state transitions must be scoped by tenant ID and inventory ID.
+
+The first persisted plan must not store raw transcript text. A safe `userIntentSummary` and `modelInterpretationSummary` may be stored only when they are bounded, user-renderable, and free of provider-specific raw output.
+
+## Initial Command Enumeration
+
+The first command enumeration is:
+
+- `create_asset`
+- `create_location`
+- `move_asset`
+- `update_asset`
+- `archive_asset`
+- `restore_asset`
+
+Commands must be stored as project-owned typed command records with a command ID, command kind, safe human summary, and bounded JSON arguments. The first persistence slice may store command arguments as reviewed JSON while application services still validate the command kind and safe summary. Command arguments must not contain provider-specific model output, raw prompts, credentials, bearer tokens, hidden resource data, or approval claims.
 
 ## Command Rules
 
