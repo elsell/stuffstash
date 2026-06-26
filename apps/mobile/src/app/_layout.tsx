@@ -34,6 +34,7 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+        <Stack.Screen name="provider-profiles" options={{ title: 'Voice providers' }} />
         <Stack.Screen
           name="tenant-switcher"
           options={{

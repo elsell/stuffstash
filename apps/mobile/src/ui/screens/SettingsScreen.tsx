@@ -16,6 +16,7 @@ import { colors, radius, spacing } from '../theme/tokens';
 
 type SettingsScreenProps = {
   readonly settingsQuery: SettingsQuery;
+  readonly onOpenProviderProfiles: () => void;
   readonly onResetConnection: () => Promise<void>;
 };
 
@@ -24,7 +25,11 @@ type ScreenState =
   | { readonly status: 'ready'; readonly settings: SettingsViewModel }
   | { readonly status: 'error'; readonly message: string };
 
-export function SettingsScreen({ settingsQuery, onResetConnection }: SettingsScreenProps) {
+export function SettingsScreen({
+  settingsQuery,
+  onOpenProviderProfiles,
+  onResetConnection
+}: SettingsScreenProps) {
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -76,6 +81,7 @@ export function SettingsScreen({ settingsQuery, onResetConnection }: SettingsScr
         <SettingsContent
           isRefreshing={isRefreshing}
           settings={screenState.settings}
+          onOpenProviderProfiles={onOpenProviderProfiles}
           onRefresh={refreshSettings}
           onResetConnection={onResetConnection}
         />
@@ -105,11 +111,13 @@ function ErrorState({ message }: { readonly message: string }) {
 function SettingsContent({
   isRefreshing,
   settings,
+  onOpenProviderProfiles,
   onRefresh,
   onResetConnection
 }: {
   readonly isRefreshing: boolean;
   readonly settings: SettingsViewModel;
+  readonly onOpenProviderProfiles: () => void;
   readonly onRefresh: () => void;
   readonly onResetConnection: () => Promise<void>;
 }) {
@@ -168,6 +176,13 @@ function SettingsContent({
 
       <View style={styles.panel}>
         <Text style={styles.sectionTitle}>Developer</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpenProviderProfiles}
+          style={styles.secondaryButton}
+        >
+          <Text style={styles.secondaryButtonText}>Voice provider profiles</Text>
+        </Pressable>
         {settings.developerRows.map((row) => (
           <SettingsRow key={row.label} label={row.label} value={row.value} />
         ))}

@@ -115,7 +115,7 @@ The web goal remains important but is not the immediate starting point. It still
 
 1. Add mobile provider-profile management and testing UX.
    - Use `specs/agent-model/provider-profiles.spec.md` and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
-   - Expose safe tenant-scoped provider profile metadata, prompt template editing, credential replacement, enable/disable/archive, and safe test results behind mobile application ports and generated-client adapters.
+   - Start with safe tenant-scoped provider profile metadata and safe provider test results behind mobile application ports and generated-client adapters, then add prompt template editing, credential replacement, and lifecycle actions.
 2. Wire mobile voice startup to tenant-managed provider profile readiness.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` and `specs/agent-model/provider-profiles.spec.md` as the source of truth.
    - Surface missing/disabled/untested provider profile state before voice capture, without exposing provider credentials or direct provider bootstrap details to the mobile app.

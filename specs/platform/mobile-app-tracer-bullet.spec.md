@@ -162,6 +162,12 @@ This spec defines camera behavior only for attaching still photos during the Add
   - It must show About information for Stuff Stash, including the mobile app version.
   - It may show clearly labeled developer diagnostics such as the configured API base URL and local-development authentication mode.
   - It must not show current inventory context, tenant switching state, unfinished account controls, sharing management, unavailable feature panels, or OIDC mobile authentication until those behaviors are specified.
+- Settings must expose a voice provider profile readiness surface before voice capture depends on tenant-managed profiles:
+  - The surface must load safe tenant-scoped provider profile metadata through a mobile application port and generated API-client adapter.
+  - It must show capability, provider kind, display name, lifecycle state, credential status, model name when present, last-tested state, and safe prompt-template presence for language inference profiles.
+  - It may run the API's safe provider diagnostic probe for a selected profile and show only the safe status, message, and tested-at timestamp returned by the API.
+  - It must never show raw credentials, sealed credential data, provider account details, provider-specific realtime URLs, raw prompts, raw transcripts, raw model responses, raw audio, or generated speech.
+  - Credential entry, profile creation, profile update, enable/disable/archive, and prompt-template editing remain separate mobile implementation work even though the API supports those operations.
 - The first mobile voice UX preview must preserve the conversational inventory specs' mental model:
   - It must show the current tenant and inventory context.
   - It must represent the journey as user utterance, transcript, assistant interpretation, structured action-plan review, approval, and cancellation.

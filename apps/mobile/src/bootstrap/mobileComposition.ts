@@ -4,6 +4,7 @@ import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInvent
 import { ApiOnboardingGateway } from '../adapters/onboarding/ApiOnboardingGateway';
 import { FileSystemConnectionProfileStore } from '../adapters/onboarding/FileSystemConnectionProfileStore';
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
+import { ApiProviderProfileRepository } from '../adapters/providerProfiles/ApiProviderProfileRepository';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
 import { ExpoVoiceAudioPlayer, ExpoVoiceAudioRecorder } from '../adapters/voice/ExpoVoiceAudio';
 import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketRealtimeVoiceTransport';
@@ -24,6 +25,8 @@ import {
   ConnectionProfileStore
 } from '../application/onboarding/ConnectionProfile';
 import { OnboardingCommand } from '../application/onboarding/OnboardingCommand';
+import { ProviderProfileSettingsQuery } from '../application/providerProfiles/ProviderProfileSettingsQuery';
+import { TestProviderProfileCommand } from '../application/providerProfiles/TestProviderProfileCommand';
 import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
 import { SettingsQuery } from '../application/settings/SettingsQuery';
 import { VoiceInteractionPreviewQuery } from '../application/voice/VoiceInteractionPreviewQuery';
@@ -46,6 +49,8 @@ export type MobileComposition = {
   readonly locationsQuery: LocationsQuery;
   readonly locationAssetsQuery: LocationAssetsQuery;
   readonly settingsQuery: SettingsQuery;
+  readonly providerProfileSettingsQuery: ProviderProfileSettingsQuery;
+  readonly testProviderProfileCommand: TestProviderProfileCommand;
   readonly voiceInteractionPreviewQuery: VoiceInteractionPreviewQuery;
   readonly realtimeVoiceSessionController: RealtimeVoiceSessionController;
 };
@@ -81,6 +86,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
   const client = createStuffStashClient(profile);
   const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '');
   const principals = new ApiCurrentPrincipalRepository(client);
+  const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
   const config = toRuntimeConfig(profile);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(createServiceScopeId());
 
@@ -102,6 +108,8 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
       principals,
       new ExpoSettingsDiagnosticsProvider(config)
     ),
+    providerProfileSettingsQuery: new ProviderProfileSettingsQuery(providerProfiles),
+    testProviderProfileCommand: new TestProviderProfileCommand(providerProfiles),
     voiceInteractionPreviewQuery: new VoiceInteractionPreviewQuery(inventorySummaries),
     realtimeVoiceSessionController: new RealtimeVoiceSessionController(
       inventorySummaries,

@@ -232,6 +232,33 @@ export interface UpdateCustomFieldDefinitionInput {
   customAssetTypeIds?: string[];
 }
 
+export interface ProviderProfile {
+  id: string;
+  tenantId: string;
+  capability: string;
+  providerKind: string;
+  displayName: string;
+  endpointUrl: string;
+  modelName: string;
+  runtimeOptions: Record<string, unknown>;
+  capabilityMetadata: Record<string, unknown>;
+  promptTemplate?: string;
+  credentialStatus: string;
+  lifecycleState: string;
+  lastTestedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProviderProfileTestResult {
+  providerProfileId: string;
+  capability: string;
+  providerKind: string;
+  status: string;
+  message: string;
+  testedAt: string;
+}
+
 export interface Pagination {
   limit: number;
   nextCursor: string | null;
@@ -257,6 +284,8 @@ type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceR
 type RecordResponse = components['schemas']['RecordResponse'];
 type AssetTypeResponse = components['schemas']['AssetTypeResponse'];
 type DefinitionResponse = components['schemas']['DefinitionResponse'];
+type ProviderProfileResponse = components['schemas']['ProviderProfileResponse'];
+type TestProviderProfileResponse = components['schemas']['TestProviderProfileResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -813,6 +842,29 @@ export class StuffStashClient {
     return mapPage(envelope, mapAuditRecord);
   }
 
+  async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/provider-profiles', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } }
+      })
+    );
+    return (envelope.data ?? []).map(mapProviderProfile);
+  }
+
+  async testProviderProfile(
+    tenantId: string,
+    providerProfileId: string
+  ): Promise<ProviderProfileTestResult> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/provider-profiles/{providerProfileId}/test', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, providerProfileId } }
+      })
+    );
+    return mapProviderProfileTestResult(envelope.data);
+  }
+
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     const envelope = await this.unwrap(
       this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive', {
@@ -1174,6 +1226,39 @@ function mapCustomFieldDefinition(response: DefinitionResponse): CustomFieldDefi
     applicability: mapCustomFieldApplicability(response.applicability),
     customAssetTypeIds: response.customAssetTypeIds ?? [],
     lifecycleState: mapCustomDefinitionLifecycleState(response.lifecycleState)
+  };
+}
+
+function mapProviderProfile(response: ProviderProfileResponse): ProviderProfile {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    capability: response.capability,
+    providerKind: response.providerKind,
+    displayName: response.displayName,
+    endpointUrl: response.endpointUrl,
+    modelName: response.modelName,
+    runtimeOptions: response.runtimeOptions ?? {},
+    capabilityMetadata: response.capabilityMetadata ?? {},
+    promptTemplate: response.promptTemplate,
+    credentialStatus: response.credentialStatus,
+    lifecycleState: response.lifecycleState,
+    lastTestedAt: response.lastTestedAt,
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt
+  };
+}
+
+function mapProviderProfileTestResult(
+  response: TestProviderProfileResponse
+): ProviderProfileTestResult {
+  return {
+    providerProfileId: response.providerProfileId,
+    capability: response.capability,
+    providerKind: response.providerKind,
+    status: response.status,
+    message: response.message,
+    testedAt: response.testedAt
   };
 }
 

@@ -177,6 +177,65 @@ describe('StuffStashClient', () => {
     expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one');
   });
 
+  it('lists and tests provider profiles with redacted metadata', async () => {
+    const requests: Request[] = [];
+    const providerProfile = {
+      id: 'profile-language',
+      tenantId: 'tenant-one',
+      capability: 'language_inference',
+      providerKind: 'gemini',
+      displayName: 'Gemini cheap language',
+      endpointUrl: 'https://generativelanguage.googleapis.com',
+      modelName: 'gemini-2.5-flash-lite',
+      runtimeOptions: { credentialType: 'api_key' },
+      capabilityMetadata: { structuredOutput: true },
+      promptTemplate: 'Prefer concise spoken answers.',
+      credentialStatus: 'configured',
+      lifecycleState: 'enabled',
+      lastTestedAt: '2026-06-26T12:00:00Z',
+      createdAt: '2026-06-26T11:00:00Z',
+      updatedAt: '2026-06-26T12:00:00Z'
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'POST') {
+          return Response.json({
+            data: {
+              providerProfileId: 'profile-language',
+              capability: 'language_inference',
+              providerKind: 'gemini',
+              status: 'success',
+              message: 'Provider profile test succeeded.',
+              testedAt: '2026-06-26T12:01:00Z'
+            },
+            meta: {}
+          });
+        }
+        return Response.json({ data: [providerProfile], meta: {} });
+      }
+    });
+
+    await expect(client.listProviderProfiles('tenant-one')).resolves.toEqual([providerProfile]);
+    await expect(client.testProviderProfile('tenant-one', 'profile-language')).resolves.toEqual({
+      providerProfileId: 'profile-language',
+      capability: 'language_inference',
+      providerKind: 'gemini',
+      status: 'success',
+      message: 'Provider profile test succeeded.',
+      testedAt: '2026-06-26T12:01:00Z'
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/provider-profiles',
+      'POST http://api.local/tenants/tenant-one/provider-profiles/profile-language/test'
+    ]);
+    expect(requests[0]?.headers.get('Authorization')).toBe('Bearer id-token');
+  });
+
   it('calls asset lifecycle endpoints', async () => {
     const requests: Request[] = [];
     const assetResponse = {
