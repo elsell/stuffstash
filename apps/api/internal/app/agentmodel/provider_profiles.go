@@ -284,7 +284,7 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
 		return domain.ProviderProfile{}, err
 	}
-	if s.providerCredentialSealer == nil {
+	if s.providerCredentialVault == nil {
 		return domain.ProviderProfile{}, apperrors.ErrPrecondition
 	}
 	purpose, ok := ports.NewProviderCredentialPurpose(input.Purpose)
@@ -309,20 +309,19 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 		ProviderKind:      ports.ProviderKind(current.ProviderKind.String()),
 		Purpose:           purpose,
 	}
-	sealed, err := s.providerCredentialSealer.SealProviderCredential(ctx, scope, input.Raw)
-	if err != nil {
-		return domain.ProviderProfile{}, apperrors.ErrValidation
-	}
 	credentialID := strings.TrimSpace(s.ids.NewID())
 	if credentialID == "" {
 		return domain.ProviderProfile{}, apperrors.ErrValidation
 	}
-	credential := ports.ProviderCredentialRecord{
+	credential, err := s.providerCredentialVault.PrepareProviderCredential(ctx, ports.PrepareProviderCredentialInput{
 		ID:        credentialID,
 		Scope:     scope,
-		Sealed:    sealed,
+		Raw:       input.Raw,
 		CreatedAt: updated.UpdatedAt,
 		UpdatedAt: updated.UpdatedAt,
+	})
+	if err != nil {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
 	}
 	auditRecord, err := s.auditRecord(providerProfileAuditInput{
 		Principal: input.Principal,
@@ -346,7 +345,7 @@ func (s Service) TestProviderProfile(ctx context.Context, input TestProviderProf
 	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
 		return ports.ProviderProfileTestResult{}, err
 	}
-	if s.providerCredentials == nil || s.providerCredentialSealer == nil || s.providerProfileTester == nil {
+	if s.providerCredentialVault == nil || s.providerProfileTester == nil {
 		return ports.ProviderProfileTestResult{}, apperrors.ErrPrecondition
 	}
 	current, found, err := s.providerProfiles.ProviderProfileByID(ctx, input.TenantID, input.ProfileID)
@@ -425,15 +424,14 @@ func (s Service) activeProviderCredential(ctx context.Context, tenantID tenant.I
 			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
 			Purpose:           purpose,
 		}
-		record, found, err := s.providerCredentials.ActiveProviderCredential(ctx, scope)
+		raw, found, err := s.providerCredentialVault.ActiveProviderCredentialMaterial(ctx, scope)
 		if err != nil {
-			return "", nil, err
+			return "", nil, apperrors.ErrPrecondition
 		}
 		if !found {
 			continue
 		}
-		raw, err := s.providerCredentialSealer.UnsealProviderCredential(ctx, scope, record.Sealed)
-		if err != nil || len(bytes.TrimSpace(raw)) == 0 {
+		if len(bytes.TrimSpace(raw)) == 0 {
 			return "", nil, apperrors.ErrPrecondition
 		}
 		return purpose, raw, nil

@@ -42,8 +42,7 @@ type App struct {
 	outbox                    ports.AuthorizationOutbox
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
-	providerCredentials       ports.ProviderCredentialRepository
-	providerCredentialSealer  ports.ProviderCredentialSealer
+	providerCredentialVault   ports.ProviderCredentialVault
 	providerProfileTester     ports.ProviderProfileTester
 	ids                       ports.IDGenerator
 	clock                     ports.Clock
@@ -93,8 +92,7 @@ type Dependencies struct {
 	Outbox                        ports.AuthorizationOutbox
 	ProviderProfiles              ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork     ports.ProviderProfileUnitOfWork
-	ProviderCredentials           ports.ProviderCredentialRepository
-	ProviderCredentialSealer      ports.ProviderCredentialSealer
+	ProviderCredentialVault       ports.ProviderCredentialVault
 	ProviderProfileTester         ports.ProviderProfileTester
 	IDs                           ports.IDGenerator
 	Clock                         ports.Clock
@@ -160,8 +158,7 @@ func New(deps Dependencies) App {
 		outbox:                    deps.Outbox,
 		providerProfiles:          deps.ProviderProfiles,
 		providerProfileUnitOfWork: deps.ProviderProfileUnitOfWork,
-		providerCredentials:       deps.ProviderCredentials,
-		providerCredentialSealer:  deps.ProviderCredentialSealer,
+		providerCredentialVault:   deps.ProviderCredentialVault,
 		providerProfileTester:     deps.ProviderProfileTester,
 		ids:                       ids,
 		clock:                     clock,
@@ -215,8 +212,7 @@ func New(deps Dependencies) App {
 		Authorizer:                app.authorizer,
 		ProviderProfiles:          app.providerProfiles,
 		ProviderProfileUnitOfWork: app.providerProfileUnitOfWork,
-		ProviderCredentials:       app.providerCredentials,
-		ProviderCredentialSealer:  app.providerCredentialSealer,
+		ProviderCredentialVault:   app.providerCredentialVault,
 		ProviderProfileTester:     app.providerProfileTester,
 		IDs:                       app.ids,
 		Clock:                     app.clock,

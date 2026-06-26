@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
@@ -18,11 +19,12 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	if err != nil {
 		return app.App{}, err
 	}
+	providerCredentialVault := buildProviderCredentialVault(repositories.providerCredentials, providerCredentialSealer)
 	stt, languageInference, tts, err := buildRealtimeVoiceProviders(ctx, cfg)
 	if err != nil {
 		return app.App{}, err
 	}
-	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialSealer, stt, languageInference, tts)
+	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
 	return app.New(app.Dependencies{
 		Observer:                      observer,
 		Auth:                          authenticator,
@@ -51,8 +53,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Outbox:                        repositories.outbox,
 		ProviderProfiles:              repositories.providerProfiles,
 		ProviderProfileUnitOfWork:     repositories.providerProfileUnitOfWork,
-		ProviderCredentials:           repositories.providerCredentials,
-		ProviderCredentialSealer:      providerCredentialSealer,
+		ProviderCredentialVault:       providerCredentialVault,
 		ProviderProfileTester:         voice.NewProviderProfileTester(voice.GoogleProviderProfileFactory{}),
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
@@ -68,4 +69,11 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		TextToSpeech:                  tts,
 		RealtimeVoiceProviderResolver: realtimeVoiceProviderResolver,
 	}), nil
+}
+
+func buildProviderCredentialVault(repository ports.ProviderCredentialRepository, sealer ports.ProviderCredentialSealer) ports.ProviderCredentialVault {
+	if repository == nil || sealer == nil {
+		return nil
+	}
+	return credentials.NewDatabaseProviderCredentialVault(repository, sealer)
 }

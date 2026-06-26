@@ -683,8 +683,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		Outbox:                    store,
 		ProviderProfiles:          store,
 		ProviderProfileUnitOfWork: store,
-		ProviderCredentials:       store,
-		ProviderCredentialSealer:  httpTestCredentialSealer{},
+		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
 		ProviderProfileTester:     httpTestProviderProfileTester{},
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})

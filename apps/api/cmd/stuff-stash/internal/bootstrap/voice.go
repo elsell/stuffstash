@@ -81,7 +81,7 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 		}), nil
 }
 
-func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories repositories, sealer ports.ProviderCredentialSealer, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) ports.RealtimeVoiceProviderResolver {
+func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories repositories, vault ports.ProviderCredentialVault, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) ports.RealtimeVoiceProviderResolver {
 	if stt != nil && lm != nil && tts != nil {
 		return staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
 			SpeechToText:      stt,
@@ -89,10 +89,10 @@ func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories reposito
 			TextToSpeech:      tts,
 		}}
 	}
-	if repositories.providerProfiles == nil || repositories.providerCredentials == nil || sealer == nil {
+	if repositories.providerProfiles == nil || vault == nil {
 		return nil
 	}
-	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.providerCredentials, sealer, voice.GoogleProviderProfileFactory{})
+	return voice.NewProviderProfileResolver(repositories.providerProfiles, vault, voice.GoogleProviderProfileFactory{})
 }
 
 func validateGoogleVoiceConfig(cfg config.Config) error {

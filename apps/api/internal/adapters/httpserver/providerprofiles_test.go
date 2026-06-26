@@ -260,8 +260,7 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		Outbox:                    store,
 		ProviderProfiles:          store,
 		ProviderProfileUnitOfWork: store,
-		ProviderCredentials:       store,
-		ProviderCredentialSealer:  httpTestCredentialSealer{},
+		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
 		ProviderProfileTester:     httpTestProviderProfileTester{},
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
@@ -280,6 +279,31 @@ func (httpTestCredentialSealer) SealProviderCredential(_ context.Context, scope 
 
 func (httpTestCredentialSealer) UnsealProviderCredential(_ context.Context, scope ports.ProviderCredentialScope, _ ports.SealedProviderCredential) ([]byte, error) {
 	return []byte("raw:" + scope.ProviderProfileID), nil
+}
+
+type httpTestCredentialVault struct {
+	repository ports.ProviderCredentialRepository
+	sealer     httpTestCredentialSealer
+}
+
+func (v httpTestCredentialVault) PrepareProviderCredential(ctx context.Context, input ports.PrepareProviderCredentialInput) (ports.ProviderCredentialRecord, error) {
+	sealed, err := v.sealer.SealProviderCredential(ctx, input.Scope, input.Raw)
+	if err != nil {
+		return ports.ProviderCredentialRecord{}, err
+	}
+	return ports.ProviderCredentialRecord{ID: input.ID, Scope: input.Scope, Sealed: sealed, CreatedAt: input.CreatedAt, UpdatedAt: input.UpdatedAt}, nil
+}
+
+func (v httpTestCredentialVault) ActiveProviderCredentialMaterial(ctx context.Context, scope ports.ProviderCredentialScope) ([]byte, bool, error) {
+	record, found, err := v.repository.ActiveProviderCredential(ctx, scope)
+	if err != nil || !found {
+		return nil, found, err
+	}
+	raw, err := v.sealer.UnsealProviderCredential(ctx, scope, record.Sealed)
+	if err != nil {
+		return nil, false, err
+	}
+	return raw, true, nil
 }
 
 type httpTestProviderProfileTester struct{}

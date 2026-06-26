@@ -21,23 +21,21 @@ type ProviderProfileProviderFactory interface {
 }
 
 type ProviderProfileResolver struct {
-	profiles    ports.ProviderProfileRepository
-	credentials ports.ProviderCredentialRepository
-	sealer      ports.ProviderCredentialSealer
-	factory     ProviderProfileProviderFactory
+	profiles ports.ProviderProfileRepository
+	vault    ports.ProviderCredentialVault
+	factory  ProviderProfileProviderFactory
 }
 
-func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, credentials ports.ProviderCredentialRepository, sealer ports.ProviderCredentialSealer, factory ProviderProfileProviderFactory) ProviderProfileResolver {
+func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, vault ports.ProviderCredentialVault, factory ProviderProfileProviderFactory) ProviderProfileResolver {
 	return ProviderProfileResolver{
-		profiles:    profiles,
-		credentials: credentials,
-		sealer:      sealer,
-		factory:     factory,
+		profiles: profiles,
+		vault:    vault,
+		factory:  factory,
 	}
 }
 
 func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Context, input ports.RealtimeVoiceProviderResolutionInput) (ports.RealtimeVoiceProviderSet, error) {
-	if r.profiles == nil || r.credentials == nil || r.sealer == nil || r.factory == nil {
+	if r.profiles == nil || r.vault == nil || r.factory == nil {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
 	profiles, err := r.profiles.ListProviderProfiles(ctx, input.TenantID)
@@ -105,16 +103,12 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
 			Purpose:           purpose,
 		}
-		record, found, err := r.credentials.ActiveProviderCredential(ctx, scope)
+		raw, found, err := r.vault.ActiveProviderCredentialMaterial(ctx, scope)
 		if err != nil {
 			return ProviderProfileProviderConfig{}, err
 		}
 		if !found {
 			continue
-		}
-		raw, err := r.sealer.UnsealProviderCredential(ctx, scope, record.Sealed)
-		if err != nil {
-			return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput
 		}
 		if len(raw) == 0 {
 			return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput

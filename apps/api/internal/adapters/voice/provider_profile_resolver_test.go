@@ -21,10 +21,9 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 		providerResolverProfile(t, "lm-profile", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
 		providerResolverProfile(t, "tts-profile", agentmodel.ProviderCapabilityTextToSpeech, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
 	}
-	credentials := newProviderResolverCredentialRepository(profiles[1], profiles[2], profiles[3])
-	sealer := &providerResolverSealer{}
+	vault := newProviderResolverCredentialVault(profiles[1], profiles[2], profiles[3])
 	factory := &providerResolverFactory{}
-	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, credentials, sealer, factory)
+	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, vault, factory)
 
 	set, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{
 		TenantID:    tenant.ID("tenant-home"),
@@ -40,8 +39,8 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if set.LanguagePromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected language prompt template from selected language profile, got %q", set.LanguagePromptTemplate)
 	}
-	if len(sealer.unsealedScopes) != 3 {
-		t.Fatalf("expected three credential unseal calls, got %+v", sealer.unsealedScopes)
+	if len(vault.scopes) != 3 {
+		t.Fatalf("expected three credential vault reads, got %+v", vault.scopes)
 	}
 	if got := factory.configs["stt-profile"]; string(got.Credential) != "raw-stt-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeAPIKey {
 		t.Fatalf("unexpected stt factory config: %+v", got)
@@ -60,8 +59,7 @@ func TestProviderProfileResolverFailsWhenRequiredCapabilityMissing(t *testing.T)
 	}
 	resolver := NewProviderProfileResolver(
 		providerResolverProfileRepository{profiles: profiles},
-		newProviderResolverCredentialRepository(profiles...),
-		&providerResolverSealer{},
+		newProviderResolverCredentialVault(profiles...),
 		&providerResolverFactory{},
 	)
 
@@ -80,8 +78,7 @@ func TestProviderProfileResolverFailsWhenCredentialCannotUnseal(t *testing.T) {
 	}
 	resolver := NewProviderProfileResolver(
 		providerResolverProfileRepository{profiles: profiles},
-		newProviderResolverCredentialRepository(profiles...),
-		&providerResolverSealer{failProfileID: "lm-profile"},
+		newProviderResolverCredentialVaultWithFailure("lm-profile", profiles...),
 		&providerResolverFactory{},
 	)
 
@@ -141,12 +138,21 @@ func (r providerResolverProfileRepository) ListProviderProfiles(_ context.Contex
 	return profiles, nil
 }
 
-type providerResolverCredentialRepository struct {
-	credentials map[ports.ProviderCredentialScope]ports.ProviderCredentialRecord
+type providerResolverCredentialVault struct {
+	credentials   map[ports.ProviderCredentialScope][]byte
+	failProfileID string
+	scopes        []ports.ProviderCredentialScope
 }
 
-func newProviderResolverCredentialRepository(profiles ...agentmodel.ProviderProfile) providerResolverCredentialRepository {
-	repository := providerResolverCredentialRepository{credentials: map[ports.ProviderCredentialScope]ports.ProviderCredentialRecord{}}
+func newProviderResolverCredentialVault(profiles ...agentmodel.ProviderProfile) *providerResolverCredentialVault {
+	return newProviderResolverCredentialVaultWithFailure("", profiles...)
+}
+
+func newProviderResolverCredentialVaultWithFailure(failProfileID string, profiles ...agentmodel.ProviderProfile) *providerResolverCredentialVault {
+	vault := &providerResolverCredentialVault{
+		credentials:   map[ports.ProviderCredentialScope][]byte{},
+		failProfileID: failProfileID,
+	}
 	for _, profile := range profiles {
 		for _, purpose := range []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer} {
 			scope := ports.ProviderCredentialScope{
@@ -156,48 +162,23 @@ func newProviderResolverCredentialRepository(profiles ...agentmodel.ProviderProf
 				ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
 				Purpose:           purpose,
 			}
-			repository.credentials[scope] = ports.ProviderCredentialRecord{
-				ID:     "credential-" + profile.ID.String() + "-" + string(purpose),
-				Scope:  scope,
-				Sealed: ports.SealedProviderCredential{KeyID: profile.ID.String(), Algorithm: ports.ProviderCredentialAlgorithmAES256GCM, Nonce: []byte("123456789012"), Ciphertext: []byte("sealed")},
-			}
+			vault.credentials[scope] = []byte("raw-" + profile.ID.String())
 		}
 	}
-	return repository
+	return vault
 }
 
-func (r providerResolverCredentialRepository) ReplaceProviderCredential(context.Context, ports.ProviderCredentialRecord) error {
-	return nil
+func (v *providerResolverCredentialVault) PrepareProviderCredential(context.Context, ports.PrepareProviderCredentialInput) (ports.ProviderCredentialRecord, error) {
+	return ports.ProviderCredentialRecord{}, nil
 }
 
-func (r providerResolverCredentialRepository) ActiveProviderCredential(_ context.Context, scope ports.ProviderCredentialScope) (ports.ProviderCredentialRecord, bool, error) {
-	record, ok := r.credentials[scope]
-	return record, ok, nil
-}
-
-func (r providerResolverCredentialRepository) ActiveProviderCredentialsExist(context.Context) (bool, error) {
-	return len(r.credentials) > 0, nil
-}
-
-func (r providerResolverCredentialRepository) SupersedeActiveProviderCredential(context.Context, ports.ProviderCredentialScope, time.Time) error {
-	return nil
-}
-
-type providerResolverSealer struct {
-	failProfileID  string
-	unsealedScopes []ports.ProviderCredentialScope
-}
-
-func (s *providerResolverSealer) SealProviderCredential(context.Context, ports.ProviderCredentialScope, []byte) (ports.SealedProviderCredential, error) {
-	return ports.SealedProviderCredential{}, nil
-}
-
-func (s *providerResolverSealer) UnsealProviderCredential(_ context.Context, scope ports.ProviderCredentialScope, _ ports.SealedProviderCredential) ([]byte, error) {
-	s.unsealedScopes = append(s.unsealedScopes, scope)
-	if scope.ProviderProfileID == s.failProfileID {
-		return nil, ports.ErrInvalidProviderCredential
+func (v *providerResolverCredentialVault) ActiveProviderCredentialMaterial(_ context.Context, scope ports.ProviderCredentialScope) ([]byte, bool, error) {
+	v.scopes = append(v.scopes, scope)
+	if scope.ProviderProfileID == v.failProfileID {
+		return nil, false, ports.ErrInvalidProviderInput
 	}
-	return []byte("raw-" + scope.ProviderProfileID), nil
+	raw, ok := v.credentials[scope]
+	return append([]byte{}, raw...), ok, nil
 }
 
 type providerResolverFactory struct {

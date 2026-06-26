@@ -104,6 +104,10 @@ Provider credentials entered through the UI or API must be sealed before persist
 
 The default infrastructure adapter may store encrypted credential material in the database. This supports Docker-based self-hosted deployments without requiring Kubernetes secrets or an external secret manager.
 
+Application services and provider-resolution services must depend on a project-owned provider credential vault port for preparing new credentials and reading active raw provider material. The vault port hides the concrete sealing adapter and credential repository from callers. The first vault adapter composes the AES-256-GCM sealer with the database credential repository so raw credentials are sealed before persistence and unsealed only when constructing provider adapters or running provider diagnostics.
+
+Credential replacement must still remain atomic with provider profile status updates and audit history. To preserve that invariant, the vault may prepare a sealed `ProviderCredentialRecord`, but the provider profile unit of work remains responsible for persisting the profile update, superseding prior active credentials, inserting the new encrypted credential row, and writing the audit record in one transaction.
+
 Credential sealing must follow these rules:
 
 - Raw provider credentials must never be persisted.
@@ -138,6 +142,21 @@ The first adapter must:
 
 Provider credentials persisted in the database must live behind a credential repository port. The first GORM adapter stores encrypted credential material in a tenant-scoped table with provider profile ID, capability, provider kind, credential purpose, key ID, algorithm, nonce, ciphertext, creation timestamp, update timestamp, and superseded timestamp. Repository reads for active credentials must require tenant ID, provider profile ID, capability, provider kind, and credential purpose.
 
+The provider credential vault port must support:
+
+- Preparing a sealed credential record from caller-supplied raw credential material, a generated credential ID, authenticated scope, and timestamps.
+- Reading active raw credential material by tenant ID, provider profile ID, capability, provider kind, and credential purpose.
+
+The first database-encryption vault adapter must:
+
+- Seal newly prepared credentials through the configured AES-256-GCM sealer.
+- Read only active credentials through the credential repository port.
+- Unseal active credentials with authenticated associated scope before returning raw material.
+- Treat missing credentials as a safe `found=false` result and malformed, mismatched, empty, or undecryptable credentials as invalid provider input.
+- Never expose raw credentials through profile responses, realtime events, audit records, observability metadata, logs, or OpenAPI examples.
+
+Startup validation may still query the credential repository port directly to determine whether active encrypted credentials exist before constructing the vault. This allows the API to fail closed when a database contains encrypted credentials but no usable decryption key is configured.
+
 ## Provider Resolution
 
 Realtime session startup must resolve provider profiles through a tenant-scoped provider resolution service.
@@ -152,8 +171,7 @@ The tenant-profile resolver must:
 
 - List tenant provider profiles through the provider profile repository port.
 - Select enabled, configured profiles for speech-to-text, language inference, and text-to-speech.
-- Read active credentials through the provider credential repository port.
-- Unseal credentials through the credential-sealing port using the tenant/profile/capability/provider-kind/purpose scope.
+- Read active credential material through the provider credential vault port using the tenant/profile/capability/provider-kind/purpose scope.
 - Build provider adapters through a provider factory interface owned by the provider adapter boundary.
 - Return safe profile IDs and provider ports only; raw credentials may live only in resolver/provider-adapter memory for the duration needed to construct or call the provider.
 

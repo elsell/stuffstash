@@ -72,9 +72,22 @@ type ProviderCredentialRecord struct {
 	SupersededAt *time.Time
 }
 
+type PrepareProviderCredentialInput struct {
+	ID        string
+	Scope     ProviderCredentialScope
+	Raw       []byte
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type ProviderCredentialSealer interface {
 	SealProviderCredential(ctx context.Context, scope ProviderCredentialScope, raw []byte) (SealedProviderCredential, error)
 	UnsealProviderCredential(ctx context.Context, scope ProviderCredentialScope, sealed SealedProviderCredential) ([]byte, error)
+}
+
+type ProviderCredentialVault interface {
+	PrepareProviderCredential(ctx context.Context, input PrepareProviderCredentialInput) (ProviderCredentialRecord, error)
+	ActiveProviderCredentialMaterial(ctx context.Context, scope ProviderCredentialScope) ([]byte, bool, error)
 }
 
 type ProviderCredentialRepository interface {
