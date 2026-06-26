@@ -87,6 +87,8 @@ export type VoiceRealtimeState = {
   readonly errorMessage?: string;
 };
 
+export type VoiceRealtimeStateHandler = (state: VoiceRealtimeState) => void;
+
 export type VoiceSafeDiagnosticEvent = {
   readonly label: VoiceSafeDiagnosticLabel;
   readonly status: VoiceSafeDiagnosticStatus;
@@ -136,7 +138,7 @@ export class RealtimeVoiceSessionController {
     };
   }
 
-  async stop(): Promise<readonly VoiceRealtimeState[]> {
+  async stop(onState?: VoiceRealtimeStateHandler): Promise<readonly VoiceRealtimeState[]> {
     if (!this.recordingStarted) {
       throw new Error('Voice recording has not started.');
     }
@@ -151,6 +153,7 @@ export class RealtimeVoiceSessionController {
       progressLabel: 'Sending audio',
       debugEvents: []
     }];
+    onState?.(states[0]);
 
     await this.transport.run({
       tenantId: context.tenantId,
@@ -167,6 +170,7 @@ export class RealtimeVoiceSessionController {
       const previous = states[states.length - 1];
       const next = await this.reduceEvent(previous, event);
       states.push(next);
+      onState?.(next);
     });
 
     return states;

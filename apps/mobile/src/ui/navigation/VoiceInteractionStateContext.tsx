@@ -101,7 +101,10 @@ export function VoiceInteractionStateProvider({
       stopRealtime: async () => {
         setStage('processing');
         try {
-          const states = await realtimeController.stop();
+          const states = await realtimeController.stop((nextState) => {
+            setRealtime(nextState);
+            setStage(nextState.status);
+          });
           const finalState = states[states.length - 1] ?? null;
           setRealtime(finalState);
           setStage(finalState?.status ?? 'failed');

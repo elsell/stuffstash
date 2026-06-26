@@ -77,6 +77,50 @@ describe('RealtimeVoiceSessionController', () => {
     expect(player.stops).toBe(2);
   });
 
+  it('notifies the mobile state layer as realtime session events arrive', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        { type: 'session.started', seq: 1, sessionId: 'session-1' },
+        { type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where is the drill?' },
+        { type: 'agent.progress', seq: 3, sessionId: 'session-1', status: 'searching', message: 'Searching visible inventory' },
+        {
+          type: 'assistant.response.completed',
+          seq: 4,
+          sessionId: 'session-1',
+          response: {
+            spokenResponse: 'The drill is in the garage.',
+            displayResponse: 'The drill is in the garage.',
+            kind: 'answer'
+          }
+        },
+        { type: 'session.completed', seq: 5, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+    const observed: string[] = [];
+
+    await controller.start();
+    const states = await controller.stop((state) => {
+      observed.push(`${state.status}:${state.progressLabel ?? ''}:${state.transcript ?? ''}:${state.spokenResponse ?? ''}`);
+    });
+
+    expect(observed).toEqual([
+      'processing:Sending audio::',
+      'processing:Connected::',
+      'processing:Thinking:Where is the drill?:',
+      'processing:Searching visible inventory:Where is the drill?:',
+      'processing:Preparing speech:Where is the drill?:The drill is in the garage.',
+      'completed:Done:Where is the drill?:The drill is in the garage.'
+    ]);
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      transcript: 'Where is the drill?',
+      spokenResponse: 'The drill is in the garage.'
+    });
+  });
+
   it('returns the server failure state when the realtime session fails safely', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
@@ -84,15 +128,22 @@ describe('RealtimeVoiceSessionController', () => {
       new FakeTransport([{ type: 'session.failed', seq: 1, code: 'invalid_request', message: 'Voice is not configured.' }]),
       new FakePlayer()
     );
+    const observed: string[] = [];
 
     await controller.start();
-    const states = await controller.stop();
+    const states = await controller.stop((state) => {
+      observed.push(`${state.status}:${state.progressLabel ?? ''}:${state.errorMessage ?? ''}`);
+    });
 
     expect(states.at(-1)).toMatchObject({
       status: 'failed',
       errorMessage: 'Voice is not configured.',
       progressLabel: 'Voice failed'
     });
+    expect(observed).toEqual([
+      'processing:Sending audio:',
+      'failed:Voice failed:Voice is not configured.'
+    ]);
   });
 
   it('does not start recording when provider profiles are not ready', async () => {
