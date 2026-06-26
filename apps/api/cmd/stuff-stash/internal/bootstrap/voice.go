@@ -23,6 +23,14 @@ var (
 	googleVoiceNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
 )
 
+type staticRealtimeVoiceProviderResolver struct {
+	providers ports.RealtimeVoiceProviderSet
+}
+
+func (r staticRealtimeVoiceProviderResolver) ResolveRealtimeVoiceProviders(context.Context, ports.RealtimeVoiceProviderResolutionInput) (ports.RealtimeVoiceProviderSet, error) {
+	return r.providers, nil
+}
+
 func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.SpeechToTextProvider, ports.LanguageInferenceProvider, ports.TextToSpeechProvider, error) {
 	if cfg.VoiceGoogleEnabled {
 		if token := strings.TrimSpace(cfg.GoogleAccessToken); token != "" {
@@ -71,6 +79,20 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 			QuotaProject: strings.TrimSpace(cfg.GoogleCloudProject),
 			TokenSource:  tokenSource,
 		}), nil
+}
+
+func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories repositories, sealer ports.ProviderCredentialSealer, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) ports.RealtimeVoiceProviderResolver {
+	if stt != nil && lm != nil && tts != nil {
+		return staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
+			SpeechToText:      stt,
+			LanguageInference: lm,
+			TextToSpeech:      tts,
+		}}
+	}
+	if repositories.providerProfiles == nil || repositories.providerCredentials == nil || sealer == nil {
+		return nil
+	}
+	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.providerCredentials, sealer, voice.GoogleProviderProfileFactory{})
 }
 
 func validateGoogleVoiceConfig(cfg config.Config) error {

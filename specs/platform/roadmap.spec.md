@@ -91,6 +91,7 @@ The web goal remains to prove a production-shaped path through:
 - Provider credential sealing now has a port, AES-256-GCM adapter, encrypted GORM persistence, migrations, startup fail-closed validation, and tests.
 - Tenant-scoped conversational provider profiles now have a typed agent/model domain model, application service boundary, memory and GORM persistence adapters, migrations, audit/observability taxonomy, and tests.
 - Tenant-scoped provider-profile management now exposes authenticated REST endpoints for create, list, detail, enable, disable, archive, and credential replacement with redacted responses, encrypted credential storage through the sealing port, audit records, generated OpenAPI coverage, and adversarial HTTP tests.
+- Realtime voice session startup now resolves session-scoped provider ports through a resolver boundary, carries selected provider profile IDs on the session, supports a tenant-profile resolver backed by provider profile and encrypted credential ports, and keeps the transitional process-configured dev/Google provider set behind the same resolver interface.
 
 ## Known Gaps
 
@@ -103,7 +104,7 @@ The web goal remains to prove a production-shaped path through:
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- Provider-profile management UI, provider profile resolution during realtime session startup, provider-health/test operations, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
+- Provider-profile management UI, API-key-backed Gemini profile adapters, provider-health/test operations, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
 
 ## Next Work
 

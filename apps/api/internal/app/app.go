@@ -60,6 +60,7 @@ type App struct {
 	speechToText              ports.SpeechToTextProvider
 	languageInference         ports.LanguageInferenceProvider
 	textToSpeech              ports.TextToSpeechProvider
+	realtimeVoiceProviders    ports.RealtimeVoiceProviderResolver
 }
 
 type Dependencies struct {
@@ -105,6 +106,7 @@ type Dependencies struct {
 	SpeechToText                  ports.SpeechToTextProvider
 	LanguageInference             ports.LanguageInferenceProvider
 	TextToSpeech                  ports.TextToSpeechProvider
+	RealtimeVoiceProviderResolver ports.RealtimeVoiceProviderResolver
 }
 
 func New(deps Dependencies) App {
@@ -118,6 +120,14 @@ func New(deps Dependencies) App {
 		clock = ports.SystemClock{}
 	}
 	defaultPageLimit := normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit)
+	realtimeVoiceProviders := deps.RealtimeVoiceProviderResolver
+	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.LanguageInference != nil && deps.TextToSpeech != nil {
+		realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
+			SpeechToText:      deps.SpeechToText,
+			LanguageInference: deps.LanguageInference,
+			TextToSpeech:      deps.TextToSpeech,
+		}}
+	}
 	app := App{
 		observer:                  deps.Observer,
 		auth:                      deps.Auth,
@@ -161,6 +171,7 @@ func New(deps Dependencies) App {
 		speechToText:              deps.SpeechToText,
 		languageInference:         deps.LanguageInference,
 		textToSpeech:              deps.TextToSpeech,
+		realtimeVoiceProviders:    realtimeVoiceProviders,
 	}
 	app.assetService = assetapp.New(assetapp.Dependencies{
 		Observer:         app.observer,

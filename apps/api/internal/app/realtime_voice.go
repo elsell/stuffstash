@@ -48,13 +48,19 @@ type RealtimeVoiceOutputAudio struct {
 }
 
 type RealtimeVoiceSession struct {
-	ID          string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Principal   identity.Principal
-	Source      string
-	InputAudio  ports.RealtimeAudioFormat
-	OutputAudio RealtimeVoiceOutputAudio
+	ID                         string
+	TenantID                   tenant.ID
+	InventoryID                inventory.InventoryID
+	Principal                  identity.Principal
+	Source                     string
+	InputAudio                 ports.RealtimeAudioFormat
+	OutputAudio                RealtimeVoiceOutputAudio
+	SpeechToTextProfileID      string
+	LanguageInferenceProfileID string
+	TextToSpeechProfileID      string
+	speechToText               ports.SpeechToTextProvider
+	languageInference          ports.LanguageInferenceProvider
+	textToSpeech               ports.TextToSpeechProvider
 }
 
 type RealtimeVoiceQueryInput struct {
@@ -84,6 +90,11 @@ func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports
 	a.speechToText = stt
 	a.languageInference = lm
 	a.textToSpeech = tts
+	a.realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
+		SpeechToText:      stt,
+		LanguageInference: lm,
+		TextToSpeech:      tts,
+	}}
 	return a
 }
 
@@ -104,19 +115,36 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
+	providers, err := a.realtimeVoiceProviders.ResolveRealtimeVoiceProviders(ctx, ports.RealtimeVoiceProviderResolutionInput{
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Principal:   input.Principal,
+	})
+	if err != nil {
+		return RealtimeVoiceSession{}, err
+	}
+	if providers.SpeechToText == nil || providers.LanguageInference == nil || providers.TextToSpeech == nil {
+		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
+	}
 
 	sessionID := a.newRealtimeVoiceID()
 	if strings.TrimSpace(sessionID) == "" {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
 	return RealtimeVoiceSession{
-		ID:          sessionID,
-		TenantID:    input.TenantID,
-		InventoryID: input.InventoryID,
-		Principal:   input.Principal,
-		Source:      input.Source,
-		InputAudio:  input.InputAudio,
-		OutputAudio: input.OutputAudio,
+		ID:                         sessionID,
+		TenantID:                   input.TenantID,
+		InventoryID:                input.InventoryID,
+		Principal:                  input.Principal,
+		Source:                     input.Source,
+		InputAudio:                 input.InputAudio,
+		OutputAudio:                input.OutputAudio,
+		SpeechToTextProfileID:      providers.SpeechToTextProfileID,
+		LanguageInferenceProfileID: providers.LanguageInferenceProfileID,
+		TextToSpeechProfileID:      providers.TextToSpeechProfileID,
+		speechToText:               providers.SpeechToText,
+		languageInference:          providers.LanguageInference,
+		textToSpeech:               providers.TextToSpeech,
 	}, nil
 }
 
@@ -128,7 +156,10 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return ports.ErrInvalidProviderInput
 	}
 
-	transcription, err := a.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
+	if input.Session.speechToText == nil || input.Session.languageInference == nil || input.Session.textToSpeech == nil {
+		return apperrors.ErrInvalidInput
+	}
+	transcription, err := input.Session.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
 		TenantID:    input.Session.TenantID,
 		InventoryID: input.Session.InventoryID,
 		Principal:   input.Session.Principal,
@@ -153,7 +184,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	toolCallIDs := []string{}
 	executedToolCalls := map[string]struct{}{}
 	for turn := 0; turn < 4; turn++ {
-		modelTurn, err := a.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
+		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:      input.Session.TenantID,
 			InventoryID:   input.Session.InventoryID,
 			Principal:     input.Session.Principal,
@@ -216,7 +247,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 }
 
 func (a App) finalizeRealtimeVoiceAfterDuplicateToolCall(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
-	modelTurn, err := a.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
+	modelTurn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 		TenantID:      session.TenantID,
 		InventoryID:   session.InventoryID,
 		Principal:     session.Principal,
@@ -246,7 +277,7 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 }
 
 func (a App) ensureRealtimeVoiceDependencies() error {
-	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.speechToText == nil || a.languageInference == nil || a.textToSpeech == nil {
+	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.realtimeVoiceProviders == nil {
 		return apperrors.ErrInvalidInput
 	}
 	return nil
@@ -273,7 +304,7 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		return err
 	}
 
-	speech, err := a.textToSpeech.Synthesize(ctx, ports.TextToSpeechInput{
+	speech, err := session.textToSpeech.Synthesize(ctx, ports.TextToSpeechInput{
 		TenantID:    session.TenantID,
 		InventoryID: session.InventoryID,
 		Principal:   session.Principal,

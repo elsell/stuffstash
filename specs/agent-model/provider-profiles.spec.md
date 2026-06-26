@@ -131,6 +131,19 @@ Provider credentials persisted in the database must live behind a credential rep
 
 Realtime session startup must resolve provider profiles through a tenant-scoped provider resolution service.
 
+The realtime application service must depend on a project-owned provider resolver port, not direct concrete speech-to-text, language inference, or text-to-speech adapters. The resolver returns the selected speech-to-text, language inference, and text-to-speech provider ports plus the safe selected provider profile IDs for the session. The session must carry that resolved provider set so a profile change after session start does not silently change an in-flight session.
+
+The first compatibility implementation may wrap a process-configured provider set behind the same resolver port for development fakes and the transitional Google smoke-test bridge. That compatibility resolver must not expose provider credentials to clients and must be replaceable by the tenant-profile resolver without changing realtime transport code or the agent loop.
+
+The tenant-profile resolver must:
+
+- List tenant provider profiles through the provider profile repository port.
+- Select enabled, configured profiles for speech-to-text, language inference, and text-to-speech.
+- Read active credentials through the provider credential repository port.
+- Unseal credentials through the credential-sealing port using the tenant/profile/capability/provider-kind/purpose scope.
+- Build provider adapters through a provider factory interface owned by the provider adapter boundary.
+- Return safe profile IDs and provider ports only; raw credentials may live only in resolver/provider-adapter memory for the duration needed to construct or call the provider.
+
 Resolution must verify:
 
 - The profile belongs to the requested tenant.

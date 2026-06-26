@@ -129,3 +129,22 @@ type RealtimeAudioFormat struct {
 	SampleRate int
 	Channels   int
 }
+
+type RealtimeVoiceProviderResolutionInput struct {
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Principal   identity.Principal
+}
+
+type RealtimeVoiceProviderSet struct {
+	SpeechToTextProfileID      string
+	LanguageInferenceProfileID string
+	TextToSpeechProfileID      string
+	SpeechToText               SpeechToTextProvider
+	LanguageInference          LanguageInferenceProvider
+	TextToSpeech               TextToSpeechProvider
+}
+
+type RealtimeVoiceProviderResolver interface {
+	ResolveRealtimeVoiceProviders(ctx context.Context, input RealtimeVoiceProviderResolutionInput) (RealtimeVoiceProviderSet, error)
+}

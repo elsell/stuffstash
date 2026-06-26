@@ -21,6 +21,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	if err != nil {
 		return app.App{}, err
 	}
+	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialSealer, stt, languageInference, tts)
 	return app.New(app.Dependencies{
 		Observer:                      observer,
 		Auth:                          authenticator,
@@ -62,5 +63,6 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		SpeechToText:                  stt,
 		LanguageInference:             languageInference,
 		TextToSpeech:                  tts,
+		RealtimeVoiceProviderResolver: realtimeVoiceProviderResolver,
 	}), nil
 }

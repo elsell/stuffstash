@@ -116,25 +116,7 @@ func validateProviderCredential(credential ports.ProviderCredentialRecord) error
 		credential.UpdatedAt.IsZero() {
 		return ports.ErrInvalidProviderCredential
 	}
-	if credential.Scope.TenantID.String() == "" || credential.Scope.ProviderProfileID == "" || credential.Scope.Capability == "" || credential.Scope.ProviderKind == "" || credential.Scope.Purpose == "" {
-		return ports.ErrInvalidProviderCredential
-	}
-	switch credential.Scope.Capability {
-	case ports.ProviderCapabilitySpeechToText, ports.ProviderCapabilityLanguageInference, ports.ProviderCapabilityTextToSpeech:
-	default:
-		return ports.ErrInvalidProviderCredential
-	}
-	switch credential.Scope.ProviderKind {
-	case ports.ProviderKindGemini, ports.ProviderKindOpenAICompatible, ports.ProviderKindLocalHTTP:
-	default:
-		return ports.ErrInvalidProviderCredential
-	}
-	switch credential.Scope.Purpose {
-	case ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer:
-	default:
-		return ports.ErrInvalidProviderCredential
-	}
-	return nil
+	return validateProviderCredentialScope(credential.Scope)
 }
 
 func sameProviderCredentialScope(left ports.ProviderCredentialScope, right ports.ProviderCredentialScope) bool {
