@@ -95,6 +95,31 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('does not start recording when provider profiles are not ready', async () => {
+    const recorder = new FakeRecorder();
+    const transport = new FakeTransport([]);
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      new FakePlayer(),
+      {
+        readinessChecker: {
+          assertReady: async () => {
+            throw new Error('Voice provider profiles are not ready: text_to_speech.');
+          }
+        }
+      }
+    );
+
+    await expect(controller.start()).rejects.toThrow(
+      'Voice provider profiles are not ready: text_to_speech.'
+    );
+    await expect(controller.stop()).rejects.toThrow('Voice recording has not started.');
+    expect(recorder.started).toBe(false);
+    expect(transport.lastInput).toBeUndefined();
+  });
+
   it('sanitizes diagnostic tool events before they reach mobile UI state', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),

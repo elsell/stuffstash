@@ -10,6 +10,7 @@ import {
 } from './ProviderProfileRepository';
 import { ManageProviderProfileCommand } from './ManageProviderProfileCommand';
 import { ProviderProfileSettingsQuery } from './ProviderProfileSettingsQuery';
+import { ProviderProfileVoiceReadinessCheck } from './ProviderProfileVoiceReadinessCheck';
 import { recommendedProviderProfiles } from './RecommendedProviderProfiles';
 import { TestProviderProfileCommand } from './TestProviderProfileCommand';
 
@@ -84,6 +85,37 @@ describe('ProviderProfileSettingsQuery', () => {
       profiles: [repository.profiles[1], repository.profiles[2], repository.profiles[0]],
       missingCapabilities: ['speech_to_text', 'text_to_speech']
     });
+  });
+});
+
+describe('ProviderProfileVoiceReadinessCheck', () => {
+  it('passes when all required provider capabilities are enabled, configured, and tested', async () => {
+    const repository = new FakeProviderProfileRepository();
+    repository.profiles = [
+      profile({ capability: 'speech_to_text' }),
+      profile({ capability: 'language_inference' }),
+      profile({ capability: 'text_to_speech' })
+    ];
+    const check = new ProviderProfileVoiceReadinessCheck(
+      new ProviderProfileSettingsQuery(repository)
+    );
+
+    await expect(check.assertReady()).resolves.toBeUndefined();
+  });
+
+  it('fails safely when required provider capabilities are not ready', async () => {
+    const repository = new FakeProviderProfileRepository();
+    repository.profiles = [
+      profile({ capability: 'speech_to_text' }),
+      profile({ capability: 'language_inference' })
+    ];
+    const check = new ProviderProfileVoiceReadinessCheck(
+      new ProviderProfileSettingsQuery(repository)
+    );
+
+    await expect(check.assertReady()).rejects.toThrow(
+      'Voice provider profiles are not ready: text_to_speech.'
+    );
   });
 });
 

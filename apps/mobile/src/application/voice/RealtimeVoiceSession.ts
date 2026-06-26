@@ -36,7 +36,12 @@ export interface RealtimeVoiceTransport {
 
 export type RealtimeVoiceSessionControllerOptions = {
 	readonly diagnosticsEnabled?: boolean;
+	readonly readinessChecker?: VoiceProviderReadinessChecker;
 };
+
+export interface VoiceProviderReadinessChecker {
+	assertReady(): Promise<void>;
+}
 
 type VoiceRealtimeEventMetadata = {
   readonly seq: number;
@@ -104,6 +109,7 @@ export type VoiceSafeDiagnosticStatus =
 
 export class RealtimeVoiceSessionController {
 	private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
+	private recordingStarted = false;
 	private ttsMimeType = 'audio/mpeg';
 
   constructor(
@@ -116,9 +122,11 @@ export class RealtimeVoiceSessionController {
 
   async start(): Promise<VoiceRealtimeState> {
     const context = await this.selectedInventoryContext();
+    await this.options.readinessChecker?.assertReady();
     this.currentContext = context;
     await this.player.stop();
     await this.recorder.start();
+    this.recordingStarted = true;
     return {
       status: 'listening',
       tenantName: context.tenantName,
@@ -129,8 +137,13 @@ export class RealtimeVoiceSessionController {
   }
 
   async stop(): Promise<readonly VoiceRealtimeState[]> {
+    if (!this.recordingStarted) {
+      throw new Error('Voice recording has not started.');
+    }
+
     const context = this.currentContext ?? (await this.selectedInventoryContext());
     const recorded = await this.recorder.stop();
+    this.recordingStarted = false;
     const states: VoiceRealtimeState[] = [{
       status: 'processing',
       tenantName: context.tenantName,

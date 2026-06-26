@@ -122,6 +122,8 @@ Mobile realtime voice is local-development testable before production mobile aut
 
 The mobile app starts a realtime voice session by opening an authenticated WebSocket to the core API.
 
+Before starting local audio capture, mobile must run a safe provider-profile readiness check through the mobile application layer when tenant-managed provider profiles are available in the composition. The check must use only safe provider profile metadata and must require enabled, credential-configured, successfully tested profiles for speech-to-text, language inference, and text-to-speech. If readiness fails, mobile must not start the recorder or open the realtime WebSocket. It must surface a safe, actionable error that names the missing capabilities without exposing provider credentials, endpoint URLs, raw prompts, raw provider responses, raw audio, or internal IDs.
+
 The session start message must include:
 
 - Tenant ID.

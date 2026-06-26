@@ -27,6 +27,7 @@ import {
 import { OnboardingCommand } from '../application/onboarding/OnboardingCommand';
 import { ManageProviderProfileCommand } from '../application/providerProfiles/ManageProviderProfileCommand';
 import { ProviderProfileSettingsQuery } from '../application/providerProfiles/ProviderProfileSettingsQuery';
+import { ProviderProfileVoiceReadinessCheck } from '../application/providerProfiles/ProviderProfileVoiceReadinessCheck';
 import { TestProviderProfileCommand } from '../application/providerProfiles/TestProviderProfileCommand';
 import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
 import { SettingsQuery } from '../application/settings/SettingsQuery';
@@ -89,6 +90,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
   const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '');
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
+  const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
   const config = toRuntimeConfig(profile);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(createServiceScopeId());
 
@@ -110,7 +112,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
       principals,
       new ExpoSettingsDiagnosticsProvider(config)
     ),
-    providerProfileSettingsQuery: new ProviderProfileSettingsQuery(providerProfiles),
+    providerProfileSettingsQuery,
     manageProviderProfileCommand: new ManageProviderProfileCommand(providerProfiles),
     testProviderProfileCommand: new TestProviderProfileCommand(providerProfiles),
     voiceInteractionPreviewQuery: new VoiceInteractionPreviewQuery(inventorySummaries),
@@ -121,7 +123,8 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
         apiBaseUrl: config?.apiBaseUrl ?? 'http://127.0.0.1:8080',
         tokenProvider: () => config?.devToken ?? ''
       }),
-      new ExpoVoiceAudioPlayer()
+      new ExpoVoiceAudioPlayer(),
+      { readinessChecker: new ProviderProfileVoiceReadinessCheck(providerProfileSettingsQuery) }
     )
   };
 }
