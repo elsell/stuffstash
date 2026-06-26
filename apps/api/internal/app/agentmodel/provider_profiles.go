@@ -54,6 +54,16 @@ type ProviderProfileLifecycleInput struct {
 	ProfileID domain.ProviderProfileID
 }
 
+type ReplaceProviderProfileCredentialInput struct {
+	Principal identity.Principal
+	Source    audit.Source
+	RequestID string
+	TenantID  tenant.ID
+	ProfileID domain.ProviderProfileID
+	Purpose   string
+	Raw       []byte
+}
+
 func (s Service) CreateProviderProfile(ctx context.Context, input CreateProviderProfileInput) (domain.ProviderProfile, error) {
 	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
 		return domain.ProviderProfile{}, err
@@ -171,6 +181,68 @@ func (s Service) ArchiveProviderProfile(ctx context.Context, input ProviderProfi
 	return s.updateLifecycle(ctx, input, audit.ActionProviderProfileArchived, ports.EventProviderProfileArchived, func(profile domain.ProviderProfile) (domain.ProviderProfile, bool) {
 		return profile.Archive(s.clock.Now())
 	})
+}
+
+func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input ReplaceProviderProfileCredentialInput) (domain.ProviderProfile, error) {
+	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	if s.providerCredentialSealer == nil {
+		return domain.ProviderProfile{}, apperrors.ErrPrecondition
+	}
+	purpose, ok := ports.NewProviderCredentialPurpose(input.Purpose)
+	if !ok || len(bytes.TrimSpace(input.Raw)) == 0 {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
+	}
+	current, found, err := s.providerProfiles.ProviderProfileByID(ctx, input.TenantID, input.ProfileID)
+	if err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	if !found {
+		return domain.ProviderProfile{}, apperrors.ErrNotFound
+	}
+	updated, ok := current.WithCredentialConfigured(s.clock.Now())
+	if !ok {
+		return domain.ProviderProfile{}, apperrors.ErrPrecondition
+	}
+	scope := ports.ProviderCredentialScope{
+		TenantID:          input.TenantID,
+		ProviderProfileID: current.ID.String(),
+		Capability:        ports.ProviderCapability(current.Capability.String()),
+		ProviderKind:      ports.ProviderKind(current.ProviderKind.String()),
+		Purpose:           purpose,
+	}
+	sealed, err := s.providerCredentialSealer.SealProviderCredential(ctx, scope, input.Raw)
+	if err != nil {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
+	}
+	credentialID := strings.TrimSpace(s.ids.NewID())
+	if credentialID == "" {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
+	}
+	credential := ports.ProviderCredentialRecord{
+		ID:        credentialID,
+		Scope:     scope,
+		Sealed:    sealed,
+		CreatedAt: updated.UpdatedAt,
+		UpdatedAt: updated.UpdatedAt,
+	}
+	auditRecord, err := s.auditRecord(providerProfileAuditInput{
+		Principal: input.Principal,
+		Source:    input.Source,
+		RequestID: input.RequestID,
+		TenantID:  input.TenantID,
+		Profile:   updated,
+		Action:    audit.ActionProviderProfileCredentialReplaced,
+	})
+	if err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	if err := s.providerProfileUnitOfWork.ReplaceProviderProfileCredential(ctx, updated, credential, auditRecord); err != nil {
+		return domain.ProviderProfile{}, err
+	}
+	s.recordProviderProfileEvent(ctx, ports.EventProviderProfileCredentialReplaced, input.Principal, updated)
+	return updated, nil
 }
 
 func (s Service) updateLifecycle(ctx context.Context, input ProviderProfileLifecycleInput, action audit.Action, eventName ports.EventName, transition func(domain.ProviderProfile) (domain.ProviderProfile, bool)) (domain.ProviderProfile, error) {

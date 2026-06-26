@@ -16,4 +16,5 @@ type ProviderProfileRepository interface {
 type ProviderProfileUnitOfWork interface {
 	SaveProviderProfile(ctx context.Context, profile agentmodel.ProviderProfile, auditRecord audit.Record) error
 	UpdateProviderProfile(ctx context.Context, profile agentmodel.ProviderProfile, auditRecord audit.Record) error
+	ReplaceProviderProfileCredential(ctx context.Context, profile agentmodel.ProviderProfile, credential ProviderCredentialRecord, auditRecord audit.Record) error
 }

@@ -21,24 +21,7 @@ func (s Store) ReplaceProviderCredential(ctx context.Context, credential ports.P
 		now = time.Now().UTC()
 	}
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := supersedeActiveProviderCredentials(tx, credential.Scope, now); err != nil {
-			return err
-		}
-		model := providerCredentialModel{
-			ID:                credential.ID,
-			TenantID:          credential.Scope.TenantID.String(),
-			ProviderProfileID: credential.Scope.ProviderProfileID,
-			Capability:        string(credential.Scope.Capability),
-			ProviderKind:      string(credential.Scope.ProviderKind),
-			Purpose:           string(credential.Scope.Purpose),
-			KeyID:             credential.Sealed.KeyID,
-			Algorithm:         credential.Sealed.Algorithm,
-			Nonce:             append([]byte{}, credential.Sealed.Nonce...),
-			Ciphertext:        append([]byte{}, credential.Sealed.Ciphertext...),
-			CreatedAt:         timeOrDefault(credential.CreatedAt, now),
-			UpdatedAt:         now,
-		}
-		return tx.Create(&model).Error
+		return replaceProviderCredentialInTx(tx, credential, now)
 	})
 }
 
@@ -84,6 +67,31 @@ func supersedeActiveProviderCredentials(tx *gorm.DB, scope ports.ProviderCredent
 			"superseded_at": supersededAt,
 			"updated_at":    supersededAt,
 		}).Error
+}
+
+func replaceProviderCredentialInTx(tx *gorm.DB, credential ports.ProviderCredentialRecord, now time.Time) error {
+	if err := supersedeActiveProviderCredentials(tx, credential.Scope, now); err != nil {
+		return err
+	}
+	model := providerCredentialModelFromRecord(credential, now)
+	return tx.Create(&model).Error
+}
+
+func providerCredentialModelFromRecord(credential ports.ProviderCredentialRecord, now time.Time) providerCredentialModel {
+	return providerCredentialModel{
+		ID:                credential.ID,
+		TenantID:          credential.Scope.TenantID.String(),
+		ProviderProfileID: credential.Scope.ProviderProfileID,
+		Capability:        string(credential.Scope.Capability),
+		ProviderKind:      string(credential.Scope.ProviderKind),
+		Purpose:           string(credential.Scope.Purpose),
+		KeyID:             credential.Sealed.KeyID,
+		Algorithm:         credential.Sealed.Algorithm,
+		Nonce:             append([]byte{}, credential.Sealed.Nonce...),
+		Ciphertext:        append([]byte{}, credential.Sealed.Ciphertext...),
+		CreatedAt:         timeOrDefault(credential.CreatedAt, now),
+		UpdatedAt:         now,
+	}
 }
 
 func providerCredentialScopeQuery(db *gorm.DB, scope ports.ProviderCredentialScope) *gorm.DB {

@@ -10,6 +10,7 @@ import (
 	customfieldroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/customfields/routes"
 	identityroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/identity/routes"
 	inventoryroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/routes"
+	providerprofileroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/providerprofiles/routes"
 	searchroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/routes"
 	tenantroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/tenants/routes"
 	undoableoperationroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/undoableoperations/routes"
@@ -28,4 +29,5 @@ func registerRoutes(api huma.API, application app.App) {
 	auditroutes.Register(api, application)
 	accessroutes.Register(api, application)
 	searchroutes.Register(api, application)
+	providerprofileroutes.Register(api, application)
 }

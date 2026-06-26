@@ -13,6 +13,10 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	if err := validateProviderCredentialSealer(ctx, cfg, repositories.providerCredentials); err != nil {
 		return app.App{}, err
 	}
+	providerCredentialSealer, err := buildProviderCredentialSealer(cfg)
+	if err != nil {
+		return app.App{}, err
+	}
 	stt, languageInference, tts, err := buildRealtimeVoiceProviders(ctx, cfg)
 	if err != nil {
 		return app.App{}, err
@@ -45,6 +49,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Outbox:                        repositories.outbox,
 		ProviderProfiles:              repositories.providerProfiles,
 		ProviderProfileUnitOfWork:     repositories.providerProfileUnitOfWork,
+		ProviderCredentialSealer:      providerCredentialSealer,
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,

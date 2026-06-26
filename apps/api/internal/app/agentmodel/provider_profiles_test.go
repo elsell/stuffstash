@@ -89,6 +89,71 @@ func TestServiceRejectsRawCredentialMaterialInProfileInput(t *testing.T) {
 	}
 }
 
+func TestServiceReplacesProviderProfileCredentialWithSealedMaterial(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	service := newProviderProfileTestService(repository, allowTenantConfigureAuthorizer{})
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileDisabled)
+	repository.saved[profile.ID.String()] = profile
+
+	updated, err := service.ReplaceProviderProfileCredential(ctx, ReplaceProviderProfileCredentialInput{
+		Principal: testPrincipal(),
+		Source:    audit.SourceAPI,
+		RequestID: "request-1",
+		TenantID:  tenant.ID("tenant-home"),
+		ProfileID: profile.ID,
+		Purpose:   "api_key",
+		Raw:       []byte("raw-provider-secret"),
+	})
+	if err != nil {
+		t.Fatalf("replace provider profile credential: %v", err)
+	}
+	if updated.CredentialStatus != domain.CredentialStatusConfigured {
+		t.Fatalf("expected configured credential status, got %+v", updated)
+	}
+	if string(repository.lastCredential.Sealed.Ciphertext) == "raw-provider-secret" || len(repository.lastCredential.Sealed.Ciphertext) == 0 {
+		t.Fatalf("expected sealed credential material, got %+v", repository.lastCredential)
+	}
+	if repository.lastCredential.Scope.TenantID.String() != "tenant-home" ||
+		repository.lastCredential.Scope.ProviderProfileID != "profile-one" ||
+		repository.lastCredential.Scope.Capability != ports.ProviderCapabilityLanguageInference ||
+		repository.lastCredential.Scope.ProviderKind != ports.ProviderKindGemini ||
+		repository.lastCredential.Scope.Purpose != ports.ProviderCredentialPurposeAPIKey {
+		t.Fatalf("unexpected credential scope: %+v", repository.lastCredential.Scope)
+	}
+}
+
+func TestServiceRejectsCredentialReplacementWhenSealerUnavailable(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	service := New(Dependencies{
+		Authorizer:                allowTenantConfigureAuthorizer{},
+		ProviderProfiles:          repository,
+		ProviderProfileUnitOfWork: repository,
+		IDs:                       fixedIDGenerator{},
+		Clock:                     fixedClock{},
+	})
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileDisabled)
+	repository.saved[profile.ID.String()] = profile
+
+	_, err := service.ReplaceProviderProfileCredential(ctx, ReplaceProviderProfileCredentialInput{
+		Principal: testPrincipal(),
+		Source:    audit.SourceAPI,
+		RequestID: "request-1",
+		TenantID:  tenant.ID("tenant-home"),
+		ProfileID: profile.ID,
+		Purpose:   "api_key",
+		Raw:       []byte("raw-provider-secret"),
+	})
+	if !errors.Is(err, apperrors.ErrPrecondition) {
+		t.Fatalf("expected precondition rejection, got %v", err)
+	}
+}
+
 func TestServiceListsAndGetsProviderProfilesByTenant(t *testing.T) {
 	t.Parallel()
 
@@ -179,7 +244,8 @@ func TestServiceLifecycleCommandsRespectArchivedBoundary(t *testing.T) {
 }
 
 type fakeProviderProfileRepository struct {
-	saved map[string]domain.ProviderProfile
+	saved          map[string]domain.ProviderProfile
+	lastCredential ports.ProviderCredentialRecord
 }
 
 func newFakeProviderProfileRepository() *fakeProviderProfileRepository {
@@ -196,6 +262,15 @@ func (r *fakeProviderProfileRepository) UpdateProviderProfile(_ context.Context,
 		return ports.ErrForbidden
 	}
 	r.saved[profile.ID.String()] = profile
+	return nil
+}
+
+func (r *fakeProviderProfileRepository) ReplaceProviderProfileCredential(_ context.Context, profile domain.ProviderProfile, credential ports.ProviderCredentialRecord, _ audit.Record) error {
+	if _, ok := r.saved[profile.ID.String()]; !ok {
+		return ports.ErrForbidden
+	}
+	r.saved[profile.ID.String()] = profile
+	r.lastCredential = credential
 	return nil
 }
 
@@ -280,11 +355,31 @@ func (fixedClock) Now() time.Time {
 
 func newProviderProfileTestService(repository *fakeProviderProfileRepository, authorizer ports.Authorizer) Service {
 	return New(Dependencies{
-		Authorizer:       authorizer,
-		ProviderProfiles: repository,
-		IDs:              fixedIDGenerator{},
-		Clock:            fixedClock{},
+		Authorizer:                authorizer,
+		ProviderProfiles:          repository,
+		ProviderProfileUnitOfWork: repository,
+		ProviderCredentialSealer:  fakeCredentialSealer{},
+		IDs:                       fixedIDGenerator{},
+		Clock:                     fixedClock{},
 	})
+}
+
+type fakeCredentialSealer struct{}
+
+func (fakeCredentialSealer) SealProviderCredential(_ context.Context, scope ports.ProviderCredentialScope, raw []byte) (ports.SealedProviderCredential, error) {
+	if len(raw) == 0 {
+		return ports.SealedProviderCredential{}, ports.ErrInvalidProviderCredential
+	}
+	return ports.SealedProviderCredential{
+		KeyID:      "test-key",
+		Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+		Nonce:      []byte("123456789012"),
+		Ciphertext: []byte("sealed:" + scope.ProviderProfileID),
+	}, nil
+}
+
+func (fakeCredentialSealer) UnsealProviderCredential(context.Context, ports.ProviderCredentialScope, ports.SealedProviderCredential) ([]byte, error) {
+	return nil, nil
 }
 
 func testPrincipal() identity.Principal {

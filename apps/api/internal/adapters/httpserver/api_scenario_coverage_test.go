@@ -44,6 +44,23 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/archive", tenantPath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/restore", tenantPath+"/restore", "Bearer dev:owner", nil, http.StatusOK)
 
+	providerProfile := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles", tenantPath+"/provider-profiles", "Bearer dev:owner", map[string]any{
+		"capability":         "language_inference",
+		"providerKind":       "gemini",
+		"displayName":        "Google Gemini",
+		"modelName":          "gemini-2.5-flash-lite",
+		"runtimeOptions":     map[string]any{"temperature": 0.1},
+		"capabilityMetadata": map[string]any{"toolCalls": true},
+	}, http.StatusCreated)
+	providerProfileID := decodeProviderProfile(t, providerProfile).Data.ID
+	providerProfilePath := tenantPath + "/provider-profiles/" + providerProfileID
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/provider-profiles", tenantPath+"/provider-profiles", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/provider-profiles/{providerProfileId}", providerProfilePath, "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPut, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential", providerProfilePath+"/credential", "Bearer dev:owner", map[string]any{"purpose": "api_key", "credential": "scenario-secret"}, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/enable", providerProfilePath+"/enable", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/disable", providerProfilePath+"/disable", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive", providerProfilePath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
+
 	inventoryCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories", tenantPath+"/inventories", "Bearer dev:owner", map[string]any{"name": "Tools"}, http.StatusCreated)
 	inventoryID := decodeScenarioInventory(t, inventoryCreate).Data.ID
 	inventoryPath := tenantPath + "/inventories/" + inventoryID
@@ -249,6 +266,14 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 	inviteBody := decodeInventoryAccessInvitation(t, invite).Data
 	invitePath := inventoryPath + "/access-invitations/" + inviteBody.ID
 
+	providerProfile := performRequest(server, http.MethodPost, tenantPath+"/provider-profiles", "Bearer dev:owner", map[string]any{
+		"capability":   "language_inference",
+		"providerKind": "gemini",
+		"displayName":  "Google Gemini",
+	})
+	requireStatus(t, providerProfile, http.StatusCreated)
+	providerProfilePath := tenantPath + "/provider-profiles/" + decodeProviderProfile(t, providerProfile).Data.ID
+
 	auditResponse := performRequest(server, http.MethodGet, inventoryPath+"/audit-records?limit=50", "Bearer dev:owner", nil)
 	requireStatus(t, auditResponse, http.StatusOK)
 	operationID := operationIDForTarget(t, decodeAuditRecordList(t, auditResponse).Data, assetID)
@@ -262,6 +287,13 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/archive", path: tenantPath + "/archive"},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/restore", path: tenantPath + "/restore"},
 		{method: http.MethodDelete, template: "/tenants/{tenantId}", path: tenantPath},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles", path: tenantPath + "/provider-profiles", body: map[string]any{"capability": "language_inference", "providerKind": "gemini", "displayName": "Blocked"}},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/provider-profiles", path: tenantPath + "/provider-profiles"},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}", path: providerProfilePath},
+		{method: http.MethodPut, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential", path: providerProfilePath + "/credential", body: map[string]any{"purpose": "api_key", "credential": "blocked"}},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/enable", path: providerProfilePath + "/enable"},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/disable", path: providerProfilePath + "/disable"},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive", path: providerProfilePath + "/archive"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories", path: tenantPath + "/inventories", body: map[string]any{"name": "Blocked"}},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories", path: tenantPath + "/inventories?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}", path: inventoryPath},

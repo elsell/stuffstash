@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -35,6 +36,17 @@ const (
 	ProviderCredentialPurposeAPIKey      ProviderCredentialPurpose = "api_key"
 	ProviderCredentialPurposeOAuthBearer ProviderCredentialPurpose = "oauth_bearer"
 )
+
+func NewProviderCredentialPurpose(value string) (ProviderCredentialPurpose, bool) {
+	switch ProviderCredentialPurpose(strings.TrimSpace(value)) {
+	case ProviderCredentialPurposeAPIKey:
+		return ProviderCredentialPurposeAPIKey, true
+	case ProviderCredentialPurposeOAuthBearer:
+		return ProviderCredentialPurposeOAuthBearer, true
+	default:
+		return "", false
+	}
+}
 
 type ProviderCredentialScope struct {
 	TenantID          tenant.ID

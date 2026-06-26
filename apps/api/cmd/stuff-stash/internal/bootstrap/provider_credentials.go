@@ -31,3 +31,15 @@ func validateProviderCredentialSealer(ctx context.Context, cfg config.Config, re
 	}
 	return nil
 }
+
+func buildProviderCredentialSealer(cfg config.Config) (ports.ProviderCredentialSealer, error) {
+	configured := strings.TrimSpace(cfg.ProviderCredentialKeyID) != "" || strings.TrimSpace(cfg.ProviderCredentialKey) != ""
+	if !configured {
+		return nil, nil
+	}
+	sealer, err := credentials.NewAESGCMSealerFromBase64(cfg.ProviderCredentialKeyID, cfg.ProviderCredentialKey)
+	if err != nil {
+		return nil, errors.New("provider credential encryption key is invalid")
+	}
+	return sealer, nil
+}

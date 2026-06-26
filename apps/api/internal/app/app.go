@@ -42,6 +42,7 @@ type App struct {
 	outbox                    ports.AuthorizationOutbox
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	providerCredentialSealer  ports.ProviderCredentialSealer
 	ids                       ports.IDGenerator
 	clock                     ports.Clock
 	outboxDrainLimit          int
@@ -89,6 +90,7 @@ type Dependencies struct {
 	Outbox                        ports.AuthorizationOutbox
 	ProviderProfiles              ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork     ports.ProviderProfileUnitOfWork
+	ProviderCredentialSealer      ports.ProviderCredentialSealer
 	IDs                           ports.IDGenerator
 	Clock                         ports.Clock
 	AuthorizationOutboxDrainLimit int
@@ -144,6 +146,7 @@ func New(deps Dependencies) App {
 		outbox:                    deps.Outbox,
 		providerProfiles:          deps.ProviderProfiles,
 		providerProfileUnitOfWork: deps.ProviderProfileUnitOfWork,
+		providerCredentialSealer:  deps.ProviderCredentialSealer,
 		ids:                       ids,
 		clock:                     clock,
 		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,
@@ -195,6 +198,7 @@ func New(deps Dependencies) App {
 		Authorizer:                app.authorizer,
 		ProviderProfiles:          app.providerProfiles,
 		ProviderProfileUnitOfWork: app.providerProfileUnitOfWork,
+		ProviderCredentialSealer:  app.providerCredentialSealer,
 		IDs:                       app.ids,
 		Clock:                     app.clock,
 	})

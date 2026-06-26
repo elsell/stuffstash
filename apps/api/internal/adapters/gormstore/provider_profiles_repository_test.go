@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestProviderProfileRepositorySavesListsAndGetsByTenant(t *testing.T) {
@@ -93,6 +94,87 @@ func TestProviderProfileRepositoryUpdatesLifecycleAndPreservesAuditAtomicity(t *
 	}
 }
 
+func TestProviderProfileRepositoryReplacesCredentialAndUpdatesProfileStatus(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	profile := providerProfile(t, "profile-one", "tenant-home", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileDisabled)
+	if err := store.SaveProviderProfile(ctx, profile, auditRecord(t, "audit-profile-one", tenant.ID("tenant-home"), "", audit.ActionProviderProfileCreated)); err != nil {
+		t.Fatalf("save provider profile: %v", err)
+	}
+
+	configured, ok := profile.WithCredentialConfigured(time.Now().UTC().Add(time.Minute))
+	if !ok {
+		t.Fatalf("configure credential status")
+	}
+	first := providerProfileCredential("credential-one", configured, "ciphertext-one", configured.UpdatedAt)
+	if err := store.ReplaceProviderProfileCredential(ctx, configured, first, auditRecord(t, "audit-credential-one", tenant.ID("tenant-home"), "", audit.ActionProviderProfileCredentialReplaced)); err != nil {
+		t.Fatalf("replace provider credential: %v", err)
+	}
+	second := providerProfileCredential("credential-two", configured, "ciphertext-two", configured.UpdatedAt.Add(time.Minute))
+	if err := store.ReplaceProviderProfileCredential(ctx, configured, second, auditRecord(t, "audit-credential-two", tenant.ID("tenant-home"), "", audit.ActionProviderProfileCredentialReplaced)); err != nil {
+		t.Fatalf("replace provider credential again: %v", err)
+	}
+
+	got, found, err := store.ProviderProfileByID(ctx, tenant.ID("tenant-home"), profile.ID)
+	if err != nil {
+		t.Fatalf("get provider profile: %v", err)
+	}
+	if !found || got.CredentialStatus != agentmodel.CredentialStatusConfigured {
+		t.Fatalf("expected configured provider profile: found=%t profile=%+v", found, got)
+	}
+	active, found, err := store.ActiveProviderCredential(ctx, second.Scope)
+	if err != nil {
+		t.Fatalf("active provider credential: %v", err)
+	}
+	if !found || active.ID != "credential-two" || string(active.Sealed.Ciphertext) != "ciphertext-two" {
+		t.Fatalf("unexpected active credential: found=%t credential=%+v", found, active)
+	}
+	var superseded providerCredentialModel
+	if err := store.db.WithContext(ctx).Where("id = ?", "credential-one").First(&superseded).Error; err != nil {
+		t.Fatalf("load superseded credential: %v", err)
+	}
+	if superseded.SupersededAt == nil {
+		t.Fatalf("expected prior credential to be superseded")
+	}
+}
+
+func TestProviderProfileRepositoryRejectsCredentialScopeMismatch(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveTenant(t, ctx, store, tenant.ID("tenant-other"), "Other")
+	profile := providerProfile(t, "profile-one", "tenant-home", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileDisabled)
+	if err := store.SaveProviderProfile(ctx, profile, auditRecord(t, "audit-profile-one", tenant.ID("tenant-home"), "", audit.ActionProviderProfileCreated)); err != nil {
+		t.Fatalf("save provider profile: %v", err)
+	}
+
+	configured, ok := profile.WithCredentialConfigured(time.Now().UTC().Add(time.Minute))
+	if !ok {
+		t.Fatalf("configure credential status")
+	}
+	mismatched := providerProfileCredential("credential-one", configured, "ciphertext-one", configured.UpdatedAt)
+	mismatched.Scope.TenantID = tenant.ID("tenant-other")
+	if err := store.ReplaceProviderProfileCredential(ctx, configured, mismatched, auditRecord(t, "audit-credential-one", tenant.ID("tenant-home"), "", audit.ActionProviderProfileCredentialReplaced)); err != ports.ErrInvalidProviderCredential {
+		t.Fatalf("expected invalid provider credential, got %v", err)
+	}
+
+	got, found, err := store.ProviderProfileByID(ctx, tenant.ID("tenant-home"), profile.ID)
+	if err != nil {
+		t.Fatalf("get provider profile: %v", err)
+	}
+	if !found || got.CredentialStatus != agentmodel.CredentialStatusMissing {
+		t.Fatalf("expected credential status to remain missing: found=%t profile=%+v", found, got)
+	}
+	if exists, err := store.ActiveProviderCredentialsExist(ctx); err != nil || exists {
+		t.Fatalf("expected no active credentials after mismatch: exists=%t err=%v", exists, err)
+	}
+}
+
 func providerProfile(t *testing.T, id string, tenantID string, capability agentmodel.ProviderCapability, lifecycle agentmodel.ProviderProfileLifecycleState) agentmodel.ProviderProfile {
 	t.Helper()
 
@@ -116,4 +198,25 @@ func providerProfile(t *testing.T, id string, tenantID string, capability agentm
 		t.Fatalf("expected valid provider profile")
 	}
 	return profile
+}
+
+func providerProfileCredential(id string, profile agentmodel.ProviderProfile, ciphertext string, now time.Time) ports.ProviderCredentialRecord {
+	return ports.ProviderCredentialRecord{
+		ID: id,
+		Scope: ports.ProviderCredentialScope{
+			TenantID:          tenant.ID(profile.TenantID.String()),
+			ProviderProfileID: profile.ID.String(),
+			Capability:        ports.ProviderCapability(profile.Capability.String()),
+			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
+			Purpose:           ports.ProviderCredentialPurposeAPIKey,
+		},
+		Sealed: ports.SealedProviderCredential{
+			KeyID:      "local-key",
+			Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+			Nonce:      []byte("123456789012"),
+			Ciphertext: []byte(ciphertext),
+		},
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }

@@ -17,6 +17,7 @@ type Service struct {
 	authorizer                ports.Authorizer
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	providerCredentialSealer  ports.ProviderCredentialSealer
 	ids                       ports.IDGenerator
 	clock                     ports.Clock
 }
@@ -26,6 +27,7 @@ type Dependencies struct {
 	Authorizer                ports.Authorizer
 	ProviderProfiles          ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	ProviderCredentialSealer  ports.ProviderCredentialSealer
 	IDs                       ports.IDGenerator
 	Clock                     ports.Clock
 }
@@ -50,6 +52,7 @@ func New(deps Dependencies) Service {
 		authorizer:                deps.Authorizer,
 		providerProfiles:          deps.ProviderProfiles,
 		providerProfileUnitOfWork: unitOfWork,
+		providerCredentialSealer:  deps.ProviderCredentialSealer,
 		ids:                       deps.IDs,
 		clock:                     clock,
 	}

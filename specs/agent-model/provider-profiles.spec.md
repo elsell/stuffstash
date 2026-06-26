@@ -10,7 +10,7 @@ Provider profiles make conversational inventory usable for self-hosted Docker de
 
 This spec covers conversational provider profile management, credential sealing, authorization, audit behavior, and testing requirements.
 
-This spec does not define the final UI layout, exact REST paths, provider SDK, realtime message schema, or provider-specific request format.
+This spec does not define the final UI layout, provider SDK, realtime message schema, or provider-specific request format.
 
 ## Architecture
 
@@ -60,6 +60,24 @@ Deleting a provider profile may be implemented as archival unless a later spec r
 The first lifecycle commands are create, enable, disable, and archive. Create starts profiles in `disabled` unless the caller explicitly requests `enabled`. Archived profiles cannot be re-enabled in the first slice. Realtime provider resolution must ignore disabled and archived profiles.
 
 Disabling, archiving, deleting, or replacing credentials for a profile must not affect already completed action plans or audit history. New realtime sessions must fail safely when their required provider profile is disabled, archived, missing, unsupported, or has unusable credentials.
+
+## First Management API
+
+The first REST management API must live under the tenant scope:
+
+- `POST /tenants/{tenantId}/provider-profiles`
+- `GET /tenants/{tenantId}/provider-profiles`
+- `GET /tenants/{tenantId}/provider-profiles/{providerProfileId}`
+- `POST /tenants/{tenantId}/provider-profiles/{providerProfileId}/enable`
+- `POST /tenants/{tenantId}/provider-profiles/{providerProfileId}/disable`
+- `POST /tenants/{tenantId}/provider-profiles/{providerProfileId}/archive`
+- `PUT /tenants/{tenantId}/provider-profiles/{providerProfileId}/credential`
+
+All provider-profile management endpoints must require the same bearer-token authentication boundary as the rest of the API and tenant configuration permission for the requested tenant. Viewers, editors, unrelated users, unauthenticated users, wrong-tenant users, expired-token users, and malformed-token users must be rejected.
+
+Provider profile responses must include safe profile metadata only: profile ID, tenant ID, capability, provider kind, display name, endpoint URL, model name, non-secret runtime options, capability metadata, credential status, lifecycle state, and timestamps. Responses must never include raw credentials, sealed credential ciphertext, nonce material, encryption key IDs, provider account details, provider session tokens, provider-specific realtime URLs, raw prompts, raw transcripts, raw model responses, raw audio, or generated speech.
+
+Credential replacement requests must accept raw credential material only in the request body for the duration of that request. The application service must seal the credential through the configured credential-sealing port before persistence, store it through the credential repository boundary, supersede prior active credentials for the same tenant/profile/capability/provider-kind/purpose, update the provider profile credential status to `configured`, and return only safe profile metadata.
 
 ## Authorization
 

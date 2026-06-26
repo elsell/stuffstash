@@ -316,3 +316,12 @@ func (p ProviderProfile) Archive(now time.Time) (ProviderProfile, bool) {
 	p.UpdatedAt = now
 	return p, true
 }
+
+func (p ProviderProfile) WithCredentialConfigured(now time.Time) (ProviderProfile, bool) {
+	if now.IsZero() || p.LifecycleState == ProviderProfileArchived {
+		return ProviderProfile{}, false
+	}
+	p.CredentialStatus = CredentialStatusConfigured
+	p.UpdatedAt = now
+	return p, true
+}
