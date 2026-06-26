@@ -146,6 +146,127 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
   });
 
+  it('cancels active recording without opening the realtime transport', async () => {
+    const recorder = new FakeRecorder();
+    const transport = new FakeTransport([]);
+    const player = new FakePlayer();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      player
+    );
+
+    await controller.start();
+    const cancelled = await controller.cancel();
+
+    expect(cancelled).toMatchObject({
+      status: 'cancelled',
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Cancelled'
+    });
+    expect(recorder.cancelled).toBe(true);
+    expect(transport.lastInput).toBeUndefined();
+    expect(player.stops).toBe(2);
+  });
+
+  it('does not open the realtime transport when cancellation races with recorder stop', async () => {
+    const recorder = new DelayedStopRecorder();
+    const transport = new FakeTransport([]);
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await recorder.stopStarted;
+
+    await controller.cancel();
+    recorder.finishStop();
+
+    await expect(stop).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(transport.lastInput).toBeUndefined();
+  });
+
+  it('does not let a new start revive a cancelled delayed stop', async () => {
+    const recorder = new DelayedStopRecorder();
+    const transport = new FakeTransport([]);
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const oldStop = controller.stop();
+    await recorder.stopStarted;
+
+    await controller.cancel();
+    await controller.start();
+    recorder.finishStop();
+
+    await expect(oldStop).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(transport.lastInput).toBeUndefined();
+  });
+
+  it('stops applying transport events after cancellation is requested', async () => {
+    const transport = new DelayedEventTransport();
+    const player = new FakePlayer();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      player
+    );
+    const observed: string[] = [];
+
+    await controller.start();
+    const stop = controller.stop((state) => {
+      observed.push(state.status);
+    });
+    await transport.started;
+    await controller.cancel();
+    transport.emit({
+      type: 'tts.audio.chunk',
+      seq: 1,
+      sessionId: 'session-1',
+      chunkId: 'late',
+      audioBase64: 'bGF0ZQ=='
+    });
+
+    await expect(stop).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(observed).toEqual(['processing']);
+    expect(player.played).toEqual([]);
+  });
+
+  it('cancels an in-flight realtime transport and treats the stop as cancelled', async () => {
+    const transport = new CancellableTransport();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.started;
+
+    const cancelled = await controller.cancel();
+
+    await expect(stop).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(cancelled).toMatchObject({
+      status: 'cancelled',
+      progressLabel: 'Cancelled'
+    });
+    expect(transport.cancelled).toBe(true);
+  });
+
   it('does not start recording when provider profiles are not ready', async () => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([]);
@@ -201,6 +322,7 @@ describe('RealtimeVoiceSessionController', () => {
 
 class FakeRecorder implements VoiceAudioRecorder {
   started = false;
+  cancelled = false;
 
   async start(): Promise<void> {
     this.started = true;
@@ -214,6 +336,11 @@ class FakeRecorder implements VoiceAudioRecorder {
       chunksBase64: ['ZmFrZS1hdWRpbw==']
     };
   }
+
+  async cancel(): Promise<void> {
+    this.cancelled = true;
+    this.started = false;
+  }
 }
 
 class FakeTransport implements RealtimeVoiceTransport {
@@ -226,6 +353,76 @@ class FakeTransport implements RealtimeVoiceTransport {
     for (const event of this.events) {
       await onEvent(event);
     }
+  }
+}
+
+class DelayedStopRecorder extends FakeRecorder {
+  private stopStartedResolve: (() => void) | undefined;
+  private finishStopResolve: (() => void) | undefined;
+  readonly stopStarted = new Promise<void>((resolve) => {
+    this.stopStartedResolve = resolve;
+  });
+
+  async stop(): Promise<RecordedVoiceAudio> {
+    this.stopStartedResolve?.();
+    await new Promise<void>((resolve) => {
+      this.finishStopResolve = resolve;
+    });
+    return super.stop();
+  }
+
+  finishStop(): void {
+    this.finishStopResolve?.();
+  }
+}
+
+class DelayedEventTransport implements RealtimeVoiceTransport {
+  private startedResolve: (() => void) | undefined;
+  private emitEvent: ((event: VoiceRealtimeEvent) => void) | undefined;
+  readonly started = new Promise<void>((resolve) => {
+    this.startedResolve = resolve;
+  });
+
+  async run(
+    _input: Parameters<RealtimeVoiceTransport['run']>[0],
+    onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: Parameters<RealtimeVoiceTransport['run']>[2]
+  ): Promise<void> {
+    this.startedResolve?.();
+    await new Promise<void>((resolve, reject) => {
+      options?.signal?.addEventListener('abort', () => {
+        reject(Object.assign(new Error('Voice session cancelled.'), { code: 'voice_cancelled' }));
+      });
+      this.emitEvent = (event) => {
+        onEvent(event).then(resolve, reject);
+      };
+    });
+  }
+
+  emit(event: VoiceRealtimeEvent): void {
+    this.emitEvent?.(event);
+  }
+}
+
+class CancellableTransport implements RealtimeVoiceTransport {
+  cancelled = false;
+  private startedResolve: (() => void) | undefined;
+  readonly started = new Promise<void>((resolve) => {
+    this.startedResolve = resolve;
+  });
+
+  async run(
+    _input: Parameters<RealtimeVoiceTransport['run']>[0],
+    _onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: Parameters<RealtimeVoiceTransport['run']>[2]
+  ): Promise<void> {
+    this.startedResolve?.();
+    await new Promise<void>((resolve, reject) => {
+      options?.signal?.addEventListener('abort', () => {
+        this.cancelled = true;
+        reject(Object.assign(new Error('Voice session cancelled.'), { code: 'voice_cancelled' }));
+      });
+    });
   }
 }
 

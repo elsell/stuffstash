@@ -1,8 +1,10 @@
 import type {
   RealtimeVoiceTransport,
   RealtimeVoiceTransportInput,
+  RealtimeVoiceTransportRunOptions,
   VoiceRealtimeEvent
 } from '../../application/voice/RealtimeVoiceSession';
+import { VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
 
 type VoiceWebSocket = {
   onopen: (() => void) | null;
@@ -32,7 +34,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     this.webSocketFactory = options.webSocketFactory ?? createReactNativeWebSocket;
   }
 
-  async run(input: RealtimeVoiceTransportInput, onEvent: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void> {
+  async run(
+    input: RealtimeVoiceTransportInput,
+    onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
+    options: RealtimeVoiceTransportRunOptions = {}
+  ): Promise<void> {
     const socket = this.webSocketFactory(realtimeVoiceUrl(this.apiBaseUrl), {
       Authorization: `Bearer ${this.tokenProvider()}`
     });
@@ -44,10 +50,32 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let completed = false;
       let settled = false;
       let messageChain = Promise.resolve();
+      const abortHandler = () => {
+        if (settled) {
+          return;
+        }
+        completed = true;
+        try {
+          if (sessionId) {
+            socket.send(JSON.stringify({
+              type: 'session.cancel',
+              seq: seq++,
+              sessionId,
+              reason: 'user_cancelled'
+            }));
+          }
+        } catch {
+          // Cancellation is best effort once the socket is already closing.
+        } finally {
+          socket.close();
+          settleReject(new VoiceRealtimeCancelledError());
+        }
+      };
 
       function settleResolve(): void {
         if (!settled) {
           settled = true;
+          options.signal?.removeEventListener('abort', abortHandler);
           resolve();
         }
       }
@@ -55,10 +83,16 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       function settleReject(error: Error): void {
         if (!settled) {
           settled = true;
+          options.signal?.removeEventListener('abort', abortHandler);
           reject(error);
         }
       }
 
+      if (options.signal?.aborted) {
+        abortHandler();
+        return;
+      }
+      options.signal?.addEventListener('abort', abortHandler, { once: true });
       socket.onerror = (event) => {
         settleReject(new Error(`Voice socket failed: ${String(event)}`));
       };
@@ -83,12 +117,20 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       };
       socket.onmessage = (event) => {
         messageChain = messageChain.then(async () => {
+          if (settled) {
+            return;
+          }
           const message = parseServerMessage(event.data);
           validateServerMessage(message, sessionId, lastServerSeq);
           lastServerSeq = message.seq;
-          await onEvent(message);
           if (message.type === 'session.started') {
             sessionId = message.sessionId;
+          }
+          await onEvent(message);
+          if (message.type === 'session.started') {
+            if (settled || options.signal?.aborted) {
+              return;
+            }
             input.audioChunksBase64.forEach((audioBase64, index) => {
               socket.send(JSON.stringify({
                 type: 'audio.chunk',
@@ -102,6 +144,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             socket.send(JSON.stringify({ type: 'audio.end', seq: seq++, sessionId }));
           }
           if (message.type === 'session.completed') {
+            completed = true;
+            socket.close();
+            settleResolve();
+          }
+          if (message.type === 'session.cancelled') {
             completed = true;
             socket.close();
             settleResolve();
@@ -206,6 +253,8 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
       return { ...metadata, type: 'tts.audio.completed', sessionId: stringField(message, 'sessionId') };
     case 'session.completed':
       return { ...metadata, type: 'session.completed', sessionId: stringField(message, 'sessionId') };
+    case 'session.cancelled':
+      return { ...metadata, type: 'session.cancelled', sessionId: stringField(message, 'sessionId') };
     default:
       throw new Error(`Unsupported voice event: ${String(message.type)}`);
   }

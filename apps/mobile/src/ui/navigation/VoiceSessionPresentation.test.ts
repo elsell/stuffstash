@@ -90,7 +90,7 @@ describe('VoiceSessionPresentation', () => {
       realtime: null,
       stage: 'processing',
       tenantName: 'Main tenant'
-    }).canReset).toBe(false);
+    })).toMatchObject({ canCancel: true, canReset: false });
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
       diagnosticsExpanded: false,
@@ -98,7 +98,26 @@ describe('VoiceSessionPresentation', () => {
       realtime: null,
       stage: 'completed',
       tenantName: 'Main tenant'
-    }).canReset).toBe(true);
+    })).toMatchObject({ canCancel: false, canReset: true });
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'cancelled',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Cancelled',
+        debugEvents: []
+      },
+      stage: 'cancelled',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      canCancel: false,
+      canReset: true,
+      title: 'Cancelled',
+      progressLabel: 'Cancelled'
+    });
   });
 
   it('offers provider setup recovery only for provider-readiness failures', () => {

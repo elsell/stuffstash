@@ -479,6 +479,10 @@ Cancellation must:
 - Prevent late events from changing the visible state of the cancelled session.
 - Emit safe cancellation observability.
 
+The first mobile cancellation implementation must expose cancellation through the mobile voice application boundary, not only through sheet dismissal. Cancelling while still recording must stop the recorder and audio player, must not open a realtime WebSocket, and must move the mobile session into a terminal cancelled state. Cancelling after a WebSocket session has been established must send a `session.cancel` client message with the active server session ID when that can be done safely, close the socket, stop local playback, and make later server events unable to update visible state for the cancelled session.
+
+When the API receives `session.cancel` before `audio.end`, it must mark the realtime session as cancelled and emit a terminal `session.cancelled` server event rather than reporting a user cancellation as `session.failed`. If the connection disappears after `audio.end` while provider work is already in flight, the server should cancel through the request context where practical and record a safe terminal outcome without relying on the client to keep listening for the acknowledgement.
+
 The server must enforce configured session, silence, provider, tool-call, and idle timeouts.
 
 Timeouts must fail safely and should produce a spoken response only when there is enough time and provider availability to do so safely.

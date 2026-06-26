@@ -19,4 +19,8 @@ export class DevelopmentVoiceAudioRecorder implements VoiceAudioRecorder {
       chunksBase64: ['ZGV2ZWxvcG1lbnQtdm9pY2UtYXVkaW8=']
     };
   }
+
+  async cancel(): Promise<void> {
+    this.recording = false;
+  }
 }

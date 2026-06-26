@@ -104,6 +104,26 @@ export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
       chunksBase64: chunkBase64Audio(audioBase64)
     };
   }
+
+  async cancel(): Promise<void> {
+    const recorder = this.recorder;
+    if (recorder === null) {
+      return;
+    }
+
+    this.recorder = null;
+    try {
+      await recorder.stop();
+    } finally {
+      await this.audio.setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true
+      });
+      if (recorder.uri) {
+        await this.fileSystem.deleteAsync?.(recorder.uri, { idempotent: true });
+      }
+    }
+  }
 }
 
 export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {

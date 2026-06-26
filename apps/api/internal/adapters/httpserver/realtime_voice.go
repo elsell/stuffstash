@@ -88,6 +88,9 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		if err != nil {
 			if errors.Is(err, errRealtimeVoiceCancelled) {
 				_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
+				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
+				_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
+				return
 			} else {
 				_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
 			}
@@ -105,6 +108,11 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 			return writeRealtimeServerMessage(ctx, connection, message)
 		})
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
+				_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
+				return
+			}
 			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session failed safely."})
 			_ = connection.Close(websocket.StatusInternalError, "voice session failed")
 			return

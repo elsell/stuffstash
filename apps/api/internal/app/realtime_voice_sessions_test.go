@@ -76,6 +76,31 @@ func TestRealtimeVoiceSessionPersistsFailureWithSafeCode(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceSessionPersistsContextCancellationAsCancelled(t *testing.T) {
+	t.Parallel()
+
+	repository := newFakeRealtimeSessionRepository()
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{err: context.Canceled}
+	application := newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, repository)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error {
+		return nil
+	})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context cancellation, got %v", err)
+	}
+
+	cancelled := repository.savedRecord(t, session.ID)
+	if cancelled.State != ports.RealtimeSessionStateCancelled || cancelled.SafeFailureCode != "" || cancelled.EndedAt.IsZero() {
+		t.Fatalf("expected cancelled outcome, got %+v", cancelled)
+	}
+}
+
 func successfulRealtimeVoiceResolver() *fakeRealtimeVoiceProviderResolver {
 	return &fakeRealtimeVoiceProviderResolver{
 		providers: ports.RealtimeVoiceProviderSet{

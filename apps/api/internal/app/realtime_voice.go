@@ -170,6 +170,10 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
 	defer func() {
 		if err != nil && strings.TrimSpace(input.Session.ID) != "" {
+			if errors.Is(err, context.Canceled) {
+				_ = a.markRealtimeVoiceSessionOutcome(context.Background(), input.Session, ports.RealtimeSessionStateCancelled, "")
+				return
+			}
 			_ = a.markRealtimeVoiceSessionOutcome(ctx, input.Session, ports.RealtimeSessionStateFailed, realtimeVoiceErrorCode(err))
 		}
 	}()

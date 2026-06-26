@@ -115,6 +115,108 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(events).toEqual([{ type: 'session.failed', seq: 1, code: 'invalid_request', message: 'No provider.' }]);
   });
 
+  it('sends session cancel and rejects safely when cancelled after session start', async () => {
+    const socket = new FakeWebSocket();
+    const controller = new AbortController();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+      if (event.type === 'session.started') {
+        controller.abort();
+      }
+    }, { signal: controller.signal });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+
+    await expect(run).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(socket.sent.at(-1)).toMatchObject({
+      type: 'session.cancel',
+      sessionId: 'session-1',
+      reason: 'user_cancelled'
+    });
+    expect(socket.closedByClient).toBe(true);
+
+    socket.receive({ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'late transcript' });
+    await Promise.resolve();
+    expect(events).toEqual([{ type: 'session.started', seq: 1, sessionId: 'session-1' }]);
+  });
+
+  it('still settles cancellation when the socket rejects the best-effort cancel send', async () => {
+    const socket = new FakeWebSocket();
+    const controller = new AbortController();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      if (event.type === 'session.started') {
+        socket.failNextSend = true;
+        controller.abort();
+      }
+    }, { signal: controller.signal });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+
+    await expect(run).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(socket.closedByClient).toBe(true);
+  });
+
+
+  it('forwards server cancellation as a terminal event', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({ type: 'session.cancelled', seq: 2, sessionId: 'session-1' });
+
+    await expect(run).resolves.toBeUndefined();
+    expect(events).toEqual([
+      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      { type: 'session.cancelled', seq: 2, sessionId: 'session-1' }
+    ]);
+  });
+
   it('allows a normal close while a terminal completion message is still queued', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
@@ -210,14 +312,22 @@ class FakeWebSocket {
   onerror: ((event: unknown) => void) | null = null;
   onclose: ((event?: { readonly code?: number; readonly reason?: string }) => void) | null = null;
   readonly sent: Array<Record<string, unknown>> = [];
+  closedByClient = false;
+  failNextSend = false;
   url = '';
   headers: Record<string, string> = {};
 
   send(payload: string): void {
+    if (this.failNextSend) {
+      this.failNextSend = false;
+      throw new Error('socket send failed');
+    }
     this.sent.push(JSON.parse(payload) as Record<string, unknown>);
   }
 
-  close(): void {}
+  close(): void {
+    this.closedByClient = true;
+  }
 
   closeFromServer(code?: number, reason?: string): void {
     this.onclose?.({ code, reason });

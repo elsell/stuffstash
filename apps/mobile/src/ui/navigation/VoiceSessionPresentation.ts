@@ -85,6 +85,16 @@ export function buildVoiceAccessoryPresentation({
     };
   }
 
+  if (stage === 'cancelled') {
+    return {
+      accessibilityLabel: 'Open cancelled voice session',
+      primaryAction: 'expand',
+      subtitle: context,
+      title: 'Voice cancelled',
+      tone: 'attention'
+    };
+  }
+
   if (stage === 'failed') {
     return {
       accessibilityLabel: 'Open voice error',
@@ -115,6 +125,7 @@ export function buildVoiceAccessoryPresentation({
 }
 
 export type VoiceSessionPresentation = {
+  readonly canCancel: boolean;
   readonly canReset: boolean;
   readonly contextLabel: string;
   readonly diagnostics: readonly string[] | null;
@@ -154,7 +165,8 @@ export function buildVoiceSessionPresentation({
       : null;
 
   return {
-    canReset: stage === 'completed' || stage === 'failed' || stage === 'review',
+    canCancel: stage === 'listening' || stage === 'processing' || stage === 'speaking',
+    canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || stage === 'review',
     contextLabel: `${inventoryName} · ${tenantName}`,
     diagnostics,
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',
@@ -202,6 +214,8 @@ function titleForStage(stage: VoiceInteractionStage): string {
       return 'Speaking';
     case 'completed':
       return 'Answer ready';
+    case 'cancelled':
+      return 'Cancelled';
     case 'failed':
       return 'Could not finish';
     case 'review':
@@ -221,6 +235,8 @@ function progressForStage(stage: VoiceInteractionStage): string {
       return 'Playing the response.';
     case 'completed':
       return 'Response complete.';
+    case 'cancelled':
+      return 'Session cancelled.';
     case 'failed':
       return 'Voice failed safely.';
     case 'review':

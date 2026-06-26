@@ -46,6 +46,24 @@ describe('ExpoVoiceAudioRecorder', () => {
 
     await expect(voiceRecorder.start()).rejects.toThrow('Microphone permission is required');
   });
+
+  it('cancels recording without reading or returning audio', async () => {
+    const recorder = new FakeRecorder('file:///recording.m4a');
+    const audio = new FakeAudio(recorder);
+    const fileSystem = new FakeFileSystem({ 'file:///recording.m4a': 'YXVkaW8=' });
+    const voiceRecorder = new ExpoVoiceAudioRecorderCore(audio, fileSystem);
+
+    await voiceRecorder.start();
+    await voiceRecorder.cancel();
+
+    expect(recorder.recording).toBe(false);
+    expect(audio.modes).toEqual([
+      { allowsRecording: true, playsInSilentMode: true },
+      { allowsRecording: false, playsInSilentMode: true }
+    ]);
+    expect(fileSystem.reads).toEqual([]);
+    expect(fileSystem.deleted).toEqual(['file:///recording.m4a']);
+  });
 });
 
 describe('ExpoVoiceAudioPlayer', () => {
@@ -203,12 +221,14 @@ class FakeAudio {
 class FakeFileSystem {
   readonly cacheDirectory = 'file:///cache/';
   readonly writes: Array<{ readonly uri: string; readonly contents: string; readonly encoding: string }> = [];
+  readonly reads: string[] = [];
   readonly deleted: string[] = [];
   readonly failDeleteUris = new Set<string>();
 
   constructor(readonly files: Record<string, string>) {}
 
   async readAsStringAsync(uri: string): Promise<string> {
+    this.reads.push(uri);
     return this.files[uri] ?? '';
   }
 

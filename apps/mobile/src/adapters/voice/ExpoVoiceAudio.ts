@@ -33,6 +33,10 @@ export class ExpoVoiceAudioRecorder implements VoiceAudioRecorder {
   stop() {
     return this.core.stop();
   }
+
+  cancel() {
+    return this.core.cancel();
+  }
 }
 
 export class ExpoVoiceAudioPlayer implements VoiceAudioPlayer {

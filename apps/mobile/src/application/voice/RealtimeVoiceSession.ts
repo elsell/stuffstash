@@ -10,6 +10,7 @@ export type RecordedVoiceAudio = {
 export interface VoiceAudioRecorder {
   start(): Promise<void>;
   stop(): Promise<RecordedVoiceAudio>;
+  cancel(): Promise<void>;
 }
 
 export interface VoiceAudioPlayer {
@@ -31,16 +32,24 @@ export type RealtimeVoiceTransportInput = {
 };
 
 export interface RealtimeVoiceTransport {
-	run(input: RealtimeVoiceTransportInput, onEvent: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void>;
+  run(
+    input: RealtimeVoiceTransportInput,
+    onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: RealtimeVoiceTransportRunOptions
+  ): Promise<void>;
 }
 
+export type RealtimeVoiceTransportRunOptions = {
+  readonly signal?: AbortSignal;
+};
+
 export type RealtimeVoiceSessionControllerOptions = {
-	readonly diagnosticsEnabled?: boolean;
-	readonly readinessChecker?: VoiceProviderReadinessChecker;
+  readonly diagnosticsEnabled?: boolean;
+  readonly readinessChecker?: VoiceProviderReadinessChecker;
 };
 
 export interface VoiceProviderReadinessChecker {
-	assertReady(): Promise<void>;
+  assertReady(): Promise<void>;
 }
 
 type VoiceRealtimeEventMetadata = {
@@ -49,21 +58,21 @@ type VoiceRealtimeEventMetadata = {
 };
 
 export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
-	| { readonly type: 'session.started'; readonly sessionId: string }
-	| { readonly type: 'session.failed'; readonly code: string; readonly message: string }
-	| { readonly type: 'transcript.final'; readonly text: string }
-	| { readonly type: 'agent.progress'; readonly status: string; readonly message: string }
+  | { readonly type: 'session.started'; readonly sessionId: string }
+  | { readonly type: 'session.failed'; readonly code: string; readonly message: string }
+  | { readonly type: 'transcript.final'; readonly text: string }
+  | { readonly type: 'agent.progress'; readonly status: string; readonly message: string }
   | {
       readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed';
       readonly toolCallId: string;
       readonly toolLabel: string;
       readonly status?: string;
       readonly code?: string;
-			readonly message?: string;
-		}
-	| { readonly type: 'assistant.response.started'; readonly responseId: string }
-	| {
-			readonly type: 'assistant.response.completed';
+      readonly message?: string;
+    }
+  | { readonly type: 'assistant.response.started'; readonly responseId: string }
+  | {
+      readonly type: 'assistant.response.completed';
       readonly response: {
         readonly kind: string;
         readonly spokenResponse: string;
@@ -74,10 +83,11 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | { readonly type: 'tts.audio.chunk'; readonly chunkId: string; readonly audioBase64: string }
   | { readonly type: 'tts.audio.completed' }
   | { readonly type: 'session.completed' }
+  | { readonly type: 'session.cancelled' }
 );
 
 export type VoiceRealtimeState = {
-  readonly status: 'ready' | 'listening' | 'processing' | 'speaking' | 'completed' | 'failed';
+  readonly status: 'ready' | 'listening' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
   readonly tenantName: string;
   readonly inventoryName: string;
   readonly transcript?: string;
@@ -89,6 +99,14 @@ export type VoiceRealtimeState = {
 };
 
 export type VoiceRealtimeFailureCode = 'provider_readiness' | 'voice_failed';
+
+export class VoiceRealtimeCancelledError extends Error {
+  readonly code = 'voice_cancelled';
+
+  constructor() {
+    super('Voice session cancelled.');
+  }
+}
 
 export type VoiceRealtimeStateHandler = (state: VoiceRealtimeState) => void;
 
@@ -113,21 +131,25 @@ export type VoiceSafeDiagnosticStatus =
   | 'Updated';
 
 export class RealtimeVoiceSessionController {
-	private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
-	private recordingStarted = false;
-	private ttsMimeType = 'audio/mpeg';
+  private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
+  private recordingStarted = false;
+  private activeRunAbortController: AbortController | null = null;
+  private activeSessionGeneration = 0;
+  private cancelledThroughSessionGeneration = 0;
+  private ttsMimeType = 'audio/mpeg';
 
   constructor(
-		private readonly inventories: InventorySummaryRepository,
-		private readonly recorder: VoiceAudioRecorder,
-		private readonly transport: RealtimeVoiceTransport,
-		private readonly player: VoiceAudioPlayer,
-		private readonly options: RealtimeVoiceSessionControllerOptions = {}
-	) {}
+    private readonly inventories: InventorySummaryRepository,
+    private readonly recorder: VoiceAudioRecorder,
+    private readonly transport: RealtimeVoiceTransport,
+    private readonly player: VoiceAudioPlayer,
+    private readonly options: RealtimeVoiceSessionControllerOptions = {}
+  ) {}
 
   async start(): Promise<VoiceRealtimeState> {
     const context = await this.selectedInventoryContext();
     await this.options.readinessChecker?.assertReady();
+    this.activeSessionGeneration++;
     this.currentContext = context;
     await this.player.stop();
     await this.recorder.start();
@@ -146,9 +168,13 @@ export class RealtimeVoiceSessionController {
       throw new Error('Voice recording has not started.');
     }
 
+    const generation = this.activeSessionGeneration;
     const context = this.currentContext ?? (await this.selectedInventoryContext());
     const recorded = await this.recorder.stop();
     this.recordingStarted = false;
+    if (this.isSessionGenerationCancelled(generation)) {
+      throw new VoiceRealtimeCancelledError();
+    }
     const states: VoiceRealtimeState[] = [{
       status: 'processing',
       tenantName: context.tenantName,
@@ -158,29 +184,65 @@ export class RealtimeVoiceSessionController {
     }];
     onState?.(states[0]);
 
-    await this.transport.run({
-      tenantId: context.tenantId,
-      inventoryId: context.inventoryId,
-      source: 'mobile_voice',
-      inputAudio: {
-        mimeType: recorded.mimeType,
-        sampleRate: recorded.sampleRate,
-        channels: recorded.channels
-      },
-      outputAudioMimeTypes: ['audio/mpeg'],
-      audioChunksBase64: recorded.chunksBase64
-    }, async (event) => {
-      const previous = states[states.length - 1];
-      const next = await this.reduceEvent(previous, event);
-      states.push(next);
-      onState?.(next);
-    });
+    const abortController = new AbortController();
+    this.activeRunAbortController = abortController;
+    try {
+      await this.transport.run({
+        tenantId: context.tenantId,
+        inventoryId: context.inventoryId,
+        source: 'mobile_voice',
+        inputAudio: {
+          mimeType: recorded.mimeType,
+          sampleRate: recorded.sampleRate,
+          channels: recorded.channels
+        },
+        outputAudioMimeTypes: ['audio/mpeg'],
+        audioChunksBase64: recorded.chunksBase64
+      }, async (event) => {
+        if (this.isSessionGenerationCancelled(generation)) {
+          throw new VoiceRealtimeCancelledError();
+        }
+        const previous = states[states.length - 1];
+        const next = await this.reduceEvent(previous, event);
+        states.push(next);
+        onState?.(next);
+      }, { signal: abortController.signal });
+    } finally {
+      if (this.activeRunAbortController === abortController) {
+        this.activeRunAbortController = null;
+      }
+    }
 
     return states;
   }
 
+  async cancel(): Promise<VoiceRealtimeState> {
+    this.cancelledThroughSessionGeneration = Math.max(
+      this.cancelledThroughSessionGeneration,
+      this.activeSessionGeneration
+    );
+    const context = this.currentContext ?? (await this.selectedInventoryContext());
+    if (this.recordingStarted) {
+      this.recordingStarted = false;
+      await this.recorder.cancel();
+    }
+    this.activeRunAbortController?.abort();
+    await this.player.stop();
+    return {
+      status: 'cancelled',
+      tenantName: context.tenantName,
+      inventoryName: context.inventoryName,
+      progressLabel: 'Cancelled',
+      debugEvents: []
+    };
+  }
+
+  private isSessionGenerationCancelled(generation: number): boolean {
+    return generation > 0 && generation <= this.cancelledThroughSessionGeneration;
+  }
+
   private async reduceEvent(state: VoiceRealtimeState, event: VoiceRealtimeEvent): Promise<VoiceRealtimeState> {
-		switch (event.type) {
+    switch (event.type) {
       case 'session.started':
         return { ...state, status: 'processing', progressLabel: 'Connected' };
       case 'transcript.final':
@@ -189,17 +251,17 @@ export class RealtimeVoiceSessionController {
         return { ...state, status: 'processing', progressLabel: event.message };
       case 'tool.call.started':
       case 'tool.call.completed':
-			case 'tool.call.failed':
-				return {
-					...state,
-					status: 'processing',
-					debugEvents: this.options.diagnosticsEnabled
-						? [...state.debugEvents, safeDiagnosticEvent(event)]
-						: state.debugEvents,
-					progressLabel: event.toolLabel
-				};
-			case 'assistant.response.started':
-				return { ...state, status: 'processing', progressLabel: 'Preparing response' };
+      case 'tool.call.failed':
+        return {
+          ...state,
+          status: 'processing',
+          debugEvents: this.options.diagnosticsEnabled
+            ? [...state.debugEvents, safeDiagnosticEvent(event)]
+            : state.debugEvents,
+          progressLabel: event.toolLabel
+        };
+      case 'assistant.response.started':
+        return { ...state, status: 'processing', progressLabel: 'Preparing response' };
       case 'assistant.response.completed':
         return {
           ...state,
@@ -218,6 +280,9 @@ export class RealtimeVoiceSessionController {
       case 'session.completed':
         await this.player.stop();
         return { ...state, status: 'completed', progressLabel: 'Done' };
+      case 'session.cancelled':
+        await this.player.stop();
+        return { ...state, status: 'cancelled', progressLabel: 'Cancelled' };
       case 'session.failed':
         await this.player.stop();
         return { ...state, status: 'failed', errorMessage: event.message, progressLabel: 'Voice failed' };

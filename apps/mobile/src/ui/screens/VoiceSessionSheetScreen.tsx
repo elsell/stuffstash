@@ -16,7 +16,7 @@ import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresent
 import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
 
 export function VoiceSessionSheetScreen() {
-  const { diagnosticsEnabled, reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
+  const { cancelRealtime, diagnosticsEnabled, reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
   const safeAreaInsets = useSafeAreaInsets();
 
@@ -49,6 +49,9 @@ export function VoiceSessionSheetScreen() {
 
         router.replace('/');
       }}
+      onCancelSession={() => {
+        void cancelRealtime();
+      }}
       onReset={() => {
         reset();
         setDiagnosticsExpanded(false);
@@ -68,6 +71,7 @@ function VoiceSessionSheet({
   diagnosticsExpanded,
   diagnosticsEnabled,
   onClose,
+  onCancelSession,
   onOpenProviderProfiles,
   onReset,
   onSessionMic,
@@ -78,6 +82,7 @@ function VoiceSessionSheet({
   readonly diagnosticsExpanded: boolean;
   readonly diagnosticsEnabled: boolean;
   readonly onClose: () => void;
+  readonly onCancelSession: () => void;
   readonly onOpenProviderProfiles: () => void;
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
@@ -211,6 +216,16 @@ function VoiceSessionSheet({
               <Text style={styles.progressTitle}>{session.progressLabel}</Text>
               <Text style={styles.progressHint}>{hintForStage(state.stage)}</Text>
             </View>
+            {session.canCancel ? (
+              <Pressable
+                accessibilityLabel="Cancel voice session"
+                accessibilityRole="button"
+                onPress={onCancelSession}
+                style={styles.cancelSessionButton}
+              >
+                <Text style={styles.cancelSessionButtonText}>Cancel</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityLabel={micAccessibilityLabel}
               accessibilityRole="button"
@@ -260,6 +275,8 @@ function hintForStage(stage: VoiceInteractionState['stage']): string {
       return 'Ask a question about this inventory.';
     case 'completed':
       return 'You can ask another question or close this.';
+    case 'cancelled':
+      return 'You can start again when you are ready.';
     case 'failed':
       return 'Reset and try again when you are ready.';
     default:
@@ -291,6 +308,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     paddingTop: spacing.md
+  },
+  cancelSessionButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.md
+  },
+  cancelSessionButtonText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900'
   },
   diagnosticIndex: {
     color: colors.textMuted,

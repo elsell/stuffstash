@@ -100,6 +100,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, use the local-development token only from runtime configuration, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance from Settings.
 - Realtime voice sessions now persist durable safe session metadata through a repository port with memory and GORM adapters, including session scope, selected provider profile IDs, lifecycle state, timestamps, and safe failure codes without storing raw audio, transcripts, prompts, model responses, generated speech, credentials, bearer tokens, or provider session IDs.
 - Mobile provider-profile management now exposes safe tenant-scoped provider profile metadata, recommended profile creation, credential replacement, prompt-template replacement, lifecycle actions, safe provider tests, readiness summaries, and a voice-sheet recovery action that opens Voice providers when readiness fails before recording.
+- Mobile realtime voice cancellation now has an application boundary, recorder cleanup path, WebSocket abort path that sends `session.cancel` when session-bound, safe terminal cancelled state, API `session.cancelled` response for pre-processing cancellation, and focused mobile/API tests.
 
 ## Known Gaps
 

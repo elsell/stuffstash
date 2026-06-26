@@ -545,11 +545,15 @@ func runRealtimeVoiceQuestionUntil(t *testing.T, serverURL string, tenantID stri
 
 type fakeSpeechToText struct {
 	transcript string
+	err        error
 }
 
 func (f fakeSpeechToText) Transcribe(_ context.Context, input ports.SpeechToTextInput) (ports.SpeechToTextResult, error) {
 	if len(input.AudioChunks) == 0 {
 		return ports.SpeechToTextResult{}, ports.ErrInvalidProviderInput
+	}
+	if f.err != nil {
+		return ports.SpeechToTextResult{}, f.err
 	}
 	return ports.SpeechToTextResult{Transcript: f.transcript}, nil
 }

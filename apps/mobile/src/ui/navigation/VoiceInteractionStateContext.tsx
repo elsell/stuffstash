@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   VoiceInteractionPreviewQuery,
   VoiceInteractionPreviewViewModel
@@ -6,10 +6,11 @@ import {
 import {
   RealtimeVoiceSessionController,
   VoiceRealtimeFailureCode,
+  VoiceRealtimeCancelledError,
   VoiceRealtimeState
 } from '../../application/voice/RealtimeVoiceSession';
 
-export type VoiceInteractionStage = 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'failed';
+export type VoiceInteractionStage = 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
 
 export type VoiceInteractionState =
   | { readonly status: 'loading'; readonly stage: VoiceInteractionStage }
@@ -27,6 +28,7 @@ type VoiceInteractionStateContextValue = {
   readonly setStage: (stage: VoiceInteractionStage) => void;
   readonly startRealtime: () => Promise<void>;
   readonly stopRealtime: () => Promise<void>;
+  readonly cancelRealtime: () => Promise<void>;
   readonly reset: () => void;
 };
 
@@ -47,6 +49,7 @@ export function VoiceInteractionStateProvider({
 }: VoiceInteractionStateProviderProps) {
   const [stage, setStage] = useState<VoiceInteractionStage>('ready');
   const [realtime, setRealtime] = useState<VoiceRealtimeState | null>(null);
+  const sessionGeneration = useRef(0);
   const [previewState, setPreviewState] = useState<
     | { readonly status: 'loading' }
     | { readonly status: 'error'; readonly message: string }
@@ -90,31 +93,69 @@ export function VoiceInteractionStateProvider({
       state,
       setStage,
       startRealtime: async () => {
+        const generation = sessionGeneration.current + 1;
+        sessionGeneration.current = generation;
         try {
           const next = await realtimeController.start();
+          if (sessionGeneration.current !== generation) {
+            return;
+          }
           setRealtime(next);
           setStage('listening');
         } catch (error) {
+          if (sessionGeneration.current !== generation) {
+            return;
+          }
           setRealtime(buildFailedVoiceRealtimeState(error));
           setStage('failed');
         }
       },
       stopRealtime: async () => {
+        const generation = sessionGeneration.current;
         setStage('processing');
         try {
           const states = await realtimeController.stop((nextState) => {
+            if (sessionGeneration.current !== generation) {
+              return;
+            }
             setRealtime(nextState);
             setStage(nextState.status);
           });
           const finalState = states[states.length - 1] ?? null;
+          if (sessionGeneration.current !== generation) {
+            return;
+          }
           setRealtime(finalState);
           setStage(finalState?.status ?? 'failed');
         } catch (error) {
+          if (sessionGeneration.current !== generation) {
+            return;
+          }
+          if (isVoiceCancelledError(error)) {
+            const cancelled = await realtimeController.cancel();
+            if (sessionGeneration.current !== generation) {
+              return;
+            }
+            setRealtime(cancelled);
+            setStage('cancelled');
+            return;
+          }
           setRealtime(buildFailedVoiceRealtimeState(error));
           setStage('failed');
         }
       },
+      cancelRealtime: async () => {
+        const generation = sessionGeneration.current + 1;
+        sessionGeneration.current = generation;
+        const cancelled = await realtimeController.cancel();
+        if (sessionGeneration.current !== generation) {
+          return;
+        }
+        setRealtime(cancelled);
+        setStage('cancelled');
+      },
       reset: () => {
+        sessionGeneration.current++;
         setRealtime(null);
         setStage('ready');
       }
@@ -140,6 +181,11 @@ export function useVoiceInteractionState(): VoiceInteractionStateContextValue {
 
 function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function isVoiceCancelledError(error: unknown): boolean {
+  return error instanceof VoiceRealtimeCancelledError ||
+    (isObject(error) && error.code === 'voice_cancelled');
 }
 
 export function buildFailedVoiceRealtimeState(error: unknown): VoiceRealtimeState {
