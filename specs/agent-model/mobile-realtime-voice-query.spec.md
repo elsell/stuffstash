@@ -83,19 +83,20 @@ If the user asks for a state-changing action during this first slice, the system
 
 The mobile app must expose realtime voice as a global interaction layer anchored to the native bottom voice accessory. Voice is not a primary navigation destination in the production mobile experience.
 
-The collapsed voice accessory is the persistent voice affordance. Activating it must expand an active voice session surface over the current mobile screen without leaving the user's current tab, asset, location, search, or add context. On platforms where the native bottom accessory is unavailable or constrained, the app may render the same collapsed voice control through an equivalent custom bottom accessory, but the product behavior must remain the same.
+The collapsed voice accessory is the persistent voice affordance. Activating it must expand an active voice session surface over the current mobile screen without leaving the user's current tab, asset, location, search, or add context. The expanded surface should use a platform-native detent sheet when the mobile runtime provides one. On platforms where the native bottom accessory or native sheet detents are unavailable or constrained, the app may render the same collapsed voice control and session surface through equivalent custom UI, but the product behavior must remain the same.
 
 The expanded session surface must:
 
 - Visually read as an expansion of the bottom voice accessory.
 - Keep the current screen context behind the session surface.
-- Fade or hold the backdrop in place while only the session sheet translates during open and close motion.
+- Use platform-native backdrop, grabber, detent, drag, scroll-expansion, and dismiss behavior when rendered through a native sheet.
+- Provide at least compact and expanded detents when the native sheet implementation supports multiple detents.
 - Provide a clear close/collapse control that does not reset a completed answer unless the user starts a new session.
 - Support tap-to-start and tap-to-stop recording for the first slice.
 - Keep the primary mic control reachable with one thumb.
-- Avoid using a standalone full-screen Voice route for normal user interaction.
+- Avoid using a standalone full-screen Voice route for normal user interaction. An internal modal route may be used as the native sheet implementation detail when the router requires a route to present a platform-native sheet.
 
-The standalone Voice route may exist only as a development or diagnostics route while the first slice is being built. It must not be linked from the main product navigation once the bottom-accessory session surface exists.
+Any internal Voice route used for native sheet presentation must not appear as a primary navigation destination. Direct entry to the internal route must fall back to a valid product screen when closed.
 
 The mobile app must show:
 

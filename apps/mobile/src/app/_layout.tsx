@@ -19,6 +19,20 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="voice"
+          options={{
+            contentStyle: { backgroundColor: colors.surface },
+            headerShown: false,
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.42, 0.88],
+            sheetCornerRadius: 24,
+            sheetExpandsWhenScrolledToEdge: true,
+            sheetGrabberVisible: true,
+            sheetInitialDetentIndex: 0,
+            sheetLargestUndimmedDetentIndex: 'none'
+          }}
+        />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
         <Stack.Screen
           name="tenant-switcher"

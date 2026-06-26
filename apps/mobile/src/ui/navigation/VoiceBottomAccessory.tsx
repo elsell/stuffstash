@@ -1,62 +1,58 @@
-import { useState } from 'react';
-import { usePathname } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { router, usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Mic, Pause } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../theme/tokens';
 import { useVoiceInteractionState } from './VoiceInteractionStateContext';
-import { VoiceSessionOverlay } from './VoiceSessionOverlay';
 import { buildVoiceAccessoryPresentation } from './VoiceSessionPresentation';
 
 export function VoiceBottomAccessory() {
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const isInline = placement === 'inline';
   const pathname = usePathname();
-  const { reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
+  const isOpeningVoiceSheet = useRef(false);
+  const { startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const presentation = buildVoiceAccessoryPresentation({
     pathname,
     stage: state.stage,
     status: state.status
   });
 
+  useEffect(() => {
+    if (pathname !== '/voice') {
+      isOpeningVoiceSheet.current = false;
+    }
+  }, [pathname]);
+
   async function handlePrimaryAction(): Promise<void> {
     if (state.status !== 'ready') {
-      setIsExpanded(true);
+      openVoiceSheet();
       return;
     }
 
     if (presentation.primaryAction === 'start') {
-      setIsExpanded(true);
-      await startRealtime();
+      openVoiceSheet();
+      void startRealtime();
       return;
     }
 
     if (presentation.primaryAction === 'stop') {
-      setIsExpanded(true);
-      await stopRealtime();
+      openVoiceSheet();
+      void stopRealtime();
       return;
     }
 
-    setIsExpanded(true);
+    openVoiceSheet();
   }
 
-  async function handleSessionMic(): Promise<void> {
-    if (state.status !== 'ready') {
+  function openVoiceSheet(): void {
+    if (pathname === '/voice' || isOpeningVoiceSheet.current) {
       return;
     }
 
-    if (state.stage === 'listening') {
-      await stopRealtime();
-      return;
-    }
-
-    if (state.stage !== 'ready') {
-      reset();
-    }
-
-    await startRealtime();
+    isOpeningVoiceSheet.current = true;
+    router.navigate('/voice');
   }
 
   return (
@@ -68,7 +64,7 @@ export function VoiceBottomAccessory() {
         <Pressable
           accessibilityLabel="Open voice session"
           accessibilityRole="button"
-          onPress={() => setIsExpanded(true)}
+          onPress={openVoiceSheet}
           style={styles.statusRegion}
         >
           <View style={[styles.statusDot, dotStyleForTone(presentation.tone)]} />
@@ -105,21 +101,6 @@ export function VoiceBottomAccessory() {
           <Mic color={colors.onAction} size={isInline ? 22 : 23} strokeWidth={2.5} />
         )}
       </Pressable>
-
-      <VoiceSessionOverlay
-        diagnosticsExpanded={diagnosticsExpanded}
-        isVisible={isExpanded}
-        onClose={() => setIsExpanded(false)}
-        onReset={() => {
-          reset();
-          setDiagnosticsExpanded(false);
-        }}
-        onSessionMic={() => {
-          void handleSessionMic();
-        }}
-        onToggleDiagnostics={() => setDiagnosticsExpanded((current) => !current)}
-        state={state}
-      />
     </View>
   );
 }
