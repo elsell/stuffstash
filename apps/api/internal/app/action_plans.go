@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -199,6 +200,32 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		}
 		a.assetService.RecordAssetCreated(ctx, prepared.Asset, input.Principal.ID)
 		return executed, nil
+	case actionplan.CommandKindMoveAsset:
+		moveInput, err := actionPlanMoveAssetInput(input, command)
+		if err != nil {
+			return ports.ActionPlanRecord{}, err
+		}
+		prepared, err := a.assetService.PrepareUpdateAsset(ctx, moveInput)
+		if err != nil {
+			return ports.ActionPlanRecord{}, err
+		}
+		executed, found, err := a.actionPlans.ExecuteUpdateAssetActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
+			PrincipalID: input.Principal.ID,
+			From:        actionplan.StateApproved,
+			To:          actionplan.StateExecuted,
+			At:          a.clock.Now(),
+		}, prepared.PreviousAsset, prepared.Asset, prepared.AuditRecords, prepared.UndoableOperation)
+		if err != nil {
+			if errors.Is(err, ports.ErrConflict) {
+				return ports.ActionPlanRecord{}, ErrConflict
+			}
+			return ports.ActionPlanRecord{}, err
+		}
+		if !found {
+			return ports.ActionPlanRecord{}, ErrNotFound
+		}
+		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
+		return executed, nil
 	default:
 		return ports.ActionPlanRecord{}, ErrValidation
 	}
@@ -292,6 +319,78 @@ func actionPlanStringArgument(raw json.RawMessage) (string, error) {
 		return "", ErrValidation
 	}
 	return strings.TrimSpace(value), nil
+}
+
+func actionPlanMoveAssetInput(input ActionPlanDecisionInput, command ports.ActionPlanCommandRecord) (UpdateAssetInput, error) {
+	args, err := parseActionPlanMoveArguments(command)
+	if err != nil {
+		return UpdateAssetInput{}, err
+	}
+	parent := AssetParentUpdate{Present: true, Value: args.ParentAssetID}
+	if args.ParentIsRoot {
+		parent.Null = true
+		parent.Value = ""
+	}
+	return UpdateAssetInput{
+		Principal:     input.Principal,
+		Source:        audit.SourceConversation,
+		RequestID:     command.ID,
+		TenantID:      input.TenantID,
+		InventoryID:   input.InventoryID,
+		AssetID:       args.AssetID,
+		ParentAssetID: parent,
+	}, nil
+}
+
+type actionPlanMoveArguments struct {
+	AssetID       asset.ID
+	ParentAssetID string
+	ParentIsRoot  bool
+}
+
+func parseActionPlanMoveArguments(command ports.ActionPlanCommandRecord) (actionPlanMoveArguments, error) {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(command.ArgumentsJSON, &raw); err != nil {
+		return actionPlanMoveArguments{}, ErrValidation
+	}
+	args := actionPlanMoveArguments{ParentIsRoot: true}
+	for key, value := range raw {
+		switch key {
+		case "assetId":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanMoveArguments{}, err
+			}
+			assetID, ok := asset.NewID(text)
+			if !ok {
+				return actionPlanMoveArguments{}, ErrValidation
+			}
+			args.AssetID = assetID
+		case "parentAssetId":
+			if string(value) == "null" {
+				args.ParentIsRoot = true
+				args.ParentAssetID = ""
+				continue
+			}
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanMoveArguments{}, err
+			}
+			args.ParentAssetID = text
+			args.ParentIsRoot = strings.TrimSpace(text) == ""
+		default:
+			return actionPlanMoveArguments{}, ErrValidation
+		}
+	}
+	if args.AssetID.String() == "" {
+		return actionPlanMoveArguments{}, ErrValidation
+	}
+	if !args.ParentIsRoot {
+		if _, ok := asset.NewID(args.ParentAssetID); !ok {
+			return actionPlanMoveArguments{}, ErrValidation
+		}
+	}
+	return args, nil
 }
 
 func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.ActionPlanCommandRecord, error) {

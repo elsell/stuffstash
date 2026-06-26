@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -61,6 +63,66 @@ func TestActionPlanRepositoryScopesReadsAndTransitions(t *testing.T) {
 	}
 	if _, _, err := store.UpdateActionPlanState(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: identity.PrincipalID("user-1"), From: actionplan.StateExecuted, To: actionplan.StateFailed, At: record.CreatedAt.Add(4 * time.Second)}); err == nil {
 		t.Fatalf("expected terminal transition to fail")
+	}
+}
+
+func TestActionPlanRepositoryExecutesUpdateAssetAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := NewStore()
+	tenantID := tenant.ID("tenant-home")
+	inventoryID := inventory.InventoryID("inventory-home")
+	saveMemoryTenant(t, ctx, store, tenantID)
+	saveMemoryInventory(t, ctx, store, tenantID, inventoryID)
+	record := memoryActionPlanRecord("plan-move", time.Date(2026, 6, 26, 18, 0, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, record); err != nil {
+		t.Fatalf("save action plan: %v", err)
+	}
+	if _, _, err := store.UpdateActionPlanState(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateProposed, To: actionplan.StateApproved, At: record.CreatedAt.Add(time.Second)}); err != nil {
+		t.Fatalf("approve action plan: %v", err)
+	}
+	item := memoryAsset(t, "asset-one", tenantID, inventoryID)
+	location := memoryAsset(t, "location-one", tenantID, inventoryID)
+	location.Kind = asset.KindLocation
+	if err := store.CreateAsset(ctx, item, memoryAuditRecord(t, "audit-create-asset", tenantID), nil); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+	if err := store.CreateAsset(ctx, location, memoryAuditRecord(t, "audit-create-location", tenantID), nil); err != nil {
+		t.Fatalf("create location: %v", err)
+	}
+	previous := item
+	item.ParentAssetID = location.ID
+	moveAudit := memoryAuditRecord(t, "audit-move", tenantID)
+	moveAudit.Action = audit.ActionAssetMoved
+	executed, found, err := store.ExecuteUpdateAssetActionPlan(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateApproved, To: actionplan.StateExecuted, At: record.CreatedAt.Add(2 * time.Second)}, previous, item, []audit.Record{moveAudit}, nil)
+	if err != nil {
+		t.Fatalf("execute update asset action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	moved, found, err := store.AssetByID(ctx, tenantID, inventoryID, item.ID)
+	if err != nil || !found || moved.ParentAssetID != location.ID {
+		t.Fatalf("expected moved asset found=%t item=%+v err=%v", found, moved, err)
+	}
+
+	staleRecord := memoryActionPlanRecord("plan-stale-move", record.CreatedAt.Add(time.Hour))
+	if err := store.SaveActionPlan(ctx, staleRecord); err != nil {
+		t.Fatalf("save stale action plan: %v", err)
+	}
+	if _, _, err := store.UpdateActionPlanState(ctx, staleRecord.TenantID, staleRecord.InventoryID, staleRecord.ID, ports.ActionPlanStateTransition{PrincipalID: staleRecord.PrincipalID, From: actionplan.StateProposed, To: actionplan.StateApproved, At: staleRecord.CreatedAt.Add(time.Second)}); err != nil {
+		t.Fatalf("approve stale action plan: %v", err)
+	}
+	bumped := moved
+	bumped.UpdatedAt = moved.UpdatedAt.Add(time.Minute)
+	if err := store.UpdateAsset(ctx, bumped, nil, nil); err != nil {
+		t.Fatalf("bump asset timestamp: %v", err)
+	}
+	target := bumped
+	target.ParentAssetID = asset.ID("")
+	if _, _, err := store.ExecuteUpdateAssetActionPlan(ctx, staleRecord.TenantID, staleRecord.InventoryID, staleRecord.ID, ports.ActionPlanStateTransition{PrincipalID: staleRecord.PrincipalID, From: actionplan.StateApproved, To: actionplan.StateExecuted, At: staleRecord.CreatedAt.Add(2 * time.Second)}, moved, target, []audit.Record{moveAudit}, nil); err == nil {
+		t.Fatalf("expected stale timestamp execution to fail")
 	}
 }
 

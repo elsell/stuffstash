@@ -11,6 +11,12 @@ import (
 
 	"nhooyr.io/websocket"
 
+	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -67,6 +73,47 @@ func TestRealtimeVoiceActionPlanApprovalUsesOpenReviewSession(t *testing.T) {
 		t.Fatalf("expected safe execution event, got %+v", executed)
 	}
 	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
+}
+
+func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
+	t.Parallel()
+
+	var application app.App
+	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithSetup(t, moveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
+		application = seedApplication
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
+	})
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.approve",
+		"seq":       4,
+		"sessionId": sessionID,
+		"planId":    "plan-id",
+	})
+	approved := readRealtimeMessage(t, ctx, connection)
+	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+		t.Fatalf("expected safe approval event, got %+v", approved)
+	}
+	executed := readRealtimeMessage(t, ctx, connection)
+	if executed["type"] != "action.plan.executed" || executed["planId"] != "plan-id" || executed["status"] != "executed" {
+		t.Fatalf("expected safe move execution event, got %+v", executed)
+	}
+	moved, err := application.GetAsset(context.Background(), app.GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		Source:      audit.SourceAPI,
+		RequestID:   "assert-moved-asset",
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		AssetID:     asset.ID("asset-id"),
+	})
+	if err != nil {
+		t.Fatalf("read moved asset: %v", err)
+	}
+	if moved.ParentAssetID != asset.ID("location-id") {
+		t.Fatalf("expected realtime-approved move to update asset parent, got %+v", moved)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"Water bottle", "Office", "apiKey", "Bearer", "provider_session_id"})
 }
 
 func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) {
@@ -188,13 +235,30 @@ func openRealtimeVoiceReviewSession(t *testing.T) (context.Context, *websocket.C
 func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.LanguageInferenceProvider) (context.Context, *websocket.Conn, string) {
 	t.Helper()
 
+	return openRealtimeVoiceReviewSessionWithSetup(t, languageInference, nil)
+}
+
+func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.LanguageInferenceProvider, setup func(app.App)) (context.Context, *websocket.Conn, string) {
+	t.Helper()
+
+	ids := []string{"voice-session-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
+	if setup != nil {
+		ids = []string{
+			"location-id", "location-undo-id", "location-audit-id",
+			"asset-id", "asset-undo-id", "asset-audit-id",
+			"voice-session-id", "plan-id", "command-id", "response-id", "move-undo-id", "move-audit-id",
+		}
+	}
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"},
+		ids:         ids,
 	}, fakeSpeechToText{transcript: "Add a water bottle."}, languageInference, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
 	})
+	if setup != nil {
+		setup(application)
+	}
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
 
@@ -291,6 +355,35 @@ func (m unsupportedActionPlanProposalLanguageModel) NextTurn(_ context.Context, 
 			Kind:            ports.StructuredAgentResponseKindClarification,
 			SpokenResponse:  "I prepared that change for review.",
 			DisplayResponse: "I prepared that change for review.",
+		},
+	}, nil
+}
+
+type moveActionPlanProposalLanguageModel struct{}
+
+func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "plan-tool-call",
+				Name: "propose_action_plan",
+				Arguments: map[string]any{
+					"commandKind":                "move_asset",
+					"intentSummary":              "Move the water bottle to the office.",
+					"modelInterpretationSummary": "The user wants the visible water bottle moved into Office.",
+					"confirmationSummary":        "Move water bottle to Office?",
+					"commandSummary":             "Move water bottle to Office",
+					"argumentsJson":              `{"assetId":"asset-id","parentAssetId":"location-id"}`,
+					"riskSummary":                "Moves an item in this inventory.",
+				},
+			}},
+		}, nil
+	}
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindClarification,
+			SpokenResponse:  "I prepared that move for review.",
+			DisplayResponse: "I prepared that move for review.",
 		},
 	}, nil
 }

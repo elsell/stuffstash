@@ -312,6 +312,46 @@ func TestExecuteActionPlanCreatesLocationAndMarksExecuted(t *testing.T) {
 	}
 }
 
+func TestExecuteActionPlanMovesAssetAndMarksExecuted(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindMoveAsset, `{"assetId":"asset-1","parentAssetId":"location-1"}`),
+		},
+	}
+	item := assetItem("asset-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	location := assetItem("location-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
+		item.ID:     item,
+		location.ID: location,
+	}}
+	application := newActionPlanExecutionTestApp(repository, assets, &fakeIDGenerator{ids: []string{"undo-1", "audit-1"}})
+
+	executed, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if err != nil {
+		t.Fatalf("execute action plan: %v", err)
+	}
+	if executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan: %+v", executed)
+	}
+	moved := assets.items[asset.ID("asset-1")]
+	if moved.ParentAssetID != asset.ID("location-1") {
+		t.Fatalf("expected moved asset parent, got %+v", moved)
+	}
+	if len(assets.auditRecords) != 1 || assets.auditRecords[0].Action != audit.ActionAssetMoved {
+		t.Fatalf("expected audited move through asset service, got %+v", assets.auditRecords)
+	}
+	if len(assets.undoables) != 1 || assets.undoables["undo-1"].OriginalAction != audit.ActionAssetMoved {
+		t.Fatalf("expected move undoable operation, got %+v", assets.undoables)
+	}
+}
+
 func TestExecuteActionPlanRejectsUnapprovedPlanWithoutCreatingAsset(t *testing.T) {
 	t.Parallel()
 
@@ -364,7 +404,7 @@ func TestExecuteActionPlanAuthorizesBeforeReadingPlanState(t *testing.T) {
 	}
 }
 
-func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutCreatingAsset(t *testing.T) {
+func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutChangingAssets(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -373,7 +413,7 @@ func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutCreatingAsset(t *te
 	}{
 		{
 			name:   "unsupported command",
-			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindMoveAsset, `{"assetId":"asset-1","parentAssetId":"location-1"}`),
+			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindArchiveAsset, `{"assetId":"asset-1"}`),
 		},
 		{
 			name: "multi command",
@@ -561,4 +601,55 @@ func (f *fakeActionPlanRepository) ExecuteCreateAssetActionPlan(ctx context.Cont
 	}
 	f.records[planID] = updated
 	return updated, true, nil
+}
+
+func (f *fakeActionPlanRepository) ExecuteUpdateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
+	if transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	record, found := f.records[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	if f.assetUnitOfWork == nil {
+		return ports.ActionPlanRecord{}, true, ErrInvalidInput
+	}
+	assetRepository, ok := f.assetUnitOfWork.(ports.AssetRepository)
+	if !ok {
+		return ports.ActionPlanRecord{}, true, ErrInvalidInput
+	}
+	current, found, err := assetRepository.AssetByID(ctx, tenantID, inventoryID, expectedCurrent.ID)
+	if err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	if !found || !testAssetsEquivalentForStaleCheck(current, expectedCurrent) {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	if err := f.assetUnitOfWork.UpdateAsset(ctx, item, auditRecords, undoableOperation); err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	f.records[planID] = updated
+	return updated, true, nil
+}
+
+func testAssetsEquivalentForStaleCheck(left asset.Asset, right asset.Asset) bool {
+	return left.ID == right.ID &&
+		left.TenantID == right.TenantID &&
+		left.InventoryID == right.InventoryID &&
+		left.ParentAssetID == right.ParentAssetID &&
+		left.CustomAssetTypeID == right.CustomAssetTypeID &&
+		left.Kind == right.Kind &&
+		left.Title == right.Title &&
+		left.Description == right.Description &&
+		left.LifecycleState == right.LifecycleState &&
+		left.CreatedAt.Equal(right.CreatedAt) &&
+		left.UpdatedAt.Equal(right.UpdatedAt) &&
+		left.CustomFields.Equal(right.CustomFields)
 }

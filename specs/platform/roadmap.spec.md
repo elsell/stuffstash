@@ -104,6 +104,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Mobile realtime voice can now expose a bounded `propose_action_plan` native tool, persist a proposed action plan through the application boundary, stream a safe `action.plan.proposed` WebSocket event, and render the proposal in the mobile voice sheet review stage without executing inventory writes.
 - Mobile realtime voice can now keep the review WebSocket session open after proposal, accept explicit mobile `action.plan.approve` or `action.plan.cancel` decisions, transition the persisted plan through application services, emit safe review outcome events, and disable duplicate mobile review decisions while awaiting the terminal review outcome.
 - Approved mobile voice action plans can now execute the first single create command slice through the existing asset application boundary, atomically persist the asset/audit/undoable operation with the terminal action-plan state, and stream safe `action.plan.executed` or `action.plan.failed` review outcomes back to mobile.
+- Approved mobile voice action plans can now execute a single `move_asset` command through the existing asset movement boundary, atomically persist the asset move/audit/undoable operation with the terminal action-plan state in memory and GORM adapters, and stream safe execution outcomes back to mobile.
 
 ## Known Gaps
 
@@ -125,7 +126,7 @@ The web goal remains important but is not the immediate starting point. It still
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
 2. Expand approval-backed write action plans beyond the first create slice.
    - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
-   - Add additional command kinds only behind application services, tenant/inventory authorization, audit history, atomic execution, and explicit user confirmation.
+   - Continue adding additional command kinds only behind application services, tenant/inventory authorization, audit history, atomic execution, and explicit user confirmation.
 3. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.

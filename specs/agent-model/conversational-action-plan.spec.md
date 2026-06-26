@@ -122,6 +122,13 @@ The first executable `create_asset` and `create_location` argument shape is:
 
 The execution service must reject command arguments outside this shape for executable create commands until richer command schemas are specified.
 
+The first executable `move_asset` argument shape is:
+
+- `assetId`: required existing active asset ID in the same inventory.
+- `parentAssetId`: optional existing active container or location ID in the same inventory. When omitted, empty, or null, the asset is moved to the inventory root.
+
+The execution service must reject command arguments outside this shape for executable move commands until richer command schemas are specified.
+
 ## Command Rules
 
 - Commands must map to application operations, not database operations.

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
@@ -104,69 +105,105 @@ func createAssetInTx(tx *gorm.DB, item asset.Asset, auditRecord audit.Record, un
 
 func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var existing assetModel
-		err := tx.Where(&assetModel{
-			ID:          item.ID.String(),
+		return updateAssetInTx(tx, asset.Asset{}, item, auditRecords, undoableOperation)
+	})
+}
+
+func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
+	var existing assetModel
+	err := tx.Where(&assetModel{
+		ID:          item.ID.String(),
+		TenantID:    item.TenantID.String(),
+		InventoryID: item.InventoryID.String(),
+	}).First(&existing).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.ErrForbidden
+	}
+	if err != nil {
+		return err
+	}
+	if expectedCurrent.ID.String() != "" {
+		matches, err := assetModelMatchesExpected(existing, expectedCurrent)
+		if err != nil {
+			return err
+		}
+		if !matches {
+			return ports.ErrConflict
+		}
+	}
+	if existing.Kind != item.Kind.String() || existing.LifecycleState != item.LifecycleState.String() || existing.LifecycleState != asset.LifecycleStateActive.String() {
+		return ports.ErrForbidden
+	}
+	if stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
+		return ports.ErrForbidden
+	}
+
+	if item.ParentAssetID.String() != "" {
+		var parent assetModel
+		err = tx.Where(&assetModel{
+			ID:          item.ParentAssetID.String(),
 			TenantID:    item.TenantID.String(),
 			InventoryID: item.InventoryID.String(),
-		}).First(&existing).Error
+		}).First(&parent).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ports.ErrForbidden
 		}
 		if err != nil {
 			return err
 		}
-		if existing.Kind != item.Kind.String() || existing.LifecycleState != item.LifecycleState.String() || existing.LifecycleState != asset.LifecycleStateActive.String() {
+		parentKind, ok := asset.NewKind(parent.Kind)
+		if !ok || !parentKind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive.String() || parent.ID == item.ID.String() {
 			return ports.ErrForbidden
 		}
-		if stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
-			return ports.ErrForbidden
-		}
-
-		if item.ParentAssetID.String() != "" {
-			var parent assetModel
-			err = tx.Where(&assetModel{
-				ID:          item.ParentAssetID.String(),
-				TenantID:    item.TenantID.String(),
-				InventoryID: item.InventoryID.String(),
-			}).First(&parent).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ports.ErrForbidden
-			}
-			if err != nil {
-				return err
-			}
-			parentKind, ok := asset.NewKind(parent.Kind)
-			if !ok || !parentKind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive.String() || parent.ID == item.ID.String() {
-				return ports.ErrForbidden
-			}
-			if err := rejectAssetContainmentCycle(tx, item.ID, parent); err != nil {
-				return err
-			}
-		}
-
-		customFields, err := json.Marshal(item.CustomFields.Values())
-		if err != nil {
+		if err := rejectAssetContainmentCycle(tx, item.ID, parent); err != nil {
 			return err
 		}
-		updates := map[string]any{
-			"parent_asset_id":      stringPtrFromAssetID(item.ParentAssetID),
-			"custom_asset_type_id": stringPtrFromCustomAssetTypeID(item.CustomAssetTypeID),
-			"title":                item.Title.String(),
-			"description":          item.Description.String(),
-			"custom_fields":        string(customFields),
-			"updated_at":           item.UpdatedAt,
-		}
-		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
+	}
+
+	customFields, err := json.Marshal(item.CustomFields.Values())
+	if err != nil {
+		return err
+	}
+	updates := map[string]any{
+		"parent_asset_id":      stringPtrFromAssetID(item.ParentAssetID),
+		"custom_asset_type_id": stringPtrFromCustomAssetTypeID(item.CustomAssetTypeID),
+		"title":                item.Title.String(),
+		"description":          item.Description.String(),
+		"custom_fields":        string(customFields),
+		"updated_at":           item.UpdatedAt,
+	}
+	if err := tx.Model(&existing).Updates(updates).Error; err != nil {
+		return err
+	}
+	for _, auditRecord := range auditRecords {
+		if err := createAuditRecord(tx, auditRecord); err != nil {
 			return err
 		}
-		for _, auditRecord := range auditRecords {
-			if err := createAuditRecord(tx, auditRecord); err != nil {
-				return err
-			}
-		}
-		return createUndoableOperation(tx, undoableOperation)
-	})
+	}
+	return createUndoableOperation(tx, undoableOperation)
+}
+
+func assetModelMatchesExpected(model assetModel, expected asset.Asset) (bool, error) {
+	existing, ok := model.toDomain()
+	if !ok {
+		return false, ports.ErrInvalidProviderInput
+	}
+	return assetsEquivalentForStaleCheck(existing, expected), nil
+}
+
+func assetsEquivalentForStaleCheck(left asset.Asset, right asset.Asset) bool {
+	return left.ID == right.ID &&
+		left.TenantID == right.TenantID &&
+		left.InventoryID == right.InventoryID &&
+		left.ParentAssetID == right.ParentAssetID &&
+		left.CustomAssetTypeID == right.CustomAssetTypeID &&
+		left.Kind == right.Kind &&
+		left.Title == right.Title &&
+		left.Description == right.Description &&
+		left.LifecycleState == right.LifecycleState &&
+		left.CreatedAt.Equal(right.CreatedAt) &&
+		left.UpdatedAt.Equal(right.UpdatedAt) &&
+		left.CustomFields.Equal(right.CustomFields)
 }
 
 func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {

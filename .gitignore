@@ -1,6 +1,11 @@
 .cache/
-.stuffstash/seed-data/
-.stuffstash/seed-media/
+.DS_Store
+.stuffstash/*
+!.stuffstash/seed-data/
+!.stuffstash/seed-data/**
+!.stuffstash/seed-media/
+!.stuffstash/seed-media/**
+apps/api/.stuffstash/
 /stuff-stash
 docs/node_modules/
 docs/dist/

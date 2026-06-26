@@ -16,6 +16,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (s Store) SaveActionPlan(ctx context.Context, record ports.ActionPlanRecord) error {
@@ -34,7 +35,7 @@ func (s Store) ActionPlanByID(ctx context.Context, tenantID tenant.ID, inventory
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
 	}
 	var model actionPlanModel
-	err := s.db.WithContext(ctx).Where("tenant_id = ? AND inventory_id = ? AND id = ?", tenantID.String(), inventoryID.String(), planID).First(&model).Error
+	err := s.db.WithContext(ctx).Where(&actionPlanModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), ID: strings.TrimSpace(planID)}).First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ports.ActionPlanRecord{}, false, nil
 	}
@@ -48,22 +49,12 @@ func (s Store) UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, in
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
 	}
-	result := s.db.WithContext(ctx).Model(&actionPlanModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND principal_id = ? AND state = ? AND created_at <= ?", tenantID.String(), inventoryID.String(), planID, transition.PrincipalID.String(), string(transition.From), transition.At).
-		Updates(actionPlanStateUpdates(transition))
-	if result.Error != nil {
-		return ports.ActionPlanRecord{}, false, result.Error
+	found, err := updateActionPlanStateInDB(s.db.WithContext(ctx), tenantID, inventoryID, planID, transition)
+	if err != nil {
+		return ports.ActionPlanRecord{}, found, err
 	}
-	if result.RowsAffected == 0 {
-		var existing actionPlanModel
-		err := s.db.WithContext(ctx).Where("tenant_id = ? AND inventory_id = ? AND id = ?", tenantID.String(), inventoryID.String(), planID).First(&existing).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ports.ActionPlanRecord{}, false, nil
-		}
-		if err != nil {
-			return ports.ActionPlanRecord{}, false, err
-		}
-		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	if !found {
+		return ports.ActionPlanRecord{}, false, nil
 	}
 	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
 }
@@ -74,25 +65,14 @@ func (s Store) ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant
 	}
 	found := false
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		result := tx.Model(&actionPlanModel{}).
-			Where("tenant_id = ? AND inventory_id = ? AND id = ? AND principal_id = ? AND state = ? AND created_at <= ?", tenantID.String(), inventoryID.String(), planID, transition.PrincipalID.String(), string(transition.From), transition.At).
-			Updates(actionPlanStateUpdates(transition))
-		if result.Error != nil {
-			return result.Error
+		transitionFound, err := updateActionPlanStateInDB(tx, tenantID, inventoryID, planID, transition)
+		if err != nil {
+			return err
 		}
-		if result.RowsAffected == 0 {
-			var existing actionPlanModel
-			err := tx.Where("tenant_id = ? AND inventory_id = ? AND id = ?", tenantID.String(), inventoryID.String(), planID).First(&existing).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			found = true
-			return ports.ErrConflict
+		found = transitionFound
+		if !found {
+			return nil
 		}
-		found = true
 		return createAssetInTx(tx, item, auditRecord, undoableOperation)
 	})
 	if err != nil {
@@ -102,6 +82,64 @@ func (s Store) ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant
 		return ports.ActionPlanRecord{}, false, nil
 	}
 	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
+}
+
+func (s Store) ExecuteUpdateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	found := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		transitionFound, err := updateActionPlanStateInDB(tx, tenantID, inventoryID, planID, transition)
+		if err != nil {
+			return err
+		}
+		found = transitionFound
+		if !found {
+			return nil
+		}
+		return updateAssetInTx(tx, expectedCurrent, item, auditRecords, undoableOperation)
+	})
+	if err != nil {
+		return ports.ActionPlanRecord{}, found, err
+	}
+	if !found {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
+}
+
+func updateActionPlanStateInDB(db *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition) (bool, error) {
+	scope := actionPlanModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		ID:          strings.TrimSpace(planID),
+		PrincipalID: transition.PrincipalID.String(),
+		State:       string(transition.From),
+	}
+	result := db.Model(&actionPlanModel{}).
+		Where(&scope).
+		Where(clause.Lte{Column: clause.Column{Name: "created_at"}, Value: transition.At}).
+		Updates(actionPlanStateUpdates(transition))
+	if result.Error != nil {
+		return false, result.Error
+	}
+	if result.RowsAffected > 0 {
+		return true, nil
+	}
+	var existing actionPlanModel
+	err := db.Where(&actionPlanModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		ID:          strings.TrimSpace(planID),
+	}).First(&existing).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, ports.ErrConflict
 }
 
 func actionPlanStateUpdates(transition ports.ActionPlanStateTransition) map[string]any {

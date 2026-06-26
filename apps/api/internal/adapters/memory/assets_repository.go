@@ -75,9 +75,16 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	return s.updateAssetLocked(asset.Asset{}, item, auditRecords, undoableOperation)
+}
+
+func (s *Store) updateAssetLocked(expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	existing, exists := s.assets[item.ID]
 	if !exists || existing.TenantID != item.TenantID || existing.InventoryID != item.InventoryID {
 		return ports.ErrForbidden
+	}
+	if expectedCurrent.ID.String() != "" && !assetsEquivalentForStaleCheck(existing, expectedCurrent) {
+		return ports.ErrConflict
 	}
 	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState {
 		return ports.ErrForbidden
@@ -130,6 +137,21 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []
 		s.undoables[undoableOperation.ID] = *undoableOperation
 	}
 	return nil
+}
+
+func assetsEquivalentForStaleCheck(left asset.Asset, right asset.Asset) bool {
+	return left.ID == right.ID &&
+		left.TenantID == right.TenantID &&
+		left.InventoryID == right.InventoryID &&
+		left.ParentAssetID == right.ParentAssetID &&
+		left.CustomAssetTypeID == right.CustomAssetTypeID &&
+		left.Kind == right.Kind &&
+		left.Title == right.Title &&
+		left.Description == right.Description &&
+		left.LifecycleState == right.LifecycleState &&
+		left.CreatedAt.Equal(right.CreatedAt) &&
+		left.UpdatedAt.Equal(right.UpdatedAt) &&
+		left.CustomFields.Equal(right.CustomFields)
 }
 
 func (s *Store) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
