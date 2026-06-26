@@ -44,8 +44,15 @@ func TestProviderProfileRepositorySavesListsAndGetsByTenant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get provider profile: %v", err)
 	}
-	if !found || got.ID != second.ID || got.RuntimeOptionsJSON.String() != `{"temperature":0.2}` {
+	if !found || got.ID != second.ID || got.RuntimeOptionsJSON.String() != `{"temperature":0.2}` || got.PromptTemplate.String() != "" {
 		t.Fatalf("unexpected provider profile: found=%t profile=%+v", found, got)
+	}
+	got, found, err = store.ProviderProfileByID(ctx, tenant.ID("tenant-home"), first.ID)
+	if err != nil {
+		t.Fatalf("get language provider profile: %v", err)
+	}
+	if !found || got.PromptTemplate.String() != "Answer in one short sentence." {
+		t.Fatalf("expected language profile prompt template, found=%t profile=%+v", found, got)
 	}
 	if _, found, err := store.ProviderProfileByID(ctx, tenant.ID("tenant-home"), other.ID); err != nil || found {
 		t.Fatalf("expected cross-tenant profile miss, found=%t err=%v", found, err)
@@ -189,6 +196,7 @@ func providerProfile(t *testing.T, id string, tenantID string, capability agentm
 		ModelName:          agentmodel.ModelName("gemini-2.5-flash-lite"),
 		RuntimeOptionsJSON: []byte(`{"temperature":0.2}`),
 		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     providerProfilePromptTemplate(capability),
 		CredentialStatus:   agentmodel.CredentialStatusMissing,
 		LifecycleState:     lifecycle,
 		CreatedAt:          now,
@@ -198,6 +206,13 @@ func providerProfile(t *testing.T, id string, tenantID string, capability agentm
 		t.Fatalf("expected valid provider profile")
 	}
 	return profile
+}
+
+func providerProfilePromptTemplate(capability agentmodel.ProviderCapability) string {
+	if capability == agentmodel.ProviderCapabilityLanguageInference {
+		return "Answer in one short sentence."
+	}
+	return ""
 }
 
 func providerProfileCredential(id string, profile agentmodel.ProviderProfile, ciphertext string, now time.Time) ports.ProviderCredentialRecord {

@@ -118,6 +118,20 @@ func (n ModelName) String() string {
 	return string(n)
 }
 
+type PromptTemplate string
+
+func NewPromptTemplate(value string) (PromptTemplate, bool) {
+	value = strings.TrimSpace(value)
+	if len(value) > 8192 {
+		return "", false
+	}
+	return PromptTemplate(value), true
+}
+
+func (t PromptTemplate) String() string {
+	return string(t)
+}
+
 type JSONObject string
 
 func NewJSONObject(raw []byte) (JSONObject, bool) {
@@ -202,6 +216,7 @@ type ProviderProfile struct {
 	ModelName          ModelName
 	RuntimeOptionsJSON JSONObject
 	CapabilityJSON     JSONObject
+	PromptTemplate     PromptTemplate
 	CredentialStatus   CredentialStatus
 	LifecycleState     ProviderProfileLifecycleState
 	LastTestedAt       *time.Time
@@ -219,6 +234,7 @@ type ProviderProfileInput struct {
 	ModelName          ModelName
 	RuntimeOptionsJSON []byte
 	CapabilityJSON     []byte
+	PromptTemplate     string
 	CredentialStatus   CredentialStatus
 	LifecycleState     ProviderProfileLifecycleState
 	LastTestedAt       *time.Time
@@ -261,6 +277,13 @@ func NewProviderProfile(input ProviderProfileInput) (ProviderProfile, bool) {
 	if !ok {
 		return ProviderProfile{}, false
 	}
+	promptTemplate, ok := NewPromptTemplate(input.PromptTemplate)
+	if !ok {
+		return ProviderProfile{}, false
+	}
+	if capability != ProviderCapabilityLanguageInference && promptTemplate.String() != "" {
+		return ProviderProfile{}, false
+	}
 	credentialStatus, ok := NewCredentialStatus(input.CredentialStatus.String())
 	if !ok {
 		return ProviderProfile{}, false
@@ -282,6 +305,7 @@ func NewProviderProfile(input ProviderProfileInput) (ProviderProfile, bool) {
 		ModelName:          modelName,
 		RuntimeOptionsJSON: runtimeOptions,
 		CapabilityJSON:     capabilityJSON,
+		PromptTemplate:     promptTemplate,
 		CredentialStatus:   credentialStatus,
 		LifecycleState:     lifecycleState,
 		LastTestedAt:       input.LastTestedAt,

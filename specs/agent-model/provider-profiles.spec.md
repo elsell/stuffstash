@@ -37,13 +37,16 @@ Each provider profile must include:
 - Model name or deployment name when required by the provider kind.
 - Non-secret runtime options as typed project-owned values.
 - Project-owned capability metadata.
+- Optional tenant-managed prompt template for language inference profiles.
 - Credential status metadata.
 - Lifecycle state.
 - Creation, update, and last-tested timestamps.
 
 Provider profile IDs must be stable. Provider kinds, capabilities, lifecycle states, and credential status values must be enumerations, not magic strings.
 
-Provider profiles must not store raw provider credentials, raw prompts, raw transcripts, raw provider responses, raw audio, generated speech bytes, or provider-specific realtime session identifiers.
+Provider profiles must not store raw provider credentials, raw final prompts, raw transcripts, raw provider responses, raw audio, generated speech bytes, or provider-specific realtime session identifiers.
+
+Language inference provider profiles may store an optional tenant-managed prompt template. A prompt template is non-secret configuration used to tune provider-specific phrasing, examples, or response style. It must not include credentials, transcripts, provider responses, audio, generated speech, or tenant inventory data. The API-owned agent loop must still append mandatory safety, tool-use, authorization, structured-output, and no-invention instructions after the tenant template so tenant configuration cannot remove the server-owned agent contract.
 
 The first repository record must store non-secret runtime options and capability metadata as project-owned JSON blobs. The application service must validate that these blobs are syntactically valid JSON objects when supplied. Raw credentials must not be accepted in provider profile create or update inputs; credential replacement is a separate operation through the credential-sealing boundary.
 
@@ -76,7 +79,7 @@ The first REST management API must live under the tenant scope:
 
 All provider-profile management endpoints must require the same bearer-token authentication boundary as the rest of the API and tenant configuration permission for the requested tenant. Viewers, editors, unrelated users, unauthenticated users, wrong-tenant users, expired-token users, and malformed-token users must be rejected.
 
-Provider profile responses must include safe profile metadata only: profile ID, tenant ID, capability, provider kind, display name, endpoint URL, model name, non-secret runtime options, capability metadata, credential status, lifecycle state, and timestamps. Responses must never include raw credentials, sealed credential ciphertext, nonce material, encryption key IDs, provider account details, provider session tokens, provider-specific realtime URLs, raw prompts, raw transcripts, raw model responses, raw audio, or generated speech.
+Provider profile responses must include safe profile metadata only: profile ID, tenant ID, capability, provider kind, display name, endpoint URL, model name, non-secret runtime options, capability metadata, prompt template when configured for language inference profiles, credential status, lifecycle state, and timestamps. Responses must never include raw credentials, sealed credential ciphertext, nonce material, encryption key IDs, provider account details, provider session tokens, provider-specific realtime URLs, raw final prompts, raw transcripts, raw model responses, raw audio, or generated speech.
 
 Credential replacement requests must accept raw credential material only in the request body for the duration of that request. The application service must seal the credential through the configured credential-sealing port before persistence, store it through the credential repository boundary, supersede prior active credentials for the same tenant/profile/capability/provider-kind/purpose, update the provider profile credential status to `configured`, and return only safe profile metadata.
 
@@ -137,6 +140,8 @@ Provider credentials persisted in the database must live behind a credential rep
 Realtime session startup must resolve provider profiles through a tenant-scoped provider resolution service.
 
 The realtime application service must depend on a project-owned provider resolver port, not direct concrete speech-to-text, language inference, or text-to-speech adapters. The resolver returns the selected speech-to-text, language inference, and text-to-speech provider ports plus the safe selected provider profile IDs for the session. The session must carry that resolved provider set so a profile change after session start does not silently change an in-flight session.
+
+When the selected language inference provider profile has a prompt template, the resolver must return that safe template metadata with the provider set. The realtime application service must pass the resolved template into language inference calls for that session, including final-only recovery turns. It must not persist the rendered final prompt or send the prompt template to the client.
 
 The first compatibility implementation may wrap a process-configured provider set behind the same resolver port for development fakes and the transitional Google smoke-test bridge. That compatibility resolver must not expose provider credentials to clients and must be replaceable by the tenant-profile resolver without changing realtime transport code or the agent loop.
 

@@ -37,6 +37,9 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if set.SpeechToTextProfileID != "stt-profile" || set.LanguageInferenceProfileID != "lm-profile" || set.TextToSpeechProfileID != "tts-profile" {
 		t.Fatalf("unexpected selected profile IDs: %+v", set)
 	}
+	if set.LanguagePromptTemplate != "Prefer concise spoken answers." {
+		t.Fatalf("expected language prompt template from selected language profile, got %q", set.LanguagePromptTemplate)
+	}
 	if len(sealer.unsealedScopes) != 3 {
 		t.Fatalf("expected three credential unseal calls, got %+v", sealer.unsealedScopes)
 	}
@@ -101,6 +104,7 @@ func providerResolverProfile(t *testing.T, id string, capability agentmodel.Prov
 		ModelName:          agentmodel.ModelName("gemini-test"),
 		RuntimeOptionsJSON: []byte(`{"temperature":0}`),
 		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     providerResolverPromptTemplate(capability),
 		CredentialStatus:   credentialStatus,
 		LifecycleState:     lifecycle,
 		CreatedAt:          now,
@@ -110,6 +114,13 @@ func providerResolverProfile(t *testing.T, id string, capability agentmodel.Prov
 		t.Fatalf("expected valid provider profile")
 	}
 	return profile
+}
+
+func providerResolverPromptTemplate(capability agentmodel.ProviderCapability) string {
+	if capability == agentmodel.ProviderCapabilityLanguageInference {
+		return "Prefer concise spoken answers."
+	}
+	return ""
 }
 
 type providerResolverProfileRepository struct {

@@ -17,6 +17,7 @@ type providerProfileModel struct {
 	ModelName          string      `gorm:"not null;default:'';size:256"`
 	RuntimeOptionsJSON []byte      `gorm:"not null"`
 	CapabilityJSON     []byte      `gorm:"not null"`
+	PromptTemplate     string      `gorm:"not null;default:'';size:8192"`
 	CredentialStatus   string      `gorm:"not null;size:64;index;check:chk_provider_profiles_credential_status,credential_status IN ('missing','configured')"`
 	LifecycleState     string      `gorm:"not null;size:64;index;check:chk_provider_profiles_lifecycle_state,lifecycle_state IN ('enabled','disabled','archived')"`
 	LastTestedAt       *time.Time
@@ -39,6 +40,7 @@ func (m providerProfileModel) toDomain() (agentmodel.ProviderProfile, bool) {
 		ModelName:          agentmodel.ModelName(m.ModelName),
 		RuntimeOptionsJSON: append([]byte{}, m.RuntimeOptionsJSON...),
 		CapabilityJSON:     append([]byte{}, m.CapabilityJSON...),
+		PromptTemplate:     m.PromptTemplate,
 		CredentialStatus:   agentmodel.CredentialStatus(m.CredentialStatus),
 		LifecycleState:     agentmodel.ProviderProfileLifecycleState(m.LifecycleState),
 		LastTestedAt:       m.LastTestedAt,
@@ -58,6 +60,7 @@ func providerProfileModelFromDomain(profile agentmodel.ProviderProfile) provider
 		ModelName:          profile.ModelName.String(),
 		RuntimeOptionsJSON: []byte(profile.RuntimeOptionsJSON.String()),
 		CapabilityJSON:     []byte(profile.CapabilityJSON.String()),
+		PromptTemplate:     profile.PromptTemplate.String(),
 		CredentialStatus:   profile.CredentialStatus.String(),
 		LifecycleState:     profile.LifecycleState.String(),
 		LastTestedAt:       profile.LastTestedAt,

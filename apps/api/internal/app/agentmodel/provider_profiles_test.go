@@ -34,6 +34,7 @@ func TestServiceCreatesTenantProviderProfile(t *testing.T) {
 		ModelName:          "gemini-2.5-flash-lite",
 		RuntimeOptionsJSON: []byte(`{"temperature":0.1}`),
 		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     "Prefer concise spoken answers.",
 		Enable:             true,
 	})
 	if err != nil {
@@ -41,6 +42,9 @@ func TestServiceCreatesTenantProviderProfile(t *testing.T) {
 	}
 	if profile.TenantID.String() != "tenant-home" || profile.LifecycleState != domain.ProviderProfileEnabled {
 		t.Fatalf("unexpected profile: %+v", profile)
+	}
+	if profile.PromptTemplate.String() != "Prefer concise spoken answers." {
+		t.Fatalf("expected prompt template to be stored: %+v", profile)
 	}
 	if repository.saved[profile.ID.String()].DisplayName.String() != "Google Gemini" {
 		t.Fatalf("expected profile to be saved: %+v", repository.saved)
@@ -87,6 +91,27 @@ func TestServiceRejectsRawCredentialMaterialInProfileInput(t *testing.T) {
 	})
 	if !errors.Is(err, apperrors.ErrValidation) {
 		t.Fatalf("expected validation rejection, got %v", err)
+	}
+
+	for _, template := range []string{
+		"Use API key value.",
+		"Use secret value.",
+		"Use token value.",
+	} {
+		_, err = service.CreateProviderProfile(ctx, CreateProviderProfileInput{
+			Principal:      testPrincipal(),
+			Source:         audit.SourceAPI,
+			RequestID:      "request-2",
+			TenantID:       tenant.ID("tenant-home"),
+			Capability:     "language_inference",
+			ProviderKind:   "gemini",
+			DisplayName:    "Google Gemini",
+			ModelName:      "gemini-2.5-flash-lite",
+			PromptTemplate: template,
+		})
+		if !errors.Is(err, apperrors.ErrValidation) {
+			t.Fatalf("expected prompt template credential rejection for %q, got %v", template, err)
+		}
 	}
 }
 

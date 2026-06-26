@@ -32,6 +32,7 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 		"modelName":          "gemini-2.5-flash-lite",
 		"runtimeOptions":     map[string]any{"projectId": "pianotechpros", "location": "us-central1", "temperature": 0.1},
 		"capabilityMetadata": map[string]any{"toolCalls": true},
+		"promptTemplate":     "Prefer concise spoken answers.",
 	})
 	if create.Code != http.StatusCreated {
 		t.Fatalf("expected provider profile create status %d, got %d with body %s", http.StatusCreated, create.Code, create.Body.String())
@@ -39,6 +40,9 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 	created := decodeProviderProfile(t, create)
 	if created.Data.ID == "" || created.Data.TenantID != tenantID || created.Data.CredentialStatus != "missing" || created.Data.LifecycleState != "disabled" {
 		t.Fatalf("unexpected created provider profile: %+v", created.Data)
+	}
+	if created.Data.PromptTemplate != "Prefer concise spoken answers." {
+		t.Fatalf("expected created prompt template to round-trip, got %+v", created.Data)
 	}
 
 	replaceCredential := performRequest(server, http.MethodPut, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/credential", "Bearer dev:tenant-owner", map[string]any{
@@ -73,13 +77,16 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 		t.Fatalf("expected provider profile list status %d, got %d with body %s", http.StatusOK, list.Code, list.Body.String())
 	}
 	listed := decodeProviderProfileList(t, list)
-	if len(listed.Data) != 1 || listed.Data[0].ID != created.Data.ID {
+	if len(listed.Data) != 1 || listed.Data[0].ID != created.Data.ID || listed.Data[0].PromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected listed provider profile, got %+v", listed)
 	}
 
 	detail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID, "Bearer dev:tenant-owner", nil)
 	if detail.Code != http.StatusOK {
 		t.Fatalf("expected provider profile detail status %d, got %d with body %s", http.StatusOK, detail.Code, detail.Body.String())
+	}
+	if decoded := decodeProviderProfile(t, detail); decoded.Data.PromptTemplate != "Prefer concise spoken answers." {
+		t.Fatalf("expected detail prompt template to round-trip, got %+v", decoded.Data)
 	}
 
 	enable := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/enable", "Bearer dev:tenant-owner", nil)
@@ -279,6 +286,7 @@ type providerProfileResponse struct {
 	ModelName          string         `json:"modelName"`
 	RuntimeOptions     map[string]any `json:"runtimeOptions"`
 	CapabilityMetadata map[string]any `json:"capabilityMetadata"`
+	PromptTemplate     string         `json:"promptTemplate"`
 	CredentialStatus   string         `json:"credentialStatus"`
 	LifecycleState     string         `json:"lifecycleState"`
 }

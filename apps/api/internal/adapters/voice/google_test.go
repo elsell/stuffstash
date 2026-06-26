@@ -265,6 +265,27 @@ func TestGoogleGeminiLanguageInferenceUsesAPIKeyBackend(t *testing.T) {
 	}
 }
 
+func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *testing.T) {
+	t.Parallel()
+
+	prompt := languagePrompt(ports.LanguageInferenceInput{
+		Transcript:     "Where is my water bottle?",
+		PromptTemplate: "Prefer concise spoken answers.",
+	})
+
+	templateIndex := strings.Index(prompt, "Prefer concise spoken answers.")
+	mandatoryIndex := strings.Index(prompt, "Use only the provided native tools for inventory lookup.")
+	if templateIndex < 0 {
+		t.Fatalf("expected tenant prompt template in prompt: %s", prompt)
+	}
+	if mandatoryIndex < 0 {
+		t.Fatalf("expected mandatory server-owned rule in prompt: %s", prompt)
+	}
+	if templateIndex > mandatoryIndex {
+		t.Fatalf("expected mandatory rules to follow tenant template so they cannot be removed: %s", prompt)
+	}
+}
+
 func TestGoogleGeminiLanguageInferenceProbeReturnsStructuredFinalResponse(t *testing.T) {
 	t.Parallel()
 

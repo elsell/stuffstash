@@ -19,6 +19,7 @@ func TestNewProviderProfileBuildsTypedTenantScopedProfile(t *testing.T) {
 		ModelName:          ModelName("gemini-2.5-flash-lite"),
 		RuntimeOptionsJSON: []byte(`{"temperature":0.1}`),
 		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     "Prefer concise spoken answers.",
 		CredentialStatus:   CredentialStatusMissing,
 		LifecycleState:     ProviderProfileDisabled,
 		CreatedAt:          created,
@@ -33,6 +34,9 @@ func TestNewProviderProfileBuildsTypedTenantScopedProfile(t *testing.T) {
 	}
 	if profile.RuntimeOptionsJSON.String() != `{"temperature":0.1}` || profile.CapabilityJSON.String() != `{"toolCalls":true}` {
 		t.Fatalf("expected JSON metadata to be preserved: %+v", profile)
+	}
+	if profile.PromptTemplate.String() != "Prefer concise spoken answers." {
+		t.Fatalf("expected prompt template to be preserved: %+v", profile)
 	}
 }
 
@@ -64,6 +68,19 @@ func TestNewProviderProfileRejectsInvalidLifecycleAndMetadata(t *testing.T) {
 	invalidMetadata.RuntimeOptionsJSON = []byte(`[]`)
 	if _, ok := NewProviderProfile(invalidMetadata); ok {
 		t.Fatalf("expected non-object runtime options rejection")
+	}
+
+	invalidPromptCapability := valid
+	invalidPromptCapability.Capability = ProviderCapabilityTextToSpeech
+	invalidPromptCapability.PromptTemplate = "Prefer concise spoken answers."
+	if _, ok := NewProviderProfile(invalidPromptCapability); ok {
+		t.Fatalf("expected prompt template on non-language profile rejection")
+	}
+
+	invalidPromptLength := valid
+	invalidPromptLength.PromptTemplate = string(make([]byte, 8193))
+	if _, ok := NewProviderProfile(invalidPromptLength); ok {
+		t.Fatalf("expected oversized prompt template rejection")
 	}
 }
 

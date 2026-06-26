@@ -17,6 +17,7 @@ type CreateProviderProfileBody struct {
 	ModelName          string         `json:"modelName,omitempty" maxLength:"256" doc:"Provider model or deployment name"`
 	RuntimeOptions     map[string]any `json:"runtimeOptions,omitempty" doc:"Non-secret runtime options"`
 	CapabilityMetadata map[string]any `json:"capabilityMetadata,omitempty" doc:"Safe provider capability metadata"`
+	PromptTemplate     string         `json:"promptTemplate,omitempty" maxLength:"8192" doc:"Tenant-managed prompt template for language inference profiles"`
 	Enable             bool           `json:"enable,omitempty" doc:"Create the profile enabled"`
 }
 
@@ -91,6 +92,7 @@ type ProviderProfileResponse struct {
 	ModelName          string         `json:"modelName"`
 	RuntimeOptions     map[string]any `json:"runtimeOptions"`
 	CapabilityMetadata map[string]any `json:"capabilityMetadata"`
+	PromptTemplate     string         `json:"promptTemplate,omitempty"`
 	CredentialStatus   string         `json:"credentialStatus"`
 	LifecycleState     string         `json:"lifecycleState"`
 	CreatedAt          string         `json:"createdAt"`

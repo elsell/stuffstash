@@ -25,6 +25,7 @@ func ProviderProfileToResponse(profile agentmodel.ProviderProfile) dto.ProviderP
 		ModelName:          profile.ModelName.String(),
 		RuntimeOptions:     jsonObject(profile.RuntimeOptionsJSON.String()),
 		CapabilityMetadata: jsonObject(profile.CapabilityJSON.String()),
+		PromptTemplate:     profile.PromptTemplate.String(),
 		CredentialStatus:   profile.CredentialStatus.String(),
 		LifecycleState:     profile.LifecycleState.String(),
 		CreatedAt:          profile.CreatedAt.UTC().Format(time.RFC3339Nano),

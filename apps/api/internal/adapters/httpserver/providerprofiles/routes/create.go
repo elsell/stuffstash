@@ -39,6 +39,7 @@ func RegisterCreate(api huma.API, application app.App) {
 			ModelName:          input.Body.ModelName,
 			RuntimeOptionsJSON: runtimeOptions,
 			CapabilityJSON:     capabilityMetadata,
+			PromptTemplate:     input.Body.PromptTemplate,
 			Enable:             input.Body.Enable,
 		})
 		if err != nil {

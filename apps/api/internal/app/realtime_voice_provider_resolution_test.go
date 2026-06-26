@@ -14,16 +14,18 @@ import (
 func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 	t.Parallel()
 
+	language := &resolvedLanguageInference{
+		response: "The tools are in the office.",
+	}
 	resolver := &fakeRealtimeVoiceProviderResolver{
 		providers: ports.RealtimeVoiceProviderSet{
 			SpeechToTextProfileID:      "stt-profile",
 			LanguageInferenceProfileID: "lm-profile",
 			TextToSpeechProfileID:      "tts-profile",
+			LanguagePromptTemplate:     "Prefer concise spoken answers.",
 			SpeechToText:               resolvedSpeechToText{transcript: "Where are my tools?"},
-			LanguageInference: resolvedLanguageInference{
-				response: "The tools are in the office.",
-			},
-			TextToSpeech: &resolvedTextToSpeech{},
+			LanguageInference:          language,
+			TextToSpeech:               &resolvedTextToSpeech{},
 		},
 	}
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
@@ -63,6 +65,9 @@ func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 	tts := resolver.providers.TextToSpeech.(*resolvedTextToSpeech)
 	if tts.lastText != "The tools are in the office." {
 		t.Fatalf("expected resolved text-to-speech provider to receive final response, got %q", tts.lastText)
+	}
+	if language.lastPromptTemplate != "Prefer concise spoken answers." {
+		t.Fatalf("expected language prompt template to be passed to model, got %q", language.lastPromptTemplate)
 	}
 }
 
@@ -147,10 +152,12 @@ func (r resolvedSpeechToText) Transcribe(context.Context, ports.SpeechToTextInpu
 }
 
 type resolvedLanguageInference struct {
-	response string
+	response           string
+	lastPromptTemplate string
 }
 
-func (r resolvedLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (r *resolvedLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	r.lastPromptTemplate = input.PromptTemplate
 	return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{
 		Kind:            ports.StructuredAgentResponseKindAnswer,
 		SpokenResponse:  r.response,

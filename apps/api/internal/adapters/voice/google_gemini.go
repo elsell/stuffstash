@@ -149,7 +149,15 @@ func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {
 }
 
 func languagePrompt(input ports.LanguageInferenceInput) string {
-	return strings.Join([]string{
+	lines := []string{}
+	if template := strings.TrimSpace(input.PromptTemplate); template != "" {
+		lines = append(lines,
+			"Tenant language-model guidance:",
+			template,
+			"Mandatory Stuff Stash agent contract:",
+		)
+	}
+	lines = append(lines, []string{
 		"You are the Stuff Stash inventory voice agent.",
 		"Use only the provided native tools for inventory lookup.",
 		"Return strict JSON only when producing a final response.",
@@ -162,7 +170,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"If a search has no matches, say you could not find a visible match; do not say the whole inventory is empty unless a broad list tool result proves it.",
 		"Do not include reasoning, IDs, markdown, or extra fields.",
 		"Transcript: " + input.Transcript,
-	}, "\n")
+	}...)
+	return strings.Join(lines, "\n")
 }
 
 func languageContents(input ports.LanguageInferenceInput) ([]geminiContent, error) {

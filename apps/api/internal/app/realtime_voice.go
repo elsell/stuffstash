@@ -58,6 +58,7 @@ type RealtimeVoiceSession struct {
 	SpeechToTextProfileID      string
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
+	LanguagePromptTemplate     string
 	speechToText               ports.SpeechToTextProvider
 	languageInference          ports.LanguageInferenceProvider
 	textToSpeech               ports.TextToSpeechProvider
@@ -142,6 +143,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		SpeechToTextProfileID:      providers.SpeechToTextProfileID,
 		LanguageInferenceProfileID: providers.LanguageInferenceProfileID,
 		TextToSpeechProfileID:      providers.TextToSpeechProfileID,
+		LanguagePromptTemplate:     providers.LanguagePromptTemplate,
 		speechToText:               providers.SpeechToText,
 		languageInference:          providers.LanguageInference,
 		textToSpeech:               providers.TextToSpeech,
@@ -185,13 +187,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	executedToolCalls := map[string]struct{}{}
 	for turn := 0; turn < 4; turn++ {
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
-			TenantID:      input.Session.TenantID,
-			InventoryID:   input.Session.InventoryID,
-			Principal:     input.Session.Principal,
-			Transcript:    transcript,
-			Tools:         realtimeVoiceToolDescriptors(),
-			ToolResults:   toolResults,
-			PreviousTurns: turn,
+			TenantID:       input.Session.TenantID,
+			InventoryID:    input.Session.InventoryID,
+			Principal:      input.Session.Principal,
+			Transcript:     transcript,
+			PromptTemplate: input.Session.LanguagePromptTemplate,
+			Tools:          realtimeVoiceToolDescriptors(),
+			ToolResults:    toolResults,
+			PreviousTurns:  turn,
 		})
 		if err != nil {
 			return err
@@ -248,13 +251,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 
 func (a App) finalizeRealtimeVoiceAfterDuplicateToolCall(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
 	modelTurn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
-		TenantID:      session.TenantID,
-		InventoryID:   session.InventoryID,
-		Principal:     session.Principal,
-		Transcript:    transcript,
-		ToolResults:   toolResults,
-		PreviousTurns: previousTurns,
-		FinalOnly:     true,
+		TenantID:       session.TenantID,
+		InventoryID:    session.InventoryID,
+		Principal:      session.Principal,
+		Transcript:     transcript,
+		PromptTemplate: session.LanguagePromptTemplate,
+		ToolResults:    toolResults,
+		PreviousTurns:  previousTurns,
+		FinalOnly:      true,
 	})
 	if err != nil {
 		return err

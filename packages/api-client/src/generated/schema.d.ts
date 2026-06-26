@@ -846,6 +846,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/provider-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID provider profiles */
+        get: operations["get-tenants-by-tenant-id-provider-profiles"];
+        put?: never;
+        /** Post tenants by tenant ID provider profiles */
+        post: operations["post-tenants-by-tenant-id-provider-profiles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/provider-profiles/{providerProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID provider profiles by provider profile ID */
+        get: operations["get-tenants-by-tenant-id-provider-profiles-by-provider-profile-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID provider profiles by provider profile ID archive */
+        post: operations["post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put tenants by tenant ID provider profiles by provider profile ID credential */
+        put: operations["put-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-credential"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/provider-profiles/{providerProfileId}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID provider profiles by provider profile ID disable */
+        post: operations["post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-disable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/provider-profiles/{providerProfileId}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID provider profiles by provider profile ID enable */
+        post: operations["post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-enable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/provider-profiles/{providerProfileId}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID provider profiles by provider profile ID test */
+        post: operations["post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/restore": {
         parameters: {
             query?: never;
@@ -1051,6 +1171,36 @@ export interface components {
             /** @description Inventory name */
             name: string;
         };
+        CreateProviderProfileBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/CreateProviderProfileBody.json
+             */
+            readonly $schema?: string;
+            /** @description Provider capability */
+            capability: string;
+            /** @description Safe provider capability metadata */
+            capabilityMetadata?: {
+                [key: string]: unknown;
+            };
+            /** @description User-facing provider profile name */
+            displayName: string;
+            /** @description Create the profile enabled */
+            enable?: boolean;
+            /** @description Provider endpoint URL when required */
+            endpointUrl?: string;
+            /** @description Provider model or deployment name */
+            modelName?: string;
+            /** @description Tenant-managed prompt template for language inference profiles */
+            promptTemplate?: string;
+            /** @description Provider adapter kind */
+            providerKind: string;
+            /** @description Non-secret runtime options */
+            runtimeOptions?: {
+                [key: string]: unknown;
+            };
+        };
         CreateTenantBody: {
             /**
              * Format: uri
@@ -1210,6 +1360,27 @@ export interface components {
             email?: string;
             id: string;
         };
+        ProviderProfileResponse: {
+            capability: string;
+            capabilityMetadata: {
+                [key: string]: unknown;
+            };
+            createdAt: string;
+            credentialStatus: string;
+            displayName: string;
+            endpointUrl: string;
+            id: string;
+            lastTestedAt?: string;
+            lifecycleState: string;
+            modelName: string;
+            promptTemplate?: string;
+            providerKind: string;
+            runtimeOptions: {
+                [key: string]: unknown;
+            };
+            tenantId: string;
+            updatedAt: string;
+        };
         RecordResponse: {
             action: string;
             id: string;
@@ -1225,6 +1396,18 @@ export interface components {
             targetId: string;
             targetType: string;
             tenantId: string;
+        };
+        ReplaceProviderProfileCredentialBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ReplaceProviderProfileCredentialBody.json
+             */
+            readonly $schema?: string;
+            /** @description Raw provider credential for this request only */
+            credential: string;
+            /** @description Credential purpose */
+            purpose: string;
         };
         SearchMatch: {
             field: string;
@@ -1410,6 +1593,16 @@ export interface components {
             data: components["schemas"]["MyTenantResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListProviderProfileResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListProviderProfileResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ProviderProfileResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListRecordResponse: {
             /**
              * Format: uri
@@ -1430,6 +1623,16 @@ export interface components {
             data: components["schemas"]["PrincipalResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeProviderProfileResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeProviderProfileResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ProviderProfileResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeTenantResponse: {
             /**
              * Format: uri
@@ -1440,11 +1643,29 @@ export interface components {
             data: components["schemas"]["TenantResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeTestProviderProfileResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeTestProviderProfileResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["TestProviderProfileResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         TenantResponse: {
             access: components["schemas"]["AccessResponse"];
             id: string;
             lifecycleState: string;
             name: string;
+        };
+        TestProviderProfileResponse: {
+            capability: string;
+            message: string;
+            providerKind: string;
+            providerProfileId: string;
+            status: string;
+            testedAt: string;
         };
         UpdateAssetBody: {
             /**
@@ -4587,6 +4808,322 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-provider-profiles": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-provider-profiles": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProviderProfileBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-provider-profiles-by-provider-profile-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-archive": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-credential": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceProviderProfileCredentialBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-disable": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-enable": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeProviderProfileResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-test": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Provider profile ID */
+                providerProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeTestProviderProfileResponse"];
                 };
             };
             /** @description Error */

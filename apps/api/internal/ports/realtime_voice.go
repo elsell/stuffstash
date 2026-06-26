@@ -40,14 +40,15 @@ type LanguageInferenceProviderProbe interface {
 }
 
 type LanguageInferenceInput struct {
-	TenantID      tenant.ID
-	InventoryID   inventory.InventoryID
-	Principal     identity.Principal
-	Transcript    string
-	Tools         []AgentToolDescriptor
-	ToolResults   []AgentToolResult
-	PreviousTurns int
-	FinalOnly     bool
+	TenantID       tenant.ID
+	InventoryID    inventory.InventoryID
+	Principal      identity.Principal
+	Transcript     string
+	PromptTemplate string
+	Tools          []AgentToolDescriptor
+	ToolResults    []AgentToolResult
+	PreviousTurns  int
+	FinalOnly      bool
 }
 
 type AgentToolDescriptor struct {
@@ -152,6 +153,7 @@ type RealtimeVoiceProviderSet struct {
 	SpeechToTextProfileID      string
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
+	LanguagePromptTemplate     string
 	SpeechToText               SpeechToTextProvider
 	LanguageInference          LanguageInferenceProvider
 	TextToSpeech               TextToSpeechProvider

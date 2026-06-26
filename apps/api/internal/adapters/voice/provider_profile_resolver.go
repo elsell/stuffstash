@@ -89,6 +89,7 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 		SpeechToTextProfileID:      sttProfile.ID.String(),
 		LanguageInferenceProfileID: languageProfile.ID.String(),
 		TextToSpeechProfileID:      ttsProfile.ID.String(),
+		LanguagePromptTemplate:     languageProfile.PromptTemplate.String(),
 		SpeechToText:               stt,
 		LanguageInference:          language,
 		TextToSpeech:               tts,

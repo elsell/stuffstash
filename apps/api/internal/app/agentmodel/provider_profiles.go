@@ -29,6 +29,7 @@ type CreateProviderProfileInput struct {
 	ModelName          string
 	RuntimeOptionsJSON []byte
 	CapabilityJSON     []byte
+	PromptTemplate     string
 	Enable             bool
 }
 
@@ -73,11 +74,13 @@ type TestProviderProfileInput struct {
 	ProfileID domain.ProviderProfileID
 }
 
+var credentialMaterialMarkers = []string{"apikey", "apisecret", "token", "accesstoken", "bearertoken", "credential", "credentials", "secret", "password"}
+
 func (s Service) CreateProviderProfile(ctx context.Context, input CreateProviderProfileInput) (domain.ProviderProfile, error) {
 	if err := s.ensureTenantConfigure(ctx, input.Principal, input.TenantID); err != nil {
 		return domain.ProviderProfile{}, err
 	}
-	if rejectsCredentialMaterial(input.RuntimeOptionsJSON) || rejectsCredentialMaterial(input.CapabilityJSON) {
+	if rejectsCredentialMaterial(input.RuntimeOptionsJSON) || rejectsCredentialMaterial(input.CapabilityJSON) || rejectsCredentialText(input.PromptTemplate) {
 		return domain.ProviderProfile{}, apperrors.ErrValidation
 	}
 	profileID, ok := domain.NewProviderProfileID(s.ids.NewID())
@@ -119,6 +122,7 @@ func (s Service) CreateProviderProfile(ctx context.Context, input CreateProvider
 		ModelName:          modelName,
 		RuntimeOptionsJSON: input.RuntimeOptionsJSON,
 		CapabilityJSON:     input.CapabilityJSON,
+		PromptTemplate:     input.PromptTemplate,
 		CredentialStatus:   domain.CredentialStatusMissing,
 		LifecycleState:     lifecycle,
 		CreatedAt:          now,
@@ -406,7 +410,18 @@ func rejectsCredentialMaterial(raw []byte) bool {
 	}
 	for key := range decoded {
 		normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(key, "_", ""), "-", ""))
-		if slices.Contains([]string{"apikey", "apisecret", "token", "accesstoken", "bearertoken", "credential", "credentials", "secret", "password"}, normalized) {
+		if slices.Contains(credentialMaterialMarkers, normalized) {
+			return true
+		}
+	}
+	return false
+}
+
+func rejectsCredentialText(value string) bool {
+	normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(value, "_", ""), "-", ""))
+	normalized = strings.ReplaceAll(normalized, " ", "")
+	for _, marker := range credentialMaterialMarkers {
+		if strings.Contains(normalized, marker) {
 			return true
 		}
 	}
