@@ -179,6 +179,8 @@ PODS:
     - Yoga
   - ExpoAsset (55.0.17):
     - ExpoModulesCore
+  - ExpoAudio (55.0.14):
+    - ExpoModulesCore
   - ExpoDomWebView (55.0.6):
     - ExpoModulesCore
   - ExpoFileSystem (55.0.22):
@@ -2367,6 +2369,7 @@ DEPENDENCIES:
   - "expo-dev-menu (from `../../../node_modules/.pnpm/expo-dev-menu@55.0.30_expo@55.0.26/node_modules/expo-dev-menu`)"
   - "expo-dev-menu-interface (from `../../../node_modules/.pnpm/expo-dev-menu-interface@55.0.2_expo@55.0.26/node_modules/expo-dev-menu-interface/ios`)"
   - "ExpoAsset (from `../../../node_modules/.pnpm/expo-asset@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19._ae52c9773e578194779bd3531563441b/node_modules/expo-asset/ios`)"
+  - "ExpoAudio (from `../../../node_modules/.pnpm/expo-audio@55.0.14_expo-asset@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29_0171d541dfe1c78da3cc47bec5d809d3/node_modules/expo-audio/ios`)"
   - "ExpoDomWebView (from `../../../node_modules/.pnpm/@expo+dom-webview@55.0.6_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+rea_9e6f04aef27f933877c369a2a1348c85/node_modules/@expo/dom-webview/ios`)"
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@55.0.22_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+rea_5a05e24c91c49cb8c193081ff93bca53/node_modules/expo-file-system/ios`)"
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2._d7eb2e6a545916bc4cce529ec13c7272/node_modules/expo-font/ios`)"
@@ -2490,6 +2493,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-dev-menu-interface@55.0.2_expo@55.0.26/node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
     :path: "../../../node_modules/.pnpm/expo-asset@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19._ae52c9773e578194779bd3531563441b/node_modules/expo-asset/ios"
+  ExpoAudio:
+    :path: "../../../node_modules/.pnpm/expo-audio@55.0.14_expo-asset@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29_0171d541dfe1c78da3cc47bec5d809d3/node_modules/expo-audio/ios"
   ExpoDomWebView:
     :path: "../../../node_modules/.pnpm/@expo+dom-webview@55.0.6_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+rea_9e6f04aef27f933877c369a2a1348c85/node_modules/@expo/dom-webview/ios"
   ExpoFileSystem:
@@ -2686,6 +2691,7 @@ SPEC CHECKSUMS:
   expo-dev-menu: ff595953daf028b6bd9f0fa9b77bf58fbc41fa66
   expo-dev-menu-interface: 833795f4c98a674d36cbc12b11b21756c38e01e8
   ExpoAsset: 7721c5c4ae2a7c3c8147a046727ac6c020b05648
+  ExpoAudio: a826903abdeba843cde8602bd1c077d808b31f1d
   ExpoDomWebView: b2e9d601f9cb77d3c97da73234e175b64be91928
   ExpoFileSystem: 61e663d0bbd1a973d324530d1d6ee559a5e5192c
   ExpoFont: a7e34a75bdfb703fa07a0e87807f836236608c76

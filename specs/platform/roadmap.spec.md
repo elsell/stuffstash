@@ -23,11 +23,11 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is closing the first conversational inventory gaps while preserving the promoted SvelteKit web inventory workspace direction.
+The current focus is closing the first conversational inventory gaps through the mobile app first, while preserving the promoted SvelteKit web inventory workspace direction as a later parallel surface.
 
-The conversational goal is to move from the first realtime read-only voice slice toward tenant-configured provider profiles, encrypted provider credentials, a reusable tool catalog, approval-backed write action plans, stronger agent-loop/session state, and production-shaped mobile voice UX.
+The conversational goal is to move from the first realtime read-only voice slice toward a phone-testable, production-shaped mobile voice loop backed by tenant-configured provider profiles, encrypted provider credentials, a reusable tool catalog, approval-backed write action plans, and stronger agent-loop/session state.
 
-The web goal remains to prove a production-shaped path through:
+The web goal remains important but is not the immediate starting point. It still needs a production-shaped path through:
 
 - a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
 - clear separation between generated API DTOs and frontend domain models,
@@ -96,6 +96,7 @@ The web goal remains to prove a production-shaped path through:
 - `a69d3f12 feat(api): support api-key Gemini profiles` added Google AI Gemini API-key support for speech-to-text and language-inference provider profiles using `x-goog-api-key`, while keeping Google Cloud Text-to-Speech OAuth-only.
 - Tenant-scoped language-inference provider profiles now support bounded prompt templates that round-trip through the management API, persist through GORM migrations, resolve with the selected provider set, and are passed into realtime language model calls while the API appends the mandatory agent contract.
 - Tenant-scoped provider-profile management now supports non-secret PATCH updates for display name, endpoint URL, model name, runtime options, capability metadata, and prompt template, with partial-update semantics, audit/observability, generated client coverage, and `lastTestedAt` reset when configuration changes.
+- Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, use the local-development token only from runtime configuration, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance from Settings.
 
 ## Known Gaps
 
@@ -108,31 +109,31 @@ The web goal remains to prove a production-shaped path through:
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- Provider-profile management UI, API-key-backed speech synthesis adapters, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
+- Mobile provider-profile management/testing UX, API-key-backed speech synthesis adapters, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
 
 ## Next Work
 
-1. Add promoted web media attachment management and direct-upload UX.
-   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/media/media-attachments.spec.md` as the source of truth.
-   - Finish direct-upload initiation/completion UX, attachment listing, thumbnail/content display where available, validation, and removal/lifecycle states behind media-aware frontend ports and adapters.
-2. Deepen browser-level web coverage.
-   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/platform/web-frontend-tracer-bullet.spec.md` as the source of truth.
-   - Expand seeded browser smoke into more flows, add viewer-denied coverage, and add authenticated API/Dex smoke once the local topology can run reliably in automation.
-3. Deepen the tenant-first web context switcher.
-   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
-   - Implement the approved tenant header, `Switch Tenant` path, inventory list replacement behavior, inventory settings entry, and mobile sheet-quality context switching without leaking generated DTOs into components.
-4. Deepen web search into a primary workflow.
-   - Use `specs/platform/web-inventory-workspace.spec.md` and `specs/search/search.spec.md` as the source of truth.
-   - Add explicit loading, no-results, denied/error states, lifecycle-aware result treatment, and result opening behavior while preserving tenant and inventory authorization boundaries.
-5. Implement inventory settings surfaces.
-   - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/identity-access/tenant-inventory-access.spec.md`, and `specs/audit-history/audit-and-undo.spec.md` as the source of truth.
-   - Create the settings workspace for inventory metadata, access management entry points, audit/activity entry points, and tenant/inventory administrative context without turning the home workspace into a dashboard.
-6. Implement web sharing and access management.
-   - Use `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
-   - Expose direct grants, invitations, revocation, expiration/cancel/delete behavior, permission denial states, and generated-client-backed adapter tests.
-7. Return to the first mobile app foundation behind domain/application/adapter boundaries after the web workspace loading and switching path is stable.
-   - Keep the no-account local Expo Go path before considering EAS or native development builds.
-   - Keep demo data behind an adapter until authentication and generated API integration are specified.
+1. Add mobile provider-profile management and testing UX.
+   - Use `specs/agent-model/provider-profiles.spec.md` and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
+   - Expose safe tenant-scoped provider profile metadata, prompt template editing, credential replacement, enable/disable/archive, and safe test results behind mobile application ports and generated-client adapters.
+2. Wire mobile voice startup to tenant-managed provider profile readiness.
+   - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` and `specs/agent-model/provider-profiles.spec.md` as the source of truth.
+   - Surface missing/disabled/untested provider profile state before voice capture, without exposing provider credentials or direct provider bootstrap details to the mobile app.
+3. Deepen the production mobile voice session surface.
+   - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
+   - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
+4. Add approval-backed write action plans.
+   - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
+   - Keep action execution behind application services, tenant/inventory authorization, audit history, and explicit user confirmation.
+5. Add durable safe realtime session metadata.
+   - Use `specs/agent-model/realtime-interaction.spec.md` as the source of truth.
+   - Persist safe session state and action-plan metadata without storing raw audio, raw transcripts, raw prompts, raw model responses, or provider credentials before retention policy is specified.
+6. Implement the external Stuff Stash MCP server.
+   - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
+   - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
+7. Resume promoted web workspace work after the mobile voice path is testable from the app.
+   - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
+   - Prioritize media attachment management, browser-level coverage, tenant-first switching, search, inventory settings, and sharing/access management.
 
 ## Later Work
 

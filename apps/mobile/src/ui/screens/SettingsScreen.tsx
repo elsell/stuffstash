@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,6 +16,7 @@ import { colors, radius, spacing } from '../theme/tokens';
 
 type SettingsScreenProps = {
   readonly settingsQuery: SettingsQuery;
+  readonly onResetConnection: () => Promise<void>;
 };
 
 type ScreenState =
@@ -21,7 +24,7 @@ type ScreenState =
   | { readonly status: 'ready'; readonly settings: SettingsViewModel }
   | { readonly status: 'error'; readonly message: string };
 
-export function SettingsScreen({ settingsQuery }: SettingsScreenProps) {
+export function SettingsScreen({ settingsQuery, onResetConnection }: SettingsScreenProps) {
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -74,6 +77,7 @@ export function SettingsScreen({ settingsQuery }: SettingsScreenProps) {
           isRefreshing={isRefreshing}
           settings={screenState.settings}
           onRefresh={refreshSettings}
+          onResetConnection={onResetConnection}
         />
       ) : null}
     </SafeAreaView>
@@ -101,12 +105,31 @@ function ErrorState({ message }: { readonly message: string }) {
 function SettingsContent({
   isRefreshing,
   settings,
-  onRefresh
+  onRefresh,
+  onResetConnection
 }: {
   readonly isRefreshing: boolean;
   readonly settings: SettingsViewModel;
   readonly onRefresh: () => void;
+  readonly onResetConnection: () => Promise<void>;
 }) {
+  function confirmResetConnection(): void {
+    Alert.alert(
+      'Change instance',
+      'This clears the saved Stuff Stash instance on this device and returns to onboarding.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () => {
+            void onResetConnection();
+          }
+        }
+      ]
+    );
+  }
+
   return (
     <ScrollView
       contentContainerStyle={styles.content}
@@ -148,6 +171,13 @@ function SettingsContent({
         {settings.developerRows.map((row) => (
           <SettingsRow key={row.label} label={row.label} value={row.value} />
         ))}
+        <Pressable
+          accessibilityRole="button"
+          onPress={confirmResetConnection}
+          style={styles.secondaryButton}
+        >
+          <Text style={styles.secondaryButtonText}>Change instance</Text>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -283,5 +313,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0,
     lineHeight: 22
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.md,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md
+  },
+  secondaryButtonText: {
+    color: colors.action,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
   },
 });

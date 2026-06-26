@@ -4,6 +4,12 @@ export type MobileRuntimeConfig = {
   readonly devToken: string;
 };
 
+export type MobileRuntimeConfigSeed = {
+  readonly apiBaseUrl?: string;
+  readonly tenantId?: string;
+  readonly devToken?: string;
+};
+
 export function parseMobileRuntimeConfig(input: {
   readonly apiBaseUrl?: string;
   readonly tenantId?: string;
@@ -27,4 +33,9 @@ function requireValue(name: string, value: string | undefined): string {
   }
 
   return trimmed;
+}
+
+export function optionalValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : undefined;
 }

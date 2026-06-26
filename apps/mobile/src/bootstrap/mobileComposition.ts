@@ -1,6 +1,8 @@
 import { StuffStashClient } from '@stuff-stash/api-client';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
+import { ApiOnboardingGateway } from '../adapters/onboarding/ApiOnboardingGateway';
+import { FileSystemConnectionProfileStore } from '../adapters/onboarding/FileSystemConnectionProfileStore';
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
 import { ExpoVoiceAudioPlayer, ExpoVoiceAudioRecorder } from '../adapters/voice/ExpoVoiceAudio';
@@ -14,27 +16,20 @@ import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
-import {
-  CreateInventoryAssetInput,
-  InventorySummaryRepository,
-  InventoryWorkspace
-} from '../application/home/InventorySummaryRepository';
 import { SelectInventoryCommand } from '../application/home/SelectInventoryCommand';
 import { LocationAssetsQuery } from '../application/locations/LocationAssetsQuery';
 import { LocationsQuery } from '../application/locations/LocationsQuery';
-import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
 import {
-  CurrentPrincipalRepository,
-  SettingsPrincipal,
-  SettingsQuery
-} from '../application/settings/SettingsQuery';
+  ConnectionProfile,
+  ConnectionProfileStore
+} from '../application/onboarding/ConnectionProfile';
+import { OnboardingCommand } from '../application/onboarding/OnboardingCommand';
+import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
+import { SettingsQuery } from '../application/settings/SettingsQuery';
 import { VoiceInteractionPreviewQuery } from '../application/voice/VoiceInteractionPreviewQuery';
 import { RealtimeVoiceSessionController } from '../application/voice/RealtimeVoiceSession';
-import { loadMobileRuntimeConfig } from '../config/mobileRuntimeConfig';
+import { loadMobileRuntimeConfigSeed } from '../config/mobileRuntimeConfig';
 import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
-import { AssetSummary } from '../domain/assets/AssetSummary';
-import { InventorySummary } from '../domain/inventories/InventorySummary';
-import { LocationSummary } from '../domain/locations/LocationSummary';
 
 export type MobileComposition = {
   readonly homeDashboardQuery: HomeDashboardQuery;
@@ -55,26 +50,38 @@ export type MobileComposition = {
   readonly realtimeVoiceSessionController: RealtimeVoiceSessionController;
 };
 
-export function createMobileComposition(): MobileComposition {
-  let inventorySummaries: InventorySummaryRepository;
-  let principals: CurrentPrincipalRepository;
-  let config: MobileRuntimeConfig | undefined;
+const connectionProfiles = new FileSystemConnectionProfileStore();
+const runtimeSeed = loadMobileRuntimeConfigSeed();
 
-  try {
-    const loadedConfig = loadMobileRuntimeConfig();
-    config = loadedConfig;
-    const client = new StuffStashClient({
-      baseUrl: loadedConfig.apiBaseUrl,
-      fetch: createTimeoutFetch(8000),
-      tokenProvider: () => loadedConfig.devToken
-    });
-    inventorySummaries = new ApiInventorySummaryRepository(client, loadedConfig.tenantId);
-    principals = new ApiCurrentPrincipalRepository(client);
-  } catch (error) {
-    const unavailableError = toError(error);
-    inventorySummaries = new UnavailableInventorySummaryRepository(unavailableError);
-    principals = new UnavailableCurrentPrincipalRepository(unavailableError);
+export function getConnectionProfileStore(): ConnectionProfileStore {
+  return connectionProfiles;
+}
+
+export function createOnboardingCommand(): OnboardingCommand {
+  return new OnboardingCommand(
+    connectionProfiles,
+    createOnboardingGateway,
+    runtimeSeed.devToken
+  );
+}
+
+export function createSeedConnectionProfile(): ConnectionProfile | undefined {
+  if (!runtimeSeed.apiBaseUrl || !runtimeSeed.devToken) {
+    return undefined;
   }
+
+  return {
+    apiBaseUrl: runtimeSeed.apiBaseUrl,
+    devToken: runtimeSeed.devToken,
+    tenantId: runtimeSeed.tenantId
+  };
+}
+
+export function createMobileComposition(profile: ConnectionProfile): MobileComposition {
+  const client = createStuffStashClient(profile);
+  const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '');
+  const principals = new ApiCurrentPrincipalRepository(client);
+  const config = toRuntimeConfig(profile);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(createServiceScopeId());
 
   return {
@@ -108,64 +115,32 @@ export function createMobileComposition(): MobileComposition {
   };
 }
 
-class UnavailableInventorySummaryRepository implements InventorySummaryRepository {
-  constructor(private readonly error: Error) {}
-
-  async getInventoryWorkspace(): Promise<InventoryWorkspace> {
-    throw this.error;
-  }
-
-  async getDefaultInventorySummary(): Promise<InventorySummary> {
-    throw this.error;
-  }
-
-  async selectInventory(): Promise<void> {
-    throw this.error;
-  }
-
-  async createAsset(): Promise<AssetSummary> {
-    throw this.error;
-  }
-
-  async addAssetPhoto(): Promise<void> {
-    throw this.error;
-  }
-
-  async archiveAsset(): Promise<void> {
-    throw this.error;
-  }
-
-  async restoreAsset(): Promise<void> {
-    throw this.error;
-  }
-
-  async deleteAsset(): Promise<void> {
-    throw this.error;
-  }
-
-  async browseAssets(): Promise<never> {
-    throw this.error;
-  }
-
-  async searchAssets(): Promise<readonly AssetSummary[]> {
-    throw this.error;
-  }
-
-  async searchLocations(): Promise<readonly LocationSummary[]> {
-    throw this.error;
-  }
+function createOnboardingApiClient(profile: ConnectionProfile): StuffStashClient {
+  return createStuffStashClient(profile);
 }
 
-class UnavailableCurrentPrincipalRepository implements CurrentPrincipalRepository {
-  constructor(private readonly error: Error) {}
-
-  async getCurrentPrincipal(): Promise<SettingsPrincipal> {
-    throw this.error;
-  }
+function createOnboardingGateway(profile: ConnectionProfile): ApiOnboardingGateway {
+  return new ApiOnboardingGateway(createOnboardingApiClient(profile));
 }
 
-function toError(error: unknown): Error {
-  return error instanceof Error ? error : new Error('Mobile API configuration is unavailable.');
+function createStuffStashClient(profile: ConnectionProfile): StuffStashClient {
+  return new StuffStashClient({
+    baseUrl: profile.apiBaseUrl,
+    fetch: createTimeoutFetch(8000),
+    tokenProvider: () => profile.devToken
+  });
+}
+
+function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | undefined {
+  if (!profile.tenantId) {
+    return undefined;
+  }
+
+  return {
+    apiBaseUrl: profile.apiBaseUrl,
+    tenantId: profile.tenantId,
+    devToken: profile.devToken
+  };
 }
 
 function createServiceScopeId(): string {

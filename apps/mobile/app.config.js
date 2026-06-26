@@ -14,7 +14,7 @@ module.exports = {
         {
           photosPermission: 'Stuff Stash uses your photo library so you can attach household item photos.',
           cameraPermission: 'Stuff Stash uses your camera so you can attach household item photos.',
-          microphonePermission: 'Stuff Stash may use the microphone for future video attachments.'
+          microphonePermission: 'Stuff Stash uses the microphone when you start a voice interaction.'
         }
       ]
     ],
@@ -26,7 +26,7 @@ module.exports = {
           'Stuff Stash uses your photo library so you can attach household item photos.',
         NSCameraUsageDescription: 'Stuff Stash uses your camera so you can attach household item photos.',
         NSMicrophoneUsageDescription:
-          'Stuff Stash may use the microphone for future video attachments.'
+          'Stuff Stash uses the microphone when you start a voice interaction.'
       }
     },
     android: {

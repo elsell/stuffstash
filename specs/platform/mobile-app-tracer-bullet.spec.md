@@ -27,14 +27,25 @@ This spec defines camera behavior only for attaching still photos during the Add
 - The app must not require an Expo account for the first local validation path.
 - Physical iPhone validation for Expo SDK 55 may use a local Expo development build when the App Store Expo Go client does not yet support the required SDK version.
 - The local development build must use `expo-dev-client` and must be installable from a connected Mac/iPhone through local Xcode signing before relying on EAS or TestFlight.
-- The app must not add native modules beyond Expo-compatible navigation and development-client dependencies for the first local validation path.
+- The app must not add native modules beyond Expo-compatible navigation, development-client dependencies, Expo FileSystem for durable non-secret onboarding profile storage, and Expo Audio for the specified realtime voice query slice in the first local validation path.
 - The mobile API adapter must use the generated `@stuff-stash/api-client` package rather than hand-written endpoint fetches.
 - Expo Go local development must receive mobile runtime configuration through Expo public environment variables:
   - `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL`
   - `EXPO_PUBLIC_STUFF_STASH_TENANT_ID`
   - `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`
 - The local-dev token value is a development-only credential for the API's local-dev auth mode. Production authentication must wait for the mobile authentication spec.
-- Until the API exposes a principal-scoped tenant discovery endpoint, the first real-API mobile slice may use `EXPO_PUBLIC_STUFF_STASH_TENANT_ID` to identify the tenant whose inventories should be listed.
+- Expo public environment variables are development defaults only. The app must not require them for first launch once onboarding exists.
+- On first launch without a saved connection profile, mobile must show an onboarding flow before the tab shell:
+  - The first onboarding step asks for a Stuff Stash instance URL.
+  - The URL must be normalized and saved in durable app-local storage so the user does not need to type it again on later launches.
+  - Durable connection profile storage must contain only non-secret profile metadata, such as the instance URL and selected tenant ID. Development tokens and future production credentials must not be written to this profile file.
+  - The local-development token may be supplied from `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN` while production mobile authentication is unspecified. The onboarding UI must not present this development token as a production account model.
+  - After the instance URL is saved, onboarding must guide the user to create a tenant if the authenticated principal has no usable tenant.
+  - After tenant creation, onboarding must guide the user to create an initial inventory if that tenant has no usable inventory.
+  - After initial inventory creation, the app must enter the regular Home/Search/Add/Locations tab shell backed by the newly created tenant and inventory.
+- A saved connection profile may include the selected tenant ID. Until durable selected-inventory preferences are specified, inventory selection may remain session-scoped and default to the first visible inventory for the selected tenant.
+- Settings must expose a way to revisit or reset the saved instance connection profile. Changing the profile must rebuild mobile application services instead of requiring an app reinstall.
+- Until production mobile authentication is specified, onboarding may use the local-development auth token supplied by runtime configuration for local API validation.
 - The first navigation shell must use the iOS and Android system tab bar through Expo Router Native Tabs.
 - React Navigation JavaScript bottom tabs are not sufficient for the first mobile shell because they do not render the iPhone-native tab bar.
 - The mobile app must use the current approved brand glyph asset from `docs/public/brand/stuff-stash-glyph.png` for local app identity and in-app brand marks until a mobile-specific app icon asset is specified.

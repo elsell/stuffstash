@@ -1,6 +1,8 @@
 import Constants from 'expo-constants';
 import {
   MobileRuntimeConfig,
+  MobileRuntimeConfigSeed,
+  optionalValue,
   parseMobileRuntimeConfig
 } from './mobileRuntimeConfigCore';
 
@@ -9,6 +11,19 @@ export function loadMobileRuntimeConfig(): MobileRuntimeConfig {
     ...readExpoExtraConfig(),
     ...readExpoPublicEnvConfig()
   });
+}
+
+export function loadMobileRuntimeConfigSeed(): MobileRuntimeConfigSeed {
+  const config = {
+    ...readExpoExtraConfig(),
+    ...readExpoPublicEnvConfig()
+  };
+
+  return {
+    apiBaseUrl: optionalValue(config.apiBaseUrl),
+    tenantId: optionalValue(config.tenantId),
+    devToken: optionalValue(config.devToken)
+  };
 }
 
 function readExpoExtraConfig() {
