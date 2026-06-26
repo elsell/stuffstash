@@ -98,6 +98,12 @@ const (
 	ActionAuditRecordListed                    Action = "audit_record.listed"
 	ActionUndoableOperationUndone              Action = "undoable_operation.undone"
 	ActionUndoableOperationRedone              Action = "undoable_operation.redone"
+	ActionProviderProfileCreated               Action = "provider_profile.created"
+	ActionProviderProfileViewed                Action = "provider_profile.viewed"
+	ActionProviderProfileListed                Action = "provider_profile.listed"
+	ActionProviderProfileEnabled               Action = "provider_profile.enabled"
+	ActionProviderProfileDisabled              Action = "provider_profile.disabled"
+	ActionProviderProfileArchived              Action = "provider_profile.archived"
 )
 
 func NewAction(value string) (Action, bool) {
@@ -160,7 +166,13 @@ func NewAction(value string) (Action, bool) {
 		ActionAttachmentDeleted,
 		ActionAuditRecordListed,
 		ActionUndoableOperationUndone,
-		ActionUndoableOperationRedone:
+		ActionUndoableOperationRedone,
+		ActionProviderProfileCreated,
+		ActionProviderProfileViewed,
+		ActionProviderProfileListed,
+		ActionProviderProfileEnabled,
+		ActionProviderProfileDisabled,
+		ActionProviderProfileArchived:
 		return action, true
 	default:
 		return "", false
@@ -209,12 +221,13 @@ const (
 	TargetAttachment            TargetType = "attachment"
 	TargetAuditRecord           TargetType = "audit_record"
 	TargetUndoableOperation     TargetType = "undoable_operation"
+	TargetProviderProfile       TargetType = "provider_profile"
 )
 
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord, TargetUndoableOperation:
+	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile:
 		return targetType, true
 	default:
 		return "", false

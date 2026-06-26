@@ -83,6 +83,12 @@ const (
 	EventAuthorizationOutboxFailed            EventName = "authorization_outbox.failed"
 	EventAuthorizationOutboxDeadLettered      EventName = "authorization_outbox.dead_lettered"
 	EventHTTPRateLimited                      EventName = "http.rate_limited"
+	EventProviderProfileCreated               EventName = "provider_profile.created"
+	EventProviderProfileViewed                EventName = "provider_profile.viewed"
+	EventProviderProfilesListed               EventName = "provider_profile.listed"
+	EventProviderProfileEnabled               EventName = "provider_profile.enabled"
+	EventProviderProfileDisabled              EventName = "provider_profile.disabled"
+	EventProviderProfileArchived              EventName = "provider_profile.archived"
 )
 
 type Event struct {

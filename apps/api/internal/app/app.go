@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/oklog/ulid/v2"
+	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	customfieldapp "github.com/stuffstash/stuff-stash/internal/app/customfields"
@@ -39,6 +40,8 @@ type App struct {
 	blobDeletionOutbox        ports.BlobDeletionOutbox
 	audit                     ports.AuditRepository
 	outbox                    ports.AuthorizationOutbox
+	providerProfiles          ports.ProviderProfileRepository
+	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
 	ids                       ports.IDGenerator
 	clock                     ports.Clock
 	outboxDrainLimit          int
@@ -52,6 +55,7 @@ type App struct {
 	maxAttachmentBytes        int
 	assetService              assetapp.Service
 	customFieldService        customfieldapp.Service
+	providerProfileService    agentmodelapp.Service
 	speechToText              ports.SpeechToTextProvider
 	languageInference         ports.LanguageInferenceProvider
 	textToSpeech              ports.TextToSpeechProvider
@@ -83,6 +87,8 @@ type Dependencies struct {
 	BlobDeletionOutbox            ports.BlobDeletionOutbox
 	Audit                         ports.AuditRepository
 	Outbox                        ports.AuthorizationOutbox
+	ProviderProfiles              ports.ProviderProfileRepository
+	ProviderProfileUnitOfWork     ports.ProviderProfileUnitOfWork
 	IDs                           ports.IDGenerator
 	Clock                         ports.Clock
 	AuthorizationOutboxDrainLimit int
@@ -136,6 +142,8 @@ func New(deps Dependencies) App {
 		blobDeletionOutbox:        deps.BlobDeletionOutbox,
 		audit:                     deps.Audit,
 		outbox:                    deps.Outbox,
+		providerProfiles:          deps.ProviderProfiles,
+		providerProfileUnitOfWork: deps.ProviderProfileUnitOfWork,
 		ids:                       ids,
 		clock:                     clock,
 		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,
@@ -181,6 +189,14 @@ func New(deps Dependencies) App {
 		Clock:                     app.clock,
 		DefaultPageLimit:          app.defaultPageLimit,
 		MaxPageLimit:              app.maxPageLimit,
+	})
+	app.providerProfileService = agentmodelapp.New(agentmodelapp.Dependencies{
+		Observer:                  app.observer,
+		Authorizer:                app.authorizer,
+		ProviderProfiles:          app.providerProfiles,
+		ProviderProfileUnitOfWork: app.providerProfileUnitOfWork,
+		IDs:                       app.ids,
+		Clock:                     app.clock,
 	})
 	return app
 }

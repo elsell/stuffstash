@@ -22,6 +22,8 @@ Provider profile application services must expose project-owned typed operations
 
 Provider profile persistence must live behind an explicit repository port. Realtime adapters and provider adapters must resolve profiles through application services or narrow query ports, not by reading persistence directly.
 
+The first implementation slice must introduce the tenant-scoped provider profile model, repository port, GORM persistence adapter, and application service before adding REST or realtime provider-profile resolution. The application service must be the only write boundary for profile lifecycle changes and must require tenant configuration permission.
+
 ## Profile Model
 
 Each provider profile must include:
@@ -43,6 +45,8 @@ Provider profile IDs must be stable. Provider kinds, capabilities, lifecycle sta
 
 Provider profiles must not store raw provider credentials, raw prompts, raw transcripts, raw provider responses, raw audio, generated speech bytes, or provider-specific realtime session identifiers.
 
+The first repository record must store non-secret runtime options and capability metadata as project-owned JSON blobs. The application service must validate that these blobs are syntactically valid JSON objects when supplied. Raw credentials must not be accepted in provider profile create or update inputs; credential replacement is a separate operation through the credential-sealing boundary.
+
 ## Lifecycle
 
 The first lifecycle states are:
@@ -52,6 +56,8 @@ The first lifecycle states are:
 - `archived`: hidden from normal selection and not eligible for new realtime sessions.
 
 Deleting a provider profile may be implemented as archival unless a later spec requires hard delete. Hard delete must not remove audit records.
+
+The first lifecycle commands are create, enable, disable, and archive. Create starts profiles in `disabled` unless the caller explicitly requests `enabled`. Archived profiles cannot be re-enabled in the first slice. Realtime provider resolution must ignore disabled and archived profiles.
 
 Disabling, archiving, deleting, or replacing credentials for a profile must not affect already completed action plans or audit history. New realtime sessions must fail safely when their required provider profile is disabled, archived, missing, unsupported, or has unusable credentials.
 

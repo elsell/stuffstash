@@ -43,6 +43,8 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		BlobDeletionOutbox:            repositories.blobDeletionOutbox,
 		Audit:                         repositories.audit,
 		Outbox:                        repositories.outbox,
+		ProviderProfiles:              repositories.providerProfiles,
+		ProviderProfileUnitOfWork:     repositories.providerProfileUnitOfWork,
 		IDs:                           idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit: cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease: cfg.AuthorizationOutboxClaimLease,

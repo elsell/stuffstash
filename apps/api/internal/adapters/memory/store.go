@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
@@ -22,6 +23,7 @@ type Store struct {
 	assets           map[asset.ID]asset.Asset
 	undoables        map[string]ports.UndoableOperation
 	attachments      map[media.ID]media.Attachment
+	providerProfiles map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
 	blobs            map[media.StorageKey][]byte
 	blobDeletions    map[string]ports.BlobDeletionEvent
 	auditRecords     map[audit.ID]audit.Record
@@ -39,6 +41,7 @@ func NewStore() *Store {
 		assets:           map[asset.ID]asset.Asset{},
 		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},
+		providerProfiles: map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile{},
 		blobs:            map[media.StorageKey][]byte{},
 		blobDeletions:    map[string]ports.BlobDeletionEvent{},
 		auditRecords:     map[audit.ID]audit.Record{},

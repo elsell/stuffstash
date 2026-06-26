@@ -88,6 +88,8 @@ The web goal remains to prove a production-shaped path through:
 - The mobile realtime voice slice can record through the mobile app, proxy through the core API, transcribe with Google Gemini, call read-only inventory tools through the application boundary, validate structured final responses, synthesize Google Text-to-Speech audio, and stream the result back to mobile.
 - The Gemini language adapter now uses native provider function calling while keeping provider-specific tool declarations and function-call/function-response shapes behind the project-owned language inference port.
 - Realtime voice loop control now allows multiple distinct tool calls, including across turns, while preventing exact duplicate tool-call re-execution and requesting an explicit finalization-only turn when needed.
+- Provider credential sealing now has a port, AES-256-GCM adapter, encrypted GORM persistence, migrations, startup fail-closed validation, and tests.
+- Tenant-scoped conversational provider profiles now have a typed agent/model domain model, application service boundary, memory and GORM persistence adapters, migrations, audit/observability taxonomy, and tests.
 
 ## Known Gaps
 
@@ -100,7 +102,7 @@ The web goal remains to prove a production-shaped path through:
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- Tenant-managed conversational provider profiles, provider-profile management APIs/UI, provider profile resolution during realtime session startup, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
+- Provider-profile management REST APIs/UI, credential replacement APIs, provider profile resolution during realtime session startup, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
 
 ## Next Work
 
