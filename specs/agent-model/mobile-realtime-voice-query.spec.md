@@ -89,6 +89,7 @@ The expanded session surface must:
 
 - Visually read as an expansion of the bottom voice accessory.
 - Keep the current screen context behind the session surface.
+- Fade or hold the backdrop in place while only the session sheet translates during open and close motion.
 - Provide a clear close/collapse control that does not reset a completed answer unless the user starts a new session.
 - Support tap-to-start and tap-to-stop recording for the first slice.
 - Keep the primary mic control reachable with one thumb.

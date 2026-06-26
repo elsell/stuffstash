@@ -1,6 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, MessageCircle, Mic, Pause, RotateCcw, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Modal,
   Pressable,
   ScrollView,
@@ -33,6 +36,8 @@ export function VoiceSessionOverlay({
   state
 }: VoiceSessionOverlayProps) {
   const readyState = state.status === 'ready' ? state : null;
+  const [shouldRender, setShouldRender] = useState(isVisible);
+  const animationProgress = useRef(new Animated.Value(isVisible ? 1 : 0)).current;
   const session = buildVoiceSessionPresentation({
     diagnosticsEnabled: Boolean(readyState?.realtime?.debugEvents.length),
     diagnosticsExpanded,
@@ -42,22 +47,60 @@ export function VoiceSessionOverlay({
     tenantName: readyState?.preview.tenantName ?? readyState?.realtime?.tenantName ?? 'Tenant'
   });
   const canUseMic = state.status === 'ready' && state.stage !== 'processing' && state.stage !== 'speaking';
+  const sheetTranslateY = animationProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [360, 0]
+  });
+
+  useEffect(() => {
+    animationProgress.stopAnimation();
+
+    if (isVisible) {
+      setShouldRender(true);
+      Animated.timing(animationProgress, {
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        toValue: 1,
+        useNativeDriver: true
+      }).start();
+      return;
+    }
+
+    Animated.timing(animationProgress, {
+      duration: 180,
+      easing: Easing.in(Easing.cubic),
+      toValue: 0,
+      useNativeDriver: true
+    }).start(({ finished }) => {
+      if (finished) {
+        setShouldRender(false);
+      }
+    });
+  }, [animationProgress, isVisible]);
+
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <Modal
-      animationType="slide"
+      animationType="none"
       onRequestClose={onClose}
       presentationStyle="overFullScreen"
       transparent
-      visible={isVisible}
+      visible={shouldRender}
     >
       <SafeAreaView style={styles.modalRoot} edges={['top', 'left', 'right']}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.scrim, { opacity: animationProgress }]}
+        />
         <Pressable
           accessibilityLabel="Close voice session backdrop"
           onPress={onClose}
           style={styles.backdrop}
         />
-        <View style={styles.sheet}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }] }]}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <View style={styles.sheetTitleGroup}>
@@ -165,7 +208,7 @@ export function VoiceSessionOverlay({
               ) : null}
             </ScrollView>
           )}
-        </View>
+        </Animated.View>
       </SafeAreaView>
     </Modal>
   );
@@ -284,7 +327,6 @@ const styles = StyleSheet.create({
     width: 40
   },
   modalRoot: {
-    backgroundColor: colors.scrim,
     flex: 1,
     justifyContent: 'flex-end'
   },
@@ -377,6 +419,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     padding: spacing.md
+  },
+  scrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.scrim
   },
   sheet: {
     backgroundColor: colors.surface,
