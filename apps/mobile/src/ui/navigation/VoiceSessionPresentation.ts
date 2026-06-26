@@ -120,9 +120,15 @@ export type VoiceSessionPresentation = {
   readonly diagnostics: readonly string[] | null;
   readonly isBusy: boolean;
   readonly progressLabel: string;
+  readonly recoveryAction?: VoiceSessionRecoveryAction;
   readonly response?: string;
   readonly title: string;
   readonly transcript?: string;
+};
+
+export type VoiceSessionRecoveryAction = {
+  readonly label: string;
+  readonly target: 'provider_profiles';
 };
 
 export function buildVoiceSessionPresentation({
@@ -153,6 +159,9 @@ export function buildVoiceSessionPresentation({
     diagnostics,
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',
     progressLabel,
+    recoveryAction: realtime?.failureCode === 'provider_readiness'
+      ? { label: 'Voice providers', target: 'provider_profiles' }
+      : undefined,
     response: realtime?.spokenResponse,
     title,
     transcript: realtime?.transcript

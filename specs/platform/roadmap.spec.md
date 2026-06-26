@@ -99,6 +99,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Tenant-scoped provider-profile management now supports non-secret PATCH updates for display name, endpoint URL, model name, runtime options, capability metadata, and prompt template, with partial-update semantics, audit/observability, generated client coverage, and `lastTestedAt` reset when configuration changes.
 - Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, use the local-development token only from runtime configuration, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance from Settings.
 - Realtime voice sessions now persist durable safe session metadata through a repository port with memory and GORM adapters, including session scope, selected provider profile IDs, lifecycle state, timestamps, and safe failure codes without storing raw audio, transcripts, prompts, model responses, generated speech, credentials, bearer tokens, or provider session IDs.
+- Mobile provider-profile management now exposes safe tenant-scoped provider profile metadata, recommended profile creation, credential replacement, prompt-template replacement, lifecycle actions, safe provider tests, readiness summaries, and a voice-sheet recovery action that opens Voice providers when readiness fails before recording.
 
 ## Known Gaps
 
@@ -111,26 +112,20 @@ The web goal remains important but is not the immediate starting point. It still
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- Mobile provider-profile management/testing UX, API-key-backed speech synthesis adapters, write action plans with approval, and the external MCP server are not yet complete.
+- API-key-backed speech synthesis adapters, write action plans with approval, and the external MCP server are not yet complete.
 
 ## Next Work
 
-1. Add mobile provider-profile management and testing UX.
-   - Use `specs/agent-model/provider-profiles.spec.md` and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
-   - Start with safe tenant-scoped provider profile metadata and safe provider test results behind mobile application ports and generated-client adapters, then add prompt template editing, credential replacement, and lifecycle actions.
-2. Wire mobile voice startup to tenant-managed provider profile readiness.
-   - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` and `specs/agent-model/provider-profiles.spec.md` as the source of truth.
-   - Surface missing/disabled/untested provider profile state before voice capture, without exposing provider credentials or direct provider bootstrap details to the mobile app.
-3. Deepen the production mobile voice session surface.
+1. Deepen the production mobile voice session surface.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
-4. Add approval-backed write action plans.
+2. Add approval-backed write action plans.
    - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Keep action execution behind application services, tenant/inventory authorization, audit history, and explicit user confirmation.
-5. Implement the external Stuff Stash MCP server.
+3. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-6. Resume promoted web workspace work after the mobile voice path is testable from the app.
+4. Resume promoted web workspace work after the mobile voice path is testable from the app.
    - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Prioritize media attachment management, browser-level coverage, tenant-first switching, search, inventory settings, and sharing/access management.
 

@@ -10,7 +10,10 @@ import {
 } from './ProviderProfileRepository';
 import { ManageProviderProfileCommand } from './ManageProviderProfileCommand';
 import { ProviderProfileSettingsQuery } from './ProviderProfileSettingsQuery';
-import { ProviderProfileVoiceReadinessCheck } from './ProviderProfileVoiceReadinessCheck';
+import {
+  ProviderProfileVoiceReadinessCheck,
+  VoiceProviderReadinessError
+} from './ProviderProfileVoiceReadinessCheck';
 import { recommendedProviderProfiles } from './RecommendedProviderProfiles';
 import { TestProviderProfileCommand } from './TestProviderProfileCommand';
 
@@ -113,9 +116,24 @@ describe('ProviderProfileVoiceReadinessCheck', () => {
       new ProviderProfileSettingsQuery(repository)
     );
 
+    await expect(check.assertReady()).rejects.toMatchObject({
+      code: 'provider_readiness',
+      missingCapabilities: ['text_to_speech']
+    });
+    await expect(check.assertReady()).rejects.toBeInstanceOf(VoiceProviderReadinessError);
     await expect(check.assertReady()).rejects.toThrow(
       'Voice provider profiles are not ready: text_to_speech.'
     );
+  });
+
+  it('redacts unexpected capability values from readiness errors', () => {
+    const error = new VoiceProviderReadinessError([
+      'text_to_speech',
+      'internal_provider_endpoint'
+    ]);
+
+    expect(error.missingCapabilities).toEqual(['text_to_speech']);
+    expect(error.message).toBe('Voice provider profiles are not ready: text_to_speech.');
   });
 });
 

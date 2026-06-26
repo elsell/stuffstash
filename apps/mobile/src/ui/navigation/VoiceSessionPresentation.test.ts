@@ -100,4 +100,58 @@ describe('VoiceSessionPresentation', () => {
       tenantName: 'Main tenant'
     }).canReset).toBe(true);
   });
+
+  it('offers provider setup recovery only for provider-readiness failures', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        debugEvents: [],
+        failureCode: 'provider_readiness',
+        errorMessage: 'Voice provider profiles are not ready: text_to_speech.'
+      },
+      stage: 'failed',
+      tenantName: 'Main tenant'
+    }).recoveryAction).toEqual({
+      label: 'Voice providers',
+      target: 'provider_profiles'
+    });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        debugEvents: [],
+        errorMessage: 'Voice provider profiles are not ready: text_to_speech.'
+      },
+      stage: 'failed',
+      tenantName: 'Main tenant'
+    }).recoveryAction).toBeUndefined();
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        debugEvents: [],
+        errorMessage: 'Voice socket closed before the session completed.'
+      },
+      stage: 'failed',
+      tenantName: 'Main tenant'
+    }).recoveryAction).toBeUndefined();
+  });
 });

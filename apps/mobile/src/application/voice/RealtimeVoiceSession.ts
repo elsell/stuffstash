@@ -84,8 +84,11 @@ export type VoiceRealtimeState = {
   readonly spokenResponse?: string;
   readonly progressLabel?: string;
   readonly debugEvents: readonly VoiceSafeDiagnosticEvent[];
+  readonly failureCode?: VoiceRealtimeFailureCode;
   readonly errorMessage?: string;
 };
+
+export type VoiceRealtimeFailureCode = 'provider_readiness' | 'voice_failed';
 
 export type VoiceRealtimeStateHandler = (state: VoiceRealtimeState) => void;
 

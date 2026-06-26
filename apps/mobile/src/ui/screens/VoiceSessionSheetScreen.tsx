@@ -53,6 +53,7 @@ export function VoiceSessionSheetScreen() {
         reset();
         setDiagnosticsExpanded(false);
       }}
+      onOpenProviderProfiles={() => router.push('/provider-profiles')}
       onSessionMic={() => {
         void handleSessionMic();
       }}
@@ -67,6 +68,7 @@ function VoiceSessionSheet({
   diagnosticsExpanded,
   diagnosticsEnabled,
   onClose,
+  onOpenProviderProfiles,
   onReset,
   onSessionMic,
   onToggleDiagnostics,
@@ -76,6 +78,7 @@ function VoiceSessionSheet({
   readonly diagnosticsExpanded: boolean;
   readonly diagnosticsEnabled: boolean;
   readonly onClose: () => void;
+  readonly onOpenProviderProfiles: () => void;
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
   readonly onToggleDiagnostics: () => void;
@@ -153,6 +156,15 @@ function VoiceSessionSheet({
               <View style={styles.errorSection}>
                 <Text style={styles.sectionLabel}>Voice failed</Text>
                 <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
+                {session.recoveryAction?.target === 'provider_profiles' ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={onOpenProviderProfiles}
+                    style={styles.recoveryButton}
+                  >
+                    <Text style={styles.recoveryButtonText}>{session.recoveryAction.label}</Text>
+                  </Pressable>
+                ) : null}
               </View>
             ) : null}
 
@@ -376,6 +388,21 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     fontWeight: '800'
+  },
+  recoveryButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.action,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    marginTop: spacing.md,
+    minHeight: 44,
+    paddingHorizontal: spacing.md
+  },
+  recoveryButtonText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '900'
   },
   responseIcon: {
     alignItems: 'center',

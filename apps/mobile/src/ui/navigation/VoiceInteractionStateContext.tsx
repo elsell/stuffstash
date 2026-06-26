@@ -5,6 +5,7 @@ import {
 } from '../../application/voice/VoiceInteractionPreviewQuery';
 import {
   RealtimeVoiceSessionController,
+  VoiceRealtimeFailureCode,
   VoiceRealtimeState
 } from '../../application/voice/RealtimeVoiceSession';
 
@@ -94,7 +95,7 @@ export function VoiceInteractionStateProvider({
           setRealtime(next);
           setStage('listening');
         } catch (error) {
-          setRealtime(failedRealtimeState(error));
+          setRealtime(buildFailedVoiceRealtimeState(error));
           setStage('failed');
         }
       },
@@ -109,7 +110,7 @@ export function VoiceInteractionStateProvider({
           setRealtime(finalState);
           setStage(finalState?.status ?? 'failed');
         } catch (error) {
-          setRealtime(failedRealtimeState(error));
+          setRealtime(buildFailedVoiceRealtimeState(error));
           setStage('failed');
         }
       },
@@ -141,13 +142,46 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-function failedRealtimeState(error: unknown): VoiceRealtimeState {
+export function buildFailedVoiceRealtimeState(error: unknown): VoiceRealtimeState {
+  const readinessFailure = providerReadinessFailure(error);
+  const failureCode: VoiceRealtimeFailureCode = readinessFailure
+    ? 'provider_readiness'
+    : 'voice_failed';
+
   return {
     status: 'failed',
     tenantName: '',
     inventoryName: '',
     progressLabel: 'Voice failed',
     debugEvents: [],
-    errorMessage: readableError(error, 'Voice failed safely.')
+    failureCode,
+    errorMessage: readinessFailure?.message ?? 'Voice failed safely.'
   };
+}
+
+function providerReadinessFailure(error: unknown): { readonly message: string } | null {
+  if (!isObject(error) || error.code !== 'provider_readiness') {
+    return null;
+  }
+
+  const missingCapabilities = Array.isArray(error.missingCapabilities)
+    ? error.missingCapabilities.filter(isVoiceProviderCapability)
+    : [];
+
+  return {
+    message: missingCapabilities.length > 0
+      ? `Voice provider profiles are not ready: ${missingCapabilities.join(', ')}.`
+      : 'Voice provider profiles are not ready.'
+  };
+}
+
+function isObject(value: unknown): value is {
+  readonly code?: unknown;
+  readonly missingCapabilities?: unknown;
+} {
+  return typeof value === 'object' && value !== null;
+}
+
+function isVoiceProviderCapability(value: unknown): value is string {
+  return value === 'speech_to_text' || value === 'language_inference' || value === 'text_to_speech';
 }
