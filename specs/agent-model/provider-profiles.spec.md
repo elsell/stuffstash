@@ -82,7 +82,7 @@ Credential replacement requests must accept raw credential material only in the 
 
 Provider test requests must require tenant configuration permission and return safe metadata only: provider profile ID, capability, provider kind, status, safe message, and test timestamp. Provider test requests may be run for `enabled` or `disabled` configured profiles so tenant administrators can verify a profile before enabling it for realtime sessions. Provider test requests must reject archived, missing, unsupported, malformed, credential-missing, or credential-unusable profiles safely. Successful tests must update the provider profile `lastTestedAt` timestamp and write audit history. Failed tests must return a safe failure and must not expose provider credentials, raw provider responses, stack traces, endpoint internals, prompts, transcripts, audio, generated speech, hidden inventory data, or provider account details.
 
-Provider test credential selection must be based on the provider profile capability and provider kind, not incidental repository order. Gemini provider profiles must prefer active `oauth_bearer` credentials before `api_key` credentials because the first Google adapter implementation authenticates through Google OAuth access tokens.
+Provider test credential selection must be based on the provider profile capability and provider kind, not incidental repository order. Gemini provider profiles that use Vertex AI runtime options must support `oauth_bearer` credentials. Gemini provider profiles for speech-to-text and language inference must also support Google AI Gemini API `api_key` credentials by sending `x-goog-api-key` to the Gemini API `generateContent` endpoint, and should prefer active `api_key` credentials before `oauth_bearer` credentials when both exist. Google Cloud Text-to-Speech provider profiles remain `oauth_bearer` only until a separate provider kind or adapter is specified for API-key-backed speech synthesis.
 
 ## Authorization
 
@@ -157,6 +157,11 @@ Resolution must verify:
 - The selected adapter supports the provider kind.
 - Required endpoint, model, runtime options, and credentials are present and valid enough to attempt provider use.
 - The authenticated principal is authorized for the tenant and inventory scope requested by the realtime session.
+
+For Gemini speech-to-text and language inference, runtime profile construction must support two credential modes:
+
+- `oauth_bearer`: uses Vertex AI Gemini with `projectId`, `location`, optional `quotaProject`, model name, and bearer authorization.
+- `api_key`: uses the Google AI Gemini API with model name, optional endpoint URL, and `x-goog-api-key` authorization. It must not require `projectId`, `location`, or `quotaProject`.
 
 Resolution must fail safely with user-safe errors and safe observability when a profile is missing, disabled, archived, malformed, unsupported, or has unusable credentials.
 

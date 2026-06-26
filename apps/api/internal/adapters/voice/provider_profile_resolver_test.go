@@ -40,8 +40,11 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if len(sealer.unsealedScopes) != 3 {
 		t.Fatalf("expected three credential unseal calls, got %+v", sealer.unsealedScopes)
 	}
-	if got := factory.configs["stt-profile"]; string(got.Credential) != "raw-stt-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
+	if got := factory.configs["stt-profile"]; string(got.Credential) != "raw-stt-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeAPIKey {
 		t.Fatalf("unexpected stt factory config: %+v", got)
+	}
+	if got := factory.configs["tts-profile"]; string(got.Credential) != "raw-tts-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
+		t.Fatalf("unexpected tts factory config: %+v", got)
 	}
 }
 

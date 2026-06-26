@@ -355,7 +355,10 @@ func (s Service) activeProviderCredential(ctx context.Context, tenantID tenant.I
 
 func providerCredentialPurposes(profile domain.ProviderProfile) []ports.ProviderCredentialPurpose {
 	if profile.ProviderKind == domain.ProviderKindGemini {
-		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer, ports.ProviderCredentialPurposeAPIKey}
+		if profile.Capability == domain.ProviderCapabilityTextToSpeech {
+			return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer}
+		}
+		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
 	}
 	return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
 }

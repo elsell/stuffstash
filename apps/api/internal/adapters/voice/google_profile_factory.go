@@ -61,17 +61,35 @@ func (GoogleProviderProfileFactory) TextToSpeechProvider(_ context.Context, conf
 }
 
 func googleGeminiConfigFromProfile(config ProviderProfileProviderConfig) (GoogleGeminiConfig, error) {
-	if config.Profile.ProviderKind != agentmodel.ProviderKindGemini || config.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
+	if config.Profile.ProviderKind != agentmodel.ProviderKindGemini {
 		return GoogleGeminiConfig{}, ports.ErrInvalidProviderInput
 	}
 	options, err := providerRuntimeOptions(config.Profile)
 	if err != nil {
 		return GoogleGeminiConfig{}, err
 	}
+	model := config.Profile.ModelName.String()
+	if model == "" {
+		return GoogleGeminiConfig{}, ports.ErrInvalidProviderInput
+	}
+	if config.CredentialPurpose == ports.ProviderCredentialPurposeAPIKey {
+		apiKey := strings.TrimSpace(string(config.Credential))
+		if apiKey == "" {
+			return GoogleGeminiConfig{}, ports.ErrInvalidProviderInput
+		}
+		return GoogleGeminiConfig{
+			Model:       model,
+			BaseURL:     config.Profile.EndpointURL.String(),
+			APIKey:      apiKey,
+			TokenSource: nil,
+		}, nil
+	}
+	if config.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
+		return GoogleGeminiConfig{}, ports.ErrInvalidProviderInput
+	}
 	projectID := stringOption(options, "projectId")
 	location := stringOption(options, "location")
-	model := config.Profile.ModelName.String()
-	if projectID == "" || location == "" || model == "" {
+	if projectID == "" || location == "" {
 		return GoogleGeminiConfig{}, ports.ErrInvalidProviderInput
 	}
 	return GoogleGeminiConfig{

@@ -19,9 +19,10 @@ type googleHTTPClient struct {
 	httpClient   *http.Client
 	tokenSource  oauth2.TokenSource
 	quotaProject string
+	apiKey       string
 }
 
-func newGoogleHTTPClient(baseURL string, httpClient *http.Client, tokenSource oauth2.TokenSource, quotaProject string) googleHTTPClient {
+func newGoogleHTTPClient(baseURL string, httpClient *http.Client, tokenSource oauth2.TokenSource, quotaProject string, apiKey string) googleHTTPClient {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 30 * time.Second}
 	}
@@ -30,16 +31,13 @@ func newGoogleHTTPClient(baseURL string, httpClient *http.Client, tokenSource oa
 		httpClient:   httpClient,
 		tokenSource:  tokenSource,
 		quotaProject: strings.TrimSpace(quotaProject),
+		apiKey:       strings.TrimSpace(apiKey),
 	}
 }
 
 func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any, response any) error {
-	if c.tokenSource == nil {
+	if c.tokenSource == nil && c.apiKey == "" {
 		return errors.New("google token source is not configured")
-	}
-	token, err := c.tokenSource.Token()
-	if err != nil {
-		return err
 	}
 	body, err := json.Marshal(request)
 	if err != nil {
@@ -49,9 +47,17 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 	if err != nil {
 		return err
 	}
-	httpRequest.Header.Set("Authorization", "Bearer "+token.AccessToken)
+	if c.apiKey != "" {
+		httpRequest.Header.Set("X-Goog-Api-Key", c.apiKey)
+	} else {
+		token, err := c.tokenSource.Token()
+		if err != nil {
+			return err
+		}
+		httpRequest.Header.Set("Authorization", "Bearer "+token.AccessToken)
+	}
 	httpRequest.Header.Set("Content-Type", "application/json")
-	if c.quotaProject != "" {
+	if c.apiKey == "" && c.quotaProject != "" {
 		httpRequest.Header.Set("X-Goog-User-Project", c.quotaProject)
 	}
 	httpResponse, err := c.httpClient.Do(httpRequest)

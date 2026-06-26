@@ -45,17 +45,39 @@ func TestGoogleProviderProfileFactoryBuildsOAuthBackedProviders(t *testing.T) {
 	}
 }
 
-func TestGoogleProviderProfileFactoryRejectsAPIKeyUntilSupported(t *testing.T) {
+func TestGoogleProviderProfileFactoryBuildsAPIKeyBackedGeminiProviders(t *testing.T) {
 	t.Parallel()
 
 	factory := GoogleProviderProfileFactory{}
-	_, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
-		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{"projectId":"project","location":"us-central1"}`),
+	language, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
+		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{}`),
+		CredentialPurpose: ports.ProviderCredentialPurposeAPIKey,
+		Credential:        []byte("api-key"),
+	})
+	if err != nil {
+		t.Fatalf("build api-key language provider: %v", err)
+	}
+	if provider, ok := language.(GoogleGeminiLanguageInference); !ok || provider.path != "/v1beta/models/gemini-test:generateContent" {
+		t.Fatalf("unexpected api-key language provider: %#v", language)
+	}
+	stt, err := factory.SpeechToTextProvider(context.Background(), ProviderProfileProviderConfig{
+		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilitySpeechToText, `{}`),
+		CredentialPurpose: ports.ProviderCredentialPurposeAPIKey,
+		Credential:        []byte("api-key"),
+	})
+	if err != nil {
+		t.Fatalf("build api-key speech-to-text provider: %v", err)
+	}
+	if provider, ok := stt.(GoogleGeminiSpeechToText); !ok || provider.path != "/v1beta/models/gemini-test:generateContent" {
+		t.Fatalf("unexpected api-key speech-to-text provider: %#v", stt)
+	}
+	_, err = factory.TextToSpeechProvider(context.Background(), ProviderProfileProviderConfig{
+		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityTextToSpeech, `{"languageCode":"en-US","voiceName":"en-US-Standard-C"}`),
 		CredentialPurpose: ports.ProviderCredentialPurposeAPIKey,
 		Credential:        []byte("api-key"),
 	})
 	if err != ports.ErrInvalidProviderInput {
-		t.Fatalf("expected invalid provider input, got %v", err)
+		t.Fatalf("expected api-key text-to-speech rejection, got %v", err)
 	}
 }
 

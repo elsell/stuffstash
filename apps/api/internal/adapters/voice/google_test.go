@@ -67,6 +67,41 @@ func TestGoogleGeminiSpeechToTextTranscribesInlineAudio(t *testing.T) {
 	}
 }
 
+func TestGoogleGeminiSpeechToTextUsesAPIKeyBackend(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "" {
+			t.Fatalf("api-key backend must not send bearer authorization: %q", r.Header.Get("Authorization"))
+		}
+		if r.Header.Get("X-Goog-Api-Key") != "test-api-key" {
+			t.Fatalf("missing api key header: %q", r.Header.Get("X-Goog-Api-Key"))
+		}
+		if r.URL.Path != "/v1beta/models/gemini-test:generateContent" {
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		_ = json.NewEncoder(w).Encode(geminiTextResponse("Where are my tools?"))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiSpeechToText(GoogleGeminiConfig{
+		Model:      "gemini-test",
+		BaseURL:    server.URL,
+		APIKey:     "test-api-key",
+		HTTPClient: server.Client(),
+	})
+	result, err := provider.Transcribe(context.Background(), ports.SpeechToTextInput{
+		AudioFormat: ports.RealtimeAudioFormat{MimeType: "audio/mp4"},
+		AudioChunks: [][]byte{[]byte("audio")},
+	})
+	if err != nil {
+		t.Fatalf("transcribe with api key: %v", err)
+	}
+	if result.Transcript != "Where are my tools?" {
+		t.Fatalf("unexpected transcript %q", result.Transcript)
+	}
+}
+
 func TestGoogleGeminiSpeechToTextProbeUsesModelEndpointWithoutTenantAudio(t *testing.T) {
 	t.Parallel()
 
@@ -195,6 +230,38 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	}
 	if !requestHasFunctionDeclaration(requests[1], "search_authorized_assets") {
 		t.Fatalf("second turn should keep usable native tool declarations for distinct follow-up calls: %+v", requests[1]["tools"])
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceUsesAPIKeyBackend(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "" {
+			t.Fatalf("api-key backend must not send bearer authorization: %q", r.Header.Get("Authorization"))
+		}
+		if r.Header.Get("X-Goog-Api-Key") != "test-api-key" {
+			t.Fatalf("missing api key header: %q", r.Header.Get("X-Goog-Api-Key"))
+		}
+		if r.URL.Path != "/v1beta/models/gemini-test:generateContent" {
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		Model:      "gemini-test",
+		BaseURL:    server.URL,
+		APIKey:     "test-api-key",
+		HTTPClient: server.Client(),
+	})
+	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Provider diagnostic.", FinalOnly: true})
+	if err != nil {
+		t.Fatalf("language inference with api key: %v", err)
+	}
+	if turn.Final == nil || turn.Final.SpokenResponse != "Ready." {
+		t.Fatalf("unexpected turn: %+v", turn)
 	}
 }
 

@@ -31,7 +31,7 @@ func NewGoogleTextToSpeech(cfg GoogleTextToSpeechConfig) GoogleTextToSpeech {
 		baseURL = "https://texttospeech.googleapis.com"
 	}
 	return GoogleTextToSpeech{
-		client:       newGoogleHTTPClient(baseURL, cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject),
+		client:       newGoogleHTTPClient(baseURL, cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject, ""),
 		languageCode: cfg.LanguageCode,
 		voiceName:    cfg.VoiceName,
 	}

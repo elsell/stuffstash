@@ -288,7 +288,7 @@ func TestServiceTestsProviderProfileWithUnsealedCredentialAndUpdatesLastTestedAt
 	if result.Status != ports.ProviderProfileTestStatusSucceeded || result.ProfileID != "profile-one" || result.Message == "" {
 		t.Fatalf("unexpected provider test result: %+v", result)
 	}
-	if tester.lastInput.Profile.ID != profile.ID || string(tester.lastInput.Credential) != "raw:profile-one" || tester.lastInput.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
+	if tester.lastInput.Profile.ID != profile.ID || string(tester.lastInput.Credential) != "raw:profile-one" || tester.lastInput.CredentialPurpose != ports.ProviderCredentialPurposeAPIKey {
 		t.Fatalf("tester did not receive expected provider input: %+v", tester.lastInput)
 	}
 	updated := repository.saved[profile.ID.String()]
@@ -297,6 +297,16 @@ func TestServiceTestsProviderProfileWithUnsealedCredentialAndUpdatesLastTestedAt
 	}
 	if repository.lastAuditAction != audit.ActionProviderProfileTested {
 		t.Fatalf("expected provider profile tested audit action, got %s", repository.lastAuditAction)
+	}
+}
+
+func TestServiceProviderCredentialPurposesPreferOAuthForGeminiTextToSpeech(t *testing.T) {
+	t.Parallel()
+
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileDisabled)
+	got := providerCredentialPurposes(profile)
+	if len(got) != 1 || got[0] != ports.ProviderCredentialPurposeOAuthBearer {
+		t.Fatalf("unexpected Gemini text-to-speech credential order: %+v", got)
 	}
 }
 

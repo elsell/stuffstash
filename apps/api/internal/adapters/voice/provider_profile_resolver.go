@@ -125,7 +125,10 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 
 func providerCredentialPurposes(profile agentmodel.ProviderProfile) []ports.ProviderCredentialPurpose {
 	if profile.ProviderKind == agentmodel.ProviderKindGemini {
-		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer, ports.ProviderCredentialPurposeAPIKey}
+		if profile.Capability == agentmodel.ProviderCapabilityTextToSpeech {
+			return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer}
+		}
+		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
 	}
 	return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
 }
