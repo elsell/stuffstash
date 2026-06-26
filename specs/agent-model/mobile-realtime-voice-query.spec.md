@@ -95,6 +95,7 @@ The expanded session surface must:
 - Support tap-to-start and tap-to-stop recording for the first slice.
 - Keep the primary mic control reachable with one thumb.
 - Keep the primary mic/progress control in a bottom action area so compact detents do not strand the main action in sparse scroll content.
+- When a proposed action plan is awaiting review, the bottom action area must replace the mic/new-session action with explicit approve and cancel controls so a compact detent keeps the decision reachable and the user cannot accidentally reset the pending review by starting another voice session.
 - Reserve the scroll body for transcript, response, progress details, diagnostics, and future approval artifacts.
 - Avoid using a standalone full-screen Voice route for normal user interaction. An internal modal route may be used as the native sheet implementation detail when the router requires a route to present a platform-native sheet.
 

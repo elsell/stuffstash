@@ -102,7 +102,8 @@ The web goal remains important but is not the immediate starting point. It still
 - Mobile provider-profile management now exposes safe tenant-scoped provider profile metadata, recommended profile creation, credential replacement, prompt-template replacement, lifecycle actions, safe provider tests, readiness summaries, and a voice-sheet recovery action that opens Voice providers when readiness fails before recording.
 - Mobile realtime voice cancellation now has an application boundary, recorder cleanup path, WebSocket abort path that sends `session.cancel` when session-bound, safe terminal cancelled state, API `session.cancelled` response for pre-processing cancellation, and focused mobile/API tests.
 - Mobile realtime voice can now expose a bounded `propose_action_plan` native tool, persist a proposed action plan through the application boundary, stream a safe `action.plan.proposed` WebSocket event, and render the proposal in the mobile voice sheet review stage without executing inventory writes.
-- Mobile realtime voice can now keep the review WebSocket session open after proposal, accept explicit mobile `action.plan.approve` or `action.plan.cancel` decisions, transition the persisted plan through application services, emit safe review outcome events, and disable duplicate mobile review decisions while execution remains unwired.
+- Mobile realtime voice can now keep the review WebSocket session open after proposal, accept explicit mobile `action.plan.approve` or `action.plan.cancel` decisions, transition the persisted plan through application services, emit safe review outcome events, and disable duplicate mobile review decisions while awaiting the terminal review outcome.
+- Approved mobile voice action plans can now execute the first single create command slice through the existing asset application boundary, atomically persist the asset/audit/undoable operation with the terminal action-plan state, and stream safe `action.plan.executed` or `action.plan.failed` review outcomes back to mobile.
 
 ## Known Gaps
 
@@ -115,16 +116,16 @@ The web goal remains important but is not the immediate starting point. It still
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- API-key-backed speech synthesis adapters, execution commands for approved action plans, and the external MCP server are not yet complete.
+- API-key-backed speech synthesis adapters and the external MCP server are not yet complete.
 
 ## Next Work
 
 1. Deepen the production mobile voice session surface.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
-2. Add approval-backed write action plans.
+2. Expand approval-backed write action plans beyond the first create slice.
    - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
-   - Keep action execution behind application services, tenant/inventory authorization, audit history, and explicit user confirmation.
+   - Add additional command kinds only behind application services, tenant/inventory authorization, audit history, atomic execution, and explicit user confirmation.
 3. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
@@ -136,5 +137,5 @@ The web goal remains important but is not the immediate starting point. It still
 
 - Google OIDC adapter end-to-end verification.
 - Mobile inventory/auth tracer bullet after the Expo Go development loop is proven.
-- Conversational inventory provider profiles (`specs/agent-model/provider-profiles.spec.md`), MCP read tools (`specs/agent-model/mcp-agent-tools.spec.md`), mobile realtime voice query (`specs/agent-model/mobile-realtime-voice-query.spec.md`), API-mediated realtime sessions, credential sealing, ports, and action plan execution. Public MCP write tools must wait for the external approval/action-plan contract.
+- Conversational inventory provider profiles (`specs/agent-model/provider-profiles.spec.md`), MCP read tools (`specs/agent-model/mcp-agent-tools.spec.md`), mobile realtime voice query (`specs/agent-model/mobile-realtime-voice-query.spec.md`), API-mediated realtime sessions, credential sealing, ports, and broader action plan execution. Public MCP write tools must wait for the external approval/action-plan contract.
 - Import and export.

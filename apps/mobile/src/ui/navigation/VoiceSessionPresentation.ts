@@ -132,9 +132,7 @@ export type VoiceSessionPresentation = {
     readonly commands: readonly string[];
     readonly risks: readonly string[];
   };
-  readonly canApproveActionPlan: boolean;
-  readonly canCancelActionPlan: boolean;
-  readonly canCancel: boolean;
+  readonly bottomAction: VoiceSessionBottomAction;
   readonly canReset: boolean;
   readonly contextLabel: string;
   readonly diagnostics: readonly string[] | null;
@@ -145,6 +143,19 @@ export type VoiceSessionPresentation = {
   readonly title: string;
   readonly transcript?: string;
 };
+
+export type VoiceSessionBottomAction =
+  | { readonly kind: 'review_decision'; readonly planId: string }
+  | {
+      readonly kind: 'session_controls';
+      readonly canCancel: boolean;
+      readonly mic: {
+        readonly accessibilityLabel: string;
+        readonly disabled: boolean;
+        readonly selected: boolean;
+      };
+    }
+  | { readonly kind: 'none' };
 
 export type VoiceSessionRecoveryAction = {
   readonly label: string;
@@ -172,6 +183,7 @@ export function buildVoiceSessionPresentation({
     diagnosticsEnabled && diagnosticsExpanded
       ? (realtime?.debugEvents ?? []).map(formatSafeDiagnosticEvent)
       : null;
+  const bottomAction = bottomActionForState(stage, realtime);
 
   return {
     actionPlan: realtime?.actionPlan
@@ -183,9 +195,7 @@ export function buildVoiceSessionPresentation({
           risks: realtime.actionPlan.risks
         }
       : undefined,
-    canApproveActionPlan: realtime?.actionPlan?.status === 'proposed' && !realtime.reviewDecisionPending,
-    canCancelActionPlan: realtime?.actionPlan?.status === 'proposed' && !realtime.reviewDecisionPending,
-    canCancel: stage === 'listening' || stage === 'processing' || stage === 'speaking',
+    bottomAction,
     canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || (stage === 'review' && realtime?.actionPlan?.status !== 'proposed'),
     contextLabel: `${inventoryName} · ${tenantName}`,
     diagnostics,
@@ -198,6 +208,34 @@ export function buildVoiceSessionPresentation({
     title,
     transcript: realtime?.transcript
   };
+}
+
+function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): VoiceSessionBottomAction {
+  if (realtime?.actionPlan?.status === 'proposed' && !realtime.reviewDecisionPending) {
+    return { kind: 'review_decision', planId: realtime.actionPlan.planId };
+  }
+  if ((realtime?.actionPlan?.status === 'approved' || realtime?.actionPlan?.status === 'proposed') && realtime.reviewDecisionPending) {
+    return { kind: 'none' };
+  }
+
+  if (stage === 'ready' || stage === 'listening' || stage === 'processing' || stage === 'speaking' || stage === 'completed' || stage === 'cancelled' || stage === 'failed') {
+    const isWorking = stage === 'processing' || stage === 'speaking';
+    return {
+      kind: 'session_controls',
+      canCancel: stage === 'listening' || isWorking,
+      mic: {
+        accessibilityLabel: stage === 'listening'
+          ? 'Stop listening'
+          : stage === 'ready' && !realtime
+            ? 'Start voice interaction'
+            : 'Start another voice interaction',
+        disabled: isWorking,
+        selected: stage === 'listening'
+      }
+    };
+  }
+
+  return { kind: 'none' };
 }
 
 export function formatSafeDiagnosticEvent(event: VoiceSafeDiagnosticEvent): string {

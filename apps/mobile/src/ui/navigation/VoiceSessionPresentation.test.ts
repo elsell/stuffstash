@@ -90,7 +90,13 @@ describe('VoiceSessionPresentation', () => {
       realtime: null,
       stage: 'processing',
       tenantName: 'Main tenant'
-    })).toMatchObject({ canCancel: true, canReset: false });
+    })).toMatchObject({
+      bottomAction: {
+        kind: 'session_controls',
+        canCancel: true
+      },
+      canReset: false
+    });
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
       diagnosticsExpanded: false,
@@ -98,7 +104,13 @@ describe('VoiceSessionPresentation', () => {
       realtime: null,
       stage: 'completed',
       tenantName: 'Main tenant'
-    })).toMatchObject({ canCancel: false, canReset: true });
+    })).toMatchObject({
+      bottomAction: {
+        kind: 'session_controls',
+        canCancel: false
+      },
+      canReset: true
+    });
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
       diagnosticsExpanded: false,
@@ -113,7 +125,10 @@ describe('VoiceSessionPresentation', () => {
       stage: 'cancelled',
       tenantName: 'Main tenant'
     })).toMatchObject({
-      canCancel: false,
+      bottomAction: {
+        kind: 'session_controls',
+        canCancel: false
+      },
       canReset: true,
       title: 'Cancelled',
       progressLabel: 'Cancelled'
@@ -142,9 +157,11 @@ describe('VoiceSessionPresentation', () => {
       stage: 'review',
       tenantName: 'Main tenant'
     })).toMatchObject({
-      canApproveActionPlan: true,
-      canCancelActionPlan: true,
-      canReset: false
+      bottomAction: {
+        kind: 'review_decision',
+        planId: 'plan-1'
+      },
+      canReset: false,
     });
   });
 
@@ -171,10 +188,102 @@ describe('VoiceSessionPresentation', () => {
       stage: 'review',
       tenantName: 'Main tenant'
     })).toMatchObject({
-      canApproveActionPlan: false,
-      canCancelActionPlan: false,
+      bottomAction: {
+        kind: 'none'
+      },
       canReset: false,
       progressLabel: 'Approving change'
+    });
+  });
+
+  it('describes bottom action controls for normal, working, review, and terminal states', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: null,
+      stage: 'listening',
+      tenantName: 'Main tenant'
+    }).bottomAction).toEqual({
+      kind: 'session_controls',
+      canCancel: true,
+      mic: {
+        accessibilityLabel: 'Stop listening',
+        disabled: false,
+        selected: true
+      }
+    });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: null,
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    }).bottomAction).toEqual({
+      kind: 'session_controls',
+      canCancel: true,
+      mic: {
+        accessibilityLabel: 'Start another voice interaction',
+        disabled: true,
+        selected: false
+      }
+    });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Applying change',
+        debugEvents: [],
+        reviewDecisionPending: true,
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'approved',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          risks: []
+        }
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    }).bottomAction).toEqual({
+      kind: 'none'
+    });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'completed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Change applied',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'executed',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          risks: []
+        }
+      },
+      stage: 'completed',
+      tenantName: 'Main tenant'
+    }).bottomAction).toEqual({
+      kind: 'session_controls',
+      canCancel: false,
+      mic: {
+        accessibilityLabel: 'Start another voice interaction',
+        disabled: false,
+        selected: false
+      }
     });
   });
 

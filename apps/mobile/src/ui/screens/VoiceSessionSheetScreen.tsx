@@ -118,14 +118,8 @@ function VoiceSessionSheet({
     stage: state.stage,
     tenantName: readyState?.preview.tenantName ?? readyState?.realtime?.tenantName ?? 'Tenant'
   });
-  const canUseMic = state.status === 'ready' && state.stage !== 'processing' && state.stage !== 'speaking';
-  const micAccessibilityLabel =
-    state.stage === 'listening'
-      ? 'Stop listening'
-      : state.stage === 'ready' && !readyState?.realtime
-        ? 'Start voice interaction'
-        : 'Start another voice interaction';
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
+  const bottomAction = session.bottomAction;
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
@@ -203,28 +197,6 @@ function VoiceSessionSheet({
                 {session.actionPlan.status === 'failed' ? (
                   <Text style={styles.actionPlanStatus}>Could not apply this change.</Text>
                 ) : null}
-                {session.canApproveActionPlan || session.canCancelActionPlan ? (
-                  <View style={styles.actionPlanActions}>
-                    <Pressable
-                      accessibilityLabel="Approve voice change"
-                      accessibilityRole="button"
-                      onPress={() => onApproveActionPlan(session.actionPlan?.planId ?? '')}
-                      style={styles.approvePlanButton}
-                    >
-                      <Check color={colors.onAction} size={18} strokeWidth={2.6} />
-                      <Text style={styles.approvePlanButtonText}>Approve</Text>
-                    </Pressable>
-                    <Pressable
-                      accessibilityLabel="Cancel voice change"
-                      accessibilityRole="button"
-                      onPress={() => onCancelActionPlan(session.actionPlan?.planId ?? '')}
-                      style={styles.cancelPlanButton}
-                    >
-                      <X color={colors.textMuted} size={17} strokeWidth={2.4} />
-                      <Text style={styles.cancelPlanButtonText}>Cancel</Text>
-                    </Pressable>
-                  </View>
-                ) : null}
               </View>
             ) : null}
 
@@ -277,44 +249,74 @@ function VoiceSessionSheet({
             ) : null}
           </ScrollView>
 
-          <View
-            style={[
-              styles.bottomActionBar,
-              { paddingBottom: spacing.md + safeAreaBottom }
-            ]}
-          >
-            <View style={styles.progressGroup}>
-              <Text style={styles.progressTitle}>{session.progressLabel}</Text>
-              <Text style={styles.progressHint}>{hintForStage(state.stage)}</Text>
+          <View style={[styles.bottomActionBar, { paddingBottom: spacing.md + safeAreaBottom }]}>
+            <View style={[
+              styles.bottomActionContent,
+              bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
+            ]}>
+              <View style={styles.progressGroup}>
+                <Text style={styles.progressTitle}>{session.progressLabel}</Text>
+                <Text
+                  numberOfLines={bottomAction.kind === 'review_decision' ? 1 : 2}
+                  style={styles.progressHint}
+                >
+                  {hintForStage(state.stage)}
+                </Text>
+              </View>
+              {bottomAction.kind === 'review_decision' ? (
+                <View style={styles.reviewActionGroup}>
+                  <Pressable
+                    accessibilityLabel="Cancel voice change"
+                    accessibilityRole="button"
+                    onPress={() => onCancelActionPlan(bottomAction.planId)}
+                    style={styles.cancelPlanButton}
+                  >
+                    <X color={colors.textMuted} size={17} strokeWidth={2.4} />
+                    <Text style={styles.cancelPlanButtonText}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel="Approve voice change"
+                    accessibilityRole="button"
+                    onPress={() => onApproveActionPlan(bottomAction.planId)}
+                    style={styles.approvePlanButton}
+                  >
+                    <Check color={colors.onAction} size={18} strokeWidth={2.6} />
+                    <Text style={styles.approvePlanButtonText}>Approve</Text>
+                  </Pressable>
+                </View>
+              ) : bottomAction.kind === 'session_controls' ? (
+                <>
+                  {bottomAction.canCancel ? (
+                    <Pressable
+                      accessibilityLabel="Cancel voice session"
+                      accessibilityRole="button"
+                      onPress={onCancelSession}
+                      style={styles.cancelSessionButton}
+                    >
+                      <Text style={styles.cancelSessionButtonText}>Cancel</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    accessibilityLabel={bottomAction.mic.accessibilityLabel}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: bottomAction.mic.disabled, selected: bottomAction.mic.selected }}
+                    disabled={bottomAction.mic.disabled}
+                    onPress={onSessionMic}
+                    style={[
+                      styles.sessionMicButton,
+                      bottomAction.mic.selected && styles.activeSessionMicButton,
+                      bottomAction.mic.disabled && styles.disabledSessionMicButton
+                    ]}
+                  >
+                    {bottomAction.mic.selected ? (
+                      <Pause color={colors.onAction} size={32} strokeWidth={2.5} />
+                    ) : (
+                      <Mic color={colors.onAction} size={34} strokeWidth={2.5} />
+                    )}
+                  </Pressable>
+                </>
+              ) : null}
             </View>
-            {session.canCancel ? (
-              <Pressable
-                accessibilityLabel="Cancel voice session"
-                accessibilityRole="button"
-                onPress={onCancelSession}
-                style={styles.cancelSessionButton}
-              >
-                <Text style={styles.cancelSessionButtonText}>Cancel</Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityLabel={micAccessibilityLabel}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !canUseMic, selected: state.stage === 'listening' }}
-              disabled={!canUseMic}
-              onPress={onSessionMic}
-              style={[
-                styles.sessionMicButton,
-                state.stage === 'listening' && styles.activeSessionMicButton,
-                !canUseMic && styles.disabledSessionMicButton
-              ]}
-            >
-              {state.stage === 'listening' ? (
-                <Pause color={colors.onAction} size={32} strokeWidth={2.5} />
-              ) : (
-                <Mic color={colors.onAction} size={34} strokeWidth={2.5} />
-              )}
-            </Pressable>
           </View>
         </>
       )}
@@ -373,12 +375,14 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   bottomActionBar: {
-    alignItems: 'center',
     borderTopColor: colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.md,
     paddingTop: spacing.md
+  },
+  bottomActionContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md
   },
   actionPlanRisk: {
     color: colors.textMuted,
@@ -386,11 +390,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 18,
     marginTop: spacing.xs
-  },
-  actionPlanActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md
   },
   actionPlanRow: {
     alignItems: 'flex-start',
@@ -607,6 +606,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     lineHeight: 24
+  },
+  reviewActionGroup: {
+    flexDirection: 'row',
+    gap: spacing.sm
+  },
+  reviewBottomActionContent: {
+    alignItems: 'stretch',
+    flexDirection: 'column',
+    gap: spacing.sm
   },
   sectionLabel: {
     color: colors.textMuted,
