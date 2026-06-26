@@ -9,14 +9,16 @@ import {
   Text,
   View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme/tokens';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
+import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
 
 export function VoiceSessionSheetScreen() {
   const { reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
+  const safeAreaInsets = useSafeAreaInsets();
 
   async function handleSessionMic(): Promise<void> {
     if (state.status !== 'ready') {
@@ -54,6 +56,7 @@ export function VoiceSessionSheetScreen() {
         void handleSessionMic();
       }}
       onToggleDiagnostics={() => setDiagnosticsExpanded((current) => !current)}
+      safeAreaBottom={safeAreaInsets.bottom}
       state={state}
     />
   );
@@ -65,6 +68,7 @@ function VoiceSessionSheet({
   onReset,
   onSessionMic,
   onToggleDiagnostics,
+  safeAreaBottom,
   state
 }: {
   readonly diagnosticsExpanded: boolean;
@@ -72,11 +76,13 @@ function VoiceSessionSheet({
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
   readonly onToggleDiagnostics: () => void;
+  readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
   const readyState = state.status === 'ready' ? state : null;
+  const diagnosticsEnabled = false;
   const session = buildVoiceSessionPresentation({
-    diagnosticsEnabled: Boolean(readyState?.realtime?.debugEvents.length),
+    diagnosticsEnabled,
     diagnosticsExpanded,
     inventoryName: readyState?.preview.inventoryName ?? readyState?.realtime?.inventoryName ?? 'Inventory',
     realtime: readyState?.realtime ?? null,
@@ -90,6 +96,7 @@ function VoiceSessionSheet({
       : state.stage === 'ready' && !readyState?.realtime
         ? 'Start voice interaction'
         : 'Start another voice interaction';
+  const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
@@ -115,8 +122,81 @@ function VoiceSessionSheet({
       ) : state.status === 'error' ? (
         <SessionErrorState message={state.message} />
       ) : (
-        <ScrollView contentContainerStyle={styles.sessionContent}>
-          <View style={styles.primaryControlRow}>
+        <>
+          <ScrollView
+            contentContainerStyle={[
+              styles.sessionContent,
+              !body.hasBodyContent && styles.emptySessionContent
+            ]}
+          >
+            {session.transcript ? (
+              <View style={styles.sessionSection}>
+                <Text style={styles.sectionLabel}>Transcript</Text>
+                <Text selectable style={styles.transcriptText}>
+                  {session.transcript}
+                </Text>
+              </View>
+            ) : null}
+
+            {session.response ? (
+              <View style={styles.responseSection}>
+                <View style={styles.responseIcon}>
+                  <MessageCircle color={colors.accentStrong} size={18} strokeWidth={2.4} />
+                </View>
+                <Text style={styles.responseText}>{session.response}</Text>
+              </View>
+            ) : null}
+
+            {state.realtime?.errorMessage ? (
+              <View style={styles.errorSection}>
+                <Text style={styles.sectionLabel}>Voice failed</Text>
+                <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
+              </View>
+            ) : null}
+
+            {diagnosticsEnabled && state.realtime?.debugEvents.length ? (
+              <View style={styles.diagnosticsSection}>
+                <Pressable
+                  accessibilityLabel={diagnosticsExpanded ? 'Hide voice diagnostics' : 'Show voice diagnostics'}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: diagnosticsExpanded }}
+                  onPress={onToggleDiagnostics}
+                  style={styles.diagnosticsHeader}
+                >
+                  <Text style={styles.sectionLabel}>Diagnostics</Text>
+                  {diagnosticsExpanded ? (
+                    <ChevronUp color={colors.textMuted} size={18} strokeWidth={2.3} />
+                  ) : (
+                    <ChevronDown color={colors.textMuted} size={18} strokeWidth={2.3} />
+                  )}
+                </Pressable>
+                {session.diagnostics?.map((event, index) => (
+                  <View key={`${event}-${index.toString()}`} style={styles.diagnosticRow}>
+                    <Text style={styles.diagnosticIndex}>{(index + 1).toString()}</Text>
+                    <Text style={styles.diagnosticText}>{event}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {session.canReset ? (
+              <Pressable accessibilityRole="button" onPress={onReset} style={styles.resetButton}>
+                <RotateCcw color={colors.textMuted} size={17} strokeWidth={2.4} />
+                <Text style={styles.resetButtonText}>Reset session</Text>
+              </Pressable>
+            ) : null}
+          </ScrollView>
+
+          <View
+            style={[
+              styles.bottomActionBar,
+              { paddingBottom: spacing.md + safeAreaBottom }
+            ]}
+          >
+            <View style={styles.progressGroup}>
+              <Text style={styles.progressTitle}>{session.progressLabel}</Text>
+              <Text style={styles.progressHint}>{hintForStage(state.stage)}</Text>
+            </View>
             <Pressable
               accessibilityLabel={micAccessibilityLabel}
               accessibilityRole="button"
@@ -130,74 +210,13 @@ function VoiceSessionSheet({
               ]}
             >
               {state.stage === 'listening' ? (
-                <Pause color={colors.onAction} size={34} strokeWidth={2.5} />
+                <Pause color={colors.onAction} size={32} strokeWidth={2.5} />
               ) : (
-                <Mic color={colors.onAction} size={36} strokeWidth={2.5} />
+                <Mic color={colors.onAction} size={34} strokeWidth={2.5} />
               )}
             </Pressable>
-            <View style={styles.progressGroup}>
-              <Text style={styles.progressTitle}>{session.progressLabel}</Text>
-              <Text style={styles.progressHint}>{hintForStage(state.stage)}</Text>
-            </View>
           </View>
-
-          {session.transcript ? (
-            <View style={styles.sessionSection}>
-              <Text style={styles.sectionLabel}>Transcript</Text>
-              <Text selectable style={styles.transcriptText}>
-                {session.transcript}
-              </Text>
-            </View>
-          ) : null}
-
-          {session.response ? (
-            <View style={styles.responseSection}>
-              <View style={styles.responseIcon}>
-                <MessageCircle color={colors.accentStrong} size={18} strokeWidth={2.4} />
-              </View>
-              <Text style={styles.responseText}>{session.response}</Text>
-            </View>
-          ) : null}
-
-          {state.realtime?.errorMessage ? (
-            <View style={styles.errorSection}>
-              <Text style={styles.sectionLabel}>Voice failed</Text>
-              <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
-            </View>
-          ) : null}
-
-          {state.realtime?.debugEvents.length ? (
-            <View style={styles.diagnosticsSection}>
-              <Pressable
-                accessibilityLabel={diagnosticsExpanded ? 'Hide voice diagnostics' : 'Show voice diagnostics'}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: diagnosticsExpanded }}
-                onPress={onToggleDiagnostics}
-                style={styles.diagnosticsHeader}
-              >
-                <Text style={styles.sectionLabel}>Diagnostics</Text>
-                {diagnosticsExpanded ? (
-                  <ChevronUp color={colors.textMuted} size={18} strokeWidth={2.3} />
-                ) : (
-                  <ChevronDown color={colors.textMuted} size={18} strokeWidth={2.3} />
-                )}
-              </Pressable>
-              {session.diagnostics?.map((event, index) => (
-                <View key={`${event}-${index.toString()}`} style={styles.diagnosticRow}>
-                  <Text style={styles.diagnosticIndex}>{(index + 1).toString()}</Text>
-                  <Text style={styles.diagnosticText}>{event}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          {session.canReset ? (
-            <Pressable accessibilityRole="button" onPress={onReset} style={styles.resetButton}>
-              <RotateCcw color={colors.textMuted} size={17} strokeWidth={2.4} />
-              <Text style={styles.resetButtonText}>Reset session</Text>
-            </Pressable>
-          ) : null}
-        </ScrollView>
+        </>
       )}
     </SafeAreaView>
   );
@@ -251,6 +270,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: 'center'
   },
+  bottomActionBar: {
+    alignItems: 'center',
+    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingTop: spacing.md
+  },
   diagnosticIndex: {
     color: colors.textMuted,
     fontSize: 12,
@@ -286,6 +313,9 @@ const styles = StyleSheet.create({
   disabledSessionMicButton: {
     opacity: 0.58
   },
+  emptySessionContent: {
+    flexGrow: 1
+  },
   errorSection: {
     backgroundColor: colors.warningSurface,
     borderRadius: radius.md,
@@ -311,11 +341,6 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     width: 40
-  },
-  primaryControlRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md
   },
   progressGroup: {
     flex: 1,
@@ -382,19 +407,19 @@ const styles = StyleSheet.create({
   },
   sessionContent: {
     gap: spacing.md,
-    paddingBottom: spacing.xl
+    paddingBottom: spacing.md
   },
   sessionMicButton: {
     alignItems: 'center',
     backgroundColor: colors.action,
-    borderRadius: 34,
-    height: 68,
+    borderRadius: 31,
+    height: 62,
     justifyContent: 'center',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
     shadowRadius: 12,
-    width: 68
+    width: 62
   },
   sessionSection: {
     borderColor: colors.border,
@@ -419,7 +444,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     justifyContent: 'space-between',
-    marginBottom: spacing.md
+    marginBottom: spacing.sm
   },
   sheetTitle: {
     color: colors.text,

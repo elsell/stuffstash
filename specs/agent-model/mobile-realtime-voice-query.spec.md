@@ -94,6 +94,8 @@ The expanded session surface must:
 - Provide a clear close/collapse control that does not reset a completed answer unless the user starts a new session.
 - Support tap-to-start and tap-to-stop recording for the first slice.
 - Keep the primary mic control reachable with one thumb.
+- Keep the primary mic/progress control in a bottom action area so compact detents do not strand the main action in sparse scroll content.
+- Reserve the scroll body for transcript, response, progress details, diagnostics, and future approval artifacts.
 - Avoid using a standalone full-screen Voice route for normal user interaction. An internal modal route may be used as the native sheet implementation detail when the router requires a route to present a platform-native sheet.
 
 Any internal Voice route used for native sheet presentation must not appear as a primary navigation destination. Direct entry to the internal route must fall back to a valid product screen when closed.
