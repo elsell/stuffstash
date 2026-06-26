@@ -120,6 +120,64 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('does not expose reset while an action plan is still awaiting review', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      canApproveActionPlan: true,
+      canCancelActionPlan: true,
+      canReset: false
+    });
+  });
+
+  it('disables action plan decisions while a review decision is pending', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Approving change',
+        debugEvents: [],
+        reviewDecisionPending: true,
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      canApproveActionPlan: false,
+      canCancelActionPlan: false,
+      canReset: false,
+      progressLabel: 'Approving change'
+    });
+  });
+
   it('offers provider setup recovery only for provider-readiness failures', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

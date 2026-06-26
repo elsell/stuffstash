@@ -23,6 +23,8 @@ const (
 	RealtimeVoiceEventToolCallCompleted           = "tool.call.completed"
 	RealtimeVoiceEventToolCallFailed              = "tool.call.failed"
 	RealtimeVoiceEventActionPlanProposed          = "action.plan.proposed"
+	RealtimeVoiceEventActionPlanApproved          = "action.plan.approved"
+	RealtimeVoiceEventActionPlanCancelled         = "action.plan.cancelled"
 	RealtimeVoiceEventAssistantResponseStarted    = "assistant.response.started"
 	RealtimeVoiceEventAssistantResponseCompleted  = "assistant.response.completed"
 	RealtimeVoiceEventTextToSpeechAudioStarted    = "tts.audio.started"
@@ -83,6 +85,7 @@ type RealtimeVoiceEvent struct {
 	Text       string
 	Response   *ports.StructuredAgentResponse
 	ActionPlan *RealtimeVoiceActionPlanProposal
+	PlanID     string
 	Audio      []byte
 	AudioMime  string
 	ChunkID    string

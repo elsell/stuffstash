@@ -17,6 +17,10 @@ type VoiceWebSocket = {
 
 type VoiceWebSocketFactory = (url: string, headers: Record<string, string>) => VoiceWebSocket;
 
+type ActiveRealtimeReviewSession = {
+  readonly sendDecision: (type: 'action.plan.approve' | 'action.plan.cancel', planId: string) => void;
+};
+
 export type WebSocketRealtimeVoiceTransportOptions = {
   readonly apiBaseUrl: string;
   readonly tokenProvider: () => string;
@@ -27,6 +31,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
   private readonly apiBaseUrl: string;
   private readonly tokenProvider: () => string;
   private readonly webSocketFactory: VoiceWebSocketFactory;
+  private activeReviewSession: ActiveRealtimeReviewSession | null = null;
 
   constructor(options: WebSocketRealtimeVoiceTransportOptions) {
     this.apiBaseUrl = options.apiBaseUrl.replace(/\/+$/, '');
@@ -42,14 +47,33 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     const socket = this.webSocketFactory(realtimeVoiceUrl(this.apiBaseUrl), {
       Authorization: `Bearer ${this.tokenProvider()}`
     });
+    const thisTransport = this;
 
     await new Promise<void>((resolve, reject) => {
       let sessionId = '';
       let seq = 1;
       let lastServerSeq = 0;
       let completed = false;
+      let hasPendingActionPlan = false;
       let settled = false;
+      let decisionSent = false;
       let messageChain = Promise.resolve();
+      const sendDecision = (type: 'action.plan.approve' | 'action.plan.cancel', planId: string) => {
+        if (!sessionId || settled) {
+          throw new Error('Voice review session is not active.');
+        }
+        if (decisionSent) {
+          throw new Error('Voice review decision has already been sent.');
+        }
+        decisionSent = true;
+        thisTransport.activeReviewSession = null;
+        socket.send(JSON.stringify({
+          type,
+          seq: seq++,
+          sessionId,
+          planId
+        }));
+      };
       const abortHandler = () => {
         if (settled) {
           return;
@@ -75,6 +99,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       function settleResolve(): void {
         if (!settled) {
           settled = true;
+          thisTransport.activeReviewSession = null;
           options.signal?.removeEventListener('abort', abortHandler);
           resolve();
         }
@@ -83,6 +108,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       function settleReject(error: Error): void {
         if (!settled) {
           settled = true;
+          thisTransport.activeReviewSession = null;
           options.signal?.removeEventListener('abort', abortHandler);
           reject(error);
         }
@@ -143,24 +169,50 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             });
             socket.send(JSON.stringify({ type: 'audio.end', seq: seq++, sessionId }));
           }
-          if (message.type === 'session.completed') {
+          if (message.type === 'action.plan.proposed') {
+            hasPendingActionPlan = true;
+            this.activeReviewSession = { sendDecision };
+          }
+          if (message.type === 'session.completed' && !hasPendingActionPlan) {
             completed = true;
+            socket.close();
+            settleResolve();
+          }
+          if (message.type === 'action.plan.approved' || message.type === 'action.plan.cancelled') {
+            completed = true;
+            this.activeReviewSession = null;
             socket.close();
             settleResolve();
           }
           if (message.type === 'session.cancelled') {
             completed = true;
+            this.activeReviewSession = null;
             socket.close();
             settleResolve();
           }
           if (message.type === 'session.failed') {
             completed = true;
+            this.activeReviewSession = null;
             socket.close();
             settleResolve();
           }
         }).catch(settleReject);
       };
     });
+  }
+
+  async approveActionPlan(planId: string): Promise<void> {
+    if (!this.activeReviewSession) {
+      throw new Error('Voice review session is not active.');
+    }
+    this.activeReviewSession.sendDecision('action.plan.approve', planId);
+  }
+
+  async cancelActionPlan(planId: string): Promise<void> {
+    if (!this.activeReviewSession) {
+      throw new Error('Voice review session is not active.');
+    }
+    this.activeReviewSession.sendDecision('action.plan.cancel', planId);
   }
 }
 
@@ -228,6 +280,22 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         type: 'action.plan.proposed',
         sessionId: stringField(message, 'sessionId'),
         actionPlan: actionPlanField(message)
+      };
+    case 'action.plan.approved':
+      return {
+        ...metadata,
+        type: 'action.plan.approved',
+        sessionId: stringField(message, 'sessionId'),
+        planId: stringField(message, 'planId'),
+        status: 'approved'
+      };
+    case 'action.plan.cancelled':
+      return {
+        ...metadata,
+        type: 'action.plan.cancelled',
+        sessionId: stringField(message, 'sessionId'),
+        planId: stringField(message, 'planId'),
+        status: 'cancelled'
       };
 		case 'assistant.response.started':
 			return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
@@ -328,6 +396,7 @@ function actionPlanField(message: Record<string, unknown>) {
   const actionPlan = objectField(message, 'actionPlan');
   return {
     planId: stringField(actionPlan, 'planId'),
+    status: 'proposed' as const,
     confirmationSummary: stringField(actionPlan, 'confirmationSummary'),
     commands: arrayField(actionPlan, 'commands').map((item) => {
       const command = objectValue(item, 'actionPlan.commands');

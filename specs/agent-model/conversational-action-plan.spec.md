@@ -74,6 +74,8 @@ The first lifecycle states are:
 
 The first slice may implement creation, approval, and cancellation before command execution. Approval must be explicit, tied to the initiating principal and plan ID, and must not execute commands until an execution service is implemented. Cancelling or approving a terminal plan must fail safely. Repository reads and state transitions must be scoped by tenant ID and inventory ID.
 
+Mobile realtime approval and cancellation must use the same action-plan application service methods as any future REST, web, or MCP review surface. The realtime adapter may translate `action.plan.approve` and `action.plan.cancel` WebSocket messages into application-service calls, but it must not update action-plan persistence directly and must not execute command records in this review slice.
+
 The first persisted plan must not store raw transcript text. A safe `userIntentSummary` and `modelInterpretationSummary` may be stored only when they are bounded, user-renderable, and free of provider-specific raw output.
 
 ## Realtime Voice Proposal Tool
@@ -92,7 +94,7 @@ The proposal tool must accept only:
 
 The proposal tool must reject unknown arguments, unknown command kinds, empty confirmation summaries, unsafe command arguments, approval claims, provider credentials, raw prompts, raw provider responses, raw transcripts, bearer tokens, provider session IDs, and hidden resource data. The persisted plan must be scoped to the active tenant, inventory, principal, and realtime session.
 
-The first realtime proposal slice must not approve, execute, or cancel the proposed plan automatically. Approval and execution require explicit later client messages and application-service handling.
+The first realtime proposal slice must not approve, execute, or cancel the proposed plan automatically. Approval and cancellation require explicit later client messages and application-service handling. Execution requires a later execution service and must not be implied by approval.
 
 ## Initial Command Enumeration
 

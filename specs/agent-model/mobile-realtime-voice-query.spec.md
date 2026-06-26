@@ -253,6 +253,8 @@ Client-to-server messages:
 - `audio.chunk`
 - `audio.end`
 - `session.cancel`
+- `action.plan.approve`
+- `action.plan.cancel`
 - `client.ack` when acknowledgement is needed for flow control
 
 Server-to-client messages:
@@ -266,6 +268,8 @@ Server-to-client messages:
 - `tool.call.completed`
 - `tool.call.failed`
 - `action.plan.proposed`
+- `action.plan.approved`
+- `action.plan.cancelled`
 - `assistant.response.started`
 - `assistant.response.delta`
 - `assistant.response.completed`
@@ -291,6 +295,16 @@ Client messages must include monotonic per-session sequence metadata once a sess
 `action.plan.proposed` contains the safe persisted action-plan review payload for mobile. It must include plan ID, confirmation summary, command summaries, risk summaries, and no raw transcript, raw prompt, raw model response, credentials, provider session IDs, hidden resource data, or approval claims.
 
 When the API emits `action.plan.proposed`, the mobile app must enter the `review` stage and show the proposal in the voice sheet. The first mobile slice may show disabled or not-yet-wired approval actions, but it must not silently execute the plan. The final spoken response for a proposed write may explain that the user should review the suggested change.
+
+The next mobile review slice must let the user approve or cancel the proposed action plan from the voice sheet using the existing realtime WebSocket session. The mobile client must send `action.plan.approve` or `action.plan.cancel` with the server-created session ID, the proposed plan ID, and monotonic client sequence metadata. The client must not send command arguments, approval claims, tenant IDs, inventory IDs, credentials, prompt text, transcript text, or model output in the review decision message.
+
+When the API receives `action.plan.approve`, it must call the action-plan application approval boundary scoped to the authenticated principal, session tenant, and session inventory. Approval transitions the persisted plan from `proposed` to `approved`; it does not execute inventory commands in this slice. The API must emit `action.plan.approved` with the safe plan ID and status after the transition succeeds.
+
+When the API receives `action.plan.cancel`, it must call the action-plan application cancellation boundary scoped to the authenticated principal, session tenant, and session inventory. Cancellation transitions the persisted plan from `proposed` to `cancelled`. The API must emit `action.plan.cancelled` with the safe plan ID and status after the transition succeeds.
+
+The server must reject review decisions with stale sequence numbers, forged session IDs, missing plan IDs, plan IDs that are not scoped to the session tenant and inventory, unauthorized principals, terminal plans, or malformed message types. Safe rejection must not expose hidden plan existence, raw model output, command arguments, credentials, prompt text, transcript text, provider response details, stack traces, or authorization internals.
+
+After receiving `action.plan.approved` or `action.plan.cancelled`, mobile must leave the pending review state and show a safe completed review state. Approval messaging must make clear that execution is still pending until the execution service is implemented. Cancellation messaging must make clear that no change was made.
 
 ## Transcript Events
 

@@ -43,12 +43,17 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 		socket.receive({ type: 'tts.audio.started', seq: 5, sessionId: 'session-1', format: { mimeType: 'audio/mpeg' } });
 		socket.receive({ type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' });
 		socket.receive({ type: 'session.completed', seq: 7, sessionId: 'session-1' });
+    await waitForSentMessageCount(socket, 3);
+    await waitForEventType(events, 'action.plan.proposed');
+    await transport.approveActionPlan('plan-1');
+    await expect(transport.cancelActionPlan('plan-1')).rejects.toThrow('not active');
+    socket.receive({ type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved' });
 
     await run;
 
     expect(socket.url).toBe('ws://127.0.0.1:8080/v1/realtime/voice');
     expect(socket.headers).toEqual({ Authorization: 'Bearer dev:user-1' });
-    expect(socket.sent.map((message) => message.type)).toEqual(['session.start', 'audio.chunk', 'audio.end']);
+    expect(socket.sent.map((message) => message.type)).toEqual(['session.start', 'audio.chunk', 'audio.end', 'action.plan.approve']);
     expect(socket.sent[0]).toMatchObject({
       seq: 1,
       tenantId: 'tenant-home',
@@ -61,6 +66,11 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       audioBase64: 'YXVkaW8=',
       isFinalChunk: true
     });
+    expect(socket.sent[3]).toMatchObject({
+      seq: 4,
+      sessionId: 'session-1',
+      planId: 'plan-1'
+    });
     expect(events).toEqual([
 			{ type: 'session.started', seq: 1, sessionId: 'session-1' },
 			{ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' },
@@ -71,6 +81,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         sessionId: 'session-1',
         actionPlan: {
           planId: 'plan-1',
+          status: 'proposed',
           confirmationSummary: 'Create item water bottle?',
           commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
           risks: ['Adds a new item to this inventory.']
@@ -78,7 +89,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       },
 			{ type: 'tts.audio.started', seq: 5, sessionId: 'session-1', mimeType: 'audio/mpeg' },
       { type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
-      { type: 'session.completed', seq: 7, sessionId: 'session-1' }
+      { type: 'session.completed', seq: 7, sessionId: 'session-1' },
+      { type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved' }
     ]);
   });
 
@@ -362,4 +374,20 @@ class FakeWebSocket {
   receive(message: Record<string, unknown>): void {
     this.onmessage?.({ data: JSON.stringify(message) });
   }
+}
+
+async function waitForSentMessageCount(socket: FakeWebSocket, count: number): Promise<void> {
+  for (let attempts = 0; attempts < 20 && socket.sent.length < count; attempts++) {
+    await Promise.resolve();
+  }
+}
+
+async function waitForEventType(events: readonly unknown[], type: string): Promise<void> {
+  for (let attempts = 0; attempts < 20 && !events.some((event) => isEventType(event, type)); attempts++) {
+    await Promise.resolve();
+  }
+}
+
+function isEventType(event: unknown, type: string): boolean {
+  return typeof event === 'object' && event !== null && 'type' in event && event.type === type;
 }

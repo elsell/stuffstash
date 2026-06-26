@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { ChevronDown, ChevronUp, MessageCircle, Mic, Pause, RotateCcw, X } from 'lucide-react-native';
+import { Check, ChevronDown, ChevronUp, MessageCircle, Mic, Pause, RotateCcw, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
   Pressable,
@@ -16,7 +16,16 @@ import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresent
 import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
 
 export function VoiceSessionSheetScreen() {
-  const { cancelRealtime, diagnosticsEnabled, reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
+  const {
+    approveRealtimeActionPlan,
+    cancelRealtime,
+    cancelRealtimeActionPlan,
+    diagnosticsEnabled,
+    reset,
+    startRealtime,
+    state,
+    stopRealtime
+  } = useVoiceInteractionState();
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
   const safeAreaInsets = useSafeAreaInsets();
 
@@ -52,6 +61,12 @@ export function VoiceSessionSheetScreen() {
       onCancelSession={() => {
         void cancelRealtime();
       }}
+      onApproveActionPlan={(planId) => {
+        void approveRealtimeActionPlan(planId);
+      }}
+      onCancelActionPlan={(planId) => {
+        void cancelRealtimeActionPlan(planId);
+      }}
       onReset={() => {
         reset();
         setDiagnosticsExpanded(false);
@@ -72,6 +87,8 @@ function VoiceSessionSheet({
   diagnosticsEnabled,
   onClose,
   onCancelSession,
+  onApproveActionPlan,
+  onCancelActionPlan,
   onOpenProviderProfiles,
   onReset,
   onSessionMic,
@@ -81,6 +98,8 @@ function VoiceSessionSheet({
 }: {
   readonly diagnosticsExpanded: boolean;
   readonly diagnosticsEnabled: boolean;
+  readonly onApproveActionPlan: (planId: string) => void;
+  readonly onCancelActionPlan: (planId: string) => void;
   readonly onClose: () => void;
   readonly onCancelSession: () => void;
   readonly onOpenProviderProfiles: () => void;
@@ -172,6 +191,34 @@ function VoiceSessionSheet({
                     {risk}
                   </Text>
                 ))}
+                {session.actionPlan.status === 'approved' ? (
+                  <Text style={styles.actionPlanStatus}>Approved. Execution is not wired yet.</Text>
+                ) : null}
+                {session.actionPlan.status === 'cancelled' ? (
+                  <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
+                ) : null}
+                {session.canApproveActionPlan || session.canCancelActionPlan ? (
+                  <View style={styles.actionPlanActions}>
+                    <Pressable
+                      accessibilityLabel="Approve voice change"
+                      accessibilityRole="button"
+                      onPress={() => onApproveActionPlan(session.actionPlan?.planId ?? '')}
+                      style={styles.approvePlanButton}
+                    >
+                      <Check color={colors.onAction} size={18} strokeWidth={2.6} />
+                      <Text style={styles.approvePlanButtonText}>Approve</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityLabel="Cancel voice change"
+                      accessibilityRole="button"
+                      onPress={() => onCancelActionPlan(session.actionPlan?.planId ?? '')}
+                      style={styles.cancelPlanButton}
+                    >
+                      <X color={colors.textMuted} size={17} strokeWidth={2.4} />
+                      <Text style={styles.cancelPlanButtonText}>Cancel</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
               </View>
             ) : null}
 
@@ -334,6 +381,11 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: spacing.xs
   },
+  actionPlanActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md
+  },
   actionPlanRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
@@ -345,6 +397,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     gap: spacing.xs,
     padding: spacing.md
+  },
+  actionPlanStatus: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+    marginTop: spacing.sm
   },
   actionPlanText: {
     color: colors.text,
@@ -358,6 +417,40 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     lineHeight: 22
+  },
+  approvePlanButton: {
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: radius.md,
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.md
+  },
+  approvePlanButtonText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '900'
+  },
+  cancelPlanButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.md
+  },
+  cancelPlanButtonText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900'
   },
   cancelSessionButton: {
     alignItems: 'center',

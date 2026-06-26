@@ -126,10 +126,14 @@ export function buildVoiceAccessoryPresentation({
 
 export type VoiceSessionPresentation = {
   readonly actionPlan?: {
+    readonly planId: string;
+    readonly status: 'proposed' | 'approved' | 'cancelled';
     readonly confirmationSummary: string;
     readonly commands: readonly string[];
     readonly risks: readonly string[];
   };
+  readonly canApproveActionPlan: boolean;
+  readonly canCancelActionPlan: boolean;
   readonly canCancel: boolean;
   readonly canReset: boolean;
   readonly contextLabel: string;
@@ -172,13 +176,17 @@ export function buildVoiceSessionPresentation({
   return {
     actionPlan: realtime?.actionPlan
       ? {
+          planId: realtime.actionPlan.planId,
+          status: realtime.actionPlan.status,
           confirmationSummary: realtime.actionPlan.confirmationSummary,
           commands: realtime.actionPlan.commands.map((command) => command.summary),
           risks: realtime.actionPlan.risks
         }
       : undefined,
+    canApproveActionPlan: realtime?.actionPlan?.status === 'proposed' && !realtime.reviewDecisionPending,
+    canCancelActionPlan: realtime?.actionPlan?.status === 'proposed' && !realtime.reviewDecisionPending,
     canCancel: stage === 'listening' || stage === 'processing' || stage === 'speaking',
-    canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || stage === 'review',
+    canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || (stage === 'review' && realtime?.actionPlan?.status !== 'proposed'),
     contextLabel: `${inventoryName} · ${tenantName}`,
     diagnostics,
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',

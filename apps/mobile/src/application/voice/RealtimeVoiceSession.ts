@@ -37,6 +37,8 @@ export interface RealtimeVoiceTransport {
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
     options?: RealtimeVoiceTransportRunOptions
   ): Promise<void>;
+  approveActionPlan(planId: string): Promise<void>;
+  cancelActionPlan(planId: string): Promise<void>;
 }
 
 export type RealtimeVoiceTransportRunOptions = {
@@ -71,6 +73,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       readonly message?: string;
     }
   | { readonly type: 'action.plan.proposed'; readonly actionPlan: VoiceActionPlanProposal }
+  | { readonly type: 'action.plan.approved' | 'action.plan.cancelled'; readonly planId: string; readonly status: 'approved' | 'cancelled' }
   | { readonly type: 'assistant.response.started'; readonly responseId: string }
   | {
       readonly type: 'assistant.response.completed';
@@ -89,6 +92,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
 
 export type VoiceActionPlanProposal = {
   readonly planId: string;
+  readonly status: 'proposed' | 'approved' | 'cancelled';
   readonly confirmationSummary: string;
   readonly commands: readonly VoiceActionPlanCommand[];
   readonly risks: readonly string[];
@@ -104,6 +108,7 @@ export type VoiceRealtimeState = {
   readonly tenantName: string;
   readonly inventoryName: string;
   readonly actionPlan?: VoiceActionPlanProposal;
+  readonly reviewDecisionPending?: boolean;
   readonly transcript?: string;
   readonly spokenResponse?: string;
   readonly progressLabel?: string;
@@ -251,6 +256,14 @@ export class RealtimeVoiceSessionController {
     };
   }
 
+  async approveActionPlan(planId: string): Promise<void> {
+    await this.transport.approveActionPlan(safeBoundedText(planId, 80));
+  }
+
+  async cancelActionPlan(planId: string): Promise<void> {
+    await this.transport.cancelActionPlan(safeBoundedText(planId, 80));
+  }
+
   private isSessionGenerationCancelled(generation: number): boolean {
     return generation > 0 && generation <= this.cancelledThroughSessionGeneration;
   }
@@ -280,6 +293,24 @@ export class RealtimeVoiceSessionController {
           status: 'review',
           actionPlan: safeActionPlanProposal(event.actionPlan),
           progressLabel: 'Review needed'
+        };
+      case 'action.plan.approved':
+        return {
+          ...state,
+          status: 'completed',
+          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
+            ? { ...state.actionPlan, status: 'approved' }
+            : state.actionPlan,
+          progressLabel: 'Change approved'
+        };
+      case 'action.plan.cancelled':
+        return {
+          ...state,
+          status: 'completed',
+          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
+            ? { ...state.actionPlan, status: 'cancelled' }
+            : state.actionPlan,
+          progressLabel: 'Change cancelled'
         };
       case 'assistant.response.started':
         return { ...state, status: state.actionPlan ? 'review' : 'processing', progressLabel: 'Preparing response' };
@@ -390,6 +421,7 @@ function safeDiagnosticStatus(status: string | undefined): VoiceSafeDiagnosticSt
 function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionPlanProposal {
   return {
     planId: safeBoundedText(proposal.planId, 80),
+    status: proposal.status === 'approved' || proposal.status === 'cancelled' ? proposal.status : 'proposed',
     confirmationSummary: safeBoundedText(proposal.confirmationSummary, 180),
     commands: proposal.commands.slice(0, 6).map((command) => ({
       kind: safeBoundedText(command.kind, 40),
@@ -397,6 +429,7 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedText(risk, 180)).filter(Boolean)
   };
+}
 
 function safeBoundedText(value: string, maxLength: number): string {
   const normalized = value.replace(/\s+/g, ' ').trim();
@@ -404,5 +437,4 @@ function safeBoundedText(value: string, maxLength: number): string {
     return normalized;
   }
   return normalized.slice(0, maxLength).trim();
-}
 }

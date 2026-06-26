@@ -134,6 +134,7 @@ describe('RealtimeVoiceSessionController', () => {
           sessionId: 'session-1',
           actionPlan: {
             planId: 'plan-1',
+            status: 'proposed',
             confirmationSummary: 'Create item water bottle?',
             commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
             risks: ['Adds a new item to this inventory.']
@@ -164,6 +165,7 @@ describe('RealtimeVoiceSessionController', () => {
       progressLabel: 'Review needed',
       actionPlan: {
         planId: 'plan-1',
+        status: 'proposed',
         confirmationSummary: 'Create item water bottle?',
         commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
         risks: ['Adds a new item to this inventory.']
@@ -173,7 +175,67 @@ describe('RealtimeVoiceSessionController', () => {
       status: 'review',
       progressLabel: 'Review needed',
       actionPlan: {
-        planId: 'plan-1'
+        planId: 'plan-1',
+        status: 'proposed'
+      }
+    });
+  });
+
+  it('approves a proposed action plan through the active realtime transport', async () => {
+    const transport = new ReviewDecisionTransport();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+    const observed: string[] = [];
+
+    await controller.start();
+    const stop = controller.stop((state) => {
+      observed.push(`${state.status}:${state.progressLabel ?? ''}:${state.actionPlan?.status ?? ''}`);
+    });
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1');
+    const states = await stop;
+
+    expect(transport.approvedPlanIds).toEqual(['plan-1']);
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Change approved',
+      actionPlan: {
+        planId: 'plan-1',
+        status: 'approved'
+      }
+    });
+    expect(observed).toContain('review:Review needed:proposed');
+    expect(observed.at(-1)).toBe('completed:Change approved:approved');
+  });
+
+  it('cancels a proposed action plan through the active realtime transport', async () => {
+    const transport = new ReviewDecisionTransport();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.cancelActionPlan('plan-1');
+    const states = await stop;
+
+    expect(transport.cancelledPlanIds).toEqual(['plan-1']);
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Change cancelled',
+      actionPlan: {
+        planId: 'plan-1',
+        status: 'cancelled'
       }
     });
   });
@@ -411,6 +473,70 @@ class FakeTransport implements RealtimeVoiceTransport {
       await onEvent(event);
     }
   }
+
+  async approveActionPlan(_planId: string): Promise<void> {}
+
+  async cancelActionPlan(_planId: string): Promise<void> {}
+}
+
+class ReviewDecisionTransport implements RealtimeVoiceTransport {
+  readonly approvedPlanIds: string[] = [];
+  readonly cancelledPlanIds: string[] = [];
+  private onEvent: ((event: VoiceRealtimeEvent) => Promise<void>) | undefined;
+  private reviewReadyResolve: (() => void) | undefined;
+  private finishResolve: (() => void) | undefined;
+  readonly reviewReady = new Promise<void>((resolve) => {
+    this.reviewReadyResolve = resolve;
+  });
+
+  async run(
+    _input: Parameters<RealtimeVoiceTransport['run']>[0],
+    onEvent: (event: VoiceRealtimeEvent) => Promise<void>
+  ): Promise<void> {
+    this.onEvent = onEvent;
+    await onEvent({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    await onEvent({
+      type: 'action.plan.proposed',
+      seq: 2,
+      sessionId: 'session-1',
+      actionPlan: {
+        planId: 'plan-1',
+        status: 'proposed',
+        confirmationSummary: 'Create item water bottle?',
+        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        risks: ['Adds a new item to this inventory.']
+      }
+    });
+    await onEvent({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    this.reviewReadyResolve?.();
+    await new Promise<void>((resolve) => {
+      this.finishResolve = resolve;
+    });
+  }
+
+  async approveActionPlan(planId: string): Promise<void> {
+    this.approvedPlanIds.push(planId);
+    await this.onEvent?.({
+      type: 'action.plan.approved',
+      seq: 4,
+      sessionId: 'session-1',
+      planId,
+      status: 'approved'
+    });
+    this.finishResolve?.();
+  }
+
+  async cancelActionPlan(planId: string): Promise<void> {
+    this.cancelledPlanIds.push(planId);
+    await this.onEvent?.({
+      type: 'action.plan.cancelled',
+      seq: 4,
+      sessionId: 'session-1',
+      planId,
+      status: 'cancelled'
+    });
+    this.finishResolve?.();
+  }
 }
 
 class DelayedStopRecorder extends FakeRecorder {
@@ -459,6 +585,10 @@ class DelayedEventTransport implements RealtimeVoiceTransport {
   emit(event: VoiceRealtimeEvent): void {
     this.emitEvent?.(event);
   }
+
+  async approveActionPlan(_planId: string): Promise<void> {}
+
+  async cancelActionPlan(_planId: string): Promise<void> {}
 }
 
 class CancellableTransport implements RealtimeVoiceTransport {
@@ -481,6 +611,10 @@ class CancellableTransport implements RealtimeVoiceTransport {
       });
     });
   }
+
+  async approveActionPlan(_planId: string): Promise<void> {}
+
+  async cancelActionPlan(_planId: string): Promise<void> {}
 }
 
 class FakePlayer implements VoiceAudioPlayer {

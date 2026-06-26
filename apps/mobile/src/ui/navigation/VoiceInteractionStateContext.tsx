@@ -28,6 +28,8 @@ type VoiceInteractionStateContextValue = {
   readonly setStage: (stage: VoiceInteractionStage) => void;
   readonly startRealtime: () => Promise<void>;
   readonly stopRealtime: () => Promise<void>;
+  readonly approveRealtimeActionPlan: (planId: string) => Promise<void>;
+  readonly cancelRealtimeActionPlan: (planId: string) => Promise<void>;
   readonly cancelRealtime: () => Promise<void>;
   readonly reset: () => void;
 };
@@ -144,6 +146,24 @@ export function VoiceInteractionStateProvider({
           setStage('failed');
         }
       },
+      approveRealtimeActionPlan: async (planId: string) => {
+        setRealtime(markReviewDecisionPending(realtime, 'Approving change'));
+        try {
+          await realtimeController.approveActionPlan(planId);
+        } catch (error) {
+          setRealtime(buildFailedVoiceRealtimeState(error));
+          setStage('failed');
+        }
+      },
+      cancelRealtimeActionPlan: async (planId: string) => {
+        setRealtime(markReviewDecisionPending(realtime, 'Cancelling change'));
+        try {
+          await realtimeController.cancelActionPlan(planId);
+        } catch (error) {
+          setRealtime(buildFailedVoiceRealtimeState(error));
+          setStage('failed');
+        }
+      },
       cancelRealtime: async () => {
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
@@ -167,6 +187,18 @@ export function VoiceInteractionStateProvider({
       {children}
     </VoiceInteractionStateContext.Provider>
   );
+}
+
+function markReviewDecisionPending(state: VoiceRealtimeState | null, progressLabel: string): VoiceRealtimeState | null {
+  if (!state?.actionPlan || state.actionPlan.status !== 'proposed' || state.reviewDecisionPending) {
+    return state;
+  }
+
+  return {
+    ...state,
+    progressLabel,
+    reviewDecisionPending: true
+  };
 }
 
 export function useVoiceInteractionState(): VoiceInteractionStateContextValue {
