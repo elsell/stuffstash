@@ -12,6 +12,28 @@ export type MobileRuntimeConfigSeed = {
   readonly voiceDeveloperDiagnosticsEnabled: boolean;
 };
 
+export type RawMobileRuntimeConfig = {
+  readonly apiBaseUrl?: string;
+  readonly tenantId?: string;
+  readonly devToken?: string;
+  readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
+};
+
+export function mergeMobileRuntimeConfigSources(
+  expoExtra: RawMobileRuntimeConfig,
+  expoPublicEnv: RawMobileRuntimeConfig
+): RawMobileRuntimeConfig {
+  return {
+    apiBaseUrl: preferConfigured(expoPublicEnv.apiBaseUrl, expoExtra.apiBaseUrl),
+    tenantId: preferConfigured(expoPublicEnv.tenantId, expoExtra.tenantId),
+    devToken: preferConfigured(expoPublicEnv.devToken, expoExtra.devToken),
+    voiceDeveloperDiagnosticsEnabled: preferConfigured(
+      expoPublicEnv.voiceDeveloperDiagnosticsEnabled,
+      expoExtra.voiceDeveloperDiagnosticsEnabled
+    )
+  };
+}
+
 export function parseMobileRuntimeConfig(input: {
   readonly apiBaseUrl?: string;
   readonly tenantId?: string;
@@ -46,6 +68,16 @@ function requireValue(name: string, value: string | undefined): string {
 export function optionalValue(value: string | undefined): string | undefined {
   const trimmed = value?.trim() ?? '';
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function preferConfigured<T extends string | boolean | undefined>(preferred: T, fallback: T): T {
+  if (typeof preferred === 'boolean') {
+    return preferred;
+  }
+  if (typeof preferred === 'string' && preferred.trim().length > 0) {
+    return preferred;
+  }
+  return fallback;
 }
 
 export function optionalBooleanValue(name: string, value: string | boolean | undefined): boolean {

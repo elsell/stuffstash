@@ -33,6 +33,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL`
   - `EXPO_PUBLIC_STUFF_STASH_TENANT_ID`
   - `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`
+- Optional mobile developer diagnostics must be configurable through `EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED`, and the Expo app config must mirror that value into `extra.stuffStash` so native development builds and dev-client reloads see the same runtime seed values as the JavaScript bundle.
 - The local-dev token value is a development-only credential for the API's local-dev auth mode. Production authentication must wait for the mobile authentication spec.
 - Expo public environment variables are development defaults only. The app must not require them for first launch once onboarding exists.
 - On first launch without a saved connection profile, mobile must show an onboarding flow before the tab shell:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMobileRuntimeConfig } from './mobileRuntimeConfigCore';
+import { mergeMobileRuntimeConfigSources, parseMobileRuntimeConfig } from './mobileRuntimeConfigCore';
 
 describe('mobileRuntimeConfig', () => {
   it('parses required Expo public API configuration', () => {
@@ -56,5 +56,29 @@ describe('mobileRuntimeConfig', () => {
         devToken: 'dev:john'
       })
     ).toThrow('EXPO_PUBLIC_STUFF_STASH_TENANT_ID');
+  });
+
+  it('keeps Expo extra values when public env values are absent at runtime', () => {
+    expect(
+      mergeMobileRuntimeConfigSources(
+        {
+          apiBaseUrl: 'http://192.168.1.117:8080',
+          tenantId: 'tenant-home',
+          devToken: 'dev:owner',
+          voiceDeveloperDiagnosticsEnabled: 'true'
+        },
+        {
+          apiBaseUrl: undefined,
+          tenantId: '',
+          devToken: undefined,
+          voiceDeveloperDiagnosticsEnabled: undefined
+        }
+      )
+    ).toEqual({
+      apiBaseUrl: 'http://192.168.1.117:8080',
+      tenantId: 'tenant-home',
+      devToken: 'dev:owner',
+      voiceDeveloperDiagnosticsEnabled: 'true'
+    });
   });
 });
