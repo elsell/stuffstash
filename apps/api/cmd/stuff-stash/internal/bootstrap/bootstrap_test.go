@@ -3,15 +3,18 @@ package bootstrap
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"golang.org/x/oauth2"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/dbmigrations"
 	"github.com/stuffstash/stuff-stash/internal/config"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestRunMigrationCommandRejectsMissingAction(t *testing.T) {
@@ -244,6 +247,46 @@ func TestBuildRealtimeVoiceProvidersAcceptsGoogleAccessToken(t *testing.T) {
 	}
 }
 
+func TestValidateProviderCredentialSealerAllowsNoCredentialsWithoutKey(t *testing.T) {
+	repository := fakeProviderCredentialRepository{}
+
+	if err := validateProviderCredentialSealer(context.Background(), config.Config{}, repository); err != nil {
+		t.Fatalf("validate provider credential sealer: %v", err)
+	}
+}
+
+func TestValidateProviderCredentialSealerAcceptsConfiguredKey(t *testing.T) {
+	repository := fakeProviderCredentialRepository{}
+	cfg := config.Config{
+		ProviderCredentialKeyID: "local-key",
+		ProviderCredentialKey:   base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{1}, 32)),
+	}
+
+	if err := validateProviderCredentialSealer(context.Background(), cfg, repository); err != nil {
+		t.Fatalf("validate provider credential sealer: %v", err)
+	}
+}
+
+func TestValidateProviderCredentialSealerFailsClosedWhenActiveCredentialsNeedMissingKey(t *testing.T) {
+	repository := fakeProviderCredentialRepository{activeExists: true}
+
+	if err := validateProviderCredentialSealer(context.Background(), config.Config{}, repository); err == nil {
+		t.Fatalf("expected missing provider credential key to fail closed")
+	}
+}
+
+func TestValidateProviderCredentialSealerRejectsMalformedConfiguredKey(t *testing.T) {
+	repository := fakeProviderCredentialRepository{activeExists: true}
+	cfg := config.Config{
+		ProviderCredentialKeyID: "local-key",
+		ProviderCredentialKey:   base64.StdEncoding.EncodeToString([]byte("short")),
+	}
+
+	if err := validateProviderCredentialSealer(context.Background(), cfg, repository); err == nil {
+		t.Fatalf("expected malformed provider credential key rejection")
+	}
+}
+
 func TestBootstrapSpiceDBSchemaReadsSchemaFile(t *testing.T) {
 	schemaPath := filepath.Join(t.TempDir(), "schema.zed")
 	if err := os.WriteFile(schemaPath, []byte("definition user {}"), 0o600); err != nil {
@@ -280,6 +323,26 @@ type fakeSchemaBootstrapper struct {
 	failuresRemaining int
 	calls             int
 	schema            string
+}
+
+type fakeProviderCredentialRepository struct {
+	activeExists bool
+}
+
+func (f fakeProviderCredentialRepository) ReplaceProviderCredential(context.Context, ports.ProviderCredentialRecord) error {
+	return nil
+}
+
+func (f fakeProviderCredentialRepository) ActiveProviderCredential(context.Context, ports.ProviderCredentialScope) (ports.ProviderCredentialRecord, bool, error) {
+	return ports.ProviderCredentialRecord{}, false, nil
+}
+
+func (f fakeProviderCredentialRepository) ActiveProviderCredentialsExist(context.Context) (bool, error) {
+	return f.activeExists, nil
+}
+
+func (f fakeProviderCredentialRepository) SupersedeActiveProviderCredential(context.Context, ports.ProviderCredentialScope, time.Time) error {
+	return nil
 }
 
 type staticBootstrapTokenSource struct{}

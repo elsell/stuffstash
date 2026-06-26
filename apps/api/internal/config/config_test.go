@@ -49,6 +49,8 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envGoogleTTSLanguageCode, "")
 	t.Setenv(envGoogleTTSVoiceName, "")
 	t.Setenv(envGoogleAccessToken, "")
+	t.Setenv(envProviderCredentialKeyID, "")
+	t.Setenv(envProviderCredentialKey, "")
 
 	cfg := Load()
 
@@ -151,6 +153,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.GoogleAccessToken != "" {
 		t.Fatalf("expected empty Google access token by default")
 	}
+	if cfg.ProviderCredentialKeyID != "" || cfg.ProviderCredentialKey != "" {
+		t.Fatalf("expected empty provider credential encryption config by default")
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -204,6 +209,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envGoogleTTSLanguageCode, "en-GB")
 	t.Setenv(envGoogleTTSVoiceName, "en-GB-Neural2-A")
 	t.Setenv(envGoogleAccessToken, "ya29.test")
+	t.Setenv(envProviderCredentialKeyID, "local-key")
+	t.Setenv(envProviderCredentialKey, "base64-key")
 
 	cfg := Load()
 
@@ -299,5 +306,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.GoogleAccessToken != "ya29.test" {
 		t.Fatalf("expected Google access token config")
+	}
+	if cfg.ProviderCredentialKeyID != "local-key" || cfg.ProviderCredentialKey != "base64-key" {
+		t.Fatalf("unexpected provider credential encryption config: %+v", cfg)
 	}
 }

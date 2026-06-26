@@ -38,6 +38,7 @@ type repositories struct {
 	imageProcessor            ports.ImageProcessor
 	audit                     ports.AuditRepository
 	outbox                    ports.AuthorizationOutbox
+	providerCredentials       ports.ProviderCredentialRepository
 }
 
 func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
@@ -58,7 +59,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 			_ = closeStore()
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store}, closeStore, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerCredentials: store}, closeStore, nil
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}

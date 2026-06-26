@@ -10,7 +10,7 @@ Provider profiles make conversational inventory usable for self-hosted Docker de
 
 This spec covers conversational provider profile management, credential sealing, authorization, audit behavior, and testing requirements.
 
-This spec does not define the final UI layout, exact REST paths, concrete encryption library, provider SDK, realtime message schema, or provider-specific request format.
+This spec does not define the final UI layout, exact REST paths, provider SDK, realtime message schema, or provider-specific request format.
 
 ## Architecture
 
@@ -87,6 +87,22 @@ Credential sealing must follow these rules:
 
 External secret managers may be added later behind the same credential-sealing or credential-store port, but the product architecture must not require Kubernetes secret references or operator-managed environment variables for tenant-level provider configuration.
 
+## First Credential Adapter
+
+The first credential-sealing adapter must use Go standard library AES-256-GCM with random 96-bit nonces. AES-GCM is chosen instead of Fernet so the first slice can use authenticated encryption without adding a new cryptographic dependency.
+
+The first adapter must:
+
+- Accept one active 32-byte root key from environment-backed runtime configuration, encoded as unpadded or padded base64.
+- Require a non-empty key identifier and persist that key identifier with sealed credentials.
+- Persist `AES-256-GCM` as the algorithm identifier.
+- Generate a fresh nonce for every seal operation.
+- Bind tenant ID, provider profile ID, capability, provider kind, and credential purpose as authenticated associated data.
+- Fail closed when the key is missing, malformed, the key identifier is missing, the algorithm is unsupported, the key identifier does not match, the authenticated scope does not match, or ciphertext authentication fails.
+- Expose only sealed credential metadata and ciphertext to persistence; raw credentials may exist only in request memory and provider adapter memory after successful unseal.
+
+Provider credentials persisted in the database must live behind a credential repository port. The first GORM adapter stores encrypted credential material in a tenant-scoped table with provider profile ID, capability, provider kind, credential purpose, key ID, algorithm, nonce, ciphertext, creation timestamp, update timestamp, and superseded timestamp. Repository reads for active credentials must require tenant ID, provider profile ID, capability, provider kind, and credential purpose.
+
 ## Provider Resolution
 
 Realtime session startup must resolve provider profiles through a tenant-scoped provider resolution service.
@@ -142,6 +158,5 @@ Tests must cover:
 ## Open Questions
 
 - Which exact REST paths should manage tenant provider profiles?
-- Which authenticated encryption implementation should the first Go credential-sealing adapter use?
 - What key rotation workflow should be required before production deployments store tenant provider credentials?
 - Which provider profile fields should be editable after a profile has been used by completed realtime sessions?

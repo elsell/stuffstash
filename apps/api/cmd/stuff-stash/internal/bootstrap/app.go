@@ -10,6 +10,9 @@ import (
 )
 
 func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+	if err := validateProviderCredentialSealer(ctx, cfg, repositories.providerCredentials); err != nil {
+		return app.App{}, err
+	}
 	stt, languageInference, tts, err := buildRealtimeVoiceProviders(ctx, cfg)
 	if err != nil {
 		return app.App{}, err

@@ -23,9 +23,11 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is deepening the promoted SvelteKit web inventory workspace against real tenant and inventory API data before moving into broader asset management screens.
+The current focus is closing the first conversational inventory gaps while preserving the promoted SvelteKit web inventory workspace direction.
 
-The goal is to prove a production-shaped path through:
+The conversational goal is to move from the first realtime read-only voice slice toward tenant-configured provider profiles, encrypted provider credentials, a reusable tool catalog, approval-backed write action plans, stronger agent-loop/session state, and production-shaped mobile voice UX.
+
+The web goal remains to prove a production-shaped path through:
 
 - a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
 - clear separation between generated API DTOs and frontend domain models,
@@ -83,6 +85,9 @@ The goal is to prove a production-shaped path through:
 - The first audit-backed undo/redo slice now supports asset create, update, move, archive, and restore through operation-scoped compensating commands, dedicated undoable-operation persistence, generated OpenAPI/client updates, and adversarial API coverage.
 - Asset state-changing application commands now use a dedicated transactional asset unit-of-work port instead of overloading the read repository port with audit and undoable-operation write concerns.
 - Core API hardening now separates read repositories from explicit command/unit-of-work ports across the implemented write surfaces, uses durable blob-deletion intent for attachment hard delete cleanup, routes search visibility through an authorization query port, and applies HTTP security headers, request body limits, and configurable server timeouts.
+- The mobile realtime voice slice can record through the mobile app, proxy through the core API, transcribe with Google Gemini, call read-only inventory tools through the application boundary, validate structured final responses, synthesize Google Text-to-Speech audio, and stream the result back to mobile.
+- The Gemini language adapter now uses native provider function calling while keeping provider-specific tool declarations and function-call/function-response shapes behind the project-owned language inference port.
+- Realtime voice loop control now allows multiple distinct tool calls, including across turns, while preventing exact duplicate tool-call re-execution and requesting an explicit finalization-only turn when needed.
 
 ## Known Gaps
 
@@ -95,6 +100,7 @@ The goal is to prove a production-shaped path through:
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
+- Tenant-managed conversational provider profiles, provider-profile management APIs/UI, provider profile resolution during realtime session startup, write action plans with approval, durable safe realtime session metadata, and the external MCP server are not yet complete.
 
 ## Next Work
 

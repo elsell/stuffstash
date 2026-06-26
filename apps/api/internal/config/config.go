@@ -59,6 +59,8 @@ const (
 	envGoogleTTSLanguageCode         = "STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE"
 	envGoogleTTSVoiceName            = "STUFF_STASH_GOOGLE_TTS_VOICE_NAME"
 	envGoogleAccessToken             = "STUFF_STASH_GOOGLE_ACCESS_TOKEN"
+	envProviderCredentialKeyID       = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID"
+	envProviderCredentialKey         = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY"
 	defaultHTTPAddr                  = ":8080"
 	defaultHTTPReadHeader            = 5 * time.Second
 	defaultHTTPRead                  = 15 * time.Second
@@ -150,6 +152,8 @@ type Config struct {
 	GoogleTTSLanguageCode            string
 	GoogleTTSVoiceName               string
 	GoogleAccessToken                string
+	ProviderCredentialKeyID          string
+	ProviderCredentialKey            string
 }
 
 func Load() Config {
@@ -205,6 +209,8 @@ func Load() Config {
 		GoogleTTSLanguageCode:            envOrDefault(envGoogleTTSLanguageCode, defaultGoogleTTSLanguageCode),
 		GoogleTTSVoiceName:               envOrDefault(envGoogleTTSVoiceName, defaultGoogleTTSVoiceName),
 		GoogleAccessToken:                os.Getenv(envGoogleAccessToken),
+		ProviderCredentialKeyID:          os.Getenv(envProviderCredentialKeyID),
+		ProviderCredentialKey:            os.Getenv(envProviderCredentialKey),
 	}
 }
 
