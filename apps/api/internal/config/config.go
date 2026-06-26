@@ -8,6 +8,8 @@ import (
 )
 
 const (
+	DefaultHTTPRateLimitRequests     = 1200
+	DefaultHTTPRateLimitBurst        = 600
 	envHTTPAddr                      = "STUFF_STASH_HTTP_ADDR"
 	envHTTPReadHeaderTimeout         = "STUFF_STASH_HTTP_READ_HEADER_TIMEOUT"
 	envHTTPReadTimeout               = "STUFF_STASH_HTTP_READ_TIMEOUT"
@@ -68,9 +70,9 @@ const (
 	defaultHTTPIdle                  = 60 * time.Second
 	defaultHTTPMaxJSONBodyBytes      = 1024 * 1024
 	defaultHTTPRateLimitEnabled      = true
-	defaultHTTPRateLimitRequests     = 120
+	defaultHTTPRateLimitRequests     = DefaultHTTPRateLimitRequests
 	defaultHTTPRateLimitWindow       = time.Minute
-	defaultHTTPRateLimitBurst        = 60
+	defaultHTTPRateLimitBurst        = DefaultHTTPRateLimitBurst
 	defaultAuthMode                  = "local-dev"
 	defaultAuthzMode                 = "memory"
 	defaultRepositoryMode            = "memory"

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -30,14 +31,20 @@ type rateLimitBucket struct {
 }
 
 func NewTokenBucketRateLimiter(limit int, window time.Duration, burst int) *TokenBucketRateLimiter {
+	defaultedLimit := false
 	if limit <= 0 {
-		limit = 120
+		limit = config.DefaultHTTPRateLimitRequests
+		defaultedLimit = true
 	}
 	if window <= 0 {
 		window = time.Minute
 	}
 	if burst <= 0 {
-		burst = limit
+		if defaultedLimit {
+			burst = config.DefaultHTTPRateLimitBurst
+		} else {
+			burst = limit
+		}
 	}
 	return &TokenBucketRateLimiter{
 		limit:   limit,

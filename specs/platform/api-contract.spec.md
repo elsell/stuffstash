@@ -186,6 +186,8 @@ Error responses must use a consistent envelope:
 - Rate limiting must run at the HTTP adapter boundary before route handlers perform domain work.
 - Rate limiting configuration must come from environment-backed configuration.
 - Rate limiting must support an explicit disabled mode for trusted local debugging only.
+- The default global limiter must allow normal web and mobile startup fan-out, including asset list, metadata, and photo or thumbnail reads from one client address.
+- The initial default is `1200` requests per minute with a `600` request burst. Operators may lower or raise this through environment configuration.
 - The first rate limiter uses an in-memory token bucket behind a rate-limiter port.
 - The in-memory limiter is acceptable for local development and single-replica deployments, but a distributed adapter is required before horizontally scaled public deployment.
 - Rate limit keys must not store raw bearer tokens. The first implementation groups requests by remote client address because rate limiting runs before authentication. Verified-principal-aware limiting may be added later behind the same rate-limiter port.
