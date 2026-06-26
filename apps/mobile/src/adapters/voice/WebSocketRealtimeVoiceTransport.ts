@@ -8,7 +8,7 @@ type VoiceWebSocket = {
   onopen: (() => void) | null;
   onmessage: ((event: { readonly data: string }) => void) | null;
   onerror: ((event: unknown) => void) | null;
-  onclose: (() => void) | null;
+  onclose: ((event?: { readonly code?: number; readonly reason?: string }) => void) | null;
   send(payload: string): void;
   close(): void;
 };
@@ -42,15 +42,32 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let seq = 1;
       let lastServerSeq = 0;
       let completed = false;
+      let settled = false;
       let messageChain = Promise.resolve();
 
-      socket.onerror = (event) => {
-        reject(new Error(`Voice socket failed: ${String(event)}`));
-      };
-      socket.onclose = () => {
-        if (!completed) {
-          reject(new Error('Voice socket closed before the session completed.'));
+      function settleResolve(): void {
+        if (!settled) {
+          settled = true;
+          resolve();
         }
+      }
+
+      function settleReject(error: Error): void {
+        if (!settled) {
+          settled = true;
+          reject(error);
+        }
+      }
+
+      socket.onerror = (event) => {
+        settleReject(new Error(`Voice socket failed: ${String(event)}`));
+      };
+      socket.onclose = (event) => {
+        void messageChain.then(() => {
+          if (!completed) {
+            settleReject(new Error(prematureCloseMessage(event)));
+          }
+        }).catch(settleReject);
       };
       socket.onopen = () => {
         socket.send(JSON.stringify({
@@ -87,17 +104,23 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           if (message.type === 'session.completed') {
             completed = true;
             socket.close();
-            resolve();
+            settleResolve();
           }
           if (message.type === 'session.failed') {
             completed = true;
             socket.close();
-            resolve();
+            settleResolve();
           }
-        }).catch(reject);
+        }).catch(settleReject);
       };
     });
   }
+}
+
+function prematureCloseMessage(event?: { readonly code?: number; readonly reason?: string }): string {
+  return typeof event?.code === 'number'
+    ? `Voice socket closed before the session completed (code ${event.code}).`
+    : 'Voice socket closed before the session completed.';
 }
 
 function realtimeVoiceUrl(apiBaseUrl: string): string {
