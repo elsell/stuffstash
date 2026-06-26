@@ -67,6 +67,40 @@ func TestGoogleGeminiSpeechToTextTranscribesInlineAudio(t *testing.T) {
 	}
 }
 
+func TestGoogleGeminiSpeechToTextProbeUsesModelEndpointWithoutTenantAudio(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, "/publishers/google/models/gemini-test:generateContent") {
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		payload, _ := json.Marshal(request)
+		if strings.Contains(string(payload), "inlineData") || !strings.Contains(string(payload), "Provider diagnostic") {
+			t.Fatalf("probe request should use safe text-only diagnostic: %s", string(payload))
+		}
+		_ = json.NewEncoder(w).Encode(geminiTextResponse("ready"))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiSpeechToText(GoogleGeminiConfig{
+		ProjectID:    "project",
+		Location:     "us-central1",
+		Model:        "gemini-test",
+		QuotaProject: "project",
+		BaseURL:      server.URL,
+		TokenSource:  staticTokenSource{},
+		HTTPClient:   server.Client(),
+	})
+
+	if err := provider.ProbeSpeechToText(context.Background()); err != nil {
+		t.Fatalf("probe speech-to-text: %v", err)
+	}
+}
+
 func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	t.Parallel()
 
@@ -164,6 +198,37 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	}
 }
 
+func TestGoogleGeminiLanguageInferenceProbeReturnsStructuredFinalResponse(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		payload, _ := json.Marshal(request)
+		if strings.Contains(string(payload), "functionDeclarations") || !strings.Contains(string(payload), "Provider diagnostic") {
+			t.Fatalf("probe request should be final-only without tools: %s", string(payload))
+		}
+		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"Provider profile test succeeded.","displayResponse":"Provider profile test succeeded."}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID:    "project",
+		Location:     "us-central1",
+		Model:        "gemini-test",
+		QuotaProject: "project",
+		BaseURL:      server.URL,
+		TokenSource:  staticTokenSource{},
+		HTTPClient:   server.Client(),
+	})
+
+	if err := provider.ProbeLanguageInference(context.Background()); err != nil {
+		t.Fatalf("probe language inference: %v", err)
+	}
+}
+
 func TestGoogleGeminiLanguageInferenceRejectsMalformedTurns(t *testing.T) {
 	t.Parallel()
 
@@ -258,6 +323,40 @@ func TestGoogleTextToSpeechSynthesizesMP3(t *testing.T) {
 	}
 	if result.MimeType != "audio/mpeg" || string(result.Chunks[0]) != "mp3-bytes" {
 		t.Fatalf("unexpected result: %+v", result)
+	}
+}
+
+func TestGoogleTextToSpeechProbeSynthesizesSafeDiagnosticPhrase(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/text:synthesize" {
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		payload, _ := json.Marshal(request)
+		if !strings.Contains(string(payload), "Stuff Stash provider test.") {
+			t.Fatalf("probe request should synthesize safe diagnostic phrase: %s", string(payload))
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"audioContent": base64.StdEncoding.EncodeToString([]byte("mp3-bytes")),
+		})
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleTextToSpeech(GoogleTextToSpeechConfig{
+		LanguageCode: "en-US",
+		VoiceName:    "en-US-Neural2-F",
+		QuotaProject: "project",
+		BaseURL:      server.URL,
+		TokenSource:  staticTokenSource{},
+		HTTPClient:   server.Client(),
+	})
+	if err := provider.ProbeTextToSpeech(context.Background()); err != nil {
+		t.Fatalf("probe text-to-speech: %v", err)
 	}
 }
 

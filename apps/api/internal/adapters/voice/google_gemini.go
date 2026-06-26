@@ -71,6 +71,26 @@ func (p GoogleGeminiSpeechToText) Transcribe(ctx context.Context, input ports.Sp
 	return ports.SpeechToTextResult{Transcript: transcript}, nil
 }
 
+func (p GoogleGeminiSpeechToText) ProbeSpeechToText(ctx context.Context) error {
+	request := geminiGenerateContentRequest{
+		Contents: []geminiContent{{
+			Role:  "user",
+			Parts: []geminiPart{{Text: "Provider diagnostic. Reply with the single word ready."}},
+		}},
+		GenerationConfig: &geminiGenerationConfig{
+			Temperature: 0,
+		},
+	}
+	var response geminiGenerateContentResponse
+	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
+		return err
+	}
+	if strings.TrimSpace(firstGeminiText(response)) == "" {
+		return ports.ErrInvalidProviderInput
+	}
+	return nil
+}
+
 type GoogleGeminiLanguageInference struct {
 	client googleHTTPClient
 	path   string
@@ -104,6 +124,20 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		return parseGeminiFunctionCalls(calls, input.Tools)
 	}
 	return parseLanguageTurn(firstGeminiText(response), input.Tools)
+}
+
+func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
+	turn, err := p.NextTurn(ctx, ports.LanguageInferenceInput{
+		Transcript: "Provider diagnostic. Return a final answer that says Provider profile test succeeded.",
+		FinalOnly:  true,
+	})
+	if err != nil {
+		return err
+	}
+	if turn.Final == nil || strings.TrimSpace(turn.Final.SpokenResponse) == "" {
+		return ports.ErrInvalidProviderInput
+	}
+	return nil
 }
 
 func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {

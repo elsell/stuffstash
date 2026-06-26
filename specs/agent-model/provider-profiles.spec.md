@@ -169,6 +169,10 @@ Test operations must:
 - Require tenant configuration permission.
 - Use sealed credentials only after successful unseal.
 - Use a project-owned provider test port so the application layer never imports concrete provider adapters.
+- Prefer capability-specific safe provider probes when the selected adapter implements them.
+- For language inference, perform a minimal final-response probe that sends no tenant inventory data and verifies the provider can return a project-owned structured response.
+- For text-to-speech, synthesize a short safe diagnostic phrase and verify non-empty speech bytes are returned without persisting those bytes.
+- For speech-to-text, perform the safest adapter-supported diagnostic probe. If the adapter cannot safely send synthetic non-tenant audio, the probe may verify the same provider endpoint, credential, model, and request path without sending tenant audio, but the response message must not imply that arbitrary microphone transcription has been proven.
 - Avoid sending real tenant inventory data unless a future spec explicitly permits a scoped test.
 - Return safe success or failure metadata.
 - Avoid exposing provider credentials, account details, raw provider responses, endpoint internals, stack traces, prompts, transcripts, or hidden inventory data.

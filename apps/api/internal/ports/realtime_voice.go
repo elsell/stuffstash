@@ -15,6 +15,10 @@ type SpeechToTextProvider interface {
 	Transcribe(ctx context.Context, input SpeechToTextInput) (SpeechToTextResult, error)
 }
 
+type SpeechToTextProviderProbe interface {
+	ProbeSpeechToText(ctx context.Context) error
+}
+
 type SpeechToTextInput struct {
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
@@ -29,6 +33,10 @@ type SpeechToTextResult struct {
 
 type LanguageInferenceProvider interface {
 	NextTurn(ctx context.Context, input LanguageInferenceInput) (LanguageInferenceTurn, error)
+}
+
+type LanguageInferenceProviderProbe interface {
+	ProbeLanguageInference(ctx context.Context) error
 }
 
 type LanguageInferenceInput struct {
@@ -109,6 +117,10 @@ type StructuredAgentResponse struct {
 
 type TextToSpeechProvider interface {
 	Synthesize(ctx context.Context, input TextToSpeechInput) (TextToSpeechResult, error)
+}
+
+type TextToSpeechProviderProbe interface {
+	ProbeTextToSpeech(ctx context.Context) error
 }
 
 type TextToSpeechInput struct {

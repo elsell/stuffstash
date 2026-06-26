@@ -64,3 +64,19 @@ func (p GoogleTextToSpeech) Synthesize(ctx context.Context, input ports.TextToSp
 		Chunks:   [][]byte{audio},
 	}, nil
 }
+
+func (p GoogleTextToSpeech) ProbeTextToSpeech(ctx context.Context) error {
+	result, err := p.Synthesize(ctx, ports.TextToSpeechInput{Text: "Stuff Stash provider test."})
+	if err != nil {
+		return err
+	}
+	if len(result.Chunks) == 0 {
+		return ports.ErrInvalidProviderInput
+	}
+	for _, chunk := range result.Chunks {
+		if len(chunk) > 0 {
+			return nil
+		}
+	}
+	return ports.ErrInvalidProviderInput
+}
