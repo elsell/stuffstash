@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -56,15 +58,28 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 		if err != nil {
 			return repositories{}, nil, err
 		}
-		blobs, directUploads, err := buildBlobStorage(cfg)
+		return repositoriesFromGORMStore(cfg, store, closeStore)
+	case "sqlite":
+		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
+			return repositories{}, nil, errors.New("database dsn is required")
+		}
+		store, closeStore, err := openSQLiteStore(ctx, cfg.DatabaseDSN)
 		if err != nil {
-			_ = closeStore()
 			return repositories{}, nil, err
 		}
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, providerCredentials: store}, closeStore, nil
+		return repositoriesFromGORMStore(cfg, store, closeStore)
 	default:
 		return repositories{}, nil, errors.New("unsupported repository mode")
 	}
+}
+
+func repositoriesFromGORMStore(cfg config.Config, store gormstore.Store, closeStore func() error) (repositories, func() error, error) {
+	blobs, directUploads, err := buildBlobStorage(cfg)
+	if err != nil {
+		_ = closeStore()
+		return repositories{}, nil, err
+	}
+	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, providerCredentials: store}, closeStore, nil
 }
 
 func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {
@@ -125,6 +140,59 @@ func openPostgresDB(ctx context.Context, dsn string) (*gorm.DB, func() error, er
 		case <-ticker.C:
 		}
 	}
+}
+
+func openSQLiteStore(ctx context.Context, dsn string) (gormstore.Store, func() error, error) {
+	if err := ensureSQLiteParentDir(dsn); err != nil {
+		return gormstore.Store{}, nil, err
+	}
+	db, err := gormstore.OpenSQLite(dsn)
+	if err != nil {
+		return gormstore.Store{}, nil, err
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		return gormstore.Store{}, nil, err
+	}
+	closeStore := sqlDB.Close
+	if err := sqlDB.PingContext(ctx); err != nil {
+		_ = closeStore()
+		return gormstore.Store{}, nil, err
+	}
+	if err := gormstore.Migrate(ctx, db); err != nil {
+		_ = closeStore()
+		return gormstore.Store{}, nil, err
+	}
+	return gormstore.NewStore(db), closeStore, nil
+}
+
+func ensureSQLiteParentDir(dsn string) error {
+	path := sqliteFilePath(dsn)
+	if path == "" {
+		return nil
+	}
+	dir := filepath.Dir(path)
+	if dir == "." || dir == "" {
+		return nil
+	}
+	return os.MkdirAll(dir, 0o700)
+}
+
+func sqliteFilePath(dsn string) string {
+	trimmed := strings.TrimSpace(dsn)
+	if trimmed == "" || trimmed == ":memory:" {
+		return ""
+	}
+	if strings.HasPrefix(trimmed, "file:") {
+		trimmed = strings.TrimPrefix(trimmed, "file:")
+		if queryIndex := strings.Index(trimmed, "?"); queryIndex >= 0 {
+			trimmed = trimmed[:queryIndex]
+		}
+	}
+	if trimmed == "" || trimmed == ":memory:" {
+		return ""
+	}
+	return trimmed
 }
 
 func tryOpenPostgresDB(ctx context.Context, dsn string) (*gorm.DB, func() error, error) {

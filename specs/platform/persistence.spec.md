@@ -33,6 +33,7 @@ This spec does not define every future asset index, backup strategy, retention p
 - Repository adapter choice must come from `STUFF_STASH_REPOSITORY_MODE`.
 - `memory` repository mode is allowed for local tracer bullets and tests.
 - `postgres` repository mode must use GORM and `STUFF_STASH_DATABASE_DSN`.
+- `sqlite` repository mode is allowed for local development when a developer needs durable state without running Postgres. It must use GORM, must use `STUFF_STASH_DATABASE_DSN` as the SQLite file DSN, and must apply the same GORM repository mappings through the local schema bootstrap path before serving requests.
 - Local Compose must run the API with `STUFF_STASH_REPOSITORY_MODE=postgres`.
 - State changes that require SpiceDB relationship writes must use a transactional outbox.
 - Domain state and authorization outbox records must be written in the same database transaction.

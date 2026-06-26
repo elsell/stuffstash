@@ -14,6 +14,9 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/dbmigrations"
 	"github.com/stuffstash/stuff-stash/internal/config"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -143,6 +146,92 @@ func TestBuildRepositoriesRejectsPostgresWithoutDSN(t *testing.T) {
 	}
 }
 
+func TestBuildRepositoriesAcceptsSQLiteMode(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "nested", "stuffstash.sqlite")
+	repositories, closeRepositories, err := buildRepositories(context.Background(), config.Config{
+		RepositoryMode:  "sqlite",
+		DatabaseDSN:     dbPath,
+		BlobStoragePath: t.TempDir(),
+	})
+	if err != nil {
+		t.Fatalf("build repositories: %v", err)
+	}
+	if repositories.tenants == nil || repositories.providerCredentials == nil || repositories.blobs == nil {
+		t.Fatalf("expected sqlite-backed repositories")
+	}
+	if err := closeRepositories(); err != nil {
+		t.Fatalf("close repositories: %v", err)
+	}
+	if _, err := os.Stat(dbPath); err != nil {
+		t.Fatalf("expected sqlite database file: %v", err)
+	}
+}
+
+func TestBuildRepositoriesSQLitePreservesProviderCredentialSupersession(t *testing.T) {
+	ctx := context.Background()
+	repositories, closeRepositories, err := buildRepositories(ctx, config.Config{
+		RepositoryMode:  "sqlite",
+		DatabaseDSN:     filepath.Join(t.TempDir(), "nested", "stuffstash.sqlite"),
+		BlobStoragePath: t.TempDir(),
+	})
+	if err != nil {
+		t.Fatalf("build repositories: %v", err)
+	}
+	defer func() {
+		if err := closeRepositories(); err != nil {
+			t.Fatalf("close repositories: %v", err)
+		}
+	}()
+
+	tenantID := tenant.ID("tenant-home")
+	tenantName, ok := tenant.NewName("Home")
+	if !ok {
+		t.Fatalf("expected valid tenant name")
+	}
+	item, ok := tenant.NewTenant(tenantID, tenantName, tenant.LifecycleStateActive)
+	if !ok {
+		t.Fatalf("expected valid tenant")
+	}
+	if err := repositories.tenantUnitOfWork.SaveTenant(ctx, item); err != nil {
+		t.Fatalf("save tenant: %v", err)
+	}
+
+	profile := sqliteBootstrapProviderProfile(t, tenantID)
+	if err := repositories.providerProfileUnitOfWork.SaveProviderProfile(ctx, profile, sqliteBootstrapAuditRecord(t, "audit-profile", tenantID, audit.ActionProviderProfileCreated)); err != nil {
+		t.Fatalf("save provider profile: %v", err)
+	}
+	configured, ok := profile.WithCredentialConfigured(profile.UpdatedAt.Add(time.Minute))
+	if !ok {
+		t.Fatalf("configure provider credential status")
+	}
+	first := sqliteBootstrapProviderCredential("credential-one", configured, "ciphertext-one", configured.UpdatedAt)
+	if err := repositories.providerProfileUnitOfWork.ReplaceProviderProfileCredential(ctx, configured, first, sqliteBootstrapAuditRecord(t, "audit-credential-one", tenantID, audit.ActionProviderProfileCredentialReplaced)); err != nil {
+		t.Fatalf("replace first credential: %v", err)
+	}
+	second := sqliteBootstrapProviderCredential("credential-two", configured, "ciphertext-two", configured.UpdatedAt.Add(time.Minute))
+	if err := repositories.providerProfileUnitOfWork.ReplaceProviderProfileCredential(ctx, configured, second, sqliteBootstrapAuditRecord(t, "audit-credential-two", tenantID, audit.ActionProviderProfileCredentialReplaced)); err != nil {
+		t.Fatalf("replace second credential: %v", err)
+	}
+
+	active, found, err := repositories.providerCredentials.ActiveProviderCredential(ctx, second.Scope)
+	if err != nil {
+		t.Fatalf("get active credential: %v", err)
+	}
+	if !found || active.ID != "credential-two" || string(active.Sealed.Ciphertext) != "ciphertext-two" {
+		t.Fatalf("unexpected active credential: found=%t credential=%+v", found, active)
+	}
+	if exists, err := repositories.providerCredentials.ActiveProviderCredentialsExist(ctx); err != nil || !exists {
+		t.Fatalf("expected active provider credentials: exists=%t err=%v", exists, err)
+	}
+}
+
+func TestBuildRepositoriesRejectsSQLiteWithoutDSN(t *testing.T) {
+	_, _, err := buildRepositories(context.Background(), config.Config{RepositoryMode: "sqlite"})
+	if err == nil {
+		t.Fatalf("expected missing database dsn error")
+	}
+}
+
 func TestBuildBlobStorageAcceptsFilesystemMode(t *testing.T) {
 	store, directUploads, err := buildBlobStorage(config.Config{BlobStorageMode: "filesystem", BlobStoragePath: t.TempDir()})
 	if err != nil {
@@ -154,6 +243,74 @@ func TestBuildBlobStorageAcceptsFilesystemMode(t *testing.T) {
 	if directUploads != nil {
 		t.Fatalf("filesystem mode must not expose an unusable direct upload target")
 	}
+}
+
+func sqliteBootstrapProviderProfile(t *testing.T, tenantID tenant.ID) agentmodel.ProviderProfile {
+	t.Helper()
+
+	now := time.Date(2026, 6, 26, 10, 0, 0, 0, time.UTC)
+	profile, ok := agentmodel.NewProviderProfile(agentmodel.ProviderProfileInput{
+		ID:                 agentmodel.ProviderProfileID("profile-one"),
+		TenantID:           agentmodel.TenantID(tenantID.String()),
+		Capability:         agentmodel.ProviderCapabilityLanguageInference,
+		ProviderKind:       agentmodel.ProviderKindGemini,
+		DisplayName:        agentmodel.DisplayName("Google Gemini"),
+		ModelName:          agentmodel.ModelName("gemini-2.5-flash-lite"),
+		RuntimeOptionsJSON: []byte(`{"location":"us-central1"}`),
+		CapabilityJSON:     []byte(`{"toolCalls":true}`),
+		PromptTemplate:     "Answer briefly.",
+		CredentialStatus:   agentmodel.CredentialStatusMissing,
+		LifecycleState:     agentmodel.ProviderProfileEnabled,
+		CreatedAt:          now,
+		UpdatedAt:          now,
+	})
+	if !ok {
+		t.Fatalf("expected valid provider profile")
+	}
+	return profile
+}
+
+func sqliteBootstrapProviderCredential(id string, profile agentmodel.ProviderProfile, ciphertext string, now time.Time) ports.ProviderCredentialRecord {
+	return ports.ProviderCredentialRecord{
+		ID: id,
+		Scope: ports.ProviderCredentialScope{
+			TenantID:          tenant.ID(profile.TenantID.String()),
+			ProviderProfileID: profile.ID.String(),
+			Capability:        ports.ProviderCapabilityLanguageInference,
+			ProviderKind:      ports.ProviderKindGemini,
+			Purpose:           ports.ProviderCredentialPurposeAPIKey,
+		},
+		Sealed: ports.SealedProviderCredential{
+			KeyID:      "local-key",
+			Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+			Nonce:      []byte("123456789012"),
+			Ciphertext: []byte(ciphertext),
+		},
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+}
+
+func sqliteBootstrapAuditRecord(t *testing.T, id string, tenantID tenant.ID, action audit.Action) audit.Record {
+	t.Helper()
+
+	record, ok := audit.NewRecord(
+		audit.ID(id),
+		audit.TenantID(tenantID.String()),
+		"",
+		audit.PrincipalID("owner"),
+		action,
+		audit.SourceAPI,
+		audit.TargetProviderProfile,
+		"profile-one",
+		time.Date(2026, 6, 26, 10, 0, 0, 0, time.UTC),
+		"request-1",
+		map[string]string{},
+	)
+	if !ok {
+		t.Fatalf("expected valid audit record")
+	}
+	return record
 }
 
 func TestBuildBlobStorageRejectsUnknownMode(t *testing.T) {
