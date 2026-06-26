@@ -167,7 +167,14 @@ This spec defines camera behavior only for attaching still photos during the Add
   - It must show capability, provider kind, display name, lifecycle state, credential status, model name when present, last-tested state, and safe prompt-template presence for language inference profiles.
   - It may run the API's safe provider diagnostic probe for a selected profile and show only the safe status, message, and tested-at timestamp returned by the API.
   - It must never show raw credentials, sealed credential data, provider account details, provider-specific realtime URLs, raw prompts, raw transcripts, raw model responses, raw audio, or generated speech.
-  - Credential entry, profile creation, profile update, enable/disable/archive, and prompt-template editing remain separate mobile implementation work even though the API supports those operations.
+  - Mobile may create first-pass recommended profiles for the existing API-supported provider contracts so a tenant can be configured from the phone:
+    - Gemini API-key speech-to-text using capability `speech_to_text`, provider kind `gemini`, model `gemini-2.5-flash-lite`, and credential purpose `api_key`.
+    - Gemini API-key language inference using capability `language_inference`, provider kind `gemini`, model `gemini-2.5-flash-lite`, credential purpose `api_key`, and optional prompt-template editing.
+    - Google Cloud Text-to-Speech using capability `text_to_speech`, provider kind `gemini`, runtime options for `languageCode` and `voiceName`, and credential purpose `oauth_bearer` until an API-key-backed speech synthesis adapter is specified.
+  - Mobile profile creation must keep advanced provider fields conservative and explicit. It must not ask for provider secrets until after the profile record exists, because credential replacement is a separate API operation that seals raw material server-side.
+  - Mobile credential entry must send the raw credential only to the credential replacement command, keep it in component state only for the active edit session, clear it after completion or cancellation, and never persist, log, echo, or include it in diagnostics.
+  - Mobile may enable, disable, or archive profiles through explicit user actions. Archive remains a destructive action that requires native confirmation.
+  - Arbitrary endpoint editing, runtime option editing beyond the first recommended profile controls, and custom provider-kind creation remain future mobile work.
 - The first mobile voice UX preview must preserve the conversational inventory specs' mental model:
   - It must show the current tenant and inventory context.
   - It must represent the journey as user utterance, transcript, assistant interpretation, structured action-plan review, approval, and cancellation.

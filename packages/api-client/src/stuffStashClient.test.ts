@@ -236,6 +236,116 @@ describe('StuffStashClient', () => {
     expect(requests[0]?.headers.get('Authorization')).toBe('Bearer id-token');
   });
 
+  it('manages provider profiles through tenant-scoped endpoints', async () => {
+    const requests: Request[] = [];
+    const providerProfile = {
+      id: 'profile-language',
+      tenantId: 'tenant-one',
+      capability: 'language_inference',
+      providerKind: 'gemini',
+      displayName: 'Gemini language',
+      endpointUrl: '',
+      modelName: 'gemini-2.5-flash-lite',
+      runtimeOptions: {},
+      capabilityMetadata: {},
+      promptTemplate: 'Answer briefly.',
+      credentialStatus: 'missing',
+      lifecycleState: 'disabled',
+      createdAt: '2026-06-26T11:00:00Z',
+      updatedAt: '2026-06-26T11:00:00Z'
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({ data: providerProfile, meta: {} });
+      }
+    });
+
+    await client.createProviderProfile('tenant-one', {
+      capability: 'language_inference',
+      providerKind: 'gemini',
+      displayName: 'Gemini language',
+      modelName: 'gemini-2.5-flash-lite',
+      promptTemplate: 'Answer briefly.'
+    });
+    await client.updateProviderProfile('tenant-one', 'profile-language', {
+      promptTemplate: 'Answer in one sentence.'
+    });
+    await client.enableProviderProfile('tenant-one', 'profile-language');
+    await client.disableProviderProfile('tenant-one', 'profile-language');
+    await client.archiveProviderProfile('tenant-one', 'profile-language');
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-one/provider-profiles',
+      'PATCH http://api.local/tenants/tenant-one/provider-profiles/profile-language',
+      'POST http://api.local/tenants/tenant-one/provider-profiles/profile-language/enable',
+      'POST http://api.local/tenants/tenant-one/provider-profiles/profile-language/disable',
+      'POST http://api.local/tenants/tenant-one/provider-profiles/profile-language/archive'
+    ]);
+    expect(await requests[0]?.json()).toEqual({
+      capability: 'language_inference',
+      providerKind: 'gemini',
+      displayName: 'Gemini language',
+      modelName: 'gemini-2.5-flash-lite',
+      promptTemplate: 'Answer briefly.'
+    });
+    expect(await requests[1]?.json()).toEqual({
+      promptTemplate: 'Answer in one sentence.'
+    });
+  });
+
+  it('replaces provider credentials only in the credential request body', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({
+          data: {
+            id: 'profile-language',
+            tenantId: 'tenant-one',
+            capability: 'language_inference',
+            providerKind: 'gemini',
+            displayName: 'Gemini language',
+            endpointUrl: '',
+            modelName: 'gemini-2.5-flash-lite',
+            runtimeOptions: {},
+            capabilityMetadata: {},
+            credentialStatus: 'configured',
+            lifecycleState: 'disabled',
+            createdAt: '2026-06-26T11:00:00Z',
+            updatedAt: '2026-06-26T12:00:00Z'
+          },
+          meta: {}
+        });
+      }
+    });
+
+    await expect(
+      client.replaceProviderProfileCredential('tenant-one', 'profile-language', {
+        purpose: 'api_key',
+        credential: 'secret-api-key'
+      })
+    ).resolves.toMatchObject({
+      id: 'profile-language',
+      credentialStatus: 'configured'
+    });
+
+    expect(requests[0]?.url).toBe(
+      'http://api.local/tenants/tenant-one/provider-profiles/profile-language/credential'
+    );
+    expect(requests[0]?.method).toBe('PUT');
+    expect(await requests[0]?.json()).toEqual({
+      purpose: 'api_key',
+      credential: 'secret-api-key'
+    });
+  });
+
   it('calls asset lifecycle endpoints', async () => {
     const requests: Request[] = [];
     const assetResponse = {

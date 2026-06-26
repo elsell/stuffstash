@@ -25,6 +25,7 @@ import {
   ConnectionProfileStore
 } from '../application/onboarding/ConnectionProfile';
 import { OnboardingCommand } from '../application/onboarding/OnboardingCommand';
+import { ManageProviderProfileCommand } from '../application/providerProfiles/ManageProviderProfileCommand';
 import { ProviderProfileSettingsQuery } from '../application/providerProfiles/ProviderProfileSettingsQuery';
 import { TestProviderProfileCommand } from '../application/providerProfiles/TestProviderProfileCommand';
 import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
@@ -50,6 +51,7 @@ export type MobileComposition = {
   readonly locationAssetsQuery: LocationAssetsQuery;
   readonly settingsQuery: SettingsQuery;
   readonly providerProfileSettingsQuery: ProviderProfileSettingsQuery;
+  readonly manageProviderProfileCommand: ManageProviderProfileCommand;
   readonly testProviderProfileCommand: TestProviderProfileCommand;
   readonly voiceInteractionPreviewQuery: VoiceInteractionPreviewQuery;
   readonly realtimeVoiceSessionController: RealtimeVoiceSessionController;
@@ -109,6 +111,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
       new ExpoSettingsDiagnosticsProvider(config)
     ),
     providerProfileSettingsQuery: new ProviderProfileSettingsQuery(providerProfiles),
+    manageProviderProfileCommand: new ManageProviderProfileCommand(providerProfiles),
     testProviderProfileCommand: new TestProviderProfileCommand(providerProfiles),
     voiceInteractionPreviewQuery: new VoiceInteractionPreviewQuery(inventorySummaries),
     realtimeVoiceSessionController: new RealtimeVoiceSessionController(

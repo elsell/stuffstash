@@ -250,6 +250,32 @@ export interface ProviderProfile {
   updatedAt: string;
 }
 
+export interface CreateProviderProfileInput {
+  capability: string;
+  providerKind: string;
+  displayName: string;
+  endpointUrl?: string;
+  modelName?: string;
+  runtimeOptions?: Record<string, unknown>;
+  capabilityMetadata?: Record<string, unknown>;
+  promptTemplate?: string;
+  enable?: boolean;
+}
+
+export interface UpdateProviderProfileInput {
+  displayName?: string;
+  endpointUrl?: string;
+  modelName?: string;
+  runtimeOptions?: Record<string, unknown>;
+  capabilityMetadata?: Record<string, unknown>;
+  promptTemplate?: string;
+}
+
+export interface ReplaceProviderProfileCredentialInput {
+  purpose: string;
+  credential: string;
+}
+
 export interface ProviderProfileTestResult {
   providerProfileId: string;
   capability: string;
@@ -852,6 +878,62 @@ export class StuffStashClient {
     return (envelope.data ?? []).map(mapProviderProfile);
   }
 
+  async createProviderProfile(
+    tenantId: string,
+    input: CreateProviderProfileInput
+  ): Promise<ProviderProfile> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/provider-profiles', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } },
+        body: input
+      })
+    );
+    return mapProviderProfile(envelope.data);
+  }
+
+  async updateProviderProfile(
+    tenantId: string,
+    providerProfileId: string,
+    input: UpdateProviderProfileInput
+  ): Promise<ProviderProfile> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/provider-profiles/{providerProfileId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, providerProfileId } },
+        body: input
+      })
+    );
+    return mapProviderProfile(envelope.data);
+  }
+
+  async replaceProviderProfileCredential(
+    tenantId: string,
+    providerProfileId: string,
+    input: ReplaceProviderProfileCredentialInput
+  ): Promise<ProviderProfile> {
+    const envelope = await this.unwrap(
+      this.client.PUT('/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, providerProfileId } },
+        body: input
+      })
+    );
+    return mapProviderProfile(envelope.data);
+  }
+
+  async enableProviderProfile(tenantId: string, providerProfileId: string): Promise<ProviderProfile> {
+    return this.changeProviderProfileLifecycle(tenantId, providerProfileId, 'enable');
+  }
+
+  async disableProviderProfile(tenantId: string, providerProfileId: string): Promise<ProviderProfile> {
+    return this.changeProviderProfileLifecycle(tenantId, providerProfileId, 'disable');
+  }
+
+  async archiveProviderProfile(tenantId: string, providerProfileId: string): Promise<ProviderProfile> {
+    return this.changeProviderProfileLifecycle(tenantId, providerProfileId, 'archive');
+  }
+
   async testProviderProfile(
     tenantId: string,
     providerProfileId: string
@@ -863,6 +945,20 @@ export class StuffStashClient {
       })
     );
     return mapProviderProfileTestResult(envelope.data);
+  }
+
+  private async changeProviderProfileLifecycle(
+    tenantId: string,
+    providerProfileId: string,
+    action: 'enable' | 'disable' | 'archive'
+  ): Promise<ProviderProfile> {
+    const envelope = await this.unwrap(
+      this.client.POST(`/tenants/{tenantId}/provider-profiles/{providerProfileId}/${action}`, {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, providerProfileId } }
+      })
+    );
+    return mapProviderProfile(envelope.data);
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
