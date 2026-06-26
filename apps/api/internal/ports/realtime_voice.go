@@ -46,7 +46,26 @@ type AgentToolDescriptor struct {
 	Label       string
 	Description string
 	ReadOnly    bool
+	Parameters  AgentToolParameters
 }
+
+type AgentToolParameters struct {
+	Properties map[string]AgentToolParameter
+	Required   []string
+}
+
+type AgentToolParameter struct {
+	Type        AgentToolParameterType
+	Description string
+	Enum        []string
+}
+
+type AgentToolParameterType string
+
+const (
+	AgentToolParameterTypeString  AgentToolParameterType = "string"
+	AgentToolParameterTypeInteger AgentToolParameterType = "integer"
+)
 
 type LanguageInferenceTurn struct {
 	ToolCalls []AgentToolCall
@@ -62,6 +81,7 @@ type AgentToolCall struct {
 type AgentToolResult struct {
 	CallID  string
 	Name    string
+	Call    AgentToolCall
 	Content string
 }
 

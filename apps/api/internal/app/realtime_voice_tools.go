@@ -22,12 +22,46 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			Label:       realtimeVoiceSearchAuthorizedAssetsPublicName,
 			Description: "Search visible assets in the selected inventory by natural-language keywords. Use this for where-is, do-I-have, or specific-item questions. Arguments: query string, optional limit number. Results are JSON with asset metadata and containment paths.",
 			ReadOnly:    true,
+			Parameters: ports.AgentToolParameters{
+				Required: []string{"query"},
+				Properties: map[string]ports.AgentToolParameter{
+					"query": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Short natural-language keywords for the visible asset, container, or location the user asked about.",
+					},
+					"limit": {
+						Type:        ports.AgentToolParameterTypeInteger,
+						Description: "Maximum number of visible matching assets to return. Defaults to 10 and is capped at 20.",
+					},
+				},
+			},
 		},
 		{
 			Name:        RealtimeVoiceToolListAuthorizedAssets,
 			Label:       realtimeVoiceListAuthorizedAssetsPublicName,
 			Description: "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have or what is in a place. Arguments: optional kind item|container|location, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata and containment paths.",
 			ReadOnly:    true,
+			Parameters: ports.AgentToolParameters{
+				Properties: map[string]ports.AgentToolParameter{
+					"kind": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional asset kind filter.",
+						Enum:        []string{"item", "container", "location"},
+					},
+					"parentTitle": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional direct parent title filter for questions about what is inside a specific container or location.",
+					},
+					"locationTitle": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional containing location title filter for questions about what is in a place.",
+					},
+					"limit": {
+						Type:        ports.AgentToolParameterTypeInteger,
+						Description: "Maximum number of visible assets to return. Defaults to 10 and is capped at 20.",
+					},
+				},
+			},
 		},
 	}
 }
@@ -231,6 +265,7 @@ func realtimeVoiceToolResult(call ports.AgentToolCall, output realtimeVoiceAsset
 	return ports.AgentToolResult{
 		CallID:  call.ID,
 		Name:    call.Name,
+		Call:    call,
 		Content: string(payload),
 	}, nil
 }

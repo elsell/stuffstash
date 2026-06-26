@@ -314,6 +314,8 @@ The first read-only tools are:
 - List root-level assets in an inventory.
 - List authorized assets by safe filters such as kind, lifecycle state, and optional parent or location title.
 
+Tool descriptors must use project-owned names, descriptions, read-only markers, and parameter metadata. Provider adapters may translate that metadata into provider-native schemas, but provider-specific tool declaration types must not cross the language inference port.
+
 The loop must not expose write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access.
 
 Tool results provided to the language model must be structured, safe, and useful enough for accurate answers. For visible assets, read-only tool output should include:
@@ -395,6 +397,12 @@ The final response must not include raw chain-of-thought, raw model reasoning, r
 ## Prompt Templates
 
 The first real provider adapters may use a fixed project-owned prompt template for the voice loop.
+
+Provider adapters that support native tool or function calling must use the provider-native tool calling mechanism for tool selection instead of asking the model to emit project-defined tool-call JSON in text. For Gemini on Vertex AI, the adapter must send the project-owned read-only tool catalog as `functionDeclarations` with OpenAPI-compatible parameter schemas, parse returned `functionCall` parts into project-owned `AgentToolCall` values, and send tool outputs back as `functionResponse` parts on later turns.
+
+Native provider tool calling is an adapter concern. Application services, domain services, REST adapters, mobile clients, and tool execution code must continue to use project-owned tool descriptors, tool calls, tool results, and structured final responses. Provider-native tool declaration, function-call, and function-response shapes must not leak across the language inference port.
+
+Provider adapters may continue to use structured JSON output for final responses when the provider supports it. Native tool calling must not loosen the final response validator, read-only/write boundaries, tenant and inventory scoping, or redaction rules.
 
 Future tenant-managed provider profiles must support model-specific prompt template configuration because smaller or local models may need different instructions, output examples, or schema wording. Prompt templates must be configuration data resolved through the provider-profile/application boundary, not hard-coded provider adapter behavior.
 

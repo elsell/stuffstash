@@ -81,7 +81,7 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 		requests = append(requests, request)
 		w.Header().Set("Content-Type", "application/json")
 		if calls == 1 {
-			_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"toolCalls":[{"id":"call-1","name":"search_authorized_assets","arguments":{"query":"tools"}}]}`))
+			_ = json.NewEncoder(w).Encode(geminiFunctionCallResponse("search_authorized_assets", map[string]any{"query": "tools"}))
 			return
 		}
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"Your tools are in Garage.","displayResponse":"Your tools are in Garage."}}`))
@@ -112,9 +112,18 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	}
 
 	finalTurn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
-		Transcript:    "Where are my tools?",
-		Tools:         tools,
-		ToolResults:   []ports.AgentToolResult{{CallID: "call-1", Name: "search_authorized_assets", Content: "Tools (container)"}},
+		Transcript: "Where are my tools?",
+		Tools:      tools,
+		ToolResults: []ports.AgentToolResult{{
+			CallID: "call-1",
+			Name:   "search_authorized_assets",
+			Call: ports.AgentToolCall{
+				ID:        "call-1",
+				Name:      "search_authorized_assets",
+				Arguments: map[string]any{"query": "tools"},
+			},
+			Content: `{"tool":"search_authorized_assets","count":1,"items":[{"title":"Tools","kind":"container","locationTitle":"Garage"}]}`,
+		}},
 		PreviousTurns: 1,
 	})
 	if err != nil {
@@ -124,8 +133,31 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 		t.Fatalf("unexpected final turn: %+v", finalTurn)
 	}
 	requestPayload, _ := json.Marshal(requests[0])
-	if !strings.Contains(string(requestPayload), "Search visible assets.") {
-		t.Fatalf("prompt did not include tool descriptor: %s", string(requestPayload))
+	if !strings.Contains(string(requestPayload), `"functionDeclarations"`) || !strings.Contains(string(requestPayload), "Search visible assets.") {
+		t.Fatalf("request did not include native tool declarations: %s", string(requestPayload))
+	}
+	if strings.Contains(string(requestPayload), `"toolCalls"`) {
+		t.Fatalf("request still prompts for text tool-call JSON: %s", string(requestPayload))
+	}
+	firstPrompt := requestTextPart(t, requests[0], 0, 0)
+	if strings.Contains(firstPrompt, "Tool results:") {
+		t.Fatalf("prompt should not inline raw tool results when native function responses are used: %s", firstPrompt)
+	}
+	secondContents := requestContents(t, requests[1])
+	if len(secondContents) != 3 {
+		t.Fatalf("expected user prompt, model function call, and user function response contents, got %d: %+v", len(secondContents), secondContents)
+	}
+	if roleAt(t, secondContents[1]) != "model" || roleAt(t, secondContents[2]) != "user" {
+		t.Fatalf("unexpected function calling roles: %+v", secondContents)
+	}
+	functionCall := partObjectAt(t, secondContents[1], 0, "functionCall")
+	if functionCall["name"] != "search_authorized_assets" || objectAt(t, functionCall, "args")["query"] != "tools" {
+		t.Fatalf("unexpected function call history: %+v", functionCall)
+	}
+	functionResponse := partObjectAt(t, secondContents[2], 0, "functionResponse")
+	response := objectAt(t, functionResponse, "response")
+	if functionResponse["name"] != "search_authorized_assets" || response["tool"] != "search_authorized_assets" || response["count"] != float64(1) {
+		t.Fatalf("unexpected structured function response: %+v", functionResponse)
 	}
 }
 
@@ -147,6 +179,38 @@ func TestGoogleGeminiLanguageInferenceRejectsMalformedTurns(t *testing.T) {
 				t.Fatalf("expected malformed turn to be rejected")
 			}
 		})
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRejectsMalformedFunctionCalls(t *testing.T) {
+	t.Parallel()
+
+	tools := []ports.AgentToolDescriptor{{Name: "search_authorized_assets", ReadOnly: true}, {Name: "write_asset", ReadOnly: false}}
+	cases := map[string][]geminiFunctionCall{
+		"unknown tool":  {{Name: "delete_asset", Args: map[string]any{"id": "asset-1"}}},
+		"non read only": {{Name: "write_asset", Args: map[string]any{"title": "x"}}},
+		"missing args":  {{Name: "search_authorized_assets"}},
+	}
+	for name, calls := range cases {
+		t.Run(name, func(t *testing.T) {
+			if _, err := parseGeminiFunctionCalls(calls, tools); err == nil {
+				t.Fatalf("expected malformed function call to be rejected")
+			}
+		})
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRejectsMalformedFunctionResponses(t *testing.T) {
+	t.Parallel()
+
+	if _, err := languageContents(ports.LanguageInferenceInput{
+		Transcript: "Where are my tools?",
+		ToolResults: []ports.AgentToolResult{{
+			Name:    "search_authorized_assets",
+			Content: "not-json",
+		}},
+	}); err == nil {
+		t.Fatalf("expected malformed function response content to be rejected")
 	}
 }
 
@@ -199,6 +263,80 @@ func geminiTextResponse(text string) map[string]any {
 		"candidates": []map[string]any{{
 			"content": map[string]any{
 				"parts": []map[string]any{{"text": text}},
+			},
+		}},
+	}
+}
+
+func requestContents(t *testing.T, request map[string]any) []any {
+	t.Helper()
+	contents, ok := request["contents"].([]any)
+	if !ok {
+		t.Fatalf("request contents missing or wrong type: %+v", request)
+	}
+	return contents
+}
+
+func requestTextPart(t *testing.T, request map[string]any, contentIndex int, partIndex int) string {
+	t.Helper()
+	content := objectFromAny(t, requestContents(t, request)[contentIndex])
+	parts, ok := content["parts"].([]any)
+	if !ok {
+		t.Fatalf("content parts missing or wrong type: %+v", content)
+	}
+	part := objectFromAny(t, parts[partIndex])
+	text, ok := part["text"].(string)
+	if !ok {
+		t.Fatalf("text part missing or wrong type: %+v", part)
+	}
+	return text
+}
+
+func roleAt(t *testing.T, content any) string {
+	t.Helper()
+	item := objectFromAny(t, content)
+	role, ok := item["role"].(string)
+	if !ok {
+		t.Fatalf("content role missing or wrong type: %+v", item)
+	}
+	return role
+}
+
+func partObjectAt(t *testing.T, content any, partIndex int, key string) map[string]any {
+	t.Helper()
+	item := objectFromAny(t, content)
+	parts, ok := item["parts"].([]any)
+	if !ok {
+		t.Fatalf("content parts missing or wrong type: %+v", item)
+	}
+	part := objectFromAny(t, parts[partIndex])
+	return objectAt(t, part, key)
+}
+
+func objectAt(t *testing.T, item map[string]any, key string) map[string]any {
+	t.Helper()
+	return objectFromAny(t, item[key])
+}
+
+func objectFromAny(t *testing.T, value any) map[string]any {
+	t.Helper()
+	item, ok := value.(map[string]any)
+	if !ok {
+		t.Fatalf("value is not an object: %+v", value)
+	}
+	return item
+}
+
+func geminiFunctionCallResponse(name string, args map[string]any) map[string]any {
+	return map[string]any{
+		"candidates": []map[string]any{{
+			"content": map[string]any{
+				"parts": []map[string]any{{
+					"functionCall": map[string]any{
+						"name": name,
+						"args": args,
+					},
+				}},
 			},
 		}},
 	}
