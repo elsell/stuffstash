@@ -76,6 +76,24 @@ The first slice may implement creation, approval, and cancellation before comman
 
 The first persisted plan must not store raw transcript text. A safe `userIntentSummary` and `modelInterpretationSummary` may be stored only when they are bounded, user-renderable, and free of provider-specific raw output.
 
+## Realtime Voice Proposal Tool
+
+The mobile realtime voice loop may expose a single proposal tool named `propose_action_plan`. This tool creates a persisted `proposed` action plan and returns a safe review payload to the realtime client. It is not a domain write command and must not mutate inventory resources.
+
+The proposal tool must accept only:
+
+- a command kind from the initial command enumeration,
+- a safe user-facing intent summary,
+- a safe model interpretation summary,
+- a safe confirmation summary,
+- a safe command summary,
+- bounded command arguments validated by the action-plan application service, and
+- bounded safe risk summaries.
+
+The proposal tool must reject unknown arguments, unknown command kinds, empty confirmation summaries, unsafe command arguments, approval claims, provider credentials, raw prompts, raw provider responses, raw transcripts, bearer tokens, provider session IDs, and hidden resource data. The persisted plan must be scoped to the active tenant, inventory, principal, and realtime session.
+
+The first realtime proposal slice must not approve, execute, or cancel the proposed plan automatically. Approval and execution require explicit later client messages and application-service handling.
+
 ## Initial Command Enumeration
 
 The first command enumeration is:

@@ -135,6 +135,7 @@ func newRealtimeVoiceResolutionTestAppWithSessions(t *testing.T, resolver ports.
 		Inventories:                   store,
 		Assets:                        store,
 		Search:                        store,
+		ActionPlans:                   store,
 		RealtimeVoiceProviderResolver: resolver,
 		RealtimeSessions:              sessions,
 		IDs:                           &realtimeVoiceResolutionIDGenerator{},

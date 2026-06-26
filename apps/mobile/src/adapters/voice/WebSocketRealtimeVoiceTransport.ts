@@ -222,6 +222,13 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         code: optionalStringField(message, 'code'),
 				message: optionalStringField(message, 'message')
 			};
+    case 'action.plan.proposed':
+      return {
+        ...metadata,
+        type: 'action.plan.proposed',
+        sessionId: stringField(message, 'sessionId'),
+        actionPlan: actionPlanField(message)
+      };
 		case 'assistant.response.started':
 			return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
 		case 'assistant.response.completed': {
@@ -313,6 +320,42 @@ function objectField(message: Record<string, unknown>, field: string): Record<st
   const value = message[field];
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error(`Voice event field ${field} must be an object.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function actionPlanField(message: Record<string, unknown>) {
+  const actionPlan = objectField(message, 'actionPlan');
+  return {
+    planId: stringField(actionPlan, 'planId'),
+    confirmationSummary: stringField(actionPlan, 'confirmationSummary'),
+    commands: arrayField(actionPlan, 'commands').map((item) => {
+      const command = objectValue(item, 'actionPlan.commands');
+      return {
+        kind: stringField(command, 'kind'),
+        summary: stringField(command, 'summary')
+      };
+    }),
+    risks: arrayField(actionPlan, 'risks').map((item) => {
+      if (typeof item !== 'string' || item.trim().length === 0) {
+        throw new Error('Voice action plan risk must be a non-empty string.');
+      }
+      return item;
+    })
+  };
+}
+
+function arrayField(message: Record<string, unknown>, field: string): readonly unknown[] {
+  const value = message[field];
+  if (!Array.isArray(value)) {
+    throw new Error(`Voice event field ${field} must be an array.`);
+  }
+  return value;
+}
+
+function objectValue(value: unknown, label: string): Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`Voice event field ${label} must contain objects.`);
   }
   return value as Record<string, unknown>;
 }

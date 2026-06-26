@@ -121,6 +121,63 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('enters review when the API proposes an action plan', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        { type: 'session.started', seq: 1, sessionId: 'session-1' },
+        { type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Add a water bottle' },
+        {
+          type: 'action.plan.proposed',
+          seq: 3,
+          sessionId: 'session-1',
+          actionPlan: {
+            planId: 'plan-1',
+            confirmationSummary: 'Create item water bottle?',
+            commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+            risks: ['Adds a new item to this inventory.']
+          }
+        },
+        { type: 'assistant.response.started', seq: 4, sessionId: 'session-1', responseId: 'response-1' },
+        {
+          type: 'assistant.response.completed',
+          seq: 5,
+          sessionId: 'session-1',
+          response: {
+            spokenResponse: 'I prepared that change for review.',
+            displayResponse: 'I prepared that change for review.',
+            kind: 'clarification'
+          }
+        },
+        { type: 'session.completed', seq: 6, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+    const review = states.find((state) => state.status === 'review');
+
+    expect(review).toMatchObject({
+      status: 'review',
+      progressLabel: 'Review needed',
+      actionPlan: {
+        planId: 'plan-1',
+        confirmationSummary: 'Create item water bottle?',
+        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        risks: ['Adds a new item to this inventory.']
+      }
+    });
+    expect(states.at(-1)).toMatchObject({
+      status: 'review',
+      progressLabel: 'Review needed',
+      actionPlan: {
+        planId: 'plan-1'
+      }
+    });
+  });
+
   it('returns the server failure state when the realtime session fails safely', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),

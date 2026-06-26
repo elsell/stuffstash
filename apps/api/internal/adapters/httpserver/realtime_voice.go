@@ -158,6 +158,7 @@ type realtimeServerMessage struct {
 	Status               string                       `json:"status,omitempty"`
 	ToolCallID           string                       `json:"toolCallId,omitempty"`
 	ToolLabel            string                       `json:"toolLabel,omitempty"`
+	ActionPlan           *realtimeActionPlanProposal  `json:"actionPlan,omitempty"`
 	ResponseID           string                       `json:"responseId,omitempty"`
 	Response             *realtimeStructuredResponse  `json:"response,omitempty"`
 	Format               *realtimeAudioFormatResponse `json:"format,omitempty"`
@@ -181,6 +182,18 @@ type realtimeStructuredResponse struct {
 	Artifacts       []any    `json:"artifacts"`
 	ToolCallIDs     []string `json:"toolCallIds"`
 	AuditMetadata   struct{} `json:"auditMetadata"`
+}
+
+type realtimeActionPlanProposal struct {
+	PlanID              string                      `json:"planId"`
+	ConfirmationSummary string                      `json:"confirmationSummary"`
+	Commands            []realtimeActionPlanCommand `json:"commands"`
+	Risks               []string                    `json:"risks"`
+}
+
+type realtimeActionPlanCommand struct {
+	Kind    string `json:"kind"`
+	Summary string `json:"summary"`
 }
 
 type realtimeAudioFormatResponse struct {
@@ -276,6 +289,10 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 		if event.Response != nil {
 			message.Response = realtimeStructuredResponseFromPort(*event.Response)
 		}
+	case app.RealtimeVoiceEventActionPlanProposed:
+		if event.ActionPlan != nil {
+			message.ActionPlan = realtimeActionPlanFromApp(*event.ActionPlan)
+		}
 	case app.RealtimeVoiceEventTextToSpeechAudioStarted:
 		message.Format = &realtimeAudioFormatResponse{MimeType: event.AudioMime}
 	case app.RealtimeVoiceEventTextToSpeechAudioChunk:
@@ -283,6 +300,19 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 		message.IsFinalChunk = event.FinalChunk
 	}
 	return message
+}
+
+func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *realtimeActionPlanProposal {
+	commands := make([]realtimeActionPlanCommand, 0, len(proposal.Commands))
+	for _, command := range proposal.Commands {
+		commands = append(commands, realtimeActionPlanCommand{Kind: command.Kind, Summary: command.Summary})
+	}
+	return &realtimeActionPlanProposal{
+		PlanID:              proposal.PlanID,
+		ConfirmationSummary: proposal.ConfirmationSummary,
+		Commands:            commands,
+		Risks:               append([]string{}, proposal.Risks...),
+	}
 }
 
 func realtimeStructuredResponseFromPort(response ports.StructuredAgentResponse) *realtimeStructuredResponse {

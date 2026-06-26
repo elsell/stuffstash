@@ -22,6 +22,7 @@ const (
 	RealtimeVoiceEventToolCallStarted             = "tool.call.started"
 	RealtimeVoiceEventToolCallCompleted           = "tool.call.completed"
 	RealtimeVoiceEventToolCallFailed              = "tool.call.failed"
+	RealtimeVoiceEventActionPlanProposed          = "action.plan.proposed"
 	RealtimeVoiceEventAssistantResponseStarted    = "assistant.response.started"
 	RealtimeVoiceEventAssistantResponseCompleted  = "assistant.response.completed"
 	RealtimeVoiceEventTextToSpeechAudioStarted    = "tts.audio.started"
@@ -30,8 +31,10 @@ const (
 	RealtimeVoiceEventSessionCompleted            = "session.completed"
 	RealtimeVoiceToolSearchAuthorizedAssets       = "search_authorized_assets"
 	RealtimeVoiceToolListAuthorizedAssets         = "list_authorized_assets"
+	RealtimeVoiceToolProposeActionPlan            = "propose_action_plan"
 	realtimeVoiceSearchAuthorizedAssetsPublicName = "Search inventory"
 	realtimeVoiceListAuthorizedAssetsPublicName   = "List inventory"
+	realtimeVoiceProposeActionPlanPublicName      = "Prepare change"
 )
 
 type RealtimeVoiceSessionInput struct {
@@ -79,6 +82,7 @@ type RealtimeVoiceEvent struct {
 	Message    string
 	Text       string
 	Response   *ports.StructuredAgentResponse
+	ActionPlan *RealtimeVoiceActionPlanProposal
 	Audio      []byte
 	AudioMime  string
 	ChunkID    string
@@ -86,6 +90,18 @@ type RealtimeVoiceEvent struct {
 }
 
 type RealtimeVoiceEventSink func(RealtimeVoiceEvent) error
+
+type RealtimeVoiceActionPlanProposal struct {
+	PlanID              string
+	ConfirmationSummary string
+	Commands            []RealtimeVoiceActionPlanCommand
+	Risks               []string
+}
+
+type RealtimeVoiceActionPlanCommand struct {
+	Kind    string
+	Summary string
+}
 
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {
 	a.speechToText = stt
@@ -253,7 +269,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "searching"}); err != nil {
 				return err
 			}
-			result, err := a.executeRealtimeVoiceTool(ctx, input.Session, ports.AgentToolCall{
+			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, ports.AgentToolCall{
 				ID:        toolCallID,
 				Name:      call.Name,
 				Arguments: call.Arguments,
@@ -264,6 +280,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			}
 			executedToolCalls[signature] = struct{}{}
 			toolResults = append(toolResults, result)
+			if proposal != nil {
+				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
+					return err
+				}
+			}
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "completed"}); err != nil {
 				return err
 			}

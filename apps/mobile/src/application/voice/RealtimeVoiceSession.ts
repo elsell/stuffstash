@@ -70,6 +70,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       readonly code?: string;
       readonly message?: string;
     }
+  | { readonly type: 'action.plan.proposed'; readonly actionPlan: VoiceActionPlanProposal }
   | { readonly type: 'assistant.response.started'; readonly responseId: string }
   | {
       readonly type: 'assistant.response.completed';
@@ -86,10 +87,23 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | { readonly type: 'session.cancelled' }
 );
 
+export type VoiceActionPlanProposal = {
+  readonly planId: string;
+  readonly confirmationSummary: string;
+  readonly commands: readonly VoiceActionPlanCommand[];
+  readonly risks: readonly string[];
+};
+
+export type VoiceActionPlanCommand = {
+  readonly kind: string;
+  readonly summary: string;
+};
+
 export type VoiceRealtimeState = {
-  readonly status: 'ready' | 'listening' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
+  readonly status: 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
   readonly tenantName: string;
   readonly inventoryName: string;
+  readonly actionPlan?: VoiceActionPlanProposal;
   readonly transcript?: string;
   readonly spokenResponse?: string;
   readonly progressLabel?: string;
@@ -260,26 +274,35 @@ export class RealtimeVoiceSessionController {
             : state.debugEvents,
           progressLabel: event.toolLabel
         };
+      case 'action.plan.proposed':
+        return {
+          ...state,
+          status: 'review',
+          actionPlan: safeActionPlanProposal(event.actionPlan),
+          progressLabel: 'Review needed'
+        };
       case 'assistant.response.started':
-        return { ...state, status: 'processing', progressLabel: 'Preparing response' };
+        return { ...state, status: state.actionPlan ? 'review' : 'processing', progressLabel: 'Preparing response' };
       case 'assistant.response.completed':
         return {
           ...state,
-          status: 'processing',
+          status: state.actionPlan ? 'review' : 'processing',
           spokenResponse: event.response.displayResponse,
           progressLabel: 'Preparing speech'
         };
       case 'tts.audio.started':
         this.ttsMimeType = event.mimeType;
-        return { ...state, status: 'speaking', progressLabel: 'Speaking' };
+        return { ...state, status: state.actionPlan ? 'review' : 'speaking', progressLabel: 'Speaking' };
       case 'tts.audio.chunk':
         await this.player.playChunk(event.audioBase64, this.ttsMimeType);
-        return { ...state, status: 'speaking', progressLabel: 'Speaking' };
+        return { ...state, status: state.actionPlan ? 'review' : 'speaking', progressLabel: 'Speaking' };
       case 'tts.audio.completed':
-        return { ...state, status: 'speaking', progressLabel: 'Speech complete' };
+        return { ...state, status: state.actionPlan ? 'review' : 'speaking', progressLabel: 'Speech complete' };
       case 'session.completed':
         await this.player.stop();
-        return { ...state, status: 'completed', progressLabel: 'Done' };
+        return state.actionPlan
+          ? { ...state, status: 'review', progressLabel: 'Review needed' }
+          : { ...state, status: 'completed', progressLabel: 'Done' };
       case 'session.cancelled':
         await this.player.stop();
         return { ...state, status: 'cancelled', progressLabel: 'Cancelled' };
@@ -362,4 +385,24 @@ function safeDiagnosticStatus(status: string | undefined): VoiceSafeDiagnosticSt
     default:
       return 'Updated';
   }
+}
+
+function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionPlanProposal {
+  return {
+    planId: safeBoundedText(proposal.planId, 80),
+    confirmationSummary: safeBoundedText(proposal.confirmationSummary, 180),
+    commands: proposal.commands.slice(0, 6).map((command) => ({
+      kind: safeBoundedText(command.kind, 40),
+      summary: safeBoundedText(command.summary, 180)
+    })),
+    risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedText(risk, 180)).filter(Boolean)
+  };
+
+function safeBoundedText(value: string, maxLength: number): string {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return normalized.slice(0, maxLength).trim();
+}
 }

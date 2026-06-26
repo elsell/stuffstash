@@ -125,6 +125,11 @@ export function buildVoiceAccessoryPresentation({
 }
 
 export type VoiceSessionPresentation = {
+  readonly actionPlan?: {
+    readonly confirmationSummary: string;
+    readonly commands: readonly string[];
+    readonly risks: readonly string[];
+  };
   readonly canCancel: boolean;
   readonly canReset: boolean;
   readonly contextLabel: string;
@@ -165,6 +170,13 @@ export function buildVoiceSessionPresentation({
       : null;
 
   return {
+    actionPlan: realtime?.actionPlan
+      ? {
+          confirmationSummary: realtime.actionPlan.confirmationSummary,
+          commands: realtime.actionPlan.commands.map((command) => command.summary),
+          risks: realtime.actionPlan.risks
+        }
+      : undefined,
     canCancel: stage === 'listening' || stage === 'processing' || stage === 'speaking',
     canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || stage === 'review',
     contextLabel: `${inventoryName} · ${tenantName}`,

@@ -6,6 +6,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -63,11 +64,53 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 				},
 			},
 		},
+		{
+			Name:        RealtimeVoiceToolProposeActionPlan,
+			Label:       realtimeVoiceProposeActionPlanPublicName,
+			Description: "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use only when the user asks to create, move, update, archive, or restore an inventory item or location. Arguments: commandKind enum, intentSummary, modelInterpretationSummary, confirmationSummary, commandSummary, optional argumentsJson object string, optional riskSummary.",
+			ReadOnly:    true,
+			Parameters: ports.AgentToolParameters{
+				Required: []string{"commandKind", "intentSummary", "modelInterpretationSummary", "confirmationSummary", "commandSummary"},
+				Properties: map[string]ports.AgentToolParameter{
+					"commandKind": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Action-plan command kind.",
+						Enum:        []string{"create_asset", "create_location", "move_asset", "update_asset", "archive_asset", "restore_asset"},
+					},
+					"intentSummary": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Safe user-facing summary of what the user asked to change.",
+					},
+					"modelInterpretationSummary": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Safe user-facing summary of how the request was interpreted.",
+					},
+					"confirmationSummary": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Short confirmation question shown to the user.",
+					},
+					"commandSummary": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Short safe summary of the single proposed command.",
+					},
+					"argumentsJson": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional JSON object containing safe command arguments such as title, kind, or parent title. Do not include secrets, prompts, transcripts, provider data, hidden IDs, or approval claims.",
+					},
+					"riskSummary": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional short safe risk summary.",
+					},
+				},
+			},
+		},
 	}
 }
 
 func realtimeVoiceToolLabel(name string) string {
 	switch name {
+	case RealtimeVoiceToolProposeActionPlan:
+		return realtimeVoiceProposeActionPlanPublicName
 	case RealtimeVoiceToolListAuthorizedAssets:
 		return realtimeVoiceListAuthorizedAssetsPublicName
 	default:
@@ -75,15 +118,62 @@ func realtimeVoiceToolLabel(name string) string {
 	}
 }
 
-func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
+func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
 	switch call.Name {
 	case RealtimeVoiceToolSearchAuthorizedAssets:
-		return a.executeRealtimeVoiceSearchTool(ctx, session, call)
+		result, err := a.executeRealtimeVoiceSearchTool(ctx, session, call)
+		return result, nil, err
 	case RealtimeVoiceToolListAuthorizedAssets:
-		return a.executeRealtimeVoiceListTool(ctx, session, call)
+		result, err := a.executeRealtimeVoiceListTool(ctx, session, call)
+		return result, nil, err
+	case RealtimeVoiceToolProposeActionPlan:
+		return a.executeRealtimeVoiceProposeActionPlanTool(ctx, session, call)
 	default:
-		return ports.AgentToolResult{}, ports.ErrForbidden
+		return ports.AgentToolResult{}, nil, ports.ErrForbidden
 	}
+}
+
+func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
+	args, err := parseRealtimeVoiceActionPlanArgs(call.Arguments)
+	if err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
+	record, err := a.CreateActionPlan(ctx, CreateActionPlanInput{
+		Principal:                  session.Principal,
+		TenantID:                   session.TenantID,
+		InventoryID:                session.InventoryID,
+		Source:                     session.Source,
+		RealtimeSessionID:          session.ID,
+		IntentSummary:              args.IntentSummary,
+		ModelInterpretationSummary: args.ModelInterpretationSummary,
+		ConfirmationSummary:        args.ConfirmationSummary,
+		Commands: []ActionPlanCommandInput{{
+			Kind:      args.CommandKind,
+			Summary:   args.CommandSummary,
+			Arguments: args.Arguments,
+		}},
+		Risks: args.Risks,
+	})
+	if err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
+	proposal := realtimeVoiceActionPlanProposal(record)
+	payload, err := json.Marshal(struct {
+		Tool       string                          `json:"tool"`
+		ActionPlan RealtimeVoiceActionPlanProposal `json:"actionPlan"`
+	}{
+		Tool:       call.Name,
+		ActionPlan: proposal,
+	})
+	if err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
+	return ports.AgentToolResult{
+		CallID:  call.ID,
+		Name:    call.Name,
+		Call:    call,
+		Content: string(payload),
+	}, &proposal, nil
 }
 
 func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
@@ -375,6 +465,98 @@ func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, err
 	return realtimeVoiceListArgs{Kind: kind, ParentTitle: parentTitle, LocationTitle: locationTitle, Limit: limit}, nil
 }
 
+func parseRealtimeVoiceActionPlanArgs(args map[string]any) (realtimeVoiceActionPlanArgs, error) {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "commandKind", "intentSummary", "modelInterpretationSummary", "confirmationSummary", "commandSummary", "arguments", "argumentsJson", "risks", "riskSummary"); err != nil {
+		return realtimeVoiceActionPlanArgs{}, err
+	}
+	commandKind := actionplan.CommandKind(strings.TrimSpace(stringArg(args["commandKind"])))
+	if !commandKind.Valid() {
+		return realtimeVoiceActionPlanArgs{}, ports.ErrInvalidProviderInput
+	}
+	arguments, err := realtimeVoiceActionPlanArguments(args)
+	if err != nil {
+		return realtimeVoiceActionPlanArgs{}, err
+	}
+	risks, err := realtimeVoiceActionPlanRisks(args)
+	if err != nil {
+		return realtimeVoiceActionPlanArgs{}, err
+	}
+	parsed := realtimeVoiceActionPlanArgs{
+		CommandKind:                commandKind,
+		IntentSummary:              strings.TrimSpace(stringArg(args["intentSummary"])),
+		ModelInterpretationSummary: strings.TrimSpace(stringArg(args["modelInterpretationSummary"])),
+		ConfirmationSummary:        strings.TrimSpace(stringArg(args["confirmationSummary"])),
+		CommandSummary:             strings.TrimSpace(stringArg(args["commandSummary"])),
+		Arguments:                  arguments,
+		Risks:                      risks,
+	}
+	if parsed.IntentSummary == "" || parsed.ModelInterpretationSummary == "" || parsed.ConfirmationSummary == "" || parsed.CommandSummary == "" {
+		return realtimeVoiceActionPlanArgs{}, ports.ErrInvalidProviderInput
+	}
+	return parsed, nil
+}
+
+func realtimeVoiceActionPlanArguments(args map[string]any) (map[string]any, error) {
+	if raw, exists := args["arguments"]; exists {
+		arguments, ok := raw.(map[string]any)
+		if !ok {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		return arguments, nil
+	}
+	rawJSON := strings.TrimSpace(stringArg(args["argumentsJson"]))
+	if rawJSON == "" {
+		return map[string]any{}, nil
+	}
+	var arguments map[string]any
+	if err := json.Unmarshal([]byte(rawJSON), &arguments); err != nil {
+		return nil, ports.ErrInvalidProviderInput
+	}
+	if arguments == nil {
+		return map[string]any{}, nil
+	}
+	return arguments, nil
+}
+
+func realtimeVoiceActionPlanRisks(args map[string]any) ([]string, error) {
+	risks := []string{}
+	if rawRisks, exists := args["risks"]; exists {
+		values, ok := rawRisks.([]any)
+		if !ok {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		for _, value := range values {
+			risk, ok := value.(string)
+			if !ok {
+				return nil, ports.ErrInvalidProviderInput
+			}
+			if risk = strings.TrimSpace(risk); risk != "" {
+				risks = append(risks, risk)
+			}
+		}
+	}
+	if risk := strings.TrimSpace(stringArg(args["riskSummary"])); risk != "" {
+		risks = append(risks, risk)
+	}
+	return risks, nil
+}
+
+func realtimeVoiceActionPlanProposal(record ports.ActionPlanRecord) RealtimeVoiceActionPlanProposal {
+	commands := make([]RealtimeVoiceActionPlanCommand, 0, len(record.Commands))
+	for _, command := range record.Commands {
+		commands = append(commands, RealtimeVoiceActionPlanCommand{
+			Kind:    string(command.Kind),
+			Summary: command.Summary,
+		})
+	}
+	return RealtimeVoiceActionPlanProposal{
+		PlanID:              record.ID,
+		ConfirmationSummary: record.ConfirmationSummary,
+		Commands:            commands,
+		Risks:               append([]string{}, record.Risks...),
+	}
+}
+
 func rejectUnknownRealtimeVoiceArgs(args map[string]any, allowed ...string) error {
 	allowedSet := map[string]struct{}{}
 	for _, key := range allowed {
@@ -413,6 +595,16 @@ type realtimeVoiceListArgs struct {
 	ParentTitle   string
 	LocationTitle string
 	Limit         int
+}
+
+type realtimeVoiceActionPlanArgs struct {
+	CommandKind                actionplan.CommandKind
+	IntentSummary              string
+	ModelInterpretationSummary string
+	ConfirmationSummary        string
+	CommandSummary             string
+	Arguments                  map[string]any
+	Risks                      []string
 }
 
 type realtimeVoiceAssetToolOutput struct {

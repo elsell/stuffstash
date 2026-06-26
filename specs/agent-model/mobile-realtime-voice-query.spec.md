@@ -265,6 +265,7 @@ Server-to-client messages:
 - `tool.call.started`
 - `tool.call.completed`
 - `tool.call.failed`
+- `action.plan.proposed`
 - `assistant.response.started`
 - `assistant.response.delta`
 - `assistant.response.completed`
@@ -284,6 +285,12 @@ The mobile transport must validate server event sequence monotonicity and sessio
 Every client message after `session.start` must be bound to the authenticated WebSocket connection and server-created session. The server must reject forged session IDs, stale client sequence numbers, replayed audio chunks, messages from cancelled sessions, messages from completed sessions, and any attempt to change tenant or inventory scope after session authorization.
 
 Client messages must include monotonic per-session sequence metadata once a session is established. The server must use that metadata only for ordering, replay rejection, flow control, and safe diagnostics; it must not treat client sequence metadata as authorization.
+
+## Action Plan Events
+
+`action.plan.proposed` contains the safe persisted action-plan review payload for mobile. It must include plan ID, confirmation summary, command summaries, risk summaries, and no raw transcript, raw prompt, raw model response, credentials, provider session IDs, hidden resource data, or approval claims.
+
+When the API emits `action.plan.proposed`, the mobile app must enter the `review` stage and show the proposal in the voice sheet. The first mobile slice may show disabled or not-yet-wired approval actions, but it must not silently execute the plan. The final spoken response for a proposed write may explain that the user should review the suggested change.
 
 ## Transcript Events
 
@@ -306,15 +313,15 @@ The agent loop must:
 - Use the authenticated principal.
 - Use the selected tenant and inventory scope.
 - Use the project-owned tool catalog.
-- Provide the language model with only the tools allowed for the first read-only slice.
+- Provide the language model with only the tools allowed for the current mobile slice.
 - Treat model output as untrusted.
 - Validate tool-call requests before execution.
 - Authorize every tool execution through the owning application service and authorization port.
 - Allow multiple tool-call iterations when needed.
-- Stop when the model produces a structured final response, a safe failure occurs, cancellation is requested, or the session times out.
+- Stop when the model produces a structured final response, proposes an action plan for user review, a safe failure occurs, cancellation is requested, or the session times out.
 - Instruct the model to use tool results as the source of truth and to avoid inventing locations, quantities, or inventory contents that are not present in tool results.
 
-The first loop must expose only read-only tools to the model.
+The first query loop exposed only read-only tools to the model. The first approval-backed mobile slice may add exactly one non-mutating write-intent tool: `propose_action_plan`.
 
 The first read-only tools are:
 
@@ -326,7 +333,9 @@ The first read-only tools are:
 
 Tool descriptors must use project-owned names, descriptions, read-only markers, and parameter metadata. Provider adapters may translate that metadata into provider-native schemas, but provider-specific tool declaration types must not cross the language inference port.
 
-The loop must not expose write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access.
+`propose_action_plan` is not an inventory mutation tool. It may persist a proposed action plan through the action-plan application boundary and return a safe plan summary for mobile review. It must not execute asset, location, tenant, sharing, provider-profile, audit mutation, import/export, or raw repository operations. Its arguments must be bounded, typed, validated by the application boundary, and free of raw prompts, raw transcripts, raw provider responses, credentials, bearer tokens, provider session IDs, hidden resource data, and approval claims.
+
+The loop must not expose direct write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access. Any future direct execution must go through an approved action-plan execution service.
 
 Tool results provided to the language model must be structured, safe, and useful enough for accurate answers. For visible assets, read-only tool output should include:
 

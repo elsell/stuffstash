@@ -29,9 +29,20 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 		socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
 		socket.receive({ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' });
 		socket.receive({ type: 'assistant.response.started', seq: 3, sessionId: 'session-1', responseId: 'response-1' });
-		socket.receive({ type: 'tts.audio.started', seq: 4, sessionId: 'session-1', format: { mimeType: 'audio/mpeg' } });
-		socket.receive({ type: 'tts.audio.chunk', seq: 5, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' });
-		socket.receive({ type: 'session.completed', seq: 6, sessionId: 'session-1' });
+    socket.receive({
+      type: 'action.plan.proposed',
+      seq: 4,
+      sessionId: 'session-1',
+      actionPlan: {
+        planId: 'plan-1',
+        confirmationSummary: 'Create item water bottle?',
+        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        risks: ['Adds a new item to this inventory.']
+      }
+    });
+		socket.receive({ type: 'tts.audio.started', seq: 5, sessionId: 'session-1', format: { mimeType: 'audio/mpeg' } });
+		socket.receive({ type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' });
+		socket.receive({ type: 'session.completed', seq: 7, sessionId: 'session-1' });
 
     await run;
 
@@ -54,9 +65,20 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 			{ type: 'session.started', seq: 1, sessionId: 'session-1' },
 			{ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' },
 			{ type: 'assistant.response.started', seq: 3, sessionId: 'session-1', responseId: 'response-1' },
-			{ type: 'tts.audio.started', seq: 4, sessionId: 'session-1', mimeType: 'audio/mpeg' },
-      { type: 'tts.audio.chunk', seq: 5, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
-      { type: 'session.completed', seq: 6, sessionId: 'session-1' }
+      {
+        type: 'action.plan.proposed',
+        seq: 4,
+        sessionId: 'session-1',
+        actionPlan: {
+          planId: 'plan-1',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          risks: ['Adds a new item to this inventory.']
+        }
+      },
+			{ type: 'tts.audio.started', seq: 5, sessionId: 'session-1', mimeType: 'audio/mpeg' },
+      { type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
+      { type: 'session.completed', seq: 7, sessionId: 'session-1' }
     ]);
   });
 

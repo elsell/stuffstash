@@ -55,6 +55,7 @@ func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authoriz
 		Audit:                     store,
 		Outbox:                    store,
 		RealtimeSessions:          store,
+		ActionPlans:               store,
 		IDs:                       &fakeIDGenerator{ids: ids},
 	})
 }
@@ -107,6 +108,7 @@ func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blob
 		Audit:                     store,
 		Outbox:                    store,
 		RealtimeSessions:          store,
+		ActionPlans:               store,
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 		InvitationTTL:             state.invitationTTL,
 	})
@@ -142,6 +144,7 @@ func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, sto
 		Audit:                     store,
 		Outbox:                    store,
 		RealtimeSessions:          store,
+		ActionPlans:               store,
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
 }

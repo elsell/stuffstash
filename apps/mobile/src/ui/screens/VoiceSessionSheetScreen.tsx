@@ -157,6 +157,24 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
+            {session.actionPlan ? (
+              <View style={styles.actionPlanSection}>
+                <Text style={styles.sectionLabel}>Review change</Text>
+                <Text style={styles.actionPlanTitle}>{session.actionPlan.confirmationSummary}</Text>
+                {session.actionPlan.commands.map((command, index) => (
+                  <View key={`${command}-${index.toString()}`} style={styles.actionPlanRow}>
+                    <Text style={styles.diagnosticIndex}>{(index + 1).toString()}</Text>
+                    <Text style={styles.actionPlanText}>{command}</Text>
+                  </View>
+                ))}
+                {session.actionPlan.risks.map((risk, index) => (
+                  <Text key={`${risk}-${index.toString()}`} style={styles.actionPlanRisk}>
+                    {risk}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+
             {state.realtime?.errorMessage ? (
               <View style={styles.errorSection}>
                 <Text style={styles.sectionLabel}>Voice failed</Text>
@@ -308,6 +326,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     paddingTop: spacing.md
+  },
+  actionPlanRisk: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+    marginTop: spacing.xs
+  },
+  actionPlanRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm
+  },
+  actionPlanSection: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  actionPlanText: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 20
+  },
+  actionPlanTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22
   },
   cancelSessionButton: {
     alignItems: 'center',
