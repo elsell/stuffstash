@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import {
   MobileRuntimeConfig,
   MobileRuntimeConfigSeed,
+  optionalBooleanValue,
   optionalValue,
   parseMobileRuntimeConfig
 } from './mobileRuntimeConfigCore';
@@ -22,7 +23,11 @@ export function loadMobileRuntimeConfigSeed(): MobileRuntimeConfigSeed {
   return {
     apiBaseUrl: optionalValue(config.apiBaseUrl),
     tenantId: optionalValue(config.tenantId),
-    devToken: optionalValue(config.devToken)
+    devToken: optionalValue(config.devToken),
+    voiceDeveloperDiagnosticsEnabled: optionalBooleanValue(
+      'EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED',
+      config.voiceDeveloperDiagnosticsEnabled
+    )
   };
 }
 
@@ -33,6 +38,7 @@ function readExpoExtraConfig() {
           readonly apiBaseUrl?: string;
           readonly tenantId?: string;
           readonly devToken?: string;
+          readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
         };
       }
     | undefined;
@@ -40,7 +46,8 @@ function readExpoExtraConfig() {
   return {
     apiBaseUrl: extra?.stuffStash?.apiBaseUrl,
     tenantId: extra?.stuffStash?.tenantId,
-    devToken: extra?.stuffStash?.devToken
+    devToken: extra?.stuffStash?.devToken,
+    voiceDeveloperDiagnosticsEnabled: extra?.stuffStash?.voiceDeveloperDiagnosticsEnabled
   };
 }
 
@@ -48,6 +55,7 @@ function readExpoPublicEnvConfig() {
   return {
     apiBaseUrl: process.env.EXPO_PUBLIC_STUFF_STASH_API_BASE_URL,
     tenantId: process.env.EXPO_PUBLIC_STUFF_STASH_TENANT_ID,
-    devToken: process.env.EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN
+    devToken: process.env.EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN,
+    voiceDeveloperDiagnosticsEnabled: process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED
   };
 }

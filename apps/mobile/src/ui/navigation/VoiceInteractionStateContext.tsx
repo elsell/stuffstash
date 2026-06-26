@@ -21,6 +21,7 @@ export type VoiceInteractionState =
     };
 
 type VoiceInteractionStateContextValue = {
+  readonly diagnosticsEnabled: boolean;
   readonly state: VoiceInteractionState;
   readonly setStage: (stage: VoiceInteractionStage) => void;
   readonly startRealtime: () => Promise<void>;
@@ -32,12 +33,14 @@ const VoiceInteractionStateContext = createContext<VoiceInteractionStateContextV
 
 type VoiceInteractionStateProviderProps = {
   readonly children: ReactNode;
+  readonly diagnosticsEnabled?: boolean;
   readonly previewQuery: VoiceInteractionPreviewQuery;
   readonly realtimeController: RealtimeVoiceSessionController;
 };
 
 export function VoiceInteractionStateProvider({
   children,
+  diagnosticsEnabled = false,
   previewQuery,
   realtimeController
 }: VoiceInteractionStateProviderProps) {
@@ -82,6 +85,7 @@ export function VoiceInteractionStateProvider({
           : { status: 'loading', stage };
 
     return {
+      diagnosticsEnabled,
       state,
       setStage,
       startRealtime: async () => {
@@ -111,7 +115,7 @@ export function VoiceInteractionStateProvider({
         setStage('ready');
       }
     };
-  }, [previewState, realtime, realtimeController, stage]);
+  }, [diagnosticsEnabled, previewState, realtime, realtimeController, stage]);
 
   return (
     <VoiceInteractionStateContext.Provider value={value}>

@@ -16,7 +16,7 @@ import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresent
 import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
 
 export function VoiceSessionSheetScreen() {
-  const { reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
+  const { diagnosticsEnabled, reset, startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
   const safeAreaInsets = useSafeAreaInsets();
 
@@ -40,6 +40,7 @@ export function VoiceSessionSheetScreen() {
   return (
     <VoiceSessionSheet
       diagnosticsExpanded={diagnosticsExpanded}
+      diagnosticsEnabled={diagnosticsEnabled}
       onClose={() => {
         if (router.canGoBack()) {
           router.back();
@@ -64,6 +65,7 @@ export function VoiceSessionSheetScreen() {
 
 function VoiceSessionSheet({
   diagnosticsExpanded,
+  diagnosticsEnabled,
   onClose,
   onReset,
   onSessionMic,
@@ -72,6 +74,7 @@ function VoiceSessionSheet({
   state
 }: {
   readonly diagnosticsExpanded: boolean;
+  readonly diagnosticsEnabled: boolean;
   readonly onClose: () => void;
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
@@ -80,7 +83,6 @@ function VoiceSessionSheet({
   readonly state: VoiceInteractionState;
 }) {
   const readyState = state.status === 'ready' ? state : null;
-  const diagnosticsEnabled = false;
   const session = buildVoiceSessionPresentation({
     diagnosticsEnabled,
     diagnosticsExpanded,

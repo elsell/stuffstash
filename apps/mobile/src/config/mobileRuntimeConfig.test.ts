@@ -12,8 +12,40 @@ describe('mobileRuntimeConfig', () => {
     ).toEqual({
       apiBaseUrl: 'http://192.168.1.97:8080',
       tenantId: 'tenant-home',
-      devToken: 'dev:john:john@example.com'
+      devToken: 'dev:john:john@example.com',
+      voiceDeveloperDiagnosticsEnabled: false
     });
+  });
+
+  it('parses explicit mobile voice developer diagnostics opt-in', () => {
+    expect(
+      parseMobileRuntimeConfig({
+        apiBaseUrl: 'http://192.168.1.97:8080/',
+        tenantId: 'tenant-home',
+        devToken: 'dev:john:john@example.com',
+        voiceDeveloperDiagnosticsEnabled: 'true'
+      }).voiceDeveloperDiagnosticsEnabled
+    ).toBe(true);
+
+    expect(
+      parseMobileRuntimeConfig({
+        apiBaseUrl: 'http://192.168.1.97:8080/',
+        tenantId: 'tenant-home',
+        devToken: 'dev:john:john@example.com',
+        voiceDeveloperDiagnosticsEnabled: '0'
+      }).voiceDeveloperDiagnosticsEnabled
+    ).toBe(false);
+  });
+
+  it('rejects invalid mobile voice developer diagnostics values', () => {
+    expect(() =>
+      parseMobileRuntimeConfig({
+        apiBaseUrl: 'http://192.168.1.97:8080',
+        tenantId: 'tenant-home',
+        devToken: 'dev:john',
+        voiceDeveloperDiagnosticsEnabled: 'sometimes'
+      })
+    ).toThrow('EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED');
   });
 
   it('rejects missing required values', () => {

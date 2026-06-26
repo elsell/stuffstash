@@ -82,6 +82,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
         }}
       >
         <VoiceInteractionStateProvider
+          diagnosticsEnabled={mobileComposition.voiceDeveloperDiagnosticsEnabled}
           previewQuery={mobileComposition.voiceInteractionPreviewQuery}
           realtimeController={mobileComposition.realtimeVoiceSessionController}
         >

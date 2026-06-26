@@ -56,6 +56,7 @@ export type MobileComposition = {
   readonly testProviderProfileCommand: TestProviderProfileCommand;
   readonly voiceInteractionPreviewQuery: VoiceInteractionPreviewQuery;
   readonly realtimeVoiceSessionController: RealtimeVoiceSessionController;
+  readonly voiceDeveloperDiagnosticsEnabled: boolean;
 };
 
 const connectionProfiles = new FileSystemConnectionProfileStore();
@@ -124,8 +125,12 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
         tokenProvider: () => config?.devToken ?? ''
       }),
       new ExpoVoiceAudioPlayer(),
-      { readinessChecker: new ProviderProfileVoiceReadinessCheck(providerProfileSettingsQuery) }
-    )
+      {
+        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
+        readinessChecker: new ProviderProfileVoiceReadinessCheck(providerProfileSettingsQuery)
+      }
+    ),
+    voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
   };
 }
 
@@ -153,7 +158,8 @@ function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | unde
   return {
     apiBaseUrl: profile.apiBaseUrl,
     tenantId: profile.tenantId,
-    devToken: profile.devToken
+    devToken: profile.devToken,
+    voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
   };
 }
 
