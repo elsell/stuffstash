@@ -20,6 +20,9 @@ It does not define Kubernetes production deployment, external Google OIDC rollou
 - SQLite remains allowed for local-only or test fakes where a spec permits it.
 - SpiceDB is the production authorization service.
 - Local development may use a deterministic development authentication adapter behind the same authentication port used by OIDC.
+- Local development may use the in-memory authorization adapter only as a development convenience. When paired with a durable repository such as SQLite for phone testing, API bootstrap must rebuild the in-memory authorization graph from durable authorization intent before serving requests so persisted local tenants and inventories do not become unusable after an API restart.
+- Local authorization replay must use project-owned authorization/outbox ports. It must not read database tables directly from bootstrap code, must not bypass authorization adapters, and must not run when a production authorization adapter such as SpiceDB is selected.
+- Local authorization replay must apply durable tenant-owner, inventory-owner, viewer, editor, and revoke intent in deterministic creation order and ignore dead-lettered authorization intent. Replayed grants and revokes must remain idempotent.
 - Local development must also support Dex as a deterministic OIDC issuer so the API can be verified with real OIDC discovery and token verification.
 - Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
 - Local Compose must provide enough SpiceDB configuration for the API to connect to SpiceDB when `STUFF_STASH_AUTHZ_MODE=spicedb`.

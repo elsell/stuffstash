@@ -33,6 +33,9 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	if err != nil {
 		return err
 	}
+	if err := replayLocalDevelopmentAuthorization(ctx, cfg, authorizer, repositories); err != nil {
+		return err
+	}
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
 		MaxJSONBodyBytes:   cfg.HTTPMaxJSONBodyBytes,

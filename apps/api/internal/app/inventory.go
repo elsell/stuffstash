@@ -340,6 +340,10 @@ func (a App) processClaimedAuthorizationOutboxEvent(ctx context.Context, event p
 }
 
 func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.AuthorizationOutboxEvent) error {
+	return ApplyAuthorizationOutboxEvent(ctx, a.authorizer, event)
+}
+
+func ApplyAuthorizationOutboxEvent(ctx context.Context, authorizer ports.Authorizer, event ports.AuthorizationOutboxEvent) error {
 	if err := validateAuthorizationOutboxEvent(event); err != nil {
 		return err
 	}
@@ -347,17 +351,17 @@ func (a App) applyAuthorizationOutboxEvent(ctx context.Context, event ports.Auth
 	principal := identity.Principal{ID: event.PrincipalID}
 	switch event.Kind {
 	case ports.AuthorizationOutboxGrantTenantOwner:
-		return a.authorizer.GrantTenantOwner(ctx, principal, event.TenantID)
+		return authorizer.GrantTenantOwner(ctx, principal, event.TenantID)
 	case ports.AuthorizationOutboxGrantInventoryOwner:
-		return a.authorizer.GrantInventoryOwner(ctx, principal, event.TenantID, event.InventoryID)
+		return authorizer.GrantInventoryOwner(ctx, principal, event.TenantID, event.InventoryID)
 	case ports.AuthorizationOutboxGrantInventoryViewer:
-		return a.authorizer.GrantInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
+		return authorizer.GrantInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
 	case ports.AuthorizationOutboxGrantInventoryEditor:
-		return a.authorizer.GrantInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
+		return authorizer.GrantInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
 	case ports.AuthorizationOutboxRevokeInventoryViewer:
-		return a.authorizer.RevokeInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
+		return authorizer.RevokeInventoryViewer(ctx, principal, event.TenantID, event.InventoryID)
 	case ports.AuthorizationOutboxRevokeInventoryEditor:
-		return a.authorizer.RevokeInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
+		return authorizer.RevokeInventoryEditor(ctx, principal, event.TenantID, event.InventoryID)
 	default:
 		return ErrInvalidInput
 	}

@@ -53,6 +53,27 @@ func (s Store) ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimI
 	return events, nil
 }
 
+func (s Store) ListAuthorizationOutboxReplayEvents(ctx context.Context) ([]ports.AuthorizationOutboxEvent, error) {
+	var models []authorizationOutboxEventModel
+	if err := s.db.WithContext(ctx).
+		Where(clause.Eq{Column: clause.Column{Name: "dead_lettered_at"}, Value: nil}).
+		Order(clause.OrderBy{
+			Columns: []clause.OrderByColumn{
+				{Column: clause.Column{Name: "created_at"}},
+				{Column: clause.Column{Name: "id"}},
+			},
+		}).
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	events := make([]ports.AuthorizationOutboxEvent, 0, len(models))
+	for _, model := range models {
+		events = append(events, model.toPort())
+	}
+	return events, nil
+}
+
 func (s Store) ClaimAuthorizationOutboxEvent(ctx context.Context, eventID string, claimID string, leaseUntil time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
 	var event ports.AuthorizationOutboxEvent
 	found := false

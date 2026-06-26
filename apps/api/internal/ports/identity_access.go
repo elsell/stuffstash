@@ -57,6 +57,7 @@ type AuthorizationOutboxEvent struct {
 type AuthorizationOutbox interface {
 	SaveTenantAndEnqueueOwnerGrant(ctx context.Context, eventID string, tenant tenant.Tenant, principal identity.Principal, auditRecord audit.Record) error
 	SaveInventoryAndEnqueueOwnerGrant(ctx context.Context, eventID string, inventory inventory.Inventory, tenantID tenant.ID, principal identity.Principal, auditRecord audit.Record) error
+	ListAuthorizationOutboxReplayEvents(ctx context.Context) ([]AuthorizationOutboxEvent, error)
 	ClaimAuthorizationOutboxEvent(ctx context.Context, eventID string, claimID string, leaseUntil time.Time) (AuthorizationOutboxEvent, bool, error)
 	ClaimPendingAuthorizationOutboxEvents(ctx context.Context, claimID string, limit int, now time.Time, leaseUntil time.Time) ([]AuthorizationOutboxEvent, error)
 	MarkAuthorizationOutboxEventProcessed(ctx context.Context, eventID string, claimID string) error

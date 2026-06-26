@@ -16,6 +16,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -232,6 +234,154 @@ func TestBuildRepositoriesRejectsSQLiteWithoutDSN(t *testing.T) {
 	}
 }
 
+func TestReplayLocalDevelopmentAuthorizationRestoresSQLiteOwnerGrants(t *testing.T) {
+	ctx := context.Background()
+	dbPath := filepath.Join(t.TempDir(), "dev.sqlite")
+	cfg := config.Config{
+		AuthzMode:       "memory",
+		RepositoryMode:  "sqlite",
+		DatabaseDSN:     dbPath,
+		BlobStoragePath: t.TempDir(),
+	}
+	principal := identity.Principal{ID: identity.PrincipalID("user-one")}
+	tenantID := tenant.ID("tenant-home")
+	inventoryID := inventory.InventoryID("inventory-home")
+
+	initialRepositories, closeInitialRepositories, err := buildRepositories(ctx, cfg)
+	if err != nil {
+		t.Fatalf("build initial repositories: %v", err)
+	}
+	home, ok := tenant.NewTenant(tenantID, tenant.Name("Home"), tenant.LifecycleStateActive)
+	if !ok {
+		t.Fatalf("expected valid tenant")
+	}
+	if err := initialRepositories.outbox.SaveTenantAndEnqueueOwnerGrant(ctx, "tenant-owner-event", home, principal, sqliteBootstrapAuditRecord(t, "audit-tenant", tenantID, audit.ActionTenantCreated)); err != nil {
+		t.Fatalf("save tenant and enqueue owner grant: %v", err)
+	}
+	inventoryName, ok := inventory.NewName("Home")
+	if !ok {
+		t.Fatalf("expected valid inventory name")
+	}
+	homeInventory, ok := inventory.NewInventory(inventoryID, inventory.TenantID(tenantID.String()), inventoryName, inventory.LifecycleStateActive)
+	if !ok {
+		t.Fatalf("expected valid inventory")
+	}
+	if err := initialRepositories.outbox.SaveInventoryAndEnqueueOwnerGrant(ctx, "inventory-owner-event", homeInventory, tenantID, principal, sqliteBootstrapAuditRecord(t, "audit-inventory", tenantID, audit.ActionInventoryCreated)); err != nil {
+		t.Fatalf("save inventory and enqueue owner grant: %v", err)
+	}
+	viewerPrincipal := identity.Principal{ID: identity.PrincipalID("viewer-user")}
+	viewerGrant := ports.InventoryAccessGrant{
+		TenantID:     tenantID,
+		InventoryID:  inventoryID,
+		PrincipalID:  viewerPrincipal.ID,
+		Relationship: ports.InventoryAccessViewer,
+	}
+	if err := initialRepositories.inventoryAccessUnitOfWork.SaveInventoryAccessGrantAndEnqueue(ctx, "viewer-grant-event", viewerGrant, sqliteBootstrapInventoryAccessAuditRecord(t, "audit-viewer-grant", tenantID, inventoryID, audit.ActionInventoryAccessGranted)); err != nil {
+		t.Fatalf("save viewer grant and enqueue authorization event: %v", err)
+	}
+	editorPrincipal := identity.Principal{ID: identity.PrincipalID("editor-user")}
+	editorGrant := ports.InventoryAccessGrant{
+		TenantID:     tenantID,
+		InventoryID:  inventoryID,
+		PrincipalID:  editorPrincipal.ID,
+		Relationship: ports.InventoryAccessEditor,
+	}
+	if err := initialRepositories.inventoryAccessUnitOfWork.SaveInventoryAccessGrantAndEnqueue(ctx, "editor-grant-event", editorGrant, sqliteBootstrapInventoryAccessAuditRecord(t, "audit-editor-grant", tenantID, inventoryID, audit.ActionInventoryAccessGranted)); err != nil {
+		t.Fatalf("save editor grant and enqueue authorization event: %v", err)
+	}
+	viewerRevokeEvent, removed, err := initialRepositories.inventoryAccessUnitOfWork.DeleteInventoryAccessGrantAndClaimRevoke(ctx, "viewer-revoke-event", "viewer-revoke-claim", time.Now().Add(time.Minute), viewerGrant, sqliteBootstrapInventoryAccessAuditRecord(t, "audit-viewer-revoke", tenantID, inventoryID, audit.ActionInventoryAccessRevoked))
+	if err != nil {
+		t.Fatalf("delete viewer grant and claim revoke: %v", err)
+	}
+	if !removed {
+		t.Fatalf("expected viewer grant to be removed")
+	}
+	claimedEvents, err := initialRepositories.outbox.ClaimPendingAuthorizationOutboxEvents(ctx, "initial-claim", 10, time.Now(), time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatalf("claim initial authorization events: %v", err)
+	}
+	if len(claimedEvents) != 4 {
+		t.Fatalf("expected four initial authorization events, got %+v", claimedEvents)
+	}
+	for _, event := range claimedEvents {
+		switch event.ID {
+		case "editor-grant-event":
+			if err := initialRepositories.outbox.MarkAuthorizationOutboxEventDeadLettered(ctx, event.ID, event.ClaimID, "test dead letter"); err != nil {
+				t.Fatalf("mark editor authorization event dead-lettered: %v", err)
+			}
+		default:
+			if err := initialRepositories.outbox.MarkAuthorizationOutboxEventProcessed(ctx, event.ID, event.ClaimID); err != nil {
+				t.Fatalf("mark initial authorization event processed: %v", err)
+			}
+		}
+	}
+	if err := initialRepositories.outbox.MarkAuthorizationOutboxEventProcessed(ctx, viewerRevokeEvent.ID, viewerRevokeEvent.ClaimID); err != nil {
+		t.Fatalf("mark viewer revoke authorization event processed: %v", err)
+	}
+	if err := closeInitialRepositories(); err != nil {
+		t.Fatalf("close initial repositories: %v", err)
+	}
+
+	reopenedRepositories, closeReopenedRepositories, err := buildRepositories(ctx, cfg)
+	if err != nil {
+		t.Fatalf("build reopened repositories: %v", err)
+	}
+	defer func() {
+		if err := closeReopenedRepositories(); err != nil {
+			t.Fatalf("close reopened repositories: %v", err)
+		}
+	}()
+	authorizer, closeAuthorizer, err := buildAuthorizer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("build authorizer: %v", err)
+	}
+	defer func() {
+		if err := closeAuthorizer(); err != nil {
+			t.Fatalf("close authorizer: %v", err)
+		}
+	}()
+	if err := authorizer.CheckTenant(ctx, principal, ports.TenantPermissionView, tenantID); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected fresh memory authorizer to be empty, got %v", err)
+	}
+
+	if err := replayLocalDevelopmentAuthorization(ctx, cfg, authorizer, reopenedRepositories); err != nil {
+		t.Fatalf("replay local development authorization: %v", err)
+	}
+	if err := authorizer.CheckTenant(ctx, principal, ports.TenantPermissionConfigure, tenantID); err != nil {
+		t.Fatalf("expected replayed tenant owner access: %v", err)
+	}
+	if err := authorizer.CheckInventory(ctx, principal, ports.InventoryPermissionConfigure, inventoryID); err != nil {
+		t.Fatalf("expected replayed inventory owner access: %v", err)
+	}
+	if err := authorizer.CheckInventory(ctx, viewerPrincipal, ports.InventoryPermissionView, inventoryID); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected replayed viewer revoke to deny viewer, got %v", err)
+	}
+	if err := authorizer.CheckInventory(ctx, editorPrincipal, ports.InventoryPermissionEditAsset, inventoryID); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected dead-lettered editor grant to be ignored, got %v", err)
+	}
+}
+
+func TestReplayLocalDevelopmentAuthorizationSkipsProductionAuthorizationModes(t *testing.T) {
+	ctx := context.Background()
+	authorizer, closeAuthorizer, err := buildAuthorizer(ctx, config.Config{AuthzMode: "memory"})
+	if err != nil {
+		t.Fatalf("build authorizer: %v", err)
+	}
+	defer func() {
+		if err := closeAuthorizer(); err != nil {
+			t.Fatalf("close authorizer: %v", err)
+		}
+	}()
+	outbox := &replayOnlyOutbox{}
+
+	if err := replayLocalDevelopmentAuthorization(ctx, config.Config{AuthzMode: "spicedb"}, authorizer, repositories{outbox: outbox}); err != nil {
+		t.Fatalf("replay should be skipped for non-memory authz: %v", err)
+	}
+	if outbox.replayCalls != 0 {
+		t.Fatalf("expected no replay query for production authz modes, got %d", outbox.replayCalls)
+	}
+}
+
 func TestBuildBlobStorageAcceptsFilesystemMode(t *testing.T) {
 	store, directUploads, err := buildBlobStorage(config.Config{BlobStorageMode: "filesystem", BlobStoragePath: t.TempDir()})
 	if err != nil {
@@ -309,6 +459,28 @@ func sqliteBootstrapAuditRecord(t *testing.T, id string, tenantID tenant.ID, act
 	)
 	if !ok {
 		t.Fatalf("expected valid audit record")
+	}
+	return record
+}
+
+func sqliteBootstrapInventoryAccessAuditRecord(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action) audit.Record {
+	t.Helper()
+
+	record, ok := audit.NewRecord(
+		audit.ID(id),
+		audit.TenantID(tenantID.String()),
+		audit.InventoryID(inventoryID.String()),
+		audit.PrincipalID("owner"),
+		action,
+		audit.SourceAPI,
+		audit.TargetInventoryAccessGrant,
+		id+"-target",
+		time.Date(2026, 6, 26, 10, 0, 0, 0, time.UTC),
+		"request-1",
+		map[string]string{},
+	)
+	if !ok {
+		t.Fatalf("expected valid inventory access audit record")
 	}
 	return record
 }
@@ -484,6 +656,43 @@ type fakeSchemaBootstrapper struct {
 
 type fakeProviderCredentialRepository struct {
 	activeExists bool
+}
+
+type replayOnlyOutbox struct {
+	replayCalls int
+}
+
+func (o *replayOnlyOutbox) SaveTenantAndEnqueueOwnerGrant(context.Context, string, tenant.Tenant, identity.Principal, audit.Record) error {
+	return nil
+}
+
+func (o *replayOnlyOutbox) SaveInventoryAndEnqueueOwnerGrant(context.Context, string, inventory.Inventory, tenant.ID, identity.Principal, audit.Record) error {
+	return nil
+}
+
+func (o *replayOnlyOutbox) ListAuthorizationOutboxReplayEvents(context.Context) ([]ports.AuthorizationOutboxEvent, error) {
+	o.replayCalls++
+	return nil, nil
+}
+
+func (o *replayOnlyOutbox) ClaimAuthorizationOutboxEvent(context.Context, string, string, time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
+	return ports.AuthorizationOutboxEvent{}, false, nil
+}
+
+func (o *replayOnlyOutbox) ClaimPendingAuthorizationOutboxEvents(context.Context, string, int, time.Time, time.Time) ([]ports.AuthorizationOutboxEvent, error) {
+	return nil, nil
+}
+
+func (o *replayOnlyOutbox) MarkAuthorizationOutboxEventProcessed(context.Context, string, string) error {
+	return nil
+}
+
+func (o *replayOnlyOutbox) MarkAuthorizationOutboxEventFailed(context.Context, string, string, string) error {
+	return nil
+}
+
+func (o *replayOnlyOutbox) MarkAuthorizationOutboxEventDeadLettered(context.Context, string, string, string) error {
+	return nil
 }
 
 func (f fakeProviderCredentialRepository) ReplaceProviderCredential(context.Context, ports.ProviderCredentialRecord) error {

@@ -43,6 +43,25 @@ func (s *Store) ClaimPendingAuthorizationOutboxEvents(_ context.Context, claimID
 	return events, nil
 }
 
+func (s *Store) ListAuthorizationOutboxReplayEvents(_ context.Context) ([]ports.AuthorizationOutboxEvent, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	events := make([]ports.AuthorizationOutboxEvent, 0, len(s.outbox))
+	for _, event := range s.outbox {
+		if event.DeadLetteredAt.IsZero() {
+			events = append(events, event)
+		}
+	}
+	sort.Slice(events, func(left int, right int) bool {
+		if events[left].CreatedAt.Equal(events[right].CreatedAt) {
+			return events[left].ID < events[right].ID
+		}
+		return events[left].CreatedAt.Before(events[right].CreatedAt)
+	})
+	return events, nil
+}
+
 func (s *Store) ClaimAuthorizationOutboxEvent(_ context.Context, eventID string, claimID string, leaseUntil time.Time) (ports.AuthorizationOutboxEvent, bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

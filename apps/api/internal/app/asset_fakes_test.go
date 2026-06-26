@@ -183,6 +183,22 @@ func (f *fakeOutbox) ClaimPendingAuthorizationOutboxEvents(_ context.Context, cl
 	return events, nil
 }
 
+func (f *fakeOutbox) ListAuthorizationOutboxReplayEvents(context.Context) ([]ports.AuthorizationOutboxEvent, error) {
+	events := make([]ports.AuthorizationOutboxEvent, 0, len(f.events))
+	for _, event := range f.events {
+		if event.DeadLetteredAt.IsZero() {
+			events = append(events, event)
+		}
+	}
+	sort.Slice(events, func(left int, right int) bool {
+		if events[left].CreatedAt.Equal(events[right].CreatedAt) {
+			return events[left].ID < events[right].ID
+		}
+		return events[left].CreatedAt.Before(events[right].CreatedAt)
+	})
+	return events, nil
+}
+
 func (f *fakeOutbox) MarkAuthorizationOutboxEventProcessed(_ context.Context, eventID string, claimID string) error {
 	for index, event := range f.events {
 		if event.ID == eventID && event.ClaimID == claimID {
