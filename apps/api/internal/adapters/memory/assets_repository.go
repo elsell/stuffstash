@@ -158,9 +158,16 @@ func (s *Store) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditR
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	return s.updateAssetLifecycleLocked(asset.Asset{}, item, auditRecord, undoableOperation)
+}
+
+func (s *Store) updateAssetLifecycleLocked(expectedCurrent asset.Asset, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	existing, exists := s.assets[item.ID]
 	if !exists || existing.TenantID != item.TenantID || existing.InventoryID != item.InventoryID {
 		return ports.ErrForbidden
+	}
+	if expectedCurrent.ID.String() != "" && !assetsEquivalentForStaleCheck(existing, expectedCurrent) {
+		return ports.ErrConflict
 	}
 	if existing.Kind != item.Kind || existing.Title != item.Title || existing.Description != item.Description || existing.ParentAssetID != item.ParentAssetID || existing.CustomAssetTypeID != item.CustomAssetTypeID || !existing.CustomFields.Equal(item.CustomFields) {
 		return ports.ErrForbidden

@@ -383,24 +383,46 @@ func TestExecuteActionPlanRejectsUnapprovedPlanWithoutCreatingAsset(t *testing.T
 func TestExecuteActionPlanAuthorizesBeforeReadingPlanState(t *testing.T) {
 	t.Parallel()
 
-	repository := &fakeActionPlanRepository{
-		records: map[string]ports.ActionPlanRecord{
-			"plan-1": actionPlanRecord("plan-1", actionplan.StateApproved),
+	tests := []struct {
+		name       string
+		authorizer ports.Authorizer
+	}{
+		{
+			name:       "forbidden",
+			authorizer: &fakeAuthorizer{checkInventoryErr: ports.ErrForbidden},
+		},
+		{
+			name: "view only",
+			authorizer: &permissionAuthorizer{allowed: map[ports.InventoryPermission]struct{}{
+				ports.InventoryPermissionView: {},
+			}},
 		},
 	}
-	application := newActionPlanTestApp(repository, &fakeIDGenerator{}, ports.ErrForbidden)
 
-	_, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
-		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
-		TenantID:    tenant.ID("tenant-home"),
-		InventoryID: inventory.InventoryID("inventory-home"),
-		PlanID:      "plan-1",
-	})
-	if !errors.Is(err, ports.ErrForbidden) {
-		t.Fatalf("expected forbidden before plan lookup, got %v", err)
-	}
-	if repository.reads != 0 {
-		t.Fatalf("expected no plan reads before execution authorization, got %d", repository.reads)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repository := &fakeActionPlanRepository{
+				records: map[string]ports.ActionPlanRecord{
+					"plan-1": actionPlanRecord("plan-1", actionplan.StateApproved),
+				},
+			}
+			application := newActionPlanTestAppWithAuthorizer(repository, &fakeIDGenerator{}, tt.authorizer)
+
+			_, err := application.ExecuteActionPlan(context.Background(), ActionPlanDecisionInput{
+				Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+				TenantID:    tenant.ID("tenant-home"),
+				InventoryID: inventory.InventoryID("inventory-home"),
+				PlanID:      "plan-1",
+			})
+			if !errors.Is(err, ports.ErrForbidden) {
+				t.Fatalf("expected forbidden before plan lookup, got %v", err)
+			}
+			if repository.reads != 0 {
+				t.Fatalf("expected no plan reads before execution authorization, got %d", repository.reads)
+			}
+		})
 	}
 }
 
@@ -413,7 +435,7 @@ func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutChangingAssets(t *t
 	}{
 		{
 			name:   "unsupported command",
-			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindArchiveAsset, `{"assetId":"asset-1"}`),
+			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindRestoreAsset, `{"assetId":"asset-1"}`),
 		},
 		{
 			name: "multi command",
@@ -458,10 +480,14 @@ func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutChangingAssets(t *t
 }
 
 func newActionPlanTestApp(repository ports.ActionPlanRepository, ids ports.IDGenerator, checkInventoryErr error) App {
+	return newActionPlanTestAppWithAuthorizer(repository, ids, &fakeAuthorizer{checkInventoryErr: checkInventoryErr})
+}
+
+func newActionPlanTestAppWithAuthorizer(repository ports.ActionPlanRepository, ids ports.IDGenerator, authorizer ports.Authorizer) App {
 	name, _ := inventory.NewName("Home")
 	return New(Dependencies{
 		Observer:   &fakeObserver{},
-		Authorizer: &fakeAuthorizer{checkInventoryErr: checkInventoryErr},
+		Authorizer: authorizer,
 		Tenants:    &fakeTenantRepository{exists: true},
 		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{{
 			ID:             inventory.InventoryID("inventory-home"),
@@ -476,13 +502,17 @@ func newActionPlanTestApp(repository ports.ActionPlanRepository, ids ports.IDGen
 }
 
 func newActionPlanExecutionTestApp(repository ports.ActionPlanRepository, assetRepository *fakeAssetRepository, ids ports.IDGenerator) App {
+	return newActionPlanExecutionTestAppWithAuthorizer(repository, assetRepository, ids, &fakeAuthorizer{})
+}
+
+func newActionPlanExecutionTestAppWithAuthorizer(repository ports.ActionPlanRepository, assetRepository *fakeAssetRepository, ids ports.IDGenerator, authorizer ports.Authorizer) App {
 	name, _ := inventory.NewName("Home")
 	if fakeRepository, ok := repository.(*fakeActionPlanRepository); ok && fakeRepository.assetUnitOfWork == nil {
 		fakeRepository.assetUnitOfWork = assetRepository
 	}
 	return New(Dependencies{
 		Observer:   &fakeObserver{},
-		Authorizer: &fakeAuthorizer{},
+		Authorizer: authorizer,
 		Tenants:    &fakeTenantRepository{exists: true},
 		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{{
 			ID:             inventory.InventoryID("inventory-home"),
@@ -497,6 +527,52 @@ func newActionPlanExecutionTestApp(repository ports.ActionPlanRepository, assetR
 		IDs:             ids,
 		Clock:           fakeClock{now: time.Date(2026, 6, 26, 17, 30, 0, 0, time.UTC)},
 	})
+}
+
+type permissionAuthorizer struct {
+	allowed map[ports.InventoryPermission]struct{}
+}
+
+func (p *permissionAuthorizer) CheckTenant(context.Context, identity.Principal, ports.TenantPermission, tenant.ID) error {
+	return nil
+}
+
+func (p *permissionAuthorizer) CheckInventory(_ context.Context, _ identity.Principal, permission ports.InventoryPermission, _ inventory.InventoryID) error {
+	if _, ok := p.allowed[permission]; ok {
+		return nil
+	}
+	return ports.ErrForbidden
+}
+
+func (p *permissionAuthorizer) ListViewableInventoryIDs(_ context.Context, _ identity.Principal, _ tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	if _, ok := p.allowed[ports.InventoryPermissionView]; !ok {
+		return []inventory.InventoryID{}, nil
+	}
+	return append([]inventory.InventoryID{}, candidates...), nil
+}
+
+func (p *permissionAuthorizer) GrantTenantOwner(context.Context, identity.Principal, tenant.ID) error {
+	return nil
+}
+
+func (p *permissionAuthorizer) GrantInventoryOwner(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (p *permissionAuthorizer) GrantInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (p *permissionAuthorizer) GrantInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (p *permissionAuthorizer) RevokeInventoryViewer(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
+}
+
+func (p *permissionAuthorizer) RevokeInventoryEditor(context.Context, identity.Principal, tenant.ID, inventory.InventoryID) error {
+	return nil
 }
 
 func actionPlanRecord(id string, state actionplan.State) ports.ActionPlanRecord {
@@ -633,6 +709,42 @@ func (f *fakeActionPlanRepository) ExecuteUpdateAssetActionPlan(ctx context.Cont
 	updated.UpdatedAt = transition.At
 	updated.ExecutedAt = transition.At
 	if err := f.assetUnitOfWork.UpdateAsset(ctx, item, auditRecords, undoableOperation); err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	f.records[planID] = updated
+	return updated, true, nil
+}
+
+func (f *fakeActionPlanRepository) ExecuteUpdateAssetLifecycleActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
+	if transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	record, found := f.records[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	if f.assetUnitOfWork == nil {
+		return ports.ActionPlanRecord{}, true, ErrInvalidInput
+	}
+	assetRepository, ok := f.assetUnitOfWork.(ports.AssetRepository)
+	if !ok {
+		return ports.ActionPlanRecord{}, true, ErrInvalidInput
+	}
+	current, found, err := assetRepository.AssetByID(ctx, tenantID, inventoryID, expectedCurrent.ID)
+	if err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	if !found || !testAssetsEquivalentForStaleCheck(current, expectedCurrent) {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	if err := f.assetUnitOfWork.UpdateAssetLifecycle(ctx, item, auditRecord, undoableOperation); err != nil {
 		return ports.ActionPlanRecord{}, true, err
 	}
 	f.records[planID] = updated

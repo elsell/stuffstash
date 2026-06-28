@@ -208,69 +208,82 @@ func assetsEquivalentForStaleCheck(left asset.Asset, right asset.Asset) bool {
 
 func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var existing assetModel
-		err := tx.Where(&assetModel{
-			ID:          item.ID.String(),
-			TenantID:    item.TenantID.String(),
-			InventoryID: item.InventoryID.String(),
-		}).First(&existing).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ports.ErrForbidden
-		}
+		return updateAssetLifecycleInTx(tx, asset.Asset{}, item, auditRecord, undoableOperation)
+	})
+}
+
+func updateAssetLifecycleInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	var existing assetModel
+	err := tx.Where(&assetModel{
+		ID:          item.ID.String(),
+		TenantID:    item.TenantID.String(),
+		InventoryID: item.InventoryID.String(),
+	}).First(&existing).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.ErrForbidden
+	}
+	if err != nil {
+		return err
+	}
+	if expectedCurrent.ID.String() != "" {
+		matches, err := assetModelMatchesExpected(existing, expectedCurrent)
 		if err != nil {
 			return err
 		}
-		if existing.Kind != item.Kind.String() || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
-			return ports.ErrForbidden
+		if !matches {
+			return ports.ErrConflict
 		}
-		var existingCustomFields map[string]any
-		if err := json.Unmarshal([]byte(existing.CustomFields), &existingCustomFields); err != nil {
+	}
+	if existing.Kind != item.Kind.String() || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
+		return ports.ErrForbidden
+	}
+	var existingCustomFields map[string]any
+	if err := json.Unmarshal([]byte(existing.CustomFields), &existingCustomFields); err != nil {
+		return err
+	}
+	existingFields, ok := asset.NewCustomFields(existingCustomFields)
+	if !ok || !existingFields.Equal(item.CustomFields) {
+		return ports.ErrForbidden
+	}
+	if existing.LifecycleState == asset.LifecycleStateActive.String() && item.LifecycleState == asset.LifecycleStateArchived {
+		hasActiveChildren, err := assetHasActiveChildren(tx, item.TenantID, item.InventoryID, item.ID)
+		if err != nil {
 			return err
 		}
-		existingFields, ok := asset.NewCustomFields(existingCustomFields)
-		if !ok || !existingFields.Equal(item.CustomFields) {
+		if hasActiveChildren {
 			return ports.ErrForbidden
 		}
-		if existing.LifecycleState == asset.LifecycleStateActive.String() && item.LifecycleState == asset.LifecycleStateArchived {
-			hasActiveChildren, err := assetHasActiveChildren(tx, item.TenantID, item.InventoryID, item.ID)
+	} else if existing.LifecycleState == asset.LifecycleStateArchived.String() && item.LifecycleState == asset.LifecycleStateActive {
+		if item.ParentAssetID.String() != "" {
+			var parent assetModel
+			err := tx.Where(&assetModel{
+				ID:          item.ParentAssetID.String(),
+				TenantID:    item.TenantID.String(),
+				InventoryID: item.InventoryID.String(),
+			}).First(&parent).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ports.ErrForbidden
+			}
 			if err != nil {
 				return err
 			}
-			if hasActiveChildren {
+			if parent.LifecycleState != asset.LifecycleStateActive.String() {
 				return ports.ErrForbidden
 			}
-		} else if existing.LifecycleState == asset.LifecycleStateArchived.String() && item.LifecycleState == asset.LifecycleStateActive {
-			if item.ParentAssetID.String() != "" {
-				var parent assetModel
-				err := tx.Where(&assetModel{
-					ID:          item.ParentAssetID.String(),
-					TenantID:    item.TenantID.String(),
-					InventoryID: item.InventoryID.String(),
-				}).First(&parent).Error
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					return ports.ErrForbidden
-				}
-				if err != nil {
-					return err
-				}
-				if parent.LifecycleState != asset.LifecycleStateActive.String() {
-					return ports.ErrForbidden
-				}
-			}
-		} else {
-			return ports.ErrForbidden
 		}
-		if err := tx.Model(&existing).Updates(map[string]any{
-			"lifecycle_state": item.LifecycleState.String(),
-			"updated_at":      item.UpdatedAt,
-		}).Error; err != nil {
-			return err
-		}
-		if err := createAuditRecord(tx, auditRecord); err != nil {
-			return err
-		}
-		return createUndoableOperation(tx, undoableOperation)
-	})
+	} else {
+		return ports.ErrForbidden
+	}
+	if err := tx.Model(&existing).Updates(map[string]any{
+		"lifecycle_state": item.LifecycleState.String(),
+		"updated_at":      item.UpdatedAt,
+	}).Error; err != nil {
+		return err
+	}
+	if err := createAuditRecord(tx, auditRecord); err != nil {
+		return err
+	}
+	return createUndoableOperation(tx, undoableOperation)
 }
 
 func (s Store) DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error {

@@ -282,6 +282,71 @@ func TestActionPlanRepositoryExecutesUpdateAssetAtomically(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryExecutesAssetLifecycleAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	successRecord := gormActionPlanRecord("plan-execute-archive", time.Date(2026, 6, 26, 18, 0, 0, 0, time.UTC))
+	rollbackRecord := gormActionPlanRecord("plan-rollback-archive", time.Date(2026, 6, 26, 18, 1, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, successRecord); err != nil {
+		t.Fatalf("save successful execution plan: %v", err)
+	}
+	if err := store.SaveActionPlan(ctx, rollbackRecord); err != nil {
+		t.Fatalf("save rollback execution plan: %v", err)
+	}
+	approveActionPlanForGormTest(t, ctx, store, successRecord)
+	approveActionPlanForGormTest(t, ctx, store, rollbackRecord)
+
+	item := assetItem("asset-one", successRecord.TenantID.String(), successRecord.InventoryID.String(), asset.KindItem, "")
+	item.CreatedAt = successRecord.CreatedAt
+	item.UpdatedAt = successRecord.CreatedAt
+	if err := createAsset(t, ctx, store, item); err != nil {
+		t.Fatalf("seed asset: %v", err)
+	}
+	archived := item
+	archived.LifecycleState = asset.LifecycleStateArchived
+	archived.UpdatedAt = successRecord.CreatedAt.Add(time.Minute)
+	executed, found, err := store.ExecuteUpdateAssetLifecycleActionPlan(ctx, successRecord.TenantID, successRecord.InventoryID, successRecord.ID, ports.ActionPlanStateTransition{
+		PrincipalID: successRecord.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          successRecord.CreatedAt.Add(2 * time.Second),
+	}, item, archived, auditRecord(t, "audit-plan-archive", successRecord.TenantID, successRecord.InventoryID, audit.ActionAssetArchived), nil)
+	if err != nil {
+		t.Fatalf("execute lifecycle action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	gotArchived, found, err := store.AssetByID(ctx, successRecord.TenantID, successRecord.InventoryID, item.ID)
+	if err != nil || !found || gotArchived.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected atomically archived asset found=%t item=%+v err=%v", found, gotArchived, err)
+	}
+
+	duplicateAudit := auditRecord(t, "audit-plan-rollback-archive", rollbackRecord.TenantID, rollbackRecord.InventoryID, audit.ActionAssetArchived)
+	if err := store.SaveAuditRecord(ctx, duplicateAudit); err != nil {
+		t.Fatalf("seed duplicate audit: %v", err)
+	}
+	if _, _, err := store.ExecuteUpdateAssetLifecycleActionPlan(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, rollbackRecord.ID, ports.ActionPlanStateTransition{
+		PrincipalID: rollbackRecord.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          rollbackRecord.CreatedAt.Add(2 * time.Second),
+	}, item, archived, duplicateAudit, nil); err == nil {
+		t.Fatalf("expected duplicate audit execution to fail")
+	}
+	rolledBack, found, err := store.ActionPlanByID(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, rollbackRecord.ID)
+	if err != nil {
+		t.Fatalf("read rolled back action plan: %v", err)
+	}
+	if !found || rolledBack.State != actionplan.StateApproved || !rolledBack.ExecutedAt.IsZero() {
+		t.Fatalf("expected plan to remain approved after rolled back execution found=%t record=%+v", found, rolledBack)
+	}
+}
+
 func TestActionPlanRepositoryStoresOnlySafeColumns(t *testing.T) {
 	t.Parallel()
 

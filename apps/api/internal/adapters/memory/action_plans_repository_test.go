@@ -126,6 +126,45 @@ func TestActionPlanRepositoryExecutesUpdateAssetAtomically(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryExecutesAssetLifecycleAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := NewStore()
+	tenantID := tenant.ID("tenant-home")
+	inventoryID := inventory.InventoryID("inventory-home")
+	saveMemoryTenant(t, ctx, store, tenantID)
+	saveMemoryInventory(t, ctx, store, tenantID, inventoryID)
+	record := memoryActionPlanRecord("plan-archive", time.Date(2026, 6, 26, 18, 0, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, record); err != nil {
+		t.Fatalf("save action plan: %v", err)
+	}
+	if _, _, err := store.UpdateActionPlanState(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateProposed, To: actionplan.StateApproved, At: record.CreatedAt.Add(time.Second)}); err != nil {
+		t.Fatalf("approve action plan: %v", err)
+	}
+	item := memoryAsset(t, "asset-one", tenantID, inventoryID)
+	if err := store.CreateAsset(ctx, item, memoryAuditRecord(t, "audit-create-asset", tenantID), nil); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+	archived := item
+	archived.LifecycleState = asset.LifecycleStateArchived
+	archived.UpdatedAt = item.UpdatedAt.Add(time.Minute)
+	archiveAudit := memoryAuditRecord(t, "audit-archive", tenantID)
+	archiveAudit.Action = audit.ActionAssetArchived
+
+	executed, found, err := store.ExecuteUpdateAssetLifecycleActionPlan(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateApproved, To: actionplan.StateExecuted, At: record.CreatedAt.Add(2 * time.Second)}, item, archived, archiveAudit, nil)
+	if err != nil {
+		t.Fatalf("execute lifecycle action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	got, found, err := store.AssetByID(ctx, tenantID, inventoryID, item.ID)
+	if err != nil || !found || got.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected archived asset found=%t item=%+v err=%v", found, got, err)
+	}
+}
+
 func memoryActionPlanRecord(id string, createdAt time.Time) ports.ActionPlanRecord {
 	return ports.ActionPlanRecord{
 		ID:                         id,

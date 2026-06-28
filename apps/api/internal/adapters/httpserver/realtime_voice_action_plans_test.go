@@ -116,6 +116,94 @@ func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
 	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"Water bottle", "Office", "apiKey", "Bearer", "provider_session_id"})
 }
 
+func TestRealtimeVoiceActionPlanApprovalExecutesArchiveAsset(t *testing.T) {
+	t.Parallel()
+
+	var application app.App
+	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithSetup(t, archiveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
+		application = seedApplication
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
+	})
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.approve",
+		"seq":       4,
+		"sessionId": sessionID,
+		"planId":    "plan-id",
+	})
+	approved := readRealtimeMessage(t, ctx, connection)
+	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+		t.Fatalf("expected safe approval event, got %+v", approved)
+	}
+	executed := readRealtimeMessage(t, ctx, connection)
+	if executed["type"] != "action.plan.executed" || executed["planId"] != "plan-id" || executed["status"] != "executed" {
+		t.Fatalf("expected safe archive execution event, got %+v", executed)
+	}
+	archived, err := application.GetAsset(context.Background(), app.GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		Source:      audit.SourceAPI,
+		RequestID:   "assert-archived-asset",
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		AssetID:     asset.ID("asset-id"),
+	})
+	if err != nil {
+		t.Fatalf("read archived asset: %v", err)
+	}
+	if archived.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected realtime-approved archive to update asset lifecycle, got %+v", archived)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"Water bottle", "Office", "apiKey", "Bearer", "provider_session_id"})
+}
+
+func TestRealtimeVoiceActionPlanArchiveFailureLeavesAssetActive(t *testing.T) {
+	t.Parallel()
+
+	var application app.App
+	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, archiveActionPlanProposalLanguageModel{}, []string{
+		"location-id", "location-undo-id", "location-audit-id",
+		"asset-id", "asset-undo-id", "asset-audit-id",
+		"child-id", "child-undo-id", "child-audit-id",
+		"voice-session-id", "plan-id", "command-id", "response-id", "archive-undo-id", "archive-audit-id",
+	}, func(seedApplication app.App) {
+		application = seedApplication
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "container", "Toolbox", "")
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Wrench", "asset-id")
+	})
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.approve",
+		"seq":       4,
+		"sessionId": sessionID,
+		"planId":    "plan-id",
+	})
+	approved := readRealtimeMessage(t, ctx, connection)
+	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+		t.Fatalf("expected safe approval event, got %+v", approved)
+	}
+	failed := readRealtimeMessage(t, ctx, connection)
+	if failed["type"] != "action.plan.failed" || failed["planId"] != "plan-id" || failed["status"] != "failed" {
+		t.Fatalf("expected safe archive failure event, got %+v", failed)
+	}
+	item, err := application.GetAsset(context.Background(), app.GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		Source:      audit.SourceAPI,
+		RequestID:   "assert-active-asset",
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		AssetID:     asset.ID("asset-id"),
+	})
+	if err != nil {
+		t.Fatalf("read active asset: %v", err)
+	}
+	if item.LifecycleState != asset.LifecycleStateActive {
+		t.Fatalf("expected failed realtime archive to leave asset active, got %+v", item)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{approved, failed}, []string{"Toolbox", "Wrench", "apiKey", "Bearer", "provider_session_id"})
+}
+
 func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) {
 	t.Parallel()
 
@@ -249,6 +337,12 @@ func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference por
 			"voice-session-id", "plan-id", "command-id", "response-id", "move-undo-id", "move-audit-id",
 		}
 	}
+	return openRealtimeVoiceReviewSessionWithSetupAndIDs(t, languageInference, ids, setup)
+}
+
+func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string) {
+	t.Helper()
+
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
@@ -384,6 +478,35 @@ func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input p
 			Kind:            ports.StructuredAgentResponseKindClarification,
 			SpokenResponse:  "I prepared that move for review.",
 			DisplayResponse: "I prepared that move for review.",
+		},
+	}, nil
+}
+
+type archiveActionPlanProposalLanguageModel struct{}
+
+func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "plan-tool-call",
+				Name: "propose_action_plan",
+				Arguments: map[string]any{
+					"commandKind":                "archive_asset",
+					"intentSummary":              "Archive the water bottle.",
+					"modelInterpretationSummary": "The user wants the visible water bottle archived.",
+					"confirmationSummary":        "Archive water bottle?",
+					"commandSummary":             "Archive water bottle",
+					"argumentsJson":              `{"assetId":"asset-id"}`,
+					"riskSummary":                "Archives an item in this inventory.",
+				},
+			}},
+		}, nil
+	}
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindClarification,
+			SpokenResponse:  "I prepared that archive for review.",
+			DisplayResponse: "I prepared that archive for review.",
 		},
 	}, nil
 }

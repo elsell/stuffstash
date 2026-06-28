@@ -53,7 +53,7 @@ func (a App) CreateActionPlan(ctx context.Context, input CreateActionPlanInput) 
 	if err := a.ensureActionPlanDependencies(); err != nil {
 		return ports.ActionPlanRecord{}, err
 	}
-	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return ports.ActionPlanRecord{}, err
 	}
 	planID := strings.TrimSpace(a.ids.NewID())
@@ -103,7 +103,7 @@ func (a App) ExecuteActionPlan(ctx context.Context, input ActionPlanDecisionInpu
 	if err := a.ensureActionPlanDependencies(); err != nil {
 		return ports.ActionPlanRecord{}, err
 	}
-	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
+	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return ports.ActionPlanRecord{}, err
 	}
 	record, found, err := a.actionPlans.ActionPlanByID(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID))
@@ -119,6 +119,9 @@ func (a App) ExecuteActionPlan(ctx context.Context, input ActionPlanDecisionInpu
 
 	executed, err := a.executeApprovedActionPlanCommands(ctx, input, record)
 	if err != nil {
+		if errors.Is(err, ports.ErrForbidden) {
+			return ports.ActionPlanRecord{}, err
+		}
 		failed, failErr := a.transitionActionPlan(ctx, input, actionplan.StateFailed)
 		if failErr != nil {
 			return ports.ActionPlanRecord{}, failErr
@@ -136,7 +139,7 @@ func (a App) transitionActionPlan(ctx context.Context, input ActionPlanDecisionI
 	if to == actionplan.StateCancelled {
 		permission = ports.InventoryPermissionView
 	} else if to == actionplan.StateExecuted || to == actionplan.StateFailed {
-		permission = ports.InventoryPermissionCreateAsset
+		permission = ports.InventoryPermissionEditAsset
 	}
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, permission); err != nil {
 		return ports.ActionPlanRecord{}, err
@@ -225,6 +228,35 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 			return ports.ActionPlanRecord{}, ErrNotFound
 		}
 		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
+		return executed, nil
+	case actionplan.CommandKindArchiveAsset:
+		archiveInput, err := actionPlanArchiveAssetInput(input, command)
+		if err != nil {
+			return ports.ActionPlanRecord{}, err
+		}
+		prepared, err := a.assetService.PrepareArchiveAsset(ctx, archiveInput)
+		if err != nil {
+			if errors.Is(err, ErrValidation) {
+				return ports.ActionPlanRecord{}, ErrConflict
+			}
+			return ports.ActionPlanRecord{}, err
+		}
+		executed, found, err := a.actionPlans.ExecuteUpdateAssetLifecycleActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
+			PrincipalID: input.Principal.ID,
+			From:        actionplan.StateApproved,
+			To:          actionplan.StateExecuted,
+			At:          a.clock.Now(),
+		}, prepared.PreviousAsset, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
+		if err != nil {
+			if errors.Is(err, ports.ErrConflict) {
+				return ports.ActionPlanRecord{}, ErrConflict
+			}
+			return ports.ActionPlanRecord{}, err
+		}
+		if !found {
+			return ports.ActionPlanRecord{}, ErrNotFound
+		}
+		a.assetService.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
 		return executed, nil
 	default:
 		return ports.ActionPlanRecord{}, ErrValidation
@@ -391,6 +423,49 @@ func parseActionPlanMoveArguments(command ports.ActionPlanCommandRecord) (action
 		}
 	}
 	return args, nil
+}
+
+func actionPlanArchiveAssetInput(input ActionPlanDecisionInput, command ports.ActionPlanCommandRecord) (UpdateAssetLifecycleInput, error) {
+	assetID, err := parseActionPlanAssetIDOnlyArguments(command)
+	if err != nil {
+		return UpdateAssetLifecycleInput{}, err
+	}
+	return UpdateAssetLifecycleInput{
+		Principal:   input.Principal,
+		Source:      audit.SourceConversation,
+		RequestID:   command.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		AssetID:     assetID,
+	}, nil
+}
+
+func parseActionPlanAssetIDOnlyArguments(command ports.ActionPlanCommandRecord) (asset.ID, error) {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(command.ArgumentsJSON, &raw); err != nil {
+		return "", ErrValidation
+	}
+	var parsed asset.ID
+	for key, value := range raw {
+		switch key {
+		case "assetId":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return "", err
+			}
+			assetID, ok := asset.NewID(text)
+			if !ok {
+				return "", ErrValidation
+			}
+			parsed = assetID
+		default:
+			return "", ErrValidation
+		}
+	}
+	if parsed.String() == "" {
+		return "", ErrValidation
+	}
+	return parsed, nil
 }
 
 func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.ActionPlanCommandRecord, error) {

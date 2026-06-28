@@ -330,11 +330,27 @@ func (s Service) RecordAssetUpdated(ctx context.Context, item asset.Asset, princ
 }
 
 func (s Service) ArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	return s.updateAssetLifecycle(ctx, input, asset.LifecycleStateActive, asset.LifecycleStateArchived, audit.ActionAssetArchived, ports.EventAssetArchived, "asset archived")
+	prepared, err := s.PrepareArchiveAsset(ctx, input)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if err := s.persistPreparedUpdateAssetLifecycle(ctx, prepared); err != nil {
+		return asset.Asset{}, err
+	}
+	s.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
+	return prepared.Asset, nil
 }
 
 func (s Service) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	return s.updateAssetLifecycle(ctx, input, asset.LifecycleStateArchived, asset.LifecycleStateActive, audit.ActionAssetRestored, ports.EventAssetRestored, "asset restored")
+	prepared, err := s.PrepareRestoreAsset(ctx, input)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if err := s.persistPreparedUpdateAssetLifecycle(ctx, prepared); err != nil {
+		return asset.Asset{}, err
+	}
+	s.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
+	return prepared.Asset, nil
 }
 
 func (s Service) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) error {
@@ -393,43 +409,60 @@ func (s Service) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInpu
 	return nil
 }
 
-func (s Service) updateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycleInput, from asset.LifecycleState, to asset.LifecycleState, action audit.Action, eventName ports.EventName, eventMessage string) (asset.Asset, error) {
+type PreparedUpdateAssetLifecycle struct {
+	PreviousAsset     asset.Asset
+	Asset             asset.Asset
+	AuditRecord       audit.Record
+	UndoableOperation ports.UndoableOperation
+	EventName         ports.EventName
+	EventMessage      string
+}
+
+func (s Service) PrepareArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (PreparedUpdateAssetLifecycle, error) {
+	return s.prepareUpdateAssetLifecycle(ctx, input, asset.LifecycleStateActive, asset.LifecycleStateArchived, audit.ActionAssetArchived, ports.EventAssetArchived, "asset archived")
+}
+
+func (s Service) PrepareRestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (PreparedUpdateAssetLifecycle, error) {
+	return s.prepareUpdateAssetLifecycle(ctx, input, asset.LifecycleStateArchived, asset.LifecycleStateActive, audit.ActionAssetRestored, ports.EventAssetRestored, "asset restored")
+}
+
+func (s Service) prepareUpdateAssetLifecycle(ctx context.Context, input UpdateAssetLifecycleInput, from asset.LifecycleState, to asset.LifecycleState, action audit.Action, eventName ports.EventName, eventMessage string) (PreparedUpdateAssetLifecycle, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
-		return asset.Asset{}, err
+		return PreparedUpdateAssetLifecycle{}, err
 	}
 	if err := s.ensureAssetRepository(); err != nil {
-		return asset.Asset{}, err
+		return PreparedUpdateAssetLifecycle{}, err
 	}
 	if input.AssetID.String() == "" {
-		return asset.Asset{}, apperrors.ErrInvalidInput
+		return PreparedUpdateAssetLifecycle{}, apperrors.ErrInvalidInput
 	}
 
 	current, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedUpdateAssetLifecycle{}, err
 	}
 	if !found {
-		return asset.Asset{}, apperrors.ErrNotFound
+		return PreparedUpdateAssetLifecycle{}, apperrors.ErrNotFound
 	}
 	if current.LifecycleState != from {
-		return asset.Asset{}, apperrors.ErrInvalidInput
+		return PreparedUpdateAssetLifecycle{}, apperrors.ErrInvalidInput
 	}
 	if to == asset.LifecycleStateArchived {
 		hasActiveChildren, err := s.assets.AssetHasActiveChildren(ctx, input.TenantID, input.InventoryID, input.AssetID)
 		if err != nil {
-			return asset.Asset{}, err
+			return PreparedUpdateAssetLifecycle{}, err
 		}
 		if hasActiveChildren {
-			return asset.Asset{}, apperrors.ErrInvalidInput
+			return PreparedUpdateAssetLifecycle{}, apperrors.ErrInvalidInput
 		}
 	}
 	if to == asset.LifecycleStateActive && current.ParentAssetID.String() != "" {
 		parent, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, current.ParentAssetID)
 		if err != nil {
-			return asset.Asset{}, err
+			return PreparedUpdateAssetLifecycle{}, err
 		}
 		if !found || parent.LifecycleState != asset.LifecycleStateActive {
-			return asset.Asset{}, apperrors.ErrInvalidInput
+			return PreparedUpdateAssetLifecycle{}, apperrors.ErrInvalidInput
 		}
 	}
 
@@ -438,7 +471,7 @@ func (s Service) updateAssetLifecycle(ctx context.Context, input UpdateAssetLife
 	updated.UpdatedAt = s.now().UTC()
 	undoableOperation, err := s.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, action, &current, updated)
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedUpdateAssetLifecycle{}, err
 	}
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
 		PrincipalID: input.Principal.ID,
@@ -457,32 +490,36 @@ func (s Service) updateAssetLifecycle(ctx context.Context, input UpdateAssetLife
 		},
 	})
 	if err != nil {
-		return asset.Asset{}, err
+		return PreparedUpdateAssetLifecycle{}, err
 	}
+	return PreparedUpdateAssetLifecycle{PreviousAsset: current, Asset: updated, AuditRecord: auditRecord, UndoableOperation: undoableOperation, EventName: eventName, EventMessage: eventMessage}, nil
+}
 
+func (s Service) persistPreparedUpdateAssetLifecycle(ctx context.Context, prepared PreparedUpdateAssetLifecycle) error {
 	if s.assetUnitOfWork == nil {
-		return asset.Asset{}, apperrors.ErrInvalidInput
+		return apperrors.ErrInvalidInput
 	}
-	if err := s.assetUnitOfWork.UpdateAssetLifecycle(ctx, updated, auditRecord, &undoableOperation); err != nil {
+	if err := s.assetUnitOfWork.UpdateAssetLifecycle(ctx, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
-			return asset.Asset{}, apperrors.ErrInvalidInput
+			return apperrors.ErrInvalidInput
 		}
-		return asset.Asset{}, err
+		return err
 	}
+	return nil
+}
 
+func (s Service) RecordAssetLifecycleUpdated(ctx context.Context, prepared PreparedUpdateAssetLifecycle, principalID identity.PrincipalID) {
 	s.observer.Record(ctx, ports.Event{
-		Name:    eventName,
-		Message: eventMessage,
+		Name:    prepared.EventName,
+		Message: prepared.EventMessage,
 		Fields: map[string]string{
-			"tenant_id":       input.TenantID.String(),
-			"inventory_id":    input.InventoryID.String(),
-			"asset_id":        updated.ID.String(),
-			"asset_kind":      updated.Kind.String(),
-			"principal_id":    input.Principal.ID.String(),
-			"lifecycle_state": updated.LifecycleState.String(),
-			"previous_state":  current.LifecycleState.String(),
+			"tenant_id":       prepared.Asset.TenantID.String(),
+			"inventory_id":    prepared.Asset.InventoryID.String(),
+			"asset_id":        prepared.Asset.ID.String(),
+			"asset_kind":      prepared.Asset.Kind.String(),
+			"principal_id":    principalID.String(),
+			"lifecycle_state": prepared.Asset.LifecycleState.String(),
+			"previous_state":  prepared.PreviousAsset.LifecycleState.String(),
 		},
 	})
-
-	return updated, nil
 }

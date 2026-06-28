@@ -53,4 +53,5 @@ type ActionPlanRepository interface {
 	UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition) (ActionPlanRecord, bool, error)
 	ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 	ExecuteUpdateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
+	ExecuteUpdateAssetLifecycleActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 }
