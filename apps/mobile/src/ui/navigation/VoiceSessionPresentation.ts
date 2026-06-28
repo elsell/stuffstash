@@ -184,6 +184,9 @@ export function buildVoiceSessionPresentation({
       ? (realtime?.debugEvents ?? []).map(formatSafeDiagnosticEvent)
       : null;
   const bottomAction = bottomActionForState(stage, realtime);
+  const activePartialTranscript = stage === 'listening' || stage === 'processing' || stage === 'speaking' || stage === 'review'
+    ? realtime?.partialTranscript
+    : undefined;
 
   return {
     actionPlan: realtime?.actionPlan
@@ -206,7 +209,7 @@ export function buildVoiceSessionPresentation({
       : undefined,
     response: realtime?.spokenResponse,
     title,
-    transcript: realtime?.transcript
+    transcript: realtime?.transcript ?? activePartialTranscript
   };
 }
 

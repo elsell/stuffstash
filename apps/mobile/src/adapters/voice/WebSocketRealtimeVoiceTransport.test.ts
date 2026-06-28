@@ -26,12 +26,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-		socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
-		socket.receive({ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' });
-		socket.receive({ type: 'assistant.response.started', seq: 3, sessionId: 'session-1', responseId: 'response-1' });
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({ type: 'transcript.delta', seq: 2, sessionId: 'session-1', text: 'Where are' });
+    socket.receive({ type: 'transcript.final', seq: 3, sessionId: 'session-1', text: 'Where are my tools?' });
+    socket.receive({ type: 'assistant.response.started', seq: 4, sessionId: 'session-1', responseId: 'response-1' });
     socket.receive({
       type: 'action.plan.proposed',
-      seq: 4,
+      seq: 5,
       sessionId: 'session-1',
       actionPlan: {
         planId: 'plan-1',
@@ -40,17 +41,17 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         risks: ['Adds a new item to this inventory.']
       }
     });
-		socket.receive({ type: 'tts.audio.started', seq: 5, sessionId: 'session-1', format: { mimeType: 'audio/mpeg' } });
-		socket.receive({ type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' });
-		socket.receive({ type: 'session.completed', seq: 7, sessionId: 'session-1' });
+    socket.receive({ type: 'tts.audio.started', seq: 6, sessionId: 'session-1', format: { mimeType: 'audio/mpeg' } });
+    socket.receive({ type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' });
+    socket.receive({ type: 'session.completed', seq: 8, sessionId: 'session-1' });
     await waitForSentMessageCount(socket, 3);
     await waitForEventType(events, 'action.plan.proposed');
     await transport.approveActionPlan('plan-1');
     await expect(transport.cancelActionPlan('plan-1')).rejects.toThrow('not active');
-    socket.receive({ type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved' });
+    socket.receive({ type: 'action.plan.approved', seq: 9, sessionId: 'session-1', planId: 'plan-1', status: 'approved' });
     socket.receive({
       type: 'action.plan.executed',
-      seq: 9,
+      seq: 10,
       sessionId: 'session-1',
       planId: 'plan-1',
       status: 'executed',
@@ -80,12 +81,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       planId: 'plan-1'
     });
     expect(events).toEqual([
-			{ type: 'session.started', seq: 1, sessionId: 'session-1' },
-			{ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' },
-			{ type: 'assistant.response.started', seq: 3, sessionId: 'session-1', responseId: 'response-1' },
+      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      { type: 'transcript.delta', seq: 2, sessionId: 'session-1', text: 'Where are' },
+      { type: 'transcript.final', seq: 3, sessionId: 'session-1', text: 'Where are my tools?' },
+      { type: 'assistant.response.started', seq: 4, sessionId: 'session-1', responseId: 'response-1' },
       {
         type: 'action.plan.proposed',
-        seq: 4,
+        seq: 5,
         sessionId: 'session-1',
         actionPlan: {
           planId: 'plan-1',
@@ -95,13 +97,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
           risks: ['Adds a new item to this inventory.']
         }
       },
-      { type: 'tts.audio.started', seq: 5, sessionId: 'session-1', mimeType: 'audio/mpeg' },
-      { type: 'tts.audio.chunk', seq: 6, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
-      { type: 'session.completed', seq: 7, sessionId: 'session-1' },
-      { type: 'action.plan.approved', seq: 8, sessionId: 'session-1', planId: 'plan-1', status: 'approved', message: undefined },
+      { type: 'tts.audio.started', seq: 6, sessionId: 'session-1', mimeType: 'audio/mpeg' },
+      { type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
+      { type: 'session.completed', seq: 8, sessionId: 'session-1' },
+      { type: 'action.plan.approved', seq: 9, sessionId: 'session-1', planId: 'plan-1', status: 'approved', message: undefined },
       {
         type: 'action.plan.executed',
-        seq: 9,
+        seq: 10,
         sessionId: 'session-1',
         planId: 'plan-1',
         status: 'executed',

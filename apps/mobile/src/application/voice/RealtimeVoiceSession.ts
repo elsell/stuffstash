@@ -62,6 +62,7 @@ type VoiceRealtimeEventMetadata = {
 export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | { readonly type: 'session.started'; readonly sessionId: string }
   | { readonly type: 'session.failed'; readonly code: string; readonly message: string }
+  | { readonly type: 'transcript.delta'; readonly text: string }
   | { readonly type: 'transcript.final'; readonly text: string }
   | { readonly type: 'agent.progress'; readonly status: string; readonly message: string }
   | {
@@ -116,6 +117,7 @@ export type VoiceRealtimeState = {
   readonly inventoryName: string;
   readonly actionPlan?: VoiceActionPlanProposal;
   readonly reviewDecisionPending?: boolean;
+  readonly partialTranscript?: string;
   readonly transcript?: string;
   readonly spokenResponse?: string;
   readonly progressLabel?: string;
@@ -284,8 +286,21 @@ export class RealtimeVoiceSessionController {
     switch (event.type) {
       case 'session.started':
         return { ...state, status: 'processing', progressLabel: 'Connected' };
+      case 'transcript.delta':
+        return {
+          ...state,
+          status: 'processing',
+          partialTranscript: event.text,
+          progressLabel: 'Transcribing'
+        };
       case 'transcript.final':
-        return { ...state, status: 'processing', transcript: event.text, progressLabel: 'Thinking' };
+        return {
+          ...state,
+          status: 'processing',
+          partialTranscript: undefined,
+          transcript: event.text,
+          progressLabel: 'Thinking'
+        };
       case 'agent.progress':
         return { ...state, status: 'processing', progressLabel: event.message };
       case 'tool.call.started':
@@ -371,12 +386,13 @@ export class RealtimeVoiceSessionController {
           : { ...state, status: 'completed', progressLabel: 'Done' };
       case 'session.cancelled':
         await this.player.stop();
-        return { ...state, status: 'cancelled', progressLabel: 'Cancelled' };
+        return { ...state, status: 'cancelled', partialTranscript: undefined, progressLabel: 'Cancelled' };
       case 'session.failed':
         await this.player.stop();
         return {
           ...state,
           status: 'failed',
+          partialTranscript: undefined,
           failureCode: voiceFailureCode(event.code),
           errorMessage: voiceFailureMessage(event.code, event.message),
           progressLabel: 'Voice failed'

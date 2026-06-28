@@ -83,11 +83,12 @@ describe('RealtimeVoiceSessionController', () => {
       new FakeRecorder(),
       new FakeTransport([
         { type: 'session.started', seq: 1, sessionId: 'session-1' },
-        { type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where is the drill?' },
-        { type: 'agent.progress', seq: 3, sessionId: 'session-1', status: 'searching', message: 'Searching visible inventory' },
+        { type: 'transcript.delta', seq: 2, sessionId: 'session-1', text: 'Where is' },
+        { type: 'transcript.final', seq: 3, sessionId: 'session-1', text: 'Where is the drill?' },
+        { type: 'agent.progress', seq: 4, sessionId: 'session-1', status: 'searching', message: 'Searching visible inventory' },
         {
           type: 'assistant.response.completed',
-          seq: 4,
+          seq: 5,
           sessionId: 'session-1',
           response: {
             spokenResponse: 'The drill is in the garage.',
@@ -95,7 +96,7 @@ describe('RealtimeVoiceSessionController', () => {
             kind: 'answer'
           }
         },
-        { type: 'session.completed', seq: 5, sessionId: 'session-1' }
+        { type: 'session.completed', seq: 6, sessionId: 'session-1' }
       ]),
       new FakePlayer()
     );
@@ -103,12 +104,13 @@ describe('RealtimeVoiceSessionController', () => {
 
     await controller.start();
     const states = await controller.stop((state) => {
-      observed.push(`${state.status}:${state.progressLabel ?? ''}:${state.transcript ?? ''}:${state.spokenResponse ?? ''}`);
+      observed.push(`${state.status}:${state.progressLabel ?? ''}:${state.transcript ?? state.partialTranscript ?? ''}:${state.spokenResponse ?? ''}`);
     });
 
     expect(observed).toEqual([
       'processing:Sending audio::',
       'processing:Connected::',
+      'processing:Transcribing:Where is:',
       'processing:Thinking:Where is the drill?:',
       'processing:Searching visible inventory:Where is the drill?:',
       'processing:Preparing speech:Where is the drill?:The drill is in the garage.',
@@ -293,6 +295,51 @@ describe('RealtimeVoiceSessionController', () => {
       'processing:Sending audio:',
       'failed:Voice failed:Voice is not configured.'
     ]);
+  });
+
+  it('clears partial transcripts when the realtime session fails before a final transcript', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        { type: 'transcript.delta', seq: 1, sessionId: 'session-1', text: 'Where is' },
+        { type: 'session.failed', seq: 2, sessionId: 'session-1', code: 'invalid_request', message: 'Voice is not configured.' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      errorMessage: 'Voice is not configured.',
+      progressLabel: 'Voice failed'
+    });
+    expect(states.at(-1)?.partialTranscript).toBeUndefined();
+    expect(states.at(-1)?.transcript).toBeUndefined();
+  });
+
+  it('clears partial transcripts when the realtime session is cancelled before a final transcript', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        { type: 'transcript.delta', seq: 1, sessionId: 'session-1', text: 'Where is' },
+        { type: 'session.cancelled', seq: 2, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'cancelled',
+      progressLabel: 'Cancelled'
+    });
+    expect(states.at(-1)?.partialTranscript).toBeUndefined();
+    expect(states.at(-1)?.transcript).toBeUndefined();
   });
 
   it('maps provider stage failures to safe actionable mobile state', async () => {

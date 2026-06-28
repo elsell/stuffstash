@@ -119,6 +119,8 @@ Safe agent progress events should be summarized as user-facing progress steps ra
 
 The active voice session view may display the final transcript to the user as ephemeral UI state. This transcript display is not debug history and must not be written to local storage, logs, crash reports, analytics, audit records, or observability metadata before a transcript retention and redaction policy is specified.
 
+When `transcript.delta` events are available, mobile may display the latest partial transcript as ephemeral UI state while processing continues. The final `transcript.final` event must replace the partial transcript in visible state and must not append partial transcript history to diagnostics or durable storage.
+
 Developer diagnostics in the mobile voice surface must be disabled by default and enabled only through explicit runtime configuration. Enabling diagnostics may allow the mobile UI to render sanitized tool-call progress labels and statuses that have already passed through the mobile application redaction boundary, but it must not alter provider prompts, tool availability, authorization, model inputs, session persistence, or raw event retention.
 
 Mobile realtime voice is local-development testable before production mobile authentication exists. A production mobile rollout requires a specified mobile authentication flow and must not rely on `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`.

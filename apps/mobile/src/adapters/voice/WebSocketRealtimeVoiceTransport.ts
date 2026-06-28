@@ -251,8 +251,9 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         code: stringField(message, 'code'),
         message: stringField(message, 'message')
       };
+    case 'transcript.delta':
     case 'transcript.final':
-      return { ...metadata, type: 'transcript.final', sessionId: stringField(message, 'sessionId'), text: stringField(message, 'text') };
+      return { ...metadata, type: message.type, sessionId: stringField(message, 'sessionId'), text: stringField(message, 'text') };
     case 'agent.progress':
       return {
         ...metadata,

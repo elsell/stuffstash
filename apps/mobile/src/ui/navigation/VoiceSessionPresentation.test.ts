@@ -82,6 +82,75 @@ describe('VoiceSessionPresentation', () => {
     expect(session.diagnostics).toEqual(['Inventory list: Completed']);
   });
 
+  it('uses the partial transcript until the final transcript is available', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        partialTranscript: 'Where is',
+        progressLabel: 'Transcribing',
+        debugEvents: []
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    }).transcript).toBe('Where is');
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        partialTranscript: 'Where is',
+        transcript: 'Where is the drill?',
+        progressLabel: 'Thinking',
+        debugEvents: []
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    }).transcript).toBe('Where is the drill?');
+  });
+
+  it('does not show partial transcripts after the active session has failed or been cancelled', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        partialTranscript: 'Where is',
+        progressLabel: 'Voice failed',
+        debugEvents: []
+      },
+      stage: 'failed',
+      tenantName: 'Main tenant'
+    }).transcript).toBeUndefined();
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'cancelled',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        partialTranscript: 'Where is',
+        progressLabel: 'Cancelled',
+        debugEvents: []
+      },
+      stage: 'cancelled',
+      tenantName: 'Main tenant'
+    }).transcript).toBeUndefined();
+  });
+
   it('does not expose reset while an active session needs true cancellation semantics', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
