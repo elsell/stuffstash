@@ -284,6 +284,36 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	if templateIndex > mandatoryIndex {
 		t.Fatalf("expected mandatory rules to follow tenant template so they cannot be removed: %s", prompt)
 	}
+	for _, required := range []string{
+		"use the returned assetId as parentAssetId",
+		"Action-plan command arguments must be structured JSON",
+		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
+	} {
+		if !strings.Contains(prompt, required) {
+			t.Fatalf("expected prompt to include %q, got: %s", required, prompt)
+		}
+	}
+}
+
+func TestGoogleGeminiToolSchemaSupportsObjectParameters(t *testing.T) {
+	t.Parallel()
+
+	tools := geminiTools([]ports.AgentToolDescriptor{{
+		Name:     "propose_action_plan",
+		ReadOnly: true,
+		Parameters: ports.AgentToolParameters{
+			Properties: map[string]ports.AgentToolParameter{
+				"arguments": {Type: ports.AgentToolParameterTypeObject},
+			},
+		},
+	}})
+	if len(tools) != 1 || len(tools[0].FunctionDeclarations) != 1 {
+		t.Fatalf("expected gemini tool declaration, got %+v", tools)
+	}
+	schema := tools[0].FunctionDeclarations[0].Parameters.Properties["arguments"]
+	if schema.Type != "object" {
+		t.Fatalf("expected object schema for structured arguments, got %+v", schema)
+	}
 }
 
 func TestGoogleGeminiLanguageInferenceProbeReturnsStructuredFinalResponse(t *testing.T) {

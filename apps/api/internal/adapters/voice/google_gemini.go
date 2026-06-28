@@ -165,6 +165,9 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"For a specific item or where-is question, call search_authorized_assets first with short keywords.",
 		"For broad list questions, call list_authorized_assets with filters.",
 		"For questions about what is in a place, list with parentTitle or locationTitle when known.",
+		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
+		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, and optional parentAssetId only.",
+		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 		"If you can answer, return {\"final\":{\"kind\":\"answer\",\"spokenResponse\":\"short spoken answer\",\"displayResponse\":\"short display answer\"}}.",
 		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
 		"If a search has no matches, say you could not find a visible match; do not say the whole inventory is empty unless a broad list tool result proves it.",
@@ -268,6 +271,8 @@ func geminiSchemaType(value ports.AgentToolParameterType) string {
 	switch value {
 	case ports.AgentToolParameterTypeInteger:
 		return "integer"
+	case ports.AgentToolParameterTypeObject:
+		return "object"
 	default:
 		return "string"
 	}

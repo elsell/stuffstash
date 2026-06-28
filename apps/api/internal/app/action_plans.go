@@ -520,6 +520,9 @@ func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.Action
 		if string(arguments) == "null" {
 			arguments = []byte("{}")
 		}
+		if err := validateExecutableActionPlanArguments(input.Kind, arguments); err != nil {
+			return nil, err
+		}
 		commands = append(commands, ports.ActionPlanCommandRecord{
 			ID:            strings.TrimSpace(a.ids.NewID()),
 			Kind:          input.Kind,
@@ -528,6 +531,23 @@ func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.Action
 		})
 	}
 	return commands, nil
+}
+
+func validateExecutableActionPlanArguments(kind actionplan.CommandKind, arguments []byte) error {
+	command := ports.ActionPlanCommandRecord{Kind: kind, ArgumentsJSON: arguments}
+	switch kind {
+	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
+		_, err := parseActionPlanCreateArguments(command)
+		return err
+	case actionplan.CommandKindMoveAsset:
+		_, err := parseActionPlanMoveArguments(command)
+		return err
+	case actionplan.CommandKindArchiveAsset, actionplan.CommandKindRestoreAsset:
+		_, err := parseActionPlanAssetIDOnlyArguments(command)
+		return err
+	default:
+		return ErrValidation
+	}
 }
 
 func validateSafeActionPlanArguments(arguments any) error {

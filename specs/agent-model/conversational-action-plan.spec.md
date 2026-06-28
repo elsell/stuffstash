@@ -98,6 +98,8 @@ The proposal tool must accept only:
 
 The proposal tool must reject unknown arguments, unknown command kinds, empty confirmation summaries, unsafe command arguments, approval claims, provider credentials, raw prompts, raw provider responses, raw transcripts, bearer tokens, provider session IDs, and hidden resource data. The persisted plan must be scoped to the active tenant, inventory, principal, and realtime session.
 
+The proposal tool must preserve executable command arguments exactly as bounded structured JSON, not lossy natural language. Provider adapters should expose command arguments as an object parameter whenever the provider supports native object parameters. String-encoded JSON is allowed only as a compatibility fallback and must be parsed by the application boundary before persistence.
+
 The first realtime proposal slice must not approve, execute, or cancel the proposed plan automatically. Approval and cancellation require explicit later client messages and application-service handling. Execution may happen only after approval through the action-plan execution service.
 
 ## Initial Command Enumeration
@@ -121,6 +123,8 @@ The first executable `create_asset` and `create_location` argument shape is:
 - `parentAssetId`: optional existing parent asset ID in the same inventory.
 
 The execution service must reject command arguments outside this shape for executable create commands until richer command schemas are specified.
+
+When a create command places a new asset inside an existing location or container, the proposal must use the existing parent's tool-derived `assetId` as `parentAssetId`. Human titles such as `parentTitle`, `locationTitle`, or raw location names are read filters only and are not executable create arguments. If the parent cannot be found unambiguously through read tools, the agent must ask for clarification or propose a root-level create rather than inventing an ID.
 
 The first executable `move_asset` argument shape is:
 

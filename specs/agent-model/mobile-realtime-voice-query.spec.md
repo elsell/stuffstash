@@ -360,6 +360,8 @@ Tool descriptors must use project-owned names, descriptions, read-only markers, 
 
 `propose_action_plan` is not an inventory mutation tool. It may persist a proposed action plan through the action-plan application boundary and return a safe plan summary for mobile review. It must not execute asset, location, tenant, sharing, provider-profile, audit mutation, import/export, or raw repository operations. Its arguments must be bounded, typed, validated by the application boundary, and free of raw prompts, raw transcripts, raw provider responses, credentials, bearer tokens, provider session IDs, hidden resource data, and approval claims.
 
+Write proposals must include executable command arguments as structured JSON. For create or move requests that reference an existing location or container, the loop must first use read tools to resolve the visible resource and then place the returned `assetId` in `parentAssetId`. Parent or location titles may be used only as read filters; they must not be persisted as executable action-plan arguments.
+
 The loop must not expose direct write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access. Any future direct execution must go through an approved action-plan execution service.
 
 Tool results provided to the language model must be structured, safe, and useful enough for accurate answers. For visible assets, read-only tool output should include:

@@ -76,6 +76,7 @@ type AgentToolParameterType string
 const (
 	AgentToolParameterTypeString  AgentToolParameterType = "string"
 	AgentToolParameterTypeInteger AgentToolParameterType = "integer"
+	AgentToolParameterTypeObject  AgentToolParameterType = "object"
 )
 
 type LanguageInferenceTurn struct {

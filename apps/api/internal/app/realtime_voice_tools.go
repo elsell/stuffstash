@@ -72,7 +72,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:        RealtimeVoiceToolProposeActionPlan,
 			Label:       realtimeVoiceProposeActionPlanPublicName,
-			Description: "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use only when the user asks to create, move, update, archive, or restore an inventory item or location. Arguments: commandKind enum, intentSummary, modelInterpretationSummary, confirmationSummary, commandSummary, optional argumentsJson object string, optional riskSummary.",
+			Description: "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use only when the user asks to create, move, update, archive, or restore an inventory item or location. Arguments: commandKind enum, intentSummary, modelInterpretationSummary, confirmationSummary, commandSummary, optional arguments object, optional riskSummary. For create or move into an existing location or container, first resolve the parent with read tools and use its assetId as parentAssetId.",
 			ReadOnly:    true,
 			Parameters: ports.AgentToolParameters{
 				Required: []string{"commandKind", "intentSummary", "modelInterpretationSummary", "confirmationSummary", "commandSummary"},
@@ -98,9 +98,9 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 						Type:        ports.AgentToolParameterTypeString,
 						Description: "Short safe summary of the single proposed command.",
 					},
-					"argumentsJson": {
-						Type:        ports.AgentToolParameterTypeString,
-						Description: "Optional JSON object containing safe command arguments such as title, kind, or parent title. Do not include secrets, prompts, transcripts, provider data, hidden IDs, or approval claims.",
+					"arguments": {
+						Type:        ports.AgentToolParameterTypeObject,
+						Description: "Optional safe structured command arguments. For create_asset use title or name, optional kind item|container|location, optional description, and optional parentAssetId. For move_asset use assetId and optional parentAssetId. For archive_asset or restore_asset use assetId. Never use parentTitle or locationTitle here; resolve existing resources with read tools and use returned assetId values. Do not include secrets, prompts, transcripts, provider data, hidden IDs, or approval claims.",
 					},
 					"riskSummary": {
 						Type:        ports.AgentToolParameterTypeString,
@@ -537,6 +537,11 @@ func realtimeVoiceActionPlanArguments(args map[string]any) (map[string]any, erro
 			return nil, ports.ErrInvalidProviderInput
 		}
 		return arguments, nil
+	}
+	if raw, exists := args["argumentsJson"]; exists {
+		if arguments, ok := raw.(map[string]any); ok {
+			return arguments, nil
+		}
 	}
 	rawJSON := strings.TrimSpace(stringArg(args["argumentsJson"]))
 	if rawJSON == "" {
