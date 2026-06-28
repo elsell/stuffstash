@@ -201,13 +201,20 @@ export function buildVoiceSessionPresentation({
     diagnostics,
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',
     progressLabel,
-    recoveryAction: realtime?.failureCode === 'provider_readiness'
+    recoveryAction: isProviderRecoveryFailure(realtime?.failureCode)
       ? { label: 'Voice providers', target: 'provider_profiles' }
       : undefined,
     response: realtime?.spokenResponse,
     title,
     transcript: realtime?.transcript
   };
+}
+
+function isProviderRecoveryFailure(code: VoiceRealtimeState['failureCode']): boolean {
+  return code === 'provider_readiness' ||
+    code === 'speech_to_text_failed' ||
+    code === 'language_inference_failed' ||
+    code === 'text_to_speech_failed';
 }
 
 function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): VoiceSessionBottomAction {

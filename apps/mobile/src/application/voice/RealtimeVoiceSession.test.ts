@@ -295,6 +295,25 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
   });
 
+  it('maps provider stage failures to safe actionable mobile state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{ type: 'session.failed', seq: 1, code: 'speech_to_text_failed', message: 'The voice session failed safely.' }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      failureCode: 'speech_to_text_failed',
+      errorMessage: 'Speech-to-text provider failed. Check Voice providers and try again.',
+      progressLabel: 'Voice failed'
+    });
+  });
+
   it('cancels active recording without opening the realtime transport', async () => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([]);

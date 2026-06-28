@@ -71,8 +71,33 @@ func TestRealtimeVoiceSessionPersistsFailureWithSafeCode(t *testing.T) {
 	}
 
 	failed := repository.savedRecord(t, session.ID)
-	if failed.State != ports.RealtimeSessionStateFailed || failed.SafeFailureCode != "invalid_request" || failed.EndedAt.IsZero() {
+	if failed.State != ports.RealtimeSessionStateFailed || failed.SafeFailureCode != "speech_to_text_failed" || failed.EndedAt.IsZero() {
 		t.Fatalf("expected failed outcome with safe code, got %+v", failed)
+	}
+}
+
+func TestRealtimeVoiceSessionPersistsProviderStageFailureWithSafeCode(t *testing.T) {
+	t.Parallel()
+
+	repository := newFakeRealtimeSessionRepository()
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = &failingResolvedLanguageInference{err: errors.New("provider account detail")}
+	application := newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, repository)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error {
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected provider stage failure")
+	}
+
+	failed := repository.savedRecord(t, session.ID)
+	if failed.State != ports.RealtimeSessionStateFailed || failed.SafeFailureCode != "language_inference_failed" || failed.EndedAt.IsZero() {
+		t.Fatalf("expected language inference failed outcome, got %+v", failed)
 	}
 }
 

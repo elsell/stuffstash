@@ -124,7 +124,12 @@ export type VoiceRealtimeState = {
   readonly errorMessage?: string;
 };
 
-export type VoiceRealtimeFailureCode = 'provider_readiness' | 'voice_failed';
+export type VoiceRealtimeFailureCode =
+  | 'provider_readiness'
+  | 'speech_to_text_failed'
+  | 'language_inference_failed'
+  | 'text_to_speech_failed'
+  | 'voice_failed';
 
 export class VoiceRealtimeCancelledError extends Error {
   readonly code = 'voice_cancelled';
@@ -369,7 +374,13 @@ export class RealtimeVoiceSessionController {
         return { ...state, status: 'cancelled', progressLabel: 'Cancelled' };
       case 'session.failed':
         await this.player.stop();
-        return { ...state, status: 'failed', errorMessage: event.message, progressLabel: 'Voice failed' };
+        return {
+          ...state,
+          status: 'failed',
+          failureCode: voiceFailureCode(event.code),
+          errorMessage: voiceFailureMessage(event.code, event.message),
+          progressLabel: 'Voice failed'
+        };
     }
   }
 
@@ -463,6 +474,30 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedText(risk, 180)).filter(Boolean)
   };
+}
+
+function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
+  switch (code) {
+    case 'speech_to_text_failed':
+    case 'language_inference_failed':
+    case 'text_to_speech_failed':
+      return code;
+    default:
+      return 'voice_failed';
+  }
+}
+
+function voiceFailureMessage(code: string, fallback: string): string {
+  switch (code) {
+    case 'speech_to_text_failed':
+      return 'Speech-to-text provider failed. Check Voice providers and try again.';
+    case 'language_inference_failed':
+      return 'Language provider failed. Check Voice providers and try again.';
+    case 'text_to_speech_failed':
+      return 'Text-to-speech provider failed. Check Voice providers and try again.';
+    default:
+      return fallback;
+  }
 }
 
 function safeBoundedText(value: string, maxLength: number): string {

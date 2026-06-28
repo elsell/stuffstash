@@ -39,6 +39,9 @@ const (
 	realtimeVoiceSearchAuthorizedAssetsPublicName = "Search inventory"
 	realtimeVoiceListAuthorizedAssetsPublicName   = "List inventory"
 	realtimeVoiceProposeActionPlanPublicName      = "Prepare change"
+	realtimeVoiceFailureSpeechToText              = "speech_to_text_failed"
+	realtimeVoiceFailureLanguageInference         = "language_inference_failed"
+	realtimeVoiceFailureTextToSpeech              = "text_to_speech_failed"
 )
 
 type RealtimeVoiceSessionInput struct {
@@ -216,7 +219,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		AudioChunks: input.AudioChunks,
 	})
 	if err != nil {
-		return err
+		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureSpeechToText, err: err}
 	}
 	transcript := strings.TrimSpace(transcription.Transcript)
 	if transcript == "" {
@@ -244,7 +247,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			PreviousTurns:  turn,
 		})
 		if err != nil {
-			return err
+			return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 		}
 		if modelTurn.Final != nil {
 			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
@@ -313,7 +316,7 @@ func (a App) finalizeRealtimeVoiceAfterDuplicateToolCall(ctx context.Context, se
 		FinalOnly:      true,
 	})
 	if err != nil {
-		return err
+		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 	}
 	if modelTurn.Final == nil {
 		return ports.ErrInvalidProviderInput
@@ -368,7 +371,7 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		MimeTypes:   session.OutputAudio.MimeTypes,
 	})
 	if err != nil {
-		return err
+		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureTextToSpeech, err: err}
 	}
 	if speech.MimeType == "" || len(speech.Chunks) == 0 {
 		return ports.ErrInvalidProviderInput
@@ -446,6 +449,10 @@ func boundedRealtimeVoiceText(value string, limit int) bool {
 }
 
 func realtimeVoiceErrorCode(err error) string {
+	var providerErr realtimeVoiceProviderStageError
+	if errors.As(err, &providerErr) {
+		return providerErr.code
+	}
 	switch {
 	case errors.Is(err, ports.ErrUnauthenticated):
 		return "unauthenticated"
@@ -456,6 +463,19 @@ func realtimeVoiceErrorCode(err error) string {
 	default:
 		return "voice_session_failed"
 	}
+}
+
+type realtimeVoiceProviderStageError struct {
+	code string
+	err  error
+}
+
+func (e realtimeVoiceProviderStageError) Error() string {
+	return e.code
+}
+
+func (e realtimeVoiceProviderStageError) Unwrap() error {
+	return e.err
 }
 
 func (a App) newRealtimeVoiceID() string {

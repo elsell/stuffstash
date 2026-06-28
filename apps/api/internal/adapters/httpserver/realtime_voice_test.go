@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -433,6 +434,28 @@ func TestRealtimeVoiceQueryRejectsMalformedFinalResponseFromProvider(t *testing.
 	}
 }
 
+func TestRealtimeVoiceQueryReportsSafeProviderStageFailureCode(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id"},
+	}, fakeSpeechToText{transcript: "Where is my water bottle?"}, failingLanguageModel{err: errors.New("raw provider response")}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
+	failed := findRealtimeEvent(t, events, "session.failed")
+	if failed["code"] != "language_inference_failed" {
+		t.Fatalf("expected language_inference_failed for provider failure, got %+v", failed)
+	}
+	if strings.Contains(failed["message"].(string), "raw provider response") {
+		t.Fatalf("provider details leaked in safe failure message: %+v", failed)
+	}
+}
+
 func TestRealtimeVoiceQueryRejectsUnexpectedToolArguments(t *testing.T) {
 	t.Parallel()
 
@@ -641,6 +664,14 @@ type finalResponseLanguageModel struct {
 
 func (m finalResponseLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	return ports.LanguageInferenceTurn{Final: &m.final}, nil
+}
+
+type failingLanguageModel struct {
+	err error
+}
+
+func (m failingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, m.err
 }
 
 type unexpectedToolArgumentLanguageModel struct{}

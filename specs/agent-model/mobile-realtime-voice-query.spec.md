@@ -131,6 +131,8 @@ Before starting local audio capture, mobile must run a safe provider-profile rea
 
 When mobile can navigate to tenant provider-profile management, a provider-readiness failure in the voice sheet should include a direct safe action to open the Voice providers screen. That action must not include provider IDs, endpoint URLs, credentials, prompt text, raw provider responses, or internal error details in the voice sheet.
 
+When the API returns a safe provider-stage failure code such as `speech_to_text_failed`, `language_inference_failed`, or `text_to_speech_failed`, mobile should preserve the code in voice session state, show a user-actionable stage-specific message, and offer the same Voice providers recovery action. The sheet must not render raw provider errors, prompts, transcripts, audio, generated speech, credentials, endpoint URLs, provider IDs, or stack traces.
+
 Mobile WebSocket handling must tolerate the server closing normally immediately after sending a terminal `session.completed` or `session.failed` event. The transport must drain already queued server messages before treating an `onclose` notification as premature, and premature close errors may include the safe numeric close code but must not surface raw close reason text.
 
 The session start message must include:
@@ -539,6 +541,7 @@ The system must:
 - Avoid logging raw audio, raw transcripts, raw prompts, raw provider responses, raw model reasoning, generated speech, credentials, or bearer tokens.
 - Avoid returning hidden resource data in transcript, progress, tool, final response, or TTS events.
 - Map provider and tool failures to safe user-facing errors.
+- Provider-stage failures must use stable safe failure codes that identify only the failed capability stage, such as speech-to-text, language inference, or text-to-speech. They must not expose provider response bodies, prompts, transcripts, generated speech, credentials, endpoint URLs, stack traces, or account details.
 
 Read tool executions must follow the safe read audit requirements of the underlying application operation. Voice read audit metadata must not include raw audio, raw transcripts, raw query text, raw prompts, raw tool inputs, raw tool outputs, raw provider responses, generated speech, or hidden resource details.
 

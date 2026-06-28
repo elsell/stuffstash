@@ -287,7 +287,7 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
-  it('offers provider setup recovery only for provider-readiness failures', () => {
+  it('offers provider setup recovery only for provider-readiness and provider-stage failures', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
       diagnosticsExpanded: false,
@@ -300,6 +300,26 @@ describe('VoiceSessionPresentation', () => {
         debugEvents: [],
         failureCode: 'provider_readiness',
         errorMessage: 'Voice provider profiles are not ready: text_to_speech.'
+      },
+      stage: 'failed',
+      tenantName: 'Main tenant'
+    }).recoveryAction).toEqual({
+      label: 'Voice providers',
+      target: 'provider_profiles'
+    });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        debugEvents: [],
+        failureCode: 'speech_to_text_failed',
+        errorMessage: 'Speech-to-text provider failed. Check Voice providers and try again.'
       },
       stage: 'failed',
       tenantName: 'Main tenant'

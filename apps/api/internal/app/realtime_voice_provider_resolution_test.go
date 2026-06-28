@@ -181,6 +181,14 @@ func (r *resolvedLanguageInference) NextTurn(_ context.Context, input ports.Lang
 	}}, nil
 }
 
+type failingResolvedLanguageInference struct {
+	err error
+}
+
+func (r *failingResolvedLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, r.err
+}
+
 type resolvedTextToSpeech struct {
 	lastText string
 }
