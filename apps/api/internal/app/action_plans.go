@@ -230,11 +230,40 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
 		return executed, nil
 	case actionplan.CommandKindArchiveAsset:
-		archiveInput, err := actionPlanArchiveAssetInput(input, command)
+		archiveInput, err := actionPlanLifecycleAssetInput(input, command)
 		if err != nil {
 			return ports.ActionPlanRecord{}, err
 		}
 		prepared, err := a.assetService.PrepareArchiveAsset(ctx, archiveInput)
+		if err != nil {
+			if errors.Is(err, ErrValidation) {
+				return ports.ActionPlanRecord{}, ErrConflict
+			}
+			return ports.ActionPlanRecord{}, err
+		}
+		executed, found, err := a.actionPlans.ExecuteUpdateAssetLifecycleActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
+			PrincipalID: input.Principal.ID,
+			From:        actionplan.StateApproved,
+			To:          actionplan.StateExecuted,
+			At:          a.clock.Now(),
+		}, prepared.PreviousAsset, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
+		if err != nil {
+			if errors.Is(err, ports.ErrConflict) {
+				return ports.ActionPlanRecord{}, ErrConflict
+			}
+			return ports.ActionPlanRecord{}, err
+		}
+		if !found {
+			return ports.ActionPlanRecord{}, ErrNotFound
+		}
+		a.assetService.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
+		return executed, nil
+	case actionplan.CommandKindRestoreAsset:
+		restoreInput, err := actionPlanLifecycleAssetInput(input, command)
+		if err != nil {
+			return ports.ActionPlanRecord{}, err
+		}
+		prepared, err := a.assetService.PrepareRestoreAsset(ctx, restoreInput)
 		if err != nil {
 			if errors.Is(err, ErrValidation) {
 				return ports.ActionPlanRecord{}, ErrConflict
@@ -425,7 +454,7 @@ func parseActionPlanMoveArguments(command ports.ActionPlanCommandRecord) (action
 	return args, nil
 }
 
-func actionPlanArchiveAssetInput(input ActionPlanDecisionInput, command ports.ActionPlanCommandRecord) (UpdateAssetLifecycleInput, error) {
+func actionPlanLifecycleAssetInput(input ActionPlanDecisionInput, command ports.ActionPlanCommandRecord) (UpdateAssetLifecycleInput, error) {
 	assetID, err := parseActionPlanAssetIDOnlyArguments(command)
 	if err != nil {
 		return UpdateAssetLifecycleInput{}, err

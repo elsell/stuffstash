@@ -40,7 +40,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:        RealtimeVoiceToolListAuthorizedAssets,
 			Label:       realtimeVoiceListAuthorizedAssetsPublicName,
-			Description: "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have or what is in a place. Arguments: optional kind item|container|location, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata and containment paths.",
+			Description: "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, and containment paths.",
 			ReadOnly:    true,
 			Parameters: ports.AgentToolParameters{
 				Properties: map[string]ports.AgentToolParameter{
@@ -48,6 +48,11 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 						Type:        ports.AgentToolParameterTypeString,
 						Description: "Optional asset kind filter.",
 						Enum:        []string{"item", "container", "location"},
+					},
+					"lifecycleState": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional lifecycle filter. Defaults to active. Use archived when the user asks to restore an archived asset.",
+						Enum:        []string{"active", "archived", "all"},
 					},
 					"parentTitle": {
 						Type:        ports.AgentToolParameterTypeString,
@@ -196,7 +201,7 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 
 	items := make([]realtimeVoiceAssetToolItem, 0, len(results.Items))
 	for _, result := range results.Items {
-		item, err := a.realtimeVoiceAssetToolItem(ctx, session, result.Asset, result.Inventory.Name.String(), realtimeVoiceMatchFields(result.Matches))
+		item, err := a.realtimeVoiceAssetToolItem(ctx, session, result.Asset, result.Inventory.Name.String(), realtimeVoiceMatchFields(result.Matches), false)
 		if err != nil {
 			return ports.AgentToolResult{}, err
 		}
@@ -237,14 +242,14 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 			InventoryID:    session.InventoryID,
 			Limit:          100,
 			Cursor:         cursor,
-			LifecycleState: "active",
+			LifecycleState: args.LifecycleState,
 			Sort:           string(ports.AssetListSortIDAsc),
 		})
 		if err != nil {
 			return ports.AgentToolResult{}, err
 		}
 		for _, visibleAsset := range result.Items {
-			toolItem, err := a.realtimeVoiceAssetToolItem(ctx, session, visibleAsset, inventoryItem.Name.String(), nil)
+			toolItem, err := a.realtimeVoiceAssetToolItem(ctx, session, visibleAsset, inventoryItem.Name.String(), nil, true)
 			if err != nil {
 				return ports.AgentToolResult{}, err
 			}
@@ -273,15 +278,16 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 		Count:   len(items),
 		HasMore: hasMore,
 		Filters: map[string]string{
-			"kind":          args.Kind.String(),
-			"parentTitle":   args.ParentTitle,
-			"locationTitle": args.LocationTitle,
+			"kind":           args.Kind.String(),
+			"lifecycleState": args.LifecycleState,
+			"parentTitle":    args.ParentTitle,
+			"locationTitle":  args.LocationTitle,
 		},
 		Items: items,
 	})
 }
 
-func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string) (realtimeVoiceAssetToolItem, error) {
+func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool) (realtimeVoiceAssetToolItem, error) {
 	ancestors, err := a.realtimeVoiceAncestors(ctx, session, item)
 	if err != nil {
 		return realtimeVoiceAssetToolItem{}, err
@@ -306,7 +312,7 @@ func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoi
 		locationTitle = item.Title.String()
 	}
 
-	return realtimeVoiceAssetToolItem{
+	toolItem := realtimeVoiceAssetToolItem{
 		Title:           item.Title.String(),
 		Kind:            item.Kind.String(),
 		Description:     item.Description.String(),
@@ -317,7 +323,11 @@ func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoi
 		LocationTitle:   locationTitle,
 		ContainmentPath: path,
 		MatchFields:     matchFields,
-	}, nil
+	}
+	if includeAssetID {
+		toolItem.AssetID = item.ID.String()
+	}
+	return toolItem, nil
 }
 
 func (a App) realtimeVoiceAncestors(ctx context.Context, session RealtimeVoiceSession, item asset.Asset) ([]asset.Asset, error) {
@@ -405,6 +415,26 @@ func realtimeVoiceOptionalAssetKind(raw any) (asset.Kind, error) {
 	return kind, nil
 }
 
+func realtimeVoiceOptionalLifecycleState(raw any) (string, error) {
+	if raw == nil {
+		return "active", nil
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return "", ports.ErrInvalidProviderInput
+	}
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "active", nil
+	}
+	switch value {
+	case "active", "archived", "all":
+		return value, nil
+	default:
+		return "", ports.ErrInvalidProviderInput
+	}
+}
+
 func realtimeVoiceMatchFields(matches []search.Match) []string {
 	fields := make([]string, 0, len(matches))
 	seen := map[string]struct{}{}
@@ -443,7 +473,7 @@ func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs,
 }
 
 func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "parentTitle", "locationTitle", "limit"); err != nil {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentTitle", "locationTitle", "limit"); err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
 	kind, err := realtimeVoiceOptionalAssetKind(args["kind"])
@@ -462,7 +492,11 @@ func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, err
 	if err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
-	return realtimeVoiceListArgs{Kind: kind, ParentTitle: parentTitle, LocationTitle: locationTitle, Limit: limit}, nil
+	lifecycleState, err := realtimeVoiceOptionalLifecycleState(args["lifecycleState"])
+	if err != nil {
+		return realtimeVoiceListArgs{}, err
+	}
+	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentTitle: parentTitle, LocationTitle: locationTitle, Limit: limit}, nil
 }
 
 func parseRealtimeVoiceActionPlanArgs(args map[string]any) (realtimeVoiceActionPlanArgs, error) {
@@ -591,10 +625,11 @@ type realtimeVoiceSearchArgs struct {
 }
 
 type realtimeVoiceListArgs struct {
-	Kind          asset.Kind
-	ParentTitle   string
-	LocationTitle string
-	Limit         int
+	Kind           asset.Kind
+	LifecycleState string
+	ParentTitle    string
+	LocationTitle  string
+	Limit          int
 }
 
 type realtimeVoiceActionPlanArgs struct {
@@ -618,6 +653,7 @@ type realtimeVoiceAssetToolOutput struct {
 }
 
 type realtimeVoiceAssetToolItem struct {
+	AssetID         string   `json:"assetId,omitempty"`
 	Title           string   `json:"title"`
 	Kind            string   `json:"kind"`
 	Description     string   `json:"description,omitempty"`

@@ -76,7 +76,7 @@ The first slice may implement creation, approval, and cancellation before comman
 
 Mobile realtime approval and cancellation must use the same action-plan application service methods as any future REST, web, or MCP review surface. The realtime adapter may translate `action.plan.approve` and `action.plan.cancel` WebSocket messages into application-service calls, but it must not update action-plan persistence directly.
 
-The first execution slices may execute approved plans only when they contain exactly one executable command. `create_location` is executed as asset creation with kind `location`; `create_asset` is executed as asset creation with kind `item` unless the validated command arguments explicitly provide `item`, `container`, or `location`. `move_asset` is executed as an asset update that changes containment. `archive_asset` is executed as an asset lifecycle transition from active to archived. Execution must use the existing asset application service boundary so tenant and inventory authorization, domain validation, audit history, undoable operations, observability, and persistence continue to behave exactly like equivalent REST or UI commands. Unsupported command kinds or multi-command plans must transition the plan to `failed` without applying inventory changes.
+The first execution slices may execute approved plans only when they contain exactly one executable command. `create_location` is executed as asset creation with kind `location`; `create_asset` is executed as asset creation with kind `item` unless the validated command arguments explicitly provide `item`, `container`, or `location`. `move_asset` is executed as an asset update that changes containment. `archive_asset` is executed as an asset lifecycle transition from active to archived. `restore_asset` is executed as an asset lifecycle transition from archived to active. Execution must use the existing asset application service boundary so tenant and inventory authorization, domain validation, audit history, undoable operations, observability, and persistence continue to behave exactly like equivalent REST or UI commands. Unsupported command kinds or multi-command plans must transition the plan to `failed` without applying inventory changes.
 
 Execution must require the plan to be in `approved` state, must be scoped by tenant ID, inventory ID, principal ID, and plan ID, and must re-authorize the initiating principal at execution time before exposing plan existence or state. Successful execution transitions the plan to `executed`; failed execution transitions it to `failed`. For every executable command, applying the inventory change, audit history, undoable operation, and terminal `executed` plan transition must be one repository unit of work so a failed terminal transition cannot leave duplicate-prone inventory mutations behind. Execution must not trust prior approval as authorization and must not execute commands from `proposed`, `cancelled`, `executed`, or `failed` plans.
 
@@ -134,6 +134,12 @@ The first executable `archive_asset` argument shape is:
 - `assetId`: required existing active asset ID in the same inventory.
 
 The execution service must reject command arguments outside this shape for executable archive commands until richer command schemas are specified. `archive_asset` must use the same lifecycle rules as the asset application service, including rejecting archive when the asset has active children.
+
+The first executable `restore_asset` argument shape is:
+
+- `assetId`: required existing archived asset ID in the same inventory.
+
+The execution service must reject command arguments outside this shape for executable restore commands until richer command schemas are specified. `restore_asset` must use the same lifecycle rules as the asset application service, including rejecting restore when the asset has an archived or unavailable parent.
 
 ## Command Rules
 

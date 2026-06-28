@@ -375,7 +375,7 @@ Tool results provided to the language model must be structured, safe, and useful
 - Custom fields only after a field sensitivity and provider-disclosure policy exists. The first improved catalog must omit custom field values from cloud-provider tool results.
 - Match metadata that helps the model understand why a result was returned.
 
-Tool results must not include raw authorization decisions, hidden resources, bearer tokens, provider credentials, raw prompts, raw model responses, raw audio, generated speech, custom field values before a sensitivity policy exists, internal stack traces, or infrastructure details. Internal resource identifiers may be provided to the in-process agent loop only when needed to chain read-only tool calls, and final user-facing responses must not speak or display those identifiers.
+Tool results must not include raw authorization decisions, hidden resources, bearer tokens, provider credentials, raw prompts, raw model responses, raw audio, generated speech, custom field values before a sensitivity policy exists, internal stack traces, or infrastructure details. Internal resource identifiers may be provided to the in-process agent loop only when needed to chain read-only tool calls or prepare an action plan for a visible resource the tool returned. Final user-facing responses, mobile progress events, and mobile action-plan review text must not speak or display those identifiers.
 
 The first implementation may expose structured tool results as compact JSON strings through the language inference port while provider-native tool schemas are still evolving. The JSON shape must remain project-owned and provider-independent.
 

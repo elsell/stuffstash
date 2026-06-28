@@ -106,6 +106,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Approved mobile voice action plans can now execute the first single create command slice through the existing asset application boundary, atomically persist the asset/audit/undoable operation with the terminal action-plan state, and stream safe `action.plan.executed` or `action.plan.failed` review outcomes back to mobile.
 - Approved mobile voice action plans can now execute a single `move_asset` command through the existing asset movement boundary, atomically persist the asset move/audit/undoable operation with the terminal action-plan state in memory and GORM adapters, and stream safe execution outcomes back to mobile.
 - Approved mobile voice action plans can now execute a single `archive_asset` command through the existing asset lifecycle boundary, atomically persist the archive/audit/undoable operation with the terminal action-plan state in memory and GORM adapters, and stream safe execution outcomes back to mobile.
+- Approved mobile voice action plans can now execute a single `restore_asset` command through the existing asset lifecycle boundary, atomically persist the restore/audit/undoable operation with the terminal action-plan state, and stream safe execution outcomes back to mobile.
 
 ## Known Gaps
 

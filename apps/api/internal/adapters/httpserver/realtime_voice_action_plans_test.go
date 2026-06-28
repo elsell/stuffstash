@@ -3,14 +3,17 @@ package httpserver
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"nhooyr.io/websocket"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -56,20 +59,20 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 func TestRealtimeVoiceActionPlanApprovalUsesOpenReviewSession(t *testing.T) {
 	t.Parallel()
 
-	ctx, connection, sessionID := openRealtimeVoiceReviewSession(t)
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSession(t)
 
 	writeRealtimeMessage(t, ctx, connection, map[string]any{
 		"type":      "action.plan.approve",
 		"seq":       4,
 		"sessionId": sessionID,
-		"planId":    "plan-id",
+		"planId":    planID,
 	})
 	approved := readRealtimeMessage(t, ctx, connection)
-	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
 		t.Fatalf("expected safe approval event, got %+v", approved)
 	}
 	executed := readRealtimeMessage(t, ctx, connection)
-	if executed["type"] != "action.plan.executed" || executed["planId"] != "plan-id" || executed["status"] != "executed" {
+	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
 		t.Fatalf("expected safe execution event, got %+v", executed)
 	}
 	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
@@ -79,7 +82,7 @@ func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithSetup(t, moveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetup(t, moveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
@@ -89,14 +92,14 @@ func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
 		"type":      "action.plan.approve",
 		"seq":       4,
 		"sessionId": sessionID,
-		"planId":    "plan-id",
+		"planId":    planID,
 	})
 	approved := readRealtimeMessage(t, ctx, connection)
-	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
 		t.Fatalf("expected safe approval event, got %+v", approved)
 	}
 	executed := readRealtimeMessage(t, ctx, connection)
-	if executed["type"] != "action.plan.executed" || executed["planId"] != "plan-id" || executed["status"] != "executed" {
+	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
 		t.Fatalf("expected safe move execution event, got %+v", executed)
 	}
 	moved, err := application.GetAsset(context.Background(), app.GetAssetInput{
@@ -120,7 +123,7 @@ func TestRealtimeVoiceActionPlanApprovalExecutesArchiveAsset(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithSetup(t, archiveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetup(t, archiveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
@@ -130,14 +133,14 @@ func TestRealtimeVoiceActionPlanApprovalExecutesArchiveAsset(t *testing.T) {
 		"type":      "action.plan.approve",
 		"seq":       4,
 		"sessionId": sessionID,
-		"planId":    "plan-id",
+		"planId":    planID,
 	})
 	approved := readRealtimeMessage(t, ctx, connection)
-	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
 		t.Fatalf("expected safe approval event, got %+v", approved)
 	}
 	executed := readRealtimeMessage(t, ctx, connection)
-	if executed["type"] != "action.plan.executed" || executed["planId"] != "plan-id" || executed["status"] != "executed" {
+	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
 		t.Fatalf("expected safe archive execution event, got %+v", executed)
 	}
 	archived, err := application.GetAsset(context.Background(), app.GetAssetInput{
@@ -161,7 +164,7 @@ func TestRealtimeVoiceActionPlanArchiveFailureLeavesAssetActive(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, archiveActionPlanProposalLanguageModel{}, []string{
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, archiveActionPlanProposalLanguageModel{}, []string{
 		"location-id", "location-undo-id", "location-audit-id",
 		"asset-id", "asset-undo-id", "asset-audit-id",
 		"child-id", "child-undo-id", "child-audit-id",
@@ -177,14 +180,14 @@ func TestRealtimeVoiceActionPlanArchiveFailureLeavesAssetActive(t *testing.T) {
 		"type":      "action.plan.approve",
 		"seq":       4,
 		"sessionId": sessionID,
-		"planId":    "plan-id",
+		"planId":    planID,
 	})
 	approved := readRealtimeMessage(t, ctx, connection)
-	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
 		t.Fatalf("expected safe approval event, got %+v", approved)
 	}
 	failed := readRealtimeMessage(t, ctx, connection)
-	if failed["type"] != "action.plan.failed" || failed["planId"] != "plan-id" || failed["status"] != "failed" {
+	if failed["type"] != "action.plan.failed" || failed["planId"] != planID || failed["status"] != "failed" {
 		t.Fatalf("expected safe archive failure event, got %+v", failed)
 	}
 	item, err := application.GetAsset(context.Background(), app.GetAssetInput{
@@ -204,23 +207,138 @@ func TestRealtimeVoiceActionPlanArchiveFailureLeavesAssetActive(t *testing.T) {
 	assertSafeRealtimeEvents(t, []map[string]any{approved, failed}, []string{"Toolbox", "Wrench", "apiKey", "Bearer", "provider_session_id"})
 }
 
-func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) {
+func TestRealtimeVoiceActionPlanApprovalExecutesRestoreAsset(t *testing.T) {
 	t.Parallel()
 
-	ctx, connection, sessionID := openRealtimeVoiceReviewSessionWithModel(t, unsupportedActionPlanProposalLanguageModel{})
+	var application app.App
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, restoreActionPlanProposalLanguageModel{}, []string{
+		"location-id", "location-undo-id", "location-audit-id",
+		"asset-id", "asset-undo-id", "asset-audit-id",
+		"seed-archive-undo-id", "seed-archive-audit-id",
+		"voice-session-id", "plan-id", "command-id", "response-id", "restore-undo-id", "restore-audit-id",
+	}, func(seedApplication app.App) {
+		application = seedApplication
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
+		_, err := seedApplication.ArchiveAsset(context.Background(), app.UpdateAssetLifecycleInput{
+			Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+			Source:      audit.SourceAPI,
+			RequestID:   "seed-archive-water-bottle",
+			TenantID:    tenant.ID("tenant-home"),
+			InventoryID: inventory.InventoryID("inventory-home"),
+			AssetID:     asset.ID("asset-id"),
+		})
+		if err != nil {
+			t.Fatalf("seed archived asset: %v", err)
+		}
+	})
 
 	writeRealtimeMessage(t, ctx, connection, map[string]any{
 		"type":      "action.plan.approve",
 		"seq":       4,
 		"sessionId": sessionID,
-		"planId":    "plan-id",
+		"planId":    planID,
 	})
 	approved := readRealtimeMessage(t, ctx, connection)
-	if approved["type"] != "action.plan.approved" || approved["planId"] != "plan-id" || approved["status"] != "approved" {
+	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
+		t.Fatalf("expected safe approval event, got %+v", approved)
+	}
+	executed := readRealtimeMessage(t, ctx, connection)
+	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
+		t.Fatalf("expected safe restore execution event, got %+v", executed)
+	}
+	restored, err := application.GetAsset(context.Background(), app.GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		Source:      audit.SourceAPI,
+		RequestID:   "assert-restored-asset",
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		AssetID:     asset.ID("asset-id"),
+	})
+	if err != nil {
+		t.Fatalf("read restored asset: %v", err)
+	}
+	if restored.LifecycleState != asset.LifecycleStateActive {
+		t.Fatalf("expected realtime-approved restore to update asset lifecycle, got %+v", restored)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"Water bottle", "Office", "apiKey", "Bearer", "provider_session_id"})
+}
+
+func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *testing.T) {
+	t.Parallel()
+
+	authorizer := &denyEditAfterProposalAuthorizer{delegate: memory.NewAuthorizer()}
+	application := newSeededTestAppWithAuthorizer(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids: []string{
+			"location-id", "location-undo-id", "location-audit-id",
+			"asset-id", "asset-undo-id", "asset-audit-id",
+			"seed-archive-undo-id", "seed-archive-audit-id",
+			"voice-session-id", "plan-id", "command-id", "response-id", "restore-undo-id", "restore-audit-id",
+		},
+	}, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Restore the water bottle."}, restoreActionPlanProposalLanguageModel{}, fakeTextToSpeech{
+		chunks: [][]byte{[]byte("spoken-audio")},
+	})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
+	if _, err := application.ArchiveAsset(context.Background(), app.UpdateAssetLifecycleInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		Source:      audit.SourceAPI,
+		RequestID:   "seed-archive-water-bottle",
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		AssetID:     asset.ID("asset-id"),
+	}); err != nil {
+		t.Fatalf("seed archived asset: %v", err)
+	}
+
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionForApplication(t, application)
+	authorizer.denyEdit.Store(true)
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.approve",
+		"seq":       4,
+		"sessionId": sessionID,
+		"planId":    planID,
+	})
+	failed := readRealtimeMessage(t, ctx, connection)
+	if failed["type"] != "session.failed" {
+		t.Fatalf("expected safe approval denial, got %+v", failed)
+	}
+	archived, err := application.GetAsset(context.Background(), app.GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		Source:      audit.SourceAPI,
+		RequestID:   "assert-restore-denied-asset",
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		AssetID:     asset.ID("asset-id"),
+	})
+	if err != nil {
+		t.Fatalf("read denied restore asset: %v", err)
+	}
+	if archived.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected denied restore to leave asset archived, got %+v", archived)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{failed}, []string{"asset-id", "tenant-home", "inventory-home", "apiKey", "Bearer", "provider_session_id"})
+}
+
+func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) {
+	t.Parallel()
+
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithModel(t, unsupportedActionPlanProposalLanguageModel{})
+
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.approve",
+		"seq":       4,
+		"sessionId": sessionID,
+		"planId":    planID,
+	})
+	approved := readRealtimeMessage(t, ctx, connection)
+	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
 		t.Fatalf("expected safe approval event, got %+v", approved)
 	}
 	failed := readRealtimeMessage(t, ctx, connection)
-	if failed["type"] != "action.plan.failed" || failed["planId"] != "plan-id" || failed["status"] != "failed" {
+	if failed["type"] != "action.plan.failed" || failed["planId"] != planID || failed["status"] != "failed" {
 		t.Fatalf("expected safe execution failure event, got %+v", failed)
 	}
 	assertSafeRealtimeEvents(t, []map[string]any{approved, failed}, []string{"asset-1", "location-1", "apiKey", "Bearer", "provider_session_id"})
@@ -229,15 +347,15 @@ func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) 
 func TestRealtimeVoiceActionPlanCancellationUsesOpenReviewSession(t *testing.T) {
 	t.Parallel()
 
-	ctx, connection, sessionID := openRealtimeVoiceReviewSession(t)
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSession(t)
 	writeRealtimeMessage(t, ctx, connection, map[string]any{
 		"type":      "action.plan.cancel",
 		"seq":       4,
 		"sessionId": sessionID,
-		"planId":    "plan-id",
+		"planId":    planID,
 	})
 	cancelled := readRealtimeMessage(t, ctx, connection)
-	if cancelled["type"] != "action.plan.cancelled" || cancelled["planId"] != "plan-id" || cancelled["status"] != "cancelled" {
+	if cancelled["type"] != "action.plan.cancelled" || cancelled["planId"] != planID || cancelled["status"] != "cancelled" {
 		t.Fatalf("expected safe cancellation event, got %+v", cancelled)
 	}
 }
@@ -303,7 +421,7 @@ func TestRealtimeVoiceActionPlanDecisionRejectsUnsafeMessages(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx, connection, _ := openRealtimeVoiceReviewSession(t)
+			ctx, connection, _, _ := openRealtimeVoiceReviewSession(t)
 			writeRealtimeMessage(t, ctx, connection, tt.message)
 			failed := readRealtimeMessage(t, ctx, connection)
 			if failed["type"] != "session.failed" {
@@ -314,19 +432,19 @@ func TestRealtimeVoiceActionPlanDecisionRejectsUnsafeMessages(t *testing.T) {
 	}
 }
 
-func openRealtimeVoiceReviewSession(t *testing.T) (context.Context, *websocket.Conn, string) {
+func openRealtimeVoiceReviewSession(t *testing.T) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithModel(t, actionPlanProposalLanguageModel{})
 }
 
-func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.LanguageInferenceProvider) (context.Context, *websocket.Conn, string) {
+func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.LanguageInferenceProvider) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetup(t, languageInference, nil)
 }
 
-func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.LanguageInferenceProvider, setup func(app.App)) (context.Context, *websocket.Conn, string) {
+func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.LanguageInferenceProvider, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	ids := []string{"voice-session-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
@@ -340,7 +458,7 @@ func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference por
 	return openRealtimeVoiceReviewSessionWithSetupAndIDs(t, languageInference, ids, setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	application := newSeededTestAppWithVoice(t, seededState{
@@ -353,6 +471,12 @@ func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInferen
 	if setup != nil {
 		setup(application)
 	}
+	return openRealtimeVoiceReviewSessionForApplication(t, application)
+}
+
+func openRealtimeVoiceReviewSessionForApplication(t *testing.T, application app.App) (context.Context, *websocket.Conn, string, string) {
+	t.Helper()
+
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
 
@@ -391,8 +515,60 @@ func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInferen
 	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
 
 	events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
-	findRealtimeEvent(t, events, "action.plan.proposed")
-	return ctx, connection, sessionID
+	proposed := findRealtimeEvent(t, events, "action.plan.proposed")
+	actionPlan, ok := proposed["actionPlan"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected action plan payload, got %+v", proposed)
+	}
+	planID, _ := actionPlan["planId"].(string)
+	if planID == "" {
+		t.Fatalf("expected proposed action plan id, got %+v", actionPlan)
+	}
+	return ctx, connection, sessionID, planID
+}
+
+type denyEditAfterProposalAuthorizer struct {
+	delegate ports.Authorizer
+	denyEdit atomic.Bool
+}
+
+func (d *denyEditAfterProposalAuthorizer) CheckTenant(ctx context.Context, principal identity.Principal, permission ports.TenantPermission, tenantID tenant.ID) error {
+	return d.delegate.CheckTenant(ctx, principal, permission, tenantID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) CheckInventory(ctx context.Context, principal identity.Principal, permission ports.InventoryPermission, inventoryID inventory.InventoryID) error {
+	if d.denyEdit.Load() && permission == ports.InventoryPermissionEditAsset {
+		return ports.ErrForbidden
+	}
+	return d.delegate.CheckInventory(ctx, principal, permission, inventoryID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) ListViewableInventoryIDs(ctx context.Context, principal identity.Principal, tenantID tenant.ID, candidates []inventory.InventoryID) ([]inventory.InventoryID, error) {
+	return d.delegate.ListViewableInventoryIDs(ctx, principal, tenantID, candidates)
+}
+
+func (d *denyEditAfterProposalAuthorizer) GrantTenantOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID) error {
+	return d.delegate.GrantTenantOwner(ctx, principal, tenantID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) GrantInventoryOwner(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return d.delegate.GrantInventoryOwner(ctx, principal, tenantID, inventoryID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) GrantInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return d.delegate.GrantInventoryViewer(ctx, principal, tenantID, inventoryID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) GrantInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return d.delegate.GrantInventoryEditor(ctx, principal, tenantID, inventoryID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) RevokeInventoryViewer(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return d.delegate.RevokeInventoryViewer(ctx, principal, tenantID, inventoryID)
+}
+
+func (d *denyEditAfterProposalAuthorizer) RevokeInventoryEditor(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return d.delegate.RevokeInventoryEditor(ctx, principal, tenantID, inventoryID)
 }
 
 type actionPlanProposalLanguageModel struct{}
@@ -509,4 +685,69 @@ func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 			DisplayResponse: "I prepared that archive for review.",
 		},
 	}, nil
+}
+
+type restoreActionPlanProposalLanguageModel struct{}
+
+func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "list-archived-water-bottle",
+				Name: "list_authorized_assets",
+				Arguments: map[string]any{
+					"kind":           "item",
+					"lifecycleState": "archived",
+					"limit":          float64(10),
+				},
+			}},
+		}, nil
+	}
+	if len(input.ToolResults) == 1 {
+		assetID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Water bottle", "archived")
+		if err != nil {
+			return ports.LanguageInferenceTurn{}, err
+		}
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "plan-tool-call",
+				Name: "propose_action_plan",
+				Arguments: map[string]any{
+					"commandKind":                "restore_asset",
+					"intentSummary":              "Restore the water bottle.",
+					"modelInterpretationSummary": "The user wants the visible archived water bottle restored.",
+					"confirmationSummary":        "Restore water bottle?",
+					"commandSummary":             "Restore water bottle",
+					"argumentsJson":              `{"assetId":"` + assetID + `"}`,
+					"riskSummary":                "Restores an item in this inventory.",
+				},
+			}},
+		}, nil
+	}
+	return ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindClarification,
+			SpokenResponse:  "I prepared that restore for review.",
+			DisplayResponse: "I prepared that restore for review.",
+		},
+	}, nil
+}
+
+func firstToolResultAssetID(content string, title string, lifecycleState string) (string, error) {
+	var output struct {
+		Items []struct {
+			AssetID        string `json:"assetId"`
+			Title          string `json:"title"`
+			LifecycleState string `json:"lifecycleState"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal([]byte(content), &output); err != nil {
+		return "", ports.ErrInvalidProviderInput
+	}
+	for _, item := range output.Items {
+		if item.Title == title && item.LifecycleState == lifecycleState && item.AssetID != "" {
+			return item.AssetID, nil
+		}
+	}
+	return "", ports.ErrInvalidProviderInput
 }
