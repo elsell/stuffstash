@@ -9,7 +9,7 @@ describe('VoiceSessionSheetPresentation', () => {
     });
   });
 
-  it('uses the body for transcript, response, errors, and diagnostics', () => {
+  it('uses the body for transcript, response, progress, errors, and diagnostics', () => {
     expect(
       buildVoiceSessionSheetBodyPresentation(readyVoiceState(null), {
         transcript: 'Where is my water bottle?'
@@ -18,6 +18,11 @@ describe('VoiceSessionSheetPresentation', () => {
     expect(
       buildVoiceSessionSheetBodyPresentation(readyVoiceState(null), {
         response: 'Your water bottle is in the Office.'
+      }, false).hasBodyContent
+    ).toBe(true);
+    expect(
+      buildVoiceSessionSheetBodyPresentation(readyVoiceState(null), {
+        progressSteps: ['Sending audio']
       }, false).hasBodyContent
     ).toBe(true);
     expect(

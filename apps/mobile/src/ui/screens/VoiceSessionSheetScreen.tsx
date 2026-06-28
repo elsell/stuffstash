@@ -161,6 +161,18 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
+            {session.progressSteps.length ? (
+              <View style={styles.progressSection}>
+                <Text style={styles.sectionLabel}>Progress</Text>
+                {session.progressSteps.map((step, index) => (
+                  <View key={`${step}-${index.toString()}`} style={styles.progressStepRow}>
+                    <Text style={styles.progressStepIndex}>{(index + 1).toString()}</Text>
+                    <Text style={styles.progressStepText}>{step}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
             {session.response ? (
               <View style={styles.responseSection}>
                 <View style={styles.responseIcon}>
@@ -545,6 +557,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: spacing.xs
+  },
+  progressSection: {
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  progressStepIndex: {
+    color: colors.accentStrong,
+    fontSize: 12,
+    fontWeight: '900',
+    width: 24
+  },
+  progressStepRow: {
+    alignItems: 'flex-start',
+    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm
+  },
+  progressStepText: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20
   },
   progressTitle: {
     color: colors.text,

@@ -117,6 +117,7 @@ export type VoiceRealtimeState = {
   readonly inventoryName: string;
   readonly actionPlan?: VoiceActionPlanProposal;
   readonly reviewDecisionPending?: boolean;
+  readonly progressSteps?: readonly string[];
   readonly partialTranscript?: string;
   readonly transcript?: string;
   readonly spokenResponse?: string;
@@ -213,6 +214,7 @@ export class RealtimeVoiceSessionController {
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
       progressLabel: 'Sending audio',
+      progressSteps: ['Sending audio'],
       debugEvents: []
     }];
     onState?.(states[0]);
@@ -266,6 +268,7 @@ export class RealtimeVoiceSessionController {
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
       progressLabel: 'Cancelled',
+      progressSteps: ['Cancelled'],
       debugEvents: []
     };
   }
@@ -285,24 +288,13 @@ export class RealtimeVoiceSessionController {
   private async reduceEvent(state: VoiceRealtimeState, event: VoiceRealtimeEvent): Promise<VoiceRealtimeState> {
     switch (event.type) {
       case 'session.started':
-        return { ...state, status: 'processing', progressLabel: 'Connected' };
+        return withProgressStep(state, 'Connected', { status: 'processing' });
       case 'transcript.delta':
-        return {
-          ...state,
-          status: 'processing',
-          partialTranscript: event.text,
-          progressLabel: 'Transcribing'
-        };
+        return withProgressStep(state, 'Transcribing', { status: 'processing', partialTranscript: event.text });
       case 'transcript.final':
-        return {
-          ...state,
-          status: 'processing',
-          partialTranscript: undefined,
-          transcript: event.text,
-          progressLabel: 'Thinking'
-        };
+        return withProgressStep(state, 'Thinking', { status: 'processing', partialTranscript: undefined, transcript: event.text });
       case 'agent.progress':
-        return { ...state, status: 'processing', progressLabel: event.message };
+        return withProgressStep(state, event.message, { status: 'processing' });
       case 'tool.call.started':
       case 'tool.call.completed':
       case 'tool.call.failed':
@@ -311,92 +303,71 @@ export class RealtimeVoiceSessionController {
           status: 'processing',
           debugEvents: this.options.diagnosticsEnabled
             ? [...state.debugEvents, safeDiagnosticEvent(event)]
-            : state.debugEvents,
-          progressLabel: event.toolLabel
+            : state.debugEvents
         };
       case 'action.plan.proposed':
-        return {
-          ...state,
-          status: 'review',
-          actionPlan: safeActionPlanProposal(event.actionPlan),
-          progressLabel: 'Review needed'
-        };
+        return withProgressStep(state, 'Review needed', { status: 'review', actionPlan: safeActionPlanProposal(event.actionPlan) });
       case 'action.plan.approved':
-        return {
-          ...state,
+        return withProgressStep(state, 'Applying change', {
           status: 'processing',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'approved' }
             : state.actionPlan,
-          reviewDecisionPending: true,
-          progressLabel: 'Applying change'
-        };
+          reviewDecisionPending: true
+        });
       case 'action.plan.cancelled':
-        return {
-          ...state,
+        return withProgressStep(state, 'Change cancelled', {
           status: 'completed',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'cancelled' }
-            : state.actionPlan,
-          progressLabel: 'Change cancelled'
-        };
+            : state.actionPlan
+        });
       case 'action.plan.executed':
-        return {
-          ...state,
+        return withProgressStep(state, 'Change applied', {
           status: 'completed',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'executed' }
             : state.actionPlan,
-          reviewDecisionPending: false,
-          progressLabel: 'Change applied'
-        };
+          reviewDecisionPending: false
+        });
       case 'action.plan.failed':
         await this.player.stop();
-        return {
-          ...state,
+        return withProgressStep(state, 'Change failed', {
           status: 'failed',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'failed' }
             : state.actionPlan,
           reviewDecisionPending: false,
-          errorMessage: event.message ?? 'The approved change could not be applied safely.',
-          progressLabel: 'Change failed'
-        };
+          errorMessage: 'The approved change could not be applied safely.'
+        });
       case 'assistant.response.started':
-        return { ...state, status: state.actionPlan ? 'review' : 'processing', progressLabel: 'Preparing response' };
+        return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing' });
       case 'assistant.response.completed':
-        return {
-          ...state,
-          status: state.actionPlan ? 'review' : 'processing',
-          spokenResponse: event.response.displayResponse,
-          progressLabel: 'Preparing speech'
-        };
+        return withProgressStep(state, 'Preparing speech', { status: state.actionPlan ? 'review' : 'processing', spokenResponse: event.response.displayResponse });
       case 'tts.audio.started':
         this.ttsMimeType = event.mimeType;
-        return { ...state, status: state.actionPlan ? 'review' : 'speaking', progressLabel: 'Speaking' };
+        return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.chunk':
         await this.player.playChunk(event.audioBase64, this.ttsMimeType);
-        return { ...state, status: state.actionPlan ? 'review' : 'speaking', progressLabel: 'Speaking' };
+        return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.completed':
-        return { ...state, status: state.actionPlan ? 'review' : 'speaking', progressLabel: 'Speech complete' };
+        return withProgressStep(state, 'Speech complete', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'session.completed':
         await this.player.stop();
         return state.actionPlan
-          ? { ...state, status: 'review', progressLabel: 'Review needed' }
-          : { ...state, status: 'completed', progressLabel: 'Done' };
+          ? withProgressStep(state, 'Review needed', { status: 'review' })
+          : withProgressStep(state, 'Done', { status: 'completed' });
       case 'session.cancelled':
         await this.player.stop();
-        return { ...state, status: 'cancelled', partialTranscript: undefined, progressLabel: 'Cancelled' };
+        return withProgressStep(state, 'Cancelled', { status: 'cancelled', partialTranscript: undefined });
       case 'session.failed':
         await this.player.stop();
-        return {
-          ...state,
+        return withProgressStep(state, 'Voice failed', {
           status: 'failed',
           partialTranscript: undefined,
           failureCode: voiceFailureCode(event.code),
-          errorMessage: voiceFailureMessage(event.code, event.message),
-          progressLabel: 'Voice failed'
-        };
+          errorMessage: voiceFailureMessage(event.code, event.message)
+        });
     }
   }
 
@@ -422,6 +393,26 @@ export class RealtimeVoiceSessionController {
       inventoryName: inventory.name
     };
   }
+}
+
+const maxVisibleProgressSteps = 12;
+
+function withProgressStep(
+  state: VoiceRealtimeState,
+  label: string,
+  updates: Partial<VoiceRealtimeState>
+): VoiceRealtimeState {
+  const safeLabel = safeBoundedText(label, 100) || 'Working';
+  const currentSteps = state.progressSteps ?? [];
+  const nextSteps = currentSteps.at(-1) === safeLabel
+    ? currentSteps
+    : [...currentSteps, safeLabel].slice(-maxVisibleProgressSteps);
+  return {
+    ...state,
+    ...updates,
+    progressLabel: safeLabel,
+    progressSteps: nextSteps
+  };
 }
 
 function safeDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed' }>): VoiceSafeDiagnosticEvent {

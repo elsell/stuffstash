@@ -138,6 +138,7 @@ export type VoiceSessionPresentation = {
   readonly diagnostics: readonly string[] | null;
   readonly isBusy: boolean;
   readonly progressLabel: string;
+  readonly progressSteps: readonly string[];
   readonly recoveryAction?: VoiceSessionRecoveryAction;
   readonly response?: string;
   readonly title: string;
@@ -204,6 +205,7 @@ export function buildVoiceSessionPresentation({
     diagnostics,
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',
     progressLabel,
+    progressSteps: realtime?.progressSteps ?? [],
     recoveryAction: isProviderRecoveryFailure(realtime?.failureCode)
       ? { label: 'Voice providers', target: 'provider_profiles' }
       : undefined,

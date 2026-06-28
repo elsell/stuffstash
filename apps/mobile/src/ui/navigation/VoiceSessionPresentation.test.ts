@@ -82,6 +82,27 @@ describe('VoiceSessionPresentation', () => {
     expect(session.diagnostics).toEqual(['Inventory list: Completed']);
   });
 
+  it('exposes safe progress steps without requiring developer diagnostics', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Searching visible inventory',
+        progressSteps: ['Sending audio', 'Connected', 'Searching visible inventory'],
+        debugEvents: [{ label: 'Inventory search', status: 'Completed' }]
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.progressSteps).toEqual(['Sending audio', 'Connected', 'Searching visible inventory']);
+    expect(session.diagnostics).toBeNull();
+  });
+
   it('uses the partial transcript until the final transcript is available', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

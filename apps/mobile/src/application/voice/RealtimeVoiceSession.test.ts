@@ -119,8 +119,50 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       transcript: 'Where is the drill?',
-      spokenResponse: 'The drill is in the garage.'
+      spokenResponse: 'The drill is in the garage.',
+      progressSteps: [
+        'Sending audio',
+        'Connected',
+        'Transcribing',
+        'Thinking',
+        'Searching visible inventory',
+        'Preparing speech',
+        'Done'
+      ]
     });
+  });
+
+  it('bounds progress steps and collapses adjacent duplicate labels', async () => {
+    const events: VoiceRealtimeEvent[] = [
+      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      { type: 'agent.progress', seq: 2, sessionId: 'session-1', status: 'duplicate', message: 'Checking shelves' },
+      { type: 'agent.progress', seq: 3, sessionId: 'session-1', status: 'duplicate', message: 'Checking shelves' },
+      ...Array.from({ length: 13 }, (_, index) => ({
+        type: 'agent.progress' as const,
+        seq: index + 4,
+        sessionId: 'session-1',
+        status: 'step',
+        message: `Safe progress ${index + 1}`
+      })),
+      { type: 'session.completed', seq: 17, sessionId: 'session-1' }
+    ];
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport(events),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+    const progressSteps = states.at(-1)?.progressSteps ?? [];
+
+    expect(progressSteps).toHaveLength(12);
+    expect(progressSteps).not.toContain('Checking shelves');
+    expect(progressSteps.at(-1)).toBe('Done');
+    for (let index = 1; index < progressSteps.length; index++) {
+      expect(progressSteps[index]).not.toBe(progressSteps[index - 1]);
+    }
   });
 
   it('enters review when the API proposes an action plan', async () => {
@@ -525,13 +567,18 @@ describe('RealtimeVoiceSessionController', () => {
       new FakePlayer(),
       { diagnosticsEnabled: true }
     );
+    const visibleProgressLabels: string[] = [];
 
     await controller.start();
-    const states = await controller.stop();
+    const states = await controller.stop((state) => {
+      visibleProgressLabels.push(state.progressLabel ?? '');
+    });
 
     expect(states.at(-1)?.debugEvents).toEqual([
       { label: 'Inventory lookup', status: 'Updated' }
     ]);
+    expect(visibleProgressLabels.join(' ')).not.toContain('bearer secret');
+    expect(states.at(-1)?.progressSteps?.join(' ')).not.toContain('bearer secret');
   });
 });
 
@@ -667,7 +714,7 @@ class FailedReviewDecisionTransport extends ReviewDecisionTransport {
       sessionId: 'session-1',
       planId,
       status: 'failed',
-      message: 'The approved change could not be applied safely.'
+      message: 'stack trace raw prompt bearer secret'
     });
     this.finish();
   }
