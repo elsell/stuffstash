@@ -26,6 +26,98 @@ describe('VoiceSessionPresentation', () => {
     expect(buildVoiceAccessoryPresentation({ pathname: '/assets/asset-1', stage: 'completed', status: 'ready' }).primaryAction).toBe('expand');
   });
 
+  it('summarizes active realtime progress in the collapsed accessory', () => {
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        partialTranscript: 'Where is my secret',
+        progressLabel: 'Searching visible inventory',
+        debugEvents: []
+      },
+      stage: 'processing',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Checking inventory',
+      subtitle: 'Current inventory'
+    });
+  });
+
+  it('summarizes terminal realtime answers and failures in the collapsed accessory', () => {
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'completed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Done',
+        spokenResponse: 'Your water bottle is in the Office.',
+        debugEvents: []
+      },
+      stage: 'completed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Answer ready',
+      subtitle: 'Your water bottle is in the Office.'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        failureCode: 'speech_to_text_failed',
+        errorMessage: 'Speech-to-text provider failed. Check Voice providers and try again.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Voice failed',
+      subtitle: 'Check Voice providers and try again.'
+    });
+  });
+
+  it('does not leak raw realtime details into the collapsed accessory', () => {
+    const unsafeText = 'raw prompt bearer secret stack trace provider id transcript';
+
+    const processing = buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        partialTranscript: unsafeText,
+        progressLabel: unsafeText,
+        debugEvents: [{ label: 'Inventory lookup', status: 'Updated' }]
+      },
+      stage: 'processing',
+      status: 'ready'
+    });
+    expect(`${processing.title} ${processing.subtitle}`).not.toContain('bearer secret');
+    expect(processing.title).toBe('Checking inventory');
+
+    const failed = buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        errorMessage: unsafeText,
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    });
+    expect(`${failed.title} ${failed.subtitle}`).not.toContain('bearer secret');
+    expect(failed.subtitle).toBe('Open for details.');
+  });
+
   it('does not promise to start voice while loading or unavailable', () => {
     expect(buildVoiceAccessoryPresentation({ pathname: '/', stage: 'ready', status: 'loading' })).toMatchObject({
       accessibilityLabel: 'Open voice status',

@@ -15,6 +15,7 @@ export function VoiceBottomAccessory() {
   const { startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const presentation = buildVoiceAccessoryPresentation({
     pathname,
+    realtime: state.status === 'ready' ? state.realtime : null,
     stage: state.stage,
     status: state.status
   });

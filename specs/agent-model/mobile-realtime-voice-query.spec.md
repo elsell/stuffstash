@@ -85,6 +85,8 @@ The mobile app must expose realtime voice as a global interaction layer anchored
 
 The collapsed voice accessory is the persistent voice affordance. Activating it must expand an active voice session surface over the current mobile screen without leaving the user's current tab, asset, location, search, or add context. The expanded surface should use a platform-native detent sheet when the mobile runtime provides one. On platforms where the native bottom accessory or native sheet detents are unavailable or constrained, the app may render the same collapsed voice control and session surface through equivalent custom UI, but the product behavior must remain the same.
 
+When a realtime session is active or has a terminal result, the collapsed voice accessory should reflect the latest safe session state instead of only generic stage labels. It may show the current safe progress label, review-needed status, safe failure summary, and the final user-facing spoken response. It must not show partial transcript text, raw transcripts, diagnostics, tool labels, tool arguments, provider errors, prompts, credentials, internal IDs, or stack traces.
+
 The expanded session surface must:
 
 - Visually read as an expansion of the bottom voice accessory.

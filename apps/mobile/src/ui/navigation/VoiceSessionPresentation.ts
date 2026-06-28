@@ -16,10 +16,12 @@ export type VoiceAccessoryPresentation = {
 
 export function buildVoiceAccessoryPresentation({
   pathname,
+  realtime,
   status,
   stage
 }: {
   readonly pathname: string;
+  readonly realtime?: VoiceRealtimeState | null;
   readonly status?: 'error' | 'loading' | 'ready';
   readonly stage: VoiceInteractionStage;
 }): VoiceAccessoryPresentation {
@@ -60,7 +62,7 @@ export function buildVoiceAccessoryPresentation({
       accessibilityLabel: 'Open voice session',
       primaryAction: 'expand',
       subtitle: context,
-      title: 'Checking inventory',
+      title: accessoryProgressTitle(realtime),
       tone: 'attention'
     };
   }
@@ -79,7 +81,7 @@ export function buildVoiceAccessoryPresentation({
     return {
       accessibilityLabel: 'Open voice answer',
       primaryAction: 'expand',
-      subtitle: context,
+      subtitle: safeAccessorySubtitle(realtime?.spokenResponse) ?? context,
       title: 'Answer ready',
       tone: 'ready'
     };
@@ -99,7 +101,7 @@ export function buildVoiceAccessoryPresentation({
     return {
       accessibilityLabel: 'Open voice error',
       primaryAction: 'expand',
-      subtitle: context,
+      subtitle: safeFailureAccessorySubtitle(realtime) ?? context,
       title: 'Voice failed',
       tone: 'failed'
     };
@@ -110,7 +112,7 @@ export function buildVoiceAccessoryPresentation({
       accessibilityLabel: 'Review voice plan',
       primaryAction: 'expand',
       subtitle: context,
-      title: 'Review needed',
+      title: accessoryProgressTitle(realtime),
       tone: 'attention'
     };
   }
@@ -122,6 +124,42 @@ export function buildVoiceAccessoryPresentation({
     title: 'Ask Stuff Stash',
     tone: 'ready'
   };
+}
+
+function safeAccessorySubtitle(value: string | undefined): string | undefined {
+  const normalized = value?.replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return undefined;
+  }
+  return normalized.length <= 96 ? normalized : `${normalized.slice(0, 95).trim()}...`;
+}
+
+function accessoryProgressTitle(realtime: VoiceRealtimeState | null | undefined): string {
+  switch (realtime?.status) {
+    case 'review':
+      return 'Review needed';
+    case 'speaking':
+      return 'Speaking';
+    case 'processing':
+      return 'Checking inventory';
+    case 'listening':
+      return 'Listening';
+    default:
+      return 'Checking inventory';
+  }
+}
+
+function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | undefined): string | undefined {
+  const code = realtime?.failureCode;
+  if (
+    code === 'provider_readiness' ||
+    code === 'speech_to_text_failed' ||
+    code === 'language_inference_failed' ||
+    code === 'text_to_speech_failed'
+  ) {
+    return 'Check Voice providers and try again.';
+  }
+  return realtime?.status === 'failed' ? 'Open for details.' : undefined;
 }
 
 export type VoiceSessionPresentation = {
