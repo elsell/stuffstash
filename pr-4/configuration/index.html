@@ -1,0 +1,673 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-hhm3q3ix"> <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Configuration Reference | Stuff Stash</title><link rel="canonical" href="https://elsell.github.io/stuffstash/pr-4/configuration/"/><link rel="sitemap" href="/stuffstash/pr-4/sitemap-index.xml"/><link rel="shortcut icon" href="/stuffstash/pr-4/brand/stuff-stash-glyph.png" type="image/png"/><meta name="generator" content="Astro v6.4.4"/><meta name="generator" content="Starlight v0.39.3"/><meta property="og:title" content="Configuration Reference"/><meta property="og:type" content="article"/><meta property="og:url" content="https://elsell.github.io/stuffstash/pr-4/configuration/"/><meta property="og:locale" content="en"/><meta property="og:description" content="Environment variables and runtime settings for Stuff Stash."/><meta property="og:site_name" content="Stuff Stash"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="Environment variables and runtime settings for Stuff Stash."/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/stuffstash/pr-4/_astro/print.DNXP8c50.css" media="print"><link rel="stylesheet" href="/stuffstash/pr-4/_astro/common.BTaCR47V.css"><script type="module" src="/stuffstash/pr-4/_astro/page.B_tncCx8.js"></script></head> <body class="astro-hhm3q3ix"> <a href="#_top" class="astro-5nbnjjg7">Skip to content</a> <div class="page sl-flex astro-mucudn5w"> <header class="header astro-mucudn5w"><div class="header astro-jtbydpy7"> <div class="title-wrapper sl-flex astro-jtbydpy7"> <a href="/stuffstash/pr-4/" class="site-title sl-flex astro-6ten6g4b">  <img class="astro-6ten6g4b" alt src="/stuffstash/pr-4/_astro/stuff-stash-glyph.B6xhzM34.png" width="457" height="457">  <span class="astro-6ten6g4b" translate="no"> Stuff Stash </span> </a> </div> <div class="sl-flex print:hidden astro-jtbydpy7"> <site-search class="astro-jtbydpy7 astro-mnnbu6h2" data-translations="{&quot;placeholder&quot;:&quot;Search&quot;}"> <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="astro-mnnbu6h2"> <svg aria-hidden="true" class="astro-mnnbu6h2 astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg> <span class="sl-hidden md:sl-block astro-mnnbu6h2" aria-hidden="true">Search</span> <kbd class="sl-hidden md:sl-flex astro-mnnbu6h2" style="display: none;"> <kbd class="astro-mnnbu6h2">Ctrl</kbd><kbd class="astro-mnnbu6h2">K</kbd> </kbd> </button> <dialog style="padding:0" aria-label="Search" class="astro-mnnbu6h2"> <div class="dialog-frame sl-flex astro-mnnbu6h2">  <button data-close-modal class="sl-flex md:sl-hidden astro-mnnbu6h2"> Cancel </button> <div class="search-container astro-mnnbu6h2"> <div id="starlight__search" class="astro-mnnbu6h2"></div> </div> </div> </dialog> </site-search>  <script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script> <script type="module" src="/stuffstash/pr-4/_astro/Search.astro_astro_type_script_index_0_lang.ZbC-tqKy.js"></script>  </div> <div class="sl-hidden md:sl-flex print:hidden right-group astro-jtbydpy7"> <div class="sl-flex social-icons astro-jtbydpy7">  </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-bqeh4aa7"> <span class="sr-only astro-bqeh4aa7">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-bqeh4aa7 astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> <select autocomplete="off" class="astro-bqeh4aa7"> <option value="dark" class="astro-bqeh4aa7">Dark</option><option value="light" class="astro-bqeh4aa7">Light</option><option value="auto" selected class="astro-bqeh4aa7">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-bqeh4aa7 astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label> </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script> <script type="module">const r="starlight-theme",o=e=>e==="auto"||e==="dark"||e==="light"?e:"auto",c=()=>o(typeof localStorage<"u"&&localStorage.getItem(r));function n(e){typeof localStorage<"u"&&localStorage.setItem(r,e==="light"||e==="dark"?e:"")}const l=()=>matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";function t(e){StarlightThemeProvider.updatePickers(e),document.documentElement.dataset.theme=e==="auto"?l():e,n(e)}matchMedia("(prefers-color-scheme: light)").addEventListener("change",()=>{c()==="auto"&&t("auto")});class s extends HTMLElement{constructor(){super(),t(c()),this.querySelector("select")?.addEventListener("change",a=>{a.currentTarget instanceof HTMLSelectElement&&t(o(a.currentTarget.value))})}}customElements.define("starlight-theme-select",s);</script> <script type="module">class s extends HTMLElement{constructor(){super();const e=this.querySelector("select");e&&(e.addEventListener("change",t=>{t.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=t.currentTarget.value)}),window.addEventListener("pageshow",t=>{if(!t.persisted)return;const n=e.querySelector("option[selected]")?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}}customElements.define("starlight-lang-select",s);</script> </div> </div></header> <nav class="sidebar print:hidden astro-mucudn5w" aria-label="Main"> <starlight-menu-button class="print:hidden astro-k7jlb2bg"> <button aria-expanded="false" aria-label="Menu" aria-controls="starlight__sidebar" class="sl-flex md:sl-hidden astro-k7jlb2bg"> <svg aria-hidden="true" class="open-menu astro-k7jlb2bg astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg> <svg aria-hidden="true" class="close-menu astro-k7jlb2bg astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg> </button> </starlight-menu-button> <script type="module">class s extends HTMLElement{constructor(){super(),this.btn=this.querySelector("button"),this.btn.addEventListener("click",()=>this.toggleExpanded());const t=this.closest("nav");t&&t.addEventListener("keyup",e=>this.closeOnEscape(e))}setExpanded(t){this.setAttribute("aria-expanded",String(t)),document.body.toggleAttribute("data-mobile-menu-expanded",t)}toggleExpanded(){this.setExpanded(this.getAttribute("aria-expanded")!=="true")}closeOnEscape(t){t.code==="Escape"&&(this.setExpanded(!1),this.btn.focus())}}customElements.define("starlight-menu-button",s);</script>  <div id="starlight__sidebar" class="sidebar-pane astro-mucudn5w"> <div class="sidebar-content sl-flex astro-mucudn5w"> <sl-sidebar-state-persist data-hash="00bxyxr" class="astro-acke6m7k"> <script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script>  <ul class="top-level astro-pfelaqev"> <li class="astro-pfelaqev"> <details open class="astro-pfelaqev"> <summary class="astro-pfelaqev"> <span class="group-label astro-pfelaqev"> <span class="large astro-pfelaqev">Evaluate</span>  </span> <svg aria-hidden="true" class="caret astro-pfelaqev astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="0"></sl-sidebar-restore> <ul class="astro-pfelaqev"> <li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/product/" class="astro-pfelaqev"> <span class="astro-pfelaqev">What It Does</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/self-hosting/" class="astro-pfelaqev"> <span class="astro-pfelaqev">Run Stuff Stash</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/configuration/" aria-current="page" class="astro-pfelaqev"> <span class="astro-pfelaqev">Configuration Reference</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/first-inventory/" class="astro-pfelaqev"> <span class="astro-pfelaqev">First Inventory</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/concepts/" class="astro-pfelaqev"> <span class="astro-pfelaqev">Concepts</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/security/" class="astro-pfelaqev"> <span class="astro-pfelaqev">Trust And Security</span>  </a> </li> </ul> </details> </li><li class="astro-pfelaqev"> <details open class="astro-pfelaqev"> <summary class="astro-pfelaqev"> <span class="group-label astro-pfelaqev"> <span class="large astro-pfelaqev">Build</span>  </span> <svg aria-hidden="true" class="caret astro-pfelaqev astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="1"></sl-sidebar-restore> <ul class="astro-pfelaqev"> <li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/architecture/" class="astro-pfelaqev"> <span class="astro-pfelaqev">Architecture</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/local-development/" class="astro-pfelaqev"> <span class="astro-pfelaqev">Development Setup</span>  </a> </li><li class="astro-pfelaqev"> <a href="/stuffstash/pr-4/specs-and-process/" class="astro-pfelaqev"> <span class="astro-pfelaqev">Contributing</span>  </a> </li> </ul> </details> </li> </ul>  <script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script> </sl-sidebar-state-persist> <div class="md:sl-hidden"> <div class="mobile-preferences sl-flex astro-xp5riutt"> <div class="social-icons astro-xp5riutt">  </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-bqeh4aa7"> <span class="sr-only astro-bqeh4aa7">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-bqeh4aa7 astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> <select autocomplete="off" class="astro-bqeh4aa7"> <option value="dark" class="astro-bqeh4aa7">Dark</option><option value="light" class="astro-bqeh4aa7">Light</option><option value="auto" selected class="astro-bqeh4aa7">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-bqeh4aa7 astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label> </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script>   </div> </div> </div> </div> </nav> <div class="main-frame astro-mucudn5w">  <script type="module">const a=document.getElementById("starlight__sidebar"),n=a?.querySelector("sl-sidebar-state-persist"),o="sl-sidebar-state",i=()=>{let t=[];const e=n?.dataset.hash||"";try{const s=sessionStorage.getItem(o),r=JSON.parse(s||"{}");Array.isArray(r.open)&&r.hash===e&&(t=r.open)}catch{}return{hash:e,open:t,scroll:a?.scrollTop||0}},c=t=>{try{sessionStorage.setItem(o,JSON.stringify(t))}catch{}},d=()=>c(i()),l=(t,e)=>{const s=i();s.open[e]=t,c(s)};n?.addEventListener("click",t=>{if(!(t.target instanceof Element))return;const e=t.target.closest("summary")?.closest("details");if(!e)return;const s=e.querySelector("sl-sidebar-restore"),r=parseInt(s?.dataset.index||"");isNaN(r)||l(!e.open,r)});addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&d()});addEventListener("pageHide",d);</script> <div class="lg:sl-flex astro-db7fjtuy"> <aside class="right-sidebar-container print:hidden astro-db7fjtuy"> <div class="right-sidebar astro-db7fjtuy"> <div class="lg:sl-hidden astro-cd2jepvz"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-shvillnf"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-shvillnf"><details id="starlight__mobile-toc" class="astro-shvillnf"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-shvillnf"><span class="toggle sl-flex astro-shvillnf">On this page<svg aria-hidden="true" class="caret astro-shvillnf astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current astro-shvillnf"></span></summary><div class="dropdown astro-shvillnf"><ul class="isMobile astro-oj7uayg3" style="--depth: 0;"> <li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#_top" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-parsing-rules" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API Parsing Rules</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-http" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: HTTP</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-rate-limiting" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Rate Limiting</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-authentication" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Authentication</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-authorization" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Authorization</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-persistence" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Persistence</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-workers-and-pagination" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Workers And Pagination</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-media-storage" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Media Storage</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-realtime-voice-providers" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Realtime Voice Providers</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-provider-credential-sealing" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Provider Credential Sealing</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#web-runtime-config" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Web Runtime Config</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#mobile-development-config" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Mobile Development Config</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#docs-build-config" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Docs Build Config</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#local-compose-helpers" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Local Compose Helpers</span> </a>  </li> </ul></div></details></nav></mobile-starlight-toc><script type="module" src="/stuffstash/pr-4/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.hwBsy0Mo.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-cd2jepvz"><div class="sl-container astro-cd2jepvz"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-oj7uayg3" style="--depth: 0;"> <li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#_top" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-parsing-rules" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API Parsing Rules</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-http" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: HTTP</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-rate-limiting" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Rate Limiting</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-authentication" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Authentication</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-authorization" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Authorization</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-persistence" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Persistence</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-workers-and-pagination" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Workers And Pagination</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-media-storage" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Media Storage</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-realtime-voice-providers" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Realtime Voice Providers</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#api-provider-credential-sealing" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">API: Provider Credential Sealing</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#web-runtime-config" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Web Runtime Config</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#mobile-development-config" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Mobile Development Config</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#docs-build-config" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Docs Build Config</span> </a>  </li><li class="astro-oj7uayg3" style="--depth: 0;"> <a href="#local-compose-helpers" class="astro-oj7uayg3" style="--depth: 0;"> <span class="astro-oj7uayg3" style="--depth: 0;">Local Compose Helpers</span> </a>  </li> </ul></nav></starlight-toc><script type="module" src="/stuffstash/pr-4/_astro/TableOfContents.astro_astro_type_script_index_0_lang.FuRcXuRY.js"></script></div></div> </div> </aside> <div class="main-pane astro-db7fjtuy">  <main data-pagefind-body class="astro-hhm3q3ix" lang="en" dir="ltr">    <div class="content-panel astro-adkxcqet"> <div class="sl-container astro-adkxcqet"> <h1 id="_top" class="astro-7csrufea">Configuration Reference</h1> </div> </div> <div class="content-panel astro-adkxcqet"> <div class="sl-container astro-adkxcqet"> <div class="sl-markdown-content"> <p>Use this page when you are wiring Stuff Stash into a real environment or
+checking which values local Compose sets for you.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-parsing-rules">API Parsing Rules</h2><a class="sl-anchor-link" href="#api-parsing-rules"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API Parsing Rules”</span></a></div>
+<p>The API reads configuration from environment variables at startup.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Type</th><th>Accepted values</th></tr></thead><tbody><tr><td>Boolean</td><td><code dir="auto">true</code>, <code dir="auto">false</code>, <code dir="auto">1</code>, <code dir="auto">0</code>, <code dir="auto">yes</code>, <code dir="auto">no</code>, <code dir="auto">on</code>, <code dir="auto">off</code></td></tr><tr><td>Duration</td><td>Go duration strings such as <code dir="auto">500ms</code>, <code dir="auto">10s</code>, <code dir="auto">2h</code></td></tr><tr><td>Integer</td><td>Positive base-10 integers</td></tr><tr><td>List</td><td>Comma-separated values, trimmed and deduplicated</td></tr></tbody></table>
+<p>Invalid primitive values fall back to their defaults during API environment
+parsing. Unsupported adapter modes, missing required adapter settings, and
+invalid enabled provider settings fail startup.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-http">API: HTTP</h2><a class="sl-anchor-link" href="#api-http"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: HTTP”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_HTTP_ADDR</code></td><td><code dir="auto">:8080</code></td><td>Address the API listens on.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_READ_HEADER_TIMEOUT</code></td><td><code dir="auto">5s</code></td><td>Maximum time to read request headers.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_READ_TIMEOUT</code></td><td><code dir="auto">15s</code></td><td>Maximum time to read a request.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_WRITE_TIMEOUT</code></td><td><code dir="auto">30s</code></td><td>Maximum time to write a response.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_IDLE_TIMEOUT</code></td><td><code dir="auto">60s</code></td><td>Keep-alive idle timeout.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES</code></td><td><code dir="auto">1048576</code></td><td>Maximum JSON request body size.</td></tr><tr><td><code dir="auto">STUFF_STASH_CORS_ALLOWED_ORIGINS</code></td><td>empty</td><td>Comma-separated browser origins allowed to call the API.</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-rate-limiting">API: Rate Limiting</h2><a class="sl-anchor-link" href="#api-rate-limiting"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Rate Limiting”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_HTTP_RATE_LIMIT_ENABLED</code></td><td><code dir="auto">true</code></td><td>Enables API HTTP rate limiting.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_RATE_LIMIT_REQUESTS</code></td><td><code dir="auto">1200</code></td><td>Request budget per rate-limit window.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_RATE_LIMIT_WINDOW</code></td><td><code dir="auto">1m</code></td><td>Rate-limit accounting window.</td></tr><tr><td><code dir="auto">STUFF_STASH_HTTP_RATE_LIMIT_BURST</code></td><td><code dir="auto">600</code></td><td>Burst allowance.</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-authentication">API: Authentication</h2><a class="sl-anchor-link" href="#api-authentication"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Authentication”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_AUTH_MODE</code></td><td><code dir="auto">local-dev</code></td><td>Authentication adapter. Use <code dir="auto">local-dev</code> or <code dir="auto">oidc</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_OIDC_ISSUER</code></td><td>empty</td><td>OIDC issuer URL when <code dir="auto">STUFF_STASH_AUTH_MODE=oidc</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_OIDC_CLIENT_ID</code></td><td>empty</td><td>Primary expected OIDC audience/client ID.</td></tr><tr><td><code dir="auto">STUFF_STASH_OIDC_CLIENT_IDS</code></td><td>empty</td><td>Additional accepted OIDC client IDs, comma-separated.</td></tr></tbody></table>
+<p><code dir="auto">STUFF_STASH_OIDC_CLIENT_ID</code> is included in the accepted client ID set even when
+<code dir="auto">STUFF_STASH_OIDC_CLIENT_IDS</code> is also configured.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-authorization">API: Authorization</h2><a class="sl-anchor-link" href="#api-authorization"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Authorization”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_AUTHZ_MODE</code></td><td><code dir="auto">memory</code></td><td>Authorization adapter. Use <code dir="auto">memory</code> or <code dir="auto">spicedb</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_SPICEDB_ENDPOINT</code></td><td>empty</td><td>SpiceDB gRPC endpoint.</td></tr><tr><td><code dir="auto">STUFF_STASH_SPICEDB_PRESHARED_KEY</code></td><td>empty</td><td>SpiceDB preshared key. Empty is only suitable for local <code dir="auto">serve-testing</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_SPICEDB_TLS_ENABLED</code></td><td><code dir="auto">true</code></td><td>Enables TLS for SpiceDB connections.</td></tr><tr><td><code dir="auto">STUFF_STASH_SPICEDB_CA_PATH</code></td><td>empty</td><td>Optional CA certificate path for self-signed or private SpiceDB TLS.</td></tr><tr><td><code dir="auto">STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA</code></td><td><code dir="auto">false</code></td><td>Bootstraps the checked-in SpiceDB schema on startup.</td></tr><tr><td><code dir="auto">STUFF_STASH_SPICEDB_SCHEMA_PATH</code></td><td><code dir="auto">deploy/spicedb/schema.zed</code></td><td>Schema file used when bootstrapping.</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-persistence">API: Persistence</h2><a class="sl-anchor-link" href="#api-persistence"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Persistence”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_REPOSITORY_MODE</code></td><td><code dir="auto">memory</code></td><td>Repository adapter. Use <code dir="auto">memory</code>, <code dir="auto">postgres</code>, or <code dir="auto">sqlite</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_DATABASE_DSN</code></td><td>empty</td><td>Postgres DSN or SQLite file path/DSN when using durable repository modes.</td></tr></tbody></table>
+<p><code dir="auto">postgres</code> and <code dir="auto">sqlite</code> require <code dir="auto">STUFF_STASH_DATABASE_DSN</code>. SQLite will create
+the parent directory for file-backed database paths.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-workers-and-pagination">API: Workers And Pagination</h2><a class="sl-anchor-link" href="#api-workers-and-pagination"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Workers And Pagination”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT</code></td><td><code dir="auto">25</code></td><td>Authorization outbox events claimed per drain.</td></tr><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL</code></td><td><code dir="auto">10s</code></td><td>Background authorization outbox drain interval.</td></tr><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE</code></td><td><code dir="auto">30s</code></td><td>Lease duration for claimed authorization outbox events.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_LIMIT</code></td><td><code dir="auto">25</code></td><td>Blob-deletion outbox events claimed per drain.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL</code></td><td><code dir="auto">10s</code></td><td>Background blob-deletion outbox drain interval.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE</code></td><td><code dir="auto">30s</code></td><td>Lease duration for claimed blob-deletion outbox events.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS</code></td><td><code dir="auto">5</code></td><td>Attempts before blob-deletion work is treated as terminal.</td></tr><tr><td><code dir="auto">STUFF_STASH_INVITATION_TTL</code></td><td><code dir="auto">168h</code></td><td>Default inventory invitation token lifetime.</td></tr><tr><td><code dir="auto">STUFF_STASH_DEFAULT_PAGE_LIMIT</code></td><td><code dir="auto">50</code></td><td>Default API collection page size.</td></tr><tr><td><code dir="auto">STUFF_STASH_MAX_PAGE_LIMIT</code></td><td><code dir="auto">100</code></td><td>Maximum accepted API collection page size.</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-media-storage">API: Media Storage</h2><a class="sl-anchor-link" href="#api-media-storage"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Media Storage”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_BLOB_STORAGE_MODE</code></td><td><code dir="auto">filesystem</code></td><td>Blob storage adapter. Use <code dir="auto">filesystem</code> or <code dir="auto">s3</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_STORAGE_PATH</code></td><td><code dir="auto">.stuffstash/blobs</code></td><td>Local filesystem blob path.</td></tr><tr><td><code dir="auto">STUFF_STASH_MAX_ATTACHMENT_BYTES</code></td><td><code dir="auto">5242880</code></td><td>Maximum attachment size in bytes.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_ENDPOINT</code></td><td>empty</td><td>S3-compatible endpoint host and port, without scheme.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_ACCESS_KEY</code></td><td>empty</td><td>S3 access key.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_SECRET_KEY</code></td><td>empty</td><td>S3 secret key.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_BUCKET</code></td><td>empty</td><td>S3 bucket name.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_REGION</code></td><td><code dir="auto">garage</code></td><td>S3 region value.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_SECURE</code></td><td><code dir="auto">true</code></td><td>Uses HTTPS for S3-compatible storage when true.</td></tr></tbody></table>
+<p>Set <code dir="auto">STUFF_STASH_S3_SECURE=false</code> only for trusted local plain-HTTP storage,
+such as local Garage verification.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-realtime-voice-providers">API: Realtime Voice Providers</h2><a class="sl-anchor-link" href="#api-realtime-voice-providers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Realtime Voice Providers”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_VOICE_DEV_FAKE_ENABLED</code></td><td><code dir="auto">false</code></td><td>Enables local development fake speech, language, and speech output providers.</td></tr><tr><td><code dir="auto">STUFF_STASH_VOICE_GOOGLE_ENABLED</code></td><td><code dir="auto">false</code></td><td>Enables Google realtime voice provider adapters.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_CLOUD_PROJECT</code></td><td>empty</td><td>Google Cloud project ID. Required when Google voice providers are enabled.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_CLOUD_LOCATION</code></td><td><code dir="auto">us-central1</code></td><td>Google Cloud location for Gemini.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_GEMINI_MODEL</code></td><td><code dir="auto">gemini-2.5-flash-lite</code></td><td>Gemini model name.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE</code></td><td><code dir="auto">en-US</code></td><td>Google Text-to-Speech language code.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_TTS_VOICE_NAME</code></td><td><code dir="auto">en-US-Standard-C</code></td><td>Google Text-to-Speech voice name.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_CREDENTIAL_MODE</code></td><td><code dir="auto">adc</code></td><td>Google credential source. Use <code dir="auto">adc</code> or <code dir="auto">access_token</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_GOOGLE_ACCESS_TOKEN</code></td><td>empty</td><td>Static Google access token when credential mode is <code dir="auto">access_token</code>.</td></tr></tbody></table>
+<p>When <code dir="auto">STUFF_STASH_VOICE_GOOGLE_ENABLED=true</code>, Google configuration is validated
+at startup. Google voice providers take precedence over development fakes when
+both are enabled.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="api-provider-credential-sealing">API: Provider Credential Sealing</h2><a class="sl-anchor-link" href="#api-provider-credential-sealing"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Provider Credential Sealing”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID</code></td><td>empty</td><td>Identifier stored with sealed tenant provider credentials.</td></tr><tr><td><code dir="auto">STUFF_STASH_PROVIDER_CREDENTIAL_KEY</code></td><td>empty</td><td>Base64-encoded 32-byte AES-GCM key for sealing provider credentials.</td></tr></tbody></table>
+<p>If active provider credentials exist, startup fails closed unless a valid
+provider credential sealing key is configured.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="web-runtime-config">Web Runtime Config</h2><a class="sl-anchor-link" href="#web-runtime-config"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Web Runtime Config”</span></a></div>
+<p>The web app reads <code dir="auto">/config.json</code> at runtime. It is not configured through
+<code dir="auto">STUFF_STASH_*</code> environment variables inside the browser bundle.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Required</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">apiBaseUrl</code></td><td>yes</td><td>Public API base URL. Trailing slashes are trimmed.</td></tr><tr><td><code dir="auto">oidcIssuer</code></td><td>yes</td><td>Browser-visible OIDC issuer URL. Trailing slashes are trimmed.</td></tr><tr><td><code dir="auto">oidcClientId</code></td><td>yes</td><td>Browser OIDC client ID.</td></tr><tr><td><code dir="auto">oidcRedirectUri</code></td><td>yes</td><td>Browser redirect URI after OIDC sign-in.</td></tr><tr><td><code dir="auto">mediaUploadPolicy.supportedContentTypes</code></td><td>no</td><td>Allowed upload content types. Defaults to JPEG, PNG, WebP, and PDF.</td></tr><tr><td><code dir="auto">mediaUploadPolicy.maxBytes</code></td><td>no</td><td>Client upload limit. Defaults to <code dir="auto">5242880</code>.</td></tr></tbody></table>
+<p>Example:</p>
+<div class="expressive-code"><link rel="stylesheet" href="/stuffstash/pr-4/_astro/ec.v4551.css"><script type="module" src="/stuffstash/pr-4/_astro/ec.0vx5m.js"></script><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="json"><code><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">{</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#7FDBCA;--1:#096E72">"apiBaseUrl"</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">https://api.example.test</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#7FDBCA;--1:#096E72">"oidcIssuer"</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">https://accounts.example.test</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#7FDBCA;--1:#096E72">"oidcClientId"</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">stuff-stash-web</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#7FDBCA;--1:#096E72">"oidcRedirectUri"</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">https://stuffstash.example.test/callback</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#7FDBCA;--1:#096E72">"mediaUploadPolicy"</span><span style="--0:#D6DEEB;--1:#403F53">: {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#7FDBCA;--1:#096E72">"supportedContentTypes"</span><span style="--0:#D6DEEB;--1:#403F53">: [</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">image/jpeg</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">image/png</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">image/webp</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C789D6;--1:#7C5686">application/pdf</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">],</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#7FDBCA;--1:#096E72">"maxBytes"</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#F78C6C;--1:#AA0982">5242880</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#D6DEEB;--1:#403F53">  </span></span><span style="--0:#D6DEEB;--1:#403F53">}</span></div></div><div class="ec-line"><div class="code"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="{  &#x22;apiBaseUrl&#x22;: &#x22;https://api.example.test&#x22;,  &#x22;oidcIssuer&#x22;: &#x22;https://accounts.example.test&#x22;,  &#x22;oidcClientId&#x22;: &#x22;stuff-stash-web&#x22;,  &#x22;oidcRedirectUri&#x22;: &#x22;https://stuffstash.example.test/callback&#x22;,  &#x22;mediaUploadPolicy&#x22;: {    &#x22;supportedContentTypes&#x22;: [&#x22;image/jpeg&#x22;, &#x22;image/png&#x22;, &#x22;image/webp&#x22;, &#x22;application/pdf&#x22;],    &#x22;maxBytes&#x22;: 5242880  }}"><div></div></button></div></figure></div>
+<p>Keep the web upload policy aligned with <code dir="auto">STUFF_STASH_MAX_ATTACHMENT_BYTES</code>; the
+API remains authoritative.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="mobile-development-config">Mobile Development Config</h2><a class="sl-anchor-link" href="#mobile-development-config"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Mobile Development Config”</span></a></div>
+<p>These Expo public variables are development defaults for the mobile app. They
+are not a production mobile authentication model.</p>
+<p>Mobile booleans accept <code dir="auto">1</code>, <code dir="auto">true</code>, <code dir="auto">yes</code>, <code dir="auto">0</code>, <code dir="auto">false</code>, and <code dir="auto">no</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Required</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_API_BASE_URL</code></td><td>yes</td><td>API base URL used by the mobile app.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_TENANT_ID</code></td><td>yes</td><td>Initial tenant ID for local development flows.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN</code></td><td>yes</td><td>Local development bearer token value.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED</code></td><td>no</td><td>Enables mobile voice developer diagnostics.</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="docs-build-config">Docs Build Config</h2><a class="sl-anchor-link" href="#docs-build-config"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Docs Build Config”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_DOCS_SITE</code></td><td><code dir="auto">https://elsell.github.io</code></td><td>Public site origin for Astro builds.</td></tr><tr><td><code dir="auto">STUFF_STASH_DOCS_BASE</code></td><td><code dir="auto">/stuffstash/</code></td><td>Base path for production or preview docs builds.</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="local-compose-helpers">Local Compose Helpers</h2><a class="sl-anchor-link" href="#local-compose-helpers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Local Compose Helpers”</span></a></div>
+<p>These variables are conveniences for local Compose. They are not API runtime
+settings unless they map to a <code dir="auto">STUFF_STASH_*</code> variable above.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_HTTP_PORT</code></td><td><code dir="auto">8080</code></td><td>Host port mapped to the API container.</td></tr><tr><td><code dir="auto">POSTGRES_DB</code></td><td><code dir="auto">stuffstash</code></td><td>Local Compose Postgres database name.</td></tr><tr><td><code dir="auto">POSTGRES_USER</code></td><td><code dir="auto">stuffstash</code></td><td>Local Compose Postgres user.</td></tr><tr><td><code dir="auto">POSTGRES_PASSWORD</code></td><td><code dir="auto">stuffstash-local</code></td><td>Local Compose Postgres password.</td></tr><tr><td><code dir="auto">POSTGRES_PORT</code></td><td><code dir="auto">5432</code></td><td>Host port mapped to Postgres.</td></tr><tr><td><code dir="auto">SPICEDB_GRPC_PORT</code></td><td><code dir="auto">50051</code></td><td>Host port mapped to SpiceDB.</td></tr><tr><td><code dir="auto">DEX_HTTP_PORT</code></td><td><code dir="auto">5556</code></td><td>Host port mapped to Dex in the OIDC Compose override.</td></tr><tr><td><code dir="auto">GO_BUILDER_IMAGE</code></td><td>pinned digest</td><td>API builder image override. Must stay digest-pinned.</td></tr><tr><td><code dir="auto">RUNTIME_IMAGE</code></td><td>pinned digest</td><td>API runtime image override. Must stay digest-pinned.</td></tr><tr><td><code dir="auto">NODE_BUILDER_IMAGE</code></td><td>pinned digest</td><td>Web builder image override. Must stay digest-pinned.</td></tr><tr><td><code dir="auto">WEB_RUNTIME_IMAGE</code></td><td>pinned digest</td><td>Web runtime image override. Must stay digest-pinned.</td></tr><tr><td><code dir="auto">PNPM_VERSION</code></td><td><code dir="auto">11.0.7</code></td><td>pnpm version used by the web image build.</td></tr></tbody></table> </div> <footer class="sl-flex astro-6yop5yi2"> <div class="meta sl-flex astro-6yop5yi2">   </div> <div class="pagination-links print:hidden astro-tng2sb2k" dir="ltr"> <a href="/stuffstash/pr-4/self-hosting/" rel="prev" class="astro-tng2sb2k"> <svg aria-hidden="true" class="astro-tng2sb2k astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg> <span class="astro-tng2sb2k"> Previous <br class="astro-tng2sb2k"> <span class="link-title astro-tng2sb2k">Run Stuff Stash</span> </span> </a> <a href="/stuffstash/pr-4/first-inventory/" rel="next" class="astro-tng2sb2k"> <svg aria-hidden="true" class="astro-tng2sb2k astro-pb4xy2lj" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg> <span class="astro-tng2sb2k"> Next <br class="astro-tng2sb2k"> <span class="link-title astro-tng2sb2k">First Inventory</span> </span> </a> </div>  </footer> </div> </div>  </main> </div> </div> </div> </div> </body></html>
