@@ -64,6 +64,9 @@ jobs:
       - name: Test API
         run: make test
 
+      - name: Build API release binary
+        run: make api-release-build
+
       - name: Install web dependencies
         run: make web-install
 

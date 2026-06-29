@@ -121,6 +121,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - A release commit on `main` must only create a new tag and GitHub release when commits since the last SemVer tag require a release.
 - Release image publication must produce immutable image digests. GitOps deployment state must prefer digests over mutable tags.
 - Release builds must publish build provenance attestations for the container image before deployment automation consumes the image.
+- Release validation must build the API release binary from the `apps/api` module with workspace mode disabled before any image publication job runs.
 - Dependency freshness must be checked mechanically for npm and Go modules.
 - npm package versions and Go module versions must be at least fourteen days old before they are accepted into the committed dependency graph.
 - Dependency age checks must fail closed when package metadata cannot be retrieved or parsed, except for Go pseudo versions where the timestamp embedded in the version is available.

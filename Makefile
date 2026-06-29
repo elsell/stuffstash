@@ -1,4 +1,4 @@
-.PHONY: test run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docker-build-web dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
+.PHONY: test api-release-build run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docker-build-web dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -14,6 +14,9 @@ PNPM ?= $(shell if command -v pnpm >/dev/null 2>&1; then command -v pnpm; elif t
 
 test:
 	GOCACHE=$(GOCACHE) go test ./apps/api/...
+
+api-release-build:
+	cd apps/api && GOWORK=off GOCACHE=$(GOCACHE) CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash-release-check ./cmd/stuff-stash
 
 run:
 	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
