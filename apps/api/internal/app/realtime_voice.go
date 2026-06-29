@@ -206,7 +206,22 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				_ = a.markRealtimeVoiceSessionOutcome(context.Background(), input.Session, ports.RealtimeSessionStateCancelled, "")
 				return
 			}
-			_ = a.markRealtimeVoiceSessionOutcome(ctx, input.Session, ports.RealtimeSessionStateFailed, realtimeVoiceErrorCode(err))
+			safeCode := realtimeVoiceErrorCode(err)
+			if a.observer != nil {
+				a.observer.Record(ctx, ports.Event{
+					Name:    ports.EventRealtimeVoiceFailed,
+					Message: "realtime voice failed safely",
+					Fields: map[string]string{
+						"tenant_id":         input.Session.TenantID.String(),
+						"inventory_id":      input.Session.InventoryID.String(),
+						"principal_id":      input.Session.Principal.ID.String(),
+						"session_id":        input.Session.ID,
+						"safe_failure_code": safeCode,
+						"error":             safeRealtimeVoiceErrorDetail(err),
+					},
+				})
+			}
+			_ = a.markRealtimeVoiceSessionOutcome(ctx, input.Session, ports.RealtimeSessionStateFailed, safeCode)
 		}
 	}()
 	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
@@ -470,6 +485,28 @@ func realtimeVoiceErrorCode(err error) string {
 		return "invalid_request"
 	default:
 		return "voice_session_failed"
+	}
+}
+
+func safeRealtimeVoiceErrorDetail(err error) string {
+	if err == nil {
+		return ""
+	}
+	var providerErr realtimeVoiceProviderStageError
+	if errors.As(err, &providerErr) {
+		return providerErr.code
+	}
+	switch {
+	case errors.Is(err, ports.ErrInvalidProviderInput):
+		return "invalid_provider_input"
+	case errors.Is(err, apperrors.ErrInvalidInput):
+		return "invalid_input"
+	case errors.Is(err, ports.ErrForbidden):
+		return "forbidden"
+	case errors.Is(err, ports.ErrUnauthenticated):
+		return "unauthenticated"
+	default:
+		return "unexpected_error"
 	}
 }
 

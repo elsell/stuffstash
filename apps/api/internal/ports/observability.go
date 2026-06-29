@@ -93,6 +93,7 @@ const (
 	EventProviderProfileCredentialReplaced    EventName = "provider_profile.credential_replaced"
 	EventProviderProfileTested                EventName = "provider_profile.tested"
 	EventVoiceProviderConfigurationUpdated    EventName = "voice_provider_configuration.updated"
+	EventRealtimeVoiceFailed                  EventName = "realtime_voice.failed"
 )
 
 type Event struct {
