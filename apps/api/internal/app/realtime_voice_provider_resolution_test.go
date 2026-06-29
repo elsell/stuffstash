@@ -108,6 +108,10 @@ func newRealtimeVoiceResolutionTestAppWithStore(t *testing.T, resolver ports.Rea
 }
 
 func newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t *testing.T, resolver ports.RealtimeVoiceProviderResolver, sessions ports.RealtimeSessionRepository) (App, *memory.Store) {
+	return newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t, resolver, sessions, &realtimeVoiceResolutionIDGenerator{})
+}
+
+func newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t *testing.T, resolver ports.RealtimeVoiceProviderResolver, sessions ports.RealtimeSessionRepository, ids ports.IDGenerator) (App, *memory.Store) {
 	t.Helper()
 
 	ctx := context.Background()
@@ -145,11 +149,12 @@ func newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t *testing.T, resolve
 		Inventories:                   store,
 		Assets:                        store,
 		Search:                        store,
+		Audit:                         store,
 		Observer:                      &fakeObserver{},
 		ActionPlans:                   store,
 		RealtimeVoiceProviderResolver: resolver,
 		RealtimeSessions:              sessions,
-		IDs:                           &realtimeVoiceResolutionIDGenerator{},
+		IDs:                           ids,
 		Clock:                         fixedRealtimeClock{now: time.Date(2026, 6, 26, 16, 0, 0, 0, time.UTC)},
 	})
 	return application, store

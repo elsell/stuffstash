@@ -362,6 +362,107 @@ func TestRealtimeVoiceActionPlanProposalCanonicalizesDependentParentAssetIDComma
 	}
 }
 
+func TestRealtimeVoiceActionPlanProposalOrdersDependentCommandsBeforeReview(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-water-bottle",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle", "limit": float64(10)},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-1",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"intentSummary":              "Move the water bottle to a new Kitchen location.",
+					"modelInterpretationSummary": "The user wants the visible water bottle moved into Kitchen, which should be created.",
+					"confirmationSummary":        "Create Kitchen and move the water bottle there?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-move-water-bottle",
+							"kind":    "move_asset",
+							"summary": "Move Water bottle to Kitchen",
+							"arguments": map[string]any{
+								"assetId":         "water-bottle-1",
+								"parentCommandId": "cmd-kitchen",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-unrelated-box",
+							"kind":    "create_asset",
+							"summary": "Create unrelated box",
+							"arguments": map[string]any{
+								"name": "Unrelated box",
+								"kind": "container",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-kitchen",
+							"kind":    "create_location",
+							"summary": "Create Kitchen",
+							"arguments": map[string]any{
+								"name": "Kitchen",
+								"kind": "location",
+							},
+						},
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "I should not be called after the proposal.",
+				DisplayResponse: "I should not be called after the proposal.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
+	resolver.providers.LanguageInference = language
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	if err := store.CreateAsset(context.Background(), waterBottle, audit.Record{ID: audit.ID("audit-water-bottle-order"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "water-bottle-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed water bottle: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if proposed == nil || len(proposed.Commands) != 3 {
+		t.Fatalf("expected dependent proposed plan, got %+v", proposed)
+	}
+	if proposed.Commands[0].ID != "cmd-unrelated-box" || proposed.Commands[0].Kind != string(actionplan.CommandKindCreateAsset) {
+		t.Fatalf("expected unrelated ready command to keep stable order before later dependency parent, got %+v", proposed.Commands)
+	}
+	if proposed.Commands[1].ID != "cmd-kitchen" || proposed.Commands[1].Kind != string(actionplan.CommandKindCreateLocation) {
+		t.Fatalf("expected create command to be ordered before dependent move, got %+v", proposed.Commands)
+	}
+	if proposed.Commands[2].ID != "cmd-move-water-bottle" || proposed.Commands[2].ParentCommandID != "cmd-kitchen" {
+		t.Fatalf("expected dependent move after create command, got %+v", proposed.Commands)
+	}
+	if len(language.seenToolResults) != 2 {
+		t.Fatalf("expected loop to pause after reordered proposal, got %d model turns", len(language.seenToolResults))
+	}
+}
+
 func TestRealtimeVoiceRejectsActionPlanIDsNotReturnedByReadTools(t *testing.T) {
 	t.Parallel()
 

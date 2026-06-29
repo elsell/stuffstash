@@ -208,6 +208,9 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	if strings.Contains(string(requestPayload), `"toolCalls"`) {
 		t.Fatalf("request still prompts for text tool-call JSON: %s", string(requestPayload))
 	}
+	if strings.Contains(string(requestPayload), `"responseMimeType"`) {
+		t.Fatalf("tool-capable turn should not force response mime type: %s", string(requestPayload))
+	}
 	firstPrompt := requestTextPart(t, requests[0], 0, 0)
 	if strings.Contains(firstPrompt, "Tool results:") {
 		t.Fatalf("prompt should not inline raw tool results when native function responses are used: %s", firstPrompt)
@@ -230,6 +233,35 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	}
 	if !requestHasFunctionDeclaration(requests[1], "search_authorized_assets") {
 		t.Fatalf("second turn should keep usable native tool declarations for distinct follow-up calls: %+v", requests[1]["tools"])
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRequestsJSONForFinalOnlyTurns(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		config := objectAt(t, request, "generationConfig")
+		if config["responseMimeType"] != "application/json" {
+			t.Fatalf("expected final-only turn to request JSON response mime type, got %+v", config)
+		}
+		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID:   "project",
+		Location:    "us-central1",
+		Model:       "gemini-test",
+		BaseURL:     server.URL,
+		TokenSource: staticTokenSource{},
+		HTTPClient:  server.Client(),
+	})
+	if _, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Provider diagnostic.", FinalOnly: true}); err != nil {
+		t.Fatalf("final-only turn: %v", err)
 	}
 }
 
@@ -274,7 +306,7 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	})
 
 	templateIndex := strings.Index(prompt, "Prefer concise spoken answers.")
-	mandatoryIndex := strings.Index(prompt, "Use only the provided native tools for inventory lookup.")
+	mandatoryIndex := strings.Index(prompt, "Use only the provided native tools for inventory lookup and action-plan proposal.")
 	if templateIndex < 0 {
 		t.Fatalf("expected tenant prompt template in prompt: %s", prompt)
 	}
@@ -287,8 +319,16 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	for _, required := range []string{
 		"use the returned assetId as parentAssetId",
 		"Action-plan command arguments must be structured JSON",
+		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
+		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
 		"Assume the user wants missing named locations or containers created",
 		"do not ask whether to create it; call propose_action_plan",
+		"the session is not complete until you either call propose_action_plan or ask a necessary clarification",
+		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
+		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
+		"If the destination name is not present as an assetId in tool results, create it in the same commands array and reference it with parentCommandId.",
+		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
+		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 	} {
 		if !strings.Contains(prompt, required) {

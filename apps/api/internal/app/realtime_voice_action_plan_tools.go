@@ -76,7 +76,7 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 				previousCommandIDs[commandID] = struct{}{}
 			}
 		}
-		return commands, nil
+		return canonicalRealtimeVoiceActionPlanCommandDependencies(commands), nil
 	}
 
 	commandKind := actionplan.CommandKind(strings.TrimSpace(stringArg(args["commandKind"])))
@@ -339,6 +339,68 @@ func canonicalRealtimeVoiceCreateLocationKind(kind actionplan.CommandKind, argum
 		return kind
 	}
 	return actionplan.CommandKindCreateLocation
+}
+
+func canonicalRealtimeVoiceActionPlanCommandDependencies(commands []ActionPlanCommandInput) []ActionPlanCommandInput {
+	if len(commands) < 2 {
+		return commands
+	}
+	normalized := make([]ActionPlanCommandInput, 0, len(commands))
+	indexByID := map[string]int{}
+	for _, command := range commands {
+		if command.ID != "" {
+			indexByID[command.ID] = len(normalized)
+		}
+		normalized = append(normalized, command)
+	}
+
+	indegree := make([]int, len(normalized))
+	dependents := map[int][]int{}
+	for index, command := range normalized {
+		parentCommandID := strings.TrimSpace(stringArg(command.Arguments["parentCommandId"]))
+		parentIndex, ok := indexByID[parentCommandID]
+		if !ok {
+			continue
+		}
+		indegree[index]++
+		dependents[parentIndex] = append(dependents[parentIndex], index)
+	}
+	ready := make([]int, 0, len(normalized))
+	for index, count := range indegree {
+		if count == 0 {
+			ready = append(ready, index)
+		}
+	}
+	ordered := make([]ActionPlanCommandInput, 0, len(normalized))
+	for len(ready) > 0 {
+		index := ready[0]
+		ready = ready[1:]
+		ordered = append(ordered, normalized[index])
+		for _, dependent := range dependents[index] {
+			indegree[dependent]--
+			if indegree[dependent] == 0 {
+				ready = appendStableRealtimeVoiceCommandIndex(ready, dependent)
+			}
+		}
+	}
+	if len(ordered) != len(normalized) {
+		return normalized
+	}
+	return ordered
+}
+
+func appendStableRealtimeVoiceCommandIndex(indexes []int, index int) []int {
+	insertAt := len(indexes)
+	for readyIndex, existing := range indexes {
+		if index < existing {
+			insertAt = readyIndex
+			break
+		}
+	}
+	indexes = append(indexes, 0)
+	copy(indexes[insertAt+1:], indexes[insertAt:])
+	indexes[insertAt] = index
+	return indexes
 }
 
 type realtimeVoiceActionPlanArgs struct {

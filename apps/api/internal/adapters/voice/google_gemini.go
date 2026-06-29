@@ -115,7 +115,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		Tools:    geminiToolsForTurn(input),
 		GenerationConfig: &geminiGenerationConfig{
 			Temperature:      0,
-			ResponseMimeType: "application/json",
+			ResponseMimeType: geminiResponseMimeTypeForTurn(input),
 		},
 	}
 	var response geminiGenerateContentResponse
@@ -141,6 +141,13 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, rawText)
 	}
 	return turn, nil
+}
+
+func geminiResponseMimeTypeForTurn(input ports.LanguageInferenceInput) string {
+	if input.FinalOnly || len(input.Tools) == 0 {
+		return "application/json"
+	}
+	return ""
 }
 
 func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
@@ -175,12 +182,15 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 	}
 	lines = append(lines, []string{
 		"You are the Stuff Stash inventory voice agent.",
-		"Use only the provided native tools for inventory lookup.",
+		"Use only the provided native tools for inventory lookup and action-plan proposal.",
 		"Return strict JSON only when producing a final response.",
 		"Tool results are compact JSON and are the only source of truth for inventory contents, locations, containment, and counts.",
 		"For a specific item or where-is question, call search_authorized_assets first with short keywords.",
 		"For broad list questions, call list_authorized_assets with filters.",
 		"For questions about what is in a place, list with parentTitle or locationTitle when known.",
+		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
+		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
+		"For write requests, the session is not complete until you either call propose_action_plan or ask a necessary clarification.",
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
 		"For missing parent containers or locations requested by the user, propose an ordered commands array and use parentCommandId to place later creates or moves inside earlier creates.",
 		"Assume the user wants missing named locations or containers created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, or Shelf.",
@@ -188,7 +198,12 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"Ask for clarification instead only when the requested destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription.",
 		"For example, if the user says move my water bottle to the kitchen and Kitchen is not visible, create a Kitchen command with an id such as cmd-kitchen, then set the move command parentCommandId to cmd-kitchen.",
 		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId only. For move_asset use assetId plus parentAssetId, parentCommandId, or null parentAssetId.",
+		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
+		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
+		"If the destination name is not present as an assetId in tool results, create it in the same commands array and reference it with parentCommandId.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
+		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
+		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"If you can answer, return {\"final\":{\"kind\":\"answer\",\"spokenResponse\":\"short spoken answer\",\"displayResponse\":\"short display answer\"}}.",
 		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
 		"If a search has no matches, say you could not find a visible match; do not say the whole inventory is empty unless a broad list tool result proves it.",

@@ -356,7 +356,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "invalid_tool_request", Message: "I need a little more detail to do that safely."}); err != nil {
 					return err
 				}
-				result, resultErr := realtimeVoiceToolErrorResult(executableCall, "invalid_tool_request", "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification.", true)
+				result, resultErr := realtimeVoiceToolErrorResult(executableCall, "invalid_tool_request", realtimeVoiceInvalidToolRequestRepairMessage(executableCall.Name), true)
 				if resultErr != nil {
 					return resultErr
 				}
@@ -440,6 +440,13 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 		return "", ports.ErrInvalidProviderInput
 	}
 	return strings.TrimSpace(call.Name) + ":" + string(payload), nil
+}
+
+func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
+	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
+		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, or kitchen-1. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location command for Kitchen and set the move command parentCommandId to that create command id."
+	}
+	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
 }
 
 func realtimeVoiceToolCallDiagnosticDetail(call ports.AgentToolCall) string {
