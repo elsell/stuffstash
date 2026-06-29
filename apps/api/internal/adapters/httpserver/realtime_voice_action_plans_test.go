@@ -439,6 +439,13 @@ func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference por
 func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
+	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t, languageInference, ids, setup)
+	return ctx, connection, sessionID, planID
+}
+
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
+	t.Helper()
+
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
@@ -449,10 +456,17 @@ func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInferen
 	if setup != nil {
 		setup(application)
 	}
-	return openRealtimeVoiceReviewSessionForApplication(t, application)
+	return openRealtimeVoiceReviewSessionForApplicationWithProposal(t, application)
 }
 
 func openRealtimeVoiceReviewSessionForApplication(t *testing.T, application app.App) (context.Context, *websocket.Conn, string, string) {
+	t.Helper()
+
+	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionForApplicationWithProposal(t, application)
+	return ctx, connection, sessionID, planID
+}
+
+func openRealtimeVoiceReviewSessionForApplicationWithProposal(t *testing.T, application app.App) (context.Context, *websocket.Conn, string, string, map[string]any) {
 	t.Helper()
 
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
@@ -502,7 +516,7 @@ func openRealtimeVoiceReviewSessionForApplication(t *testing.T, application app.
 	if planID == "" {
 		t.Fatalf("expected proposed action plan id, got %+v", actionPlan)
 	}
-	return ctx, connection, sessionID, planID
+	return ctx, connection, sessionID, planID, actionPlan
 }
 
 type denyEditAfterProposalAuthorizer struct {

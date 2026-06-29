@@ -88,6 +88,13 @@ func (s Store) ExecuteCreateAssetsActionPlan(ctx context.Context, tenantID tenan
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || len(creates) == 0 || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
 	}
+	return s.ExecuteCreateAndUpdateAssetsActionPlan(ctx, tenantID, inventoryID, planID, transition, creates, nil)
+}
+
+func (s Store) ExecuteCreateAndUpdateAssetsActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, creates []ports.ActionPlanCreateAssetOperation, updates []ports.ActionPlanUpdateAssetOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || (len(creates) == 0 && len(updates) == 0) || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
 	found := false
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		transitionFound, err := updateActionPlanStateInDB(tx, tenantID, inventoryID, planID, transition)
@@ -100,6 +107,11 @@ func (s Store) ExecuteCreateAssetsActionPlan(ctx context.Context, tenantID tenan
 		}
 		for _, create := range creates {
 			if err := createAssetInTx(tx, create.Item, create.AuditRecord, actionPlanUndoableOperationPtr(create.UndoableOperation)); err != nil {
+				return err
+			}
+		}
+		for _, update := range updates {
+			if err := updateAssetInTx(tx, update.ExpectedCurrent, update.Item, update.AuditRecords, update.UndoableOperation); err != nil {
 				return err
 			}
 		}

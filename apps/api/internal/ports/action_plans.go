@@ -25,6 +25,13 @@ type ActionPlanCreateAssetOperation struct {
 	UndoableOperation UndoableOperation
 }
 
+type ActionPlanUpdateAssetOperation struct {
+	ExpectedCurrent   asset.Asset
+	Item              asset.Asset
+	AuditRecords      []audit.Record
+	UndoableOperation *UndoableOperation
+}
+
 type ActionPlanRecord struct {
 	ID                         string
 	TenantID                   tenant.ID
@@ -59,6 +66,7 @@ type ActionPlanRepository interface {
 	UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition) (ActionPlanRecord, bool, error)
 	ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 	ExecuteCreateAssetsActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, creates []ActionPlanCreateAssetOperation) (ActionPlanRecord, bool, error)
+	ExecuteCreateAndUpdateAssetsActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, creates []ActionPlanCreateAssetOperation, updates []ActionPlanUpdateAssetOperation) (ActionPlanRecord, bool, error)
 	ExecuteUpdateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 	ExecuteUpdateAssetLifecycleActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 }

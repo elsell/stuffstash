@@ -267,6 +267,94 @@ func TestActionPlanRepositoryRollsBackCreateAssetsActionPlan(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryExecutesCreateAndUpdateAssetsActionPlanAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	successRecord := gormActionPlanRecord("plan-mixed-success", time.Date(2026, 6, 26, 18, 4, 0, 0, time.UTC))
+	rollbackRecord := gormActionPlanRecord("plan-mixed-rollback", time.Date(2026, 6, 26, 18, 5, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, successRecord); err != nil {
+		t.Fatalf("save successful action plan: %v", err)
+	}
+	if err := store.SaveActionPlan(ctx, rollbackRecord); err != nil {
+		t.Fatalf("save rollback action plan: %v", err)
+	}
+	approveActionPlanForGormTest(t, ctx, store, successRecord)
+	approveActionPlanForGormTest(t, ctx, store, rollbackRecord)
+
+	waterBottle := assetItem("water-bottle", successRecord.TenantID.String(), successRecord.InventoryID.String(), asset.KindItem, "")
+	waterBottle.CreatedAt = successRecord.CreatedAt
+	waterBottle.UpdatedAt = successRecord.CreatedAt
+	if err := createAsset(t, ctx, store, waterBottle); err != nil {
+		t.Fatalf("seed water bottle: %v", err)
+	}
+	kitchen := assetItem("kitchen", successRecord.TenantID.String(), successRecord.InventoryID.String(), asset.KindLocation, "")
+	moved := waterBottle
+	moved.ParentAssetID = kitchen.ID
+	executed, found, err := store.ExecuteCreateAndUpdateAssetsActionPlan(ctx, successRecord.TenantID, successRecord.InventoryID, successRecord.ID, ports.ActionPlanStateTransition{
+		PrincipalID: successRecord.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          successRecord.CreatedAt.Add(2 * time.Second),
+	}, []ports.ActionPlanCreateAssetOperation{{
+		Item:        kitchen,
+		AuditRecord: auditRecord(t, "audit-mixed-create", successRecord.TenantID, successRecord.InventoryID, audit.ActionAssetCreated),
+	}}, []ports.ActionPlanUpdateAssetOperation{{
+		ExpectedCurrent: waterBottle,
+		Item:            moved,
+		AuditRecords:    []audit.Record{auditRecord(t, "audit-mixed-move", successRecord.TenantID, successRecord.InventoryID, audit.ActionAssetMoved)},
+	}})
+	if err != nil {
+		t.Fatalf("execute mixed action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	if got, found, err := store.AssetByID(ctx, successRecord.TenantID, successRecord.InventoryID, waterBottle.ID); err != nil || !found || got.ParentAssetID != kitchen.ID {
+		t.Fatalf("expected water bottle to move into created kitchen found=%t item=%+v err=%v", found, got, err)
+	}
+
+	duplicateAudit := auditRecord(t, "audit-mixed-rollback-move", rollbackRecord.TenantID, rollbackRecord.InventoryID, audit.ActionAssetMoved)
+	if err := store.SaveAuditRecord(ctx, duplicateAudit); err != nil {
+		t.Fatalf("seed duplicate audit: %v", err)
+	}
+	pantry := assetItem("pantry", rollbackRecord.TenantID.String(), rollbackRecord.InventoryID.String(), asset.KindLocation, "")
+	rollbackMove := moved
+	rollbackMove.ParentAssetID = pantry.ID
+	if _, _, err := store.ExecuteCreateAndUpdateAssetsActionPlan(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, rollbackRecord.ID, ports.ActionPlanStateTransition{
+		PrincipalID: rollbackRecord.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          rollbackRecord.CreatedAt.Add(2 * time.Second),
+	}, []ports.ActionPlanCreateAssetOperation{{
+		Item:        pantry,
+		AuditRecord: auditRecord(t, "audit-mixed-rollback-create", rollbackRecord.TenantID, rollbackRecord.InventoryID, audit.ActionAssetCreated),
+	}}, []ports.ActionPlanUpdateAssetOperation{{
+		ExpectedCurrent: moved,
+		Item:            rollbackMove,
+		AuditRecords:    []audit.Record{duplicateAudit},
+	}}); err == nil {
+		t.Fatalf("expected mixed execution to fail on duplicate audit")
+	}
+	if _, found, err := store.AssetByID(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, pantry.ID); err != nil || found {
+		t.Fatalf("expected created pantry to roll back found=%t err=%v", found, err)
+	}
+	rolledBack, found, err := store.ActionPlanByID(ctx, rollbackRecord.TenantID, rollbackRecord.InventoryID, rollbackRecord.ID)
+	if err != nil {
+		t.Fatalf("read rolled back action plan: %v", err)
+	}
+	if !found || rolledBack.State != actionplan.StateApproved || !rolledBack.ExecutedAt.IsZero() {
+		t.Fatalf("expected mixed plan to remain approved after rollback found=%t record=%+v", found, rolledBack)
+	}
+	stillInKitchen, found, err := store.AssetByID(ctx, successRecord.TenantID, successRecord.InventoryID, waterBottle.ID)
+	if err != nil || !found || stillInKitchen.ParentAssetID != kitchen.ID {
+		t.Fatalf("expected rollback not to move water bottle found=%t item=%+v err=%v", found, stillInKitchen, err)
+	}
+}
+
 func TestActionPlanRepositoryExecutesUpdateAssetAtomically(t *testing.T) {
 	t.Parallel()
 

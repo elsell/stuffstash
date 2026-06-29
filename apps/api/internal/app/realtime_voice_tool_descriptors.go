@@ -58,7 +58,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:        RealtimeVoiceToolProposeActionPlan,
 			Label:       realtimeVoiceProposeActionPlanPublicName,
-			Description: "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use commandKind plus arguments for single-command create, move, update, archive, or restore plans. Prefer commands array for multi-step create-only plans. Each command object has id, kind, summary, and arguments. For create into an existing location/container, resolve the parent with read tools and use its assetId as parentAssetId. For create inside something created earlier in the same plan, use parentCommandId.",
+			Description: "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use commandKind plus arguments for single-command create, move, update, archive, or restore plans. Prefer commands array for multi-step plans. Each command object has id, kind, summary, and arguments. For create or move into an existing location/container, resolve the parent with read tools and use its assetId as parentAssetId. For create or move into something created earlier in the same plan, use parentCommandId. If the user asks to move an existing asset to a missing location, propose creating the location first and then moving the existing asset using parentCommandId.",
 			ReadOnly:    true,
 			Parameters: ports.AgentToolParameters{
 				Required: []string{"intentSummary", "modelInterpretationSummary", "confirmationSummary"},
@@ -90,7 +90,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 					},
 					"commands": {
 						Type:        ports.AgentToolParameterTypeArray,
-						Description: "Preferred command array for multi-step create-only plans. Each item must include id, kind, summary, and arguments. For create_asset use title/name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId. parentCommandId must point to an earlier create command id. Never use parentTitle or locationTitle here.",
+						Description: "Preferred command array for multi-step plans. Each item must include id, kind, summary, and arguments. For create_asset use title/name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId. For move_asset use assetId plus either parentAssetId, parentCommandId, or null parentAssetId for root. parentCommandId must point to an earlier create command id. Never use parentTitle or locationTitle here.",
 						Items: &ports.AgentToolParameter{
 							Type:     ports.AgentToolParameterTypeObject,
 							Required: []string{"id", "kind", "summary", "arguments"},
@@ -101,8 +101,8 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 								},
 								"kind": {
 									Type:        ports.AgentToolParameterTypeString,
-									Description: "Create-only action-plan command kind for multi-step plans.",
-									Enum:        []string{"create_asset", "create_location"},
+									Description: "Action-plan command kind for multi-step plans.",
+									Enum:        []string{"create_asset", "create_location", "move_asset"},
 								},
 								"summary": {
 									Type:        ports.AgentToolParameterTypeString,
@@ -110,8 +110,12 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 								},
 								"arguments": {
 									Type:        ports.AgentToolParameterTypeObject,
-									Description: "Structured command arguments. For creates include title or name, kind item|container|location, optional description, and exactly one parentAssetId or parentCommandId when placing the new asset.",
+									Description: "Structured command arguments. For creates include title or name, kind item|container|location, optional description, and exactly one parentAssetId or parentCommandId when placing the new asset. For move_asset include assetId and either parentAssetId, parentCommandId, or parentAssetId null for root.",
 									Properties: map[string]ports.AgentToolParameter{
+										"assetId": {
+											Type:        ports.AgentToolParameterTypeString,
+											Description: "Existing asset id returned by a read tool for move_asset.",
+										},
 										"title": {
 											Type:        ports.AgentToolParameterTypeString,
 											Description: "New asset title.",

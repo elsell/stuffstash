@@ -186,6 +186,14 @@ type PreparedUpdateAsset struct {
 }
 
 func (s Service) PrepareUpdateAsset(ctx context.Context, input UpdateAssetInput) (PreparedUpdateAsset, error) {
+	return s.prepareUpdateAsset(ctx, input, nil)
+}
+
+func (s Service) PrepareUpdateAssetWithPendingParents(ctx context.Context, input UpdateAssetInput, pendingParents map[asset.ID]asset.Kind) (PreparedUpdateAsset, error) {
+	return s.prepareUpdateAsset(ctx, input, pendingParents)
+}
+
+func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput, pendingParents map[asset.ID]asset.Kind) (PreparedUpdateAsset, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return PreparedUpdateAsset{}, err
 	}
@@ -237,7 +245,7 @@ func (s Service) PrepareUpdateAsset(ctx context.Context, input UpdateAssetInput)
 	if input.ParentAssetID.Present {
 		parentAssetID := asset.ID("")
 		if !input.ParentAssetID.Null {
-			parentAsset, err := s.validatedParentAssetID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.ParentAssetID.Value)
+			parentAsset, err := s.validatedParentAssetIDWithPendingParents(ctx, input.TenantID, input.InventoryID, input.AssetID, input.ParentAssetID.Value, pendingParents)
 			if err != nil {
 				return PreparedUpdateAsset{}, err
 			}

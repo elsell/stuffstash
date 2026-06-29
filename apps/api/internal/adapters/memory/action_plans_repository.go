@@ -97,6 +97,17 @@ func (s *Store) ExecuteCreateAssetsActionPlan(_ context.Context, tenantID tenant
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || len(creates) == 0 || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
 	}
+	return s.executeCreateAndUpdateAssetsActionPlan(tenantID, inventoryID, planID, transition, creates, nil)
+}
+
+func (s *Store) ExecuteCreateAndUpdateAssetsActionPlan(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, creates []ports.ActionPlanCreateAssetOperation, updates []ports.ActionPlanUpdateAssetOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || (len(creates) == 0 && len(updates) == 0) || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	return s.executeCreateAndUpdateAssetsActionPlan(tenantID, inventoryID, planID, transition, creates, updates)
+}
+
+func (s *Store) executeCreateAndUpdateAssetsActionPlan(tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, creates []ports.ActionPlanCreateAssetOperation, updates []ports.ActionPlanUpdateAssetOperation) (ports.ActionPlanRecord, bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -113,6 +124,14 @@ func (s *Store) ExecuteCreateAssetsActionPlan(_ context.Context, tenantID tenant
 	for _, create := range creates {
 		operation := create.UndoableOperation
 		if err := s.createAssetLocked(create.Item, create.AuditRecord, &operation); err != nil {
+			s.assets = assetsSnapshot
+			s.auditRecords = auditSnapshot
+			s.undoables = undoableSnapshot
+			return ports.ActionPlanRecord{}, true, err
+		}
+	}
+	for _, update := range updates {
+		if err := s.updateAssetLocked(update.ExpectedCurrent, update.Item, update.AuditRecords, update.UndoableOperation); err != nil {
 			s.assets = assetsSnapshot
 			s.auditRecords = auditSnapshot
 			s.undoables = undoableSnapshot

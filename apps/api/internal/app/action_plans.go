@@ -419,9 +419,10 @@ func actionPlanMoveAssetInput(input ActionPlanDecisionInput, command ports.Actio
 }
 
 type actionPlanMoveArguments struct {
-	AssetID       asset.ID
-	ParentAssetID string
-	ParentIsRoot  bool
+	AssetID         asset.ID
+	ParentAssetID   string
+	ParentCommandID string
+	ParentIsRoot    bool
 }
 
 func parseActionPlanMoveArguments(command ports.ActionPlanCommandRecord) (actionPlanMoveArguments, error) {
@@ -454,6 +455,13 @@ func parseActionPlanMoveArguments(command ports.ActionPlanCommandRecord) (action
 			}
 			args.ParentAssetID = text
 			args.ParentIsRoot = strings.TrimSpace(text) == ""
+		case "parentCommandId":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanMoveArguments{}, err
+			}
+			args.ParentCommandID = text
+			args.ParentIsRoot = false
 		default:
 			return actionPlanMoveArguments{}, ErrValidation
 		}
@@ -461,8 +469,19 @@ func parseActionPlanMoveArguments(command ports.ActionPlanCommandRecord) (action
 	if args.AssetID.String() == "" {
 		return actionPlanMoveArguments{}, ErrValidation
 	}
+	if strings.TrimSpace(args.ParentAssetID) != "" && strings.TrimSpace(args.ParentCommandID) != "" {
+		return actionPlanMoveArguments{}, ErrValidation
+	}
+	if strings.TrimSpace(args.ParentCommandID) != "" && !validActionPlanCommandID(args.ParentCommandID) {
+		return actionPlanMoveArguments{}, ErrValidation
+	}
 	if !args.ParentIsRoot {
-		if _, ok := asset.NewID(args.ParentAssetID); !ok {
+		if strings.TrimSpace(args.ParentCommandID) == "" {
+			if _, ok := asset.NewID(args.ParentAssetID); !ok {
+				return actionPlanMoveArguments{}, ErrValidation
+			}
+		}
+		if args.AssetID.String() == strings.TrimSpace(args.ParentAssetID) {
 			return actionPlanMoveArguments{}, ErrValidation
 		}
 	}

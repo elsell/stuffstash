@@ -63,12 +63,22 @@ func ValidateCustomFields(ctx context.Context, repo ports.CustomFieldDefinitionR
 }
 
 func (s Service) validatedParentAssetID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, rawParentAssetID string) (asset.ID, error) {
+	return s.validatedParentAssetIDWithPendingParents(ctx, tenantID, inventoryID, assetID, rawParentAssetID, nil)
+}
+
+func (s Service) validatedParentAssetIDWithPendingParents(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, rawParentAssetID string, pendingParents map[asset.ID]asset.Kind) (asset.ID, error) {
 	if strings.TrimSpace(rawParentAssetID) == "" {
 		return asset.ID(""), apperrors.ErrInvalidInput
 	}
 	parentAssetID, ok := asset.NewID(rawParentAssetID)
 	if !ok || parentAssetID == assetID {
 		return asset.ID(""), apperrors.ErrInvalidInput
+	}
+	if pendingKind, ok := pendingParents[parentAssetID]; ok {
+		if !pendingKind.CanContainChildren() {
+			return asset.ID(""), apperrors.ErrInvalidInput
+		}
+		return parentAssetID, nil
 	}
 	parent, found, err := s.assets.AssetByID(ctx, tenantID, inventoryID, parentAssetID)
 	if err != nil {
