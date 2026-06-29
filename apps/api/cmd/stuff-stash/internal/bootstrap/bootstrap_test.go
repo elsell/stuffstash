@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -521,8 +522,8 @@ func TestBuildRealtimeVoiceProvidersAcceptsExplicitDevelopmentFakes(t *testing.T
 
 func TestBuildRealtimeVoiceProvidersRejectsGoogleWithoutProject(t *testing.T) {
 	_, _, _, err := buildRealtimeVoiceProviders(context.Background(), config.Config{VoiceGoogleEnabled: true})
-	if err == nil {
-		t.Fatalf("expected missing Google project error")
+	if err == nil || !strings.Contains(err.Error(), "google cloud project") {
+		t.Fatalf("expected missing Google project error, got %v", err)
 	}
 }
 
@@ -558,7 +559,38 @@ func TestBuildRealtimeVoiceProvidersPrefersGoogleWhenEnabled(t *testing.T) {
 	}
 }
 
-func TestBuildRealtimeVoiceProvidersAcceptsGoogleAccessToken(t *testing.T) {
+func TestBuildRealtimeVoiceProvidersRejectsAccessTokenModeWithoutToken(t *testing.T) {
+	_, _, _, err := buildRealtimeVoiceProviders(context.Background(), config.Config{
+		VoiceGoogleEnabled:    true,
+		GoogleCloudProject:    "pianotechpros",
+		GoogleCloudLocation:   "us-central1",
+		GoogleGeminiModel:     "gemini-test",
+		GoogleTTSLanguageCode: "en-US",
+		GoogleTTSVoiceName:    "en-US-Neural2-F",
+		GoogleCredentialMode:  config.GoogleCredentialModeAccessToken,
+	})
+	if err == nil {
+		t.Fatalf("expected access token mode without token to fail")
+	}
+}
+
+func TestBuildRealtimeVoiceProvidersRejectsInvalidGoogleCredentialMode(t *testing.T) {
+	_, _, _, err := buildRealtimeVoiceProviders(context.Background(), config.Config{
+		VoiceGoogleEnabled:    true,
+		GoogleCloudProject:    "pianotechpros",
+		GoogleCloudLocation:   "us-central1",
+		GoogleGeminiModel:     "gemini-test",
+		GoogleTTSLanguageCode: "en-US",
+		GoogleTTSVoiceName:    "en-US-Neural2-F",
+		GoogleCredentialMode:  "bearer",
+		GoogleAccessToken:     "ya29.test",
+	})
+	if err == nil {
+		t.Fatalf("expected invalid Google credential mode to fail")
+	}
+}
+
+func TestBuildRealtimeVoiceProvidersAcceptsExplicitGoogleAccessTokenMode(t *testing.T) {
 	stt, lm, tts, err := buildRealtimeVoiceProviders(context.Background(), config.Config{
 		VoiceGoogleEnabled:    true,
 		GoogleCloudProject:    "pianotechpros",
@@ -566,6 +598,7 @@ func TestBuildRealtimeVoiceProvidersAcceptsGoogleAccessToken(t *testing.T) {
 		GoogleGeminiModel:     "gemini-test",
 		GoogleTTSLanguageCode: "en-US",
 		GoogleTTSVoiceName:    "en-US-Neural2-F",
+		GoogleCredentialMode:  config.GoogleCredentialModeAccessToken,
 		GoogleAccessToken:     "ya29.test",
 	})
 	if err != nil {

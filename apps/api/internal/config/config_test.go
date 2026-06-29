@@ -48,6 +48,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envGoogleGeminiModel, "")
 	t.Setenv(envGoogleTTSLanguageCode, "")
 	t.Setenv(envGoogleTTSVoiceName, "")
+	t.Setenv(envGoogleCredentialMode, "")
 	t.Setenv(envGoogleAccessToken, "")
 	t.Setenv(envProviderCredentialKeyID, "")
 	t.Setenv(envProviderCredentialKey, "")
@@ -150,6 +151,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.GoogleCloudProject != "" || cfg.GoogleCloudLocation != defaultGoogleCloudLocation || cfg.GoogleGeminiModel != defaultGoogleGeminiModel || cfg.GoogleTTSLanguageCode != defaultGoogleTTSLanguageCode || cfg.GoogleTTSVoiceName != defaultGoogleTTSVoiceName {
 		t.Fatalf("unexpected Google voice defaults: %+v", cfg)
 	}
+	if cfg.GoogleCredentialMode != defaultGoogleCredentialMode {
+		t.Fatalf("expected Google credential mode %q, got %q", defaultGoogleCredentialMode, cfg.GoogleCredentialMode)
+	}
 	if cfg.GoogleAccessToken != "" {
 		t.Fatalf("expected empty Google access token by default")
 	}
@@ -208,6 +212,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envGoogleGeminiModel, "gemini-test-model")
 	t.Setenv(envGoogleTTSLanguageCode, "en-GB")
 	t.Setenv(envGoogleTTSVoiceName, "en-GB-Neural2-A")
+	t.Setenv(envGoogleCredentialMode, GoogleCredentialModeAccessToken)
 	t.Setenv(envGoogleAccessToken, "ya29.test")
 	t.Setenv(envProviderCredentialKeyID, "local-key")
 	t.Setenv(envProviderCredentialKey, "base64-key")
@@ -303,6 +308,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if !cfg.VoiceGoogleEnabled || cfg.GoogleCloudProject != "pianotechpros" || cfg.GoogleCloudLocation != "us-east5" || cfg.GoogleGeminiModel != "gemini-test-model" || cfg.GoogleTTSLanguageCode != "en-GB" || cfg.GoogleTTSVoiceName != "en-GB-Neural2-A" {
 		t.Fatalf("unexpected Google voice config: %+v", cfg)
+	}
+	if cfg.GoogleCredentialMode != GoogleCredentialModeAccessToken {
+		t.Fatalf("expected Google access token credential mode, got %q", cfg.GoogleCredentialMode)
 	}
 	if cfg.GoogleAccessToken != "ya29.test" {
 		t.Fatalf("expected Google access token config")

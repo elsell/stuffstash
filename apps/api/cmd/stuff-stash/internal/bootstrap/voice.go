@@ -33,17 +33,28 @@ func (r staticRealtimeVoiceProviderResolver) ResolveRealtimeVoiceProviders(conte
 
 func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.SpeechToTextProvider, ports.LanguageInferenceProvider, ports.TextToSpeechProvider, error) {
 	if cfg.VoiceGoogleEnabled {
-		if token := strings.TrimSpace(cfg.GoogleAccessToken); token != "" {
+		if err := validateGoogleVoiceConfig(cfg); err != nil {
+			return nil, nil, nil, err
+		}
+		switch strings.TrimSpace(cfg.GoogleCredentialMode) {
+		case "", config.GoogleCredentialModeADC:
+			tokenSource, err := google.DefaultTokenSource(ctx, googleCloudPlatformScope)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			return buildRealtimeVoiceProvidersWithTokenSource(cfg, tokenSource)
+		case config.GoogleCredentialModeAccessToken:
+			token := strings.TrimSpace(cfg.GoogleAccessToken)
+			if token == "" {
+				return nil, nil, nil, errors.New("google access token is required when google credential mode is access_token")
+			}
 			return buildRealtimeVoiceProvidersWithTokenSource(cfg, oauth2.StaticTokenSource(&oauth2.Token{
 				AccessToken: token,
 				TokenType:   "Bearer",
 			}))
+		default:
+			return nil, nil, nil, errors.New("google credential mode is invalid for realtime voice providers")
 		}
-		tokenSource, err := google.DefaultTokenSource(ctx, googleCloudPlatformScope)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		return buildRealtimeVoiceProvidersWithTokenSource(cfg, tokenSource)
 	}
 	if cfg.VoiceDevFakeEnabled {
 		return voice.DevFakeSpeechToText{}, voice.DevFakeLanguageInference{}, voice.DevFakeTextToSpeech{}, nil
@@ -57,9 +68,6 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 			return voice.DevFakeSpeechToText{}, voice.DevFakeLanguageInference{}, voice.DevFakeTextToSpeech{}, nil
 		}
 		return nil, nil, nil, nil
-	}
-	if strings.TrimSpace(cfg.GoogleCloudProject) == "" {
-		return nil, nil, nil, errors.New("google cloud project is required for realtime voice providers")
 	}
 	if err := validateGoogleVoiceConfig(cfg); err != nil {
 		return nil, nil, nil, err
@@ -96,6 +104,9 @@ func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories reposito
 }
 
 func validateGoogleVoiceConfig(cfg config.Config) error {
+	if strings.TrimSpace(cfg.GoogleCloudProject) == "" {
+		return errors.New("google cloud project is required for realtime voice providers")
+	}
 	fields := []struct {
 		name    string
 		value   string

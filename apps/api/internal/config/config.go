@@ -60,6 +60,7 @@ const (
 	envGoogleGeminiModel             = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
 	envGoogleTTSLanguageCode         = "STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE"
 	envGoogleTTSVoiceName            = "STUFF_STASH_GOOGLE_TTS_VOICE_NAME"
+	envGoogleCredentialMode          = "STUFF_STASH_GOOGLE_CREDENTIAL_MODE"
 	envGoogleAccessToken             = "STUFF_STASH_GOOGLE_ACCESS_TOKEN"
 	envProviderCredentialKeyID       = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID"
 	envProviderCredentialKey         = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY"
@@ -101,6 +102,13 @@ const (
 	defaultGoogleTTSLanguageCode     = "en-US"
 	defaultGoogleTTSVoiceName        = "en-US-Standard-C"
 )
+
+const (
+	GoogleCredentialModeADC         = "adc"
+	GoogleCredentialModeAccessToken = "access_token"
+)
+
+const defaultGoogleCredentialMode = GoogleCredentialModeADC
 
 type Config struct {
 	HTTPAddr                         string
@@ -153,6 +161,7 @@ type Config struct {
 	GoogleGeminiModel                string
 	GoogleTTSLanguageCode            string
 	GoogleTTSVoiceName               string
+	GoogleCredentialMode             string
 	GoogleAccessToken                string
 	ProviderCredentialKeyID          string
 	ProviderCredentialKey            string
@@ -210,6 +219,7 @@ func Load() Config {
 		GoogleGeminiModel:                envOrDefault(envGoogleGeminiModel, defaultGoogleGeminiModel),
 		GoogleTTSLanguageCode:            envOrDefault(envGoogleTTSLanguageCode, defaultGoogleTTSLanguageCode),
 		GoogleTTSVoiceName:               envOrDefault(envGoogleTTSVoiceName, defaultGoogleTTSVoiceName),
+		GoogleCredentialMode:             envOrDefault(envGoogleCredentialMode, defaultGoogleCredentialMode),
 		GoogleAccessToken:                os.Getenv(envGoogleAccessToken),
 		ProviderCredentialKeyID:          os.Getenv(envProviderCredentialKeyID),
 		ProviderCredentialKey:            os.Getenv(envProviderCredentialKey),
