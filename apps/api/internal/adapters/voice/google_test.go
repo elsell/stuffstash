@@ -287,6 +287,7 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	for _, required := range []string{
 		"use the returned assetId as parentAssetId",
 		"Action-plan command arguments must be structured JSON",
+		"Assume the user wants missing named locations or containers created",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 	} {
 		if !strings.Contains(prompt, required) {
