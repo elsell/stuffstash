@@ -21,13 +21,13 @@ importers:
     dependencies:
       '@astrojs/starlight':
         specifier: 0.39.3
-        version: 0.39.3(astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1))
+        version: 0.39.3(astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1))
       '@fontsource/geist-sans':
         specifier: 5.2.5
         version: 5.2.5
       astro:
-        specifier: 6.4.4
-        version: 6.4.4(@types/node@24.13.1)(rollup@4.61.1)
+        specifier: 6.4.6
+        version: 6.4.6(@types/node@24.13.1)(rollup@4.61.1)
 
 packages:
 
@@ -89,12 +89,12 @@ packages:
     resolution: {integrity: sha512-VERIM64vtTP1C4mxQ5thVT9fK0apjPFobqybMtA1UdUujWka24ERHbRHFGmpbbhp73MhV+KSsHQH9C6uOTdEQA==}
     engines: {node: '>=18'}
 
-  '@clack/core@1.4.1':
-    resolution: {integrity: sha512-FILJa1gGKEFTGZAJE9RpVhrjKz3c3h4ar60dSv6cGuDqufQ84YEIS3GAGvZiN+H6yaLbbvTFNejjCC4tXpZEuw==}
+  '@clack/core@1.4.2':
+    resolution: {integrity: sha512-0Ty/1Gfm+Kb07sXcuESjyKfwEhSy4Ns1AgeEisHb/bDY5fWme0tTeTkU14T1Gmcs17YIjB/teiDe4uaCghbYqQ==}
     engines: {node: '>= 20.12.0'}
 
-  '@clack/prompts@1.5.1':
-    resolution: {integrity: sha512-zccHj2z2oCCO4yrDiRSlFOxWerGqRiysP7a5jPK6uoI9URKAquwY42Dd/iUP8JWHxEzdRe4TlbvZCo8z1/mhrw==}
+  '@clack/prompts@1.6.0':
+    resolution: {integrity: sha512-EYlRokl8szrP9Z25qT5aepMdBjzBvHF9ZEhzIiUBc9guz/T31EqRgvD0QSgZcpE93xiwrr+OkB4nz0BZyF6fSA==}
     engines: {node: '>= 20.12.0'}
 
   '@ctrl/tinycolor@4.2.0':
@@ -731,8 +731,8 @@ packages:
     peerDependencies:
       astro: ^4.0.0-beta || ^5.0.0-beta || ^3.3.0 || ^6.0.0-beta
 
-  astro@6.4.4:
-    resolution: {integrity: sha512-hVe8tq3lqt/Dr0UyB//yUmQSlHMTU8scTiF/vQddQVahLE4TTaSdH5H0nb7OvRcwo0UmlAO8DWYar4jNaS7H+A==}
+  astro@6.4.6:
+    resolution: {integrity: sha512-48OBTBKR9ctbf+DQxpOuxGl8ebfn59zTuNQMBzptmG/Mi/H8IdfMSbJgGuX1I/4U6g9yazG1p4BHlf4+2hWU4Q==}
     engines: {node: '>=22.12.0', npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
@@ -1317,8 +1317,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  nanoid@3.3.12:
-    resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
+  nanoid@3.3.14:
+    resolution: {integrity: sha512-U9kYi5bpVMEI31yC8iw4bJJp0avcHXA0W8/wNfLfnvJYzihQo2ZRPYPvpAAd570HAcCBjCTN7vnr+v4StKl1IQ==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -1856,12 +1856,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@5.0.6(astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1))':
+  '@astrojs/mdx@5.0.6(astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1))':
     dependencies:
       '@astrojs/markdown-remark': 7.1.2
       '@mdx-js/mdx': 3.1.1
       acorn: 8.16.0
-      astro: 6.4.4(@types/node@24.13.1)(rollup@4.61.1)
+      astro: 6.4.6(@types/node@24.13.1)(rollup@4.61.1)
       es-module-lexer: 2.1.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -1885,17 +1885,17 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 4.4.3
 
-  '@astrojs/starlight@0.39.3(astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1))':
+  '@astrojs/starlight@0.39.3(astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1))':
     dependencies:
       '@astrojs/markdown-remark': 7.2.0
-      '@astrojs/mdx': 5.0.6(astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1))
+      '@astrojs/mdx': 5.0.6(astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1))
       '@astrojs/sitemap': 3.7.3
       '@pagefind/default-ui': 1.5.2
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 6.4.4(@types/node@24.13.1)(rollup@4.61.1)
-      astro-expressive-code: 0.42.0(astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1))
+      astro: 6.4.6(@types/node@24.13.1)(rollup@4.61.1)
+      astro-expressive-code: 0.42.0(astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -1945,14 +1945,14 @@ snapshots:
     dependencies:
       fontkitten: 1.0.3
 
-  '@clack/core@1.4.1':
+  '@clack/core@1.4.2':
     dependencies:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@clack/prompts@1.5.1':
+  '@clack/prompts@1.6.0':
     dependencies:
-      '@clack/core': 1.4.1
+      '@clack/core': 1.4.2
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
@@ -2409,19 +2409,19 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro-expressive-code@0.42.0(astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1)):
+  astro-expressive-code@0.42.0(astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1)):
     dependencies:
-      astro: 6.4.4(@types/node@24.13.1)(rollup@4.61.1)
+      astro: 6.4.6(@types/node@24.13.1)(rollup@4.61.1)
       rehype-expressive-code: 0.42.0
 
-  astro@6.4.4(@types/node@24.13.1)(rollup@4.61.1):
+  astro@6.4.6(@types/node@24.13.1)(rollup@4.61.1):
     dependencies:
       '@astrojs/compiler': 4.0.0
       '@astrojs/internal-helpers': 0.10.0
       '@astrojs/markdown-remark': 7.2.0
       '@astrojs/telemetry': 3.3.2
       '@capsizecss/unpack': 4.0.0
-      '@clack/prompts': 1.5.1
+      '@clack/prompts': 1.6.0
       '@oslojs/encoding': 1.1.0
       '@rollup/pluginutils': 5.4.0(rollup@4.61.1)
       aria-query: 5.3.2
@@ -3491,7 +3491,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  nanoid@3.3.12: {}
+  nanoid@3.3.14: {}
 
   neotraverse@0.6.18: {}
 
@@ -3593,7 +3593,7 @@ snapshots:
 
   postcss@8.5.15:
     dependencies:
-      nanoid: 3.3.12
+      nanoid: 3.3.14
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
