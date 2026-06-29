@@ -145,6 +145,7 @@ func newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t *testing.T, resolve
 		Inventories:                   store,
 		Assets:                        store,
 		Search:                        store,
+		Observer:                      &fakeObserver{},
 		ActionPlans:                   store,
 		RealtimeVoiceProviderResolver: resolver,
 		RealtimeSessions:              sessions,

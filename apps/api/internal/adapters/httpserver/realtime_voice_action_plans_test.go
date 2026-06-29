@@ -322,28 +322,6 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 	assertSafeRealtimeEvents(t, []map[string]any{failed}, []string{"asset-id", "tenant-home", "inventory-home", "apiKey", "Bearer", "provider_session_id"})
 }
 
-func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) {
-	t.Parallel()
-
-	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithModel(t, unsupportedActionPlanProposalLanguageModel{})
-
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":      "action.plan.approve",
-		"seq":       4,
-		"sessionId": sessionID,
-		"planId":    planID,
-	})
-	approved := readRealtimeMessage(t, ctx, connection)
-	if approved["type"] != "action.plan.approved" || approved["planId"] != planID || approved["status"] != "approved" {
-		t.Fatalf("expected safe approval event, got %+v", approved)
-	}
-	failed := readRealtimeMessage(t, ctx, connection)
-	if failed["type"] != "action.plan.failed" || failed["planId"] != planID || failed["status"] != "failed" {
-		t.Fatalf("expected safe execution failure event, got %+v", failed)
-	}
-	assertSafeRealtimeEvents(t, []map[string]any{approved, failed}, []string{"asset-1", "location-1", "apiKey", "Bearer", "provider_session_id"})
-}
-
 func TestRealtimeVoiceActionPlanCancellationUsesOpenReviewSession(t *testing.T) {
 	t.Parallel()
 
@@ -600,39 +578,30 @@ func (m actionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports
 	}, nil
 }
 
-type unsupportedActionPlanProposalLanguageModel struct{}
-
-func (m unsupportedActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-tool-call",
-				Name: "propose_action_plan",
-				Arguments: map[string]any{
-					"commandKind":                "move_asset",
-					"intentSummary":              "Move a visible item.",
-					"modelInterpretationSummary": "The user wants to move an item.",
-					"confirmationSummary":        "Move item?",
-					"commandSummary":             "Move item",
-					"argumentsJson":              `{"assetId":"asset-1","parentAssetId":"location-1"}`,
-					"riskSummary":                "Moves an item in this inventory.",
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "I prepared that change for review.",
-			DisplayResponse: "I prepared that change for review.",
-		},
-	}, nil
-}
-
 type moveActionPlanProposalLanguageModel struct{}
 
 func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	if len(input.ToolResults) == 0 {
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "list-active-assets",
+				Name: "list_authorized_assets",
+				Arguments: map[string]any{
+					"lifecycleState": "active",
+					"limit":          float64(10),
+				},
+			}},
+		}, nil
+	}
+	if len(input.ToolResults) == 1 {
+		assetID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Water bottle", "active")
+		if err != nil {
+			return ports.LanguageInferenceTurn{}, err
+		}
+		parentID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Office", "active")
+		if err != nil {
+			return ports.LanguageInferenceTurn{}, err
+		}
 		return ports.LanguageInferenceTurn{
 			ToolCalls: []ports.AgentToolCall{{
 				ID:   "plan-tool-call",
@@ -643,7 +612,7 @@ func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input p
 					"modelInterpretationSummary": "The user wants the visible water bottle moved into Office.",
 					"confirmationSummary":        "Move water bottle to Office?",
 					"commandSummary":             "Move water bottle to Office",
-					"argumentsJson":              `{"assetId":"asset-id","parentAssetId":"location-id"}`,
+					"argumentsJson":              `{"assetId":"` + assetID + `","parentAssetId":"` + parentID + `"}`,
 					"riskSummary":                "Moves an item in this inventory.",
 				},
 			}},
@@ -664,16 +633,32 @@ func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 	if len(input.ToolResults) == 0 {
 		return ports.LanguageInferenceTurn{
 			ToolCalls: []ports.AgentToolCall{{
+				ID:   "list-active-assets",
+				Name: "list_authorized_assets",
+				Arguments: map[string]any{
+					"lifecycleState": "active",
+					"limit":          float64(10),
+				},
+			}},
+		}, nil
+	}
+	if len(input.ToolResults) == 1 {
+		assetID, err := firstToolResultAnyAssetID(input.ToolResults[0].Content, "active", "Water bottle", "Toolbox")
+		if err != nil {
+			return ports.LanguageInferenceTurn{}, err
+		}
+		return ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
 				ID:   "plan-tool-call",
 				Name: "propose_action_plan",
 				Arguments: map[string]any{
 					"commandKind":                "archive_asset",
-					"intentSummary":              "Archive the water bottle.",
-					"modelInterpretationSummary": "The user wants the visible water bottle archived.",
-					"confirmationSummary":        "Archive water bottle?",
-					"commandSummary":             "Archive water bottle",
-					"argumentsJson":              `{"assetId":"asset-id"}`,
-					"riskSummary":                "Archives an item in this inventory.",
+					"intentSummary":              "Archive the selected asset.",
+					"modelInterpretationSummary": "The user wants the visible selected asset archived.",
+					"confirmationSummary":        "Archive selected asset?",
+					"commandSummary":             "Archive selected asset",
+					"argumentsJson":              `{"assetId":"` + assetID + `"}`,
+					"riskSummary":                "Archives an asset in this inventory.",
 				},
 			}},
 		}, nil
@@ -734,6 +719,30 @@ func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 }
 
 func firstToolResultAssetID(content string, title string, lifecycleState string) (string, error) {
+	ids, err := toolResultAssetIDs(content, lifecycleState)
+	if err != nil {
+		return "", err
+	}
+	if id := ids[title]; id != "" {
+		return id, nil
+	}
+	return "", ports.ErrInvalidProviderInput
+}
+
+func firstToolResultAnyAssetID(content string, lifecycleState string, titles ...string) (string, error) {
+	ids, err := toolResultAssetIDs(content, lifecycleState)
+	if err != nil {
+		return "", err
+	}
+	for _, title := range titles {
+		if id := ids[title]; id != "" {
+			return id, nil
+		}
+	}
+	return "", ports.ErrInvalidProviderInput
+}
+
+func toolResultAssetIDs(content string, lifecycleState string) (map[string]string, error) {
 	var output struct {
 		Items []struct {
 			AssetID        string `json:"assetId"`
@@ -742,12 +751,13 @@ func firstToolResultAssetID(content string, title string, lifecycleState string)
 		} `json:"items"`
 	}
 	if err := json.Unmarshal([]byte(content), &output); err != nil {
-		return "", ports.ErrInvalidProviderInput
+		return nil, ports.ErrInvalidProviderInput
 	}
+	ids := map[string]string{}
 	for _, item := range output.Items {
-		if item.Title == title && item.LifecycleState == lifecycleState && item.AssetID != "" {
-			return item.AssetID, nil
+		if item.LifecycleState == lifecycleState && item.AssetID != "" {
+			ids[item.Title] = item.AssetID
 		}
 	}
-	return "", ports.ErrInvalidProviderInput
+	return ids, nil
 }

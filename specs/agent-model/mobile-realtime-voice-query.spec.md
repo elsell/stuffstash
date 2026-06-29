@@ -365,6 +365,24 @@ The agent loop must:
 - Stop when the model produces a structured final response, proposes an action plan for user review, a safe failure occurs, cancellation is requested, or the session times out.
 - Instruct the model to use tool results as the source of truth and to avoid inventing locations, quantities, or inventory contents that are not present in tool results.
 
+The Go application service owns the realtime voice agent loop. The loop should use a small graph-like state machine inspired by durable agent runtimes: explicit state, named steps, bounded turns, safe progress events, model-visible tool results, and terminal outcomes. The implementation must remain project-owned Go code behind Stuff Stash ports and must not depend on Python, JavaScript, provider-hosted agent runtimes, LangGraph, LangChain, or provider-specific agent SDKs for core control flow.
+
+The first graph-like loop nodes are:
+
+- `transcribe`: convert audio into an ephemeral final transcript.
+- `agent`: request the next model turn from the configured language provider.
+- `tools`: validate and execute one or more requested project-owned tools.
+- `finalize`: validate a structured final response, synthesize speech, and complete the session.
+- `recover`: produce a bounded safe final response when the loop cannot make more progress but can still explain the outcome without leaking internals.
+
+Recoverable tool-call failures must not fail the whole voice session by default. If a model asks for an unknown tool, malformed tool arguments, unsafe proposal arguments, a duplicate exact tool call, or another expected validation failure, the loop must emit a safe `tool.call.failed` event and append a structured error tool result back to the model. The model then gets another turn to repair the tool call, ask for clarification, or produce a safe unsupported-action response. Fatal failures such as provider transport errors, authentication or authorization failures, context cancellation, text-to-speech failures, and persistence failures may still terminate the session with a safe failure code.
+
+The structured error tool result must be provider-independent JSON and must include only safe fields such as the tool name, a stable error code, a short safe message, and whether the model may retry. It must not include raw provider output, stack traces, raw prompts, raw transcript text, credentials, bearer tokens, hidden resource data, exact unauthorized IDs, or unredacted tool arguments.
+
+The loop must maintain a bounded remaining-step budget. If the model continues asking for tools when no more tool execution budget remains, the loop should request one final-only model turn using the accumulated tool results and no tool catalog. If the model still does not produce a valid structured final response, the `recover` node must complete with a safe final response instead of returning a generic transport failure whenever text-to-speech is available.
+
+The loop should optimize for low-friction autonomy. For write-like requests, it should gather enough visible context through read tools to propose a complete approval plan in one session when practical, including multiple dependent commands. It should ask a clarification only when the requested object, destination, or command cannot be resolved safely or unambiguously from visible authorized data.
+
 The first query loop exposed only read-only tools to the model. The first approval-backed mobile slice may add exactly one non-mutating write-intent tool: `propose_action_plan`.
 
 The first read-only tools are:
@@ -381,6 +399,8 @@ Tool descriptors must use project-owned names, descriptions, read-only markers, 
 
 Write proposals must include executable command arguments as structured JSON. For create or move requests that reference an existing location or container, the loop must first use read tools to resolve the visible resource and then place the returned `assetId` in `parentAssetId`. For requests that require missing parent containers or locations to be created, the loop may propose an ordered multi-command create plan and use `parentCommandId` to place later creates inside earlier creates. Parent or location titles may be used only as read filters; they must not be persisted as executable action-plan arguments.
 
+The realtime loop must track the set of opaque `assetId` values returned by successful authorized read tools during the current session. `propose_action_plan` must reject any `assetId` or `parentAssetId` that is not in that session-visible set before persisting the proposed plan. This provenance check is in addition to action-plan command validation and execution-time authorization.
+
 The mobile approval sheet must present multi-step plans as an explicit review surface, not a generic confirmation sentence. It should separate what Stuff Stash will use from what it will create, show nested placement in readable language, keep approve and cancel controls fixed in the bottom action area, and avoid raw IDs, provider terminology, diagnostics, or hidden model details. For dependent creates, the user should be able to see the hierarchy before approval, such as `Living room` as an existing location, `Box underneath the TV` as a new container inside it, and `Apple TV remote` as a new item inside the new container.
 
 The loop must not expose direct write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access. Any future direct execution must go through an approved action-plan execution service.
@@ -395,6 +415,7 @@ Tool results provided to the language model must be structured, safe, and useful
 - Parent title and parent kind when present.
 - Nearest containing location title when present.
 - Human-readable containment path from outermost visible container or location to the asset.
+- Opaque `assetId` values for visible assets when needed for follow-up tool calls or action-plan arguments.
 - Custom fields only after a field sensitivity and provider-disclosure policy exists. The first improved catalog must omit custom field values from cloud-provider tool results.
 - Match metadata that helps the model understand why a result was returned.
 

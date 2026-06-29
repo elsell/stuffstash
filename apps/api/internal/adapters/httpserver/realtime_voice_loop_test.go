@@ -29,6 +29,10 @@ func TestRealtimeVoiceQueryFinalizesAfterDuplicateToolCallWithoutReexecuting(t *
 	if started := countRealtimeEvents(events, "tool.call.started"); started != 1 {
 		t.Fatalf("expected duplicate tool call not to execute twice, got %d starts in %+v", started, events)
 	}
+	failed := findRealtimeEvent(t, events, "tool.call.failed")
+	if failed["code"] != "duplicate_tool_request" {
+		t.Fatalf("expected duplicate tool request event, got %+v", failed)
+	}
 	final := findRealtimeEvent(t, events, "assistant.response.completed")
 	response, ok := final["response"].(map[string]any)
 	if !ok {
@@ -115,6 +119,10 @@ func TestRealtimeVoiceQuerySkipsDuplicateButExecutesDistinctCallInSameTurn(t *te
 	if started := countRealtimeEvents(events, "tool.call.started"); started != 2 {
 		t.Fatalf("expected duplicate skipped and distinct call executed, got %d starts in %+v", started, events)
 	}
+	failed := findRealtimeEvent(t, events, "tool.call.failed")
+	if failed["code"] != "duplicate_tool_request" {
+		t.Fatalf("expected duplicate tool request event, got %+v", failed)
+	}
 	if !language.finalizationOnly {
 		t.Fatalf("expected duplicate handling to request explicit finalization-only turn")
 	}
@@ -130,7 +138,7 @@ func (m *duplicateToolCallLanguageModel) NextTurn(_ context.Context, input ports
 	if m.turns == 1 {
 		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{duplicateSearchToolCall()}}, nil
 	}
-	if input.FinalOnly && len(input.Tools) == 0 && len(input.ToolResults) == 1 {
+	if input.FinalOnly && len(input.Tools) == 0 && len(input.ToolResults) >= 1 {
 		m.finalizationWithoutTools = true
 		return ports.LanguageInferenceTurn{
 			Final: &ports.StructuredAgentResponse{

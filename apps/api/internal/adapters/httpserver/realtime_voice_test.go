@@ -409,31 +409,6 @@ func TestRealtimeVoiceQueryCanListVisibleItemsInSelectedInventory(t *testing.T) 
 	}
 }
 
-func TestRealtimeVoiceQueryRejectsMalformedFinalResponseFromProvider(t *testing.T) {
-	t.Parallel()
-
-	application := newSeededTestAppWithVoice(t, seededState{
-		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
-		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id"},
-	}, fakeSpeechToText{transcript: "Where is my water bottle?"}, finalResponseLanguageModel{
-		final: ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKind("raw_provider_dump"),
-			SpokenResponse:  strings.Repeat("x", 501),
-			DisplayResponse: strings.Repeat("x", 1001),
-		},
-	}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
-
-	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
-	t.Cleanup(server.Close)
-
-	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
-	failed := findRealtimeEvent(t, events, "session.failed")
-	if failed["code"] != "invalid_request" {
-		t.Fatalf("expected invalid_request for malformed final response, got %+v", failed)
-	}
-}
-
 func TestRealtimeVoiceQueryReportsSafeProviderStageFailureCode(t *testing.T) {
 	t.Parallel()
 
@@ -453,25 +428,6 @@ func TestRealtimeVoiceQueryReportsSafeProviderStageFailureCode(t *testing.T) {
 	}
 	if strings.Contains(failed["message"].(string), "raw provider response") {
 		t.Fatalf("provider details leaked in safe failure message: %+v", failed)
-	}
-}
-
-func TestRealtimeVoiceQueryRejectsUnexpectedToolArguments(t *testing.T) {
-	t.Parallel()
-
-	application := newSeededTestAppWithVoice(t, seededState{
-		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
-		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id"},
-	}, fakeSpeechToText{transcript: "What items do I have?"}, unexpectedToolArgumentLanguageModel{}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
-
-	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
-	t.Cleanup(server.Close)
-
-	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
-	failed := findRealtimeEvent(t, events, "session.failed")
-	if failed["code"] != "invalid_request" {
-		t.Fatalf("expected invalid_request for unexpected tool arg, got %+v", failed)
 	}
 }
 

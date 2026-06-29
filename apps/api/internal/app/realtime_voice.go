@@ -258,6 +258,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	toolResults := []ports.AgentToolResult{}
 	toolCallIDs := []string{}
 	executedToolCalls := map[string]struct{}{}
+	visibleAssetIDs := map[string]struct{}{}
 	for turn := 0; turn < 4; turn++ {
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:       input.Session.TenantID,
@@ -274,6 +275,9 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		}
 		if modelTurn.Final != nil {
 			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
+				if recoverableRealtimeVoiceToolError(err) {
+					return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, emit)
+				}
 				return err
 			}
 			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, emit)
@@ -281,14 +285,30 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		if len(modelTurn.ToolCalls) == 0 {
 			return ports.ErrInvalidProviderInput
 		}
-		duplicateToolCallSeen := false
 		for _, call := range modelTurn.ToolCalls {
 			signature, err := realtimeVoiceToolCallSignature(call)
 			if err != nil {
 				return err
 			}
 			if _, duplicate := executedToolCalls[signature]; duplicate {
-				duplicateToolCallSeen = true
+				toolCallID := strings.TrimSpace(call.ID)
+				if toolCallID == "" {
+					toolCallID = a.newRealtimeVoiceID()
+				}
+				toolLabel := realtimeVoiceToolLabel(call.Name)
+				toolCallIDs = append(toolCallIDs, toolCallID)
+				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "duplicate_tool_request", Message: "I already checked that."}); err != nil {
+					return err
+				}
+				result, resultErr := realtimeVoiceToolErrorResult(ports.AgentToolCall{
+					ID:        toolCallID,
+					Name:      call.Name,
+					Arguments: call.Arguments,
+				}, "duplicate_tool_request", "This exact tool request has already been executed. Use the existing tool result, make a distinct tool request, ask for clarification, or produce a final response.", true)
+				if resultErr != nil {
+					return resultErr
+				}
+				toolResults = append(toolResults, result)
 				continue
 			}
 			toolCallID := strings.TrimSpace(call.ID)
@@ -300,16 +320,34 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "searching"}); err != nil {
 				return err
 			}
-			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, ports.AgentToolCall{
+			executableCall := ports.AgentToolCall{
 				ID:        toolCallID,
 				Name:      call.Name,
 				Arguments: call.Arguments,
-			})
+			}
+			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, executableCall, visibleAssetIDs)
 			if err != nil {
-				_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
-				return err
+				if !recoverableRealtimeVoiceToolError(err) {
+					_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
+					return err
+				}
+				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "invalid_tool_request", Message: "I need a little more detail to do that safely."}); err != nil {
+					return err
+				}
+				result, resultErr := realtimeVoiceToolErrorResult(executableCall, "invalid_tool_request", "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification.", true)
+				if resultErr != nil {
+					return resultErr
+				}
+				executedToolCalls[signature] = struct{}{}
+				toolResults = append(toolResults, result)
+				continue
 			}
 			executedToolCalls[signature] = struct{}{}
+			if call.Name == RealtimeVoiceToolSearchAuthorizedAssets || call.Name == RealtimeVoiceToolListAuthorizedAssets {
+				if err := collectRealtimeVoiceVisibleAssetIDs(result, visibleAssetIDs); err != nil {
+					return err
+				}
+			}
 			toolResults = append(toolResults, result)
 			if proposal != nil {
 				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
@@ -320,14 +358,15 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				return err
 			}
 		}
-		if duplicateToolCallSeen {
-			return a.finalizeRealtimeVoiceAfterDuplicateToolCall(ctx, input.Session, transcript, toolResults, toolCallIDs, turn+1, emit)
-		}
 	}
-	return ports.ErrInvalidProviderInput
+	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, transcript, toolResults, toolCallIDs, emit)
 }
 
-func (a App) finalizeRealtimeVoiceAfterDuplicateToolCall(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
+func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
+	return a.finalizeRealtimeVoiceWithToolResults(ctx, session, transcript, toolResults, toolCallIDs, 4, emit)
+}
+
+func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
 	modelTurn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 		TenantID:       session.TenantID,
 		InventoryID:    session.InventoryID,
@@ -342,9 +381,12 @@ func (a App) finalizeRealtimeVoiceAfterDuplicateToolCall(ctx context.Context, se
 		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 	}
 	if modelTurn.Final == nil {
-		return ports.ErrInvalidProviderInput
+		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, emit)
 	}
 	if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
+		if recoverableRealtimeVoiceToolError(err) {
+			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, emit)
+		}
 		return err
 	}
 	return a.completeRealtimeVoiceResponse(ctx, session, *modelTurn.Final, toolCallIDs, emit)
@@ -417,6 +459,20 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		return err
 	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
+}
+
+func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
+	return a.completeRealtimeVoiceResponse(ctx, session, ports.StructuredAgentResponse{
+		Kind:            ports.StructuredAgentResponseKindSafeFailure,
+		SpokenResponse:  "I could not finish that voice request safely. Please try again with a little more detail.",
+		DisplayResponse: "I could not finish that voice request safely. Please try again with a little more detail.",
+	}, toolCallIDs, emit)
+}
+
+func recoverableRealtimeVoiceToolError(err error) bool {
+	return errors.Is(err, ports.ErrInvalidProviderInput) ||
+		errors.Is(err, apperrors.ErrInvalidInput) ||
+		errors.Is(err, ErrValidation)
 }
 
 func (a App) MarkRealtimeVoiceSessionFailed(ctx context.Context, session RealtimeVoiceSession, safeFailureCode string) error {

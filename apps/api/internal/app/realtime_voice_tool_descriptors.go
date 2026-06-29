@@ -7,7 +7,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:        RealtimeVoiceToolSearchAuthorizedAssets,
 			Label:       realtimeVoiceSearchAuthorizedAssetsPublicName,
-			Description: "Search visible assets in the selected inventory by natural-language keywords. Use this for where-is, do-I-have, or specific-item questions. Arguments: query string, optional limit number. Results are JSON with asset metadata and containment paths.",
+			Description: "Search visible assets in the selected inventory by natural-language keywords. Use this for where-is, do-I-have, specific-item questions, and resolving resources for action plans. Arguments: query string, optional limit number. Results are JSON with asset metadata, opaque internal asset IDs for follow-up tool calls or action-plan arguments, and containment paths. Do not speak or display asset IDs to the user.",
 			ReadOnly:    true,
 			Parameters: ports.AgentToolParameters{
 				Required: []string{"query"},

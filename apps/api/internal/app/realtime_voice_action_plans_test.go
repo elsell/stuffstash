@@ -19,6 +19,13 @@ func TestRealtimeVoiceCanProposePersistedActionPlanForMobileReview(t *testing.T)
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
 		{
 			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-living-room",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "living room"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
 				ID:   "tool-plan-1",
 				Name: RealtimeVoiceToolProposeActionPlan,
 				Arguments: map[string]any{
@@ -88,6 +95,13 @@ func TestRealtimeVoiceActionPlanProposalPersistsNativeObjectArguments(t *testing
 	t.Parallel()
 
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-living-room",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "living room"},
+			}},
+		},
 		{
 			ToolCalls: []ports.AgentToolCall{{
 				ID:   "tool-plan-1",
@@ -162,6 +176,13 @@ func TestRealtimeVoiceActionPlanProposalSupportsDependentCreateCommands(t *testi
 	t.Parallel()
 
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-living-room",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "living room"},
+			}},
+		},
 		{
 			ToolCalls: []ports.AgentToolCall{{
 				ID:   "tool-plan-1",
@@ -239,7 +260,7 @@ func TestRealtimeVoiceActionPlanProposalSupportsDependentCreateCommands(t *testi
 	}
 }
 
-func TestRealtimeVoiceRejectsUnsafeActionPlanProposalArguments(t *testing.T) {
+func TestRealtimeVoiceReturnsRecoverableToolErrorsToModel(t *testing.T) {
 	t.Parallel()
 
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
@@ -259,10 +280,239 @@ func TestRealtimeVoiceRejectsUnsafeActionPlanProposalArguments(t *testing.T) {
 				},
 			}},
 		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I could not prepare that change safely. Please try again with the item name and location.",
+				DisplayResponse: "I could not prepare that change safely. Please try again with the item name and location.",
+			},
+		},
 	}}
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Add an item."}
 	resolver.providers.LanguageInference = language
+	tts := &resolvedTextToSpeech{}
+	resolver.providers.TextToSpeech = tts
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if len(language.seenToolResults) < 2 || len(language.seenToolResults[1]) != 1 {
+		t.Fatalf("expected recoverable tool error to be returned to model, got %+v", language.seenToolResults)
+	}
+	if !strings.Contains(language.seenToolResults[1][0].Content, `"status":"error"`) || !strings.Contains(language.seenToolResults[1][0].Content, `"retryable":true`) {
+		t.Fatalf("expected safe retryable tool error result, got %s", language.seenToolResults[1][0].Content)
+	}
+	if _, leaked := language.seenToolResults[1][0].Call.Arguments["apiKey"]; leaked {
+		t.Fatalf("rejected tool arguments leaked into provider-bound call history: %+v", language.seenToolResults[1][0].Call.Arguments)
+	}
+	seenFailureEvent := false
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventToolCallFailed && event.Code == "invalid_tool_request" {
+			seenFailureEvent = true
+			break
+		}
+	}
+	if !seenFailureEvent {
+		t.Fatalf("expected safe tool failure event, got %+v", events)
+	}
+	if tts.lastText != "I could not prepare that change safely. Please try again with the item name and location." {
+		t.Fatalf("expected recovered final response to be spoken, got %q", tts.lastText)
+	}
+}
+
+func TestRealtimeVoiceRejectsActionPlanIDsNotReturnedByReadTools(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-move",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"commandKind":                "move_asset",
+					"intentSummary":              "Move the drill to the living room.",
+					"modelInterpretationSummary": "The user wants to move a drill.",
+					"confirmationSummary":        "Move Drill to Living room?",
+					"commandSummary":             "Move Drill to Living room",
+					"arguments": map[string]any{
+						"assetId":       "drill-1",
+						"parentAssetId": "living-room-1",
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I need to find the drill and destination before preparing that move.",
+				DisplayResponse: "I need to find the drill and destination before preparing that move.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my drill to the living room."}
+	resolver.providers.LanguageInference = language
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if proposed != nil {
+		t.Fatalf("expected unprovenanced asset IDs to be rejected before proposal, got %+v", proposed)
+	}
+	if len(language.seenToolResults) < 2 || !strings.Contains(language.seenToolResults[1][0].Content, `"code":"invalid_tool_request"`) {
+		t.Fatalf("expected model-visible invalid tool result, got %+v", language.seenToolResults)
+	}
+}
+
+func TestRealtimeVoiceCanGatherContextAndProposeMoveActionPlan(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{
+				{
+					ID:   "tool-search-drill",
+					Name: RealtimeVoiceToolSearchAuthorizedAssets,
+					Arguments: map[string]any{
+						"query": "drill",
+						"limit": 5,
+					},
+				},
+				{
+					ID:   "tool-search-living-room",
+					Name: RealtimeVoiceToolSearchAuthorizedAssets,
+					Arguments: map[string]any{
+						"query": "living room",
+						"limit": 5,
+					},
+				},
+			},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-move",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"commandKind":                "move_asset",
+					"intentSummary":              "Move the drill to the living room.",
+					"modelInterpretationSummary": "The user wants the visible drill moved into the visible Living room location.",
+					"confirmationSummary":        "Move Drill to Living room?",
+					"commandSummary":             "Move Drill to Living room",
+					"arguments": map[string]any{
+						"assetId":       "drill-1",
+						"parentAssetId": "living-room-1",
+					},
+					"risks": []any{"Moves an existing item to a different location."},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I prepared that move for review.",
+				DisplayResponse: "I prepared that move for review.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my drill to the living room."}
+	resolver.providers.LanguageInference = language
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+
+	drill := assetItem("drill-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	drillTitle, _ := asset.NewTitle("Drill")
+	drill.Title = drillTitle
+	livingRoom := assetItem("living-room-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	livingRoomTitle, _ := asset.NewTitle("Living room")
+	livingRoom.Title = livingRoomTitle
+	if err := store.CreateAsset(context.Background(), drill, audit.Record{ID: audit.ID("audit-drill"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "drill-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed drill: %v", err)
+	}
+	if err := store.CreateAsset(context.Background(), livingRoom, audit.Record{ID: audit.ID("audit-living-room"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "living-room-1", OccurredAt: time.Date(2026, 6, 26, 15, 1, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed living room: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if len(language.seenToolResults) < 2 || len(language.seenToolResults[1]) != 2 {
+		t.Fatalf("expected first turn tool results to be sent back to model, got %+v", language.seenToolResults)
+	}
+	if !strings.Contains(language.seenToolResults[1][0].Content, `"assetId":"drill-1"`) || !strings.Contains(language.seenToolResults[1][1].Content, `"assetId":"living-room-1"`) {
+		t.Fatalf("expected authorized read tools to expose opaque IDs for planning, got %+v", language.seenToolResults[1])
+	}
+	if proposed == nil || len(proposed.Commands) != 1 {
+		t.Fatalf("expected move plan proposal, got %+v", proposed)
+	}
+	if proposed.Commands[0].Kind != string(actionplan.CommandKindMoveAsset) || proposed.Commands[0].Operation != "move" || proposed.Commands[0].Summary != "Move Drill to Living room" {
+		t.Fatalf("unexpected move command proposal: %+v", proposed.Commands[0])
+	}
+}
+
+func TestRealtimeVoiceRequestsFinalOnlyTurnWhenToolBudgetIsExhausted(t *testing.T) {
+	t.Parallel()
+
+	invalidToolTurn := func(id string) ports.LanguageInferenceTurn {
+		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{{
+			ID:   id,
+			Name: "unknown_tool",
+			Arguments: map[string]any{
+				"query": id,
+			},
+		}}}
+	}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		invalidToolTurn("bad-tool-1"),
+		invalidToolTurn("bad-tool-2"),
+		invalidToolTurn("bad-tool-3"),
+		invalidToolTurn("bad-tool-4"),
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindUnsupportedAction,
+				SpokenResponse:  "I could not complete that with the available tools.",
+				DisplayResponse: "I could not complete that with the available tools.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my drill somewhere."}
+	resolver.providers.LanguageInference = language
+	tts := &resolvedTextToSpeech{}
+	resolver.providers.TextToSpeech = tts
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
 
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
@@ -272,18 +522,31 @@ func TestRealtimeVoiceRejectsUnsafeActionPlanProposalArguments(t *testing.T) {
 	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error {
 		return nil
 	})
-	if err == nil || !strings.Contains(err.Error(), "validation") {
-		t.Fatalf("expected unsafe proposal to fail validation, got %v", err)
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if len(language.seenFinalOnly) != 5 || !language.seenFinalOnly[4] {
+		t.Fatalf("expected fifth turn to be final-only, got %+v", language.seenFinalOnly)
+	}
+	if len(language.seenTools[4]) != 0 {
+		t.Fatalf("expected no tools on final-only turn, got %+v", language.seenTools[4])
+	}
+	if tts.lastText != "I could not complete that with the available tools." {
+		t.Fatalf("expected final-only response to be spoken, got %q", tts.lastText)
 	}
 }
 
 type scriptedRealtimeLanguageInference struct {
-	turns     []ports.LanguageInferenceTurn
-	seenTools [][]ports.AgentToolDescriptor
+	turns           []ports.LanguageInferenceTurn
+	seenTools       [][]ports.AgentToolDescriptor
+	seenToolResults [][]ports.AgentToolResult
+	seenFinalOnly   []bool
 }
 
 func (s *scriptedRealtimeLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	s.seenTools = append(s.seenTools, append([]ports.AgentToolDescriptor{}, input.Tools...))
+	s.seenToolResults = append(s.seenToolResults, append([]ports.AgentToolResult{}, input.ToolResults...))
+	s.seenFinalOnly = append(s.seenFinalOnly, input.FinalOnly)
 	if len(s.turns) == 0 {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}

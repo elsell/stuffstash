@@ -433,6 +433,41 @@ func TestGoogleGeminiLanguageInferenceRejectsMalformedFunctionResponses(t *testi
 	}
 }
 
+func TestGoogleGeminiLanguageInferenceDoesNotReplayRejectedToolArguments(t *testing.T) {
+	t.Parallel()
+
+	contents, err := languageContents(ports.LanguageInferenceInput{
+		Transcript: "Add an item.",
+		ToolResults: []ports.AgentToolResult{{
+			CallID: "bad-call",
+			Name:   "propose_action_plan",
+			Call: ports.AgentToolCall{
+				ID:        "bad-call",
+				Name:      "propose_action_plan",
+				Arguments: map[string]any{},
+			},
+			Content: `{"tool":"propose_action_plan","status":"error","code":"invalid_tool_request","message":"The tool request was invalid or incomplete.","retryable":true}`,
+		}},
+	})
+	if err != nil {
+		t.Fatalf("build language contents: %v", err)
+	}
+	payload, err := json.Marshal(contents)
+	if err != nil {
+		t.Fatalf("marshal contents: %v", err)
+	}
+	if strings.Contains(string(payload), "apiKey") || strings.Contains(string(payload), "secret") {
+		t.Fatalf("rejected tool arguments leaked into provider contents: %s", string(payload))
+	}
+	functionCall := contents[1].Parts[0].FunctionCall
+	if functionCall == nil {
+		t.Fatalf("expected function call history, got %+v", contents[1])
+	}
+	if len(functionCall.Args) != 0 {
+		t.Fatalf("expected sanitized empty function call args, got %+v", functionCall.Args)
+	}
+}
+
 func TestGoogleTextToSpeechSynthesizesMP3(t *testing.T) {
 	t.Parallel()
 

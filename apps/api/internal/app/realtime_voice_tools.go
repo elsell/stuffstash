@@ -16,7 +16,7 @@ import (
 
 const realtimeVoiceToolMaxResults = 20
 
-func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
+func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
 	switch call.Name {
 	case RealtimeVoiceToolSearchAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceSearchTool(ctx, session, call)
@@ -25,15 +25,18 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 		result, err := a.executeRealtimeVoiceListTool(ctx, session, call)
 		return result, nil, err
 	case RealtimeVoiceToolProposeActionPlan:
-		return a.executeRealtimeVoiceProposeActionPlanTool(ctx, session, call)
+		return a.executeRealtimeVoiceProposeActionPlanTool(ctx, session, call, visibleAssetIDs)
 	default:
-		return ports.AgentToolResult{}, nil, ports.ErrForbidden
+		return ports.AgentToolResult{}, nil, ports.ErrInvalidProviderInput
 	}
 }
 
-func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
+func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
 	args, err := parseRealtimeVoiceActionPlanArgs(call.Arguments)
 	if err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
+	if err := validateRealtimeVoiceActionPlanVisibleIDs(args.Commands, visibleAssetIDs); err != nil {
 		return ports.AgentToolResult{}, nil, err
 	}
 	record, err := a.CreateActionPlan(ctx, CreateActionPlanInput{
@@ -93,7 +96,7 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 
 	items := make([]realtimeVoiceAssetToolItem, 0, len(results.Items))
 	for _, result := range results.Items {
-		item, err := a.realtimeVoiceAssetToolItem(ctx, session, result.Asset, result.Inventory.Name.String(), realtimeVoiceMatchFields(result.Matches), false)
+		item, err := a.realtimeVoiceAssetToolItem(ctx, session, result.Asset, result.Inventory.Name.String(), realtimeVoiceMatchFields(result.Matches), true)
 		if err != nil {
 			return ports.AgentToolResult{}, err
 		}
@@ -260,6 +263,52 @@ func realtimeVoiceToolResult(call ports.AgentToolCall, output realtimeVoiceAsset
 		Call:    call,
 		Content: string(payload),
 	}, nil
+}
+
+func realtimeVoiceToolErrorResult(call ports.AgentToolCall, code string, message string, retryable bool) (ports.AgentToolResult, error) {
+	payload, err := json.Marshal(struct {
+		Tool      string `json:"tool"`
+		Status    string `json:"status"`
+		Code      string `json:"code"`
+		Message   string `json:"message"`
+		Retryable bool   `json:"retryable"`
+	}{
+		Tool:      call.Name,
+		Status:    "error",
+		Code:      code,
+		Message:   message,
+		Retryable: retryable,
+	})
+	if err != nil {
+		return ports.AgentToolResult{}, err
+	}
+	return ports.AgentToolResult{
+		CallID:  call.ID,
+		Name:    call.Name,
+		Call:    ports.AgentToolCall{ID: call.ID, Name: call.Name, Arguments: map[string]any{}},
+		Content: string(payload),
+	}, nil
+}
+
+func collectRealtimeVoiceVisibleAssetIDs(result ports.AgentToolResult, visibleAssetIDs map[string]struct{}) error {
+	if visibleAssetIDs == nil || strings.TrimSpace(result.Content) == "" {
+		return nil
+	}
+	var output realtimeVoiceAssetToolOutput
+	if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
+		return ports.ErrInvalidProviderInput
+	}
+	for _, item := range output.Items {
+		id := strings.TrimSpace(item.AssetID)
+		if id == "" {
+			continue
+		}
+		if _, ok := asset.NewID(id); !ok {
+			return ports.ErrInvalidProviderInput
+		}
+		visibleAssetIDs[id] = struct{}{}
+	}
+	return nil
 }
 
 func realtimeVoiceToolLimit(raw any) (int, error) {
@@ -529,6 +578,61 @@ func realtimeVoiceActionPlanRisks(args map[string]any) ([]string, error) {
 		risks = append(risks, risk)
 	}
 	return risks, nil
+}
+
+func validateRealtimeVoiceActionPlanVisibleIDs(commands []ActionPlanCommandInput, visibleAssetIDs map[string]struct{}) error {
+	if len(commands) == 0 {
+		return ports.ErrInvalidProviderInput
+	}
+	for _, command := range commands {
+		ids, err := realtimeVoiceActionPlanReferencedAssetIDs(command)
+		if err != nil {
+			return err
+		}
+		for _, id := range ids {
+			if _, ok := visibleAssetIDs[id]; !ok {
+				return ports.ErrInvalidProviderInput
+			}
+		}
+	}
+	return nil
+}
+
+func realtimeVoiceActionPlanReferencedAssetIDs(command ActionPlanCommandInput) ([]string, error) {
+	payload, err := json.Marshal(command.Arguments)
+	if err != nil {
+		return nil, ports.ErrInvalidProviderInput
+	}
+	record := ports.ActionPlanCommandRecord{Kind: command.Kind, ArgumentsJSON: payload}
+	ids := []string{}
+	switch command.Kind {
+	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
+		args, err := parseActionPlanCreateArguments(record)
+		if err != nil {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		if strings.TrimSpace(args.ParentAssetID) != "" {
+			ids = append(ids, args.ParentAssetID)
+		}
+	case actionplan.CommandKindMoveAsset:
+		args, err := parseActionPlanMoveArguments(record)
+		if err != nil {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		ids = append(ids, args.AssetID.String())
+		if !args.ParentIsRoot {
+			ids = append(ids, args.ParentAssetID)
+		}
+	case actionplan.CommandKindArchiveAsset, actionplan.CommandKindRestoreAsset:
+		id, err := parseActionPlanAssetIDOnlyArguments(record)
+		if err != nil {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		ids = append(ids, id.String())
+	default:
+		return nil, ports.ErrInvalidProviderInput
+	}
+	return ids, nil
 }
 
 func (a App) realtimeVoiceActionPlanProposal(ctx context.Context, session RealtimeVoiceSession, record ports.ActionPlanRecord) (RealtimeVoiceActionPlanProposal, error) {
