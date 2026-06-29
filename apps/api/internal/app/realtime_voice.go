@@ -360,6 +360,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				if resultErr != nil {
 					return resultErr
 				}
+				if input.Session.DeveloperDiagnostics {
+					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool result received", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+						return err
+					}
+				}
 				executedToolCalls[signature] = struct{}{}
 				toolResults = append(toolResults, result)
 				continue

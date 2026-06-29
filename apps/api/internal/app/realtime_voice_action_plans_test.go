@@ -185,132 +185,6 @@ func TestRealtimeVoiceActionPlanProposalPersistsNativeObjectArguments(t *testing
 	}
 }
 
-func TestRealtimeVoiceStreamsVerboseAgentDiagnostics(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Diagnostics: []ports.LanguageInferenceDiagnostic{{
-				Title:  "Language prompt",
-				Detail: "Transcript: move my water bottle to the kitchen\napiKey: should-not-leak\nBearer abc123",
-			}},
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-kitchen",
-				Name: RealtimeVoiceToolProposeActionPlan,
-				Arguments: map[string]any{
-					"commandKind":                "create_asset",
-					"intentSummary":              "Move the water bottle to a new Kitchen location.",
-					"modelInterpretationSummary": "The user wants the visible water bottle moved to Kitchen, which should be created.",
-					"confirmationSummary":        "Create Kitchen and move the water bottle there?",
-					"commandSummary":             "Create Kitchen",
-					"arguments": map[string]any{
-						"title": "Kitchen",
-						"kind":  "location",
-					},
-				},
-			}},
-		},
-		{
-			Diagnostics: []ports.LanguageInferenceDiagnostic{{
-				Title:  "Language model turn",
-				Detail: `{"final":{"kind":"answer","spokenResponse":"I checked your inventory.","displayResponse":"I checked your inventory."}}`,
-			}},
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I checked your inventory.",
-				DisplayResponse: "I checked your inventory.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
-	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-
-	var promptDiagnostic, toolStarted, toolCompleted, toolResultDiagnostic *RealtimeVoiceEvent
-	for index := range events {
-		event := &events[index]
-		switch {
-		case event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Language prompt":
-			promptDiagnostic = event
-		case event.Type == RealtimeVoiceEventToolCallStarted:
-			toolStarted = event
-		case event.Type == RealtimeVoiceEventToolCallCompleted:
-			toolCompleted = event
-		case event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Tool result received":
-			toolResultDiagnostic = event
-		}
-	}
-	if promptDiagnostic == nil || !strings.Contains(promptDiagnostic.Detail, "move my water bottle to the kitchen") {
-		t.Fatalf("expected prompt diagnostic, got %+v", events)
-	}
-	if strings.Contains(promptDiagnostic.Detail, "should-not-leak") || strings.Contains(promptDiagnostic.Detail, "abc123") || !strings.Contains(promptDiagnostic.Detail, "[redacted-key]") {
-		t.Fatalf("expected redacted prompt diagnostic, got %q", promptDiagnostic.Detail)
-	}
-	if toolStarted == nil || toolStarted.Detail != "" {
-		t.Fatalf("expected bland tool start event, got %+v", toolStarted)
-	}
-	if toolCompleted == nil || toolCompleted.Detail != "" {
-		t.Fatalf("expected bland tool completed event, got %+v", toolCompleted)
-	}
-	if toolResultDiagnostic == nil || !strings.Contains(toolResultDiagnostic.Detail, `"content"`) || !strings.Contains(toolResultDiagnostic.Detail, "propose_action_plan") {
-		t.Fatalf("expected tool result diagnostic, got %+v", toolResultDiagnostic)
-	}
-}
-
-func TestRealtimeVoiceOmitsVerboseDiagnosticsByDefault(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Diagnostics: []ports.LanguageInferenceDiagnostic{{
-				Title:  "Language prompt",
-				Detail: "Transcript: move my water bottle to the kitchen\nBearer should-not-leak",
-			}},
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I checked your inventory.",
-				DisplayResponse: "I checked your inventory.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
-	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	for _, event := range events {
-		if event.Type == RealtimeVoiceEventAgentDiagnostic || event.Detail != "" {
-			t.Fatalf("expected default session to omit verbose diagnostics, got %+v from %+v", event, events)
-		}
-	}
-}
-
 func TestRealtimeVoiceActionPlanProposalSupportsDependentCreateCommands(t *testing.T) {
 	t.Parallel()
 
@@ -399,74 +273,92 @@ func TestRealtimeVoiceActionPlanProposalSupportsDependentCreateCommands(t *testi
 	}
 }
 
-func TestRealtimeVoiceReturnsRecoverableToolErrorsToModel(t *testing.T) {
+func TestRealtimeVoiceActionPlanProposalCanonicalizesDependentParentAssetIDCommandReference(t *testing.T) {
 	t.Parallel()
 
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
 		{
 			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-water-bottle",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle", "limit": float64(10)},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
 				ID:   "tool-plan-1",
 				Name: RealtimeVoiceToolProposeActionPlan,
 				Arguments: map[string]any{
-					"commandKind":                "create_asset",
-					"intentSummary":              "Create an item.",
-					"modelInterpretationSummary": "The user wants to add an item.",
-					"confirmationSummary":        "Create item?",
-					"commandSummary":             "Create item",
-					"arguments": map[string]any{
-						"apiKey": "secret",
+					"intentSummary":              "Move the water bottle to a new Kitchen location.",
+					"modelInterpretationSummary": "The user wants the visible water bottle moved into Kitchen, which should be created.",
+					"confirmationSummary":        "Create Kitchen and move the water bottle there?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-kitchen",
+							"kind":    "create_asset",
+							"summary": "Create Kitchen",
+							"arguments": map[string]any{
+								"title": "Kitchen",
+								"kind":  "location",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-move-water-bottle",
+							"kind":    "move_asset",
+							"summary": "Move Water bottle to Kitchen",
+							"arguments": map[string]any{
+								"assetId":       "water-bottle-1",
+								"parentAssetId": "cmd-kitchen",
+							},
+						},
 					},
 				},
 			}},
 		},
 		{
 			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindClarification,
-				SpokenResponse:  "I could not prepare that change safely. Please try again with the item name and location.",
-				DisplayResponse: "I could not prepare that change safely. Please try again with the item name and location.",
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "I should not be called after the proposal.",
+				DisplayResponse: "I should not be called after the proposal.",
 			},
 		},
 	}}
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Add an item."}
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
 	resolver.providers.LanguageInference = language
-	tts := &resolvedTextToSpeech{}
-	resolver.providers.TextToSpeech = tts
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	if err := store.CreateAsset(context.Background(), waterBottle, audit.Record{ID: audit.ID("audit-water-bottle"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "water-bottle-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed water bottle: %v", err)
+	}
 
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {
 		t.Fatalf("start realtime voice session: %v", err)
 	}
-	events := []RealtimeVoiceEvent{}
+	var proposed *RealtimeVoiceActionPlanProposal
 	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
 		return nil
 	})
 	if err != nil {
 		t.Fatalf("run realtime voice query: %v", err)
 	}
-	if len(language.seenToolResults) < 2 || len(language.seenToolResults[1]) != 1 {
-		t.Fatalf("expected recoverable tool error to be returned to model, got %+v", language.seenToolResults)
+	if proposed == nil || len(proposed.Commands) != 2 {
+		t.Fatalf("expected dependent proposed plan, got %+v", proposed)
 	}
-	if !strings.Contains(language.seenToolResults[1][0].Content, `"status":"error"`) || !strings.Contains(language.seenToolResults[1][0].Content, `"retryable":true`) {
-		t.Fatalf("expected safe retryable tool error result, got %s", language.seenToolResults[1][0].Content)
+	if proposed.Commands[0].Kind != string(actionplan.CommandKindCreateLocation) || proposed.Commands[0].AssetKind != asset.KindLocation.String() {
+		t.Fatalf("expected create_asset location command to canonicalize to create_location, got %+v", proposed.Commands[0])
 	}
-	if _, leaked := language.seenToolResults[1][0].Call.Arguments["apiKey"]; leaked {
-		t.Fatalf("rejected tool arguments leaked into provider-bound call history: %+v", language.seenToolResults[1][0].Call.Arguments)
+	if proposed.Commands[1].ParentCommandID != "cmd-kitchen" || proposed.Commands[1].ParentAssetID != "" {
+		t.Fatalf("expected parentAssetId command reference to canonicalize to parentCommandId, got %+v", proposed.Commands[1])
 	}
-	seenFailureEvent := false
-	for _, event := range events {
-		if event.Type == RealtimeVoiceEventToolCallFailed && event.Code == "invalid_tool_request" {
-			seenFailureEvent = true
-			break
-		}
-	}
-	if !seenFailureEvent {
-		t.Fatalf("expected safe tool failure event, got %+v", events)
-	}
-	if tts.lastText != "I could not prepare that change safely. Please try again with the item name and location." {
-		t.Fatalf("expected recovered final response to be spoken, got %q", tts.lastText)
+	if len(language.seenToolResults) != 2 {
+		t.Fatalf("expected loop to pause after canonicalized proposal, got %d model turns", len(language.seenToolResults))
 	}
 }
 

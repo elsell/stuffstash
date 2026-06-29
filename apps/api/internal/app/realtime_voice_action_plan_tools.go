@@ -42,6 +42,7 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 			return nil, ports.ErrInvalidProviderInput
 		}
 		commands := make([]ActionPlanCommandInput, 0, len(values))
+		previousCommandIDs := map[string]struct{}{}
 		for _, value := range values {
 			command, ok := value.(map[string]any)
 			if !ok {
@@ -62,12 +63,18 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 			if err != nil {
 				return nil, err
 			}
+			commandID := strings.TrimSpace(firstStringArg(command["id"], command["commandId"]))
+			arguments = canonicalRealtimeVoiceDependentParentReference(arguments, previousCommandIDs)
+			kind = canonicalRealtimeVoiceCreateLocationKind(kind, arguments)
 			commands = append(commands, ActionPlanCommandInput{
-				ID:        strings.TrimSpace(firstStringArg(command["id"], command["commandId"])),
+				ID:        commandID,
 				Kind:      kind,
 				Summary:   summary,
 				Arguments: arguments,
 			})
+			if commandID != "" {
+				previousCommandIDs[commandID] = struct{}{}
+			}
 		}
 		return commands, nil
 	}
@@ -80,6 +87,7 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 	if err != nil {
 		return nil, err
 	}
+	commandKind = canonicalRealtimeVoiceCreateLocationKind(commandKind, arguments)
 	summary := strings.TrimSpace(stringArg(args["commandSummary"]))
 	if summary == "" {
 		return nil, ports.ErrInvalidProviderInput
@@ -296,6 +304,41 @@ func actionPlanCommandOperation(kind actionplan.CommandKind) string {
 	default:
 		return "update"
 	}
+}
+
+func canonicalRealtimeVoiceDependentParentReference(arguments map[string]any, previousCommandIDs map[string]struct{}) map[string]any {
+	if len(arguments) == 0 || len(previousCommandIDs) == 0 {
+		return arguments
+	}
+	if strings.TrimSpace(stringArg(arguments["parentCommandId"])) != "" {
+		return arguments
+	}
+	parentAssetID := strings.TrimSpace(stringArg(arguments["parentAssetId"]))
+	if parentAssetID == "" {
+		return arguments
+	}
+	if _, ok := previousCommandIDs[parentAssetID]; !ok {
+		return arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		if key == "parentAssetId" {
+			continue
+		}
+		canonical[key] = value
+	}
+	canonical["parentCommandId"] = parentAssetID
+	return canonical
+}
+
+func canonicalRealtimeVoiceCreateLocationKind(kind actionplan.CommandKind, arguments map[string]any) actionplan.CommandKind {
+	if kind != actionplan.CommandKindCreateAsset {
+		return kind
+	}
+	if strings.TrimSpace(stringArg(arguments["kind"])) != asset.KindLocation.String() {
+		return kind
+	}
+	return actionplan.CommandKindCreateLocation
 }
 
 type realtimeVoiceActionPlanArgs struct {
