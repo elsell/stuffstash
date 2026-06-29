@@ -65,7 +65,8 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 				SampleRate: start.InputAudio.SampleRate,
 				Channels:   start.InputAudio.Channels,
 			},
-			OutputAudio: app.RealtimeVoiceOutputAudio{MimeTypes: start.OutputAudio.MimeTypes},
+			OutputAudio:          app.RealtimeVoiceOutputAudio{MimeTypes: start.OutputAudio.MimeTypes},
+			DeveloperDiagnostics: start.DeveloperDiagnostics,
 		})
 		serverSeq := 1
 		if err != nil {
@@ -143,6 +144,7 @@ type realtimeClientMessage struct {
 	RequestedCapabilities []string               `json:"requestedCapabilities"`
 	InputAudio            realtimeInputAudio     `json:"inputAudio"`
 	OutputAudio           realtimeOutputAudio    `json:"outputAudio"`
+	DeveloperDiagnostics  bool                   `json:"developerDiagnostics,omitempty"`
 	ChunkID               string                 `json:"chunkId"`
 	PlanID                string                 `json:"planId"`
 	AudioBase64           string                 `json:"audioBase64"`
@@ -168,6 +170,7 @@ type realtimeServerMessage struct {
 	Code                 string                       `json:"code,omitempty"`
 	Message              string                       `json:"message,omitempty"`
 	Text                 string                       `json:"text,omitempty"`
+	Detail               string                       `json:"detail,omitempty"`
 	Status               string                       `json:"status,omitempty"`
 	ToolCallID           string                       `json:"toolCallId,omitempty"`
 	ToolLabel            string                       `json:"toolLabel,omitempty"`
@@ -421,6 +424,7 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 		Code:       event.Code,
 		Message:    event.Message,
 		Text:       event.Text,
+		Detail:     event.Detail,
 		ToolCallID: event.ToolCallID,
 		ToolLabel:  event.ToolLabel,
 		PlanID:     event.PlanID,

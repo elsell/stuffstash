@@ -18,6 +18,7 @@ func TestRealtimeVoiceActionPlanToolGuidesMissingDestinationsToCreate(t *testing
 		"missing but clearly named location or container",
 		"assume they want it created",
 		"moving the existing asset using parentCommandId",
+		"Do not ask a final yes/no clarification",
 	} {
 		if !strings.Contains(proposalDescription, required) {
 			t.Fatalf("expected proposal tool guidance to include %q, got %q", required, proposalDescription)

@@ -133,6 +133,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     const transport = new WebSocketRealtimeVoiceTransport({
       apiBaseUrl: 'http://127.0.0.1:8080/',
       tokenProvider: () => 'dev:user-1',
+      diagnosticsEnabled: true,
       webSocketFactory: () => socket
     });
     const events: unknown[] = [];
@@ -154,6 +155,69 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
     await expect(run).rejects.toThrow('session');
     expect(events).toEqual([{ type: 'session.started', seq: 1, sessionId: 'session-1' }]);
+  });
+
+  it('forwards verbose agent diagnostic and tool detail events', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      diagnosticsEnabled: true,
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'agent.diagnostic',
+      seq: 2,
+      sessionId: 'session-1',
+      message: 'Language prompt',
+      detail: 'Transcript: move my water bottle'
+    });
+    socket.receive({
+      type: 'tool.call.started',
+      seq: 3,
+      sessionId: 'session-1',
+      toolCallId: 'tool-1',
+      toolLabel: 'Inventory list',
+      status: 'searching',
+      detail: '{\n  "locationTitle": "Kitchen"\n}'
+    });
+    socket.receive({ type: 'session.completed', seq: 4, sessionId: 'session-1' });
+
+    await run;
+    expect(socket.sent[0]).toMatchObject({ type: 'session.start', developerDiagnostics: true });
+    expect(events).toContainEqual({
+      type: 'agent.diagnostic',
+      seq: 2,
+      sessionId: 'session-1',
+      message: 'Language prompt',
+      detail: 'Transcript: move my water bottle'
+    });
+    expect(events).toContainEqual({
+      type: 'tool.call.started',
+      seq: 3,
+      sessionId: 'session-1',
+      toolCallId: 'tool-1',
+      toolLabel: 'Inventory list',
+      status: 'searching',
+      code: undefined,
+      message: undefined,
+      detail: '{\n  "locationTitle": "Kitchen"\n}'
+    });
   });
 
   it('forwards safe session failure events as terminal states', async () => {

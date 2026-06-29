@@ -165,13 +165,17 @@ describe('VoiceSessionPresentation', () => {
         tenantName: 'Main tenant',
         inventoryName: 'Home',
         progressLabel: 'Checking location',
-        debugEvents: [{ label: 'Inventory list', status: 'Completed' }]
+        debugEvents: [{
+          label: 'Inventory list',
+          status: 'Completed',
+          detail: '{\n  "count": 1\n}'
+        }]
       },
       stage: 'processing',
       tenantName: 'Main tenant'
     });
 
-    expect(session.diagnostics).toEqual(['Inventory list: Completed']);
+    expect(session.diagnostics).toEqual(['Inventory list: Completed\n{\n  "count": 1\n}']);
   });
 
   it('exposes safe progress steps without requiring developer diagnostics', () => {

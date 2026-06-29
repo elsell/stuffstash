@@ -109,6 +109,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 	if err != nil {
 		return ports.LanguageInferenceTurn{}, err
 	}
+	prompt := firstLanguagePromptText(contents)
 	request := geminiGenerateContentRequest{
 		Contents: contents,
 		Tools:    geminiToolsForTurn(input),
@@ -122,9 +123,24 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		return ports.LanguageInferenceTurn{}, err
 	}
 	if calls := geminiFunctionCalls(response); len(calls) > 0 {
-		return parseGeminiFunctionCalls(calls, input.Tools)
+		turn, err := parseGeminiFunctionCalls(calls, input.Tools)
+		if err != nil {
+			return ports.LanguageInferenceTurn{}, err
+		}
+		if input.IncludeDiagnostics {
+			turn.Diagnostics = languageInferenceDiagnostics(prompt, geminiFunctionCallDiagnostic(calls))
+		}
+		return turn, nil
 	}
-	return parseLanguageTurn(firstGeminiText(response), input.Tools)
+	rawText := firstGeminiText(response)
+	turn, err := parseLanguageTurn(rawText, input.Tools)
+	if err != nil {
+		return ports.LanguageInferenceTurn{}, err
+	}
+	if input.IncludeDiagnostics {
+		turn.Diagnostics = languageInferenceDiagnostics(prompt, rawText)
+	}
+	return turn, nil
 }
 
 func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
@@ -168,6 +184,7 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
 		"For missing parent containers or locations requested by the user, propose an ordered commands array and use parentCommandId to place later creates or moves inside earlier creates.",
 		"Assume the user wants missing named locations or containers created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, or Shelf.",
+		"For a clear write request with a missing destination, do not ask whether to create it; call propose_action_plan so the mobile approval sheet can ask for confirmation.",
 		"Ask for clarification instead only when the requested destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription.",
 		"For example, if the user says move my water bottle to the kitchen and Kitchen is not visible, create a Kitchen command with an id such as cmd-kitchen, then set the move command parentCommandId to cmd-kitchen.",
 		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId only. For move_asset use assetId plus parentAssetId, parentCommandId, or null parentAssetId.",
@@ -220,6 +237,32 @@ func languageContents(input ports.LanguageInferenceInput) ([]geminiContent, erro
 		})
 	}
 	return contents, nil
+}
+
+func firstLanguagePromptText(contents []geminiContent) string {
+	if len(contents) == 0 || len(contents[0].Parts) == 0 {
+		return ""
+	}
+	return contents[0].Parts[0].Text
+}
+
+func languageInferenceDiagnostics(prompt string, modelTurn string) []ports.LanguageInferenceDiagnostic {
+	diagnostics := []ports.LanguageInferenceDiagnostic{}
+	if strings.TrimSpace(prompt) != "" {
+		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language prompt", Detail: prompt})
+	}
+	if strings.TrimSpace(modelTurn) != "" {
+		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language model turn", Detail: modelTurn})
+	}
+	return diagnostics
+}
+
+func geminiFunctionCallDiagnostic(calls []geminiFunctionCall) string {
+	payload, err := json.MarshalIndent(calls, "", "  ")
+	if err != nil {
+		return "Gemini returned function calls."
+	}
+	return string(payload)
 }
 
 func geminiFunctionResponsePayload(content string) (map[string]any, error) {

@@ -560,9 +560,17 @@ describe('RealtimeVoiceSessionController', () => {
           sessionId: 'session-1',
           toolCallId: 'tool-1',
           toolLabel: 'raw prompt bearer secret stack trace',
-          status: 'raw query text'
+          status: 'raw query text',
+          detail: 'name: search_authorized_assets\napiKey: should-not-leak\nquery: water bottle'
         },
-        { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+        {
+          type: 'agent.diagnostic',
+          seq: 2,
+          sessionId: 'session-1',
+          message: 'Language prompt',
+          detail: 'Transcript: move water bottle\nbearer abc123'
+        },
+        { type: 'session.completed', seq: 3, sessionId: 'session-1' }
       ]),
       new FakePlayer(),
       { diagnosticsEnabled: true }
@@ -575,7 +583,16 @@ describe('RealtimeVoiceSessionController', () => {
     });
 
     expect(states.at(-1)?.debugEvents).toEqual([
-      { label: 'Inventory lookup', status: 'Updated' }
+      {
+        label: 'Inventory lookup',
+        status: 'Updated',
+        detail: 'name: search_authorized_assets\napiKey: [redacted]\nquery: water bottle'
+      },
+      {
+        label: 'Language prompt',
+        status: 'Details',
+        detail: 'Transcript: move water bottle\nbearer [redacted]'
+      }
     ]);
     expect(visibleProgressLabels.join(' ')).not.toContain('bearer secret');
     expect(states.at(-1)?.progressSteps?.join(' ')).not.toContain('bearer secret');

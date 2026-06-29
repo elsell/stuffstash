@@ -276,7 +276,7 @@ function VoiceSessionSheet({
                 {session.diagnostics?.map((event, index) => (
                   <View key={`${event}-${index.toString()}`} style={styles.diagnosticRow}>
                     <Text style={styles.diagnosticIndex}>{(index + 1).toString()}</Text>
-                    <Text style={styles.diagnosticText}>{event}</Text>
+                    <Text selectable style={styles.diagnosticText}>{event}</Text>
                   </View>
                 ))}
               </View>

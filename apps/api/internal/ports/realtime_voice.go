@@ -41,15 +41,16 @@ type LanguageInferenceProviderProbe interface {
 }
 
 type LanguageInferenceInput struct {
-	TenantID       tenant.ID
-	InventoryID    inventory.InventoryID
-	Principal      identity.Principal
-	Transcript     string
-	PromptTemplate string
-	Tools          []AgentToolDescriptor
-	ToolResults    []AgentToolResult
-	PreviousTurns  int
-	FinalOnly      bool
+	TenantID           tenant.ID
+	InventoryID        inventory.InventoryID
+	Principal          identity.Principal
+	Transcript         string
+	PromptTemplate     string
+	Tools              []AgentToolDescriptor
+	ToolResults        []AgentToolResult
+	PreviousTurns      int
+	FinalOnly          bool
+	IncludeDiagnostics bool
 }
 
 type AgentToolDescriptor struct {
@@ -84,8 +85,14 @@ const (
 )
 
 type LanguageInferenceTurn struct {
-	ToolCalls []AgentToolCall
-	Final     *StructuredAgentResponse
+	ToolCalls   []AgentToolCall
+	Final       *StructuredAgentResponse
+	Diagnostics []LanguageInferenceDiagnostic
+}
+
+type LanguageInferenceDiagnostic struct {
+	Title  string
+	Detail string
 }
 
 type AgentToolCall struct {

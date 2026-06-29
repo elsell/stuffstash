@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
@@ -19,6 +20,7 @@ const (
 
 	RealtimeVoiceEventTranscriptFinal             = "transcript.final"
 	RealtimeVoiceEventAgentProgress               = "agent.progress"
+	RealtimeVoiceEventAgentDiagnostic             = "agent.diagnostic"
 	RealtimeVoiceEventToolCallStarted             = "tool.call.started"
 	RealtimeVoiceEventToolCallCompleted           = "tool.call.completed"
 	RealtimeVoiceEventToolCallFailed              = "tool.call.failed"
@@ -45,12 +47,13 @@ const (
 )
 
 type RealtimeVoiceSessionInput struct {
-	Principal   identity.Principal
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Source      string
-	InputAudio  ports.RealtimeAudioFormat
-	OutputAudio RealtimeVoiceOutputAudio
+	Principal            identity.Principal
+	TenantID             tenant.ID
+	InventoryID          inventory.InventoryID
+	Source               string
+	InputAudio           ports.RealtimeAudioFormat
+	OutputAudio          RealtimeVoiceOutputAudio
+	DeveloperDiagnostics bool
 }
 
 type RealtimeVoiceOutputAudio struct {
@@ -69,6 +72,7 @@ type RealtimeVoiceSession struct {
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
 	LanguagePromptTemplate     string
+	DeveloperDiagnostics       bool
 	speechToText               ports.SpeechToTextProvider
 	languageInference          ports.LanguageInferenceProvider
 	textToSpeech               ports.TextToSpeechProvider
@@ -88,6 +92,7 @@ type RealtimeVoiceEvent struct {
 	Code       string
 	Message    string
 	Text       string
+	Detail     string
 	Response   *ports.StructuredAgentResponse
 	ActionPlan *RealtimeVoiceActionPlanProposal
 	PlanID     string
@@ -176,6 +181,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		LanguageInferenceProfileID: providers.LanguageInferenceProfileID,
 		TextToSpeechProfileID:      providers.TextToSpeechProfileID,
 		LanguagePromptTemplate:     providers.LanguagePromptTemplate,
+		DeveloperDiagnostics:       input.DeveloperDiagnostics,
 		speechToText:               providers.SpeechToText,
 		languageInference:          providers.LanguageInference,
 		textToSpeech:               providers.TextToSpeech,
@@ -261,17 +267,28 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	visibleAssetIDs := map[string]struct{}{}
 	for turn := 0; turn < 4; turn++ {
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
-			TenantID:       input.Session.TenantID,
-			InventoryID:    input.Session.InventoryID,
-			Principal:      input.Session.Principal,
-			Transcript:     transcript,
-			PromptTemplate: input.Session.LanguagePromptTemplate,
-			Tools:          realtimeVoiceToolDescriptors(),
-			ToolResults:    toolResults,
-			PreviousTurns:  turn,
+			TenantID:           input.Session.TenantID,
+			InventoryID:        input.Session.InventoryID,
+			Principal:          input.Session.Principal,
+			Transcript:         transcript,
+			PromptTemplate:     input.Session.LanguagePromptTemplate,
+			Tools:              realtimeVoiceToolDescriptors(),
+			ToolResults:        toolResults,
+			PreviousTurns:      turn,
+			IncludeDiagnostics: input.Session.DeveloperDiagnostics,
 		})
 		if err != nil {
 			return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
+		}
+		if err := emitRealtimeVoiceDiagnostics(input.Session, modelTurn.Diagnostics, emit); err != nil {
+			return err
+		}
+		if input.Session.DeveloperDiagnostics {
+			for _, call := range modelTurn.ToolCalls {
+				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool call requested", realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
+					return err
+				}
+			}
 		}
 		if modelTurn.Final != nil {
 			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
@@ -279,6 +296,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 					return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, emit)
 				}
 				return err
+			}
+			if input.Session.DeveloperDiagnostics {
+				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Structured final response", realtimeVoiceFinalDiagnosticDetail(*modelTurn.Final), emit); err != nil {
+					return err
+				}
 			}
 			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, emit)
 		}
@@ -354,6 +376,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 					return err
 				}
 			}
+			if input.Session.DeveloperDiagnostics {
+				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool result received", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+					return err
+				}
+			}
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "completed"}); err != nil {
 				return err
 			}
@@ -368,17 +395,21 @@ func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session R
 
 func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
 	modelTurn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
-		TenantID:       session.TenantID,
-		InventoryID:    session.InventoryID,
-		Principal:      session.Principal,
-		Transcript:     transcript,
-		PromptTemplate: session.LanguagePromptTemplate,
-		ToolResults:    toolResults,
-		PreviousTurns:  previousTurns,
-		FinalOnly:      true,
+		TenantID:           session.TenantID,
+		InventoryID:        session.InventoryID,
+		Principal:          session.Principal,
+		Transcript:         transcript,
+		PromptTemplate:     session.LanguagePromptTemplate,
+		ToolResults:        toolResults,
+		PreviousTurns:      previousTurns,
+		FinalOnly:          true,
+		IncludeDiagnostics: session.DeveloperDiagnostics,
 	})
 	if err != nil {
 		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
+	}
+	if err := emitRealtimeVoiceDiagnostics(session, modelTurn.Diagnostics, emit); err != nil {
+		return err
 	}
 	if modelTurn.Final == nil {
 		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, emit)
@@ -389,6 +420,11 @@ func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session R
 		}
 		return err
 	}
+	if session.DeveloperDiagnostics {
+		if err := emitRealtimeVoiceDiagnostic(session.ID, "Structured final response", realtimeVoiceFinalDiagnosticDetail(*modelTurn.Final), emit); err != nil {
+			return err
+		}
+	}
 	return a.completeRealtimeVoiceResponse(ctx, session, *modelTurn.Final, toolCallIDs, emit)
 }
 
@@ -398,6 +434,126 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 		return "", ports.ErrInvalidProviderInput
 	}
 	return strings.TrimSpace(call.Name) + ":" + string(payload), nil
+}
+
+func realtimeVoiceToolCallDiagnosticDetail(call ports.AgentToolCall) string {
+	payload, err := json.MarshalIndent(map[string]any{
+		"name":      call.Name,
+		"arguments": redactRealtimeVoiceDiagnosticValue(call.Arguments),
+	}, "", "  ")
+	if err != nil {
+		return "Tool call arguments could not be rendered safely."
+	}
+	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
+}
+
+func emitRealtimeVoiceDiagnostics(session RealtimeVoiceSession, diagnostics []ports.LanguageInferenceDiagnostic, emit RealtimeVoiceEventSink) error {
+	if !session.DeveloperDiagnostics {
+		return nil
+	}
+	for _, diagnostic := range diagnostics {
+		if err := emitRealtimeVoiceDiagnostic(session.ID, diagnostic.Title, diagnostic.Detail, emit); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, emit RealtimeVoiceEventSink) error {
+	message := safeRealtimeVoiceDiagnosticText(title, 120)
+	if message == "" {
+		message = "Agent diagnostic"
+	}
+	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentDiagnostic, SessionID: sessionID, Message: message, Detail: safeRealtimeVoiceDiagnosticText(detail, 4000)})
+}
+
+func realtimeVoiceFinalDiagnosticDetail(response ports.StructuredAgentResponse) string {
+	payload, err := json.MarshalIndent(map[string]any{
+		"kind":            response.Kind,
+		"spokenResponse":  response.SpokenResponse,
+		"displayResponse": response.DisplayResponse,
+	}, "", "  ")
+	if err != nil {
+		return "Final response could not be rendered safely."
+	}
+	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
+}
+
+func realtimeVoiceToolResultDiagnosticDetail(result ports.AgentToolResult) string {
+	payload, err := json.MarshalIndent(map[string]any{
+		"name":    result.Name,
+		"content": redactRealtimeVoiceDiagnosticString(result.Content),
+	}, "", "  ")
+	if err != nil {
+		return "Tool result could not be rendered safely."
+	}
+	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
+}
+
+func safeRealtimeVoiceDiagnosticText(value string, maxLength int) string {
+	trimmed := strings.TrimSpace(redactRealtimeVoiceDiagnosticString(value))
+	if trimmed == "" {
+		return ""
+	}
+	if len(trimmed) <= maxLength {
+		return trimmed
+	}
+	return strings.TrimSpace(trimmed[:maxLength]) + " ..."
+}
+
+func redactRealtimeVoiceDiagnosticString(value string) string {
+	value = realtimeVoiceDiagnosticAssignmentPattern.ReplaceAllString(value, "$1[redacted]")
+	value = realtimeVoiceDiagnosticBearerPattern.ReplaceAllString(value, "$1 [redacted]")
+	replacer := strings.NewReplacer(
+		"apiKey", "[redacted-key]",
+		"api_key", "[redacted-key]",
+		"authorization", "[redacted-authorization]",
+		"bearer", "[redacted-bearer]",
+		"credential", "[redacted-credential]",
+		"password", "[redacted-password]",
+		"providerSessionId", "[redacted-provider-session]",
+		"secret", "[redacted-secret]",
+		"token", "[redacted-token]",
+	)
+	return replacer.Replace(value)
+}
+
+var realtimeVoiceDiagnosticAssignmentPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+`)
+var realtimeVoiceDiagnosticBearerPattern = regexp.MustCompile(`(?i)\b(bearer)\s+[a-z0-9._~+/=-]+`)
+
+func redactRealtimeVoiceDiagnosticValue(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		redacted := map[string]any{}
+		for key, nested := range typed {
+			if unsafeRealtimeVoiceDiagnosticKey(key) {
+				redacted[key] = "[redacted]"
+				continue
+			}
+			redacted[key] = redactRealtimeVoiceDiagnosticValue(nested)
+		}
+		return redacted
+	case []any:
+		redacted := make([]any, 0, len(typed))
+		for _, nested := range typed {
+			redacted = append(redacted, redactRealtimeVoiceDiagnosticValue(nested))
+		}
+		return redacted
+	case string:
+		return redactRealtimeVoiceDiagnosticString(typed)
+	default:
+		return typed
+	}
+}
+
+func unsafeRealtimeVoiceDiagnosticKey(key string) bool {
+	normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(key, "_", ""), "-", ""), " ", ""))
+	for _, token := range []string{"apikey", "authorization", "bearer", "credential", "password", "providersessionid", "secret", "token"} {
+		if strings.Contains(normalized, token) {
+			return true
+		}
+	}
+	return false
 }
 
 func (a App) ensureRealtimeVoiceDependencies() error {

@@ -288,11 +288,89 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 		"use the returned assetId as parentAssetId",
 		"Action-plan command arguments must be structured JSON",
 		"Assume the user wants missing named locations or containers created",
+		"do not ask whether to create it; call propose_action_plan",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 	} {
 		if !strings.Contains(prompt, required) {
 			t.Fatalf("expected prompt to include %q, got: %s", required, prompt)
 		}
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceExposesSafeDiagnostics(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"candidates": []map[string]any{{
+				"content": map[string]any{
+					"parts": []map[string]any{{
+						"functionCall": map[string]any{
+							"name": "search_authorized_assets",
+							"args": map[string]any{"query": "water bottle"},
+						},
+					}},
+				},
+			}},
+		})
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID:   "project",
+		Location:    "us-central1",
+		Model:       "gemini-test",
+		BaseURL:     server.URL,
+		TokenSource: staticTokenSource{},
+		HTTPClient:  server.Client(),
+	})
+	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
+		Transcript:         "Move my water bottle to the kitchen.",
+		IncludeDiagnostics: true,
+		Tools: []ports.AgentToolDescriptor{{
+			Name:     "search_authorized_assets",
+			ReadOnly: true,
+			Parameters: ports.AgentToolParameters{
+				Properties: map[string]ports.AgentToolParameter{"query": {Type: ports.AgentToolParameterTypeString}},
+			},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("language inference: %v", err)
+	}
+	if len(turn.Diagnostics) != 2 {
+		t.Fatalf("expected prompt and model turn diagnostics, got %+v", turn.Diagnostics)
+	}
+	if turn.Diagnostics[0].Title != "Language prompt" || !strings.Contains(turn.Diagnostics[0].Detail, "Move my water bottle to the kitchen.") {
+		t.Fatalf("unexpected prompt diagnostic: %+v", turn.Diagnostics[0])
+	}
+	if turn.Diagnostics[1].Title != "Language model turn" || !strings.Contains(turn.Diagnostics[1].Detail, "search_authorized_assets") {
+		t.Fatalf("unexpected model turn diagnostic: %+v", turn.Diagnostics[1])
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceOmitsDiagnosticsByDefault(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID:   "project",
+		Location:    "us-central1",
+		Model:       "gemini-test",
+		BaseURL:     server.URL,
+		TokenSource: staticTokenSource{},
+		HTTPClient:  server.Client(),
+	})
+	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Where is my water bottle?", FinalOnly: true})
+	if err != nil {
+		t.Fatalf("language inference: %v", err)
+	}
+	if len(turn.Diagnostics) != 0 {
+		t.Fatalf("expected diagnostics to be disabled by default, got %+v", turn.Diagnostics)
 	}
 }
 

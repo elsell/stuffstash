@@ -388,7 +388,8 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
 }
 
 export function formatSafeDiagnosticEvent(event: VoiceSafeDiagnosticEvent): string {
-  return `${event.label}: ${event.status}`;
+  const summary = `${event.label}: ${event.status}`;
+  return event.detail ? `${summary}\n${event.detail}` : summary;
 }
 
 function describeVoiceContext(pathname: string): string {

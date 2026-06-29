@@ -122,7 +122,8 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
       new ExpoVoiceAudioRecorder(),
       new WebSocketRealtimeVoiceTransport({
         apiBaseUrl: config?.apiBaseUrl ?? 'http://127.0.0.1:8080',
-        tokenProvider: () => config?.devToken ?? ''
+        tokenProvider: () => config?.devToken ?? '',
+        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
       }),
       new ExpoVoiceAudioPlayer(),
       {

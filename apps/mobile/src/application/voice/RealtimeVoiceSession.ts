@@ -65,6 +65,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | { readonly type: 'transcript.delta'; readonly text: string }
   | { readonly type: 'transcript.final'; readonly text: string }
   | { readonly type: 'agent.progress'; readonly status: string; readonly message: string }
+  | { readonly type: 'agent.diagnostic'; readonly message: string; readonly detail?: string }
   | {
       readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed';
       readonly toolCallId: string;
@@ -72,6 +73,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       readonly status?: string;
       readonly code?: string;
       readonly message?: string;
+      readonly detail?: string;
     }
   | { readonly type: 'action.plan.proposed'; readonly actionPlan: VoiceActionPlanProposal }
   | {
@@ -153,24 +155,10 @@ export class VoiceRealtimeCancelledError extends Error {
 export type VoiceRealtimeStateHandler = (state: VoiceRealtimeState) => void;
 
 export type VoiceSafeDiagnosticEvent = {
-  readonly label: VoiceSafeDiagnosticLabel;
-  readonly status: VoiceSafeDiagnosticStatus;
+  readonly label: string;
+  readonly status: string;
+  readonly detail?: string;
 };
-
-export type VoiceSafeDiagnosticLabel =
-  | 'Asset lookup'
-  | 'Inventory list'
-  | 'Inventory lookup'
-  | 'Inventory search'
-  | 'Location contents';
-
-export type VoiceSafeDiagnosticStatus =
-  | 'Completed'
-  | 'Failed safely'
-  | 'Looking'
-  | 'Needs more context'
-  | 'No visible match'
-  | 'Updated';
 
 export class RealtimeVoiceSessionController {
   private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
@@ -303,6 +291,13 @@ export class RealtimeVoiceSessionController {
         return withProgressStep(state, 'Thinking', { status: 'processing', partialTranscript: undefined, transcript: event.text });
       case 'agent.progress':
         return withProgressStep(state, event.message, { status: 'processing' });
+      case 'agent.diagnostic':
+        return {
+          ...state,
+          debugEvents: this.options.diagnosticsEnabled
+            ? [...state.debugEvents, safeAgentDiagnosticEvent(event)]
+            : state.debugEvents
+        };
       case 'tool.call.started':
       case 'tool.call.completed':
       case 'tool.call.failed':
@@ -426,11 +421,20 @@ function withProgressStep(
 function safeDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed' }>): VoiceSafeDiagnosticEvent {
   return {
     label: safeDiagnosticLabel(event.toolLabel),
-    status: safeDiagnosticStatus(event.status ?? event.code)
+    status: safeDiagnosticStatus(event.status ?? event.code),
+    detail: event.detail ? safeBoundedDiagnosticDetail(event.detail, 4000) : undefined
   };
 }
 
-function safeDiagnosticLabel(toolLabel: string): VoiceSafeDiagnosticLabel {
+function safeAgentDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'agent.diagnostic' }>): VoiceSafeDiagnosticEvent {
+  return {
+    label: safeBoundedText(event.message, 120) || 'Agent diagnostic',
+    status: 'Details',
+    detail: event.detail ? safeBoundedDiagnosticDetail(event.detail, 4000) : undefined
+  };
+}
+
+function safeDiagnosticLabel(toolLabel: string): string {
   const normalized = toolLabel.toLowerCase();
 
   if (normalized.includes('search')) {
@@ -452,7 +456,7 @@ function safeDiagnosticLabel(toolLabel: string): VoiceSafeDiagnosticLabel {
   return 'Inventory lookup';
 }
 
-function safeDiagnosticStatus(status: string | undefined): VoiceSafeDiagnosticStatus {
+function safeDiagnosticStatus(status: string | undefined): string {
   switch (status) {
     case 'completed':
       return 'Completed';
@@ -529,4 +533,19 @@ function safeBoundedText(value: string, maxLength: number): string {
     return normalized;
   }
   return normalized.slice(0, maxLength).trim();
+}
+
+function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
+  const normalized = value
+    .replace(/\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+/gi, '$1: [redacted]')
+    .replace(/bearer\s+[a-z0-9._-]+/gi, 'bearer [redacted]')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{4,}/g, '\n\n\n')
+    .trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }

@@ -24,18 +24,21 @@ type ActiveRealtimeReviewSession = {
 export type WebSocketRealtimeVoiceTransportOptions = {
   readonly apiBaseUrl: string;
   readonly tokenProvider: () => string;
+  readonly diagnosticsEnabled?: boolean;
   readonly webSocketFactory?: VoiceWebSocketFactory;
 };
 
 export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
   private readonly apiBaseUrl: string;
   private readonly tokenProvider: () => string;
+  private readonly diagnosticsEnabled: boolean;
   private readonly webSocketFactory: VoiceWebSocketFactory;
   private activeReviewSession: ActiveRealtimeReviewSession | null = null;
 
   constructor(options: WebSocketRealtimeVoiceTransportOptions) {
     this.apiBaseUrl = options.apiBaseUrl.replace(/\/+$/, '');
     this.tokenProvider = options.tokenProvider;
+    this.diagnosticsEnabled = options.diagnosticsEnabled ?? false;
     this.webSocketFactory = options.webSocketFactory ?? createReactNativeWebSocket;
   }
 
@@ -137,6 +140,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           inventoryId: input.inventoryId,
           source: input.source,
           requestedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech'],
+          developerDiagnostics: this.diagnosticsEnabled,
           inputAudio: input.inputAudio,
           outputAudio: { mimeTypes: input.outputAudioMimeTypes }
         }));
@@ -262,9 +266,17 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         status: stringField(message, 'status'),
         message: stringField(message, 'message')
       };
-		case 'tool.call.started':
-		case 'tool.call.completed':
-		case 'tool.call.failed':
+    case 'agent.diagnostic':
+      return {
+        ...metadata,
+        type: 'agent.diagnostic',
+        sessionId: stringField(message, 'sessionId'),
+        message: stringField(message, 'message'),
+        detail: optionalStringField(message, 'detail')
+      };
+    case 'tool.call.started':
+    case 'tool.call.completed':
+    case 'tool.call.failed':
       return {
         ...metadata,
         type: message.type,
@@ -273,8 +285,9 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         toolLabel: stringField(message, 'toolLabel'),
         status: optionalStringField(message, 'status'),
         code: optionalStringField(message, 'code'),
-				message: optionalStringField(message, 'message')
-			};
+        message: optionalStringField(message, 'message'),
+        detail: optionalStringField(message, 'detail')
+      };
     case 'action.plan.proposed':
       return {
         ...metadata,
