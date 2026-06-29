@@ -31,6 +31,14 @@ type PreparedCreateAsset struct {
 }
 
 func (s Service) PrepareCreateAsset(ctx context.Context, input CreateAssetInput) (PreparedCreateAsset, error) {
+	return s.prepareCreateAsset(ctx, input, nil)
+}
+
+func (s Service) PrepareCreateAssetWithPendingParents(ctx context.Context, input CreateAssetInput, pendingParents map[asset.ID]asset.Kind) (PreparedCreateAsset, error) {
+	return s.prepareCreateAsset(ctx, input, pendingParents)
+}
+
+func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput, pendingParents map[asset.ID]asset.Kind) (PreparedCreateAsset, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionCreateAsset); err != nil {
 		return PreparedCreateAsset{}, err
 	}
@@ -67,15 +75,21 @@ func (s Service) PrepareCreateAsset(ctx context.Context, input CreateAssetInput)
 		if !ok {
 			return PreparedCreateAsset{}, apperrors.ErrInvalidInput
 		}
-		parent, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, parsedParentID)
-		if err != nil {
-			return PreparedCreateAsset{}, err
-		}
-		if !found {
-			return PreparedCreateAsset{}, apperrors.ErrNotFound
-		}
-		if !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
-			return PreparedCreateAsset{}, apperrors.ErrInvalidInput
+		if pendingKind, ok := pendingParents[parsedParentID]; ok {
+			if !pendingKind.CanContainChildren() {
+				return PreparedCreateAsset{}, apperrors.ErrInvalidInput
+			}
+		} else {
+			parent, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, parsedParentID)
+			if err != nil {
+				return PreparedCreateAsset{}, err
+			}
+			if !found {
+				return PreparedCreateAsset{}, apperrors.ErrNotFound
+			}
+			if !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
+				return PreparedCreateAsset{}, apperrors.ErrInvalidInput
+			}
 		}
 		parentAssetID = parsedParentID
 	}

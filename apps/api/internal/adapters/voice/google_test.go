@@ -304,6 +304,25 @@ func TestGoogleGeminiToolSchemaSupportsObjectParameters(t *testing.T) {
 		Parameters: ports.AgentToolParameters{
 			Properties: map[string]ports.AgentToolParameter{
 				"arguments": {Type: ports.AgentToolParameterTypeObject},
+				"commands": {
+					Type: ports.AgentToolParameterTypeArray,
+					Items: &ports.AgentToolParameter{
+						Type:     ports.AgentToolParameterTypeObject,
+						Required: []string{"id", "kind", "summary", "arguments"},
+						Properties: map[string]ports.AgentToolParameter{
+							"id":      {Type: ports.AgentToolParameterTypeString},
+							"kind":    {Type: ports.AgentToolParameterTypeString, Enum: []string{"create_asset", "create_location"}},
+							"summary": {Type: ports.AgentToolParameterTypeString},
+							"arguments": {
+								Type: ports.AgentToolParameterTypeObject,
+								Properties: map[string]ports.AgentToolParameter{
+									"title":           {Type: ports.AgentToolParameterTypeString},
+									"parentCommandId": {Type: ports.AgentToolParameterTypeString},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}})
@@ -313,6 +332,20 @@ func TestGoogleGeminiToolSchemaSupportsObjectParameters(t *testing.T) {
 	schema := tools[0].FunctionDeclarations[0].Parameters.Properties["arguments"]
 	if schema.Type != "object" {
 		t.Fatalf("expected object schema for structured arguments, got %+v", schema)
+	}
+	commands := tools[0].FunctionDeclarations[0].Parameters.Properties["commands"]
+	if commands.Type != "array" || commands.Items == nil || commands.Items.Type != "object" {
+		t.Fatalf("expected command array with object items, got %+v", commands)
+	}
+	if strings.Join(commands.Items.Required, ",") != "id,kind,summary,arguments" {
+		t.Fatalf("expected command item required fields, got %+v", commands.Items.Required)
+	}
+	if commands.Items.Properties["kind"].Enum[0] != "create_asset" {
+		t.Fatalf("expected nested enum for command kind, got %+v", commands.Items.Properties["kind"])
+	}
+	arguments := commands.Items.Properties["arguments"]
+	if arguments.Type != "object" || arguments.Properties["parentCommandId"].Type != "string" {
+		t.Fatalf("expected nested command argument properties, got %+v", arguments)
 	}
 }
 

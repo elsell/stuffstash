@@ -37,7 +37,15 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       actionPlan: {
         planId: 'plan-1',
         confirmationSummary: 'Create item water bottle?',
-        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        commands: [{
+          id: 'cmd-water-bottle',
+          kind: 'create_asset',
+          summary: 'Create item water bottle',
+          operation: 'create',
+          title: 'Water bottle',
+          assetKind: 'item',
+          parentTitle: 'Kitchen'
+        }],
         risks: ['Adds a new item to this inventory.']
       }
     });
@@ -93,7 +101,15 @@ describe('WebSocketRealtimeVoiceTransport', () => {
           planId: 'plan-1',
           status: 'proposed',
           confirmationSummary: 'Create item water bottle?',
-          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          commands: [{
+            id: 'cmd-water-bottle',
+            kind: 'create_asset',
+            summary: 'Create item water bottle',
+            operation: 'create',
+            title: 'Water bottle',
+            assetKind: 'item',
+            parentTitle: 'Kitchen'
+          }],
           risks: ['Adds a new item to this inventory.']
         }
       },

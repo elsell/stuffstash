@@ -16,11 +16,12 @@ import (
 )
 
 const (
-	maxActionPlanCommands       = 10
-	maxActionPlanSummaryLength  = 500
-	maxActionPlanArgumentBytes  = 4096
-	maxActionPlanRiskCount      = 10
-	maxActionPlanRiskTextLength = 300
+	maxActionPlanCommands        = 10
+	maxActionPlanCommandIDLength = 80
+	maxActionPlanSummaryLength   = 500
+	maxActionPlanArgumentBytes   = 4096
+	maxActionPlanRiskCount       = 10
+	maxActionPlanRiskTextLength  = 300
 )
 
 type CreateActionPlanInput struct {
@@ -37,6 +38,7 @@ type CreateActionPlanInput struct {
 }
 
 type ActionPlanCommandInput struct {
+	ID        string
 	Kind      actionplan.CommandKind
 	Summary   string
 	Arguments map[string]any
@@ -172,8 +174,11 @@ func actionPlanTransitionFromState(to actionplan.State) actionplan.State {
 }
 
 func (a App) executeApprovedActionPlanCommands(ctx context.Context, input ActionPlanDecisionInput, record ports.ActionPlanRecord) (ports.ActionPlanRecord, error) {
-	if len(record.Commands) != 1 {
+	if len(record.Commands) == 0 {
 		return ports.ActionPlanRecord{}, ErrValidation
+	}
+	if len(record.Commands) > 1 {
+		return a.executeApprovedCreateActionPlanCommands(ctx, input, record)
 	}
 	command := record.Commands[0]
 	switch command.Kind {
@@ -319,10 +324,11 @@ func actionPlanCreateAssetInput(input ActionPlanDecisionInput, command ports.Act
 }
 
 type actionPlanCreateArguments struct {
-	Title         string
-	Kind          string
-	Description   string
-	ParentAssetID string
+	Title           string
+	Kind            string
+	Description     string
+	ParentAssetID   string
+	ParentCommandID string
 }
 
 func parseActionPlanCreateArguments(command ports.ActionPlanCommandRecord) (actionPlanCreateArguments, error) {
@@ -359,11 +365,20 @@ func parseActionPlanCreateArguments(command ports.ActionPlanCommandRecord) (acti
 				return actionPlanCreateArguments{}, err
 			}
 			args.ParentAssetID = text
+		case "parentCommandId":
+			text, err := actionPlanStringArgument(value)
+			if err != nil {
+				return actionPlanCreateArguments{}, err
+			}
+			args.ParentCommandID = text
 		default:
 			return actionPlanCreateArguments{}, ErrValidation
 		}
 	}
 	if strings.TrimSpace(args.Title) == "" {
+		return actionPlanCreateArguments{}, ErrValidation
+	}
+	if strings.TrimSpace(args.ParentAssetID) != "" && strings.TrimSpace(args.ParentCommandID) != "" {
 		return actionPlanCreateArguments{}, ErrValidation
 	}
 	switch strings.TrimSpace(args.Kind) {
@@ -523,14 +538,38 @@ func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.Action
 		if err := validateExecutableActionPlanArguments(input.Kind, arguments); err != nil {
 			return nil, err
 		}
+		commandID := strings.TrimSpace(input.ID)
+		if commandID == "" {
+			commandID = strings.TrimSpace(a.ids.NewID())
+		}
+		if !validActionPlanCommandID(commandID) {
+			return nil, ErrValidation
+		}
 		commands = append(commands, ports.ActionPlanCommandRecord{
-			ID:            strings.TrimSpace(a.ids.NewID()),
+			ID:            commandID,
 			Kind:          input.Kind,
 			Summary:       summary,
 			ArgumentsJSON: arguments,
 		})
 	}
+	if err := validateActionPlanCommandDependencies(commands); err != nil {
+		return nil, err
+	}
 	return commands, nil
+}
+
+func validActionPlanCommandID(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" || len(value) > maxActionPlanCommandIDLength {
+		return false
+	}
+	for _, char := range value {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '-' || char == '_' || char == '.' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func validateExecutableActionPlanArguments(kind actionplan.CommandKind, arguments []byte) error {

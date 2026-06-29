@@ -69,6 +69,9 @@ type AgentToolParameter struct {
 	Type        AgentToolParameterType
 	Description string
 	Enum        []string
+	Properties  map[string]AgentToolParameter
+	Required    []string
+	Items       *AgentToolParameter
 }
 
 type AgentToolParameterType string
@@ -77,6 +80,7 @@ const (
 	AgentToolParameterTypeString  AgentToolParameterType = "string"
 	AgentToolParameterTypeInteger AgentToolParameterType = "integer"
 	AgentToolParameterTypeObject  AgentToolParameterType = "object"
+	AgentToolParameterTypeArray   AgentToolParameterType = "array"
 )
 
 type LanguageInferenceTurn struct {

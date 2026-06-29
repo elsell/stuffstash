@@ -206,8 +206,16 @@ type realtimeActionPlanProposal struct {
 }
 
 type realtimeActionPlanCommand struct {
-	Kind    string `json:"kind"`
-	Summary string `json:"summary"`
+	ID              string `json:"id,omitempty"`
+	Kind            string `json:"kind"`
+	Summary         string `json:"summary"`
+	Operation       string `json:"operation,omitempty"`
+	Title           string `json:"title,omitempty"`
+	AssetKind       string `json:"assetKind,omitempty"`
+	ParentAssetID   string `json:"parentAssetId,omitempty"`
+	ParentTitle     string `json:"parentTitle,omitempty"`
+	ParentKind      string `json:"parentKind,omitempty"`
+	ParentCommandID string `json:"parentCommandId,omitempty"`
 }
 
 type realtimeAudioFormatResponse struct {
@@ -443,7 +451,18 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *realtimeActionPlanProposal {
 	commands := make([]realtimeActionPlanCommand, 0, len(proposal.Commands))
 	for _, command := range proposal.Commands {
-		commands = append(commands, realtimeActionPlanCommand{Kind: command.Kind, Summary: command.Summary})
+		commands = append(commands, realtimeActionPlanCommand{
+			ID:              command.ID,
+			Kind:            command.Kind,
+			Summary:         command.Summary,
+			Operation:       command.Operation,
+			Title:           command.Title,
+			AssetKind:       command.AssetKind,
+			ParentAssetID:   command.ParentAssetID,
+			ParentTitle:     command.ParentTitle,
+			ParentKind:      command.ParentKind,
+			ParentCommandID: command.ParentCommandID,
+		})
 	}
 	return &realtimeActionPlanProposal{
 		PlanID:              proposal.PlanID,

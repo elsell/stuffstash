@@ -438,14 +438,14 @@ func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutChangingAssets(t *t
 			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindUpdateAsset, `{"assetId":"asset-1","title":"Updated"}`),
 		},
 		{
-			name: "multi command",
+			name: "unsupported multi command mix",
 			record: func() ports.ActionPlanRecord {
 				record := actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindCreateAsset, `{"title":"Water bottle"}`)
 				record.Commands = append(record.Commands, ports.ActionPlanCommandRecord{
 					ID:            "command-2",
-					Kind:          actionplan.CommandKindCreateLocation,
-					Summary:       "Create Office",
-					ArgumentsJSON: []byte(`{"name":"Office"}`),
+					Kind:          actionplan.CommandKindArchiveAsset,
+					Summary:       "Archive old item",
+					ArgumentsJSON: []byte(`{"assetId":"asset-1"}`),
 				})
 				return record
 			}(),

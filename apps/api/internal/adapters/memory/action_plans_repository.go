@@ -93,6 +93,40 @@ func (s *Store) ExecuteCreateAssetActionPlan(_ context.Context, tenantID tenant.
 	return cloneActionPlanRecord(updated), true, nil
 }
 
+func (s *Store) ExecuteCreateAssetsActionPlan(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, creates []ports.ActionPlanCreateAssetOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || len(creates) == 0 || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, found := s.actionPlans[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From || record.State.Terminal() || transition.At.Before(record.CreatedAt) {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	assetsSnapshot := cloneAssetMap(s.assets)
+	auditSnapshot := cloneAuditMap(s.auditRecords)
+	undoableSnapshot := cloneUndoableMap(s.undoables)
+	for _, create := range creates {
+		operation := create.UndoableOperation
+		if err := s.createAssetLocked(create.Item, create.AuditRecord, &operation); err != nil {
+			s.assets = assetsSnapshot
+			s.auditRecords = auditSnapshot
+			s.undoables = undoableSnapshot
+			return ports.ActionPlanRecord{}, true, err
+		}
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	s.actionPlans[planID] = updated
+	return cloneActionPlanRecord(updated), true, nil
+}
+
 func (s *Store) ExecuteUpdateAssetActionPlan(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
@@ -196,4 +230,28 @@ func cloneActionPlanRecord(record ports.ActionPlanRecord) ports.ActionPlanRecord
 	}
 	record.Risks = append([]string{}, record.Risks...)
 	return record
+}
+
+func cloneAssetMap(values map[asset.ID]asset.Asset) map[asset.ID]asset.Asset {
+	cloned := make(map[asset.ID]asset.Asset, len(values))
+	for key, value := range values {
+		cloned[key] = value
+	}
+	return cloned
+}
+
+func cloneAuditMap(values map[audit.ID]audit.Record) map[audit.ID]audit.Record {
+	cloned := make(map[audit.ID]audit.Record, len(values))
+	for key, value := range values {
+		cloned[key] = value
+	}
+	return cloned
+}
+
+func cloneUndoableMap(values map[string]ports.UndoableOperation) map[string]ports.UndoableOperation {
+	cloned := make(map[string]ports.UndoableOperation, len(values))
+	for key, value := range values {
+		cloned[key] = value
+	}
+	return cloned
 }

@@ -1,4 +1,5 @@
 import type {
+  VoiceActionPlanCommand,
   VoiceRealtimeState,
   VoiceSafeDiagnosticEvent
 } from '../../application/voice/RealtimeVoiceSession';
@@ -167,7 +168,8 @@ export type VoiceSessionPresentation = {
     readonly planId: string;
     readonly status: 'proposed' | 'approved' | 'cancelled' | 'executed' | 'failed';
     readonly confirmationSummary: string;
-    readonly commands: readonly string[];
+    readonly summary: string;
+    readonly commands: readonly VoiceSessionActionPlanCommand[];
     readonly risks: readonly string[];
   };
   readonly bottomAction: VoiceSessionBottomAction;
@@ -181,6 +183,14 @@ export type VoiceSessionPresentation = {
   readonly response?: string;
   readonly title: string;
   readonly transcript?: string;
+};
+
+export type VoiceSessionActionPlanCommand = {
+  readonly id?: string;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly placement?: string;
+  readonly tone: 'create' | 'use' | 'update';
 };
 
 export type VoiceSessionBottomAction =
@@ -233,7 +243,8 @@ export function buildVoiceSessionPresentation({
           planId: realtime.actionPlan.planId,
           status: realtime.actionPlan.status,
           confirmationSummary: realtime.actionPlan.confirmationSummary,
-          commands: realtime.actionPlan.commands.map((command) => command.summary),
+          summary: summarizeActionPlanCommands(realtime.actionPlan.commands),
+          commands: formatActionPlanCommands(realtime.actionPlan.commands),
           risks: realtime.actionPlan.risks
         }
       : undefined,
@@ -251,6 +262,94 @@ export function buildVoiceSessionPresentation({
     title,
     transcript: realtime?.transcript ?? activePartialTranscript
   };
+}
+
+function summarizeActionPlanCommands(commands: readonly VoiceActionPlanCommand[]): string {
+  const creates = commands.filter((command) => command.operation === 'create' || command.kind === 'create_asset' || command.kind === 'create_location').length;
+  if (creates === 0) {
+    return `${commands.length} ${commands.length === 1 ? 'change' : 'changes'}`;
+  }
+  return `${creates} new ${creates === 1 ? 'thing' : 'things'}`;
+}
+
+function formatActionPlanCommands(commands: readonly VoiceActionPlanCommand[]): readonly VoiceSessionActionPlanCommand[] {
+  const titlesByID = new Map<string, string>();
+  for (const command of commands) {
+    if (command.id) {
+      titlesByID.set(command.id, command.title || command.summary);
+    }
+  }
+  const formatted: VoiceSessionActionPlanCommand[] = [];
+  const usedExistingParents = new Set<string>();
+  for (const command of commands) {
+    if (command.parentAssetId && !usedExistingParents.has(command.parentAssetId)) {
+      usedExistingParents.add(command.parentAssetId);
+      formatted.push(formatExistingParentUseCommand(command));
+    }
+    formatted.push(formatActionPlanCommand(command, titlesByID));
+  }
+  return formatted;
+}
+
+function formatExistingParentUseCommand(command: VoiceActionPlanCommand): VoiceSessionActionPlanCommand {
+  const parentKind = friendlyParentKind(command.parentKind);
+  return {
+    id: command.parentAssetId ? `use-${command.parentAssetId}` : undefined,
+    title: command.parentTitle ?? 'Existing place',
+    subtitle: `Use existing ${parentKind}`,
+    tone: 'use'
+  };
+}
+
+function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: ReadonlyMap<string, string>): VoiceSessionActionPlanCommand {
+  const title = command.title || command.summary;
+  const assetKind = friendlyAssetKind(command.assetKind || command.kind);
+  const tone = command.operation === 'create' || command.kind === 'create_asset' || command.kind === 'create_location'
+    ? 'create'
+    : 'update';
+  return {
+    id: command.id,
+    title,
+    subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
+    placement: placementLabel(command, titlesByID),
+    tone
+  };
+}
+
+function placementLabel(command: VoiceActionPlanCommand, titlesByID: ReadonlyMap<string, string>): string | undefined {
+  if (command.parentCommandId) {
+    return `Inside new ${titlesByID.get(command.parentCommandId) ?? 'container'}`;
+  }
+  if (command.parentAssetId) {
+    return `Inside ${command.parentTitle ?? 'existing place'}`;
+  }
+  return undefined;
+}
+
+function friendlyAssetKind(value: string | undefined): string {
+  switch (value) {
+    case 'create_location':
+    case 'location':
+      return 'location';
+    case 'container':
+      return 'container';
+    case 'item':
+    case 'create_asset':
+      return 'item';
+    default:
+      return 'item';
+  }
+}
+
+function friendlyParentKind(value: string | undefined): string {
+  switch (value) {
+    case 'location':
+      return 'location';
+    case 'container':
+      return 'container';
+    default:
+      return 'place';
+  }
 }
 
 function isProviderRecoveryFailure(code: VoiceRealtimeState['failureCode']): boolean {

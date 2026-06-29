@@ -107,8 +107,16 @@ type RealtimeVoiceActionPlanProposal struct {
 }
 
 type RealtimeVoiceActionPlanCommand struct {
-	Kind    string
-	Summary string
+	ID              string
+	Kind            string
+	Summary         string
+	Operation       string
+	Title           string
+	AssetKind       string
+	ParentAssetID   string
+	ParentTitle     string
+	ParentKind      string
+	ParentCommandID string
 }
 
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {

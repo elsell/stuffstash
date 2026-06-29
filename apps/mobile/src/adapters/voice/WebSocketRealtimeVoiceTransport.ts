@@ -399,7 +399,15 @@ function actionPlanField(message: Record<string, unknown>) {
       const command = objectValue(item, 'actionPlan.commands');
       return {
         kind: stringField(command, 'kind'),
-        summary: stringField(command, 'summary')
+        summary: stringField(command, 'summary'),
+        ...optionalObjectField('id', optionalStringField(command, 'id')),
+        ...optionalObjectField('operation', optionalStringField(command, 'operation')),
+        ...optionalObjectField('title', optionalStringField(command, 'title')),
+        ...optionalObjectField('assetKind', optionalStringField(command, 'assetKind')),
+        ...optionalObjectField('parentAssetId', optionalStringField(command, 'parentAssetId')),
+        ...optionalObjectField('parentTitle', optionalStringField(command, 'parentTitle')),
+        ...optionalObjectField('parentKind', optionalStringField(command, 'parentKind')),
+        ...optionalObjectField('parentCommandId', optionalStringField(command, 'parentCommandId'))
       };
     }),
     risks: arrayField(actionPlan, 'risks').map((item) => {
@@ -409,6 +417,10 @@ function actionPlanField(message: Record<string, unknown>) {
       return item;
     })
   };
+}
+
+function optionalObjectField<T extends string>(field: T, value: string | undefined): { readonly [key in T]?: string } {
+  return value ? { [field]: value } as { readonly [key in T]?: string } : {};
 }
 
 function actionPlanStatusField(

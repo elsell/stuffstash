@@ -179,6 +179,94 @@ func TestActionPlanRepositoryExecutesCreateAssetAtomically(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryExecutesCreateAssetsActionPlanAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	record := gormActionPlanRecord("plan-create-hierarchy", time.Date(2026, 6, 26, 18, 2, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, record); err != nil {
+		t.Fatalf("save action plan: %v", err)
+	}
+	approveActionPlanForGormTest(t, ctx, store, record)
+
+	box := assetItem("box-1", record.TenantID.String(), record.InventoryID.String(), asset.KindContainer, "")
+	remote := assetItem("remote-1", record.TenantID.String(), record.InventoryID.String(), asset.KindItem, "box-1")
+	executed, found, err := store.ExecuteCreateAssetsActionPlan(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{
+		PrincipalID: record.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          record.CreatedAt.Add(2 * time.Second),
+	}, []ports.ActionPlanCreateAssetOperation{
+		{
+			Item:        box,
+			AuditRecord: auditRecord(t, "audit-box", record.TenantID, record.InventoryID, audit.ActionAssetCreated),
+		},
+		{
+			Item:        remote,
+			AuditRecord: auditRecord(t, "audit-remote", record.TenantID, record.InventoryID, audit.ActionAssetCreated),
+		},
+	})
+	if err != nil {
+		t.Fatalf("execute create assets action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	if got, found, err := store.AssetByID(ctx, record.TenantID, record.InventoryID, remote.ID); err != nil || !found || got.ParentAssetID != box.ID {
+		t.Fatalf("expected dependent asset to be created in batch found=%t item=%+v err=%v", found, got, err)
+	}
+}
+
+func TestActionPlanRepositoryRollsBackCreateAssetsActionPlan(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	record := gormActionPlanRecord("plan-create-rollback", time.Date(2026, 6, 26, 18, 3, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, record); err != nil {
+		t.Fatalf("save action plan: %v", err)
+	}
+	approveActionPlanForGormTest(t, ctx, store, record)
+
+	box := assetItem("box-rollback", record.TenantID.String(), record.InventoryID.String(), asset.KindContainer, "")
+	duplicate := assetItem("remote-duplicate", record.TenantID.String(), record.InventoryID.String(), asset.KindItem, "")
+	if err := createAsset(t, ctx, store, duplicate); err != nil {
+		t.Fatalf("seed duplicate asset: %v", err)
+	}
+	if _, _, err := store.ExecuteCreateAssetsActionPlan(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{
+		PrincipalID: record.PrincipalID,
+		From:        actionplan.StateApproved,
+		To:          actionplan.StateExecuted,
+		At:          record.CreatedAt.Add(2 * time.Second),
+	}, []ports.ActionPlanCreateAssetOperation{
+		{
+			Item:        box,
+			AuditRecord: auditRecord(t, "audit-rollback-box", record.TenantID, record.InventoryID, audit.ActionAssetCreated),
+		},
+		{
+			Item:        duplicate,
+			AuditRecord: auditRecord(t, "audit-rollback-duplicate", record.TenantID, record.InventoryID, audit.ActionAssetCreated),
+		},
+	}); err == nil {
+		t.Fatalf("expected duplicate batch create to fail")
+	}
+	if _, found, err := store.AssetByID(ctx, record.TenantID, record.InventoryID, box.ID); err != nil || found {
+		t.Fatalf("expected first batch create to roll back found=%t err=%v", found, err)
+	}
+	rolledBack, found, err := store.ActionPlanByID(ctx, record.TenantID, record.InventoryID, record.ID)
+	if err != nil {
+		t.Fatalf("read rolled back action plan: %v", err)
+	}
+	if !found || rolledBack.State != actionplan.StateApproved || !rolledBack.ExecutedAt.IsZero() {
+		t.Fatalf("expected plan to remain approved after rollback found=%t record=%+v", found, rolledBack)
+	}
+}
+
 func TestActionPlanRepositoryExecutesUpdateAssetAtomically(t *testing.T) {
 	t.Parallel()
 

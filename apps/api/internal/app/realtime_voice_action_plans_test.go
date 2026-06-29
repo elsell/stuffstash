@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -114,7 +117,13 @@ func TestRealtimeVoiceActionPlanProposalPersistsNativeObjectArguments(t *testing
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "I'd like to add an Apple TV remote to the living room."}
 	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	location := assetItem("location-living-room", "tenant-home", "inventory-home", asset.KindLocation, "")
+	locationTitle, _ := asset.NewTitle("Living room")
+	location.Title = locationTitle
+	if err := store.CreateAsset(context.Background(), location, audit.Record{ID: audit.ID("audit-living-room"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "location-living-room", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed living room: %v", err)
+	}
 
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {
@@ -146,6 +155,87 @@ func TestRealtimeVoiceActionPlanProposalPersistsNativeObjectArguments(t *testing
 	}
 	if arguments["title"] != "Apple TV remote" || arguments["kind"] != "item" || arguments["parentAssetId"] != "location-living-room" {
 		t.Fatalf("expected structured action-plan arguments to be preserved, got %+v", arguments)
+	}
+}
+
+func TestRealtimeVoiceActionPlanProposalSupportsDependentCreateCommands(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-1",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"intentSummary":              "Create an Apple TV remote in the box underneath the TV in the living room.",
+					"modelInterpretationSummary": "The user wants a new container and a new item placed inside it.",
+					"confirmationSummary":        "Create a box underneath the TV and add an Apple TV remote inside it?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-box",
+							"kind":    "create_asset",
+							"summary": "Create Box underneath the TV in Living room",
+							"arguments": map[string]any{
+								"title":         "Box underneath the TV",
+								"kind":          "container",
+								"parentAssetId": "location-1",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-remote",
+							"kind":    "create_asset",
+							"summary": "Create Apple TV remote inside Box underneath the TV",
+							"arguments": map[string]any{
+								"title":           "Apple TV remote",
+								"kind":            "item",
+								"parentCommandId": "cmd-box",
+							},
+						},
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I prepared that change for review.",
+				DisplayResponse: "I prepared that change for review.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Add my Apple TV remote to the box underneath the TV in the living room."}
+	resolver.providers.LanguageInference = language
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	location := assetItem("location-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	locationTitle, _ := asset.NewTitle("Living room")
+	location.Title = locationTitle
+	if err := store.CreateAsset(context.Background(), location, audit.Record{ID: audit.ID("audit-location"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "location-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed location: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if proposed == nil || len(proposed.Commands) != 2 {
+		t.Fatalf("expected two proposed commands, got %+v", proposed)
+	}
+	if proposed.Commands[0].ID != "cmd-box" || proposed.Commands[0].Operation != "create" || proposed.Commands[0].Title != "Box underneath the TV" || proposed.Commands[0].AssetKind != "container" || proposed.Commands[0].ParentAssetID != "location-1" || proposed.Commands[0].ParentTitle != "Living room" {
+		t.Fatalf("unexpected first command detail: %+v", proposed.Commands[0])
+	}
+	if proposed.Commands[1].ID != "cmd-remote" || proposed.Commands[1].Title != "Apple TV remote" || proposed.Commands[1].ParentCommandID != "cmd-box" {
+		t.Fatalf("unexpected second command detail: %+v", proposed.Commands[1])
 	}
 }
 

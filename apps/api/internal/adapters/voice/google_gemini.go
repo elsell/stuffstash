@@ -166,7 +166,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"For broad list questions, call list_authorized_assets with filters.",
 		"For questions about what is in a place, list with parentTitle or locationTitle when known.",
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
-		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, and optional parentAssetId only.",
+		"For missing parent containers or locations requested by the user, propose an ordered commands array and use parentCommandId to place later creates inside earlier creates.",
+		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId only.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 		"If you can answer, return {\"final\":{\"kind\":\"answer\",\"spokenResponse\":\"short spoken answer\",\"displayResponse\":\"short display answer\"}}.",
 		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
@@ -257,6 +258,12 @@ func geminiParameters(parameters ports.AgentToolParameters) geminiSchema {
 			Type:        geminiSchemaType(parameter.Type),
 			Description: parameter.Description,
 			Enum:        append([]string{}, parameter.Enum...),
+			Properties:  geminiProperties(parameter.Properties),
+			Required:    append([]string{}, parameter.Required...),
+		}
+		if parameter.Items != nil {
+			item := geminiParameterSchema(*parameter.Items)
+			property.Items = &item
 		}
 		properties[name] = property
 	}
@@ -267,12 +274,40 @@ func geminiParameters(parameters ports.AgentToolParameters) geminiSchema {
 	}
 }
 
+func geminiParameterSchema(parameter ports.AgentToolParameter) geminiSchema {
+	schema := geminiSchema{
+		Type:        geminiSchemaType(parameter.Type),
+		Description: parameter.Description,
+		Enum:        append([]string{}, parameter.Enum...),
+		Properties:  geminiProperties(parameter.Properties),
+		Required:    append([]string{}, parameter.Required...),
+	}
+	if parameter.Items != nil {
+		item := geminiParameterSchema(*parameter.Items)
+		schema.Items = &item
+	}
+	return schema
+}
+
+func geminiProperties(parameters map[string]ports.AgentToolParameter) map[string]geminiSchema {
+	if len(parameters) == 0 {
+		return nil
+	}
+	properties := map[string]geminiSchema{}
+	for name, parameter := range parameters {
+		properties[name] = geminiParameterSchema(parameter)
+	}
+	return properties
+}
+
 func geminiSchemaType(value ports.AgentToolParameterType) string {
 	switch value {
 	case ports.AgentToolParameterTypeInteger:
 		return "integer"
 	case ports.AgentToolParameterTypeObject:
 		return "object"
+	case ports.AgentToolParameterTypeArray:
+		return "array"
 	default:
 		return "string"
 	}
@@ -476,6 +511,7 @@ type geminiSchema struct {
 	Properties  map[string]geminiSchema `json:"properties,omitempty"`
 	Required    []string                `json:"required,omitempty"`
 	Enum        []string                `json:"enum,omitempty"`
+	Items       *geminiSchema           `json:"items,omitempty"`
 }
 
 type geminiGenerationConfig struct {

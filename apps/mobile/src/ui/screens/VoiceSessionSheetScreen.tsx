@@ -184,19 +184,48 @@ function VoiceSessionSheet({
 
             {session.actionPlan ? (
               <View style={styles.actionPlanSection}>
-                <Text style={styles.sectionLabel}>Review change</Text>
-                <Text style={styles.actionPlanTitle}>{session.actionPlan.confirmationSummary}</Text>
-                {session.actionPlan.commands.map((command, index) => (
-                  <View key={`${command}-${index.toString()}`} style={styles.actionPlanRow}>
-                    <Text style={styles.diagnosticIndex}>{(index + 1).toString()}</Text>
-                    <Text style={styles.actionPlanText}>{command}</Text>
+                <View style={styles.actionPlanHeader}>
+                  <View style={styles.actionPlanHeaderText}>
+                    <Text style={styles.sectionLabel}>Review change</Text>
+                    <Text style={styles.actionPlanTitle}>{session.actionPlan.confirmationSummary}</Text>
                   </View>
-                ))}
-                {session.actionPlan.risks.map((risk, index) => (
-                  <Text key={`${risk}-${index.toString()}`} style={styles.actionPlanRisk}>
-                    {risk}
-                  </Text>
-                ))}
+                  <View style={styles.actionPlanCountPill}>
+                    <Text style={styles.actionPlanCountText}>{session.actionPlan.summary}</Text>
+                  </View>
+                </View>
+                <View style={styles.actionPlanCommandList}>
+                  {session.actionPlan.commands.map((command, index) => (
+                    <View key={`${command.id ?? command.title}-${index.toString()}`} style={styles.actionPlanRow}>
+                      <View style={[
+                        styles.actionPlanStepMarker,
+                        command.tone === 'create' && styles.actionPlanCreateMarker,
+                        command.tone === 'use' && styles.actionPlanUseMarker
+                      ]}>
+                        {command.tone === 'use' ? (
+                          <Check color={colors.accentStrong} size={15} strokeWidth={2.8} />
+                        ) : (
+                          <Text style={styles.actionPlanStepText}>{(index + 1).toString()}</Text>
+                        )}
+                      </View>
+                      <View style={styles.actionPlanCommandTextGroup}>
+                        <Text style={styles.actionPlanText}>{command.title}</Text>
+                        <Text style={styles.actionPlanCommandMeta}>{command.subtitle}</Text>
+                        {command.placement ? (
+                          <Text style={styles.actionPlanPlacement}>{command.placement}</Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+                {session.actionPlan.risks.length ? (
+                  <View style={styles.actionPlanRisks}>
+                    {session.actionPlan.risks.map((risk, index) => (
+                      <Text key={`${risk}-${index.toString()}`} style={styles.actionPlanRisk}>
+                        {risk}
+                      </Text>
+                    ))}
+                  </View>
+                ) : null}
                 {session.actionPlan.status === 'approved' ? (
                   <Text style={styles.actionPlanStatus}>Approved. Applying change.</Text>
                 ) : null}
@@ -406,13 +435,65 @@ const styles = StyleSheet.create({
   actionPlanRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  actionPlanCommandList: {
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.sm
+  },
+  actionPlanCommandMeta: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 18,
+    marginTop: 2
+  },
+  actionPlanCommandTextGroup: {
+    flex: 1
+  },
+  actionPlanCountPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  actionPlanCountText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900'
+  },
+  actionPlanCreateMarker: {
+    backgroundColor: colors.accent
+  },
+  actionPlanHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.md,
+    justifyContent: 'space-between'
+  },
+  actionPlanHeaderText: {
+    flex: 1
+  },
+  actionPlanPlacement: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+    marginTop: 2
+  },
+  actionPlanRisks: {
     marginTop: spacing.sm
   },
   actionPlanSection: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
-    gap: spacing.xs,
     padding: spacing.md
   },
   actionPlanStatus: {
@@ -428,6 +509,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     lineHeight: 20
+  },
+  actionPlanStepMarker: {
+    alignItems: 'center',
+    backgroundColor: colors.textMuted,
+    borderRadius: 14,
+    height: 28,
+    justifyContent: 'center',
+    marginTop: 1,
+    width: 28
+  },
+  actionPlanStepText: {
+    color: colors.onAction,
+    fontSize: 12,
+    fontWeight: '900'
+  },
+  actionPlanUseMarker: {
+    backgroundColor: colors.surface,
+    borderColor: colors.accentStrong,
+    borderWidth: StyleSheet.hairlineWidth
   },
   actionPlanTitle: {
     color: colors.text,

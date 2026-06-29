@@ -84,6 +84,43 @@ func (s Store) ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant
 	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
 }
 
+func (s Store) ExecuteCreateAssetsActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, creates []ports.ActionPlanCreateAssetOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || len(creates) == 0 || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	found := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		transitionFound, err := updateActionPlanStateInDB(tx, tenantID, inventoryID, planID, transition)
+		if err != nil {
+			return err
+		}
+		found = transitionFound
+		if !found {
+			return nil
+		}
+		for _, create := range creates {
+			if err := createAssetInTx(tx, create.Item, create.AuditRecord, actionPlanUndoableOperationPtr(create.UndoableOperation)); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return ports.ActionPlanRecord{}, found, err
+	}
+	if !found {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
+}
+
+func actionPlanUndoableOperationPtr(operation ports.UndoableOperation) *ports.UndoableOperation {
+	if strings.TrimSpace(operation.ID) == "" {
+		return nil
+	}
+	return &operation
+}
+
 func (s Store) ExecuteUpdateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput

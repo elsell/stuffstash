@@ -347,6 +347,75 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('formats dependent create plans for clear mobile review', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Create a box underneath the TV and add an Apple TV remote inside it?',
+          commands: [
+            {
+              id: 'cmd-box',
+              kind: 'create_asset',
+              operation: 'create',
+              title: 'Box underneath the TV',
+              assetKind: 'container',
+              parentAssetId: 'location-1',
+              parentTitle: 'Living room',
+              parentKind: 'location',
+              summary: 'Create Box underneath the TV in Living room'
+            },
+            {
+              id: 'cmd-remote',
+              kind: 'create_asset',
+              operation: 'create',
+              title: 'Apple TV remote',
+              assetKind: 'item',
+              parentCommandId: 'cmd-box',
+              summary: 'Create Apple TV remote inside Box underneath the TV'
+            }
+          ],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan).toMatchObject({
+      summary: '2 new things',
+      commands: [
+        {
+          title: 'Living room',
+          subtitle: 'Use existing location',
+          tone: 'use'
+        },
+        {
+          title: 'Box underneath the TV',
+          subtitle: 'Create container',
+          placement: 'Inside Living room',
+          tone: 'create'
+        },
+        {
+          title: 'Apple TV remote',
+          subtitle: 'Create item',
+          placement: 'Inside new Box underneath the TV',
+          tone: 'create'
+        }
+      ]
+    });
+    expect(session.actionPlan?.commands.map((command) => command.title).join(' ')).not.toContain('location-1');
+  });
+
   it('disables action plan decisions while a review decision is pending', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

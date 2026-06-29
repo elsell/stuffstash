@@ -94,10 +94,20 @@ func TestRealtimeVoiceSessionFailsWhenProviderResolverUnavailable(t *testing.T) 
 }
 
 func newRealtimeVoiceResolutionTestApp(t *testing.T, resolver ports.RealtimeVoiceProviderResolver) App {
-	return newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, newFakeRealtimeSessionRepository())
+	application, _ := newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t, resolver, newFakeRealtimeSessionRepository())
+	return application
 }
 
 func newRealtimeVoiceResolutionTestAppWithSessions(t *testing.T, resolver ports.RealtimeVoiceProviderResolver, sessions ports.RealtimeSessionRepository) App {
+	application, _ := newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t, resolver, sessions)
+	return application
+}
+
+func newRealtimeVoiceResolutionTestAppWithStore(t *testing.T, resolver ports.RealtimeVoiceProviderResolver) (App, *memory.Store) {
+	return newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t, resolver, newFakeRealtimeSessionRepository())
+}
+
+func newRealtimeVoiceResolutionTestAppWithStoreAndSessions(t *testing.T, resolver ports.RealtimeVoiceProviderResolver, sessions ports.RealtimeSessionRepository) (App, *memory.Store) {
 	t.Helper()
 
 	ctx := context.Background()
@@ -129,7 +139,7 @@ func newRealtimeVoiceResolutionTestAppWithSessions(t *testing.T, resolver ports.
 		t.Fatalf("grant inventory owner: %v", err)
 	}
 
-	return New(Dependencies{
+	application := New(Dependencies{
 		Authorizer:                    authorizer,
 		Tenants:                       store,
 		Inventories:                   store,
@@ -141,6 +151,7 @@ func newRealtimeVoiceResolutionTestAppWithSessions(t *testing.T, resolver ports.
 		IDs:                           &realtimeVoiceResolutionIDGenerator{},
 		Clock:                         fixedRealtimeClock{now: time.Date(2026, 6, 26, 16, 0, 0, 0, time.UTC)},
 	})
+	return application, store
 }
 
 type fakeRealtimeVoiceProviderResolver struct {
