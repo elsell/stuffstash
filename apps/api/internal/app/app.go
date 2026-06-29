@@ -42,6 +42,7 @@ type App struct {
 	outbox                    ports.AuthorizationOutbox
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	voiceProviderConfigs      ports.VoiceProviderConfigurationRepository
 	providerCredentialVault   ports.ProviderCredentialVault
 	providerProfileTester     ports.ProviderProfileTester
 	realtimeSessions          ports.RealtimeSessionRepository
@@ -94,6 +95,7 @@ type Dependencies struct {
 	Outbox                        ports.AuthorizationOutbox
 	ProviderProfiles              ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork     ports.ProviderProfileUnitOfWork
+	VoiceProviderConfigs          ports.VoiceProviderConfigurationRepository
 	ProviderCredentialVault       ports.ProviderCredentialVault
 	ProviderProfileTester         ports.ProviderProfileTester
 	RealtimeSessions              ports.RealtimeSessionRepository
@@ -162,6 +164,7 @@ func New(deps Dependencies) App {
 		outbox:                    deps.Outbox,
 		providerProfiles:          deps.ProviderProfiles,
 		providerProfileUnitOfWork: deps.ProviderProfileUnitOfWork,
+		voiceProviderConfigs:      deps.VoiceProviderConfigs,
 		providerCredentialVault:   deps.ProviderCredentialVault,
 		providerProfileTester:     deps.ProviderProfileTester,
 		realtimeSessions:          deps.RealtimeSessions,
@@ -218,6 +221,7 @@ func New(deps Dependencies) App {
 		Authorizer:                app.authorizer,
 		ProviderProfiles:          app.providerProfiles,
 		ProviderProfileUnitOfWork: app.providerProfileUnitOfWork,
+		VoiceProviderConfigs:      app.voiceProviderConfigs,
 		ProviderCredentialVault:   app.providerCredentialVault,
 		ProviderProfileTester:     app.providerProfileTester,
 		IDs:                       app.ids,

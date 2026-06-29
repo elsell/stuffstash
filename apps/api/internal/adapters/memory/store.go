@@ -24,6 +24,7 @@ type Store struct {
 	undoables        map[string]ports.UndoableOperation
 	attachments      map[media.ID]media.Attachment
 	providerProfiles map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
+	voiceConfigs     map[tenant.ID]ports.VoiceProviderConfigurationRecord
 	providerCreds    map[string]ports.ProviderCredentialRecord
 	realtimeSessions map[string]ports.RealtimeSessionRecord
 	actionPlans      map[string]ports.ActionPlanRecord
@@ -45,6 +46,7 @@ func NewStore() *Store {
 		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},
 		providerProfiles: map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile{},
+		voiceConfigs:     map[tenant.ID]ports.VoiceProviderConfigurationRecord{},
 		providerCreds:    map[string]ports.ProviderCredentialRecord{},
 		realtimeSessions: map[string]ports.RealtimeSessionRecord{},
 		actionPlans:      map[string]ports.ActionPlanRecord{},

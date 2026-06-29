@@ -1,10 +1,12 @@
 import {
   ProviderProfileRepository,
-  ProviderProfileSummary
+  ProviderProfileSummary,
+  VoiceProviderConfiguration
 } from './ProviderProfileRepository';
 
 export type ProviderProfileSettingsViewModel = {
   readonly profiles: readonly ProviderProfileSummary[];
+  readonly configuration: VoiceProviderConfiguration;
   readonly missingCapabilities: readonly string[];
 };
 
@@ -18,21 +20,20 @@ export class ProviderProfileSettingsQuery {
   constructor(private readonly profiles: ProviderProfileRepository) {}
 
   async execute(): Promise<ProviderProfileSettingsViewModel> {
-    const profiles = await this.profiles.listProviderProfiles();
-    const readyCapabilities = new Set(
-      profiles
-        .filter(
-          (profile) =>
-            profile.lifecycleState === 'enabled' &&
-            profile.credentialStatus === 'configured' &&
-            Boolean(profile.lastTestedAt)
-        )
-        .map((profile) => profile.capability)
-    );
+    const [profiles, configuration] = await Promise.all([
+      this.profiles.listProviderProfiles(),
+      this.profiles.getVoiceProviderConfiguration()
+    ]);
 
     return {
       profiles: [...profiles].sort(compareProfiles),
-      missingCapabilities: requiredCapabilities.filter((capability) => !readyCapabilities.has(capability))
+      configuration,
+      missingCapabilities: requiredCapabilities.filter(
+        (capability) =>
+          configuration.slots.some(
+            (slot) => slot.capability === capability && slot.readiness !== 'ready'
+          )
+      )
     };
   }
 }

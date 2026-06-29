@@ -20,6 +20,20 @@ type ProviderProfileUnitOfWork interface {
 	ReplaceProviderProfileCredential(ctx context.Context, profile agentmodel.ProviderProfile, credential ProviderCredentialRecord, auditRecord audit.Record) error
 }
 
+type VoiceProviderConfigurationRecord struct {
+	TenantID                   tenant.ID
+	SpeechToTextProfileID      string
+	LanguageInferenceProfileID string
+	TextToSpeechProfileID      string
+	CreatedAt                  time.Time
+	UpdatedAt                  time.Time
+}
+
+type VoiceProviderConfigurationRepository interface {
+	VoiceProviderConfiguration(ctx context.Context, tenantID tenant.ID) (VoiceProviderConfigurationRecord, bool, error)
+	SaveVoiceProviderConfiguration(ctx context.Context, record VoiceProviderConfigurationRecord, auditRecord audit.Record) error
+}
+
 type ProviderProfileTestStatus string
 
 const (

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { ProviderProfile, ProviderProfileTestResult } from '@stuff-stash/api-client';
+import type {
+  ProviderProfile,
+  ProviderProfileTestResult,
+  UpdateVoiceProviderConfigurationInput,
+  VoiceProviderConfiguration
+} from '@stuff-stash/api-client';
 import { ApiProviderProfileRepository } from './ApiProviderProfileRepository';
 
 class FakeProviderProfileClient {
@@ -15,6 +20,8 @@ class FakeProviderProfileClient {
   listedTenantId: string | undefined;
   testedTenantId: string | undefined;
   testedProfileId: string | undefined;
+  voiceConfiguration: VoiceProviderConfiguration = voiceProviderConfiguration();
+  updatedVoiceInput: UpdateVoiceProviderConfigurationInput | undefined;
 
   async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
     this.listedTenantId = tenantId;
@@ -28,6 +35,25 @@ class FakeProviderProfileClient {
     this.testedTenantId = tenantId;
     this.testedProfileId = providerProfileId;
     return this.testResult;
+  }
+
+  async getVoiceProviderConfiguration(): Promise<VoiceProviderConfiguration> {
+    return this.voiceConfiguration;
+  }
+
+  async updateVoiceProviderConfiguration(
+    _tenantId: string,
+    input: UpdateVoiceProviderConfigurationInput
+  ): Promise<VoiceProviderConfiguration> {
+    this.updatedVoiceInput = input;
+    this.voiceConfiguration = voiceProviderConfiguration({
+      profileIds: {
+        speechToText: input.speechToTextProfileId,
+        languageInference: input.languageInferenceProfileId,
+        textToSpeech: input.textToSpeechProfileId
+      }
+    });
+    return this.voiceConfiguration;
   }
 
   async createProviderProfile(
@@ -133,6 +159,61 @@ describe('ApiProviderProfileRepository', () => {
     expect(client.testedProfileId).toBe('profile-language');
   });
 
+  it('maps voice provider configuration slots without exposing provider internals', async () => {
+    const client = new FakeProviderProfileClient();
+    client.voiceConfiguration = voiceProviderConfiguration({
+      slots: [
+        {
+          capability: 'speech_to_text',
+          label: 'Speech input',
+          selectedProfileId: 'profile-stt',
+          selectedProfile: {
+            id: 'profile-stt',
+            capability: 'speech_to_text',
+            providerKind: 'gemini',
+            displayName: 'Gemini speech',
+            modelName: 'gemini-2.5-flash-lite',
+            credentialStatus: 'configured',
+            lifecycleState: 'enabled',
+            lastTestedAt: '2026-06-26T12:00:00Z'
+          },
+          selectionSource: 'explicit',
+          readiness: 'ready',
+          issues: [],
+          recommendedAction: 'none',
+          duplicateProfiles: []
+        }
+      ]
+    });
+    const repository = new ApiProviderProfileRepository(client, 'tenant-home');
+
+    await expect(repository.getVoiceProviderConfiguration()).resolves.toMatchObject({
+      readiness: 'ready',
+      slots: [
+        {
+          label: 'Speech input',
+          selectedProfile: {
+            id: 'profile-stt',
+            credentialPurpose: 'api_key',
+            hasPromptTemplate: false
+          }
+        }
+      ]
+    });
+
+    await repository.updateVoiceProviderConfiguration({
+      speechToTextProfileId: 'profile-stt',
+      languageInferenceProfileId: 'profile-lm',
+      textToSpeechProfileId: 'profile-tts'
+    });
+    expect(client.updatedVoiceInput).toEqual({
+      speechToTextProfileId: 'profile-stt',
+      languageInferenceProfileId: 'profile-lm',
+      textToSpeechProfileId: 'profile-tts'
+    });
+  });
+
+
   it('maps management responses back to safe summaries', async () => {
     const client = new FakeProviderProfileClient();
     const repository = new ApiProviderProfileRepository(client, 'tenant-home');
@@ -186,5 +267,17 @@ function providerProfile(): ProviderProfile {
     lifecycleState: 'disabled',
     createdAt: '2026-06-26T11:00:00Z',
     updatedAt: '2026-06-26T12:00:00Z'
+  };
+}
+
+function voiceProviderConfiguration(
+  overrides: Partial<VoiceProviderConfiguration> = {}
+): VoiceProviderConfiguration {
+  return {
+    tenantId: overrides.tenantId ?? 'tenant-home',
+    readiness: overrides.readiness ?? 'ready',
+    updatedAt: overrides.updatedAt,
+    profileIds: overrides.profileIds ?? {},
+    slots: overrides.slots ?? []
   };
 }

@@ -92,7 +92,7 @@ func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories reposito
 	if repositories.providerProfiles == nil || vault == nil {
 		return nil
 	}
-	return voice.NewProviderProfileResolver(repositories.providerProfiles, vault, voice.GoogleProviderProfileFactory{})
+	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, voice.GoogleProviderProfileFactory{})
 }
 
 func validateGoogleVoiceConfig(cfg config.Config) error {

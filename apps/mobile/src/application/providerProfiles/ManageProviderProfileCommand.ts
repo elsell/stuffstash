@@ -3,7 +3,9 @@ import {
   ProviderProfileRepository,
   ProviderProfileSummary,
   ReplaceProviderProfileCredentialInput,
-  UpdateProviderProfileInput
+  UpdateProviderProfileInput,
+  UpdateVoiceProviderConfigurationInput,
+  VoiceProviderConfiguration
 } from './ProviderProfileRepository';
 import { RecommendedProviderProfileTemplate } from './RecommendedProviderProfiles';
 
@@ -46,6 +48,12 @@ export class ManageProviderProfileCommand {
       requireText(providerProfileId, 'Choose a provider profile.'),
       action
     );
+  }
+
+  async updateVoiceProviderConfiguration(
+    input: UpdateVoiceProviderConfigurationInput
+  ): Promise<VoiceProviderConfiguration> {
+    return this.profiles.updateVoiceProviderConfiguration(input);
   }
 }
 

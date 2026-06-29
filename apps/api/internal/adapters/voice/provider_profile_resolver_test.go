@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -23,7 +24,7 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	}
 	vault := newProviderResolverCredentialVault(profiles[1], profiles[2], profiles[3])
 	factory := &providerResolverFactory{}
-	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, vault, factory)
+	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, providerResolverVoiceConfigurationRepository{}, vault, factory)
 
 	set, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{
 		TenantID:    tenant.ID("tenant-home"),
@@ -50,6 +51,91 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	}
 }
 
+func TestProviderProfileResolverUsesExplicitVoiceProviderConfiguration(t *testing.T) {
+	t.Parallel()
+
+	profiles := []agentmodel.ProviderProfile{
+		providerResolverProfile(t, "stt-implicit", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "stt-explicit", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "lm-profile", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "tts-profile", agentmodel.ProviderCapabilityTextToSpeech, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+	}
+	vault := newProviderResolverCredentialVault(profiles...)
+	factory := &providerResolverFactory{}
+	resolver := NewProviderProfileResolver(
+		providerResolverProfileRepository{profiles: profiles},
+		providerResolverVoiceConfigurationRepository{record: ports.VoiceProviderConfigurationRecord{
+			TenantID:                   tenant.ID("tenant-home"),
+			SpeechToTextProfileID:      "stt-explicit",
+			LanguageInferenceProfileID: "lm-profile",
+			TextToSpeechProfileID:      "tts-profile",
+		}, found: true},
+		vault,
+		factory,
+	)
+
+	set, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: tenant.ID("tenant-home")})
+	if err != nil {
+		t.Fatalf("resolve providers: %v", err)
+	}
+	if set.SpeechToTextProfileID != "stt-explicit" {
+		t.Fatalf("expected explicit speech profile, got %+v", set)
+	}
+}
+
+func TestProviderProfileResolverFallsBackPerEmptyExplicitSlot(t *testing.T) {
+	t.Parallel()
+
+	profiles := []agentmodel.ProviderProfile{
+		providerResolverProfile(t, "stt-implicit", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "lm-explicit", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "tts-implicit", agentmodel.ProviderCapabilityTextToSpeech, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+	}
+	resolver := NewProviderProfileResolver(
+		providerResolverProfileRepository{profiles: profiles},
+		providerResolverVoiceConfigurationRepository{record: ports.VoiceProviderConfigurationRecord{
+			TenantID:                   tenant.ID("tenant-home"),
+			LanguageInferenceProfileID: "lm-explicit",
+		}, found: true},
+		newProviderResolverCredentialVault(profiles...),
+		&providerResolverFactory{},
+	)
+
+	set, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: tenant.ID("tenant-home")})
+	if err != nil {
+		t.Fatalf("resolve providers: %v", err)
+	}
+	if set.SpeechToTextProfileID != "stt-implicit" || set.LanguageInferenceProfileID != "lm-explicit" || set.TextToSpeechProfileID != "tts-implicit" {
+		t.Fatalf("expected per-slot explicit fallback, got %+v", set)
+	}
+}
+
+func TestProviderProfileResolverFailsExplicitConfigurationWithoutFallback(t *testing.T) {
+	t.Parallel()
+
+	profiles := []agentmodel.ProviderProfile{
+		providerResolverProfile(t, "stt-implicit", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "stt-disabled", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileDisabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "lm-profile", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "tts-profile", agentmodel.ProviderCapabilityTextToSpeech, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+	}
+	resolver := NewProviderProfileResolver(
+		providerResolverProfileRepository{profiles: profiles},
+		providerResolverVoiceConfigurationRepository{record: ports.VoiceProviderConfigurationRecord{
+			TenantID:                   tenant.ID("tenant-home"),
+			SpeechToTextProfileID:      "stt-disabled",
+			LanguageInferenceProfileID: "lm-profile",
+			TextToSpeechProfileID:      "tts-profile",
+		}, found: true},
+		newProviderResolverCredentialVault(profiles...),
+		&providerResolverFactory{},
+	)
+
+	if _, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: tenant.ID("tenant-home")}); err != ports.ErrInvalidProviderInput {
+		t.Fatalf("expected invalid provider input, got %v", err)
+	}
+}
+
 func TestProviderProfileResolverFailsWhenRequiredCapabilityMissing(t *testing.T) {
 	t.Parallel()
 
@@ -59,6 +145,7 @@ func TestProviderProfileResolverFailsWhenRequiredCapabilityMissing(t *testing.T)
 	}
 	resolver := NewProviderProfileResolver(
 		providerResolverProfileRepository{profiles: profiles},
+		providerResolverVoiceConfigurationRepository{},
 		newProviderResolverCredentialVault(profiles...),
 		&providerResolverFactory{},
 	)
@@ -78,6 +165,7 @@ func TestProviderProfileResolverFailsWhenCredentialCannotUnseal(t *testing.T) {
 	}
 	resolver := NewProviderProfileResolver(
 		providerResolverProfileRepository{profiles: profiles},
+		providerResolverVoiceConfigurationRepository{},
 		newProviderResolverCredentialVaultWithFailure("lm-profile", profiles...),
 		&providerResolverFactory{},
 	)
@@ -104,6 +192,7 @@ func providerResolverProfile(t *testing.T, id string, capability agentmodel.Prov
 		PromptTemplate:     providerResolverPromptTemplate(capability),
 		CredentialStatus:   credentialStatus,
 		LifecycleState:     lifecycle,
+		LastTestedAt:       &now,
 		CreatedAt:          now,
 		UpdatedAt:          now,
 	})
@@ -136,6 +225,19 @@ func (r providerResolverProfileRepository) ListProviderProfiles(_ context.Contex
 		}
 	}
 	return profiles, nil
+}
+
+type providerResolverVoiceConfigurationRepository struct {
+	record ports.VoiceProviderConfigurationRecord
+	found  bool
+}
+
+func (r providerResolverVoiceConfigurationRepository) VoiceProviderConfiguration(context.Context, tenant.ID) (ports.VoiceProviderConfigurationRecord, bool, error) {
+	return r.record, r.found, nil
+}
+
+func (r providerResolverVoiceConfigurationRepository) SaveVoiceProviderConfiguration(context.Context, ports.VoiceProviderConfigurationRecord, audit.Record) error {
+	return nil
 }
 
 type providerResolverCredentialVault struct {

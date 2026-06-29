@@ -191,6 +191,40 @@ For Gemini speech-to-text and language inference, runtime profile construction m
 
 Resolution must fail safely with user-safe errors and safe observability when a profile is missing, disabled, archived, malformed, unsupported, or has unusable credentials.
 
+## Voice Provider Configuration
+
+Tenant administrators need an explicit voice pipeline configuration instead of relying on incidental provider profile order. The voice pipeline has three required slots:
+
+- Speech input: `speech_to_text`.
+- Agent brain: `language_inference`.
+- Spoken output: `text_to_speech`.
+
+Each tenant may store one selected provider profile ID per slot. A selected profile must belong to the tenant and must match the slot capability. Disabled, archived, credential-missing, or untested profiles may be selected only as draft configuration; realtime session startup must still reject them until they are ready. This lets the UI explain "selected but not ready" instead of hiding the profile behind implicit selection.
+
+When no explicit selection exists for a slot, the application may choose a safe fallback for compatibility by selecting the oldest enabled, credential-configured profile for that capability. The response must mark that selection source as `implicit` so clients can invite the administrator to save an explicit choice. Missing or duplicate eligible profiles must not be silently hidden from setup diagnostics.
+
+The voice configuration API must live under the tenant scope:
+
+- `GET /tenants/{tenantId}/voice-provider-configuration`
+- `PUT /tenants/{tenantId}/voice-provider-configuration`
+
+Both endpoints require tenant configuration permission. The response must include safe metadata only:
+
+- Selected profile IDs for each required capability, when present.
+- Selection source per slot: `explicit`, `implicit`, or `missing`.
+- Slot readiness: `ready`, `missing`, `disabled`, `archived`, `credential_missing`, `untested`, `duplicate_candidates`, or `invalid_selection`.
+- Safe selected profile summaries using the same redacted metadata as provider profile responses.
+- Safe issue messages and recommended action keys for UI routing.
+- Duplicate eligible profile summaries by capability.
+
+The response must never include raw credentials, sealed credential material, raw provider errors, raw prompts rendered with server instructions, raw transcripts, raw audio, generated speech bytes, provider account details, provider session tokens, or internal stack details.
+
+Updating the voice configuration must validate all provided selected profile IDs before saving any slot. A profile selected for the wrong tenant, wrong capability, missing profile, or archived profile must fail safely. Successful updates must write audit history and safe observability.
+
+Realtime provider resolution must prefer explicit selected profiles when present. If the selected profile is not enabled, configured, tested, or otherwise usable, resolution must fail safely for that capability instead of falling back to another profile. This prevents hidden provider changes after an administrator has made an explicit selection.
+
+Provider setup UI must present the voice pipeline as the primary mental model. The normal view must show the three slots in order, their selected provider, readiness, direct fix actions, and duplicate warnings. A separate profile inventory or advanced tab may list all profiles, including inactive or archived profiles, but it must not be the first or only way to understand voice readiness.
+
 ## Provider Testing
 
 Provider profile test operations must run through provider ports and adapters.

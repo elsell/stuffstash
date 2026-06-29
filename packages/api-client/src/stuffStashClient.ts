@@ -285,6 +285,47 @@ export interface ProviderProfileTestResult {
   testedAt: string;
 }
 
+export interface ProviderProfileSummary {
+  id: string;
+  capability: string;
+  providerKind: string;
+  displayName: string;
+  modelName: string;
+  credentialStatus: string;
+  lifecycleState: string;
+  lastTestedAt?: string;
+}
+
+export interface VoiceProviderSlot {
+  capability: string;
+  label: string;
+  selectedProfileId?: string;
+  selectedProfile?: ProviderProfileSummary;
+  selectionSource: string;
+  readiness: string;
+  issues: string[];
+  recommendedAction: string;
+  duplicateProfiles: ProviderProfileSummary[];
+}
+
+export interface VoiceProviderConfiguration {
+  tenantId: string;
+  readiness: string;
+  updatedAt?: string;
+  profileIds: {
+    speechToText?: string;
+    languageInference?: string;
+    textToSpeech?: string;
+  };
+  slots: VoiceProviderSlot[];
+}
+
+export interface UpdateVoiceProviderConfigurationInput {
+  speechToTextProfileId?: string;
+  languageInferenceProfileId?: string;
+  textToSpeechProfileId?: string;
+}
+
 export interface Pagination {
   limit: number;
   nextCursor: string | null;
@@ -312,6 +353,7 @@ type AssetTypeResponse = components['schemas']['AssetTypeResponse'];
 type DefinitionResponse = components['schemas']['DefinitionResponse'];
 type ProviderProfileResponse = components['schemas']['ProviderProfileResponse'];
 type TestProviderProfileResponse = components['schemas']['TestProviderProfileResponse'];
+type VoiceProviderConfigurationResponse = components['schemas']['VoiceProviderConfigurationResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -878,6 +920,30 @@ export class StuffStashClient {
     return (envelope.data ?? []).map(mapProviderProfile);
   }
 
+  async getVoiceProviderConfiguration(tenantId: string): Promise<VoiceProviderConfiguration> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/voice-provider-configuration', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } }
+      })
+    );
+    return mapVoiceProviderConfiguration(envelope.data);
+  }
+
+  async updateVoiceProviderConfiguration(
+    tenantId: string,
+    input: UpdateVoiceProviderConfigurationInput
+  ): Promise<VoiceProviderConfiguration> {
+    const envelope = await this.unwrap(
+      this.client.PUT('/tenants/{tenantId}/voice-provider-configuration', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId } },
+        body: input
+      })
+    );
+    return mapVoiceProviderConfiguration(envelope.data);
+  }
+
   async createProviderProfile(
     tenantId: string,
     input: CreateProviderProfileInput
@@ -1157,6 +1223,7 @@ export class StuffStashClient {
       );
     }
   }
+
 }
 
 function mapAttachment(response: AttachmentResponse): Attachment {
@@ -1355,6 +1422,43 @@ function mapProviderProfileTestResult(
     status: response.status,
     message: response.message,
     testedAt: response.testedAt
+  };
+}
+
+function mapVoiceProviderConfiguration(response: VoiceProviderConfigurationResponse): VoiceProviderConfiguration {
+  return {
+    tenantId: response.tenantId,
+    readiness: response.readiness,
+    updatedAt: response.updatedAt,
+    profileIds: {
+      speechToText: response.profileIds?.speechToText,
+      languageInference: response.profileIds?.languageInference,
+      textToSpeech: response.profileIds?.textToSpeech
+    },
+    slots: (response.slots ?? []).map((slot) => ({
+      capability: slot.capability,
+      label: slot.label,
+      selectedProfileId: slot.selectedProfileId,
+      selectedProfile: slot.selectedProfile ? mapProviderProfileSummary(slot.selectedProfile) : undefined,
+      selectionSource: slot.selectionSource,
+      readiness: slot.readiness,
+      issues: slot.issues ?? [],
+      recommendedAction: slot.recommendedAction,
+      duplicateProfiles: (slot.duplicateProfiles ?? []).map(mapProviderProfileSummary)
+    }))
+  };
+}
+
+function mapProviderProfileSummary(response: ProviderProfileSummary): ProviderProfileSummary {
+  return {
+    id: response.id,
+    capability: response.capability,
+    providerKind: response.providerKind,
+    displayName: response.displayName,
+    modelName: response.modelName,
+    credentialStatus: response.credentialStatus,
+    lifecycleState: response.lifecycleState,
+    lastTestedAt: response.lastTestedAt
   };
 }
 

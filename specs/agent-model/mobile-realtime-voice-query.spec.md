@@ -137,6 +137,25 @@ Before starting local audio capture, mobile must run a safe provider-profile rea
 
 When mobile can navigate to tenant provider-profile management, a provider-readiness failure in the voice sheet should include a direct safe action to open the Voice providers screen. That action must not include provider IDs, endpoint URLs, credentials, prompt text, raw provider responses, or internal error details in the voice sheet.
 
+Mobile provider management must use the voice pipeline as the primary setup model:
+
+- Speech input.
+- Agent brain.
+- Spoken output.
+
+Each slot must show its selected profile, readiness state, and the next best action. The setup view must distinguish selected profiles from unselected duplicates, missing credentials, disabled profiles, archived profiles, and profiles that need a fresh test. A flat list of provider profile cards may exist only as a secondary profile inventory or advanced view.
+
+The setup screen must help users recover from the real failure classes that block voice:
+
+- No selected profile for a required slot.
+- Selected profile is disabled or archived.
+- Selected profile has missing credentials.
+- Selected profile has not been tested or was changed since the last successful test.
+- Multiple eligible profiles exist for the same capability and the user has not made an explicit selection.
+- Provider-stage failures returned by the API, such as `speech_to_text_failed`, `language_inference_failed`, or `text_to_speech_failed`.
+
+When the API exposes tenant voice provider configuration, mobile must use that configuration and diagnostics rather than inferring readiness solely from the profile list. Mobile may keep a compatibility inference path only for older API builds, and that path must visually indicate that selection is implicit.
+
 When the API returns a safe provider-stage failure code such as `speech_to_text_failed`, `language_inference_failed`, or `text_to_speech_failed`, mobile should preserve the code in voice session state, show a user-actionable stage-specific message, and offer the same Voice providers recovery action. The sheet must not render raw provider errors, prompts, transcripts, audio, generated speech, credentials, endpoint URLs, provider IDs, or stack traces.
 
 Mobile WebSocket handling must tolerate the server closing normally immediately after sending a terminal `session.completed` or `session.failed` event. The transport must drain already queued server messages before treating an `onclose` notification as premature, and premature close errors may include the safe numeric close code but must not surface raw close reason text.

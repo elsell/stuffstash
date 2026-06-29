@@ -59,6 +59,8 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/provider-profiles/{providerProfileId}", providerProfilePath, "Bearer dev:owner", map[string]any{"displayName": "Google Gemini tuned", "modelName": "gemini-2.5-flash-lite", "runtimeOptions": map[string]any{"projectId": "pianotechpros", "location": "us-central1", "temperature": 0.2}, "capabilityMetadata": map[string]any{"toolCalls": true}, "promptTemplate": "Answer briefly."}, http.StatusOK)
 	coverage.request(t, server, http.MethodPut, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential", providerProfilePath+"/credential", "Bearer dev:owner", map[string]any{"purpose": "oauth_bearer", "credential": "scenario-secret"}, http.StatusOK)
 	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/test", providerProfilePath+"/test", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/voice-provider-configuration", tenantPath+"/voice-provider-configuration", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPut, "/tenants/{tenantId}/voice-provider-configuration", tenantPath+"/voice-provider-configuration", "Bearer dev:owner", map[string]any{"languageInferenceProfileId": providerProfileID}, http.StatusOK)
 	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/enable", providerProfilePath+"/enable", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/disable", providerProfilePath+"/disable", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive", providerProfilePath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
@@ -274,7 +276,8 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		"displayName":  "Google Gemini",
 	})
 	requireStatus(t, providerProfile, http.StatusCreated)
-	providerProfilePath := tenantPath + "/provider-profiles/" + decodeProviderProfile(t, providerProfile).Data.ID
+	providerProfileID := decodeProviderProfile(t, providerProfile).Data.ID
+	providerProfilePath := tenantPath + "/provider-profiles/" + providerProfileID
 
 	auditResponse := performRequest(server, http.MethodGet, inventoryPath+"/audit-records?limit=50", "Bearer dev:owner", nil)
 	requireStatus(t, auditResponse, http.StatusOK)
@@ -295,6 +298,8 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}", path: providerProfilePath, body: map[string]any{"displayName": "Blocked", "runtimeOptions": map[string]any{}, "capabilityMetadata": map[string]any{}}},
 		{method: http.MethodPut, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential", path: providerProfilePath + "/credential", body: map[string]any{"purpose": "api_key", "credential": "blocked"}},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/test", path: providerProfilePath + "/test"},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/voice-provider-configuration", path: tenantPath + "/voice-provider-configuration"},
+		{method: http.MethodPut, template: "/tenants/{tenantId}/voice-provider-configuration", path: tenantPath + "/voice-provider-configuration", body: map[string]any{"languageInferenceProfileId": providerProfileID}},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/enable", path: providerProfilePath + "/enable"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/disable", path: providerProfilePath + "/disable"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive", path: providerProfilePath + "/archive"},

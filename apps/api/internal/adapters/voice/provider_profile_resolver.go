@@ -21,16 +21,18 @@ type ProviderProfileProviderFactory interface {
 }
 
 type ProviderProfileResolver struct {
-	profiles ports.ProviderProfileRepository
-	vault    ports.ProviderCredentialVault
-	factory  ProviderProfileProviderFactory
+	profiles     ports.ProviderProfileRepository
+	voiceConfigs ports.VoiceProviderConfigurationRepository
+	vault        ports.ProviderCredentialVault
+	factory      ProviderProfileProviderFactory
 }
 
-func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, vault ports.ProviderCredentialVault, factory ProviderProfileProviderFactory) ProviderProfileResolver {
+func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, voiceConfigs ports.VoiceProviderConfigurationRepository, vault ports.ProviderCredentialVault, factory ProviderProfileProviderFactory) ProviderProfileResolver {
 	return ProviderProfileResolver{
-		profiles: profiles,
-		vault:    vault,
-		factory:  factory,
+		profiles:     profiles,
+		voiceConfigs: voiceConfigs,
+		vault:        vault,
+		factory:      factory,
 	}
 }
 
@@ -42,15 +44,19 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
-	sttProfile, ok := selectProviderProfile(profiles, agentmodel.ProviderCapabilitySpeechToText)
+	config, hasExplicitConfig, err := r.voiceProviderConfiguration(ctx, input.TenantID)
+	if err != nil {
+		return ports.RealtimeVoiceProviderSet{}, err
+	}
+	sttProfile, ok := r.selectConfiguredProviderProfile(profiles, config.SpeechToTextProfileID, hasExplicitConfig, agentmodel.ProviderCapabilitySpeechToText)
 	if !ok {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
-	languageProfile, ok := selectProviderProfile(profiles, agentmodel.ProviderCapabilityLanguageInference)
+	languageProfile, ok := r.selectConfiguredProviderProfile(profiles, config.LanguageInferenceProfileID, hasExplicitConfig, agentmodel.ProviderCapabilityLanguageInference)
 	if !ok {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
-	ttsProfile, ok := selectProviderProfile(profiles, agentmodel.ProviderCapabilityTextToSpeech)
+	ttsProfile, ok := r.selectConfiguredProviderProfile(profiles, config.TextToSpeechProfileID, hasExplicitConfig, agentmodel.ProviderCapabilityTextToSpeech)
 	if !ok {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
@@ -94,6 +100,32 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	}, nil
 }
 
+func (r ProviderProfileResolver) voiceProviderConfiguration(ctx context.Context, tenantID tenant.ID) (ports.VoiceProviderConfigurationRecord, bool, error) {
+	if r.voiceConfigs == nil {
+		return ports.VoiceProviderConfigurationRecord{TenantID: tenantID}, false, nil
+	}
+	record, found, err := r.voiceConfigs.VoiceProviderConfiguration(ctx, tenantID)
+	if err != nil {
+		return ports.VoiceProviderConfigurationRecord{}, false, err
+	}
+	if !found {
+		return ports.VoiceProviderConfigurationRecord{TenantID: tenantID}, false, nil
+	}
+	return record, true, nil
+}
+
+func (r ProviderProfileResolver) selectConfiguredProviderProfile(profiles []agentmodel.ProviderProfile, selectedID string, explicit bool, capability agentmodel.ProviderCapability) (agentmodel.ProviderProfile, bool) {
+	if explicit && selectedID != "" {
+		for _, profile := range profiles {
+			if profile.ID.String() == selectedID && profile.Capability == capability && providerProfileRuntimeReady(profile) {
+				return profile, true
+			}
+		}
+		return agentmodel.ProviderProfile{}, false
+	}
+	return selectProviderProfile(profiles, capability)
+}
+
 func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID tenant.ID, profile agentmodel.ProviderProfile) (ProviderProfileProviderConfig, error) {
 	for _, purpose := range providerCredentialPurposes(profile) {
 		scope := ports.ProviderCredentialScope{
@@ -130,11 +162,15 @@ func providerCredentialPurposes(profile agentmodel.ProviderProfile) []ports.Prov
 
 func selectProviderProfile(profiles []agentmodel.ProviderProfile, capability agentmodel.ProviderCapability) (agentmodel.ProviderProfile, bool) {
 	for _, profile := range profiles {
-		if profile.Capability == capability &&
-			profile.LifecycleState == agentmodel.ProviderProfileEnabled &&
-			profile.CredentialStatus == agentmodel.CredentialStatusConfigured {
+		if profile.Capability == capability && providerProfileRuntimeReady(profile) {
 			return profile, true
 		}
 	}
 	return agentmodel.ProviderProfile{}, false
+}
+
+func providerProfileRuntimeReady(profile agentmodel.ProviderProfile) bool {
+	return profile.LifecycleState == agentmodel.ProviderProfileEnabled &&
+		profile.CredentialStatus == agentmodel.CredentialStatusConfigured &&
+		profile.LastTestedAt != nil
 }

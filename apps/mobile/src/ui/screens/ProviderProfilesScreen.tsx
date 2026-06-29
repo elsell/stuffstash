@@ -18,7 +18,9 @@ import {
 } from '../../application/providerProfiles/ProviderProfileSettingsQuery';
 import {
   ProviderProfileLifecycleAction,
-  ProviderProfileSummary
+  ProviderProfileSummary,
+  VoiceProviderConfiguration,
+  VoiceProviderSlot
 } from '../../application/providerProfiles/ProviderProfileRepository';
 import { recommendedProviderProfiles } from '../../application/providerProfiles/RecommendedProviderProfiles';
 import { TestProviderProfileCommand } from '../../application/providerProfiles/TestProviderProfileCommand';
@@ -27,6 +29,7 @@ import {
   buildCredentialEditorPresentation,
   buildPromptEditorPresentation
 } from './ProviderProfilesScreenPresentation';
+import { VoiceSetupPanel } from './ProviderProfilesVoiceSetup';
 
 type ProviderProfilesScreenProps = {
   readonly manageCommand: ManageProviderProfileCommand;
@@ -52,6 +55,8 @@ type PromptEditorState = {
   readonly value: string;
 };
 
+type ProviderProfilesTab = 'setup' | 'profiles' | 'add';
+
 export function ProviderProfilesScreen({
   manageCommand,
   query,
@@ -64,6 +69,7 @@ export function ProviderProfilesScreen({
   const [lastResultByProfileId, setLastResultByProfileId] = useState<Record<string, string>>({});
   const [credentialEditor, setCredentialEditor] = useState<CredentialEditorState | undefined>();
   const [promptEditor, setPromptEditor] = useState<PromptEditorState | undefined>();
+  const [activeTab, setActiveTab] = useState<ProviderProfilesTab>('setup');
 
   useEffect(() => {
     let isCurrent = true;
@@ -204,12 +210,34 @@ export function ProviderProfilesScreen({
     }
   }
 
+  async function selectSlotProfile(
+    configuration: VoiceProviderConfiguration,
+    slot: VoiceProviderSlot,
+    profile: ProviderProfileSummary
+  ): Promise<void> {
+    await runWorkingAction(`select-${slot.capability}-${profile.id}`, async () => {
+      await manageCommand.updateVoiceProviderConfiguration({
+        speechToTextProfileId: slot.capability === 'speech_to_text'
+          ? profile.id
+          : configuration.profileIds.speechToText,
+        languageInferenceProfileId: slot.capability === 'language_inference'
+          ? profile.id
+          : configuration.profileIds.languageInference,
+        textToSpeechProfileId: slot.capability === 'text_to_speech'
+          ? profile.id
+          : configuration.profileIds.textToSpeech
+      });
+      await refresh();
+    });
+  }
+
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {screenState.status === 'loading' ? <LoadingState /> : null}
       {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
       {screenState.status === 'ready' ? (
         <ProviderProfileContent
+          activeTab={activeTab}
           credentialEditor={credentialEditor}
           isRefreshing={isRefreshing}
           lastResultByProfileId={lastResultByProfileId}
@@ -243,6 +271,8 @@ export function ProviderProfilesScreen({
           onRefresh={refresh}
           onReplaceCredential={replaceCredential}
           onSavePrompt={savePromptTemplate}
+          onSelectSlotProfile={selectSlotProfile}
+          onSelectTab={setActiveTab}
           onTestProfile={testProfile}
         />
       ) : null}
@@ -251,6 +281,7 @@ export function ProviderProfilesScreen({
 }
 
 function ProviderProfileContent({
+  activeTab,
   credentialEditor,
   isRefreshing,
   lastResultByProfileId,
@@ -269,8 +300,11 @@ function ProviderProfileContent({
   onRefresh,
   onReplaceCredential,
   onSavePrompt,
+  onSelectSlotProfile,
+  onSelectTab,
   onTestProfile
 }: {
+  readonly activeTab: ProviderProfilesTab;
   readonly credentialEditor?: CredentialEditorState;
   readonly isRefreshing: boolean;
   readonly lastResultByProfileId: Record<string, string>;
@@ -289,6 +323,12 @@ function ProviderProfileContent({
   readonly onRefresh: () => void;
   readonly onReplaceCredential: () => void;
   readonly onSavePrompt: () => void;
+  readonly onSelectSlotProfile: (
+    configuration: VoiceProviderConfiguration,
+    slot: VoiceProviderSlot,
+    profile: ProviderProfileSummary
+  ) => void;
+  readonly onSelectTab: (tab: ProviderProfilesTab) => void;
   readonly onTestProfile: (profile: ProviderProfileSummary) => void;
 }) {
   return (
@@ -303,11 +343,17 @@ function ProviderProfileContent({
       }
     >
       <Text style={styles.title}>Voice providers</Text>
-      {viewModel.missingCapabilities.length > 0 ? (
+      <View style={styles.tabBar}>
+        <TabButton active={activeTab === 'setup'} label="Setup" onPress={() => onSelectTab('setup')} />
+        <TabButton active={activeTab === 'profiles'} label="Profiles" onPress={() => onSelectTab('profiles')} />
+        <TabButton active={activeTab === 'add'} label="Add" onPress={() => onSelectTab('add')} />
+      </View>
+
+      {viewModel.configuration.readiness !== 'ready' ? (
         <View style={styles.warningPanel}>
-          <Text style={styles.warningTitle}>Voice setup incomplete</Text>
+          <Text style={styles.warningTitle}>Setup needs attention</Text>
           <Text style={styles.warningText}>
-            Missing, disabled, or untested profiles: {viewModel.missingCapabilities.map(formatCapability).join(', ')}
+            {viewModel.missingCapabilities.map(formatCapability).join(', ')}
           </Text>
         </View>
       ) : (
@@ -317,28 +363,23 @@ function ProviderProfileContent({
         </View>
       )}
 
-      {viewModel.profiles.length === 0 ? (
-        <View style={styles.emptyPanel}>
-          <Text style={styles.emptyTitle}>No profiles yet</Text>
-          <Text style={styles.emptyText}>Add the recommended profiles below to configure tenant-managed voice.</Text>
-        </View>
+      {activeTab === 'setup' ? (
+        <VoiceSetupPanel
+          configuration={viewModel.configuration}
+          profiles={viewModel.profiles}
+          workingAction={workingAction}
+          onEditCredential={onEditCredential}
+          onTestProfile={onTestProfile}
+          onSelectSlotProfile={onSelectSlotProfile}
+        />
       ) : null}
 
-      <View style={styles.panel}>
-        <Text style={styles.sectionTitle}>Add recommended profile</Text>
-        {recommendedProviderProfiles.map((template) => (
-          <Pressable
-            accessibilityRole="button"
-            disabled={Boolean(workingAction)}
-            key={template.key}
-            onPress={() => onCreateRecommendedProfile(template.key)}
-            style={styles.templateButton}
-          >
-            <Text style={styles.templateTitle}>{template.title}</Text>
-            <Text style={styles.templateText}>{template.description}</Text>
-          </Pressable>
-        ))}
-      </View>
+      {activeTab === 'add' ? (
+        <RecommendedProfilesPanel
+          workingAction={workingAction}
+          onCreateRecommendedProfile={onCreateRecommendedProfile}
+        />
+      ) : null}
 
       {credentialEditor ? (
         <InlineSecretEditor
@@ -360,7 +401,14 @@ function ProviderProfileContent({
         />
       ) : null}
 
-      {viewModel.profiles.map((profile) => (
+      {activeTab === 'profiles' && viewModel.profiles.length === 0 ? (
+        <View style={styles.emptyPanel}>
+          <Text style={styles.emptyTitle}>No profiles yet</Text>
+          <Text style={styles.emptyText}>Add the recommended profiles to configure tenant-managed voice.</Text>
+        </View>
+      ) : null}
+
+      {activeTab === 'profiles' ? viewModel.profiles.map((profile) => (
         <ProviderProfileCard
           key={profile.id}
           lastResult={lastResultByProfileId[profile.id]}
@@ -372,8 +420,34 @@ function ProviderProfileContent({
           onEditPrompt={() => onEditPrompt(profile)}
           onTest={() => onTestProfile(profile)}
         />
-      ))}
+      )) : null}
     </ScrollView>
+  );
+}
+
+function RecommendedProfilesPanel({
+  workingAction,
+  onCreateRecommendedProfile
+}: {
+  readonly workingAction?: string;
+  readonly onCreateRecommendedProfile: (templateKey: string) => void;
+}) {
+  return (
+    <View style={styles.panel}>
+      <Text style={styles.sectionTitle}>Recommended profiles</Text>
+      {recommendedProviderProfiles.map((template) => (
+        <Pressable
+          accessibilityRole="button"
+          disabled={Boolean(workingAction)}
+          key={template.key}
+          onPress={() => onCreateRecommendedProfile(template.key)}
+          style={styles.templateButton}
+        >
+          <Text style={styles.templateTitle}>{template.title}</Text>
+          <Text style={styles.templateText}>{template.description}</Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
@@ -570,6 +644,27 @@ function SecondaryActionButton({
   );
 }
 
+function TabButton({
+  active,
+  label,
+  onPress
+}: {
+  readonly active: boolean;
+  readonly label: string;
+  readonly onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={[styles.tabButton, active ? styles.tabButtonActive : null]}
+    >
+      <Text style={[styles.tabButtonText, active ? styles.tabButtonTextActive : null]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function StatusPill({ label, tone }: { readonly label: string; readonly tone: 'success' | 'muted' }) {
   return (
     <View style={[styles.statusPill, tone === 'success' ? styles.statusPillSuccess : null]}>
@@ -629,6 +724,36 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     lineHeight: 36,
     marginBottom: spacing.md
+  },
+  tabBar: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+    padding: spacing.xs
+  },
+  tabButton: {
+    alignItems: 'center',
+    borderRadius: radius.sm,
+    flex: 1,
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm
+  },
+  tabButtonActive: {
+    backgroundColor: colors.action
+  },
+  tabButtonText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  tabButtonTextActive: {
+    color: colors.onAction
   },
   warningPanel: {
     backgroundColor: colors.warningSurface,

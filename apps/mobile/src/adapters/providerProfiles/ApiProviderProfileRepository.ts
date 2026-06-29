@@ -1,16 +1,26 @@
-import type { ProviderProfile, ProviderProfileTestResult, StuffStashClient } from '@stuff-stash/api-client';
+import type {
+  ProviderProfile,
+  ProviderProfileSummary as ApiProviderProfileSummary,
+  ProviderProfileTestResult,
+  StuffStashClient,
+  VoiceProviderConfiguration as ApiVoiceProviderConfiguration
+} from '@stuff-stash/api-client';
 import {
   CreateProviderProfileInput,
   ProviderProfileLifecycleAction,
   ProviderProfileRepository,
   ProviderProfileSummary,
   ReplaceProviderProfileCredentialInput,
-  UpdateProviderProfileInput
+  UpdateProviderProfileInput,
+  UpdateVoiceProviderConfigurationInput,
+  VoiceProviderConfiguration
 } from '../../application/providerProfiles/ProviderProfileRepository';
 
 type ProviderProfileApiClient = Pick<
   StuffStashClient,
   | 'listProviderProfiles'
+  | 'getVoiceProviderConfiguration'
+  | 'updateVoiceProviderConfiguration'
   | 'createProviderProfile'
   | 'updateProviderProfile'
   | 'replaceProviderProfileCredential'
@@ -30,6 +40,20 @@ export class ApiProviderProfileRepository implements ProviderProfileRepository {
     this.requireTenant();
     const profiles = await this.client.listProviderProfiles(this.tenantId);
     return profiles.map(mapProviderProfile);
+  }
+
+  async getVoiceProviderConfiguration(): Promise<VoiceProviderConfiguration> {
+    this.requireTenant();
+    return mapVoiceProviderConfiguration(await this.client.getVoiceProviderConfiguration(this.tenantId));
+  }
+
+  async updateVoiceProviderConfiguration(
+    input: UpdateVoiceProviderConfigurationInput
+  ): Promise<VoiceProviderConfiguration> {
+    this.requireTenant();
+    return mapVoiceProviderConfiguration(
+      await this.client.updateVoiceProviderConfiguration(this.tenantId, input)
+    );
   }
 
   async createProviderProfile(input: CreateProviderProfileInput): Promise<ProviderProfileSummary> {
@@ -100,10 +124,54 @@ function mapProviderProfile(profile: ProviderProfile): ProviderProfileSummary {
   };
 }
 
+function mapApiProviderProfileSummary(profile: ApiProviderProfileSummary): ProviderProfileSummary {
+  return {
+    id: profile.id,
+    capability: profile.capability,
+    providerKind: profile.providerKind,
+    displayName: profile.displayName,
+    modelName: profile.modelName,
+    credentialStatus: profile.credentialStatus,
+    credentialPurpose: credentialPurposeForSummary(profile),
+    lifecycleState: profile.lifecycleState,
+    lastTestedAt: profile.lastTestedAt,
+    hasPromptTemplate: false
+  };
+}
+
+function mapVoiceProviderConfiguration(
+  configuration: ApiVoiceProviderConfiguration
+): VoiceProviderConfiguration {
+  return {
+    tenantId: configuration.tenantId,
+    readiness: configuration.readiness,
+    updatedAt: configuration.updatedAt,
+    profileIds: configuration.profileIds,
+    slots: configuration.slots.map((slot) => ({
+      capability: slot.capability,
+      label: slot.label,
+      selectedProfileId: slot.selectedProfileId,
+      selectedProfile: slot.selectedProfile ? mapApiProviderProfileSummary(slot.selectedProfile) : undefined,
+      selectionSource: slot.selectionSource,
+      readiness: slot.readiness,
+      issues: slot.issues,
+      recommendedAction: slot.recommendedAction,
+      duplicateProfiles: slot.duplicateProfiles.map(mapApiProviderProfileSummary)
+    }))
+  };
+}
+
 function credentialPurposeForProfile(profile: ProviderProfile): 'api_key' | 'oauth_bearer' | undefined {
   if (profile.capability === 'text_to_speech') {
     return 'oauth_bearer';
   }
 
   return profile.runtimeOptions.credentialType === 'api_key' ? 'api_key' : undefined;
+}
+
+function credentialPurposeForSummary(profile: ApiProviderProfileSummary): 'api_key' | 'oauth_bearer' | undefined {
+  if (profile.providerKind !== 'gemini') {
+    return undefined;
+  }
+  return profile.capability === 'text_to_speech' ? 'oauth_bearer' : 'api_key';
 }

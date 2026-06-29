@@ -18,7 +18,7 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 	server := NewServer(":0", newProviderProfileTestApp(t, seededState{
 		tenants: []seedTenant{{id: tenantID, name: "Home", owner: "tenant-owner"}},
 		ids: []string{
-			"01ARZ3NDEKTSV4RRFFQ69G5FAW", "audit-create-profile",
+			"01ARZ3NDEKTSV4RRFFQ69G5FAW", "audit-create-profile", "audit-voice-config",
 			"credential-one", "audit-replace-credential",
 			"audit-test-profile", "audit-enable-profile", "audit-disable-profile", "audit-archive-profile",
 		},
@@ -43,6 +43,24 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 	}
 	if created.Data.PromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected created prompt template to round-trip, got %+v", created.Data)
+	}
+
+	getVoiceConfig := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/voice-provider-configuration", "Bearer dev:tenant-owner", nil)
+	if getVoiceConfig.Code != http.StatusOK {
+		t.Fatalf("expected voice configuration status %d, got %d with body %s", http.StatusOK, getVoiceConfig.Code, getVoiceConfig.Body.String())
+	}
+	if strings.Contains(getVoiceConfig.Body.String(), "Prefer concise spoken answers.") {
+		t.Fatalf("voice configuration leaked full prompt template: %s", getVoiceConfig.Body.String())
+	}
+
+	updateVoiceConfig := performRequest(server, http.MethodPut, "/tenants/"+tenantID+"/voice-provider-configuration", "Bearer dev:tenant-owner", map[string]any{
+		"languageInferenceProfileId": created.Data.ID,
+	})
+	if updateVoiceConfig.Code != http.StatusOK {
+		t.Fatalf("expected voice configuration update status %d, got %d with body %s", http.StatusOK, updateVoiceConfig.Code, updateVoiceConfig.Body.String())
+	}
+	if !strings.Contains(updateVoiceConfig.Body.String(), `"selectionSource":"explicit"`) || strings.Contains(updateVoiceConfig.Body.String(), "raw-provider-secret") {
+		t.Fatalf("unexpected voice configuration response: %s", updateVoiceConfig.Body.String())
 	}
 
 	replaceCredential := performRequest(server, http.MethodPut, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/credential", "Bearer dev:tenant-owner", map[string]any{
@@ -188,6 +206,8 @@ func TestProviderProfileEndpointsRejectUnauthorizedUsers(t *testing.T) {
 	}{
 		{name: "create", method: http.MethodPost, path: "/tenants/" + tenantID + "/provider-profiles", body: map[string]any{"capability": "language_inference", "providerKind": "gemini", "displayName": "Blocked"}},
 		{name: "list", method: http.MethodGet, path: "/tenants/" + tenantID + "/provider-profiles"},
+		{name: "get voice configuration", method: http.MethodGet, path: "/tenants/" + tenantID + "/voice-provider-configuration"},
+		{name: "update voice configuration", method: http.MethodPut, path: "/tenants/" + tenantID + "/voice-provider-configuration", body: map[string]any{"languageInferenceProfileId": profileID}},
 		{name: "detail", method: http.MethodGet, path: profilePath},
 		{name: "update", method: http.MethodPatch, path: profilePath, body: map[string]any{"displayName": "Blocked", "runtimeOptions": map[string]any{}, "capabilityMetadata": map[string]any{}}},
 		{name: "replace credential", method: http.MethodPut, path: profilePath + "/credential", body: credentialBody},
@@ -260,6 +280,7 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		Outbox:                    store,
 		ProviderProfiles:          store,
 		ProviderProfileUnitOfWork: store,
+		VoiceProviderConfigs:      store,
 		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
 		ProviderProfileTester:     httpTestProviderProfileTester{},
 		RealtimeSessions:          store,

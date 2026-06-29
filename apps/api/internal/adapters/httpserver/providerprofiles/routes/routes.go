@@ -8,6 +8,7 @@ import (
 func Register(api huma.API, application app.App) {
 	RegisterCreate(api, application)
 	RegisterList(api, application)
+	RegisterVoiceConfiguration(api, application)
 	RegisterDetail(api, application)
 	RegisterUpdate(api, application)
 	RegisterLifecycle(api, application)

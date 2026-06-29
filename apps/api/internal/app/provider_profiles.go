@@ -15,6 +15,11 @@ type UpdateProviderProfileInput = agentmodelapp.UpdateProviderProfileInput
 type ProviderProfileLifecycleInput = agentmodelapp.ProviderProfileLifecycleInput
 type ReplaceProviderProfileCredentialInput = agentmodelapp.ReplaceProviderProfileCredentialInput
 type TestProviderProfileInput = agentmodelapp.TestProviderProfileInput
+type VoiceProviderConfigurationInput = agentmodelapp.VoiceProviderConfigurationInput
+type UpdateVoiceProviderConfigurationInput = agentmodelapp.UpdateVoiceProviderConfigurationInput
+type VoiceProviderConfigurationView = agentmodelapp.VoiceProviderConfigurationView
+type VoiceProviderSlotView = agentmodelapp.VoiceProviderSlotView
+type ProviderProfileSummary = agentmodelapp.ProviderProfileSummary
 
 func (a App) CreateProviderProfile(ctx context.Context, input CreateProviderProfileInput) (agentmodel.ProviderProfile, error) {
 	return a.providerProfileService.CreateProviderProfile(ctx, input)
@@ -50,4 +55,12 @@ func (a App) ReplaceProviderProfileCredential(ctx context.Context, input Replace
 
 func (a App) TestProviderProfile(ctx context.Context, input TestProviderProfileInput) (ports.ProviderProfileTestResult, error) {
 	return a.providerProfileService.TestProviderProfile(ctx, input)
+}
+
+func (a App) GetVoiceProviderConfiguration(ctx context.Context, input VoiceProviderConfigurationInput) (VoiceProviderConfigurationView, error) {
+	return a.providerProfileService.GetVoiceProviderConfiguration(ctx, input)
+}
+
+func (a App) UpdateVoiceProviderConfiguration(ctx context.Context, input UpdateVoiceProviderConfigurationInput) (VoiceProviderConfigurationView, error) {
+	return a.providerProfileService.UpdateVoiceProviderConfiguration(ctx, input)
 }

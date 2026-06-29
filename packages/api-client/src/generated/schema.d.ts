@@ -1001,6 +1001,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/voice-provider-configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID voice provider configuration */
+        get: operations["get-tenants-by-tenant-id-voice-provider-configuration"];
+        /** Put tenants by tenant ID voice provider configuration */
+        put: operations["put-tenants-by-tenant-id-voice-provider-configuration"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1382,6 +1400,16 @@ export interface components {
             tenantId: string;
             updatedAt: string;
         };
+        ProviderProfileSummaryResponse: {
+            capability: string;
+            credentialStatus: string;
+            displayName: string;
+            id: string;
+            lastTestedAt?: string;
+            lifecycleState: string;
+            modelName: string;
+            providerKind: string;
+        };
         RecordResponse: {
             action: string;
             id: string;
@@ -1654,6 +1682,16 @@ export interface components {
             data: components["schemas"]["TestProviderProfileResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeVoiceProviderConfigurationResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeVoiceProviderConfigurationResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["VoiceProviderConfigurationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         TenantResponse: {
             access: components["schemas"]["AccessResponse"];
             id: string;
@@ -1777,6 +1815,43 @@ export interface components {
             readonly $schema?: string;
             /** @description Tenant name */
             name?: string;
+        };
+        UpdateVoiceProviderConfigurationBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateVoiceProviderConfigurationBody.json
+             */
+            readonly $schema?: string;
+            /** @description Selected language inference provider profile ID */
+            languageInferenceProfileId?: string;
+            /** @description Selected speech-to-text provider profile ID */
+            speechToTextProfileId?: string;
+            /** @description Selected text-to-speech provider profile ID */
+            textToSpeechProfileId?: string;
+        };
+        VoiceProviderConfigurationProfileID: {
+            languageInference?: string;
+            speechToText?: string;
+            textToSpeech?: string;
+        };
+        VoiceProviderConfigurationResponse: {
+            profileIds: components["schemas"]["VoiceProviderConfigurationProfileID"];
+            readiness: string;
+            slots: components["schemas"]["VoiceProviderSlotResponse"][] | null;
+            tenantId: string;
+            updatedAt?: string;
+        };
+        VoiceProviderSlotResponse: {
+            capability: string;
+            duplicateProfiles: components["schemas"]["ProviderProfileSummaryResponse"][] | null;
+            issues: string[] | null;
+            label: string;
+            readiness: string;
+            recommendedAction: string;
+            selectedProfile?: components["schemas"]["ProviderProfileSummaryResponse"];
+            selectedProfileId?: string;
+            selectionSource: string;
         };
     };
     responses: never;
@@ -5277,6 +5352,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListAssetSearchResultResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-voice-provider-configuration": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeVoiceProviderConfigurationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-voice-provider-configuration": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVoiceProviderConfigurationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeVoiceProviderConfigurationResponse"];
                 };
             };
             /** @description Error */

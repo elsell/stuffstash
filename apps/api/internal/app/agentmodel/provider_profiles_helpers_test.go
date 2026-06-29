@@ -15,6 +15,8 @@ import (
 
 type fakeProviderProfileRepository struct {
 	saved           map[string]domain.ProviderProfile
+	voiceConfig     ports.VoiceProviderConfigurationRecord
+	voiceConfigSet  bool
 	lastCredential  ports.ProviderCredentialRecord
 	lastAuditAction audit.Action
 }
@@ -64,6 +66,20 @@ func (r *fakeProviderProfileRepository) ListProviderProfiles(_ context.Context, 
 		}
 	}
 	return profiles, nil
+}
+
+func (r *fakeProviderProfileRepository) VoiceProviderConfiguration(_ context.Context, tenantID tenant.ID) (ports.VoiceProviderConfigurationRecord, bool, error) {
+	if !r.voiceConfigSet || r.voiceConfig.TenantID != tenantID {
+		return ports.VoiceProviderConfigurationRecord{}, false, nil
+	}
+	return r.voiceConfig, true, nil
+}
+
+func (r *fakeProviderProfileRepository) SaveVoiceProviderConfiguration(_ context.Context, record ports.VoiceProviderConfigurationRecord, auditRecord audit.Record) error {
+	r.voiceConfig = record
+	r.voiceConfigSet = true
+	r.lastAuditAction = auditRecord.Action
+	return nil
 }
 
 type allowTenantConfigureAuthorizer struct{}
@@ -132,15 +148,29 @@ func newProviderProfileTestService(repository *fakeProviderProfileRepository, au
 }
 
 func newProviderProfileTestServiceWithCredentials(repository *fakeProviderProfileRepository, credentials *fakeProviderCredentialRepository, tester ports.ProviderProfileTester, authorizer ports.Authorizer) Service {
+	return newProviderProfileTestServiceWithObserver(repository, credentials, tester, authorizer, nil)
+}
+
+func newProviderProfileTestServiceWithObserver(repository *fakeProviderProfileRepository, credentials *fakeProviderCredentialRepository, tester ports.ProviderProfileTester, authorizer ports.Authorizer, observer ports.Observer) Service {
 	return New(Dependencies{
+		Observer:                  observer,
 		Authorizer:                authorizer,
 		ProviderProfiles:          repository,
 		ProviderProfileUnitOfWork: repository,
+		VoiceProviderConfigs:      repository,
 		ProviderCredentialVault:   fakeCredentialVault{repository: credentials, sealer: fakeCredentialSealer{}},
 		ProviderProfileTester:     tester,
 		IDs:                       fixedIDGenerator{},
 		Clock:                     fixedClock{},
 	})
+}
+
+type fakeObserver struct {
+	events []ports.Event
+}
+
+func (f *fakeObserver) Record(_ context.Context, event ports.Event) {
+	f.events = append(f.events, event)
 }
 
 type fakeProviderCredentialRepository struct {

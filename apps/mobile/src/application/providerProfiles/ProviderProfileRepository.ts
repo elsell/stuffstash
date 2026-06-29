@@ -26,6 +26,49 @@ export type ProviderProfileTestResult = {
   readonly testedAt: string;
 };
 
+export type VoiceProviderSelectionSource = 'explicit' | 'implicit' | 'missing' | string;
+export type VoiceProviderReadiness = 'ready' | 'needs_attention' | string;
+export type VoiceProviderSlotReadiness =
+  | 'ready'
+  | 'missing'
+  | 'disabled'
+  | 'archived'
+  | 'credential_missing'
+  | 'untested'
+  | 'duplicate_candidates'
+  | 'invalid_selection'
+  | string;
+
+export type VoiceProviderSlot = {
+  readonly capability: ProviderProfileCapability;
+  readonly label: string;
+  readonly selectedProfileId?: string;
+  readonly selectedProfile?: ProviderProfileSummary;
+  readonly selectionSource: VoiceProviderSelectionSource;
+  readonly readiness: VoiceProviderSlotReadiness;
+  readonly issues: readonly string[];
+  readonly recommendedAction: string;
+  readonly duplicateProfiles: readonly ProviderProfileSummary[];
+};
+
+export type VoiceProviderConfiguration = {
+  readonly tenantId: string;
+  readonly readiness: VoiceProviderReadiness;
+  readonly updatedAt?: string;
+  readonly profileIds: {
+    readonly speechToText?: string;
+    readonly languageInference?: string;
+    readonly textToSpeech?: string;
+  };
+  readonly slots: readonly VoiceProviderSlot[];
+};
+
+export type UpdateVoiceProviderConfigurationInput = {
+  readonly speechToTextProfileId?: string;
+  readonly languageInferenceProfileId?: string;
+  readonly textToSpeechProfileId?: string;
+};
+
 export type CreateProviderProfileInput = {
   readonly capability: ProviderProfileCapability;
   readonly providerKind: string;
@@ -52,6 +95,8 @@ export type ProviderProfileLifecycleAction = 'enable' | 'disable' | 'archive';
 
 export interface ProviderProfileRepository {
   listProviderProfiles(): Promise<readonly ProviderProfileSummary[]>;
+  getVoiceProviderConfiguration(): Promise<VoiceProviderConfiguration>;
+  updateVoiceProviderConfiguration(input: UpdateVoiceProviderConfigurationInput): Promise<VoiceProviderConfiguration>;
   createProviderProfile(input: CreateProviderProfileInput): Promise<ProviderProfileSummary>;
   updateProviderProfile(input: UpdateProviderProfileInput): Promise<ProviderProfileSummary>;
   replaceProviderProfileCredential(input: ReplaceProviderProfileCredentialInput): Promise<ProviderProfileSummary>;

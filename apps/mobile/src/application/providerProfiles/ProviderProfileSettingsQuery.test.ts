@@ -6,7 +6,9 @@ import {
   ProviderProfileSummary,
   ProviderProfileTestResult,
   ReplaceProviderProfileCredentialInput,
-  UpdateProviderProfileInput
+  UpdateProviderProfileInput,
+  UpdateVoiceProviderConfigurationInput,
+  VoiceProviderConfiguration
 } from './ProviderProfileRepository';
 import { ManageProviderProfileCommand } from './ManageProviderProfileCommand';
 import { ProviderProfileSettingsQuery } from './ProviderProfileSettingsQuery';
@@ -24,9 +26,29 @@ class FakeProviderProfileRepository implements ProviderProfileRepository {
   updatedProfile: UpdateProviderProfileInput | undefined;
   replacedCredential: ReplaceProviderProfileCredentialInput | undefined;
   lifecycleChange: { providerProfileId: string; action: ProviderProfileLifecycleAction } | undefined;
+  voiceConfiguration: VoiceProviderConfiguration = voiceConfiguration({});
+  updatedVoiceConfiguration: UpdateVoiceProviderConfigurationInput | undefined;
 
   async listProviderProfiles(): Promise<readonly ProviderProfileSummary[]> {
     return this.profiles;
+  }
+
+  async getVoiceProviderConfiguration(): Promise<VoiceProviderConfiguration> {
+    return this.voiceConfiguration;
+  }
+
+  async updateVoiceProviderConfiguration(
+    input: UpdateVoiceProviderConfigurationInput
+  ): Promise<VoiceProviderConfiguration> {
+    this.updatedVoiceConfiguration = input;
+    this.voiceConfiguration = voiceConfiguration({
+      profileIds: {
+        speechToText: input.speechToTextProfileId,
+        languageInference: input.languageInferenceProfileId,
+        textToSpeech: input.textToSpeechProfileId
+      }
+    });
+    return this.voiceConfiguration;
   }
 
   async createProviderProfile(input: CreateProviderProfileInput): Promise<ProviderProfileSummary> {
@@ -75,17 +97,25 @@ class FakeProviderProfileRepository implements ProviderProfileRepository {
 }
 
 describe('ProviderProfileSettingsQuery', () => {
-  it('sorts safe profile metadata and reports missing ready capabilities', async () => {
+  it('sorts safe profile metadata and reports slot readiness from voice configuration', async () => {
     const repository = new FakeProviderProfileRepository();
     repository.profiles = [
       profile({ id: 'tts', capability: 'text_to_speech', lifecycleState: 'disabled' }),
       profile({ id: 'lm', capability: 'language_inference', hasPromptTemplate: true }),
       profile({ id: 'stt', capability: 'speech_to_text', lastTestedAt: undefined })
     ];
+    repository.voiceConfiguration = voiceConfiguration({
+      slots: [
+        voiceSlot({ capability: 'speech_to_text', readiness: 'untested' }),
+        voiceSlot({ capability: 'language_inference', readiness: 'ready' }),
+        voiceSlot({ capability: 'text_to_speech', readiness: 'disabled' })
+      ]
+    });
     const query = new ProviderProfileSettingsQuery(repository);
 
     await expect(query.execute()).resolves.toEqual({
       profiles: [repository.profiles[1], repository.profiles[2], repository.profiles[0]],
+      configuration: repository.voiceConfiguration,
       missingCapabilities: ['speech_to_text', 'text_to_speech']
     });
   });
@@ -112,6 +142,13 @@ describe('ProviderProfileVoiceReadinessCheck', () => {
       profile({ capability: 'speech_to_text' }),
       profile({ capability: 'language_inference' })
     ];
+    repository.voiceConfiguration = voiceConfiguration({
+      slots: [
+        voiceSlot({ capability: 'speech_to_text', readiness: 'ready' }),
+        voiceSlot({ capability: 'language_inference', readiness: 'ready' }),
+        voiceSlot({ capability: 'text_to_speech', readiness: 'missing' })
+      ]
+    });
     const check = new ProviderProfileVoiceReadinessCheck(
       new ProviderProfileSettingsQuery(repository)
     );
@@ -192,6 +229,11 @@ describe('ManageProviderProfileCommand', () => {
       credential: ' secret-api-key '
     });
     await command.changeLifecycle('profile-language', 'enable');
+    await command.updateVoiceProviderConfiguration({
+      speechToTextProfileId: 'profile-stt',
+      languageInferenceProfileId: 'profile-language',
+      textToSpeechProfileId: 'profile-tts'
+    });
 
     expect(repository.updatedProfile).toEqual({
       providerProfileId: 'profile-language',
@@ -205,6 +247,11 @@ describe('ManageProviderProfileCommand', () => {
     expect(repository.lifecycleChange).toEqual({
       providerProfileId: 'profile-language',
       action: 'enable'
+    });
+    expect(repository.updatedVoiceConfiguration).toEqual({
+      speechToTextProfileId: 'profile-stt',
+      languageInferenceProfileId: 'profile-language',
+      textToSpeechProfileId: 'profile-tts'
     });
   });
 
@@ -238,5 +285,44 @@ function profile(
       ? overrides.lastTestedAt
       : '2026-06-26T12:00:00Z',
     hasPromptTemplate: overrides.hasPromptTemplate ?? false
+  };
+}
+
+function voiceConfiguration(
+  overrides: Partial<VoiceProviderConfiguration>
+): VoiceProviderConfiguration {
+  const slots = overrides.slots ?? [
+    voiceSlot({ capability: 'speech_to_text', selectedProfile: profile({ id: 'stt', capability: 'speech_to_text' }) }),
+    voiceSlot({ capability: 'language_inference', selectedProfile: profile({ id: 'lm', capability: 'language_inference' }) }),
+    voiceSlot({ capability: 'text_to_speech', selectedProfile: profile({ id: 'tts', capability: 'text_to_speech' }) })
+  ];
+
+  return {
+    tenantId: overrides.tenantId ?? 'tenant-home',
+    readiness: overrides.readiness ?? (slots.every((slot) => slot.readiness === 'ready') ? 'ready' : 'needs_attention'),
+    updatedAt: overrides.updatedAt,
+    profileIds: overrides.profileIds ?? {
+      speechToText: slots.find((slot) => slot.capability === 'speech_to_text')?.selectedProfileId,
+      languageInference: slots.find((slot) => slot.capability === 'language_inference')?.selectedProfileId,
+      textToSpeech: slots.find((slot) => slot.capability === 'text_to_speech')?.selectedProfileId
+    },
+    slots
+  };
+}
+
+function voiceSlot(
+  overrides: Partial<VoiceProviderConfiguration['slots'][number]>
+): VoiceProviderConfiguration['slots'][number] {
+  const selectedProfile = overrides.selectedProfile;
+  return {
+    capability: overrides.capability ?? selectedProfile?.capability ?? 'speech_to_text',
+    label: overrides.label ?? 'Voice slot',
+    selectedProfileId: overrides.selectedProfileId ?? selectedProfile?.id,
+    selectedProfile,
+    selectionSource: overrides.selectionSource ?? (selectedProfile ? 'explicit' : 'missing'),
+    readiness: overrides.readiness ?? 'ready',
+    issues: overrides.issues ?? [],
+    recommendedAction: overrides.recommendedAction ?? 'none',
+    duplicateProfiles: overrides.duplicateProfiles ?? []
   };
 }

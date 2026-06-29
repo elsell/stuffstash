@@ -17,6 +17,7 @@ type Service struct {
 	authorizer                ports.Authorizer
 	providerProfiles          ports.ProviderProfileRepository
 	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	voiceProviderConfigs      ports.VoiceProviderConfigurationRepository
 	providerCredentialVault   ports.ProviderCredentialVault
 	providerProfileTester     ports.ProviderProfileTester
 	ids                       ports.IDGenerator
@@ -28,6 +29,7 @@ type Dependencies struct {
 	Authorizer                ports.Authorizer
 	ProviderProfiles          ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork ports.ProviderProfileUnitOfWork
+	VoiceProviderConfigs      ports.VoiceProviderConfigurationRepository
 	ProviderCredentialVault   ports.ProviderCredentialVault
 	ProviderProfileTester     ports.ProviderProfileTester
 	IDs                       ports.IDGenerator
@@ -54,6 +56,7 @@ func New(deps Dependencies) Service {
 		authorizer:                deps.Authorizer,
 		providerProfiles:          deps.ProviderProfiles,
 		providerProfileUnitOfWork: unitOfWork,
+		voiceProviderConfigs:      deps.VoiceProviderConfigs,
 		providerCredentialVault:   deps.ProviderCredentialVault,
 		providerProfileTester:     deps.ProviderProfileTester,
 		ids:                       deps.IDs,
