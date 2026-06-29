@@ -78,9 +78,13 @@ The API reads configuration from environment variables. The web app reads
 `config.json` at runtime, so the same web image can point at different API and
 OIDC endpoints.
 
-Before using this as a production deployment, choose image tags or digests,
-configure public URLs and CORS, mount or generate the web `config.json`, enable
-the right OIDC and SpiceDB settings, and decide where media blobs live.
+Before using this as a production deployment, choose reviewed image references
+pinned by immutable digest, configure public URLs and CORS, mount or generate
+the web `config.json`, enable the right OIDC and SpiceDB settings, and decide
+where media blobs live.
+
+See the [Configuration Reference](../configuration/) for the full runtime
+settings list.
 
 ## Advanced: Kubernetes-Shaped
 
@@ -96,6 +100,9 @@ The project shape fits Kubernetes, but Docker Compose remains the quickest
 evaluation path.
 
 ## Important Settings
+
+This is the short list most deployments need first. The full list is in the
+[Configuration Reference](../configuration/).
 
 | Variable | Purpose |
 | --- | --- |

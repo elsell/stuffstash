@@ -16,6 +16,9 @@ evaluate the app, start with [Run Stuff Stash](../self-hosting/).
 The repository pins dependencies, container images, GitHub Actions, and tooling
 versions intentionally. Supply-chain security is part of the project boundary.
 
+Runtime settings are listed in the
+[Configuration Reference](../configuration/).
+
 ## API
 
 Run the API with in-memory local adapters:
