@@ -369,7 +369,7 @@ export class RealtimeVoiceSessionController {
           status: 'failed',
           partialTranscript: undefined,
           failureCode: voiceFailureCode(event.code),
-          errorMessage: voiceFailureMessage(event.code, event.message)
+          errorMessage: voiceFailureMessage(event.code, event.message, this.options.diagnosticsEnabled === true)
         });
     }
   }
@@ -514,12 +514,14 @@ function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
   }
 }
 
-function voiceFailureMessage(code: string, fallback: string): string {
+function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled: boolean): string {
   switch (code) {
     case 'speech_to_text_failed':
       return 'Speech-to-text provider failed. Check Voice providers and try again.';
     case 'language_inference_failed':
-      return 'Language provider failed. Check Voice providers and try again.';
+      return diagnosticsEnabled
+        ? 'Language model stopped while continuing this request. Check diagnostics or Voice providers and try again.'
+        : 'Language model stopped while continuing this request. Check Voice providers and try again.';
     case 'text_to_speech_failed':
       return 'Text-to-speech provider failed. Check Voice providers and try again.';
     default:

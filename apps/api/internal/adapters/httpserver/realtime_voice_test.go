@@ -489,6 +489,20 @@ func runRealtimeVoiceQuestion(t *testing.T, serverURL string, tenantID string, i
 func runRealtimeVoiceQuestionUntil(t *testing.T, serverURL string, tenantID string, inventoryID string, principalID string, terminalType string) []map[string]any {
 	t.Helper()
 
+	return runRealtimeVoiceQuestionUntilWithStart(t, serverURL, map[string]any{
+		"type":        "session.start",
+		"seq":         1,
+		"tenantId":    tenantID,
+		"inventoryId": inventoryID,
+		"source":      "mobile_voice",
+		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
+		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
+	}, principalID, terminalType)
+}
+
+func runRealtimeVoiceQuestionUntilWithStart(t *testing.T, serverURL string, startMessage map[string]any, principalID string, terminalType string) []map[string]any {
+	t.Helper()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
 	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(serverURL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
@@ -499,15 +513,7 @@ func runRealtimeVoiceQuestionUntil(t *testing.T, serverURL string, tenantID stri
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    tenantID,
-		"inventoryId": inventoryID,
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, startMessage)
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 	writeRealtimeMessage(t, ctx, connection, map[string]any{

@@ -403,6 +403,40 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('maps late language provider failures to continuation-specific copy', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{ type: 'session.failed', seq: 1, code: 'language_inference_failed', message: 'The voice session failed safely.' }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      failureCode: 'language_inference_failed',
+      errorMessage: 'Language model stopped while continuing this request. Check Voice providers and try again.',
+      progressLabel: 'Voice failed'
+    });
+  });
+
+  it('mentions diagnostics for language provider failures only when diagnostics are enabled', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{ type: 'session.failed', seq: 1, code: 'language_inference_failed', message: 'The voice session failed safely.' }]),
+      new FakePlayer(),
+      { diagnosticsEnabled: true }
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)?.errorMessage).toBe('Language model stopped while continuing this request. Check diagnostics or Voice providers and try again.');
+  });
+
   it('cancels active recording without opening the realtime transport', async () => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([]);

@@ -278,6 +278,9 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			IncludeDiagnostics: input.Session.DeveloperDiagnostics,
 		})
 		if err != nil {
+			if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(input.Session, turn+1, false, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
+				return diagnosticErr
+			}
 			return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 		}
 		if err := emitRealtimeVoiceDiagnostics(input.Session, modelTurn.Diagnostics, emit); err != nil {
@@ -412,6 +415,9 @@ func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session R
 		IncludeDiagnostics: session.DeveloperDiagnostics,
 	})
 	if err != nil {
+		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, previousTurns+1, true, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
+			return diagnosticErr
+		}
 		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 	}
 	if err := emitRealtimeVoiceDiagnostics(session, modelTurn.Diagnostics, emit); err != nil {

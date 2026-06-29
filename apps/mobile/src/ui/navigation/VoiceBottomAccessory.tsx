@@ -12,8 +12,9 @@ export function VoiceBottomAccessory() {
   const isInline = placement === 'inline';
   const pathname = usePathname();
   const isOpeningVoiceSheet = useRef(false);
-  const { startRealtime, state, stopRealtime } = useVoiceInteractionState();
+  const { diagnosticsEnabled, startRealtime, state, stopRealtime } = useVoiceInteractionState();
   const presentation = buildVoiceAccessoryPresentation({
+    diagnosticsEnabled,
     pathname,
     realtime: state.status === 'ready' ? state.realtime : null,
     stage: state.stage,

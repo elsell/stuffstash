@@ -271,3 +271,122 @@ func TestRealtimeVoiceReturnsRecoverableToolErrorsToModel(t *testing.T) {
 		t.Fatalf("expected recovered final response to be spoken, got %q", tts.lastText)
 	}
 }
+
+func TestRealtimeVoiceEmitsDiagnosticWhenLanguageContinuationFailsAfterTools(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{
+		turns: []ports.LanguageInferenceTurn{{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-1",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		}},
+		errs: []error{nil, safeRealtimeVoiceDiagnosticFailure{safe: "provider_http_status_429"}},
+	}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
+	resolver.providers.LanguageInference = language
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureLanguageInference {
+		t.Fatalf("expected language inference failure, got %v", err)
+	}
+
+	var diagnostic *RealtimeVoiceEvent
+	for index := range events {
+		event := &events[index]
+		if event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Language provider failed" {
+			diagnostic = event
+			break
+		}
+	}
+	if diagnostic == nil {
+		t.Fatalf("expected failed continuation diagnostic, got %+v", events)
+	}
+	for _, required := range []string{`"turn": 2`, `"previousTurns": 1`, `"finalOnly": false`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets, "language_inference_failed", "provider_http_status_429"} {
+		if !strings.Contains(diagnostic.Detail, required) {
+			t.Fatalf("expected diagnostic to contain %q, got %s", required, diagnostic.Detail)
+		}
+	}
+	if strings.Contains(diagnostic.Detail, "should-not-leak") || strings.Contains(strings.ToLower(diagnostic.Detail), "bearer ") || strings.Contains(diagnostic.Detail, "provider.invalid") {
+		t.Fatalf("expected provider failure diagnostic to be redacted, got %s", diagnostic.Detail)
+	}
+}
+
+func TestRealtimeVoiceDowngradesUnsafeProviderDiagnosticCategories(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{
+		turns: []ports.LanguageInferenceTurn{{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-1",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		}},
+		errs: []error{nil, safeRealtimeVoiceDiagnosticFailure{safe: "provider_http_status_429 https://provider.invalid project-id should-not-leak"}},
+	}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
+	resolver.providers.LanguageInference = language
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err == nil {
+		t.Fatalf("expected language inference failure")
+	}
+	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Language provider failed")
+	if !strings.Contains(diagnostic.Detail, "provider_request_failed") {
+		t.Fatalf("expected unsafe provider diagnostic to downgrade, got %s", diagnostic.Detail)
+	}
+	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(diagnostic.Detail, "project-id") || strings.Contains(diagnostic.Detail, "should-not-leak") {
+		t.Fatalf("unsafe provider diagnostic leaked, got %s", diagnostic.Detail)
+	}
+}
+
+func findRealtimeVoiceDiagnosticEvent(t *testing.T, events []RealtimeVoiceEvent, message string) RealtimeVoiceEvent {
+	t.Helper()
+
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == message {
+			return event
+		}
+	}
+	t.Fatalf("expected diagnostic %q, got %+v", message, events)
+	return RealtimeVoiceEvent{}
+}
+
+type safeRealtimeVoiceDiagnosticFailure struct {
+	safe string
+}
+
+func (e safeRealtimeVoiceDiagnosticFailure) Error() string {
+	return "provider failure with raw endpoint https://provider.invalid bearer should-not-leak"
+}
+
+func (e safeRealtimeVoiceDiagnosticFailure) SafeRealtimeVoiceDiagnostic() string {
+	return e.safe
+}

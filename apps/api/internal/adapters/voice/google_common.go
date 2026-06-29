@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -66,9 +67,21 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 	}
 	defer httpResponse.Body.Close()
 	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
-		return errors.New("google provider request failed")
+		return googleProviderHTTPError{statusCode: httpResponse.StatusCode}
 	}
 	return json.NewDecoder(httpResponse.Body).Decode(response)
+}
+
+type googleProviderHTTPError struct {
+	statusCode int
+}
+
+func (e googleProviderHTTPError) Error() string {
+	return fmt.Sprintf("google provider request failed with status %d", e.statusCode)
+}
+
+func (e googleProviderHTTPError) SafeRealtimeVoiceDiagnostic() string {
+	return fmt.Sprintf("provider_http_status_%d", e.statusCode)
 }
 
 func firstGeminiText(response geminiGenerateContentResponse) string {

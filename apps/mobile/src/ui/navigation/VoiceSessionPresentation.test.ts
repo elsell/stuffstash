@@ -80,6 +80,43 @@ describe('VoiceSessionPresentation', () => {
       title: 'Voice failed',
       subtitle: 'Check Voice providers and try again.'
     });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        failureCode: 'language_inference_failed',
+        errorMessage: 'Language model stopped while continuing this request. Check Voice providers and try again.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Voice failed',
+      subtitle: 'Check Voice providers and try again.'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      diagnosticsEnabled: true,
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
+        failureCode: 'language_inference_failed',
+        errorMessage: 'Language model stopped while continuing this request. Check diagnostics or Voice providers and try again.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Voice failed',
+      subtitle: 'Open diagnostics or check Voice providers.'
+    });
   });
 
   it('does not leak raw realtime details into the collapsed accessory', () => {

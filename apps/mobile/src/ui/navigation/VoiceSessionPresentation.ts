@@ -16,11 +16,13 @@ export type VoiceAccessoryPresentation = {
 };
 
 export function buildVoiceAccessoryPresentation({
+  diagnosticsEnabled = false,
   pathname,
   realtime,
   status,
   stage
 }: {
+  readonly diagnosticsEnabled?: boolean;
   readonly pathname: string;
   readonly realtime?: VoiceRealtimeState | null;
   readonly status?: 'error' | 'loading' | 'ready';
@@ -102,7 +104,7 @@ export function buildVoiceAccessoryPresentation({
     return {
       accessibilityLabel: 'Open voice error',
       primaryAction: 'expand',
-      subtitle: safeFailureAccessorySubtitle(realtime) ?? context,
+      subtitle: safeFailureAccessorySubtitle(realtime, diagnosticsEnabled) ?? context,
       title: 'Voice failed',
       tone: 'failed'
     };
@@ -150,15 +152,17 @@ function accessoryProgressTitle(realtime: VoiceRealtimeState | null | undefined)
   }
 }
 
-function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | undefined): string | undefined {
+function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | undefined, diagnosticsEnabled: boolean): string | undefined {
   const code = realtime?.failureCode;
   if (
     code === 'provider_readiness' ||
     code === 'speech_to_text_failed' ||
-    code === 'language_inference_failed' ||
     code === 'text_to_speech_failed'
   ) {
     return 'Check Voice providers and try again.';
+  }
+  if (code === 'language_inference_failed') {
+    return diagnosticsEnabled ? 'Open diagnostics or check Voice providers.' : 'Check Voice providers and try again.';
   }
   return realtime?.status === 'failed' ? 'Open for details.' : undefined;
 }
