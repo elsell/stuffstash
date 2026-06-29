@@ -124,10 +124,18 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 			return
 		}
 		if reviewPlanID != "" {
-			if err := handleRealtimeActionPlanDecision(ctx, connection, application, session, reviewPlanID, &lastClientSeq, &serverSeq); err != nil {
+			reviewOutcome, err := handleRealtimeActionPlanDecision(ctx, connection, application, session, reviewPlanID, &lastClientSeq, &serverSeq)
+			if err != nil {
+				_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
 				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The action plan decision could not be applied safely."})
 				_ = connection.Close(websocket.StatusPolicyViolation, "voice review failed")
 				return
+			}
+			switch reviewOutcome {
+			case ports.RealtimeSessionStateCancelled:
+				_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
+			default:
+				_ = application.MarkRealtimeVoiceSessionCompleted(ctx, session)
 			}
 		}
 		_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
@@ -328,21 +336,21 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 	}
 }
 
-func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket.Conn, application app.App, session app.RealtimeVoiceSession, expectedPlanID string, lastClientSeq *int, serverSeq *int) error {
+func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket.Conn, application app.App, session app.RealtimeVoiceSession, expectedPlanID string, lastClientSeq *int, serverSeq *int) (ports.RealtimeSessionState, error) {
 	message, err := readRealtimeActionPlanDecisionMessage(ctx, connection)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if message.Seq <= *lastClientSeq {
-		return ports.ErrInvalidProviderInput
+		return "", ports.ErrInvalidProviderInput
 	}
 	*lastClientSeq = message.Seq
 	if message.SessionID != session.ID {
-		return ports.ErrForbidden
+		return "", ports.ErrForbidden
 	}
 	planID := strings.TrimSpace(message.PlanID)
 	if planID == "" || planID != strings.TrimSpace(expectedPlanID) {
-		return ports.ErrForbidden
+		return "", ports.ErrForbidden
 	}
 
 	var eventType string
@@ -356,12 +364,12 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 			PlanID:      planID,
 		})
 		if err != nil {
-			return err
+			return "", err
 		}
 		eventType = app.RealtimeVoiceEventActionPlanApproved
 		status = string(record.State)
 		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: eventType, Seq: *serverSeq, SessionID: session.ID, PlanID: planID, Status: status}); err != nil {
-			return err
+			return "", err
 		}
 		*serverSeq = *serverSeq + 1
 
@@ -375,7 +383,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		outcomeMessage := "The approved change was applied."
 		if err != nil {
 			if executed.State != actionplan.StateFailed {
-				return err
+				return "", err
 			}
 			outcomeType = app.RealtimeVoiceEventActionPlanFailed
 			outcomeMessage = "The approved change could not be applied safely."
@@ -388,10 +396,10 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 			Status:    string(executed.State),
 			Message:   outcomeMessage,
 		}); err != nil {
-			return err
+			return "", err
 		}
 		*serverSeq = *serverSeq + 1
-		return nil
+		return ports.RealtimeSessionStateCompleted, nil
 	case "action.plan.cancel":
 		record, err := application.CancelActionPlan(ctx, app.ActionPlanDecisionInput{
 			Principal:   session.Principal,
@@ -400,19 +408,19 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 			PlanID:      planID,
 		})
 		if err != nil {
-			return err
+			return "", err
 		}
 		eventType = app.RealtimeVoiceEventActionPlanCancelled
 		status = string(record.State)
 	default:
-		return ports.ErrInvalidProviderInput
+		return "", ports.ErrInvalidProviderInput
 	}
 
 	if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: eventType, Seq: *serverSeq, SessionID: session.ID, PlanID: planID, Status: status}); err != nil {
-		return err
+		return "", err
 	}
 	*serverSeq = *serverSeq + 1
-	return nil
+	return ports.RealtimeSessionStateCancelled, nil
 }
 
 func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realtimeServerMessage {

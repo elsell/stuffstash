@@ -371,11 +371,6 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				}
 			}
 			toolResults = append(toolResults, result)
-			if proposal != nil {
-				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
-					return err
-				}
-			}
 			if input.Session.DeveloperDiagnostics {
 				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool result received", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
 					return err
@@ -383,6 +378,12 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			}
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "completed"}); err != nil {
 				return err
+			}
+			if proposal != nil {
+				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
+					return err
+				}
+				return nil
 			}
 		}
 	}
@@ -636,6 +637,13 @@ func (a App) MarkRealtimeVoiceSessionFailed(ctx context.Context, session Realtim
 		return err
 	}
 	return a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateFailed, safeFailureCode)
+}
+
+func (a App) MarkRealtimeVoiceSessionCompleted(ctx context.Context, session RealtimeVoiceSession) error {
+	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
+		return err
+	}
+	return a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, "")
 }
 
 func (a App) MarkRealtimeVoiceSessionCancelled(ctx context.Context, session RealtimeVoiceSession) error {

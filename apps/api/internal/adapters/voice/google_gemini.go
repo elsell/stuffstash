@@ -128,7 +128,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 			return ports.LanguageInferenceTurn{}, err
 		}
 		if input.IncludeDiagnostics {
-			turn.Diagnostics = languageInferenceDiagnostics(prompt, geminiFunctionCallDiagnostic(calls))
+			turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, geminiFunctionCallDiagnostic(calls))
 		}
 		return turn, nil
 	}
@@ -138,7 +138,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		return ports.LanguageInferenceTurn{}, err
 	}
 	if input.IncludeDiagnostics {
-		turn.Diagnostics = languageInferenceDiagnostics(prompt, rawText)
+		turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, rawText)
 	}
 	return turn, nil
 }
@@ -246,13 +246,18 @@ func firstLanguagePromptText(contents []geminiContent) string {
 	return contents[0].Parts[0].Text
 }
 
-func languageInferenceDiagnostics(prompt string, modelTurn string) []ports.LanguageInferenceDiagnostic {
+func languageInferenceDiagnostics(previousTurns int, prompt string, modelTurn string) []ports.LanguageInferenceDiagnostic {
 	diagnostics := []ports.LanguageInferenceDiagnostic{}
+	turnLabel := fmt.Sprintf("turn %d", previousTurns+1)
 	if strings.TrimSpace(prompt) != "" {
-		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language prompt", Detail: prompt})
+		detail := prompt
+		if previousTurns > 0 {
+			detail = "Prompt scaffolding repeated from the first language-model turn; full prompt omitted to keep diagnostics readable."
+		}
+		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language prompt (" + turnLabel + ")", Detail: detail})
 	}
 	if strings.TrimSpace(modelTurn) != "" {
-		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language model turn", Detail: modelTurn})
+		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language model turn (" + turnLabel + ")", Detail: modelTurn})
 	}
 	return diagnostics
 }

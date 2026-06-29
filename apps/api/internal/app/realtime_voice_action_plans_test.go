@@ -16,6 +16,7 @@ import (
 func TestRealtimeVoiceCanProposePersistedActionPlanForMobileReview(t *testing.T) {
 	t.Parallel()
 
+	tts := &resolvedTextToSpeech{}
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
 		{
 			ToolCalls: []ports.AgentToolCall{{
@@ -53,6 +54,7 @@ func TestRealtimeVoiceCanProposePersistedActionPlanForMobileReview(t *testing.T)
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Add a water bottle."}
 	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
 
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
@@ -88,6 +90,17 @@ func TestRealtimeVoiceCanProposePersistedActionPlanForMobileReview(t *testing.T)
 	}
 	if len(language.seenTools) == 0 || !containsRealtimeTool(language.seenTools[0], RealtimeVoiceToolProposeActionPlan) {
 		t.Fatalf("expected language provider to receive propose action plan tool, got %+v", language.seenTools)
+	}
+	if len(language.seenToolResults) != 2 {
+		t.Fatalf("expected loop to stop after proposal without requesting final turn, got %d turns", len(language.seenToolResults))
+	}
+	if tts.lastText != "" {
+		t.Fatalf("expected no speech synthesis while review is pending, got %q", tts.lastText)
+	}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAssistantResponseCompleted || event.Type == RealtimeVoiceEventSessionCompleted {
+			t.Fatalf("expected review proposal to pause before final completion, got %+v in %+v", event, events)
+		}
 	}
 }
 
@@ -228,14 +241,12 @@ func TestRealtimeVoiceStreamsVerboseAgentDiagnostics(t *testing.T) {
 		t.Fatalf("run realtime voice query: %v", err)
 	}
 
-	var promptDiagnostic, turnDiagnostic, toolStarted, toolCompleted, toolResultDiagnostic *RealtimeVoiceEvent
+	var promptDiagnostic, toolStarted, toolCompleted, toolResultDiagnostic *RealtimeVoiceEvent
 	for index := range events {
 		event := &events[index]
 		switch {
 		case event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Language prompt":
 			promptDiagnostic = event
-		case event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Language model turn":
-			turnDiagnostic = event
 		case event.Type == RealtimeVoiceEventToolCallStarted:
 			toolStarted = event
 		case event.Type == RealtimeVoiceEventToolCallCompleted:
@@ -249,9 +260,6 @@ func TestRealtimeVoiceStreamsVerboseAgentDiagnostics(t *testing.T) {
 	}
 	if strings.Contains(promptDiagnostic.Detail, "should-not-leak") || strings.Contains(promptDiagnostic.Detail, "abc123") || !strings.Contains(promptDiagnostic.Detail, "[redacted-key]") {
 		t.Fatalf("expected redacted prompt diagnostic, got %q", promptDiagnostic.Detail)
-	}
-	if turnDiagnostic == nil || !strings.Contains(turnDiagnostic.Detail, "spokenResponse") {
-		t.Fatalf("expected model turn diagnostic, got %+v", events)
 	}
 	if toolStarted == nil || toolStarted.Detail != "" {
 		t.Fatalf("expected bland tool start event, got %+v", toolStarted)

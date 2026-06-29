@@ -341,11 +341,26 @@ func TestGoogleGeminiLanguageInferenceExposesSafeDiagnostics(t *testing.T) {
 	if len(turn.Diagnostics) != 2 {
 		t.Fatalf("expected prompt and model turn diagnostics, got %+v", turn.Diagnostics)
 	}
-	if turn.Diagnostics[0].Title != "Language prompt" || !strings.Contains(turn.Diagnostics[0].Detail, "Move my water bottle to the kitchen.") {
+	if turn.Diagnostics[0].Title != "Language prompt (turn 1)" || !strings.Contains(turn.Diagnostics[0].Detail, "Move my water bottle to the kitchen.") {
 		t.Fatalf("unexpected prompt diagnostic: %+v", turn.Diagnostics[0])
 	}
-	if turn.Diagnostics[1].Title != "Language model turn" || !strings.Contains(turn.Diagnostics[1].Detail, "search_authorized_assets") {
+	if turn.Diagnostics[1].Title != "Language model turn (turn 1)" || !strings.Contains(turn.Diagnostics[1].Detail, "search_authorized_assets") {
 		t.Fatalf("unexpected model turn diagnostic: %+v", turn.Diagnostics[1])
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceElidesRepeatedPromptDiagnostics(t *testing.T) {
+	t.Parallel()
+
+	diagnostics := languageInferenceDiagnostics(2, "Full repeated prompt.", `{"final":{"kind":"answer"}}`)
+	if len(diagnostics) != 2 {
+		t.Fatalf("expected prompt marker and model turn diagnostics, got %+v", diagnostics)
+	}
+	if diagnostics[0].Title != "Language prompt (turn 3)" || strings.Contains(diagnostics[0].Detail, "Full repeated prompt.") {
+		t.Fatalf("expected repeated prompt to be elided, got %+v", diagnostics[0])
+	}
+	if !strings.Contains(diagnostics[1].Title, "turn 3") || !strings.Contains(diagnostics[1].Detail, "answer") {
+		t.Fatalf("expected turn-labeled model diagnostic, got %+v", diagnostics[1])
 	}
 }
 

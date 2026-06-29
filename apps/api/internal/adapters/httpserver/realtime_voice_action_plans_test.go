@@ -36,7 +36,7 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
 
-	events := runRealtimeVoiceQuestion(t, server.URL, "tenant-home", "inventory-home", "user-1")
+	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "action.plan.proposed")
 	proposed := findRealtimeEvent(t, events, "action.plan.proposed")
 	actionPlan, ok := proposed["actionPlan"].(map[string]any)
 	if !ok {
@@ -54,6 +54,9 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 		t.Fatalf("unexpected command payload: %+v", commands[0])
 	}
 	assertSafeRealtimeEvents(t, events, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
+	if hasRealtimeEvent(events, "assistant.response.completed") || hasRealtimeEvent(events, "session.completed") {
+		t.Fatalf("expected action plan proposal to pause review before final response, got %+v", events)
+	}
 }
 
 func TestRealtimeVoiceActionPlanApprovalUsesOpenReviewSession(t *testing.T) {
@@ -506,7 +509,7 @@ func openRealtimeVoiceReviewSessionForApplicationWithProposal(t *testing.T, appl
 	})
 	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
 
-	events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+	events := readRealtimeMessagesUntil(t, ctx, connection, "action.plan.proposed")
 	proposed := findRealtimeEvent(t, events, "action.plan.proposed")
 	actionPlan, ok := proposed["actionPlan"].(map[string]any)
 	if !ok {
@@ -517,6 +520,15 @@ func openRealtimeVoiceReviewSessionForApplicationWithProposal(t *testing.T, appl
 		t.Fatalf("expected proposed action plan id, got %+v", actionPlan)
 	}
 	return ctx, connection, sessionID, planID, actionPlan
+}
+
+func hasRealtimeEvent(events []map[string]any, eventType string) bool {
+	for _, event := range events {
+		if event["type"] == eventType {
+			return true
+		}
+	}
+	return false
 }
 
 type denyEditAfterProposalAuthorizer struct {
