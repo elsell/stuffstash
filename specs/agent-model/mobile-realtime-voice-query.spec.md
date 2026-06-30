@@ -463,6 +463,21 @@ The corpus must cover at least these behaviors:
 
 Live corpus tuning must optimize the general contract, tool metadata, loop repair behavior, and concise prompt rules. It must not add a one-off instruction for every corpus utterance. Adding a representative example is acceptable only when it teaches a general class of behavior, such as clear missing destinations being represented as dependent create commands before a move. A live corpus pass is successful only when every expected-success scenario succeeds and every expected-non-success scenario falls forward with a user-actionable response instead of producing a generic voice failure, transport/provider error, hidden diagnostic, or contradictory final response.
 
+## Voice Evaluation Skill And Harness
+
+Stuff Stash must maintain a repo-local Codex skill for evaluating conversational inventory quality. The skill must guide an agent through running the live Gemini voice corpus, preserving full traces, reviewing the actual model and tool behavior, and deciding whether each scenario is product-good rather than merely test-green.
+
+The evaluation workflow must produce durable artifacts for each run, including raw `go test -json` output, extracted scenario traces, and a summary that distinguishes:
+
+- Hard execution failures, such as provider errors, invalid action plans, or unexpected session completion.
+- Assertion failures from the Go regression suite.
+- Human/product quality concerns found by an agent reading the trace, such as awkward fall-forward wording, wrong mental model, unnecessary tool turns, brittle planning, or missing next steps.
+- Cases that passed deterministic checks but still need product follow-up.
+
+The skill may use the Codex CLI as an optional judge for trace review, but the primary agent remains responsible for evaluating the judge reasoning. A green Codex-judge verdict must not be accepted blindly. The agent must read the judge explanation, compare it to the trace and rubric, and identify any changes needed in prompts, schemas, loop policy, tool metadata, fixtures, or product behavior.
+
+The evaluator must prefer realistic home-inventory utterances and traces. Fast deterministic unit tests remain necessary for safety invariants, but they are not a substitute for live trace evaluation.
+
 The realtime loop must track the set of opaque `assetId` values returned by successful authorized read tools during the current session. `propose_action_plan` must reject any `assetId` or `parentAssetId` that is not in that session-visible set before persisting the proposed plan. This provenance check is in addition to action-plan command validation and execution-time authorization.
 
 The realtime loop must reject a proposed `move_asset` command that moves an asset to inventory root when the transcript appears to name a destination, unless the transcript itself clearly asks for root, top level, no parent, or removal from a container/location. If the model searches for a destination, finds no visible match, and then proposes root as a substitute, the loop must treat that as a recoverable invalid tool request and give the model a chance to ask a clarification or propose a better action plan. This prevents likely speech-to-text errors such as "move my drill to the side" from becoming destructive or confusing root moves.

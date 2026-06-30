@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stuff Stash Voice Evaluation"
+  short_description: "Evaluate realistic Stuff Stash voice traces."
+  default_prompt: "Evaluate the Stuff Stash voice corpus with live traces, product-quality reasoning, and clear pass/fail findings."
