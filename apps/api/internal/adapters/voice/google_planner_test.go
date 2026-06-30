@@ -68,6 +68,77 @@ func TestGoogleGeminiLanguageInferenceRequestsStructuredActionPlanForPlannerTurn
 	}
 }
 
+func TestGoogleGeminiActionPlanSchemaDoesNotUseLegacyToolArgumentShape(t *testing.T) {
+	t.Parallel()
+
+	schema := geminiActionPlanResponseSchema()
+	if !sameStrings(schema.Required, []string{"actionPlan"}) {
+		t.Fatalf("expected root actionPlan required field, got %+v", schema.Required)
+	}
+	actionPlan, ok := schema.Properties["actionPlan"]
+	if !ok {
+		t.Fatalf("expected actionPlan property in schema: %+v", schema)
+	}
+	if !sameStrings(actionPlan.Required, []string{"intentSummary", "modelInterpretationSummary", "confirmationSummary", "commands"}) {
+		t.Fatalf("expected action plan required fields, got %+v", actionPlan.Required)
+	}
+	if _, hasCommandKind := actionPlan.Properties["commandKind"]; hasCommandKind {
+		t.Fatalf("planner schema must not expose legacy commandKind field: %+v", actionPlan.Properties)
+	}
+	if _, hasArguments := actionPlan.Properties["arguments"]; hasArguments {
+		t.Fatalf("planner schema must not expose legacy top-level arguments field: %+v", actionPlan.Properties)
+	}
+	commands := actionPlan.Properties["commands"]
+	if commands.Items == nil {
+		t.Fatalf("expected typed command items in planner schema: %+v", commands)
+	}
+	if !sameStrings(commands.Items.Required, []string{"id", "kind", "summary", "arguments"}) {
+		t.Fatalf("expected command item required fields, got %+v", commands.Items.Required)
+	}
+	kindEnum := commands.Items.Properties["kind"].Enum
+	if !sameStrings(kindEnum, []string{"create_asset", "create_location", "move_asset", "archive_asset", "restore_asset"}) {
+		t.Fatalf("expected supported command kind enum, got %+v", kindEnum)
+	}
+	arguments := commands.Items.Properties["arguments"]
+	if arguments.Properties["title"].Type != "string" || arguments.Properties["assetId"].Type != "string" || arguments.Properties["parentCommandId"].Type != "string" {
+		t.Fatalf("expected typed command argument properties, got %+v", arguments.Properties)
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRejectsMalformedStructuredActionPlan(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		body string
+	}{
+		{
+			name: "missing commands",
+			body: `{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?"}}`,
+		},
+		{
+			name: "empty commands",
+			body: `{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[]}}`,
+		},
+		{
+			name: "unsupported command kind",
+			body: `{"actionPlan":{"intentSummary":"Rename a bottle.","modelInterpretationSummary":"Rename it.","confirmationSummary":"Rename it?","commands":[{"id":"cmd-1","kind":"update_asset","summary":"Rename it","arguments":{"assetId":"asset-water-bottle","title":"Bottle"}}]}}`,
+		},
+		{
+			name: "missing command arguments",
+			body: `{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[{"id":"cmd-1","kind":"move_asset","summary":"Move it"}]}}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := parseLanguageTurn(tt.body, []ports.AgentToolDescriptor{testGeminiActionPlanToolDescriptor()}, true)
+			if err == nil {
+				t.Fatalf("expected malformed planner output to be rejected")
+			}
+		})
+	}
+}
+
 func testGeminiActionPlanToolDescriptor() ports.AgentToolDescriptor {
 	return ports.AgentToolDescriptor{
 		Name: "propose_action_plan",
@@ -139,4 +210,16 @@ func TestGoogleGeminiLanguageInferenceRejectsTextActionPlanOutsidePlannerTurns(t
 	if err == nil {
 		t.Fatalf("expected text action plan outside planner mode to be rejected")
 	}
+}
+
+func sameStrings(actual []string, expected []string) bool {
+	if len(actual) != len(expected) {
+		return false
+	}
+	for index := range expected {
+		if actual[index] != expected[index] {
+			return false
+		}
+	}
+	return true
 }

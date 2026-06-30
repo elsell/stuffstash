@@ -115,6 +115,7 @@ func TestGoogleGeminiLiveMinimalStructuredAndToolTurns(t *testing.T) {
 	if finalTurn.Final == nil || strings.TrimSpace(finalTurn.Final.SpokenResponse) == "" {
 		t.Fatalf("expected structured final response, got %+v", finalTurn)
 	}
+	t.Logf("live structured final: kind=%s spoken=%q", finalTurn.Final.Kind, finalTurn.Final.SpokenResponse)
 
 	toolTurn, err := provider.NextTurn(ctx, ports.LanguageInferenceInput{
 		Transcript:      "Where is my water bottle?",
@@ -137,4 +138,83 @@ func TestGoogleGeminiLiveMinimalStructuredAndToolTurns(t *testing.T) {
 	if len(toolTurn.ToolCalls) != 1 || toolTurn.ToolCalls[0].Name != "search_authorized_assets" {
 		t.Fatalf("expected forced search tool call, got %+v", toolTurn)
 	}
+	t.Logf("live forced tool call: name=%s args=%v", toolTurn.ToolCalls[0].Name, toolTurn.ToolCalls[0].Arguments)
+
+	plannerTurn, err := provider.NextTurn(ctx, ports.LanguageInferenceInput{
+		Transcript: "Move my water bottle to the kitchen.",
+		Tools:      []ports.AgentToolDescriptor{testGeminiActionPlanToolDescriptor()},
+		ToolResults: []ports.AgentToolResult{{
+			CallID: "call-water-bottle",
+			Name:   "search_authorized_assets",
+			Call: ports.AgentToolCall{
+				ID:        "call-water-bottle",
+				Name:      "search_authorized_assets",
+				Arguments: map[string]any{"query": "water bottle"},
+			},
+			Content: `{"tool":"search_authorized_assets","count":1,"items":[{"assetId":"asset-water-bottle","title":"Water bottle","kind":"item","locationTitle":"Office"}]}`,
+		}, {
+			CallID: "call-kitchen",
+			Name:   "search_authorized_assets",
+			Call: ports.AgentToolCall{
+				ID:        "call-kitchen",
+				Name:      "search_authorized_assets",
+				Arguments: map[string]any{"query": "kitchen"},
+			},
+			Content: `{"tool":"search_authorized_assets","count":0,"items":[]}`,
+		}},
+		PreviousTurns: 2,
+		PlanOnly:      true,
+	})
+	if err != nil {
+		t.Fatalf("structured planner live turn failed: %v", err)
+	}
+	if len(plannerTurn.ToolCalls) != 1 || plannerTurn.ToolCalls[0].Name != "propose_action_plan" {
+		t.Fatalf("expected structured planner action plan, got %+v", plannerTurn)
+	}
+	commands, ok := plannerTurn.ToolCalls[0].Arguments["commands"].([]any)
+	if !ok || len(commands) == 0 {
+		t.Fatalf("expected planner commands from structured schema, got %+v", plannerTurn.ToolCalls[0].Arguments)
+	}
+	t.Logf("live structured planner action plan: %+v", plannerTurn.ToolCalls[0].Arguments)
+	if !livePlannerCreatesKitchenAndMovesWithParentCommand(commands) {
+		t.Fatalf("expected planner to create missing Kitchen and move by parentCommandId, got %+v", commands)
+	}
+}
+
+func livePlannerCreatesKitchenAndMovesWithParentCommand(commands []any) bool {
+	kitchenCommandID := ""
+	for _, raw := range commands {
+		command, ok := raw.(map[string]any)
+		if !ok || command["kind"] != "create_location" {
+			continue
+		}
+		args, ok := command["arguments"].(map[string]any)
+		if !ok || !strings.EqualFold(stringAny(args["title"]), "Kitchen") {
+			continue
+		}
+		kitchenCommandID = stringAny(command["id"])
+		break
+	}
+	if kitchenCommandID == "" {
+		return false
+	}
+	for _, raw := range commands {
+		command, ok := raw.(map[string]any)
+		if !ok || command["kind"] != "move_asset" {
+			continue
+		}
+		args, ok := command["arguments"].(map[string]any)
+		if !ok {
+			continue
+		}
+		if stringAny(args["assetId"]) == "asset-water-bottle" && stringAny(args["parentCommandId"]) == kitchenCommandID {
+			return true
+		}
+	}
+	return false
+}
+
+func stringAny(value any) string {
+	text, _ := value.(string)
+	return text
 }

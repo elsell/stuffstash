@@ -116,10 +116,29 @@ func generationConfigHasActionPlanSchema(config map[string]any) bool {
 	if !ok || commands["type"] != "array" {
 		return false
 	}
+	items, ok := commands["items"].(map[string]any)
+	if !ok || items["type"] != "object" {
+		return false
+	}
+	itemProperties, ok := items["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
+	arguments, ok := itemProperties["arguments"].(map[string]any)
+	if !ok || arguments["type"] != "object" {
+		return false
+	}
+	argumentProperties, ok := arguments["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
 	_, hasIntent := actionPlanProperties["intentSummary"].(map[string]any)
 	_, hasInterpretation := actionPlanProperties["modelInterpretationSummary"].(map[string]any)
 	_, hasConfirmation := actionPlanProperties["confirmationSummary"].(map[string]any)
-	return hasIntent && hasInterpretation && hasConfirmation
+	_, hasTitle := argumentProperties["title"].(map[string]any)
+	_, hasAssetID := argumentProperties["assetId"].(map[string]any)
+	_, hasParentCommandID := argumentProperties["parentCommandId"].(map[string]any)
+	return hasIntent && hasInterpretation && hasConfirmation && hasTitle && hasAssetID && hasParentCommandID
 }
 
 func geminiFunctionCallResponse(name string, args map[string]any) map[string]any {

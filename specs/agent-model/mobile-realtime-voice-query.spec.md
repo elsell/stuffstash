@@ -582,6 +582,10 @@ The agent loop must allow multiple distinct read-only tool calls across turns wh
 
 Provider adapters may continue to use structured JSON output for final responses when the provider supports it. Native tool calling must not loosen the final response validator, read-only/write boundaries, tenant and inventory scoping, or redaction rules.
 
+Action-plan proposal is a structured-output phase, not a provider tool-calling phase. For Gemini on Vertex AI, the adapter must force planner turns with `responseMimeType: application/json` and a concrete `responseSchema` for the Stuff Stash action-plan envelope. The schema must require `actionPlan.intentSummary`, `actionPlan.modelInterpretationSummary`, `actionPlan.confirmationSummary`, and `actionPlan.commands`, and must define `commands[]` plus the supported command argument fields explicitly. The planner schema must not be derived from an unconstrained provider tool argument object, because that permits valid JSON that is still not a valid executable plan.
+
+The action-plan schema may leave command argument fields optional because valid argument combinations vary by command kind, but the application loop must still validate command semantics through project-owned action-plan parsing, authorization, tenancy, and approval rules before presenting or applying any change.
+
 Future tenant-managed provider profiles must support model-specific prompt template configuration because smaller or local models may need different instructions, output examples, or schema wording. Prompt templates must be configuration data resolved through the provider-profile/application boundary, not hard-coded provider adapter behavior.
 
 Prompt template customization must preserve required security and product guardrails:

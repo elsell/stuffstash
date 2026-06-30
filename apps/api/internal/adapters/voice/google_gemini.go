@@ -187,7 +187,7 @@ func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGe
 	config := &geminiGenerationConfig{Temperature: 0}
 	if input.PlanOnly {
 		config.ResponseMimeType = "application/json"
-		config.ResponseSchema = geminiActionPlanResponseSchema(input.Tools)
+		config.ResponseSchema = geminiActionPlanResponseSchema()
 		return config
 	}
 	if input.RequireToolCall && !input.FinalOnly {
@@ -548,9 +548,7 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor, allowActio
 		}}, nil
 	}
 	if decoded.ActionPlan != nil {
-		if !boundedNonEmpty(stringValue(decoded.ActionPlan["intentSummary"]), 500) ||
-			!boundedNonEmpty(stringValue(decoded.ActionPlan["modelInterpretationSummary"]), 1000) ||
-			!boundedNonEmpty(stringValue(decoded.ActionPlan["confirmationSummary"]), 500) {
+		if !validLanguageActionPlan(decoded.ActionPlan) {
 			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 		}
 		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{{
@@ -575,6 +573,40 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor, allowActio
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
 	return ports.LanguageInferenceTurn{ToolCalls: toolCalls}, nil
+}
+
+func validLanguageActionPlan(plan map[string]any) bool {
+	if !boundedNonEmpty(stringValue(plan["intentSummary"]), 500) ||
+		!boundedNonEmpty(stringValue(plan["modelInterpretationSummary"]), 1000) ||
+		!boundedNonEmpty(stringValue(plan["confirmationSummary"]), 500) {
+		return false
+	}
+	commands, ok := plan["commands"].([]any)
+	if !ok || len(commands) == 0 {
+		return false
+	}
+	for _, raw := range commands {
+		command, ok := raw.(map[string]any)
+		if !ok ||
+			!boundedNonEmpty(stringValue(command["id"]), 100) ||
+			!allowedLanguageActionPlanCommandKind(stringValue(command["kind"])) ||
+			!boundedNonEmpty(stringValue(command["summary"]), 500) {
+			return false
+		}
+		if _, ok := command["arguments"].(map[string]any); !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func allowedLanguageActionPlanCommandKind(kind string) bool {
+	switch strings.TrimSpace(kind) {
+	case "create_asset", "create_location", "move_asset", "archive_asset", "restore_asset":
+		return true
+	default:
+		return false
+	}
 }
 
 type languageTurnJSON struct {
