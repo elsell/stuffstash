@@ -383,6 +383,9 @@ func parseActionPlanCreateArguments(command ports.ActionPlanCommandRecord) (acti
 	}
 	switch strings.TrimSpace(args.Kind) {
 	case "", "item", "container", "location":
+		if command.Kind == actionplan.CommandKindCreateLocation && strings.TrimSpace(args.Kind) != "" && strings.TrimSpace(args.Kind) != "location" {
+			return actionPlanCreateArguments{}, ErrValidation
+		}
 		return args, nil
 	default:
 		return actionPlanCreateArguments{}, ErrValidation

@@ -38,6 +38,14 @@ func TestCreateActionPlanRejectsUnsupportedExecutableCommandArguments(t *testing
 			},
 		},
 		{
+			name: "create location with container kind",
+			kind: actionplan.CommandKindCreateLocation,
+			arguments: map[string]any{
+				"title": "Box under the TV",
+				"kind":  "container",
+			},
+		},
+		{
 			name: "move parent title",
 			kind: actionplan.CommandKindMoveAsset,
 			arguments: map[string]any{

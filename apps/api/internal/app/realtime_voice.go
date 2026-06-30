@@ -267,15 +267,21 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	executedToolCalls := map[string]struct{}{}
 	visibleAssetIDs := map[string]struct{}{}
 	for turn := 0; turn < realtimeVoiceToolTurnBudget; turn++ {
+		tools := realtimeVoiceToolDescriptors()
+		requireToolCall := turn == 0
+		if requireToolCall {
+			tools = realtimeVoiceReadToolDescriptors()
+		}
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:           input.Session.TenantID,
 			InventoryID:        input.Session.InventoryID,
 			Principal:          input.Session.Principal,
 			Transcript:         transcript,
 			PromptTemplate:     input.Session.LanguagePromptTemplate,
-			Tools:              realtimeVoiceToolDescriptors(),
+			Tools:              tools,
 			ToolResults:        toolResults,
 			PreviousTurns:      turn,
+			RequireToolCall:    requireToolCall,
 			IncludeDiagnostics: input.Session.DeveloperDiagnostics,
 		})
 		if err != nil {
@@ -303,6 +309,19 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				toolResults = append(toolResults, result)
 				if input.Session.DeveloperDiagnostics {
 					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Final clarification repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+						return err
+					}
+				}
+				continue
+			}
+			if realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(transcript, *modelTurn.Final, toolResults) {
+				result, resultErr := realtimeVoiceFinalWriteClaimRepairResult(a.newRealtimeVoiceID())
+				if resultErr != nil {
+					return resultErr
+				}
+				toolResults = append(toolResults, result)
+				if input.Session.DeveloperDiagnostics {
+					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Final write claim repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
 						return err
 					}
 				}
@@ -364,7 +383,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				Name:      call.Name,
 				Arguments: call.Arguments,
 			}
-			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, executableCall, visibleAssetIDs)
+			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, transcript, toolResults, executableCall, visibleAssetIDs)
 			if err != nil {
 				if !recoverableRealtimeVoiceToolError(err) {
 					_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
@@ -464,7 +483,7 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 
 func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
 	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
-		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, or kitchen-1. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location command for Kitchen and set the move command parentCommandId to that create command id. Do not set a move command parentAssetId to null when the plan creates the requested destination."
+		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, apple-tv-remote-1, or kitchen-1. For a new item the user wants to add, use create_asset with title or name and kind item; do not use move_asset, do not invent an assetId, and do not include assetId in create_asset arguments. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location or create_asset container command and set the later command parentCommandId to that create command id. If a missing container belongs inside an existing visible location, create the container with parentAssetId set to the visible location assetId, then create or move the item with parentCommandId set to the container command id. Use create_asset kind container for containers; use create_location only for true locations. Do not set a move command parentAssetId to null when the user named a destination."
 	}
 	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
 }
@@ -694,85 +713,6 @@ func (a App) markRealtimeVoiceSessionOutcome(ctx context.Context, session Realti
 		At:              a.clock.Now(),
 		SafeFailureCode: strings.TrimSpace(safeFailureCode),
 	})
-}
-
-func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) error {
-	kind := response.Kind
-	if kind == "" {
-		kind = ports.StructuredAgentResponseKindAnswer
-	}
-	switch kind {
-	case ports.StructuredAgentResponseKindAnswer,
-		ports.StructuredAgentResponseKindClarification,
-		ports.StructuredAgentResponseKindUnsupportedAction,
-		ports.StructuredAgentResponseKindSafeFailure:
-	default:
-		return ports.ErrInvalidProviderInput
-	}
-	if !boundedRealtimeVoiceText(response.SpokenResponse, 500) {
-		return ports.ErrInvalidProviderInput
-	}
-	if strings.TrimSpace(response.DisplayResponse) != "" && !boundedRealtimeVoiceText(response.DisplayResponse, 1000) {
-		return ports.ErrInvalidProviderInput
-	}
-	return nil
-}
-
-func boundedRealtimeVoiceText(value string, limit int) bool {
-	value = strings.TrimSpace(value)
-	return value != "" && len(value) <= limit
-}
-
-func realtimeVoiceErrorCode(err error) string {
-	var providerErr realtimeVoiceProviderStageError
-	if errors.As(err, &providerErr) {
-		return providerErr.code
-	}
-	switch {
-	case errors.Is(err, ports.ErrUnauthenticated):
-		return "unauthenticated"
-	case errors.Is(err, ports.ErrForbidden), errors.Is(err, apperrors.ErrNotFound):
-		return "forbidden"
-	case errors.Is(err, ports.ErrInvalidProviderInput), errors.Is(err, apperrors.ErrInvalidInput):
-		return "invalid_request"
-	default:
-		return "voice_session_failed"
-	}
-}
-
-func safeRealtimeVoiceErrorDetail(err error) string {
-	if err == nil {
-		return ""
-	}
-	var providerErr realtimeVoiceProviderStageError
-	if errors.As(err, &providerErr) {
-		return providerErr.code
-	}
-	switch {
-	case errors.Is(err, ports.ErrInvalidProviderInput):
-		return "invalid_provider_input"
-	case errors.Is(err, apperrors.ErrInvalidInput):
-		return "invalid_input"
-	case errors.Is(err, ports.ErrForbidden):
-		return "forbidden"
-	case errors.Is(err, ports.ErrUnauthenticated):
-		return "unauthenticated"
-	default:
-		return "unexpected_error"
-	}
-}
-
-type realtimeVoiceProviderStageError struct {
-	code string
-	err  error
-}
-
-func (e realtimeVoiceProviderStageError) Error() string {
-	return e.code
-}
-
-func (e realtimeVoiceProviderStageError) Unwrap() error {
-	return e.err
 }
 
 func (a App) newRealtimeVoiceID() string {

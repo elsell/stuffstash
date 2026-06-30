@@ -50,15 +50,19 @@ type LanguageInferenceInput struct {
 	ToolResults        []AgentToolResult
 	PreviousTurns      int
 	FinalOnly          bool
+	RequireToolCall    bool
 	IncludeDiagnostics bool
 }
 
 type AgentToolDescriptor struct {
-	Name        string
-	Label       string
-	Description string
-	ReadOnly    bool
-	Parameters  AgentToolParameters
+	Name             string
+	Label            string
+	Description      string
+	ReadOnly         bool
+	ProviderCallable bool
+	RequiresApproval bool
+	MutatesInventory bool
+	Parameters       AgentToolParameters
 }
 
 type AgentToolParameters struct {

@@ -10,7 +10,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func parseRealtimeVoiceActionPlanArgs(args map[string]any) (realtimeVoiceActionPlanArgs, error) {
+func parseRealtimeVoiceActionPlanArgs(args map[string]any, transcript string) (realtimeVoiceActionPlanArgs, error) {
 	if err := rejectUnknownRealtimeVoiceArgs(args, "commandKind", "intentSummary", "modelInterpretationSummary", "confirmationSummary", "commandSummary", "arguments", "argumentsJson", "commands", "risks", "riskSummary"); err != nil {
 		return realtimeVoiceActionPlanArgs{}, err
 	}
@@ -35,6 +35,9 @@ func parseRealtimeVoiceActionPlanArgs(args map[string]any) (realtimeVoiceActionP
 	if err := validateRealtimeVoiceActionPlanMoveDependencies(parsed); err != nil {
 		return realtimeVoiceActionPlanArgs{}, err
 	}
+	if err := validateRealtimeVoiceRootMoves(parsed.Commands, transcript); err != nil {
+		return realtimeVoiceActionPlanArgs{}, err
+	}
 	return parsed, nil
 }
 
@@ -54,15 +57,15 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 			if err := rejectUnknownRealtimeVoiceArgs(command, "id", "commandId", "kind", "commandKind", "summary", "commandSummary", "arguments", "argumentsJson"); err != nil {
 				return nil, err
 			}
-			kind := actionplan.CommandKind(strings.TrimSpace(firstStringArg(command["kind"], command["commandKind"])))
-			if !kind.Valid() {
-				return nil, ports.ErrInvalidProviderInput
-			}
 			summary := strings.TrimSpace(firstStringArg(command["summary"], command["commandSummary"]))
 			if summary == "" {
 				return nil, ports.ErrInvalidProviderInput
 			}
 			arguments, err := realtimeVoiceActionPlanArguments(command)
+			if err != nil {
+				return nil, err
+			}
+			kind, arguments, err := canonicalRealtimeVoiceCommandKind(firstStringArg(command["kind"], command["commandKind"]), arguments)
 			if err != nil {
 				return nil, err
 			}
@@ -83,11 +86,11 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 		return commands, nil
 	}
 
-	commandKind := actionplan.CommandKind(strings.TrimSpace(stringArg(args["commandKind"])))
-	if !commandKind.Valid() {
-		return nil, ports.ErrInvalidProviderInput
-	}
 	arguments, err := realtimeVoiceActionPlanArguments(args)
+	if err != nil {
+		return nil, err
+	}
+	commandKind, arguments, err := canonicalRealtimeVoiceCommandKind(stringArg(args["commandKind"]), arguments)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +104,36 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 		Summary:   summary,
 		Arguments: arguments,
 	}}, nil
+}
+
+func canonicalRealtimeVoiceCommandKind(raw string, arguments map[string]any) (actionplan.CommandKind, map[string]any, error) {
+	kind := actionplan.CommandKind(strings.TrimSpace(raw))
+	switch kind {
+	case "create_item":
+		return actionplan.CommandKindCreateAsset, realtimeVoiceArgumentsWithDefaultKind(arguments, asset.KindItem.String()), nil
+	case "create_container":
+		return actionplan.CommandKindCreateAsset, realtimeVoiceArgumentsWithDefaultKind(arguments, asset.KindContainer.String()), nil
+	default:
+		if !kind.Valid() {
+			return "", nil, ports.ErrInvalidProviderInput
+		}
+		return kind, arguments, nil
+	}
+}
+
+func realtimeVoiceArgumentsWithDefaultKind(arguments map[string]any, defaultKind string) map[string]any {
+	if arguments == nil {
+		arguments = map[string]any{}
+	}
+	if strings.TrimSpace(stringArg(arguments["kind"])) != "" {
+		return arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		canonical[key] = value
+	}
+	canonical["kind"] = defaultKind
+	return canonical
 }
 
 func validateRealtimeVoiceActionPlanMoveDependencies(plan realtimeVoiceActionPlanArgs) error {
@@ -147,6 +180,48 @@ func realtimeVoicePlanTextTargetsCreatedTitle(planText string, title string) boo
 			strings.Contains(planText, prefix+"the "+title) ||
 			strings.Contains(planText, prefix+"a "+title) ||
 			strings.Contains(planText, prefix+"an "+title) {
+			return true
+		}
+	}
+	return false
+}
+
+func validateRealtimeVoiceRootMoves(commands []ActionPlanCommandInput, transcript string) error {
+	if !realtimeVoiceTranscriptNamesDestination(transcript) || realtimeVoiceTranscriptAllowsRootDestination(transcript) {
+		return nil
+	}
+	for _, command := range commands {
+		if command.Kind != actionplan.CommandKindMoveAsset {
+			continue
+		}
+		parentAssetID := strings.TrimSpace(stringArg(command.Arguments["parentAssetId"]))
+		parentCommandID := strings.TrimSpace(stringArg(command.Arguments["parentCommandId"]))
+		if parentAssetID == "" && parentCommandID == "" {
+			return ports.ErrInvalidProviderInput
+		}
+	}
+	return nil
+}
+
+func realtimeVoiceTranscriptNamesDestination(transcript string) bool {
+	normalized := " " + strings.ToLower(strings.TrimSpace(transcript)) + " "
+	for _, token := range []string{" to ", " into ", " inside ", " in "} {
+		if strings.Contains(normalized, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceTranscriptAllowsRootDestination(transcript string) bool {
+	normalized := " " + strings.ToLower(strings.TrimSpace(transcript)) + " "
+	for _, replacer := range []string{".", ",", "!", "?", ";", ":", "\"", "'", "(", ")", "[", "]", "{", "}"} {
+		normalized = strings.ReplaceAll(normalized, replacer, " ")
+	}
+	normalized = strings.Join(strings.Fields(normalized), " ")
+	normalized = " " + normalized + " "
+	for _, phrase := range []string{" root ", " top level ", " top-level ", " inventory root ", " no parent ", " out of ", " remove from ", " take out of "} {
+		if strings.Contains(normalized, phrase) {
 			return true
 		}
 	}

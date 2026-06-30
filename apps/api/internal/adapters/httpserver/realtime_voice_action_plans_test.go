@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -85,7 +84,7 @@ func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetup(t, moveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndTranscript(t, moveActionPlanProposalLanguageModel{}, "Move the water bottle to the office.", func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
@@ -428,6 +427,12 @@ func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference por
 func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.LanguageInferenceProvider, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
+	return openRealtimeVoiceReviewSessionWithSetupAndTranscript(t, languageInference, "Add a water bottle.", setup)
+}
+
+func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+	t.Helper()
+
 	ids := []string{"voice-session-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
 	if setup != nil {
 		ids = []string{
@@ -436,7 +441,7 @@ func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference por
 			"voice-session-id", "plan-id", "command-id", "response-id", "move-undo-id", "move-audit-id",
 		}
 	}
-	return openRealtimeVoiceReviewSessionWithSetupAndIDs(t, languageInference, ids, setup)
+	return openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, languageInference, ids, transcript, setup)
 }
 
 func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
@@ -449,11 +454,24 @@ func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInferen
 func openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
 	t.Helper()
 
+	return openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, languageInference, ids, "Add a water bottle.", setup)
+}
+
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+	t.Helper()
+
+	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, languageInference, ids, transcript, setup)
+	return ctx, connection, sessionID, planID
+}
+
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
+	t.Helper()
+
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
 		ids:         ids,
-	}, fakeSpeechToText{transcript: "Add a water bottle."}, languageInference, fakeTextToSpeech{
+	}, fakeSpeechToText{transcript: transcript}, languageInference, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
 	})
 	if setup != nil {
@@ -742,48 +760,4 @@ func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 			DisplayResponse: "I prepared that restore for review.",
 		},
 	}, nil
-}
-
-func firstToolResultAssetID(content string, title string, lifecycleState string) (string, error) {
-	ids, err := toolResultAssetIDs(content, lifecycleState)
-	if err != nil {
-		return "", err
-	}
-	if id := ids[title]; id != "" {
-		return id, nil
-	}
-	return "", ports.ErrInvalidProviderInput
-}
-
-func firstToolResultAnyAssetID(content string, lifecycleState string, titles ...string) (string, error) {
-	ids, err := toolResultAssetIDs(content, lifecycleState)
-	if err != nil {
-		return "", err
-	}
-	for _, title := range titles {
-		if id := ids[title]; id != "" {
-			return id, nil
-		}
-	}
-	return "", ports.ErrInvalidProviderInput
-}
-
-func toolResultAssetIDs(content string, lifecycleState string) (map[string]string, error) {
-	var output struct {
-		Items []struct {
-			AssetID        string `json:"assetId"`
-			Title          string `json:"title"`
-			LifecycleState string `json:"lifecycleState"`
-		} `json:"items"`
-	}
-	if err := json.Unmarshal([]byte(content), &output); err != nil {
-		return nil, ports.ErrInvalidProviderInput
-	}
-	ids := map[string]string{}
-	for _, item := range output.Items {
-		if item.LifecycleState == lifecycleState && item.AssetID != "" {
-			ids[item.Title] = item.AssetID
-		}
-	}
-	return ids, nil
 }

@@ -5,10 +5,11 @@ import "github.com/stuffstash/stuff-stash/internal/ports"
 func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 	return []ports.AgentToolDescriptor{
 		{
-			Name:        RealtimeVoiceToolSearchAuthorizedAssets,
-			Label:       realtimeVoiceSearchAuthorizedAssetsPublicName,
-			Description: "Search visible assets in the selected inventory by natural-language keywords. Use this for where-is, do-I-have, specific-item questions, and resolving resources for action plans. Arguments: query string, optional limit number. Results are JSON with asset metadata, opaque internal asset IDs for follow-up tool calls or action-plan arguments, and containment paths. Do not speak or display asset IDs to the user.",
-			ReadOnly:    true,
+			Name:             RealtimeVoiceToolSearchAuthorizedAssets,
+			Label:            realtimeVoiceSearchAuthorizedAssetsPublicName,
+			Description:      "Search visible assets in the selected inventory by natural-language keywords. Use this for where-is, do-I-have, specific-item questions, and resolving resources for action plans. Arguments: query string, optional limit number. Results are JSON with asset metadata, opaque internal asset IDs for follow-up tool calls or action-plan arguments, and containment paths. Do not speak or display asset IDs to the user.",
+			ReadOnly:         true,
+			ProviderCallable: true,
 			Parameters: ports.AgentToolParameters{
 				Required: []string{"query"},
 				Properties: map[string]ports.AgentToolParameter{
@@ -24,10 +25,11 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			},
 		},
 		{
-			Name:        RealtimeVoiceToolListAuthorizedAssets,
-			Label:       realtimeVoiceListAuthorizedAssetsPublicName,
-			Description: "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, and containment paths.",
-			ReadOnly:    true,
+			Name:             RealtimeVoiceToolListAuthorizedAssets,
+			Label:            realtimeVoiceListAuthorizedAssetsPublicName,
+			Description:      "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, and containment paths.",
+			ReadOnly:         true,
+			ProviderCallable: true,
 			Parameters: ports.AgentToolParameters{
 				Properties: map[string]ports.AgentToolParameter{
 					"kind": {
@@ -56,10 +58,11 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			},
 		},
 		{
-			Name:        RealtimeVoiceToolProposeActionPlan,
-			Label:       realtimeVoiceProposeActionPlanPublicName,
-			Description: "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use commandKind plus arguments for single-command create, move, update, archive, or restore plans. Prefer commands array for multi-step plans. Each command object has id, kind, summary, and arguments. For create or move into an existing location/container, resolve the parent with read tools and use its assetId as parentAssetId. For create or move into something created earlier in the same plan, use parentCommandId. If the user asks to move an existing asset to a missing but clearly named location or container, assume they want it created unless the words are ambiguous or likely mistranscribed. Propose creating the missing destination first and then moving the existing asset using parentCommandId. Do not ask a final yes/no clarification for clear missing destinations; this proposal is the review step.",
-			ReadOnly:    true,
+			Name:             RealtimeVoiceToolProposeActionPlan,
+			Label:            realtimeVoiceProposeActionPlanPublicName,
+			Description:      "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use commandKind plus arguments for single-command create, move, update, archive, or restore plans. Prefer commands array for multi-step plans. Each command object has id, kind, summary, and arguments. Use create_asset for new items and containers. Use create_location only for a true location. Never put assetId in create_asset arguments; assetId is only for move_asset, archive_asset, or restore_asset of an existing asset returned by a read tool. For create or move into an existing location/container, resolve the parent with read tools and use its assetId as parentAssetId. For create or move into something created earlier in the same plan, use parentCommandId. If the user asks to add a new item into a missing container under an existing location, create the missing container first with parentAssetId set to the existing location, then create the item with parentCommandId set to the container command id. If the user asks to move an existing asset to a missing but clearly named location or container, assume they want it created unless the words are ambiguous or likely mistranscribed. Propose creating the missing destination first and then moving the existing asset using parentCommandId. Do not ask a final yes/no clarification for clear missing destinations; this proposal is the review step.",
+			ProviderCallable: true,
+			RequiresApproval: true,
 			Parameters: ports.AgentToolParameters{
 				Required: []string{"intentSummary", "modelInterpretationSummary", "confirmationSummary"},
 				Properties: map[string]ports.AgentToolParameter{
@@ -90,7 +93,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 					},
 					"commands": {
 						Type:        ports.AgentToolParameterTypeArray,
-						Description: "Preferred command array for multi-step plans. Each item must include id, kind, summary, and arguments. For create_asset use title/name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId. For move_asset use assetId plus either parentAssetId, parentCommandId, or null parentAssetId for root. parentCommandId must point to an earlier create command id. Never use parentTitle or locationTitle here.",
+						Description: "Preferred command array for multi-step plans. Each item must include id, kind, summary, and arguments. For create_asset use title/name, kind item|container|location, optional description, and optional parentAssetId or parentCommandId. Do not include assetId in create_asset. For create_location use title/name and no kind, or kind location. For move_asset use assetId plus either parentAssetId, parentCommandId, or null parentAssetId for root. parentCommandId must point to an earlier create command id. Never use parentTitle or locationTitle here.",
 						Items: &ports.AgentToolParameter{
 							Type:     ports.AgentToolParameterTypeObject,
 							Required: []string{"id", "kind", "summary", "arguments"},
@@ -110,7 +113,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 								},
 								"arguments": {
 									Type:        ports.AgentToolParameterTypeObject,
-									Description: "Structured command arguments. For creates include title or name, kind item|container|location, optional description, and exactly one parentAssetId or parentCommandId when placing the new asset. For move_asset include assetId and either parentAssetId, parentCommandId, or parentAssetId null for root.",
+									Description: "Structured command arguments. For create_asset include title or name, kind item|container|location, optional description, and exactly one parentAssetId or parentCommandId when placing the new asset. Never include assetId in create_asset. For create_location include title or name and optional parent references only when creating a location-like child; do not use kind container with create_location. For move_asset include assetId and either parentAssetId, parentCommandId, or parentAssetId null for root.",
 									Properties: map[string]ports.AgentToolParameter{
 										"assetId": {
 											Type:        ports.AgentToolParameterTypeString,
@@ -154,6 +157,18 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			},
 		},
 	}
+}
+
+func realtimeVoiceReadToolDescriptors() []ports.AgentToolDescriptor {
+	tools := realtimeVoiceToolDescriptors()
+	readTools := make([]ports.AgentToolDescriptor, 0, len(tools))
+	for _, tool := range tools {
+		if tool.Name == RealtimeVoiceToolProposeActionPlan {
+			continue
+		}
+		readTools = append(readTools, tool)
+	}
+	return readTools
 }
 
 func realtimeVoiceToolLabel(name string) string {

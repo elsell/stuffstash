@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/oauth2"
-
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -208,8 +206,12 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	if strings.Contains(string(requestPayload), `"toolCalls"`) {
 		t.Fatalf("request still prompts for text tool-call JSON: %s", string(requestPayload))
 	}
-	if strings.Contains(string(requestPayload), `"responseMimeType"`) {
-		t.Fatalf("tool-capable turn should not force response mime type: %s", string(requestPayload))
+	firstConfig := objectAt(t, requests[0], "generationConfig")
+	if firstConfig["responseMimeType"] != "application/json" {
+		t.Fatalf("tool-capable turn should request structured JSON when not calling a function, got %+v", firstConfig)
+	}
+	if !generationConfigHasFinalResponseSchema(firstConfig) {
+		t.Fatalf("tool-capable turn should include final response schema, got %+v", firstConfig)
 	}
 	firstPrompt := requestTextPart(t, requests[0], 0, 0)
 	if strings.Contains(firstPrompt, "Tool results:") {
@@ -234,6 +236,10 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 	if !requestHasFunctionDeclaration(requests[1], "search_authorized_assets") {
 		t.Fatalf("second turn should keep usable native tool declarations for distinct follow-up calls: %+v", requests[1]["tools"])
 	}
+	secondConfig := objectAt(t, requests[1], "generationConfig")
+	if secondConfig["responseMimeType"] != "application/json" || !generationConfigHasFinalResponseSchema(secondConfig) {
+		t.Fatalf("continuation turn should include structured final response controls, got %+v", secondConfig)
+	}
 }
 
 func TestGoogleGeminiLanguageInferenceRequestsJSONForFinalOnlyTurns(t *testing.T) {
@@ -247,6 +253,9 @@ func TestGoogleGeminiLanguageInferenceRequestsJSONForFinalOnlyTurns(t *testing.T
 		config := objectAt(t, request, "generationConfig")
 		if config["responseMimeType"] != "application/json" {
 			t.Fatalf("expected final-only turn to request JSON response mime type, got %+v", config)
+		}
+		if !generationConfigHasFinalResponseSchema(config) {
+			t.Fatalf("expected final-only turn to request final response schema, got %+v", config)
 		}
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}}`))
 	}))
@@ -262,6 +271,59 @@ func TestGoogleGeminiLanguageInferenceRequestsJSONForFinalOnlyTurns(t *testing.T
 	})
 	if _, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Provider diagnostic.", FinalOnly: true}); err != nil {
 		t.Fatalf("final-only turn: %v", err)
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceCanRequireToolCall(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		toolConfig := objectAt(t, request, "toolConfig")
+		functionCalling := objectAt(t, toolConfig, "functionCallingConfig")
+		if functionCalling["mode"] != "ANY" {
+			t.Fatalf("expected required tool call mode ANY, got %+v", functionCalling)
+		}
+		names, ok := functionCalling["allowedFunctionNames"].([]any)
+		if !ok || len(names) != 1 || names[0] != "search_authorized_assets" {
+			t.Fatalf("expected allowed tool names, got %+v", functionCalling)
+		}
+		config := objectAt(t, request, "generationConfig")
+		if _, exists := config["responseMimeType"]; exists {
+			t.Fatalf("required function-call turn should not also request textual structured output, got %+v", config)
+		}
+		if _, exists := config["responseSchema"]; exists {
+			t.Fatalf("required function-call turn should not include response schema, got %+v", config)
+		}
+		_ = json.NewEncoder(w).Encode(geminiFunctionCallResponse("search_authorized_assets", map[string]any{"query": "water bottle"}))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID:   "project",
+		Location:    "us-central1",
+		Model:       "gemini-test",
+		BaseURL:     server.URL,
+		TokenSource: staticTokenSource{},
+		HTTPClient:  server.Client(),
+	})
+	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
+		Transcript:      "Where is my water bottle?",
+		RequireToolCall: true,
+		Tools: []ports.AgentToolDescriptor{{
+			Name:        "search_authorized_assets",
+			Description: "Search visible assets.",
+			ReadOnly:    true,
+		}},
+	})
+	if err != nil {
+		t.Fatalf("required tool turn: %v", err)
+	}
+	if len(turn.ToolCalls) != 1 || turn.ToolCalls[0].Name != "search_authorized_assets" {
+		t.Fatalf("expected required tool call, got %+v", turn)
 	}
 }
 
@@ -321,19 +383,27 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 		"Action-plan command arguments must be structured JSON",
 		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
 		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
+		"For where-is questions, if search_authorized_assets returns the requested item with locationTitle or containmentPath, answer from that result instead of listing unrelated assets.",
+		"containmentPath ends with the returned asset itself; never say an item is inside itself.",
 		"Assume the user wants missing named locations or containers created",
 		"do not ask whether to create it; call propose_action_plan",
 		"the session is not complete until you either call propose_action_plan or ask a necessary clarification",
 		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
 		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
 		"If the destination name is not present as an assetId in tool results, create it in the same commands array and reference it with parentCommandId.",
+		"For nested create or move requests, resolve named outer locations and containers as separate search terms",
+		"a combined phrase search returning no matches does not prove each path segment is missing",
 		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
 		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
+		"follows the provided response schema",
 	} {
 		if !strings.Contains(prompt, required) {
 			t.Fatalf("expected prompt to include %q, got: %s", required, prompt)
 		}
+	}
+	if strings.Contains(prompt, `{"final"`) {
+		t.Fatalf("prompt should not duplicate the provider response schema: %s", prompt)
 	}
 }
 
@@ -712,84 +782,4 @@ func requestTextPart(t *testing.T, request map[string]any, contentIndex int, par
 		t.Fatalf("text part missing or wrong type: %+v", part)
 	}
 	return text
-}
-
-func roleAt(t *testing.T, content any) string {
-	t.Helper()
-	item := objectFromAny(t, content)
-	role, ok := item["role"].(string)
-	if !ok {
-		t.Fatalf("content role missing or wrong type: %+v", item)
-	}
-	return role
-}
-
-func partObjectAt(t *testing.T, content any, partIndex int, key string) map[string]any {
-	t.Helper()
-	item := objectFromAny(t, content)
-	parts, ok := item["parts"].([]any)
-	if !ok {
-		t.Fatalf("content parts missing or wrong type: %+v", item)
-	}
-	part := objectFromAny(t, parts[partIndex])
-	return objectAt(t, part, key)
-}
-
-func objectAt(t *testing.T, item map[string]any, key string) map[string]any {
-	t.Helper()
-	return objectFromAny(t, item[key])
-}
-
-func objectFromAny(t *testing.T, value any) map[string]any {
-	t.Helper()
-	item, ok := value.(map[string]any)
-	if !ok {
-		t.Fatalf("value is not an object: %+v", value)
-	}
-	return item
-}
-
-func requestHasFunctionDeclaration(request map[string]any, name string) bool {
-	tools, ok := request["tools"].([]any)
-	if !ok {
-		return false
-	}
-	for _, rawTool := range tools {
-		tool, ok := rawTool.(map[string]any)
-		if !ok {
-			continue
-		}
-		declarations, ok := tool["functionDeclarations"].([]any)
-		if !ok {
-			continue
-		}
-		for _, rawDeclaration := range declarations {
-			declaration, ok := rawDeclaration.(map[string]any)
-			if ok && declaration["name"] == name {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func geminiFunctionCallResponse(name string, args map[string]any) map[string]any {
-	return map[string]any{
-		"candidates": []map[string]any{{
-			"content": map[string]any{
-				"parts": []map[string]any{{
-					"functionCall": map[string]any{
-						"name": name,
-						"args": args,
-					},
-				}},
-			},
-		}},
-	}
-}
-
-type staticTokenSource struct{}
-
-func (staticTokenSource) Token() (*oauth2.Token, error) {
-	return &oauth2.Token{AccessToken: "test-token", TokenType: "Bearer"}, nil
 }

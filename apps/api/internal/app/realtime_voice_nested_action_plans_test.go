@@ -379,7 +379,7 @@ func TestRealtimeVoiceAllowsRootMoveWithUnrelatedCreate(t *testing.T) {
 		},
 	}
 
-	parsed, err := parseRealtimeVoiceActionPlanArgs(args)
+	parsed, err := parseRealtimeVoiceActionPlanArgs(args, "Move my water bottle to root.")
 	if err != nil {
 		t.Fatalf("expected unrelated root move to parse: %v", err)
 	}

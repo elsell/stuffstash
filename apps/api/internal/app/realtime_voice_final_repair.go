@@ -41,6 +41,29 @@ func realtimeVoiceShouldRepairCreateClarification(transcript string, response po
 		strings.Contains(text, "not find")
 }
 
+func realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(transcript string, response ports.StructuredAgentResponse, toolResults []ports.AgentToolResult) bool {
+	if !realtimeVoiceLooksLikeWriteRequest(transcript) || !realtimeVoiceHasRejectedActionPlanProposal(toolResults) || realtimeVoiceAlreadyRejectedWriteClaim(toolResults) {
+		return false
+	}
+	kind := response.Kind
+	if kind == "" {
+		kind = ports.StructuredAgentResponseKindAnswer
+	}
+	if kind != ports.StructuredAgentResponseKindAnswer {
+		return false
+	}
+	return true
+}
+
+func realtimeVoiceHasRejectedActionPlanProposal(toolResults []ports.AgentToolResult) bool {
+	for _, result := range toolResults {
+		if result.Name == RealtimeVoiceToolProposeActionPlan && strings.Contains(result.Content, `"status":"error"`) {
+			return true
+		}
+	}
+	return false
+}
+
 func realtimeVoiceToolResultsContainRequestedSource(transcript string, toolResults []ports.AgentToolResult) bool {
 	source := realtimeVoiceRequestedMoveSource(transcript)
 	if source == "" {
@@ -117,6 +140,15 @@ func realtimeVoiceAlreadyRejectedCreateClarification(toolResults []ports.AgentTo
 	return false
 }
 
+func realtimeVoiceAlreadyRejectedWriteClaim(toolResults []ports.AgentToolResult) bool {
+	for _, result := range toolResults {
+		if strings.Contains(result.Content, "final_write_claim_rejected") {
+			return true
+		}
+	}
+	return false
+}
+
 func realtimeVoiceLooksLikeWriteRequest(transcript string) bool {
 	text := strings.ToLower(transcript)
 	for _, token := range []string{"move ", "put ", "place ", "add ", "create ", "store ", "stash "} {
@@ -136,4 +168,15 @@ func realtimeVoiceFinalClarificationRepairResult(id string) (ports.AgentToolResu
 		ID:   id,
 		Name: RealtimeVoiceToolProposeActionPlan,
 	}, "final_clarification_rejected", "A clear write request with a missing named destination must be turned into a reviewable action plan instead of a final yes/no creation question. Call propose_action_plan with ordered create commands for every missing parent location or container, then the requested move or create command. Use parentCommandId for dependencies such as Kitchen -> Big cabinet -> Second shelf -> move item.", true)
+}
+
+func realtimeVoiceFinalWriteClaimRepairResult(id string) (ports.AgentToolResult, error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		id = "final-write-claim-repair"
+	}
+	return realtimeVoiceToolErrorResult(ports.AgentToolCall{
+		ID:   id,
+		Name: RealtimeVoiceToolProposeActionPlan,
+	}, "final_write_claim_rejected", "No inventory change has been applied. A write request is complete only after propose_action_plan succeeds and the user approves the plan. Retry propose_action_plan with valid structured commands, or produce a safe clarification that tells the user what is needed next. For a new item inside a missing container under an existing parent, create the container first with parentAssetId, then create the item with parentCommandId; do not move a newly-created item by invented assetId.", true)
 }

@@ -113,12 +113,10 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 	}
 	prompt := firstLanguagePromptText(contents)
 	request := geminiGenerateContentRequest{
-		Contents: contents,
-		Tools:    geminiToolsForTurn(input),
-		GenerationConfig: &geminiGenerationConfig{
-			Temperature:      0,
-			ResponseMimeType: geminiResponseMimeTypeForTurn(input),
-		},
+		Contents:         contents,
+		Tools:            geminiToolsForTurn(input),
+		ToolConfig:       geminiToolConfigForTurn(input),
+		GenerationConfig: geminiGenerationConfigForTurn(input),
 	}
 	var response geminiGenerateContentResponse
 	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
@@ -145,13 +143,6 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 	return turn, nil
 }
 
-func geminiResponseMimeTypeForTurn(input ports.LanguageInferenceInput) string {
-	if input.FinalOnly || len(input.Tools) == 0 {
-		return "application/json"
-	}
-	return ""
-}
-
 func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
 	turn, err := p.NextTurn(ctx, ports.LanguageInferenceInput{
 		Transcript: "Provider diagnostic. Return a final answer that says Provider profile test succeeded.",
@@ -173,6 +164,35 @@ func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {
 	return geminiTools(input.Tools)
 }
 
+func geminiToolConfigForTurn(input ports.LanguageInferenceInput) *geminiToolConfig {
+	if input.FinalOnly || !input.RequireToolCall || len(input.Tools) == 0 {
+		return nil
+	}
+	names := make([]string, 0, len(input.Tools))
+	for _, tool := range input.Tools {
+		if googleGeminiProviderCallableTool(tool) {
+			names = append(names, tool.Name)
+		}
+	}
+	if len(names) == 0 {
+		return nil
+	}
+	return &geminiToolConfig{FunctionCallingConfig: &geminiFunctionCallingConfig{
+		Mode:                 "ANY",
+		AllowedFunctionNames: names,
+	}}
+}
+
+func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGenerationConfig {
+	config := &geminiGenerationConfig{Temperature: 0}
+	if input.RequireToolCall && !input.FinalOnly {
+		return config
+	}
+	config.ResponseMimeType = "application/json"
+	config.ResponseSchema = geminiFinalResponseSchema()
+	return config
+}
+
 func languagePrompt(input ports.LanguageInferenceInput) string {
 	lines := []string{}
 	if template := strings.TrimSpace(input.PromptTemplate); template != "" {
@@ -182,18 +202,38 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 			"Mandatory Stuff Stash agent contract:",
 		)
 	}
+	if input.RequireToolCall && !input.FinalOnly {
+		lines = append(lines, []string{
+			"You are the Stuff Stash inventory voice agent.",
+			"This turn must gather context with exactly one provided read tool.",
+			"Use search_authorized_assets for specific items, where-is questions, resolving named locations or containers, and write requests that mention named inventory things.",
+			"For add/create requests into a nested destination, search the outermost named place or container separately, such as living room, garage, office, kitchen, cabinet, box, shelf, or drawer; do not search the whole destination phrase first.",
+			"For move/archive/restore requests involving an existing item, search the source item first.",
+			"Use list_authorized_assets for broad inventory lists or questions about what is inside a known place.",
+			"Use short search keywords copied from the transcript. Do not answer yet and do not propose changes on this turn.",
+			"Transcript: " + input.Transcript,
+		}...)
+		return strings.Join(lines, "\n")
+	}
 	lines = append(lines, []string{
 		"You are the Stuff Stash inventory voice agent.",
 		"Use only the provided native tools for inventory lookup and action-plan proposal.",
 		"Return strict JSON only when producing a final response.",
 		"Tool results are compact JSON and are the only source of truth for inventory contents, locations, containment, and counts.",
 		"For a specific item or where-is question, call search_authorized_assets first with short keywords.",
+		"For where-is questions, if search_authorized_assets returns the requested item with locationTitle or containmentPath, answer from that result instead of listing unrelated assets.",
+		"containmentPath ends with the returned asset itself; never say an item is inside itself.",
 		"For broad list questions, call list_authorized_assets with filters.",
 		"For questions about what is in a place, list with parentTitle or locationTitle when known.",
 		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
 		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
+		"For add/create requests for a new item, use create_asset with title or name and kind item.",
+		"Do not invent an assetId for a new item; use move_asset only for an existing asset returned by a read tool.",
+		"Never include assetId in create_asset arguments; create_asset creates a new thing and needs title or name plus kind.",
 		"For write requests, the session is not complete until you either call propose_action_plan or ask a necessary clarification.",
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
+		"For nested create or move requests, resolve named outer locations and containers as separate search terms; a combined phrase search returning no matches does not prove each path segment is missing.",
+		"If only a combined nested destination phrase has been searched and returned no matches, search a separate outer location or container term before proposing a plan.",
 		"For missing parent containers or locations requested by the user, propose an ordered commands array and use parentCommandId to place later creates or moves inside earlier creates.",
 		"Assume the user wants missing named locations or containers created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, Big cabinet, or Second shelf.",
 		"For nested missing destinations, create every missing path segment in order, then move or create the requested item into the deepest created command.",
@@ -201,14 +241,17 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"Ask for clarification instead only when the requested destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription.",
 		"For example, if the user says move my water bottle to the kitchen and Kitchen is not visible, create a Kitchen command with an id such as cmd-kitchen, then set the move command parentCommandId to cmd-kitchen.",
 		"For example, if the user says move my water bottle to the second shelf in the big cabinet in the kitchen and none of that path is visible, create Kitchen, create Big cabinet with parentCommandId cmd-kitchen, create Second shelf with parentCommandId cmd-big-cabinet, then move the water bottle with parentCommandId cmd-second-shelf.",
+		"For example, if the user adds a new remote to a missing box under an existing Living room, create Box under the TV with kind container and parentAssetId set to Living room's assetId, then create Apple TV remote with kind item and parentCommandId set to the box command id. Do not create the new item first and do not add a move_asset command for the new item.",
 		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId only. For move_asset use assetId plus parentAssetId, parentCommandId, or null parentAssetId.",
 		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
 		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
 		"If the destination name is not present as an assetId in tool results, create it in the same commands array and reference it with parentCommandId.",
+		"If a missing container belongs inside an existing visible location, create the container with parentAssetId set to that visible location assetId, then create or move the item with parentCommandId set to the container command id.",
+		"Use create_asset with kind container for new containers; use create_location only for true locations.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
 		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
-		"If you can answer, return {\"final\":{\"kind\":\"answer\",\"spokenResponse\":\"short spoken answer\",\"displayResponse\":\"short display answer\"}}.",
+		"If you can answer without another tool call, return a final response that follows the provided response schema.",
 		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
 		"If a search has no matches, say you could not find a visible match; do not say the whole inventory is empty unless a broad list tool result proves it.",
 		"Do not include reasoning, IDs, markdown, or extra fields.",
@@ -306,7 +349,7 @@ func geminiFunctionResponsePayload(content string) (map[string]any, error) {
 func geminiTools(tools []ports.AgentToolDescriptor) []geminiTool {
 	declarations := make([]geminiFunctionDeclaration, 0, len(tools))
 	for _, tool := range tools {
-		if !tool.ReadOnly {
+		if !googleGeminiProviderCallableTool(tool) {
 			continue
 		}
 		declarations = append(declarations, geminiFunctionDeclaration{
@@ -319,6 +362,38 @@ func geminiTools(tools []ports.AgentToolDescriptor) []geminiTool {
 		return nil
 	}
 	return []geminiTool{{FunctionDeclarations: declarations}}
+}
+
+func geminiFinalResponseSchema() *geminiSchema {
+	return &geminiSchema{
+		Type: "object",
+		Properties: map[string]geminiSchema{
+			"final": {
+				Type: "object",
+				Properties: map[string]geminiSchema{
+					"kind": {
+						Type: "string",
+						Enum: []string{
+							string(ports.StructuredAgentResponseKindAnswer),
+							string(ports.StructuredAgentResponseKindClarification),
+							string(ports.StructuredAgentResponseKindUnsupportedAction),
+							string(ports.StructuredAgentResponseKindSafeFailure),
+						},
+					},
+					"spokenResponse": {
+						Type:        "string",
+						Description: "Short user-facing response that will be spoken aloud.",
+					},
+					"displayResponse": {
+						Type:        "string",
+						Description: "Short user-facing response for the app to display.",
+					},
+				},
+				Required: []string{"kind", "spokenResponse", "displayResponse"},
+			},
+		},
+		Required: []string{"final"},
+	}
 }
 
 func geminiParameters(parameters ports.AgentToolParameters) geminiSchema {
@@ -471,11 +546,15 @@ type languageFinalJSON struct {
 func allowedToolNames(tools []ports.AgentToolDescriptor) map[string]bool {
 	allowed := make(map[string]bool, len(tools))
 	for _, tool := range tools {
-		if tool.ReadOnly {
+		if googleGeminiProviderCallableTool(tool) {
 			allowed[tool.Name] = true
 		}
 	}
 	return allowed
+}
+
+func googleGeminiProviderCallableTool(tool ports.AgentToolDescriptor) bool {
+	return tool.ProviderCallable || tool.ReadOnly
 }
 
 func isAllowedStructuredResponseKind(kind ports.StructuredAgentResponseKind) bool {
@@ -535,7 +614,17 @@ func googleGeminiLocation(cfg GoogleGeminiConfig) string {
 type geminiGenerateContentRequest struct {
 	Contents         []geminiContent         `json:"contents"`
 	Tools            []geminiTool            `json:"tools,omitempty"`
+	ToolConfig       *geminiToolConfig       `json:"toolConfig,omitempty"`
 	GenerationConfig *geminiGenerationConfig `json:"generationConfig,omitempty"`
+}
+
+type geminiToolConfig struct {
+	FunctionCallingConfig *geminiFunctionCallingConfig `json:"functionCallingConfig,omitempty"`
+}
+
+type geminiFunctionCallingConfig struct {
+	Mode                 string   `json:"mode"`
+	AllowedFunctionNames []string `json:"allowedFunctionNames,omitempty"`
 }
 
 type geminiContent struct {
@@ -585,6 +674,7 @@ type geminiSchema struct {
 }
 
 type geminiGenerationConfig struct {
-	Temperature      float64 `json:"temperature"`
-	ResponseMimeType string  `json:"responseMimeType,omitempty"`
+	Temperature      float64       `json:"temperature"`
+	ResponseMimeType string        `json:"responseMimeType,omitempty"`
+	ResponseSchema   *geminiSchema `json:"responseSchema,omitempty"`
 }

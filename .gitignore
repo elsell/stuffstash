@@ -1,10 +1,6 @@
 .cache/
 .DS_Store
-.stuffstash/*
-!.stuffstash/seed-data/
-!.stuffstash/seed-data/**
-!.stuffstash/seed-media/
-!.stuffstash/seed-media/**
+.stuffstash/
 apps/api/.stuffstash/
 /stuff-stash
 docs/node_modules/

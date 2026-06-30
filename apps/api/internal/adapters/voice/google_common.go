@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -67,6 +68,13 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 	}
 	httpResponse, err := c.httpClient.Do(httpRequest)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return googleProviderTimeoutError{}
+		}
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			return googleProviderTimeoutError{}
+		}
 		return err
 	}
 	defer httpResponse.Body.Close()
@@ -74,6 +82,16 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 		return googleProviderHTTPError{statusCode: httpResponse.StatusCode}
 	}
 	return json.NewDecoder(httpResponse.Body).Decode(response)
+}
+
+type googleProviderTimeoutError struct{}
+
+func (googleProviderTimeoutError) Error() string {
+	return "google provider request timed out"
+}
+
+func (googleProviderTimeoutError) SafeRealtimeVoiceDiagnostic() string {
+	return "provider_timeout"
 }
 
 type googleProviderHTTPError struct {
