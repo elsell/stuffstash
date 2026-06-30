@@ -171,6 +171,15 @@ func realtimeVoiceReadToolDescriptors() []ports.AgentToolDescriptor {
 	return readTools
 }
 
+func realtimeVoiceSearchAuthorizedAssetsToolDescriptor() ports.AgentToolDescriptor {
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolSearchAuthorizedAssets {
+			return tool
+		}
+	}
+	return ports.AgentToolDescriptor{}
+}
+
 func realtimeVoiceToolLabel(name string) string {
 	switch name {
 	case RealtimeVoiceToolProposeActionPlan:

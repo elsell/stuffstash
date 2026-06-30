@@ -136,7 +136,10 @@ type duplicateToolCallLanguageModel struct {
 func (m *duplicateToolCallLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	m.turns++
 	if m.turns == 1 {
-		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{duplicateSearchToolCall()}}, nil
+		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{
+			duplicateSearchToolCall(),
+			duplicateSearchToolCall(),
+		}}, nil
 	}
 	if input.FinalOnly && len(input.Tools) == 0 && len(input.ToolResults) >= 1 {
 		m.finalizationWithoutTools = true

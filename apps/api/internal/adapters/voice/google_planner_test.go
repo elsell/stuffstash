@@ -62,6 +62,9 @@ func TestGoogleGeminiLanguageInferenceRequestsStructuredActionPlanForPlannerTurn
 	if _, hasTools := request["tools"]; hasTools {
 		t.Fatalf("planner turn must not expose provider-callable tools, got %+v", request["tools"])
 	}
+	if _, hasToolConfig := request["toolConfig"]; hasToolConfig {
+		t.Fatalf("planner turn must not send tool config, got %+v", request["toolConfig"])
+	}
 	config := objectAt(t, request, "generationConfig")
 	if config["responseMimeType"] != "application/json" || !generationConfigHasActionPlanSchema(config) {
 		t.Fatalf("planner turn should request action-plan structured output, got %+v", config)

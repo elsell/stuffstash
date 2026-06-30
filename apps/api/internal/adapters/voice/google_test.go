@@ -207,11 +207,11 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 		t.Fatalf("request still prompts for text tool-call JSON: %s", string(requestPayload))
 	}
 	firstConfig := objectAt(t, requests[0], "generationConfig")
-	if firstConfig["responseMimeType"] != "application/json" {
-		t.Fatalf("tool-capable turn should request structured JSON when not calling a function, got %+v", firstConfig)
+	if _, exists := firstConfig["responseMimeType"]; exists {
+		t.Fatalf("tool-capable turn should not mix function calling with structured output, got %+v", firstConfig)
 	}
-	if !generationConfigHasFinalResponseSchema(firstConfig) {
-		t.Fatalf("tool-capable turn should include final response schema, got %+v", firstConfig)
+	if _, exists := firstConfig["responseSchema"]; exists {
+		t.Fatalf("tool-capable turn should not include final response schema, got %+v", firstConfig)
 	}
 	firstPrompt := requestTextPart(t, requests[0], 0, 0)
 	if strings.Contains(firstPrompt, "Tool results:") {
@@ -237,8 +237,11 @@ func TestGoogleGeminiLanguageInferenceMapsToolAndFinalTurns(t *testing.T) {
 		t.Fatalf("second turn should keep usable native tool declarations for distinct follow-up calls: %+v", requests[1]["tools"])
 	}
 	secondConfig := objectAt(t, requests[1], "generationConfig")
-	if secondConfig["responseMimeType"] != "application/json" || !generationConfigHasFinalResponseSchema(secondConfig) {
-		t.Fatalf("continuation turn should include structured final response controls, got %+v", secondConfig)
+	if _, exists := secondConfig["responseMimeType"]; exists {
+		t.Fatalf("continuation tool-capable turn should not mix function calling with structured output, got %+v", secondConfig)
+	}
+	if _, exists := secondConfig["responseSchema"]; exists {
+		t.Fatalf("continuation tool-capable turn should not include final response schema, got %+v", secondConfig)
 	}
 }
 

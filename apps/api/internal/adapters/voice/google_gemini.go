@@ -190,7 +190,7 @@ func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGe
 		config.ResponseSchema = geminiActionPlanResponseSchema()
 		return config
 	}
-	if input.RequireToolCall && !input.FinalOnly {
+	if len(geminiToolsForTurn(input)) > 0 && !input.FinalOnly {
 		return config
 	}
 	config.ResponseMimeType = "application/json"
@@ -212,7 +212,7 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 			lines = append(lines, []string{
 				"You are the Stuff Stash inventory voice agent.",
 				"This turn must gather missing context with exactly one provided read tool.",
-				"For move, put, place, store, or stash requests, search the named destination, outer room, place, or container now. Do not repeat the source-item search unless the source was not found.",
+				"For add, create, move, put, place, store, or stash requests, search the named destination, outer room, place, or container now. Do not repeat the source-item search unless the source was not found.",
 				"Use short search keywords copied from the destination phrase, such as living room, garage, kitchen, cabinet, box, shelf, drawer, or counter.",
 				"Do not answer yet and do not propose changes on this turn.",
 				"Transcript: " + input.Transcript,

@@ -277,7 +277,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		planOnly := realtimeVoiceShouldUseConstrainedPlanner(transcript, turn, toolResults)
 		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(transcript, turn, toolResults)
 		if requireToolCall {
-			tools = realtimeVoiceReadToolDescriptors()
+			tools = realtimeVoiceReadToolsForTurn(transcript, turn, toolResults)
 		}
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:           input.Session.TenantID,
@@ -352,6 +352,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			return ports.ErrInvalidProviderInput
 		}
 		for _, call := range modelTurn.ToolCalls {
+			if parentQuery := realtimeVoiceRequiredNestedCreateParentQuery(transcript, turn, toolResults); parentQuery != "" {
+				call = realtimeVoiceSearchCallWithQuery(call, parentQuery)
+				if input.Session.DeveloperDiagnostics {
+					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Server-selected parent read", realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
+						return err
+					}
+				}
+			}
 			signature, err := realtimeVoiceToolCallSignature(call)
 			if err != nil {
 				return err
@@ -440,35 +448,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				return nil
 			}
 		}
-	}
-	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, transcript, toolResults, toolCallIDs, emit)
-}
-
-func realtimeVoiceShouldRequireReadTool(transcript string, turn int, toolResults []ports.AgentToolResult) bool {
-	if turn == 0 {
-		return true
-	}
-	return realtimeVoiceLooksLikeMoveRequest(transcript) && turn == 1 && realtimeVoiceReadToolResultCount(toolResults) < 2
-}
-
-func realtimeVoiceShouldUseConstrainedPlanner(transcript string, turn int, toolResults []ports.AgentToolResult) bool {
-	if !realtimeVoiceLooksLikeWriteRequest(transcript) || turn == 0 {
-		return false
-	}
-	if realtimeVoiceLooksLikeMoveRequest(transcript) && turn < 2 && realtimeVoiceReadToolResultCount(toolResults) < 2 {
-		return false
-	}
-	return true
-}
-
-func realtimeVoiceReadToolResultCount(toolResults []ports.AgentToolResult) int {
-	count := 0
-	for _, result := range toolResults {
-		if result.Name == RealtimeVoiceToolSearchAuthorizedAssets || result.Name == RealtimeVoiceToolListAuthorizedAssets {
-			count++
+		if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript, toolResults) {
+			return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, transcript, toolResults, toolCallIDs, turn+1, emit)
 		}
 	}
-	return count
+	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, transcript, toolResults, toolCallIDs, emit)
 }
 
 func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, emit RealtimeVoiceEventSink) error {

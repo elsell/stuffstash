@@ -288,6 +288,89 @@ func TestRealtimeVoiceRejectsMovePlanThatCreatesVisibleSourceInsteadOfMovingIt(t
 	}
 }
 
+func TestRealtimeVoiceRejectsMovePlanThatCreatesMissingSourceItem(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-passport",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "passport"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-office",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "office"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-create-source",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"intentSummary":              "Move the passport to the office.",
+					"modelInterpretationSummary": "The source search was empty, but the model tried to create the source.",
+					"confirmationSummary":        "Create passport in Office?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-passport",
+							"kind":    "create_asset",
+							"summary": "Create Passport",
+							"arguments": map[string]any{
+								"title":         "Passport",
+								"kind":          "item",
+								"parentAssetId": "office-1",
+							},
+						},
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I could not find a passport to move. Add it first or tell me a different item.",
+				DisplayResponse: "I could not find a passport to move. Add it first or tell me a different item.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my passport to the office."}
+	resolver.providers.LanguageInference = language
+	tts := &resolvedTextToSpeech{}
+	resolver.providers.TextToSpeech = tts
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	office := assetItem("office-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	officeTitle, _ := asset.NewTitle("Office")
+	office.Title = officeTitle
+	if err := store.CreateAsset(context.Background(), office, audit.Record{ID: audit.ID("audit-office"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "office-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed office: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if proposed != nil {
+		t.Fatalf("expected missing-source create to be rejected, got %+v", proposed)
+	}
+	if tts.lastText != "I could not find a passport to move. Add it first or tell me a different item." {
+		t.Fatalf("expected fall-forward response, got %q", tts.lastText)
+	}
+}
+
 func TestRealtimeVoiceRejectsInvertedMissingDestinationHierarchy(t *testing.T) {
 	t.Parallel()
 

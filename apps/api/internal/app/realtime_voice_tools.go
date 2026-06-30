@@ -45,6 +45,12 @@ func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, sess
 	if err := validateRealtimeVoiceMoveRequestUsesVisibleSource(args.Commands, transcript, priorResults); err != nil {
 		return ports.AgentToolResult{}, nil, err
 	}
+	if err := validateRealtimeVoiceMoveRequestDoesNotCreateMissingSource(args.Commands, transcript, priorResults); err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
+	if err := validateRealtimeVoiceRootCreatesUseVisibleParents(args.Commands, transcript, priorResults); err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
 	if err := validateRealtimeVoiceMissingDestinationSegmentsAccountedFor(args.Commands, transcript, priorResults); err != nil {
 		return ports.AgentToolResult{}, nil, err
 	}
@@ -189,6 +195,55 @@ func realtimeVoiceMeaningfulWordsRepresented(query string, represented string) b
 	return false
 }
 
+func realtimeVoiceTranscriptHasUnrepresentedDestinationSegment(transcript string, represented string) bool {
+	representedWords := map[string]struct{}{}
+	for _, word := range realtimeVoiceMeaningfulWords(represented) {
+		representedWords[word] = struct{}{}
+	}
+	for _, word := range realtimeVoiceMeaningfulWords(transcript) {
+		if !realtimeVoiceDestinationSegmentWords[word] {
+			continue
+		}
+		if _, exists := representedWords[word]; !exists {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceLikelyOuterDestinationQuery(transcript string, toolResults []ports.AgentToolResult) string {
+	represented := strings.Builder{}
+	for _, query := range realtimeVoiceNoMatchQueries(toolResults) {
+		represented.WriteString(" ")
+		represented.WriteString(query)
+	}
+	representedText := represented.String()
+	for _, phrase := range []string{"living room", "kitchen", "garage", "office", "bedroom", "bathroom", "basement", "attic", "pantry"} {
+		if strings.Contains(strings.ToLower(transcript), phrase) && !realtimeVoiceVisibleParentTitlePresent(toolResults, phrase) {
+			return phrase
+		}
+	}
+	for _, word := range realtimeVoiceMeaningfulWords(transcript) {
+		if realtimeVoiceDestinationSegmentWords[word] && !realtimeVoiceMeaningfulWordsRepresented(word, representedText) {
+			return word
+		}
+	}
+	return ""
+}
+
+func realtimeVoiceVisibleParentTitlePresent(toolResults []ports.AgentToolResult, title string) bool {
+	title = normalizeRealtimeVoiceSourceText(title)
+	if title == "" {
+		return false
+	}
+	for _, parent := range realtimeVoiceVisibleParentsInTranscript(toolResults, title) {
+		if normalizeRealtimeVoiceSourceText(parent.Title) == title {
+			return true
+		}
+	}
+	return false
+}
+
 func realtimeVoiceMeaningfulWords(value string) []string {
 	words := []string{}
 	for _, word := range strings.Fields(strings.ToLower(value)) {
@@ -294,6 +349,8 @@ var realtimeVoiceDestinationSegmentWords = map[string]bool{
 	"closet":   true,
 	"counter":  true,
 	"kitchen":  true,
+	"living":   true,
+	"room":     true,
 	"garage":   true,
 	"office":   true,
 	"bedroom":  true,
@@ -634,111 +691,4 @@ func realtimeVoiceMatchFields(matches []search.Match) []string {
 func stringArg(raw any) string {
 	value, _ := raw.(string)
 	return value
-}
-
-func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "query", "limit"); err != nil {
-		return realtimeVoiceSearchArgs{}, err
-	}
-	query := strings.TrimSpace(stringArg(args["query"]))
-	if query == "" || len(query) > 120 {
-		return realtimeVoiceSearchArgs{}, ports.ErrInvalidProviderInput
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceSearchArgs{}, err
-	}
-	return realtimeVoiceSearchArgs{Query: query, Limit: limit}, nil
-}
-
-func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentTitle", "locationTitle", "limit"); err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	kind, err := realtimeVoiceOptionalAssetKind(args["kind"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	parentTitle, err := optionalRealtimeVoiceTitle(args["parentTitle"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	locationTitle, err := optionalRealtimeVoiceTitle(args["locationTitle"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	lifecycleState, err := realtimeVoiceOptionalLifecycleState(args["lifecycleState"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentTitle: parentTitle, LocationTitle: locationTitle, Limit: limit}, nil
-}
-
-func rejectUnknownRealtimeVoiceArgs(args map[string]any, allowed ...string) error {
-	allowedSet := map[string]struct{}{}
-	for _, key := range allowed {
-		allowedSet[key] = struct{}{}
-	}
-	for key := range args {
-		if _, ok := allowedSet[key]; !ok {
-			return ports.ErrInvalidProviderInput
-		}
-	}
-	return nil
-}
-
-func optionalRealtimeVoiceTitle(raw any) (string, error) {
-	if raw == nil {
-		return "", nil
-	}
-	value, ok := raw.(string)
-	if !ok {
-		return "", ports.ErrInvalidProviderInput
-	}
-	value = strings.TrimSpace(value)
-	if len(value) > 160 {
-		return "", ports.ErrInvalidProviderInput
-	}
-	return value, nil
-}
-
-type realtimeVoiceSearchArgs struct {
-	Query string
-	Limit int
-}
-
-type realtimeVoiceListArgs struct {
-	Kind           asset.Kind
-	LifecycleState string
-	ParentTitle    string
-	LocationTitle  string
-	Limit          int
-}
-
-type realtimeVoiceAssetToolOutput struct {
-	Tool    string                       `json:"tool"`
-	Query   string                       `json:"query,omitempty"`
-	Filters map[string]string            `json:"filters,omitempty"`
-	Count   int                          `json:"count"`
-	HasMore bool                         `json:"hasMore,omitempty"`
-	Note    string                       `json:"note,omitempty"`
-	Items   []realtimeVoiceAssetToolItem `json:"items"`
-}
-
-type realtimeVoiceAssetToolItem struct {
-	AssetID         string   `json:"assetId,omitempty"`
-	Title           string   `json:"title"`
-	Kind            string   `json:"kind"`
-	Description     string   `json:"description,omitempty"`
-	InventoryName   string   `json:"inventoryName"`
-	LifecycleState  string   `json:"lifecycleState"`
-	ParentTitle     string   `json:"parentTitle,omitempty"`
-	ParentKind      string   `json:"parentKind,omitempty"`
-	LocationTitle   string   `json:"locationTitle,omitempty"`
-	ContainmentPath []string `json:"containmentPath,omitempty"`
-	MatchFields     []string `json:"matchFields,omitempty"`
 }

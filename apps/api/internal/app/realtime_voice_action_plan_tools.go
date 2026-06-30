@@ -26,7 +26,7 @@ func parseRealtimeVoiceActionPlanArgs(args map[string]any, transcript string) (r
 		IntentSummary:              strings.TrimSpace(stringArg(args["intentSummary"])),
 		ModelInterpretationSummary: strings.TrimSpace(stringArg(args["modelInterpretationSummary"])),
 		ConfirmationSummary:        strings.TrimSpace(stringArg(args["confirmationSummary"])),
-		Commands:                   commands,
+		Commands:                   canonicalRealtimeVoiceActionPlanCommandDependencies(canonicalRealtimeVoiceTranscriptCreateHierarchy(commands, transcript)),
 		Risks:                      risks,
 	}
 	if parsed.IntentSummary == "" || parsed.ModelInterpretationSummary == "" || parsed.ConfirmationSummary == "" || len(parsed.Commands) == 0 {
@@ -758,20 +758,6 @@ func canonicalRealtimeVoiceActionPlanCommandDependencies(commands []ActionPlanCo
 		return normalized
 	}
 	return ordered
-}
-
-func appendStableRealtimeVoiceCommandIndex(indexes []int, index int) []int {
-	insertAt := len(indexes)
-	for readyIndex, existing := range indexes {
-		if index < existing {
-			insertAt = readyIndex
-			break
-		}
-	}
-	indexes = append(indexes, 0)
-	copy(indexes[insertAt+1:], indexes[insertAt:])
-	indexes[insertAt] = index
-	return indexes
 }
 
 type realtimeVoiceActionPlanArgs struct {
