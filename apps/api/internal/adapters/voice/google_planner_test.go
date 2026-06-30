@@ -69,6 +69,12 @@ func TestGoogleGeminiLanguageInferenceRequestsStructuredActionPlanForPlannerTurn
 	if config["responseMimeType"] != "application/json" || !generationConfigHasActionPlanSchema(config) {
 		t.Fatalf("planner turn should request action-plan structured output, got %+v", config)
 	}
+	if _, hasOpenAPISchema := config["responseSchema"]; hasOpenAPISchema {
+		t.Fatalf("planner turn must use responseJsonSchema for branchy action-plan output, got %+v", config)
+	}
+	if _, hasJSONSchema := config["responseJsonSchema"]; !hasJSONSchema {
+		t.Fatalf("planner turn should send responseJsonSchema, got %+v", config)
+	}
 }
 
 func TestGoogleGeminiActionPlanSchemaDoesNotUseLegacyToolArgumentShape(t *testing.T) {
@@ -95,16 +101,31 @@ func TestGoogleGeminiActionPlanSchemaDoesNotUseLegacyToolArgumentShape(t *testin
 	if commands.Items == nil {
 		t.Fatalf("expected typed command items in planner schema: %+v", commands)
 	}
-	if !sameStrings(commands.Items.Required, []string{"id", "kind", "summary", "arguments"}) {
-		t.Fatalf("expected command item required fields, got %+v", commands.Items.Required)
+	if len(commands.Items.AnyOf) != 5 {
+		t.Fatalf("expected command-specific schema branches, got %+v", commands.Items)
 	}
-	kindEnum := commands.Items.Properties["kind"].Enum
-	if !sameStrings(kindEnum, []string{"create_asset", "create_location", "move_asset", "archive_asset", "restore_asset"}) {
-		t.Fatalf("expected supported command kind enum, got %+v", kindEnum)
+	createAsset := commands.Items.AnyOf[0]
+	if !sameStrings(createAsset.Required, []string{"id", "kind", "summary", "arguments"}) ||
+		!sameStrings(createAsset.Properties["kind"].Enum, []string{"create_asset"}) {
+		t.Fatalf("expected create_asset branch, got %+v", createAsset)
 	}
-	arguments := commands.Items.Properties["arguments"]
-	if arguments.Properties["title"].Type != "string" || arguments.Properties["assetId"].Type != "string" || arguments.Properties["parentCommandId"].Type != "string" {
-		t.Fatalf("expected typed command argument properties, got %+v", arguments.Properties)
+	createArgs := createAsset.Properties["arguments"]
+	if !sameStrings(createArgs.Required, []string{"title", "kind", "parentAssetId", "parentCommandId"}) ||
+		len(createArgs.AnyOf) != 0 ||
+		createArgs.Properties["assetId"].Type != "" ||
+		createArgs.Properties["parentCommandId"].Type != "string" {
+		t.Fatalf("expected constrained create_asset arguments, got %+v", createArgs)
+	}
+	moveAsset := commands.Items.AnyOf[2]
+	if !sameStrings(moveAsset.Properties["kind"].Enum, []string{"move_asset"}) {
+		t.Fatalf("expected move_asset branch, got %+v", moveAsset)
+	}
+	moveArgs := moveAsset.Properties["arguments"]
+	if !sameStrings(moveArgs.Required, []string{"assetId", "parentAssetId", "parentCommandId"}) ||
+		len(moveArgs.AnyOf) != 0 ||
+		len(moveArgs.Properties["parentAssetId"].AnyOf) != 2 ||
+		moveArgs.Properties["title"].Type != "" {
+		t.Fatalf("expected constrained move_asset arguments, got %+v", moveArgs)
 	}
 }
 

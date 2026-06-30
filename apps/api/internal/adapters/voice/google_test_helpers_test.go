@@ -66,7 +66,10 @@ func requestHasFunctionDeclaration(request map[string]any, name string) bool {
 }
 
 func generationConfigHasFinalResponseSchema(config map[string]any) bool {
-	schema, ok := config["responseSchema"].(map[string]any)
+	schema, ok := config["responseJsonSchema"].(map[string]any)
+	if !ok {
+		schema, ok = config["responseSchema"].(map[string]any)
+	}
 	if !ok || schema["type"] != "object" {
 		return false
 	}
@@ -97,6 +100,9 @@ func generationConfigHasFinalResponseSchema(config map[string]any) bool {
 
 func generationConfigHasActionPlanSchema(config map[string]any) bool {
 	schema, ok := config["responseSchema"].(map[string]any)
+	if !ok {
+		schema, ok = config["responseJsonSchema"].(map[string]any)
+	}
 	if !ok || schema["type"] != "object" {
 		return false
 	}
@@ -117,28 +123,66 @@ func generationConfigHasActionPlanSchema(config map[string]any) bool {
 		return false
 	}
 	items, ok := commands["items"].(map[string]any)
-	if !ok || items["type"] != "object" {
-		return false
-	}
-	itemProperties, ok := items["properties"].(map[string]any)
 	if !ok {
 		return false
 	}
-	arguments, ok := itemProperties["arguments"].(map[string]any)
-	if !ok || arguments["type"] != "object" {
+	branches, ok := items["anyOf"].([]any)
+	if !ok || len(branches) < 3 {
 		return false
 	}
-	argumentProperties, ok := arguments["properties"].(map[string]any)
+	createBranch, ok := branches[0].(map[string]any)
+	if !ok {
+		return false
+	}
+	createProperties, ok := createBranch["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
+	createKind, ok := createProperties["kind"].(map[string]any)
+	if !ok {
+		return false
+	}
+	createEnum, _ := createKind["enum"].([]any)
+	createArguments, ok := createProperties["arguments"].(map[string]any)
+	if !ok {
+		return false
+	}
+	createArgumentProperties, ok := createArguments["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
+	moveBranch, ok := branches[2].(map[string]any)
+	if !ok {
+		return false
+	}
+	moveProperties, ok := moveBranch["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
+	moveKind, ok := moveProperties["kind"].(map[string]any)
+	if !ok {
+		return false
+	}
+	moveEnum, _ := moveKind["enum"].([]any)
+	moveArguments, ok := moveProperties["arguments"].(map[string]any)
+	if !ok {
+		return false
+	}
+	moveArgumentProperties, ok := moveArguments["properties"].(map[string]any)
 	if !ok {
 		return false
 	}
 	_, hasIntent := actionPlanProperties["intentSummary"].(map[string]any)
 	_, hasInterpretation := actionPlanProperties["modelInterpretationSummary"].(map[string]any)
 	_, hasConfirmation := actionPlanProperties["confirmationSummary"].(map[string]any)
-	_, hasTitle := argumentProperties["title"].(map[string]any)
-	_, hasAssetID := argumentProperties["assetId"].(map[string]any)
-	_, hasParentCommandID := argumentProperties["parentCommandId"].(map[string]any)
-	return hasIntent && hasInterpretation && hasConfirmation && hasTitle && hasAssetID && hasParentCommandID
+	_, hasTitle := createArgumentProperties["title"].(map[string]any)
+	_, hasCreateParentCommandID := createArgumentProperties["parentCommandId"].(map[string]any)
+	_, hasAssetID := moveArgumentProperties["assetId"].(map[string]any)
+	_, hasMoveParentCommandID := moveArgumentProperties["parentCommandId"].(map[string]any)
+	return hasIntent && hasInterpretation && hasConfirmation &&
+		len(createEnum) == 1 && createEnum[0] == "create_asset" &&
+		len(moveEnum) == 1 && moveEnum[0] == "move_asset" &&
+		hasTitle && hasCreateParentCommandID && hasAssetID && hasMoveParentCommandID
 }
 
 func geminiFunctionCallResponse(name string, args map[string]any) map[string]any {

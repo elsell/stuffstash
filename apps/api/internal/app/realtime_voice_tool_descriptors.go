@@ -180,6 +180,15 @@ func realtimeVoiceSearchAuthorizedAssetsToolDescriptor() ports.AgentToolDescript
 	return ports.AgentToolDescriptor{}
 }
 
+func realtimeVoiceListAuthorizedAssetsToolDescriptor() ports.AgentToolDescriptor {
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolListAuthorizedAssets {
+			return tool
+		}
+	}
+	return ports.AgentToolDescriptor{}
+}
+
 func realtimeVoiceToolLabel(name string) string {
 	switch name {
 	case RealtimeVoiceToolProposeActionPlan:

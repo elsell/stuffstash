@@ -240,7 +240,7 @@ func TestRealtimeVoiceReturnsRecoverableToolErrorsToModel(t *testing.T) {
 	if !strings.Contains(language.seenToolResults[1][0].Content, `"status":"error"`) || !strings.Contains(language.seenToolResults[1][0].Content, `"retryable":true`) {
 		t.Fatalf("expected safe retryable tool error result, got %s", language.seenToolResults[1][0].Content)
 	}
-	if !strings.Contains(language.seenToolResults[1][0].Content, "parentCommandId") || !strings.Contains(language.seenToolResults[1][0].Content, "create_location") {
+	if !strings.Contains(language.seenToolResults[1][0].Content, "parentCommandId") || !strings.Contains(language.seenToolResults[1][0].Content, "missing location/container") {
 		t.Fatalf("expected action-plan repair guidance in tool error result, got %s", language.seenToolResults[1][0].Content)
 	}
 	if _, leaked := language.seenToolResults[1][0].Call.Arguments["apiKey"]; leaked {

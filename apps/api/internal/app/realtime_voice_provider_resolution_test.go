@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -221,5 +222,5 @@ type realtimeVoiceResolutionIDGenerator struct {
 
 func (g *realtimeVoiceResolutionIDGenerator) NewID() string {
 	g.counter++
-	return "voice-resolution-id"
+	return fmt.Sprintf("voice-resolution-id-%d", g.counter)
 }

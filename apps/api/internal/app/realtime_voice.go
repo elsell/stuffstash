@@ -352,10 +352,10 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			return ports.ErrInvalidProviderInput
 		}
 		for _, call := range modelTurn.ToolCalls {
-			if parentQuery := realtimeVoiceRequiredNestedCreateParentQuery(transcript, turn, toolResults); parentQuery != "" {
-				call = realtimeVoiceSearchCallWithQuery(call, parentQuery)
+			if selectedCall, diagnosticTitle := realtimeVoiceServerSelectedReadCall(transcript, turn, toolResults, call); diagnosticTitle != "" {
+				call = selectedCall
 				if input.Session.DeveloperDiagnostics {
-					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Server-selected parent read", realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
+					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, diagnosticTitle, realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
 						return err
 					}
 				}
@@ -507,7 +507,7 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 
 func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
 	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
-		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, apple-tv-remote-1, or kitchen-1. If this is a move/archive/restore request and you do not have the source item's assetId from a read tool, call search_authorized_assets for the source item before retrying the plan. For a new item the user wants to add, use create_asset with title or name and kind item; do not use move_asset, do not invent an assetId, and do not include assetId in create_asset arguments. When a new item belongs inside an existing visible parent, make it one create_asset command with parentAssetId set to the visible parent assetId. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location or create_asset container command and set the later command parentCommandId to that create command id. If the transcript names an outer room or place that you have not resolved yet, call a read tool for that parent before retrying the plan. If a missing container or surface belongs inside an existing visible location, create the container or surface with parentAssetId set to the visible location assetId, then create or move the item with parentCommandId set to the container command id. Use create_asset kind container for containers and surfaces; use create_location only for true rooms or places. Do not set a move command parentAssetId to null when the user named a destination."
+		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. For existing assets, assetId and parentAssetId must be opaque assetId values copied exactly from successful read tool results; never use titles or guessed IDs. For a new item, use one create_asset command with title or name and kind item; never include assetId and never add a move_asset command for that newly-created item. Put the new item directly in an existing visible parent with parentAssetId, or in a newly-created parent with parentCommandId. For missing destinations, create every missing location/container first, then reference those create commands with parentCommandId. If a missing container belongs inside an existing visible location, create the container with parentAssetId set to that visible location assetId, then create or move the requested item into the container with parentCommandId."
 	}
 	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
 }

@@ -187,7 +187,7 @@ func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGe
 	config := &geminiGenerationConfig{Temperature: 0}
 	if input.PlanOnly {
 		config.ResponseMimeType = "application/json"
-		config.ResponseSchema = geminiActionPlanResponseSchema()
+		config.ResponseJSONSchema = geminiActionPlanResponseSchema()
 		return config
 	}
 	if len(geminiToolsForTurn(input)) > 0 && !input.FinalOnly {
@@ -240,7 +240,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 			"For move_asset, assetId must be copied from a read-tool result.",
 			"For missing named destinations, create every missing path segment in order and reference earlier create commands with parentCommandId.",
 			"Use create_asset with kind container for household containers or surfaces. Use create_location only for true rooms or places.",
-			"Use create_asset with kind item for new items. Never include assetId in create_asset arguments.",
+			"Use create_asset with kind item for new items. Put the item directly in its existing parent with parentAssetId, or in a newly-created parent with parentCommandId.",
+			"Never include assetId in create_asset arguments. Never add a move_asset command for an item created earlier in the same plan.",
 			"Transcript: " + input.Transcript,
 		}...)
 		return strings.Join(lines, "\n")
@@ -261,7 +262,7 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"For add/create requests for a new item, use create_asset with title or name and kind item.",
 		"Do not invent an assetId for a new item; use move_asset only for an existing asset returned by a read tool.",
 		"Never include assetId in create_asset arguments; create_asset creates a new thing and needs title or name plus kind.",
-		"When a new item should go inside an existing parent, use one create_asset command with parentAssetId set to the visible parent. Do not create the item and then move it.",
+		"When a new item should go inside an existing parent, use one create_asset command with parentAssetId set to the visible parent. When it should go inside a parent created earlier in the same plan, use parentCommandId on the item create command. Do not create the item and then move it.",
 		"For write requests, the session is not complete until you either call propose_action_plan or ask a necessary clarification.",
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
 		"For nested create or move requests, resolve named outer locations and containers as separate search terms before proposing. A combined phrase search returning no matches does not prove each path segment is missing.",
@@ -286,7 +287,7 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"If you can answer without another tool call, return a final response that follows the provided response schema.",
 		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
-		"If a search has no matches, say you could not find a visible match; do not say the whole inventory is empty unless a broad list tool result proves it.",
+		"If a search has no matches, say you could not find a visible match and give a concise next step, such as asking for a more specific item name or adding the missing thing. Do not say the whole inventory is empty unless a broad list tool result proves it.",
 		"Do not include reasoning, IDs, markdown, or extra fields.",
 		"Transcript: " + input.Transcript,
 	}...)
@@ -754,16 +755,18 @@ type geminiFunctionDeclaration struct {
 }
 
 type geminiSchema struct {
-	Type        string                  `json:"type"`
+	Type        string                  `json:"type,omitempty"`
 	Description string                  `json:"description,omitempty"`
 	Properties  map[string]geminiSchema `json:"properties,omitempty"`
 	Required    []string                `json:"required,omitempty"`
 	Enum        []string                `json:"enum,omitempty"`
 	Items       *geminiSchema           `json:"items,omitempty"`
+	AnyOf       []geminiSchema          `json:"anyOf,omitempty"`
 }
 
 type geminiGenerationConfig struct {
-	Temperature      float64       `json:"temperature"`
-	ResponseMimeType string        `json:"responseMimeType,omitempty"`
-	ResponseSchema   *geminiSchema `json:"responseSchema,omitempty"`
+	Temperature        float64       `json:"temperature"`
+	ResponseMimeType   string        `json:"responseMimeType,omitempty"`
+	ResponseSchema     *geminiSchema `json:"responseSchema,omitempty"`
+	ResponseJSONSchema *geminiSchema `json:"responseJsonSchema,omitempty"`
 }

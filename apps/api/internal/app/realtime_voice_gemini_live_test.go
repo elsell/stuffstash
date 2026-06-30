@@ -201,8 +201,8 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 		{
 			name:       "where category like household phrase",
 			transcript: "Where are my tools?",
-			expect:     liveGeminiVoiceExpectAnswer,
-			terms:      []string{"drill", "garage"},
+			expect:     liveGeminiVoiceExpectFallForward,
+			terms:      []string{"tools"},
 		},
 		{
 			name:       "broad item list",

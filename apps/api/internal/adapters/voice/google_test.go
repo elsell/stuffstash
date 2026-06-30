@@ -400,6 +400,7 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
 		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
+		"give a concise next step",
 		"follows the provided response schema",
 	} {
 		if !strings.Contains(prompt, required) {
