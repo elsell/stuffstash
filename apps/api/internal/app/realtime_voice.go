@@ -44,6 +44,7 @@ const (
 	realtimeVoiceFailureSpeechToText              = "speech_to_text_failed"
 	realtimeVoiceFailureLanguageInference         = "language_inference_failed"
 	realtimeVoiceFailureTextToSpeech              = "text_to_speech_failed"
+	realtimeVoiceToolTurnBudget                   = 6
 )
 
 type RealtimeVoiceSessionInput struct {
@@ -265,7 +266,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	toolCallIDs := []string{}
 	executedToolCalls := map[string]struct{}{}
 	visibleAssetIDs := map[string]struct{}{}
-	for turn := 0; turn < 4; turn++ {
+	for turn := 0; turn < realtimeVoiceToolTurnBudget; turn++ {
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:           input.Session.TenantID,
 			InventoryID:        input.Session.InventoryID,
@@ -294,6 +295,19 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			}
 		}
 		if modelTurn.Final != nil {
+			if realtimeVoiceShouldRepairCreateClarification(transcript, *modelTurn.Final, toolResults) {
+				result, resultErr := realtimeVoiceFinalClarificationRepairResult(a.newRealtimeVoiceID())
+				if resultErr != nil {
+					return resultErr
+				}
+				toolResults = append(toolResults, result)
+				if input.Session.DeveloperDiagnostics {
+					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Final clarification repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+						return err
+					}
+				}
+				continue
+			}
 			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
 				if recoverableRealtimeVoiceToolError(err) {
 					return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, emit)
@@ -399,7 +413,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 }
 
 func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
-	return a.finalizeRealtimeVoiceWithToolResults(ctx, session, transcript, toolResults, toolCallIDs, 4, emit)
+	return a.finalizeRealtimeVoiceWithToolResults(ctx, session, transcript, toolResults, toolCallIDs, realtimeVoiceToolTurnBudget, emit)
 }
 
 func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
@@ -450,7 +464,7 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 
 func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
 	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
-		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, or kitchen-1. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location command for Kitchen and set the move command parentCommandId to that create command id."
+		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, or kitchen-1. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location command for Kitchen and set the move command parentCommandId to that create command id. Do not set a move command parentAssetId to null when the plan creates the requested destination."
 	}
 	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
 }

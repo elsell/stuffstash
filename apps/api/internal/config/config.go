@@ -55,6 +55,7 @@ const (
 	envMaxAttachmentBytes            = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
 	envVoiceDevFakeEnabled           = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
 	envVoiceGoogleEnabled            = "STUFF_STASH_VOICE_GOOGLE_ENABLED"
+	envVoiceProviderHTTPTimeout      = "STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT"
 	envGoogleCloudProject            = "STUFF_STASH_GOOGLE_CLOUD_PROJECT"
 	envGoogleCloudLocation           = "STUFF_STASH_GOOGLE_CLOUD_LOCATION"
 	envGoogleGeminiModel             = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
@@ -97,6 +98,7 @@ const (
 	defaultSpiceDBBootstrapMode      = false
 	defaultVoiceDevFakeEnabled       = false
 	defaultVoiceGoogleEnabled        = false
+	defaultVoiceProviderHTTPTimeout  = 60 * time.Second
 	defaultGoogleCloudLocation       = "us-central1"
 	defaultGoogleGeminiModel         = "gemini-2.5-flash-lite"
 	defaultGoogleTTSLanguageCode     = "en-US"
@@ -156,6 +158,7 @@ type Config struct {
 	MaxAttachmentBytes               int
 	VoiceDevFakeEnabled              bool
 	VoiceGoogleEnabled               bool
+	VoiceProviderHTTPTimeout         time.Duration
 	GoogleCloudProject               string
 	GoogleCloudLocation              string
 	GoogleGeminiModel                string
@@ -214,6 +217,7 @@ func Load() Config {
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 		VoiceDevFakeEnabled:              boolEnvOrDefault(envVoiceDevFakeEnabled, defaultVoiceDevFakeEnabled),
 		VoiceGoogleEnabled:               boolEnvOrDefault(envVoiceGoogleEnabled, defaultVoiceGoogleEnabled),
+		VoiceProviderHTTPTimeout:         durationEnvOrDefault(envVoiceProviderHTTPTimeout, defaultVoiceProviderHTTPTimeout),
 		GoogleCloudProject:               os.Getenv(envGoogleCloudProject),
 		GoogleCloudLocation:              envOrDefault(envGoogleCloudLocation, defaultGoogleCloudLocation),
 		GoogleGeminiModel:                envOrDefault(envGoogleGeminiModel, defaultGoogleGeminiModel),

@@ -81,6 +81,51 @@ func TestGoogleProviderProfileFactoryBuildsAPIKeyBackedGeminiProviders(t *testin
 	}
 }
 
+func TestGoogleProviderProfileFactoryAppliesProfileHTTPTimeout(t *testing.T) {
+	t.Parallel()
+
+	options := `{"projectId":"project","location":"us-central1","languageCode":"en-US","voiceName":"en-US-Standard-C","httpTimeout":"75s"}`
+	config := ProviderProfileProviderConfig{
+		CredentialPurpose: ports.ProviderCredentialPurposeOAuthBearer,
+		Credential:        []byte("access-token"),
+	}
+	factory := GoogleProviderProfileFactory{}
+
+	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, options)
+	language, err := factory.LanguageInferenceProvider(context.Background(), config)
+	if err != nil {
+		t.Fatalf("build language provider: %v", err)
+	}
+	languageProvider, ok := language.(GoogleGeminiLanguageInference)
+	if !ok || languageProvider.client.httpClient.Timeout != 75*time.Second {
+		t.Fatalf("unexpected language timeout provider: %#v", language)
+	}
+
+	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityTextToSpeech, options)
+	tts, err := factory.TextToSpeechProvider(context.Background(), config)
+	if err != nil {
+		t.Fatalf("build text-to-speech provider: %v", err)
+	}
+	ttsProvider, ok := tts.(GoogleTextToSpeech)
+	if !ok || ttsProvider.client.httpClient.Timeout != 75*time.Second {
+		t.Fatalf("unexpected text-to-speech timeout provider: %#v", tts)
+	}
+}
+
+func TestGoogleProviderProfileFactoryRejectsMalformedProfileHTTPTimeout(t *testing.T) {
+	t.Parallel()
+
+	factory := GoogleProviderProfileFactory{}
+	_, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
+		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{"projectId":"project","location":"us-central1","httpTimeout":"0s"}`),
+		CredentialPurpose: ports.ProviderCredentialPurposeOAuthBearer,
+		Credential:        []byte("access-token"),
+	})
+	if err != ports.ErrInvalidProviderInput {
+		t.Fatalf("expected invalid timeout rejection, got %v", err)
+	}
+}
+
 func googleFactoryProfile(t *testing.T, capability agentmodel.ProviderCapability, runtimeOptions string) agentmodel.ProviderProfile {
 	t.Helper()
 

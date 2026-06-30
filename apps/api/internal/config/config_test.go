@@ -43,6 +43,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envMaxAttachmentBytes, "")
 	t.Setenv(envVoiceDevFakeEnabled, "")
 	t.Setenv(envVoiceGoogleEnabled, "")
+	t.Setenv(envVoiceProviderHTTPTimeout, "")
 	t.Setenv(envGoogleCloudProject, "")
 	t.Setenv(envGoogleCloudLocation, "")
 	t.Setenv(envGoogleGeminiModel, "")
@@ -148,6 +149,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.VoiceGoogleEnabled {
 		t.Fatalf("expected Google voice providers disabled by default")
 	}
+	if cfg.VoiceProviderHTTPTimeout != defaultVoiceProviderHTTPTimeout {
+		t.Fatalf("expected voice provider HTTP timeout %s, got %s", defaultVoiceProviderHTTPTimeout, cfg.VoiceProviderHTTPTimeout)
+	}
 	if cfg.GoogleCloudProject != "" || cfg.GoogleCloudLocation != defaultGoogleCloudLocation || cfg.GoogleGeminiModel != defaultGoogleGeminiModel || cfg.GoogleTTSLanguageCode != defaultGoogleTTSLanguageCode || cfg.GoogleTTSVoiceName != defaultGoogleTTSVoiceName {
 		t.Fatalf("unexpected Google voice defaults: %+v", cfg)
 	}
@@ -207,6 +211,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envMaxAttachmentBytes, "12345")
 	t.Setenv(envVoiceDevFakeEnabled, "true")
 	t.Setenv(envVoiceGoogleEnabled, "true")
+	t.Setenv(envVoiceProviderHTTPTimeout, "75s")
 	t.Setenv(envGoogleCloudProject, "pianotechpros")
 	t.Setenv(envGoogleCloudLocation, "us-east5")
 	t.Setenv(envGoogleGeminiModel, "gemini-test-model")
@@ -305,6 +310,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if !cfg.VoiceDevFakeEnabled {
 		t.Fatalf("expected voice dev fake providers enabled")
+	}
+	if cfg.VoiceProviderHTTPTimeout.String() != "1m15s" {
+		t.Fatalf("expected voice provider HTTP timeout 75s, got %s", cfg.VoiceProviderHTTPTimeout)
 	}
 	if !cfg.VoiceGoogleEnabled || cfg.GoogleCloudProject != "pianotechpros" || cfg.GoogleCloudLocation != "us-east5" || cfg.GoogleGeminiModel != "gemini-test-model" || cfg.GoogleTTSLanguageCode != "en-GB" || cfg.GoogleTTSVoiceName != "en-GB-Neural2-A" {
 		t.Fatalf("unexpected Google voice config: %+v", cfg)

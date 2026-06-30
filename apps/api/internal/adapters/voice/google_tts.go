@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 
@@ -17,6 +18,7 @@ type GoogleTextToSpeechConfig struct {
 	BaseURL      string
 	TokenSource  oauth2.TokenSource
 	HTTPClient   *http.Client
+	HTTPTimeout  time.Duration
 }
 
 type GoogleTextToSpeech struct {
@@ -31,7 +33,7 @@ func NewGoogleTextToSpeech(cfg GoogleTextToSpeechConfig) GoogleTextToSpeech {
 		baseURL = "https://texttospeech.googleapis.com"
 	}
 	return GoogleTextToSpeech{
-		client:       newGoogleHTTPClient(baseURL, cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject, ""),
+		client:       newGoogleHTTPClient(baseURL, cfg.HTTPClient, cfg.HTTPTimeout, cfg.TokenSource, cfg.QuotaProject, ""),
 		languageCode: cfg.LanguageCode,
 		voiceName:    cfg.VoiceName,
 	}

@@ -103,6 +103,73 @@ func TestGoogleGeminiLiveMoveWaterBottleToMissingKitchenProposesPlan(t *testing.
 	assertLiveGeminiVoiceKitchenMoveProposal(t, *proposed, events)
 }
 
+func TestGoogleGeminiLiveMoveWaterBottleToNestedMissingPathProposesPlan(t *testing.T) {
+	if os.Getenv("STUFF_STASH_GOOGLE_LIVE_TESTS") != "1" {
+		t.Skip("set STUFF_STASH_GOOGLE_LIVE_TESTS=1 to run the live Gemini regression")
+	}
+	projectID := strings.TrimSpace(os.Getenv("STUFF_STASH_GOOGLE_CLOUD_PROJECT"))
+	if projectID == "" {
+		t.Skip("set STUFF_STASH_GOOGLE_CLOUD_PROJECT to run the live Gemini regression")
+	}
+	location := strings.TrimSpace(os.Getenv("STUFF_STASH_GOOGLE_CLOUD_LOCATION"))
+	if location == "" {
+		location = "us-central1"
+	}
+	model := strings.TrimSpace(os.Getenv("STUFF_STASH_GOOGLE_GEMINI_MODEL"))
+	if model == "" {
+		model = "gemini-2.5-flash-lite"
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the second shelf in the big cabinet in the kitchen."}
+	resolver.providers.LanguageInference = voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
+		ProjectID:    projectID,
+		Location:     location,
+		Model:        model,
+		QuotaProject: projectID,
+		TokenSource:  liveGoogleTokenSource(t, ctx),
+	})
+	resolver.providers.TextToSpeech = &resolvedTextToSpeech{}
+	application, store := newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t, resolver, newFakeRealtimeSessionRepository(), &fakeIDGenerator{})
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	if err := store.CreateAsset(ctx, waterBottle, audit.Record{ID: audit.ID("audit-water-bottle"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "water-bottle-1", OccurredAt: time.Date(2026, 6, 29, 12, 1, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed water bottle: %v", err)
+	}
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(ctx, sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(ctx, RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v\n%s", err, liveGeminiVoiceDiagnostics(events))
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	for index := range events {
+		event := events[index]
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		if event.Type == RealtimeVoiceEventAssistantResponseCompleted || event.Type == RealtimeVoiceEventSessionCompleted {
+			t.Fatalf("expected live Gemini nested proposal to pause before final completion, got %+v\n%s", event, liveGeminiVoiceDiagnostics(events))
+		}
+	}
+	if proposed == nil {
+		t.Fatalf("expected live Gemini to propose nested move plan, got events:\n%s", liveGeminiVoiceDiagnostics(events))
+	}
+	assertLiveGeminiVoiceNestedMoveProposal(t, *proposed, events)
+}
+
 func liveGoogleTokenSource(t *testing.T, ctx context.Context) oauth2.TokenSource {
 	t.Helper()
 
@@ -140,6 +207,39 @@ func assertLiveGeminiVoiceKitchenMoveProposal(t *testing.T, proposed RealtimeVoi
 	}
 	if kitchenCommandID == "" || !sawKitchenCreate || !sawWaterBottleMove {
 		t.Fatalf("expected create Kitchen plus move Water bottle into that command, got %+v\n%s", proposed, liveGeminiVoiceDiagnostics(events))
+	}
+}
+
+func assertLiveGeminiVoiceNestedMoveProposal(t *testing.T, proposed RealtimeVoiceActionPlanProposal, events []RealtimeVoiceEvent) {
+	t.Helper()
+
+	commandIDByTitle := map[string]string{}
+	for _, command := range proposed.Commands {
+		if command.Title != "" {
+			commandIDByTitle[strings.ToLower(command.Title)] = command.ID
+		}
+	}
+	kitchenID := commandIDByTitle["kitchen"]
+	cabinetID := commandIDByTitle["big cabinet"]
+	shelfID := commandIDByTitle["second shelf"]
+	if kitchenID == "" || cabinetID == "" || shelfID == "" {
+		t.Fatalf("expected Kitchen, Big cabinet, and Second shelf creates, got %+v\n%s", proposed, liveGeminiVoiceDiagnostics(events))
+	}
+	sawCabinetInKitchen := false
+	sawShelfInCabinet := false
+	sawMoveToShelf := false
+	for _, command := range proposed.Commands {
+		switch {
+		case strings.EqualFold(command.Title, "Big cabinet") && command.ParentCommandID == kitchenID:
+			sawCabinetInKitchen = true
+		case strings.EqualFold(command.Title, "Second shelf") && command.ParentCommandID == cabinetID:
+			sawShelfInCabinet = true
+		case command.Kind == string(actionplan.CommandKindMoveAsset) && command.ParentCommandID == shelfID:
+			sawMoveToShelf = true
+		}
+	}
+	if !sawCabinetInKitchen || !sawShelfInCabinet || !sawMoveToShelf {
+		t.Fatalf("expected nested create path and move into Second shelf, got %+v\n%s", proposed, liveGeminiVoiceDiagnostics(events))
 	}
 }
 

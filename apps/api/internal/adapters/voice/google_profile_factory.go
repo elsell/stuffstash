@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -50,6 +51,10 @@ func (GoogleProviderProfileFactory) TextToSpeechProvider(_ context.Context, conf
 	if languageCode == "" || voiceName == "" {
 		return nil, ports.ErrInvalidProviderInput
 	}
+	httpTimeout, err := httpTimeoutOption(options)
+	if err != nil {
+		return nil, err
+	}
 	baseURL := config.Profile.EndpointURL.String()
 	return NewGoogleTextToSpeech(GoogleTextToSpeechConfig{
 		LanguageCode: languageCode,
@@ -57,6 +62,7 @@ func (GoogleProviderProfileFactory) TextToSpeechProvider(_ context.Context, conf
 		QuotaProject: quotaProjectOption(options),
 		BaseURL:      baseURL,
 		TokenSource:  oauth2.StaticTokenSource(&oauth2.Token{AccessToken: strings.TrimSpace(string(config.Credential)), TokenType: "Bearer"}),
+		HTTPTimeout:  httpTimeout,
 	}), nil
 }
 
@@ -72,6 +78,10 @@ func googleGeminiConfigFromProfile(config ProviderProfileProviderConfig) (Google
 	if model == "" {
 		return GoogleGeminiConfig{}, ports.ErrInvalidProviderInput
 	}
+	httpTimeout, err := httpTimeoutOption(options)
+	if err != nil {
+		return GoogleGeminiConfig{}, err
+	}
 	if config.CredentialPurpose == ports.ProviderCredentialPurposeAPIKey {
 		apiKey := strings.TrimSpace(string(config.Credential))
 		if apiKey == "" {
@@ -82,6 +92,7 @@ func googleGeminiConfigFromProfile(config ProviderProfileProviderConfig) (Google
 			BaseURL:     config.Profile.EndpointURL.String(),
 			APIKey:      apiKey,
 			TokenSource: nil,
+			HTTPTimeout: httpTimeout,
 		}, nil
 	}
 	if config.CredentialPurpose != ports.ProviderCredentialPurposeOAuthBearer {
@@ -99,6 +110,7 @@ func googleGeminiConfigFromProfile(config ProviderProfileProviderConfig) (Google
 		QuotaProject: quotaProjectOption(options),
 		BaseURL:      config.Profile.EndpointURL.String(),
 		TokenSource:  oauth2.StaticTokenSource(&oauth2.Token{AccessToken: strings.TrimSpace(string(config.Credential)), TokenType: "Bearer"}),
+		HTTPTimeout:  httpTimeout,
 	}, nil
 }
 
@@ -120,4 +132,16 @@ func quotaProjectOption(options map[string]any) string {
 		return quotaProject
 	}
 	return stringOption(options, "projectId")
+}
+
+func httpTimeoutOption(options map[string]any) (time.Duration, error) {
+	timeout := stringOption(options, "httpTimeout")
+	if timeout == "" {
+		return 0, nil
+	}
+	parsed, err := time.ParseDuration(timeout)
+	if err != nil || parsed <= 0 {
+		return 0, ports.ErrInvalidProviderInput
+	}
+	return parsed, nil
 }

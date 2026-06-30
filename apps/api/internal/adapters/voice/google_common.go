@@ -14,6 +14,7 @@ import (
 )
 
 const googleCloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+const googleDefaultHTTPTimeout = 60 * time.Second
 
 type googleHTTPClient struct {
 	baseURL      string
@@ -23,9 +24,12 @@ type googleHTTPClient struct {
 	apiKey       string
 }
 
-func newGoogleHTTPClient(baseURL string, httpClient *http.Client, tokenSource oauth2.TokenSource, quotaProject string, apiKey string) googleHTTPClient {
+func newGoogleHTTPClient(baseURL string, httpClient *http.Client, httpTimeout time.Duration, tokenSource oauth2.TokenSource, quotaProject string, apiKey string) googleHTTPClient {
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 30 * time.Second}
+		if httpTimeout <= 0 {
+			httpTimeout = googleDefaultHTTPTimeout
+		}
+		httpClient = &http.Client{Timeout: httpTimeout}
 	}
 	return googleHTTPClient{
 		baseURL:      strings.TrimRight(baseURL, "/"),

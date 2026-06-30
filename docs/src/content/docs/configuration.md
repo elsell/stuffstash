@@ -114,6 +114,7 @@ such as local Garage verification.
 | --- | --- | --- |
 | `STUFF_STASH_VOICE_DEV_FAKE_ENABLED` | `false` | Enables local development fake speech, language, and speech output providers. |
 | `STUFF_STASH_VOICE_GOOGLE_ENABLED` | `false` | Enables Google realtime voice provider adapters. |
+| `STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT` | `60s` | HTTP timeout for configured realtime voice provider calls. |
 | `STUFF_STASH_GOOGLE_CLOUD_PROJECT` | empty | Google Cloud project ID. Required when Google voice providers are enabled. |
 | `STUFF_STASH_GOOGLE_CLOUD_LOCATION` | `us-central1` | Google Cloud location for Gemini. |
 | `STUFF_STASH_GOOGLE_GEMINI_MODEL` | `gemini-2.5-flash-lite` | Gemini model name. |

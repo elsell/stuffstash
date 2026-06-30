@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/oauth2"
 
@@ -24,6 +25,7 @@ type GoogleGeminiConfig struct {
 	APIKey       string
 	TokenSource  oauth2.TokenSource
 	HTTPClient   *http.Client
+	HTTPTimeout  time.Duration
 }
 
 type GoogleGeminiSpeechToText struct {
@@ -33,7 +35,7 @@ type GoogleGeminiSpeechToText struct {
 
 func NewGoogleGeminiSpeechToText(cfg GoogleGeminiConfig) GoogleGeminiSpeechToText {
 	return GoogleGeminiSpeechToText{
-		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject, cfg.APIKey),
+		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.HTTPTimeout, cfg.TokenSource, cfg.QuotaProject, cfg.APIKey),
 		path:   googleGeminiPath(cfg),
 	}
 }
@@ -99,7 +101,7 @@ type GoogleGeminiLanguageInference struct {
 
 func NewGoogleGeminiLanguageInference(cfg GoogleGeminiConfig) GoogleGeminiLanguageInference {
 	return GoogleGeminiLanguageInference{
-		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.TokenSource, cfg.QuotaProject, cfg.APIKey),
+		client: newGoogleHTTPClient(googleGeminiBaseURL(cfg), cfg.HTTPClient, cfg.HTTPTimeout, cfg.TokenSource, cfg.QuotaProject, cfg.APIKey),
 		path:   googleGeminiPath(cfg),
 	}
 }
@@ -193,10 +195,12 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"For write requests, the session is not complete until you either call propose_action_plan or ask a necessary clarification.",
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
 		"For missing parent containers or locations requested by the user, propose an ordered commands array and use parentCommandId to place later creates or moves inside earlier creates.",
-		"Assume the user wants missing named locations or containers created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, or Shelf.",
+		"Assume the user wants missing named locations or containers created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, Big cabinet, or Second shelf.",
+		"For nested missing destinations, create every missing path segment in order, then move or create the requested item into the deepest created command.",
 		"For a clear write request with a missing destination, do not ask whether to create it; call propose_action_plan so the mobile approval sheet can ask for confirmation.",
 		"Ask for clarification instead only when the requested destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription.",
 		"For example, if the user says move my water bottle to the kitchen and Kitchen is not visible, create a Kitchen command with an id such as cmd-kitchen, then set the move command parentCommandId to cmd-kitchen.",
+		"For example, if the user says move my water bottle to the second shelf in the big cabinet in the kitchen and none of that path is visible, create Kitchen, create Big cabinet with parentCommandId cmd-kitchen, create Second shelf with parentCommandId cmd-big-cabinet, then move the water bottle with parentCommandId cmd-second-shelf.",
 		"Action-plan command arguments must be structured JSON. For create_asset use title or name, optional kind item|container|location, optional description, optional parentAssetId, or optional parentCommandId only. For move_asset use assetId plus parentAssetId, parentCommandId, or null parentAssetId.",
 		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
 		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",

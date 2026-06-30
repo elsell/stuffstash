@@ -32,6 +32,9 @@ func parseRealtimeVoiceActionPlanArgs(args map[string]any) (realtimeVoiceActionP
 	if parsed.IntentSummary == "" || parsed.ModelInterpretationSummary == "" || parsed.ConfirmationSummary == "" || len(parsed.Commands) == 0 {
 		return realtimeVoiceActionPlanArgs{}, ports.ErrInvalidProviderInput
 	}
+	if err := validateRealtimeVoiceActionPlanMoveDependencies(parsed); err != nil {
+		return realtimeVoiceActionPlanArgs{}, err
+	}
 	return parsed, nil
 }
 
@@ -76,7 +79,8 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 				previousCommandIDs[commandID] = struct{}{}
 			}
 		}
-		return canonicalRealtimeVoiceActionPlanCommandDependencies(commands), nil
+		commands = canonicalRealtimeVoiceActionPlanCommandDependencies(commands)
+		return commands, nil
 	}
 
 	commandKind := actionplan.CommandKind(strings.TrimSpace(stringArg(args["commandKind"])))
@@ -97,6 +101,56 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 		Summary:   summary,
 		Arguments: arguments,
 	}}, nil
+}
+
+func validateRealtimeVoiceActionPlanMoveDependencies(plan realtimeVoiceActionPlanArgs) error {
+	createdTitles := []string{}
+	planText := strings.ToLower(plan.IntentSummary + " " + plan.ModelInterpretationSummary + " " + plan.ConfirmationSummary)
+	if planText == "" {
+		return nil
+	}
+	for _, command := range plan.Commands {
+		if command.Kind != actionplan.CommandKindCreateAsset && command.Kind != actionplan.CommandKindCreateLocation {
+			continue
+		}
+		title := strings.ToLower(strings.TrimSpace(firstStringArg(command.Arguments["title"], command.Arguments["name"])))
+		if title != "" {
+			createdTitles = append(createdTitles, title)
+		}
+	}
+	if len(createdTitles) == 0 {
+		return nil
+	}
+	for _, command := range plan.Commands {
+		if command.Kind != actionplan.CommandKindMoveAsset {
+			continue
+		}
+		if strings.TrimSpace(stringArg(command.Arguments["parentAssetId"])) != "" || strings.TrimSpace(stringArg(command.Arguments["parentCommandId"])) != "" {
+			continue
+		}
+		for _, title := range createdTitles {
+			if realtimeVoicePlanTextTargetsCreatedTitle(planText, title) {
+				return ports.ErrInvalidProviderInput
+			}
+		}
+	}
+	return nil
+}
+
+func realtimeVoicePlanTextTargetsCreatedTitle(planText string, title string) bool {
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return false
+	}
+	for _, prefix := range []string{" to ", " into ", " inside ", " in "} {
+		if strings.Contains(planText, prefix+title) ||
+			strings.Contains(planText, prefix+"the "+title) ||
+			strings.Contains(planText, prefix+"a "+title) ||
+			strings.Contains(planText, prefix+"an "+title) {
+			return true
+		}
+	}
+	return false
 }
 
 func firstStringArg(values ...any) string {

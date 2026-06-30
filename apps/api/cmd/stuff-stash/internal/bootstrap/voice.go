@@ -78,6 +78,7 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 		Model:        cfg.GoogleGeminiModel,
 		QuotaProject: strings.TrimSpace(cfg.GoogleCloudProject),
 		TokenSource:  tokenSource,
+		HTTPTimeout:  cfg.VoiceProviderHTTPTimeout,
 	}
 	return voice.NewGoogleGeminiSpeechToText(geminiConfig),
 		voice.NewGoogleGeminiLanguageInference(geminiConfig),
@@ -86,6 +87,7 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 			VoiceName:    cfg.GoogleTTSVoiceName,
 			QuotaProject: strings.TrimSpace(cfg.GoogleCloudProject),
 			TokenSource:  tokenSource,
+			HTTPTimeout:  cfg.VoiceProviderHTTPTimeout,
 		}), nil
 }
 

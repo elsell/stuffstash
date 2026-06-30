@@ -632,6 +632,8 @@ func TestRealtimeVoiceRequestsFinalOnlyTurnWhenToolBudgetIsExhausted(t *testing.
 		invalidToolTurn("bad-tool-2"),
 		invalidToolTurn("bad-tool-3"),
 		invalidToolTurn("bad-tool-4"),
+		invalidToolTurn("bad-tool-5"),
+		invalidToolTurn("bad-tool-6"),
 		{
 			Final: &ports.StructuredAgentResponse{
 				Kind:            ports.StructuredAgentResponseKindUnsupportedAction,
@@ -657,11 +659,11 @@ func TestRealtimeVoiceRequestsFinalOnlyTurnWhenToolBudgetIsExhausted(t *testing.
 	if err != nil {
 		t.Fatalf("run realtime voice query: %v", err)
 	}
-	if len(language.seenFinalOnly) != 5 || !language.seenFinalOnly[4] {
-		t.Fatalf("expected fifth turn to be final-only, got %+v", language.seenFinalOnly)
+	if len(language.seenFinalOnly) != 7 || !language.seenFinalOnly[6] {
+		t.Fatalf("expected seventh turn to be final-only, got %+v", language.seenFinalOnly)
 	}
-	if len(language.seenTools[4]) != 0 {
-		t.Fatalf("expected no tools on final-only turn, got %+v", language.seenTools[4])
+	if len(language.seenTools[6]) != 0 {
+		t.Fatalf("expected no tools on final-only turn, got %+v", language.seenTools[6])
 	}
 	if tts.lastText != "I could not complete that with the available tools." {
 		t.Fatalf("expected final-only response to be spoken, got %q", tts.lastText)
