@@ -70,25 +70,39 @@ func TestRealtimeVoiceFinalizesReadOnlyAnswerWithConstrainedFinalTurn(t *testing
 	}
 }
 
+func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *testing.T) {
+	t.Parallel()
+
+	call, _, ok := realtimeVoiceServerSelectedReadCallWithoutModel("What's in the toolbox?", 0, nil, "read-1")
+	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "toolbox" {
+		t.Fatalf("expected proactive toolbox search, got ok=%v call=%+v", ok, call)
+	}
+	call, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("Add a phone charger to the office.", 0, nil, "read-2")
+	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "office" {
+		t.Fatalf("expected proactive office search, got ok=%v call=%+v", ok, call)
+	}
+	_, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("Add an Apple TV remote to the box under the TV in the living room.", 0, nil, "read-3")
+	if ok {
+		t.Fatalf("did not expect proactive read for nested create path")
+	}
+	for _, transcript := range []string{
+		"Put my water bottle in the kitchen.",
+		"Store the drill in the garage.",
+		"Stash it in the toolbox.",
+		"Place my passport in the office.",
+		"Move my water bottle to the kitchen.",
+	} {
+		if call, _, ok := realtimeVoiceServerSelectedReadCallWithoutModel(transcript, 0, nil, "read-move-like"); ok {
+			t.Fatalf("did not expect proactive destination read for %q, got %+v", transcript, call)
+		}
+	}
+}
+
 func TestRealtimeVoiceListsContentsAfterContainerSearchForContentsQuestion(t *testing.T) {
 	t.Parallel()
 
 	tts := &resolvedTextToSpeech{}
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-toolbox",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "toolbox"},
-			}},
-		},
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-again",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "toolbox"},
-			}},
-		},
 		{
 			Final: &ports.StructuredAgentResponse{
 				Kind:            ports.StructuredAgentResponseKindAnswer,
@@ -124,10 +138,10 @@ func TestRealtimeVoiceListsContentsAfterContainerSearchForContentsQuestion(t *te
 	}); err != nil {
 		t.Fatalf("run realtime voice query: %T %[1]v", err)
 	}
-	if len(language.seenTools) < 2 || len(language.seenTools[1]) != 1 || language.seenTools[1][0].Name != RealtimeVoiceToolListAuthorizedAssets {
-		t.Fatalf("expected contents phase to expose only list, got %+v", language.seenTools)
+	if len(language.seenTools) != 1 || len(language.seenTools[0]) != 0 {
+		t.Fatalf("expected only final model turn after server-selected reads, got %+v", language.seenTools)
 	}
-	if len(language.seenToolResults) < 3 || len(language.seenToolResults[2]) < 2 || language.seenToolResults[2][1].Name != RealtimeVoiceToolListAuthorizedAssets || !containsAll(language.seenToolResults[2][1].Content, "Toolbox", "Cordless drill") {
+	if len(language.seenToolResults) != 1 || len(language.seenToolResults[0]) < 2 || language.seenToolResults[0][0].Name != RealtimeVoiceToolSearchAuthorizedAssets || language.seenToolResults[0][1].Name != RealtimeVoiceToolListAuthorizedAssets || !containsAll(language.seenToolResults[0][1].Content, "Toolbox", "Cordless drill") {
 		t.Fatalf("expected contents list result with drill, got %+v", language.seenToolResults)
 	}
 	if tts.lastText != "The toolbox contains the cordless drill." {
@@ -195,20 +209,6 @@ func TestRealtimeVoiceContentsListPrefersNamedContainerOverOverlappingLocation(t
 	tts := &resolvedTextToSpeech{}
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
 		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-tv",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "tv"},
-			}},
-		},
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-again",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "tv"},
-			}},
-		},
-		{
 			Final: &ports.StructuredAgentResponse{
 				Kind:            ports.StructuredAgentResponseKindAnswer,
 				SpokenResponse:  "The TV box contains the remote.",
@@ -243,10 +243,10 @@ func TestRealtimeVoiceContentsListPrefersNamedContainerOverOverlappingLocation(t
 	}); err != nil {
 		t.Fatalf("run realtime voice query: %T %[1]v", err)
 	}
-	if len(language.seenToolResults) < 3 || len(language.seenToolResults[2]) < 2 {
+	if len(language.seenToolResults) != 1 || len(language.seenToolResults[0]) < 2 {
 		t.Fatalf("expected server-selected contents list result, got %+v", language.seenToolResults)
 	}
-	result := language.seenToolResults[2][1]
+	result := language.seenToolResults[0][1]
 	if result.Name != RealtimeVoiceToolListAuthorizedAssets || !containsAll(result.Content, `"parentTitle":"TV box"`, "Remote") {
 		t.Fatalf("expected contents list to target TV box, got %+v", result)
 	}
@@ -256,20 +256,6 @@ func TestRealtimeVoiceReadsDestinationBeforePlanningCreateInNamedParent(t *testi
 	t.Parallel()
 
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-phone-charger",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "phone charger"},
-			}},
-		},
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-phone-again",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "phone charger"},
-			}},
-		},
 		{
 			ToolCalls: []ports.AgentToolCall{{
 				ID:   "plan-phone-charger",
@@ -316,7 +302,7 @@ func TestRealtimeVoiceReadsDestinationBeforePlanningCreateInNamedParent(t *testi
 	}); err != nil {
 		t.Fatalf("run realtime voice query: %T %[1]v", err)
 	}
-	if len(language.seenToolResults) < 3 || len(language.seenToolResults[2]) < 2 || language.seenToolResults[2][1].Name != RealtimeVoiceToolSearchAuthorizedAssets || !containsAll(language.seenToolResults[2][1].Content, `"query":"office"`, "office-1") {
+	if len(language.seenToolResults) != 1 || len(language.seenToolResults[0]) != 1 || language.seenToolResults[0][0].Name != RealtimeVoiceToolSearchAuthorizedAssets || !containsAll(language.seenToolResults[0][0].Content, `"query":"office"`, "office-1") {
 		t.Fatalf("expected server-selected Office destination read, got %+v", language.seenToolResults)
 	}
 	if proposed == nil || len(proposed.Commands) != 1 || proposed.Commands[0].ParentAssetID != "office-1" {

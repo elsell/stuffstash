@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -48,7 +49,11 @@ func TestRealtimeVoiceStreamsVerboseAgentDiagnostics(t *testing.T) {
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
 	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
 
 	sessionInput := defaultRealtimeVoiceSessionInput()
 	sessionInput.DeveloperDiagnostics = true
@@ -288,7 +293,11 @@ func TestRealtimeVoiceEmitsDiagnosticWhenLanguageContinuationFailsAfterTools(t *
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
 	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
 
 	sessionInput := defaultRealtimeVoiceSessionInput()
 	sessionInput.DeveloperDiagnostics = true
@@ -342,7 +351,11 @@ func TestRealtimeVoiceDowngradesUnsafeProviderDiagnosticCategories(t *testing.T)
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
 	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
 
 	sessionInput := defaultRealtimeVoiceSessionInput()
 	sessionInput.DeveloperDiagnostics = true

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -79,7 +80,13 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 	}
 	defer httpResponse.Body.Close()
 	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
-		return googleProviderHTTPError{statusCode: httpResponse.StatusCode}
+		return googleProviderHTTPError{
+			statusCode: httpResponse.StatusCode,
+			retryAfter: googleRetryAfterDuration(
+				httpResponse.Header.Get("Retry-After"),
+				time.Now(),
+			),
+		}
 	}
 	return json.NewDecoder(httpResponse.Body).Decode(response)
 }
@@ -96,6 +103,7 @@ func (googleProviderTimeoutError) SafeRealtimeVoiceDiagnostic() string {
 
 type googleProviderHTTPError struct {
 	statusCode int
+	retryAfter time.Duration
 }
 
 func (e googleProviderHTTPError) Error() string {
@@ -104,6 +112,27 @@ func (e googleProviderHTTPError) Error() string {
 
 func (e googleProviderHTTPError) SafeRealtimeVoiceDiagnostic() string {
 	return fmt.Sprintf("provider_http_status_%d", e.statusCode)
+}
+
+func googleRetryAfterDuration(value string, now time.Time) time.Duration {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return 0
+	}
+	if seconds, err := strconv.Atoi(value); err == nil {
+		if seconds <= 0 {
+			return 0
+		}
+		return time.Duration(seconds) * time.Second
+	}
+	when, err := http.ParseTime(value)
+	if err != nil {
+		return 0
+	}
+	if !when.After(now) {
+		return 0
+	}
+	return when.Sub(now)
 }
 
 func firstGeminiText(response geminiGenerateContentResponse) string {

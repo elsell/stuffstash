@@ -18,7 +18,9 @@ import (
 func TestGoogleGeminiLanguageInferenceReportsSafeHTTPStatusWithoutBody(t *testing.T) {
 	t.Parallel()
 
+	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
 		w.WriteHeader(http.StatusTooManyRequests)
 		_, _ = w.Write([]byte(`{"error":{"message":"quota exhausted for secret-project and bearer should-not-leak"}}`))
 	}))
@@ -42,6 +44,25 @@ func TestGoogleGeminiLanguageInferenceReportsSafeHTTPStatusWithoutBody(t *testin
 	}
 	if strings.Contains(err.Error(), "secret-project") || strings.Contains(err.Error(), "should-not-leak") {
 		t.Fatalf("provider error leaked response body: %v", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected bounded retry before surfacing 429, got %d calls", calls)
+	}
+}
+
+func TestGoogleRetryAfterDurationParsesSecondsAndHTTPDate(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 6, 30, 12, 0, 0, 0, time.UTC)
+	if got := googleRetryAfterDuration("2", now); got != 2*time.Second {
+		t.Fatalf("expected seconds retry-after, got %s", got)
+	}
+	date := now.Add(1500 * time.Millisecond).UTC().Format(http.TimeFormat)
+	if got := googleRetryAfterDuration(date, now); got != time.Second {
+		t.Fatalf("expected rounded HTTP-date retry-after, got %s", got)
+	}
+	if got := googleRetryAfterDuration("nonsense", now); got != 0 {
+		t.Fatalf("expected invalid retry-after to be ignored, got %s", got)
 	}
 }
 

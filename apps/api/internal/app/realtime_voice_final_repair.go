@@ -55,6 +55,39 @@ func realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(transcript string, r
 	return true
 }
 
+func realtimeVoiceMissingMoveSourceResponse(transcript string, toolResults []ports.AgentToolResult) (ports.StructuredAgentResponse, bool) {
+	if !realtimeVoiceLooksLikeMoveRequest(transcript) {
+		return ports.StructuredAgentResponse{}, false
+	}
+	source := realtimeVoiceRequestedMoveSource(transcript)
+	if source == "" || source == "it" || source == "them" {
+		return ports.StructuredAgentResponse{}, false
+	}
+	if !realtimeVoiceSourceWasSearchedWithNoMatch(source, toolResults) || realtimeVoiceToolResultsContainVisibleAssetTitle(source, toolResults) {
+		return ports.StructuredAgentResponse{}, false
+	}
+	message := "I could not find " + realtimeVoiceArticleForSpokenSource(source) + source + " to move. Add it first or tell me a different item."
+	return ports.StructuredAgentResponse{
+		Kind:            ports.StructuredAgentResponseKindClarification,
+		SpokenResponse:  message,
+		DisplayResponse: message,
+	}, true
+}
+
+func realtimeVoiceArticleForSpokenSource(source string) string {
+	first := ""
+	for _, char := range strings.TrimSpace(source) {
+		first = strings.ToLower(string(char))
+		break
+	}
+	switch first {
+	case "a", "e", "i", "o", "u":
+		return "an "
+	default:
+		return "a "
+	}
+}
+
 func realtimeVoiceHasRejectedActionPlanProposal(toolResults []ports.AgentToolResult) bool {
 	for _, result := range toolResults {
 		if result.Name == RealtimeVoiceToolProposeActionPlan && strings.Contains(result.Content, `"status":"error"`) {

@@ -336,6 +336,9 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 				t.Fatalf("start realtime voice session: %v", err)
 			}
 			events := []RealtimeVoiceEvent{}
+			t.Cleanup(func() {
+				t.Logf("voice corpus trace for %q:\n%s", scenario.transcript, liveGeminiVoiceFullTrace(events, tts.lastText))
+			})
 			err = application.RunRealtimeVoiceQuery(ctx, RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
 				events = append(events, event)
 				return nil
@@ -343,7 +346,6 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 			if err != nil {
 				t.Fatalf("run realtime voice query: %v\n%s", err, liveGeminiVoiceDiagnostics(events))
 			}
-			t.Logf("voice corpus trace for %q:\n%s", scenario.transcript, liveGeminiVoiceFullTrace(events, tts.lastText))
 			assertLiveGeminiVoiceCorpusOutcome(t, scenario, events, tts.lastText)
 		})
 	}

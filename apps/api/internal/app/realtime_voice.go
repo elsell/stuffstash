@@ -273,6 +273,28 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	executedToolCalls := map[string]struct{}{}
 	visibleAssetIDs := map[string]struct{}{}
 	for turn := 0; turn < realtimeVoiceToolTurnBudget; turn++ {
+		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedReadCallWithoutModel(transcript, turn, toolResults, ""); ok {
+			if strings.TrimSpace(call.ID) == "" {
+				call.ID = a.newRealtimeVoiceID()
+			}
+			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, transcript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
+			if err != nil {
+				return err
+			}
+			if proposal != nil {
+				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
+					return err
+				}
+				return nil
+			}
+			if response, ok := realtimeVoiceMissingMoveSourceResponse(transcript, toolResults); ok {
+				return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, emit)
+			}
+			if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript, toolResults) {
+				return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, transcript, toolResults, toolCallIDs, turn+1, emit)
+			}
+			continue
+		}
 		tools := realtimeVoiceToolDescriptors()
 		planOnly := realtimeVoiceShouldUseConstrainedPlanner(transcript, turn, toolResults)
 		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(transcript, turn, toolResults)
@@ -450,6 +472,9 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		}
 		if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript, toolResults) {
 			return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, transcript, toolResults, toolCallIDs, turn+1, emit)
+		}
+		if response, ok := realtimeVoiceMissingMoveSourceResponse(transcript, toolResults); ok {
+			return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, emit)
 		}
 	}
 	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, transcript, toolResults, toolCallIDs, emit)

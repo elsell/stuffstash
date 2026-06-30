@@ -360,9 +360,9 @@ Speech-to-text may emit partial and final transcript events.
 
 `transcript.final` contains the transcript text the agent loop may use for intent interpretation. If the speech-to-text provider cannot stream partials, the server may emit only `transcript.final`.
 
-Raw transcripts must not be durably persisted before a transcript retention and redaction policy is specified.
+Raw user transcripts must not be durably persisted before a transcript retention and redaction policy is specified.
 
-Transcripts are ephemeral UI and in-memory agent-loop state only in the first slice. Raw transcript text must not be written to mobile local storage, debug event history, crash reports, analytics, audit records, observability metadata, API session metadata, logs, or provider profile test records before a retention and redaction policy is specified.
+User transcripts are ephemeral UI and in-memory agent-loop state only in the first slice. Raw user transcript text must not be written to mobile local storage, debug event history, crash reports, analytics, audit records, observability metadata, API session metadata, logs, or provider profile test records before a retention and redaction policy is specified.
 
 ## Agent Loop
 
@@ -392,6 +392,8 @@ The first graph-like loop nodes are:
 - `recover`: produce a bounded safe final response when the loop cannot make more progress but can still explain the outcome without leaking internals.
 
 Recoverable tool-call failures must not fail the whole voice session by default. If a model asks for an unknown tool, malformed tool arguments, unsafe proposal arguments, a duplicate exact tool call, or another expected validation failure, the loop must emit a safe `tool.call.failed` event and append a structured error tool result back to the model. The model then gets another turn to repair the tool call, ask for clarification, or produce a safe unsupported-action response. If the model produces a final clarification asking whether to create a clear missing destination for a write request, such as "I can't find the second shelf in the big cabinet in the kitchen. Do you want me to create it?", after a prior authorized read result has already shown the requested source item, the loop must treat that as a recoverable agent-contract failure rather than a terminal final response. It should append safe repair feedback and give the model another bounded tool-capable turn so it can call `propose_action_plan`. If the source item itself is not visible in prior read results, the loop must not force an action plan. Fatal failures such as provider transport errors, authentication or authorization failures, context cancellation, text-to-speech failures, and persistence failures may still terminate the session with a safe failure code.
+
+For move-style utterances, if a read tool search for the requested source item returns no visible matches, the loop must fall forward with a structured clarification before planner mode. It must not ask the model to create the source as a side effect of a move request, and it must not spend repeated repair turns on action plans that invent or create the missing source. Missing destinations are different: once the source item is visible, clear missing destination names should become reviewable create-and-move action plans.
 
 The structured error tool result must be provider-independent JSON and must include only safe fields such as the tool name, a stable error code, a short safe message, and whether the model may retry. It must not include raw provider output, stack traces, raw prompts, raw transcript text, credentials, bearer tokens, hidden resource data, exact unauthorized IDs, or unredacted tool arguments.
 
@@ -467,12 +469,16 @@ Live corpus tuning must optimize the general contract, tool metadata, loop repai
 
 Stuff Stash must maintain a repo-local Codex skill for evaluating conversational inventory quality. The skill must guide an agent through running the live Gemini voice corpus, preserving full traces, reviewing the actual model and tool behavior, and deciding whether each scenario is product-good rather than merely test-green.
 
-The evaluation workflow must produce durable artifacts for each run, including raw `go test -json` output, extracted scenario traces, and a summary that distinguishes:
+The evaluation workflow may produce durable artifacts for synthetic opt-in corpus fixtures only. These traces may include the fixture transcript, model/tool diagnostics, and spoken response needed to evaluate agent quality. They must not include arbitrary user transcripts, provider credentials, bearer tokens, raw audio, generated speech bytes, hidden resources, or production tenant data. The evaluation workflow must produce durable artifacts for each run, including raw `go test -json` output, extracted scenario traces, and a summary that distinguishes:
 
 - Hard execution failures, such as provider errors, invalid action plans, or unexpected session completion.
 - Assertion failures from the Go regression suite.
 - Human/product quality concerns found by an agent reading the trace, such as awkward fall-forward wording, wrong mental model, unnecessary tool turns, brittle planning, or missing next steps.
 - Cases that passed deterministic checks but still need product follow-up.
+
+Live corpus tests must log the same full event trace for failed scenarios that they log for successful scenarios. A provider failure, timeout, invalid model response, assertion failure, or unexpected session completion must still leave enough trace evidence for the evaluation harness to extract the transcript, provider stage, safe failure code, tool calls, tool results, and last spoken text when present.
+
+Provider adapters may perform bounded retries for transient language-inference failures, including rate-limited HTTP responses and malformed structured planner/final responses from a provider that otherwise returned successfully. Retries must be internal to the adapter, must not re-execute Stuff Stash tools or inventory writes, must preserve the same transcript, prompt, tool results, and tenant/inventory context, and must remain bounded so voice sessions fail safely instead of hanging indefinitely.
 
 The skill may use the Codex CLI as an optional judge for trace review, but the primary agent remains responsible for evaluating the judge reasoning. A green Codex-judge verdict must not be accepted blindly. The agent must read the judge explanation, compare it to the trace and rubric, and identify any changes needed in prompts, schemas, loop policy, tool metadata, fixtures, or product behavior.
 
@@ -525,6 +531,8 @@ The application loop may override a provider-requested read tool call with a ser
 - For contents questions such as "what's in the toolbox", after a read result returns a visible location or container named by the transcript, the loop may force `list_authorized_assets` scoped to that exact location or parent title. If multiple visible locations or containers overlap the transcript, the loop must prefer exact phrase coverage, stronger word coverage, and direct containers over broad locations.
 - For add/create requests where the first read only proves a new item is missing and the transcript names a destination, the loop may force one destination search using the likely outer room, place, or container from the transcript before entering the planner phase.
 - For nested create or move requests where a combined destination phrase misses, the loop may force one search for the likely outer parent before entering the planner phase.
+
+The application loop may also perform narrowly bounded proactive read-only calls without a provider-requested tool call when the transcript has an unambiguous grammar and the read cannot mutate inventory. This is allowed only for exact context gathering that a provider prompt would otherwise be required to select: resolving the named target of a contents question, and resolving the named parent of a simple non-nested create/add request. It must not proactively execute write tools, broad exploratory lists, nested path expansion, source-item substitution, destructive actions, provider-profile actions, or reads that depend on guessing hidden state. Proactive reads must have deterministic tests and negative coverage for nested or ambiguous phrasing.
 
 Server-selected reads must preserve tenant, inventory, authorization, and visible-resource scoping. They must emit developer diagnostics when developer diagnostics are enabled. They must be minimization-preserving: the loop must not replace a narrow no-match lookup with a broad list of unrelated visible inventory merely to help the model guess a category or synonym.
 

@@ -109,6 +109,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Approved mobile voice action plans can now execute a single `archive_asset` command through the existing asset lifecycle boundary, atomically persist the archive/audit/undoable operation with the terminal action-plan state in memory and GORM adapters, and stream safe execution outcomes back to mobile.
 - Approved mobile voice action plans can now execute a single `restore_asset` command through the existing asset lifecycle boundary, atomically persist the restore/audit/undoable operation with the terminal action-plan state, and stream safe execution outcomes back to mobile.
 - `.codex/skills/stuffstash-voice-evaluation` now provides a repo-local Codex skill and harness for live voice corpus trace capture, Codex-judge-assisted review, and primary-agent product-quality evaluation.
+- The live Gemini realistic voice corpus passed all 19 scenarios with `gemini-2.5-flash-lite` and ADC after server-selected read optimization, full failure trace logging, bounded language retry handling, and planner repair-path tolerance.
 
 ## Known Gaps
 

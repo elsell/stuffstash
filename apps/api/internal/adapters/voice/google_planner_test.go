@@ -129,7 +129,7 @@ func TestGoogleGeminiActionPlanSchemaDoesNotUseLegacyToolArgumentShape(t *testin
 	}
 }
 
-func TestGoogleGeminiLanguageInferenceRejectsMalformedStructuredActionPlan(t *testing.T) {
+func TestGoogleGeminiLanguageInferencePassesMalformedPlannerCommandsToAppRepair(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -137,29 +137,73 @@ func TestGoogleGeminiLanguageInferenceRejectsMalformedStructuredActionPlan(t *te
 		body string
 	}{
 		{
-			name: "missing commands",
-			body: `{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?"}}`,
-		},
-		{
-			name: "empty commands",
-			body: `{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[]}}`,
-		},
-		{
-			name: "unsupported command kind",
-			body: `{"actionPlan":{"intentSummary":"Rename a bottle.","modelInterpretationSummary":"Rename it.","confirmationSummary":"Rename it?","commands":[{"id":"cmd-1","kind":"update_asset","summary":"Rename it","arguments":{"assetId":"asset-water-bottle","title":"Bottle"}}]}}`,
-		},
-		{
-			name: "missing command arguments",
-			body: `{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[{"id":"cmd-1","kind":"move_asset","summary":"Move it"}]}}`,
+			name: "semantically invalid move id",
+			body: `{"actionPlan":{"intentSummary":"Move a bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[{"id":"cmd-1","kind":"move_asset","summary":"Move it","arguments":{"assetId":"water bottle","parentAssetId":"kitchen"}}]}}`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := parseLanguageTurn(tt.body, []ports.AgentToolDescriptor{testGeminiActionPlanToolDescriptor()}, true)
-			if err == nil {
-				t.Fatalf("expected malformed planner output to be rejected")
+			turn, err := parseLanguageTurn(tt.body, []ports.AgentToolDescriptor{testGeminiActionPlanToolDescriptor()}, true)
+			if err != nil {
+				t.Fatalf("planner output should reach app repair path: %v", err)
+			}
+			if len(turn.ToolCalls) != 1 || turn.ToolCalls[0].Name != "propose_action_plan" {
+				t.Fatalf("expected app action-plan tool call, got %+v", turn)
 			}
 		})
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRejectsPlannerOutputWithoutCommands(t *testing.T) {
+	t.Parallel()
+
+	for _, body := range []string{
+		`{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?"}}`,
+		`{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[]}}`,
+		`{"actionPlan":{"intentSummary":"Move a water bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[{"id":"cmd-1","kind":"move_asset","summary":"Move it"}]}}`,
+		`{"actionPlan":{"intentSummary":"Rename a bottle.","modelInterpretationSummary":"Rename it.","confirmationSummary":"Rename it?","commands":[{"id":"cmd-1","kind":"update_asset","summary":"Rename it","arguments":{"assetId":"asset-water-bottle","title":"Bottle"}}]}}`,
+		`{"actionPlan":{"intentSummary":"Move a bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[{"kind":"move_asset","summary":"Move it","arguments":{"assetId":"asset-water-bottle"}}]}}`,
+	} {
+		if _, err := parseLanguageTurn(body, []ports.AgentToolDescriptor{testGeminiActionPlanToolDescriptor()}, true); err == nil {
+			t.Fatalf("expected planner output without executable command envelopes to be rejected: %s", body)
+		}
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRetriesMalformedPlannerOutput(t *testing.T) {
+	t.Parallel()
+
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls == 1 {
+			_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"actionPlan":{"commands":[]}}`))
+			return
+		}
+		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"actionPlan":{"intentSummary":"Move the drill.","modelInterpretationSummary":"Move it to Garage.","confirmationSummary":"Move the drill to Garage?","commands":[{"id":"cmd-move","kind":"move_asset","summary":"Move drill","arguments":{"assetId":"drill-1","parentAssetId":"garage-1"}}]}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID:   "project",
+		Location:    "us-central1",
+		Model:       "gemini-test",
+		BaseURL:     server.URL,
+		TokenSource: staticTokenSource{},
+		HTTPClient:  server.Client(),
+	})
+	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
+		Transcript: "Move the drill out to the garage.",
+		PlanOnly:   true,
+	})
+	if err != nil {
+		t.Fatalf("planner retry: %v", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected one retry, got %d calls", calls)
+	}
+	if len(turn.ToolCalls) != 1 || turn.ToolCalls[0].Name != "propose_action_plan" {
+		t.Fatalf("expected recovered planner tool call, got %+v", turn)
 	}
 }
 

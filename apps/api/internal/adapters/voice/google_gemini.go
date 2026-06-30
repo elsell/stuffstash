@@ -118,29 +118,57 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		ToolConfig:       geminiToolConfigForTurn(input),
 		GenerationConfig: geminiGenerationConfigForTurn(input),
 	}
-	var response geminiGenerateContentResponse
-	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
-		return ports.LanguageInferenceTurn{}, err
-	}
-	if calls := geminiFunctionCalls(response); len(calls) > 0 {
-		turn, err := parseGeminiFunctionCalls(calls, input.Tools)
+	var lastErr error
+	for attempt := 0; attempt < googleLanguageInferenceAttempts(input); attempt++ {
+		var response geminiGenerateContentResponse
+		if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
+			lastErr = err
+			if !retryableGoogleLanguageInferenceError(err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
+				return ports.LanguageInferenceTurn{}, err
+			}
+			if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
+				return ports.LanguageInferenceTurn{}, err
+			}
+			continue
+		}
+		if calls := geminiFunctionCalls(response); len(calls) > 0 {
+			turn, err := parseGeminiFunctionCalls(calls, input.Tools)
+			if err != nil {
+				lastErr = err
+				if !retryableGoogleStructuredOutputError(input, err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
+					return ports.LanguageInferenceTurn{}, err
+				}
+				if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
+					return ports.LanguageInferenceTurn{}, err
+				}
+				continue
+			}
+			if input.IncludeDiagnostics {
+				turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, geminiFunctionCallDiagnostic(calls))
+			}
+			return turn, nil
+		}
+		rawText := firstGeminiText(response)
+		turn, err := parseLanguageTurn(rawText, input.Tools, input.PlanOnly)
 		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
+			lastErr = err
+			if !retryableGoogleStructuredOutputError(input, err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
+				return ports.LanguageInferenceTurn{}, err
+			}
+			if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
+				return ports.LanguageInferenceTurn{}, err
+			}
+			continue
 		}
 		if input.IncludeDiagnostics {
-			turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, geminiFunctionCallDiagnostic(calls))
+			turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, rawText)
 		}
 		return turn, nil
 	}
-	rawText := firstGeminiText(response)
-	turn, err := parseLanguageTurn(rawText, input.Tools, input.PlanOnly)
-	if err != nil {
-		return ports.LanguageInferenceTurn{}, err
+	if lastErr != nil {
+		return ports.LanguageInferenceTurn{}, lastErr
 	}
-	if input.IncludeDiagnostics {
-		turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, rawText)
-	}
-	return turn, nil
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
@@ -549,7 +577,7 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor, allowActio
 		}}, nil
 	}
 	if decoded.ActionPlan != nil {
-		if !validLanguageActionPlan(decoded.ActionPlan) {
+		if !validLanguageActionPlanEnvelope(decoded.ActionPlan) {
 			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 		}
 		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{{
@@ -576,7 +604,7 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor, allowActio
 	return ports.LanguageInferenceTurn{ToolCalls: toolCalls}, nil
 }
 
-func validLanguageActionPlan(plan map[string]any) bool {
+func validLanguageActionPlanEnvelope(plan map[string]any) bool {
 	if !boundedNonEmpty(stringValue(plan["intentSummary"]), 500) ||
 		!boundedNonEmpty(stringValue(plan["modelInterpretationSummary"]), 1000) ||
 		!boundedNonEmpty(stringValue(plan["confirmationSummary"]), 500) {
@@ -666,39 +694,6 @@ func boundedNonEmpty(value string, max int) bool {
 
 func boundedOptional(value string, max int) bool {
 	return strings.TrimSpace(value) == "" || len(value) <= max
-}
-
-func googleGeminiBaseURL(cfg GoogleGeminiConfig) string {
-	if strings.TrimSpace(cfg.BaseURL) != "" {
-		return cfg.BaseURL
-	}
-	if strings.TrimSpace(cfg.APIKey) != "" {
-		return "https://generativelanguage.googleapis.com"
-	}
-	return "https://" + googleGeminiLocation(cfg) + "-aiplatform.googleapis.com"
-}
-
-func googleGeminiPath(cfg GoogleGeminiConfig) string {
-	if strings.TrimSpace(cfg.APIKey) != "" {
-		return "/v1beta/" + googleGeminiAPIModelName(cfg.Model) + ":generateContent"
-	}
-	return "/v1/projects/" + cfg.ProjectID + "/locations/" + googleGeminiLocation(cfg) + "/publishers/google/models/" + cfg.Model + ":generateContent"
-}
-
-func googleGeminiAPIModelName(model string) string {
-	model = strings.Trim(strings.TrimSpace(model), "/")
-	if strings.HasPrefix(model, "models/") || strings.HasPrefix(model, "tunedModels/") {
-		return model
-	}
-	return "models/" + model
-}
-
-func googleGeminiLocation(cfg GoogleGeminiConfig) string {
-	location := strings.TrimSpace(cfg.Location)
-	if location == "" {
-		return "us-central1"
-	}
-	return location
 }
 
 type geminiGenerateContentRequest struct {

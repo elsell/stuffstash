@@ -278,10 +278,10 @@ func TestRealtimeVoiceDoesNotRepairCreateClarificationWhenSourceIsMissing(t *tes
 	if proposed != nil {
 		t.Fatalf("expected no action plan for missing source, got %+v", proposed)
 	}
-	if len(language.seenToolResults) != 2 {
-		t.Fatalf("expected loop to stop on missing-source clarification, got %d calls", len(language.seenToolResults))
+	if len(language.seenToolResults) != 1 {
+		t.Fatalf("expected loop to stop immediately after missing-source read, got %d calls", len(language.seenToolResults))
 	}
-	if tts.lastText != "I can't find the water bottle. Do you want me to add it?" {
+	if tts.lastText != "I could not find a water bottle to move. Add it first or tell me a different item." {
 		t.Fatalf("expected final clarification to be spoken, got %q", tts.lastText)
 	}
 }
