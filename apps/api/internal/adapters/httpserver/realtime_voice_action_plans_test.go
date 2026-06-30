@@ -696,13 +696,18 @@ func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 				ID:   "plan-tool-call",
 				Name: "propose_action_plan",
 				Arguments: map[string]any{
-					"commandKind":                "archive_asset",
 					"intentSummary":              "Archive the selected asset.",
 					"modelInterpretationSummary": "The user wants the visible selected asset archived.",
 					"confirmationSummary":        "Archive selected asset?",
-					"commandSummary":             "Archive selected asset",
-					"argumentsJson":              `{"assetId":"` + assetID + `"}`,
-					"riskSummary":                "Archives an asset in this inventory.",
+					"commands": []any{map[string]any{
+						"id":      "cmd-archive-asset",
+						"kind":    "archive_asset",
+						"summary": "Archive selected asset",
+						"arguments": map[string]any{
+							"assetId": assetID,
+						},
+					}},
+					"riskSummary": "Archives an asset in this inventory.",
 				},
 			}},
 		}, nil
@@ -742,13 +747,18 @@ func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 				ID:   "plan-tool-call",
 				Name: "propose_action_plan",
 				Arguments: map[string]any{
-					"commandKind":                "restore_asset",
 					"intentSummary":              "Restore the water bottle.",
 					"modelInterpretationSummary": "The user wants the visible archived water bottle restored.",
 					"confirmationSummary":        "Restore water bottle?",
-					"commandSummary":             "Restore water bottle",
-					"argumentsJson":              `{"assetId":"` + assetID + `"}`,
-					"riskSummary":                "Restores an item in this inventory.",
+					"commands": []any{map[string]any{
+						"id":      "cmd-restore-water-bottle",
+						"kind":    "restore_asset",
+						"summary": "Restore water bottle",
+						"arguments": map[string]any{
+							"assetId": assetID,
+						},
+					}},
+					"riskSummary": "Restores an item in this inventory.",
 				},
 			}},
 		}, nil

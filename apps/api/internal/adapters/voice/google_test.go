@@ -383,16 +383,17 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 		"Action-plan command arguments must be structured JSON",
 		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
 		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
+		"If a move request names a source item and you do not have that item's assetId from a read tool, call search_authorized_assets for the source item before proposing a plan.",
 		"For where-is questions, if search_authorized_assets returns the requested item with locationTitle or containmentPath, answer from that result instead of listing unrelated assets.",
 		"containmentPath ends with the returned asset itself; never say an item is inside itself.",
-		"Assume the user wants missing named locations or containers created",
+		"Assume the user wants missing named locations, containers, or household surfaces created",
 		"do not ask whether to create it; call propose_action_plan",
 		"the session is not complete until you either call propose_action_plan or ask a necessary clarification",
 		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
 		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
 		"If the destination name is not present as an assetId in tool results, create it in the same commands array and reference it with parentCommandId.",
 		"For nested create or move requests, resolve named outer locations and containers as separate search terms",
-		"a combined phrase search returning no matches does not prove each path segment is missing",
+		"A combined phrase search returning no matches does not prove each path segment is missing",
 		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
 		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
@@ -598,7 +599,7 @@ func TestGoogleGeminiLanguageInferenceRejectsMalformedTurns(t *testing.T) {
 	}
 	for name, payload := range cases {
 		t.Run(name, func(t *testing.T) {
-			if _, err := parseLanguageTurn(payload, tools); err == nil {
+			if _, err := parseLanguageTurn(payload, tools, false); err == nil {
 				t.Fatalf("expected malformed turn to be rejected")
 			}
 		})

@@ -93,7 +93,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 					},
 					"commands": {
 						Type:        ports.AgentToolParameterTypeArray,
-						Description: "Preferred command array for multi-step plans. Each item must include id, kind, summary, and arguments. For create_asset use title/name, kind item|container|location, optional description, and optional parentAssetId or parentCommandId. Do not include assetId in create_asset. For create_location use title/name and no kind, or kind location. For move_asset use assetId plus either parentAssetId, parentCommandId, or null parentAssetId for root. parentCommandId must point to an earlier create command id. Never use parentTitle or locationTitle here.",
+						Description: "Preferred command array for multi-step plans. Each item must include id, kind, summary, and arguments. For create_asset use title/name, kind item|container|location, optional description, and optional parentAssetId or parentCommandId. Do not include assetId in create_asset. For create_location use title/name and no kind, or kind location. For move_asset use assetId plus either parentAssetId, parentCommandId, or null parentAssetId for root. For archive_asset or restore_asset use assetId from a read tool. parentCommandId must point to an earlier create command id. Never use parentTitle or locationTitle here.",
 						Items: &ports.AgentToolParameter{
 							Type:     ports.AgentToolParameterTypeObject,
 							Required: []string{"id", "kind", "summary", "arguments"},
@@ -105,7 +105,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 								"kind": {
 									Type:        ports.AgentToolParameterTypeString,
 									Description: "Action-plan command kind for multi-step plans.",
-									Enum:        []string{"create_asset", "create_location", "move_asset"},
+									Enum:        []string{"create_asset", "create_location", "move_asset", "update_asset", "archive_asset", "restore_asset"},
 								},
 								"summary": {
 									Type:        ports.AgentToolParameterTypeString,
@@ -113,7 +113,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 								},
 								"arguments": {
 									Type:        ports.AgentToolParameterTypeObject,
-									Description: "Structured command arguments. For create_asset include title or name, kind item|container|location, optional description, and exactly one parentAssetId or parentCommandId when placing the new asset. Never include assetId in create_asset. For create_location include title or name and optional parent references only when creating a location-like child; do not use kind container with create_location. For move_asset include assetId and either parentAssetId, parentCommandId, or parentAssetId null for root.",
+									Description: "Structured command arguments. For create_asset include title or name, kind item|container|location, optional description, and exactly one parentAssetId or parentCommandId when placing the new asset. Never include assetId in create_asset. For create_location include title or name and optional parent references only when creating a location-like child; do not use kind container with create_location. For move_asset include assetId and either parentAssetId, parentCommandId, or parentAssetId null for root. For archive_asset or restore_asset include assetId.",
 									Properties: map[string]ports.AgentToolParameter{
 										"assetId": {
 											Type:        ports.AgentToolParameterTypeString,

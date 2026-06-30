@@ -62,6 +62,19 @@ The core API owns:
 - Safe final response events.
 - Safe observability.
 
+Language inference must be phase-aware. Provider adapters must not rely on prompt text alone when a provider offers native constrained output. For Gemini, final-response turns and action-plan planner turns must request `application/json` output with a provider-native response schema. Read turns may use native function calling with a required tool-call configuration when the loop needs inventory context. The planner turn must not expose `propose_action_plan` as a provider-callable function; instead, the provider returns a schema-constrained action-plan object that the API converts into the same internal action-plan proposal path used by other adapters. The API remains responsible for authorization, visible-ID validation, tenant and inventory scoping, action-plan persistence, approval, audit, and execution.
+
+For clear write requests, the loop should follow an explicit state sequence:
+
+1. Gather required inventory context with read-only tools.
+2. Ask the language provider for a constrained action-plan object when enough context exists to propose a safe reviewable plan.
+3. Validate and persist the action plan through the application service.
+4. Pause the session and emit `action.plan.proposed` until the user approves or cancels.
+
+The loop must not continue calling the language model after a valid action plan has been proposed. If a constrained planner output is invalid, the loop may retry with safe structured repair context, but it must not let a later final answer override a previously valid plan.
+
+The API may complete obvious unsafe or under-specified transcripts locally after transcription and before language inference. This includes provider credential requests, broad destructive database or inventory wipe requests, and vague deictic move destinations such as "over there" or "to the side" when no concrete place is named. These local completions must return structured safe final or clarification responses and must not call the language provider.
+
 The internal agent loop may use the project-owned tool catalog specified by `specs/agent-model/mcp-agent-tools.spec.md`, but it must call tools in-process through application services and ports. It must not call the public MCP transport for this first mobile loop.
 
 ## First User Workflow
@@ -433,11 +446,15 @@ The Gemini live-regression suite must include a small realistic voice corpus tha
 The corpus must cover at least these behaviors:
 
 - Asking where a known item is.
+- Asking where a category-like household phrase is, such as tools, when the answer must still be grounded in visible matching assets and containment.
 - Asking for a broad list of visible items.
 - Asking what is inside a known location or container.
+- Asking what is inside an existing visible container.
 - Creating an item in an existing visible location.
+- Creating an item in an existing visible container using casual spoken wording such as "I got..." or "put it in...".
 - Creating an item inside a missing nested container path under an existing visible location.
 - Moving an existing item into an existing visible location.
+- Moving an existing item with casual location language, such as "out to the garage", while still using only visible destination IDs.
 - Moving an existing item into a missing single destination that should be created.
 - Moving an existing item into a missing nested destination path that should be created.
 - Asking for a change where the source item is not visible.

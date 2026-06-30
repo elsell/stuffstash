@@ -50,6 +50,7 @@ type LanguageInferenceInput struct {
 	ToolResults        []AgentToolResult
 	PreviousTurns      int
 	FinalOnly          bool
+	PlanOnly           bool
 	RequireToolCall    bool
 	IncludeDiagnostics bool
 }

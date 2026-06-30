@@ -95,6 +95,33 @@ func generationConfigHasFinalResponseSchema(config map[string]any) bool {
 	return hasSpoken && hasDisplay
 }
 
+func generationConfigHasActionPlanSchema(config map[string]any) bool {
+	schema, ok := config["responseSchema"].(map[string]any)
+	if !ok || schema["type"] != "object" {
+		return false
+	}
+	properties, ok := schema["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
+	actionPlan, ok := properties["actionPlan"].(map[string]any)
+	if !ok || actionPlan["type"] != "object" {
+		return false
+	}
+	actionPlanProperties, ok := actionPlan["properties"].(map[string]any)
+	if !ok {
+		return false
+	}
+	commands, ok := actionPlanProperties["commands"].(map[string]any)
+	if !ok || commands["type"] != "array" {
+		return false
+	}
+	_, hasIntent := actionPlanProperties["intentSummary"].(map[string]any)
+	_, hasInterpretation := actionPlanProperties["modelInterpretationSummary"].(map[string]any)
+	_, hasConfirmation := actionPlanProperties["confirmationSummary"].(map[string]any)
+	return hasIntent && hasInterpretation && hasConfirmation
+}
+
 func geminiFunctionCallResponse(name string, args map[string]any) map[string]any {
 	return map[string]any{
 		"candidates": []map[string]any{{

@@ -57,6 +57,24 @@ func TestRealtimeVoiceDoesNotRepairSafeWriteClarificationAfterRejectedActionPlan
 	}
 }
 
+func TestRealtimeVoiceReadQuestionsWithWriteVerbsAreNotWriteRequests(t *testing.T) {
+	t.Parallel()
+
+	for _, transcript := range []string{
+		"Where did I put my water bottle?",
+		"What did I put in the toolbox?",
+		"Do I have any batteries?",
+		"Find my drill.",
+	} {
+		if realtimeVoiceLooksLikeWriteRequest(transcript) {
+			t.Fatalf("expected %q to stay read-only", transcript)
+		}
+		if realtimeVoiceLooksLikeMoveRequest(transcript) {
+			t.Fatalf("expected %q not to look like a move request", transcript)
+		}
+	}
+}
+
 func TestRealtimeVoiceDoesNotRepairCreateClarificationWhenRequestedSourceWasNotVisible(t *testing.T) {
 	t.Parallel()
 

@@ -96,9 +96,9 @@ func realtimeVoiceToolResultsContainVisibleAssetTitle(source string, toolResults
 }
 
 func realtimeVoiceRequestedMoveSource(transcript string) string {
-	text := strings.ToLower(transcript)
+	text := normalizedRealtimeVoiceVerbText(transcript)
 	verbStart := -1
-	for _, verb := range []string{"move ", "put ", "place ", "store ", "stash "} {
+	for _, verb := range []string{" move ", " put ", " place ", " store ", " stash "} {
 		if index := strings.Index(text, verb); index >= 0 && (verbStart == -1 || index < verbStart) {
 			verbStart = index + len(verb)
 		}
@@ -150,13 +150,51 @@ func realtimeVoiceAlreadyRejectedWriteClaim(toolResults []ports.AgentToolResult)
 }
 
 func realtimeVoiceLooksLikeWriteRequest(transcript string) bool {
-	text := strings.ToLower(transcript)
-	for _, token := range []string{"move ", "put ", "place ", "add ", "create ", "store ", "stash "} {
+	if realtimeVoiceLooksLikeReadQuestion(transcript) {
+		return false
+	}
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, token := range []string{" move ", " put ", " place ", " add ", " create ", " store ", " stash ", " restore ", " archive ", " rename ", " update "} {
 		if strings.Contains(text, token) {
 			return true
 		}
 	}
 	return false
+}
+
+func realtimeVoiceLooksLikeReadQuestion(transcript string) bool {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, prefix := range []string{" where ", " what ", " when ", " who ", " which ", " do i ", " do we ", " did i ", " did we ", " can you find ", " find my ", " find the "} {
+		if strings.HasPrefix(text, prefix) {
+			return true
+		}
+	}
+	return strings.Contains(text, " where did ") ||
+		strings.Contains(text, " where is ") ||
+		strings.Contains(text, " where are ") ||
+		strings.Contains(text, " what is ") ||
+		strings.Contains(text, " what are ")
+}
+
+func realtimeVoiceLooksLikeMoveRequest(transcript string) bool {
+	if realtimeVoiceLooksLikeReadQuestion(transcript) {
+		return false
+	}
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, token := range []string{" move ", " put ", " place ", " store ", " stash "} {
+		if strings.Contains(text, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizedRealtimeVoiceVerbText(transcript string) string {
+	text := strings.ToLower(transcript)
+	for _, replacer := range []string{".", ",", "!", "?", ";", ":", "\"", "'", "(", ")", "[", "]", "{", "}"} {
+		text = strings.ReplaceAll(text, replacer, " ")
+	}
+	return " " + strings.Join(strings.Fields(text), " ") + " "
 }
 
 func realtimeVoiceFinalClarificationRepairResult(id string) (ports.AgentToolResult, error) {

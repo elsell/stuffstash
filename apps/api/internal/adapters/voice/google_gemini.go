@@ -133,7 +133,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 		return turn, nil
 	}
 	rawText := firstGeminiText(response)
-	turn, err := parseLanguageTurn(rawText, input.Tools)
+	turn, err := parseLanguageTurn(rawText, input.Tools, input.PlanOnly)
 	if err != nil {
 		return ports.LanguageInferenceTurn{}, err
 	}
@@ -158,14 +158,14 @@ func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Contex
 }
 
 func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {
-	if input.FinalOnly {
+	if input.FinalOnly || input.PlanOnly {
 		return nil
 	}
 	return geminiTools(input.Tools)
 }
 
 func geminiToolConfigForTurn(input ports.LanguageInferenceInput) *geminiToolConfig {
-	if input.FinalOnly || !input.RequireToolCall || len(input.Tools) == 0 {
+	if input.FinalOnly || input.PlanOnly || !input.RequireToolCall || len(input.Tools) == 0 {
 		return nil
 	}
 	names := make([]string, 0, len(input.Tools))
@@ -185,6 +185,11 @@ func geminiToolConfigForTurn(input ports.LanguageInferenceInput) *geminiToolConf
 
 func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGenerationConfig {
 	config := &geminiGenerationConfig{Temperature: 0}
+	if input.PlanOnly {
+		config.ResponseMimeType = "application/json"
+		config.ResponseSchema = geminiActionPlanResponseSchema(input.Tools)
+		return config
+	}
 	if input.RequireToolCall && !input.FinalOnly {
 		return config
 	}
@@ -203,14 +208,39 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		)
 	}
 	if input.RequireToolCall && !input.FinalOnly {
+		if input.PreviousTurns > 0 {
+			lines = append(lines, []string{
+				"You are the Stuff Stash inventory voice agent.",
+				"This turn must gather missing context with exactly one provided read tool.",
+				"For move, put, place, store, or stash requests, search the named destination, outer room, place, or container now. Do not repeat the source-item search unless the source was not found.",
+				"Use short search keywords copied from the destination phrase, such as living room, garage, kitchen, cabinet, box, shelf, drawer, or counter.",
+				"Do not answer yet and do not propose changes on this turn.",
+				"Transcript: " + input.Transcript,
+			}...)
+			return strings.Join(lines, "\n")
+		}
 		lines = append(lines, []string{
 			"You are the Stuff Stash inventory voice agent.",
 			"This turn must gather context with exactly one provided read tool.",
 			"Use search_authorized_assets for specific items, where-is questions, resolving named locations or containers, and write requests that mention named inventory things.",
-			"For add/create requests into a nested destination, search the outermost named place or container separately, such as living room, garage, office, kitchen, cabinet, box, shelf, or drawer; do not search the whole destination phrase first.",
-			"For move/archive/restore requests involving an existing item, search the source item first.",
+			"For add/create requests into a nested destination, search the outermost room, place, or container separately first, such as living room, garage, office, kitchen, cabinet, box, shelf, drawer, or counter; do not search only the item or the whole destination phrase.",
+			"For move/archive/restore requests involving an existing item, this first read turn must search the source item first, not the destination.",
 			"Use list_authorized_assets for broad inventory lists or questions about what is inside a known place.",
 			"Use short search keywords copied from the transcript. Do not answer yet and do not propose changes on this turn.",
+			"Transcript: " + input.Transcript,
+		}...)
+		return strings.Join(lines, "\n")
+	}
+	if input.PlanOnly {
+		lines = append(lines, []string{
+			"You are the Stuff Stash inventory voice planner.",
+			"Return strict JSON matching the provided actionPlan response schema.",
+			"Do not return a final answer. Do not ask whether to create a clear missing destination; the action plan is the user review step.",
+			"Use only tool results as source of truth for existing assets and opaque asset IDs.",
+			"For move_asset, assetId must be copied from a read-tool result.",
+			"For missing named destinations, create every missing path segment in order and reference earlier create commands with parentCommandId.",
+			"Use create_asset with kind container for household containers or surfaces. Use create_location only for true rooms or places.",
+			"Use create_asset with kind item for new items. Never include assetId in create_asset arguments.",
 			"Transcript: " + input.Transcript,
 		}...)
 		return strings.Join(lines, "\n")
@@ -227,15 +257,18 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"For questions about what is in a place, list with parentTitle or locationTitle when known.",
 		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
 		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
+		"If a move request names a source item and you do not have that item's assetId from a read tool, call search_authorized_assets for the source item before proposing a plan.",
 		"For add/create requests for a new item, use create_asset with title or name and kind item.",
 		"Do not invent an assetId for a new item; use move_asset only for an existing asset returned by a read tool.",
 		"Never include assetId in create_asset arguments; create_asset creates a new thing and needs title or name plus kind.",
+		"When a new item should go inside an existing parent, use one create_asset command with parentAssetId set to the visible parent. Do not create the item and then move it.",
 		"For write requests, the session is not complete until you either call propose_action_plan or ask a necessary clarification.",
 		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
-		"For nested create or move requests, resolve named outer locations and containers as separate search terms; a combined phrase search returning no matches does not prove each path segment is missing.",
+		"For nested create or move requests, resolve named outer locations and containers as separate search terms before proposing. A combined phrase search returning no matches does not prove each path segment is missing.",
+		"If a transcript says a missing container or surface is in a room, search the room before proposing a plan.",
 		"If only a combined nested destination phrase has been searched and returned no matches, search a separate outer location or container term before proposing a plan.",
 		"For missing parent containers or locations requested by the user, propose an ordered commands array and use parentCommandId to place later creates or moves inside earlier creates.",
-		"Assume the user wants missing named locations or containers created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, Big cabinet, or Second shelf.",
+		"Assume the user wants missing named locations, containers, or household surfaces created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, Big cabinet, Counter, or Second shelf.",
 		"For nested missing destinations, create every missing path segment in order, then move or create the requested item into the deepest created command.",
 		"For a clear write request with a missing destination, do not ask whether to create it; call propose_action_plan so the mobile approval sheet can ask for confirmation.",
 		"Ask for clarification instead only when the requested destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription.",
@@ -478,7 +511,7 @@ func parseGeminiFunctionCalls(calls []geminiFunctionCall, tools []ports.AgentToo
 	return ports.LanguageInferenceTurn{ToolCalls: toolCalls}, nil
 }
 
-func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor) (ports.LanguageInferenceTurn, error) {
+func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor, allowActionPlan bool) (ports.LanguageInferenceTurn, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
@@ -492,7 +525,13 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor) (ports.Lan
 	if decoder.More() {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
-	if decoded.Final != nil && len(decoded.ToolCalls) > 0 {
+	if decoded.Final != nil && (len(decoded.ToolCalls) > 0 || decoded.ActionPlan != nil) {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	if decoded.ActionPlan != nil && len(decoded.ToolCalls) > 0 {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	if decoded.ActionPlan != nil && !allowActionPlan {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
 	if decoded.Final != nil {
@@ -507,6 +546,18 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor) (ports.Lan
 			SpokenResponse:  decoded.Final.SpokenResponse,
 			DisplayResponse: decoded.Final.DisplayResponse,
 		}}, nil
+	}
+	if decoded.ActionPlan != nil {
+		if !boundedNonEmpty(stringValue(decoded.ActionPlan["intentSummary"]), 500) ||
+			!boundedNonEmpty(stringValue(decoded.ActionPlan["modelInterpretationSummary"]), 1000) ||
+			!boundedNonEmpty(stringValue(decoded.ActionPlan["confirmationSummary"]), 500) {
+			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+		}
+		return ports.LanguageInferenceTurn{ToolCalls: []ports.AgentToolCall{{
+			ID:        "gemini-action-plan",
+			Name:      "propose_action_plan",
+			Arguments: decoded.ActionPlan,
+		}}}, nil
 	}
 	allowedTools := allowedToolNames(tools)
 	toolCalls := make([]ports.AgentToolCall, 0, len(decoded.ToolCalls))
@@ -527,8 +578,9 @@ func parseLanguageTurn(raw string, tools []ports.AgentToolDescriptor) (ports.Lan
 }
 
 type languageTurnJSON struct {
-	ToolCalls []languageToolCallJSON `json:"toolCalls,omitempty"`
-	Final     *languageFinalJSON     `json:"final,omitempty"`
+	ToolCalls  []languageToolCallJSON `json:"toolCalls,omitempty"`
+	Final      *languageFinalJSON     `json:"final,omitempty"`
+	ActionPlan map[string]any         `json:"actionPlan,omitempty"`
 }
 
 type languageToolCallJSON struct {
@@ -567,6 +619,11 @@ func isAllowedStructuredResponseKind(kind ports.StructuredAgentResponseKind) boo
 	default:
 		return false
 	}
+}
+
+func stringValue(value any) string {
+	text, _ := value.(string)
+	return text
 }
 
 func boundedNonEmpty(value string, max int) bool {

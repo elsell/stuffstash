@@ -258,6 +258,12 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTranscriptFinal, SessionID: input.Session.ID, Text: transcript}); err != nil {
 		return err
 	}
+	if response, ok := realtimeVoiceUnsafeUnsupportedTranscriptResponse(transcript); ok {
+		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit)
+	}
+	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(transcript); ok {
+		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit)
+	}
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentProgress, SessionID: input.Session.ID, Status: "thinking", Message: "Checking your inventory."}); err != nil {
 		return err
 	}
@@ -268,7 +274,8 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	visibleAssetIDs := map[string]struct{}{}
 	for turn := 0; turn < realtimeVoiceToolTurnBudget; turn++ {
 		tools := realtimeVoiceToolDescriptors()
-		requireToolCall := turn == 0
+		planOnly := realtimeVoiceShouldUseConstrainedPlanner(transcript, turn, toolResults)
+		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(transcript, turn, toolResults)
 		if requireToolCall {
 			tools = realtimeVoiceReadToolDescriptors()
 		}
@@ -281,6 +288,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			Tools:              tools,
 			ToolResults:        toolResults,
 			PreviousTurns:      turn,
+			PlanOnly:           planOnly,
 			RequireToolCall:    requireToolCall,
 			IncludeDiagnostics: input.Session.DeveloperDiagnostics,
 		})
@@ -389,6 +397,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 					_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
 					return err
 				}
+				if input.Session.DeveloperDiagnostics {
+					if diagnosticErr := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool validation failed", safeRealtimeVoiceErrorDetail(err), emit); diagnosticErr != nil {
+						return diagnosticErr
+					}
+				}
 				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "invalid_tool_request", Message: "I need a little more detail to do that safely."}); err != nil {
 					return err
 				}
@@ -429,6 +442,33 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		}
 	}
 	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, transcript, toolResults, toolCallIDs, emit)
+}
+
+func realtimeVoiceShouldRequireReadTool(transcript string, turn int, toolResults []ports.AgentToolResult) bool {
+	if turn == 0 {
+		return true
+	}
+	return realtimeVoiceLooksLikeMoveRequest(transcript) && turn == 1 && realtimeVoiceReadToolResultCount(toolResults) < 2
+}
+
+func realtimeVoiceShouldUseConstrainedPlanner(transcript string, turn int, toolResults []ports.AgentToolResult) bool {
+	if !realtimeVoiceLooksLikeWriteRequest(transcript) || turn == 0 {
+		return false
+	}
+	if realtimeVoiceLooksLikeMoveRequest(transcript) && turn < 2 && realtimeVoiceReadToolResultCount(toolResults) < 2 {
+		return false
+	}
+	return true
+}
+
+func realtimeVoiceReadToolResultCount(toolResults []ports.AgentToolResult) int {
+	count := 0
+	for _, result := range toolResults {
+		if result.Name == RealtimeVoiceToolSearchAuthorizedAssets || result.Name == RealtimeVoiceToolListAuthorizedAssets {
+			count++
+		}
+	}
+	return count
 }
 
 func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
@@ -483,7 +523,7 @@ func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
 
 func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
 	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
-		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, apple-tv-remote-1, or kitchen-1. For a new item the user wants to add, use create_asset with title or name and kind item; do not use move_asset, do not invent an assetId, and do not include assetId in create_asset arguments. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location or create_asset container command and set the later command parentCommandId to that create command id. If a missing container belongs inside an existing visible location, create the container with parentAssetId set to the visible location assetId, then create or move the item with parentCommandId set to the container command id. Use create_asset kind container for containers; use create_location only for true locations. Do not set a move command parentAssetId to null when the user named a destination."
+		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets results. Do not use titles or guessed IDs such as water bottle, kitchen, apple-tv-remote-1, or kitchen-1. If this is a move/archive/restore request and you do not have the source item's assetId from a read tool, call search_authorized_assets for the source item before retrying the plan. For a new item the user wants to add, use create_asset with title or name and kind item; do not use move_asset, do not invent an assetId, and do not include assetId in create_asset arguments. When a new item belongs inside an existing visible parent, make it one create_asset command with parentAssetId set to the visible parent assetId. If a requested destination like Kitchen was not returned as an assetId, include an earlier create_location or create_asset container command and set the later command parentCommandId to that create command id. If the transcript names an outer room or place that you have not resolved yet, call a read tool for that parent before retrying the plan. If a missing container or surface belongs inside an existing visible location, create the container or surface with parentAssetId set to the visible location assetId, then create or move the item with parentCommandId set to the container command id. Use create_asset kind container for containers and surfaces; use create_location only for true rooms or places. Do not set a move command parentAssetId to null when the user named a destination."
 	}
 	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
 }

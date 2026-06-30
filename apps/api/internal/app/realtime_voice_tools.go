@@ -42,7 +42,13 @@ func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, sess
 	if err := a.validateRealtimeVoiceActionPlanTranscriptAlignment(ctx, session, args.Commands, transcript); err != nil {
 		return ports.AgentToolResult{}, nil, err
 	}
+	if err := validateRealtimeVoiceMoveRequestUsesVisibleSource(args.Commands, transcript, priorResults); err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
 	if err := validateRealtimeVoiceMissingDestinationSegmentsAccountedFor(args.Commands, transcript, priorResults); err != nil {
+		return ports.AgentToolResult{}, nil, err
+	}
+	if err := validateRealtimeVoiceMissingDestinationHierarchy(args.Commands, transcript, priorResults); err != nil {
 		return ports.AgentToolResult{}, nil, err
 	}
 	record, err := a.CreateActionPlan(ctx, CreateActionPlanInput{
@@ -138,27 +144,6 @@ func validateRealtimeVoiceRootCreate(commandKind actionplan.CommandKind, rawKind
 	}
 	if kind == asset.KindItem.String() {
 		return ports.ErrInvalidProviderInput
-	}
-	return nil
-}
-
-func validateRealtimeVoiceMissingDestinationSegmentsAccountedFor(commands []ActionPlanCommandInput, transcript string, priorResults []ports.AgentToolResult) error {
-	represented := strings.Builder{}
-	for _, command := range commands {
-		if command.Kind != actionplan.CommandKindCreateAsset && command.Kind != actionplan.CommandKindCreateLocation {
-			continue
-		}
-		represented.WriteString(" ")
-		represented.WriteString(firstStringArg(command.Arguments["title"], command.Arguments["name"]))
-	}
-	representedText := represented.String()
-	for _, query := range realtimeVoiceNoMatchQueries(priorResults) {
-		if !realtimeVoiceQueryLooksLikeDestinationSegment(query, transcript) {
-			continue
-		}
-		if !realtimeVoiceMeaningfulWordsRepresented(query, representedText) {
-			return ports.ErrInvalidProviderInput
-		}
 	}
 	return nil
 }
@@ -300,6 +285,25 @@ var realtimeVoiceTranscriptStopWords = map[string]bool{
 }
 
 var realtimeVoiceDestinationSegmentWords = map[string]bool{
+	"box":      true,
+	"cabinet":  true,
+	"shelf":    true,
+	"drawer":   true,
+	"bin":      true,
+	"basket":   true,
+	"closet":   true,
+	"counter":  true,
+	"kitchen":  true,
+	"garage":   true,
+	"office":   true,
+	"bedroom":  true,
+	"bathroom": true,
+	"basement": true,
+	"attic":    true,
+	"pantry":   true,
+}
+
+var realtimeVoiceContainerSegmentWords = map[string]bool{
 	"box":     true,
 	"cabinet": true,
 	"shelf":   true,
@@ -307,6 +311,7 @@ var realtimeVoiceDestinationSegmentWords = map[string]bool{
 	"bin":     true,
 	"basket":  true,
 	"closet":  true,
+	"counter": true,
 }
 
 func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {

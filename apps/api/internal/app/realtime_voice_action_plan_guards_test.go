@@ -102,7 +102,7 @@ func TestRealtimeVoiceRejectsMovePlanToParentNotNamedByTranscript(t *testing.T) 
 			t.Fatalf("expected parent substitution to be rejected before proposal, got %+v", event.ActionPlan)
 		}
 	}
-	if tts.lastText != "I found the drill, but I could not understand the destination. Please tell me the room or container." {
+	if tts.lastText != "I need to know where to move it before I can prepare that move." {
 		t.Fatalf("expected clarification after rejected parent substitution, got %q", tts.lastText)
 	}
 }
@@ -202,6 +202,187 @@ func TestRealtimeVoiceRejectsDuplicateRootCreateWhenVisibleAssetAlreadyExists(t 
 	}
 }
 
+func TestRealtimeVoiceRejectsMovePlanThatCreatesVisibleSourceInsteadOfMovingIt(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-water-bottle",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-kitchen",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "kitchen"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-create-duplicate-source",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"intentSummary":              "Move the water bottle to the kitchen.",
+					"modelInterpretationSummary": "The source was visible, but the model tried to create a new water bottle.",
+					"confirmationSummary":        "Create Kitchen and a new water bottle?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-kitchen",
+							"kind":    "create_location",
+							"summary": "Create Kitchen",
+							"arguments": map[string]any{
+								"title": "Kitchen",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-water-bottle",
+							"kind":    "create_asset",
+							"summary": "Create Water bottle",
+							"arguments": map[string]any{
+								"title":           "Water bottle",
+								"kind":            "item",
+								"parentCommandId": "cmd-kitchen",
+							},
+						},
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I need to move the existing water bottle, not create a duplicate.",
+				DisplayResponse: "I need to move the existing water bottle, not create a duplicate.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
+	resolver.providers.LanguageInference = language
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	if err := store.CreateAsset(context.Background(), waterBottle, audit.Record{ID: audit.ID("audit-water-bottle"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "water-bottle-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed water bottle: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if proposed != nil {
+		t.Fatalf("expected duplicate-source create to be rejected, got %+v", proposed)
+	}
+}
+
+func TestRealtimeVoiceRejectsInvertedMissingDestinationHierarchy(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-counter",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "counter"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-kitchen",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "kitchen"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-inverted-path",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"intentSummary":              "Move the water bottle to the counter in the kitchen.",
+					"modelInterpretationSummary": "The model inverted the spoken destination path.",
+					"confirmationSummary":        "Create Counter and Kitchen?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-counter",
+							"kind":    "create_asset",
+							"summary": "Create Counter",
+							"arguments": map[string]any{
+								"title": "Counter",
+								"kind":  "container",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-kitchen",
+							"kind":    "create_location",
+							"summary": "Create Kitchen",
+							"arguments": map[string]any{
+								"title":           "Kitchen",
+								"parentCommandId": "cmd-counter",
+							},
+						},
+						map[string]any{
+							"id":      "cmd-move",
+							"kind":    "move_asset",
+							"summary": "Move Water bottle to Counter",
+							"arguments": map[string]any{
+								"assetId":         "water-bottle-1",
+								"parentCommandId": "cmd-counter",
+							},
+						},
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I need the counter to be inside the kitchen.",
+				DisplayResponse: "I need the counter to be inside the kitchen.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle onto the counter in the kitchen."}
+	resolver.providers.LanguageInference = language
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	if err := store.CreateAsset(context.Background(), waterBottle, audit.Record{ID: audit.ID("audit-water-bottle"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "water-bottle-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed water bottle: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var proposed *RealtimeVoiceActionPlanProposal
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			proposed = event.ActionPlan
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if proposed != nil {
+		t.Fatalf("expected inverted hierarchy to be rejected, got %+v", proposed)
+	}
+}
+
 func TestRealtimeVoiceCanGatherContextAndProposeMoveActionPlan(t *testing.T) {
 	t.Parallel()
 
@@ -284,11 +465,21 @@ func TestRealtimeVoiceCanGatherContextAndProposeMoveActionPlan(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run realtime voice query: %v", err)
 	}
-	if len(language.seenToolResults) < 2 || len(language.seenToolResults[1]) != 2 {
-		t.Fatalf("expected first turn tool results to be sent back to model, got %+v", language.seenToolResults)
+	plannerTurn := -1
+	for index, planOnly := range language.seenPlanOnly {
+		if planOnly {
+			plannerTurn = index
+			break
+		}
 	}
-	if !strings.Contains(language.seenToolResults[1][0].Content, `"assetId":"drill-1"`) || !strings.Contains(language.seenToolResults[1][1].Content, `"assetId":"living-room-1"`) {
-		t.Fatalf("expected authorized read tools to expose opaque IDs for planning, got %+v", language.seenToolResults[1])
+	if plannerTurn < 0 {
+		t.Fatalf("expected a constrained planner turn, got %+v", language.seenPlanOnly)
+	}
+	if len(language.seenToolResults) <= plannerTurn || len(language.seenToolResults[plannerTurn]) != 2 {
+		t.Fatalf("expected read tool results to be sent to planner turn, got %+v", language.seenToolResults)
+	}
+	if !strings.Contains(language.seenToolResults[plannerTurn][0].Content, `"assetId":"drill-1"`) || !strings.Contains(language.seenToolResults[plannerTurn][1].Content, `"assetId":"living-room-1"`) {
+		t.Fatalf("expected authorized read tools to expose opaque IDs for planning, got %+v", language.seenToolResults[plannerTurn])
 	}
 	if proposed == nil || len(proposed.Commands) != 1 {
 		t.Fatalf("expected move plan proposal, got %+v", proposed)

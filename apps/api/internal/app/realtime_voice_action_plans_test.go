@@ -736,7 +736,7 @@ func TestRealtimeVoiceRejectsRootMoveWhenTranscriptNamesMissingDestination(t *te
 			t.Fatalf("expected unsafe root move to be rejected before proposal, got %+v", event.ActionPlan)
 		}
 	}
-	if tts.lastText != "I found the drill, but I could not understand the destination. Please tell me the room or container." {
+	if tts.lastText != "I need to know where to move it before I can prepare that move." {
 		t.Fatalf("expected clarification after rejected root move, got %q", tts.lastText)
 	}
 }

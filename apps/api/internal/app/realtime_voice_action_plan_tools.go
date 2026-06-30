@@ -71,7 +71,11 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 			}
 			commandID := strings.TrimSpace(firstStringArg(command["id"], command["commandId"]))
 			arguments = canonicalRealtimeVoiceDependentParentReference(arguments, previousCommandIDs)
+			arguments = canonicalRealtimeVoiceConflictingParentReference(arguments)
 			kind = canonicalRealtimeVoiceCreateLocationKind(kind, arguments)
+			kind, arguments = canonicalRealtimeVoiceCreateLocationStorageKind(kind, arguments)
+			arguments = canonicalRealtimeVoiceCreateAssetKind(kind, arguments)
+			arguments = canonicalRealtimeVoiceCreateParentAssetID(kind, arguments)
 			commands = append(commands, ActionPlanCommandInput{
 				ID:        commandID,
 				Kind:      kind,
@@ -82,6 +86,8 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 				previousCommandIDs[commandID] = struct{}{}
 			}
 		}
+		commands = canonicalRealtimeVoiceCreatedItemMoveCommands(commands)
+		commands = canonicalRealtimeVoiceCreatedItemContainerDestination(commands)
 		commands = canonicalRealtimeVoiceActionPlanCommandDependencies(commands)
 		return commands, nil
 	}
@@ -95,6 +101,10 @@ func realtimeVoiceActionPlanCommands(args map[string]any) ([]ActionPlanCommandIn
 		return nil, err
 	}
 	commandKind = canonicalRealtimeVoiceCreateLocationKind(commandKind, arguments)
+	arguments = canonicalRealtimeVoiceConflictingParentReference(arguments)
+	commandKind, arguments = canonicalRealtimeVoiceCreateLocationStorageKind(commandKind, arguments)
+	arguments = canonicalRealtimeVoiceCreateAssetKind(commandKind, arguments)
+	arguments = canonicalRealtimeVoiceCreateParentAssetID(commandKind, arguments)
 	summary := strings.TrimSpace(stringArg(args["commandSummary"]))
 	if summary == "" {
 		return nil, ports.ErrInvalidProviderInput
@@ -460,6 +470,20 @@ func canonicalRealtimeVoiceDependentParentReference(arguments map[string]any, pr
 	return canonical
 }
 
+func canonicalRealtimeVoiceConflictingParentReference(arguments map[string]any) map[string]any {
+	if strings.TrimSpace(stringArg(arguments["parentAssetId"])) == "" || strings.TrimSpace(stringArg(arguments["parentCommandId"])) == "" {
+		return arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		if key == "parentCommandId" {
+			continue
+		}
+		canonical[key] = value
+	}
+	return canonical
+}
+
 func canonicalRealtimeVoiceCreateLocationKind(kind actionplan.CommandKind, arguments map[string]any) actionplan.CommandKind {
 	if kind != actionplan.CommandKindCreateAsset {
 		return kind
@@ -468,6 +492,224 @@ func canonicalRealtimeVoiceCreateLocationKind(kind actionplan.CommandKind, argum
 		return kind
 	}
 	return actionplan.CommandKindCreateLocation
+}
+
+func canonicalRealtimeVoiceCreateLocationStorageKind(kind actionplan.CommandKind, arguments map[string]any) (actionplan.CommandKind, map[string]any) {
+	if kind != actionplan.CommandKindCreateLocation || !realtimeVoiceTitleLooksLikeContainer(firstStringArg(arguments["title"], arguments["name"])) {
+		return kind, arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		if key == "kind" {
+			continue
+		}
+		canonical[key] = value
+	}
+	canonical["kind"] = asset.KindContainer.String()
+	return actionplan.CommandKindCreateAsset, canonical
+}
+
+func canonicalRealtimeVoiceCreateAssetKind(kind actionplan.CommandKind, arguments map[string]any) map[string]any {
+	if kind != actionplan.CommandKindCreateAsset || strings.TrimSpace(stringArg(arguments["kind"])) != asset.KindContainer.String() {
+		return arguments
+	}
+	title := strings.TrimSpace(firstStringArg(arguments["title"], arguments["name"]))
+	if title == "" || realtimeVoiceTitleLooksLikeContainer(title) {
+		return arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		canonical[key] = value
+	}
+	canonical["kind"] = asset.KindItem.String()
+	return canonical
+}
+
+func realtimeVoiceTitleLooksLikeContainer(title string) bool {
+	for _, word := range realtimeVoiceMeaningfulWords(title) {
+		if realtimeVoiceContainerSegmentWords[word] {
+			return true
+		}
+	}
+	return false
+}
+
+func canonicalRealtimeVoiceCreateParentAssetID(kind actionplan.CommandKind, arguments map[string]any) map[string]any {
+	if kind != actionplan.CommandKindCreateAsset && kind != actionplan.CommandKindCreateLocation {
+		return arguments
+	}
+	if strings.TrimSpace(stringArg(arguments["assetId"])) == "" {
+		return arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		if key == "assetId" {
+			continue
+		}
+		canonical[key] = value
+	}
+	if strings.TrimSpace(stringArg(arguments["parentAssetId"])) != "" ||
+		strings.TrimSpace(stringArg(arguments["parentCommandId"])) != "" ||
+		strings.TrimSpace(firstStringArg(arguments["title"], arguments["name"])) == "" {
+		return canonical
+	}
+	canonical["parentAssetId"] = arguments["assetId"]
+	return canonical
+}
+
+func canonicalRealtimeVoiceCreatedItemMoveCommands(commands []ActionPlanCommandInput) []ActionPlanCommandInput {
+	if len(commands) < 2 {
+		return commands
+	}
+	createItemIndexByID := map[string]int{}
+	createItemIndexByGuessedID := map[string]int{}
+	for index, command := range commands {
+		if command.ID == "" || command.Kind != actionplan.CommandKindCreateAsset {
+			continue
+		}
+		kind := strings.TrimSpace(stringArg(command.Arguments["kind"]))
+		if kind == "" {
+			kind = asset.KindItem.String()
+		}
+		if kind == asset.KindItem.String() {
+			createItemIndexByID[command.ID] = index
+			for _, guessedID := range realtimeVoiceGuessedAssetIDsFromTitle(firstStringArg(command.Arguments["title"], command.Arguments["name"])) {
+				createItemIndexByGuessedID[guessedID] = index
+			}
+		}
+	}
+	if len(createItemIndexByID) == 0 {
+		return commands
+	}
+	dropMoveIndexes := map[int]struct{}{}
+	normalized := append([]ActionPlanCommandInput{}, commands...)
+	for index, command := range commands {
+		if command.Kind != actionplan.CommandKindMoveAsset {
+			continue
+		}
+		assetID := strings.TrimSpace(stringArg(command.Arguments["assetId"]))
+		parentAssetID := strings.TrimSpace(stringArg(command.Arguments["parentAssetId"]))
+		parentCommandID := strings.TrimSpace(stringArg(command.Arguments["parentCommandId"]))
+		if createIndex, ok := createItemIndexByID[assetID]; ok && (parentAssetID != "" || parentCommandID != "") {
+			normalized[createIndex].Arguments = realtimeVoiceArgumentsWithParentReference(normalized[createIndex].Arguments, parentAssetID, parentCommandID)
+			dropMoveIndexes[index] = struct{}{}
+			continue
+		}
+		if createIndex, ok := createItemIndexByGuessedID[assetID]; ok && (parentAssetID != "" || parentCommandID != "") {
+			normalized[createIndex].Arguments = realtimeVoiceArgumentsWithParentReference(normalized[createIndex].Arguments, parentAssetID, parentCommandID)
+			dropMoveIndexes[index] = struct{}{}
+			continue
+		}
+		if createIndex, ok := createItemIndexByID[parentCommandID]; ok && assetID != "" && parentAssetID == "" {
+			normalized[createIndex].Arguments = realtimeVoiceArgumentsWithParentReference(normalized[createIndex].Arguments, assetID, "")
+			dropMoveIndexes[index] = struct{}{}
+		}
+	}
+	if len(dropMoveIndexes) == 0 {
+		return commands
+	}
+	compacted := make([]ActionPlanCommandInput, 0, len(normalized)-len(dropMoveIndexes))
+	for index, command := range normalized {
+		if _, drop := dropMoveIndexes[index]; drop {
+			continue
+		}
+		compacted = append(compacted, command)
+	}
+	return compacted
+}
+
+func canonicalRealtimeVoiceCreatedItemContainerDestination(commands []ActionPlanCommandInput) []ActionPlanCommandInput {
+	if len(commands) < 2 {
+		return commands
+	}
+	itemIndexes := []int{}
+	containerIndexes := []int{}
+	for index, command := range commands {
+		if command.Kind != actionplan.CommandKindCreateAsset {
+			continue
+		}
+		kind := strings.TrimSpace(stringArg(command.Arguments["kind"]))
+		if kind == "" {
+			kind = asset.KindItem.String()
+		}
+		switch kind {
+		case asset.KindItem.String():
+			itemIndexes = append(itemIndexes, index)
+		case asset.KindContainer.String():
+			containerIndexes = append(containerIndexes, index)
+		}
+	}
+	if len(itemIndexes) != 1 || len(containerIndexes) != 1 {
+		return commands
+	}
+	itemIndex := itemIndexes[0]
+	container := commands[containerIndexes[0]]
+	if container.ID == "" {
+		return commands
+	}
+	item := commands[itemIndex]
+	itemParentCommandID := strings.TrimSpace(stringArg(item.Arguments["parentCommandId"]))
+	containerParentAssetID := strings.TrimSpace(stringArg(container.Arguments["parentAssetId"]))
+	itemParentAssetID := strings.TrimSpace(stringArg(item.Arguments["parentAssetId"]))
+	if itemParentCommandID != "" || (itemParentAssetID != "" && itemParentAssetID != containerParentAssetID) {
+		return commands
+	}
+	normalized := append([]ActionPlanCommandInput{}, commands...)
+	canonical := map[string]any{}
+	for key, value := range item.Arguments {
+		if key == "parentAssetId" {
+			continue
+		}
+		canonical[key] = value
+	}
+	canonical["parentCommandId"] = container.ID
+	normalized[itemIndex].Arguments = canonical
+	return normalized
+}
+
+func realtimeVoiceArgumentsWithParentReference(arguments map[string]any, parentAssetID string, parentCommandID string) map[string]any {
+	if strings.TrimSpace(stringArg(arguments["parentCommandId"])) != "" {
+		return arguments
+	}
+	canonical := map[string]any{}
+	for key, value := range arguments {
+		if parentCommandID != "" && key == "parentAssetId" {
+			continue
+		}
+		canonical[key] = value
+	}
+	if parentCommandID != "" {
+		canonical["parentCommandId"] = parentCommandID
+		return canonical
+	}
+	if strings.TrimSpace(stringArg(arguments["parentAssetId"])) != "" {
+		return arguments
+	}
+	if parentAssetID != "" {
+		canonical["parentAssetId"] = parentAssetID
+	}
+	return canonical
+}
+
+func realtimeVoiceGuessedAssetIDsFromTitle(title string) []string {
+	words := realtimeVoiceMeaningfulWords(title)
+	if len(words) == 0 {
+		return nil
+	}
+	values := []string{strings.Join(words, "-") + "-1"}
+	withoutModifiers := make([]string, 0, len(words))
+	for _, word := range words {
+		switch word {
+		case "spare", "pack":
+			continue
+		default:
+			withoutModifiers = append(withoutModifiers, word)
+		}
+	}
+	if len(withoutModifiers) > 0 && len(withoutModifiers) != len(words) {
+		values = append(values, strings.Join(withoutModifiers, "-")+"-1")
+	}
+	return values
 }
 
 func canonicalRealtimeVoiceActionPlanCommandDependencies(commands []ActionPlanCommandInput) []ActionPlanCommandInput {

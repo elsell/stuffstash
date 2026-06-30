@@ -36,6 +36,8 @@ func TestGoogleGeminiLanguagePromptGuidesNewThingsIntoCreateCommands(t *testing.
 		"For add/create requests for a new item, use create_asset with title or name and kind item",
 		"Do not invent an assetId for a new item",
 		"Never include assetId in create_asset arguments",
+		"When a new item should go inside an existing parent, use one create_asset command with parentAssetId set to the visible parent.",
+		"Do not create the item and then move it.",
 		"create the container with parentAssetId set to that visible location assetId",
 		"Use create_asset with kind container for new containers",
 		"Do not create the new item first and do not add a move_asset command for the new item.",
@@ -57,8 +59,9 @@ func TestGoogleGeminiLanguagePromptUsesCompactReadOnlyPromptForRequiredToolTurns
 
 	for _, required := range []string{
 		"This turn must gather context with exactly one provided read tool.",
-		"For add/create requests into a nested destination, search the outermost named place or container separately",
-		"do not search the whole destination phrase first",
+		"For add/create requests into a nested destination, search the outermost room, place, or container separately first",
+		"do not search only the item or the whole destination phrase",
+		"this first read turn must search the source item first, not the destination",
 		"Use short search keywords copied from the transcript.",
 		"Do not answer yet and do not propose changes on this turn.",
 	} {

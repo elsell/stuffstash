@@ -697,7 +697,17 @@ func readRealtimeMessagesUntil(t *testing.T, ctx context.Context, connection *we
 
 	var events []map[string]any
 	for {
-		event := readRealtimeMessage(t, ctx, connection)
+		frameType, payload, err := connection.Read(ctx)
+		if err != nil {
+			t.Fatalf("read realtime message before %s: %v; events=%+v", messageType, err, events)
+		}
+		if frameType != websocket.MessageText {
+			t.Fatalf("expected text message before %s, got %v; events=%+v", messageType, frameType, events)
+		}
+		var event map[string]any
+		if err := json.Unmarshal(payload, &event); err != nil {
+			t.Fatalf("decode realtime message %s before %s: %v; events=%+v", string(payload), messageType, err, events)
+		}
 		events = append(events, event)
 		if event["type"] == messageType {
 			return events
