@@ -1,6 +1,5 @@
 import type {
   Asset,
-  AssetPhotoReference,
   AssetSearchResult,
   Inventory,
   StuffStashClient,
@@ -14,7 +13,8 @@ import {
   AddInventoryAssetPhotoInput,
   InventoryAssetPhotoDirectUpload,
   InventorySummaryRepository,
-  InventoryWorkspace
+  InventoryWorkspace,
+  UpdateInventoryAssetInput
 } from '../../application/home/InventorySummaryRepository';
 import { assetId, AssetSummary } from '../../domain/assets/AssetSummary';
 import {
@@ -32,12 +32,14 @@ type InventoryApiClient = Pick<
   | 'listInventories'
   | 'listAssets'
   | 'createAsset'
+  | 'updateAsset'
   | 'archiveAsset'
   | 'restoreAsset'
   | 'deleteAsset'
   | 'createAssetAttachment'
   | 'initiateAssetAttachmentDirectUpload'
   | 'completeAssetAttachmentDirectUpload'
+  | 'deleteAssetAttachment'
   | 'searchAssets'
   | 'listAssetAttachments'
   | 'assetAttachmentThumbnailReference'
@@ -135,6 +137,20 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     );
   }
 
+  async updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary> {
+    const inventory = await this.getDefaultInventorySummary();
+    const asset = await this.client.updateAsset(inventory.tenantId, inventory.id, input.assetId, {
+      ...(input.title !== undefined ? { title: input.title } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {})
+    });
+
+    const knownAssets = inventory.assets.map((item) =>
+      summaryToApiAsset(inventory.tenantId, inventory.id, item)
+    );
+    return this.mapAssetWithPhoto(inventory.name, asset, knownAssets);
+  }
+
   async addAssetPhoto(
     assetIdValue: AssetSummary['id'],
     input: CreateInventoryAssetPhotoInput
@@ -175,6 +191,11 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       contentType: input.contentType,
       contentBase64: await attachmentContentBase64(input)
     });
+  }
+
+  async deleteAssetPhoto(assetIdValue: AssetSummary['id'], photoId: string): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.deleteAssetAttachment(inventory.tenantId, inventory.id, assetIdValue, photoId);
   }
 
   async archiveAsset(assetIdValue: AssetSummary['id']): Promise<void> {
@@ -249,7 +270,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
     return Promise.all(
       locationAssets.map(async (location) =>
-        mapLocation(location, knownAssets, await this.primaryPhotoForAsset(location))
+        mapLocation(location, knownAssets, (await this.photosForAsset(location))[0])
       )
     );
   }
@@ -262,7 +283,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const locations = await Promise.all(
       assets
         .filter((asset) => asset.kind === 'location')
-        .map(async (location) => mapLocation(location, assets, await this.primaryPhotoForAsset(location)))
+        .map(async (location) => mapLocation(location, assets, (await this.photosForAsset(location))[0]))
     );
 
     const mappedAssets = await Promise.all(
@@ -303,33 +324,49 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     asset: Asset,
     assets: readonly Asset[]
   ): Promise<AssetSummary> {
-    const photo = await this.primaryPhotoForAsset(asset);
-    return mapAsset(inventoryName, asset, assets, photo);
+    const photos = await this.photosForAsset(asset);
+    return mapAsset(inventoryName, asset, assets, photos);
   }
 
-  private async primaryPhotoForAsset(asset: Asset): Promise<AssetPhotoReference | undefined> {
-    let attachmentsPage;
+  private async photosForAsset(asset: Asset): Promise<readonly NonNullable<AssetSummary['photo']>[]> {
+    const attachments = [];
+    let cursor: string | undefined;
+
     try {
-      attachmentsPage = await this.client.listAssetAttachments(
-        asset.tenantId,
-        asset.inventoryId,
-        asset.id,
-        1
-      );
+      do {
+        const page = await this.client.listAssetAttachments(
+          asset.tenantId,
+          asset.inventoryId,
+          asset.id,
+          50,
+          cursor
+        );
+        attachments.push(...page.items);
+        cursor = page.pagination.nextCursor ?? undefined;
+      } while (cursor);
     } catch {
-      return undefined;
+      return [];
     }
 
-    const attachment = attachmentsPage.items.find((item) => item.lifecycleState === 'active');
-    if (!attachment || !attachment.contentType.startsWith('image/')) {
-      return undefined;
-    }
-
-    return this.client.assetAttachmentThumbnailReference(
-      asset.tenantId,
-      asset.inventoryId,
-      asset.id,
-      attachment.id
+    return Promise.all(
+      attachments
+        .filter((item) => item.lifecycleState === 'active' && item.contentType.startsWith('image/'))
+        .map(async (attachment) => {
+          const reference = await this.client.assetAttachmentThumbnailReference(
+            asset.tenantId,
+            asset.inventoryId,
+            asset.id,
+            attachment.id
+          );
+          return {
+            id: attachment.id,
+            fileName: attachment.fileName,
+            contentType: attachment.contentType,
+            sizeBytes: attachment.sizeBytes,
+            uri: reference.uri,
+            headers: reference.headers
+          };
+        })
     );
   }
 
@@ -521,7 +558,7 @@ function mapTenant(tenant: Tenant) {
 function mapLocation(
   location: Asset,
   assets: readonly Asset[],
-  photo?: AssetPhotoReference
+  photo?: AssetSummary['photo']
 ): LocationSummary {
   const children = assets.filter((asset) => asset.parentAssetId === location.id);
 
@@ -552,24 +589,47 @@ function mapAsset(
   inventoryName: string,
   asset: Asset,
   assets: readonly Asset[],
-  photo?: AssetPhotoReference
+  photos: readonly NonNullable<AssetSummary['photo']>[] = []
 ): AssetSummary {
   const parent = asset.parentAssetId
     ? assets.find((candidate) => candidate.id === asset.parentAssetId)
     : undefined;
+  const ancestorTitles = ancestorTrail(asset, assets).map((ancestor) => ancestor.title);
+  const photo = photos[0];
 
   return {
     id: assetId(asset.id),
     title: asset.title,
     kind: asset.kind,
     lifecycleState: asset.lifecycleState,
+    parentAssetId: asset.parentAssetId ? assetId(asset.parentAssetId) : undefined,
     locationLabel: parent?.title ?? 'Inventory root',
-    locationTrail: [inventoryName, parent?.title, asset.title].filter(isString),
+    locationTrail: [inventoryName, ...ancestorTitles, asset.title].filter(isString),
     description: asset.description,
     updatedAtLabel: updatedAtLabel(asset),
     hasPhoto: photo !== undefined,
+    photos,
     photo
   };
+}
+
+function ancestorTrail(asset: Asset, assets: readonly Asset[]): readonly Asset[] {
+  const byID = new Map(assets.map((candidate) => [candidate.id, candidate]));
+  const ancestors: Asset[] = [];
+  const seen = new Set<string>([asset.id]);
+  let parentID = asset.parentAssetId ?? undefined;
+
+  while (parentID && !seen.has(parentID)) {
+    seen.add(parentID);
+    const parent = byID.get(parentID);
+    if (!parent) {
+      break;
+    }
+    ancestors.unshift(parent);
+    parentID = parent.parentAssetId ?? undefined;
+  }
+
+  return ancestors;
 }
 
 function isString(value: string | undefined): value is string {
@@ -604,7 +664,7 @@ function summaryToApiAsset(
     kind: asset.kind,
     title: asset.title,
     description: asset.description,
-    parentAssetId: null,
+    parentAssetId: asset.parentAssetId ?? null,
     lifecycleState: asset.lifecycleState,
     customFields: {},
     createdAt: '',

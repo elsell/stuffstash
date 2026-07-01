@@ -112,7 +112,7 @@ describe('LocationAssetsQuery', () => {
   it('builds image-card and detail view models for assets inside a location', async () => {
     const query = new LocationAssetsQuery(new FakeInventorySummaryRepository());
 
-    await expect(query.execute('asset-garage')).resolves.toEqual({
+    await expect(query.execute('asset-garage')).resolves.toMatchObject({
       locationId: 'asset-garage',
       locationTitle: 'Garage',
       inventoryName: 'Home',
@@ -133,14 +133,22 @@ describe('LocationAssetsQuery', () => {
         {
           id: 'asset-filters',
           title: 'Furnace filters',
+          kind: 'item',
           kindLabel: 'Item',
           customTypeLabel: undefined,
           description: 'MERV 11 three-pack.',
           locationTrailLabel: 'Garage / Furnace filters',
           lifecycleLabel: 'Active',
+          isActive: true,
+          canEdit: true,
+          canMove: true,
+          canAddPhotos: true,
           canArchive: true,
           canRestore: false,
           canDeletePermanently: false,
+          canContainAssets: false,
+          containedAssetsLabel: '0 things inside',
+          containedAssets: [],
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           imagePlaceholderLabel: 'Item'

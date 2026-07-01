@@ -13,9 +13,13 @@ import { CreateAssetCommand } from '../application/add/CreateAssetCommand';
 import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
 import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
+import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
+import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
+import { MoveAssetCommand } from '../application/assets/MoveAssetCommand';
+import { UpdateAssetCommand } from '../application/assets/UpdateAssetCommand';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
 import { SelectInventoryCommand } from '../application/home/SelectInventoryCommand';
 import { LocationAssetsQuery } from '../application/locations/LocationAssetsQuery';
@@ -42,6 +46,10 @@ export type MobileComposition = {
   readonly searchAssetsQuery: SearchAssetsQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
+  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
+  readonly moveAssetCommand: MoveAssetCommand;
+  readonly updateAssetCommand: UpdateAssetCommand;
   readonly inventoryAssetsQuery: InventoryAssetsQuery;
   readonly createAssetCommand: CreateAssetCommand;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
@@ -101,6 +109,10 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
+    addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),
+    deleteAssetPhotoCommand: new DeleteAssetPhotoCommand(inventorySummaries),
+    moveAssetCommand: new MoveAssetCommand(inventorySummaries),
+    updateAssetCommand: new UpdateAssetCommand(inventorySummaries),
     inventoryAssetsQuery: new InventoryAssetsQuery(inventorySummaries),
     createAssetCommand: new CreateAssetCommand(inventorySummaries),
     addDraftScopeQuery: new AddDraftScopeQuery(principals),

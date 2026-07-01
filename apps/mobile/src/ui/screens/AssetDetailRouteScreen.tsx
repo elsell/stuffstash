@@ -1,24 +1,56 @@
 import { useEffect, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
+  ActionSheetIOS,
   ActivityIndicator,
   Alert,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  AddAssetPhotosCommand,
+  AddAssetPhotosCommandResult
+} from '../../application/assets/AddAssetPhotosCommand';
 import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
+import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
+import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
+import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand';
+import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
+import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
+import {
+  PhotoSelectionQuery,
+  SelectedAssetPhoto
+} from '../../application/add/PhotoSelectionQuery';
 import { AssetDetailView } from '../components/AssetDetailView';
+import {
+  EditAssetSheet,
+  EditDraft,
+  MoveAssetSheet,
+  MoveDraft,
+  MoveIntoDraft,
+  MoveThingsHereSheet
+} from './AssetDetailSheets';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
-import { colors, spacing } from '../theme/tokens';
+import { parentFromCurrentAssetPath } from './AssetDetailMovePresentation';
+import { showPhotoSourceChooser } from './PhotoSourceChooser';
+import { colors, radius, spacing } from '../theme/tokens';
 
 type AssetDetailRouteScreenProps = {
+  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly createAssetCommand: CreateAssetCommand;
+  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
+  readonly moveAssetCommand: MoveAssetCommand;
+  readonly parentLookupQuery: ParentLookupQuery;
+  readonly photoSelectionQuery: PhotoSelectionQuery;
+  readonly updateAssetCommand: UpdateAssetCommand;
   readonly assetId: string;
 };
 
@@ -27,14 +59,28 @@ type ScreenState =
   | { readonly status: 'ready'; readonly asset: AssetDetailViewModel }
   | { readonly status: 'error'; readonly message: string };
 
+type PendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos';
+
 export function AssetDetailRouteScreen({
+  addAssetPhotosCommand,
   assetDetailQuery,
   assetLifecycleCommand,
-  assetId
+  assetId,
+  createAssetCommand,
+  deleteAssetPhotoCommand,
+  moveAssetCommand,
+  parentLookupQuery,
+  photoSelectionQuery,
+  updateAssetCommand
 }: AssetDetailRouteScreenProps) {
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'archive' | 'restore' | 'delete' | undefined>();
+  const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
+  const [editDraft, setEditDraft] = useState<EditDraft | undefined>();
+  const [moveDraft, setMoveDraft] = useState<MoveDraft | undefined>();
+  const [moveIntoDraft, setMoveIntoDraft] = useState<MoveIntoDraft | undefined>();
+  const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
+  const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
 
   useEffect(() => {
     let isCurrent = true;
@@ -64,8 +110,7 @@ export function AssetDetailRouteScreen({
     setIsRefreshing(true);
 
     try {
-      const asset = await assetDetailQuery.execute(assetId);
-      setScreenState({ status: 'ready', asset });
+      await reloadAsset();
     } catch (error) {
       setScreenState({
         status: 'error',
@@ -76,19 +121,283 @@ export function AssetDetailRouteScreen({
     }
   }
 
+  async function reloadAsset(): Promise<AssetDetailViewModel> {
+    const asset = await assetDetailQuery.execute(assetId);
+    setScreenState({ status: 'ready', asset });
+    return asset;
+  }
+
+  function openEdit(asset: AssetDetailViewModel): void {
+    setEditDraft({ title: asset.title, description: asset.description });
+  }
+
+  function requestCloseEdit(asset: AssetDetailViewModel): void {
+    if (!editDraft || (editDraft.title === asset.title && editDraft.description === asset.description)) {
+      setEditDraft(undefined);
+      return;
+    }
+    Alert.alert('Discard changes?', 'Your edits have not been saved.', [
+      { text: 'Keep editing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => setEditDraft(undefined) }
+    ]);
+  }
+
+  async function saveEdit(): Promise<void> {
+    if (!editDraft) {
+      return;
+    }
+    setPendingAction('edit');
+    try {
+      await updateAssetCommand.execute({
+        assetId,
+        title: editDraft.title,
+        description: editDraft.description
+      });
+      setEditDraft(undefined);
+      await reloadAsset();
+    } catch (error) {
+      Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  async function openMove(asset: AssetDetailViewModel): Promise<void> {
+    const matches = await parentLookupQuery.execute('');
+    const safeMatches = matches.filter((match) => match.id !== asset.id);
+    const currentParent = asset.parentAssetId
+      ? safeMatches.find((match) => match.id === asset.parentAssetId) ?? parentFromCurrentAssetPath(asset)
+      : null;
+    setMoveDraft({
+      query: currentParent?.title ?? '',
+      matches: safeMatches,
+      selectedParent: currentParent
+    });
+  }
+
+  async function updateMoveQuery(query: string, asset: AssetDetailViewModel): Promise<void> {
+    setMoveDraft((current) => current ? { ...current, query } : current);
+    const matches = await parentLookupQuery.execute(query);
+    setMoveDraft((current) => current
+      && current.query === query
+      ? {
+          ...current,
+          matches: matches.filter((match) => match.id !== asset.id)
+        }
+      : current);
+  }
+
+  async function createMoveDestination(asset: AssetDetailViewModel): Promise<void> {
+    const name = moveDraft?.query.trim() ?? '';
+    if (name.length === 0) {
+      return;
+    }
+    setPendingAction('move');
+    try {
+      const created = await createAssetCommand.execute({
+        kind: 'location',
+        title: name,
+        description: ''
+      });
+      const createdParent: ParentLookupResult = {
+        id: created.id,
+        title: created.title,
+        kind: 'location',
+        subtitle: 'New location',
+        selectionHint: 'Location',
+        willPromoteToContainer: false
+      };
+      setMoveDraft({
+        query: created.title,
+        matches: [createdParent, ...(moveDraft?.matches ?? []).filter((match) => match.id !== asset.id)],
+        selectedParent: createdParent
+      });
+    } catch (error) {
+      Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  async function saveMove(): Promise<void> {
+    if (!moveDraft) {
+      return;
+    }
+    setPendingAction('move');
+    try {
+      await moveAssetCommand.execute({
+        assetId,
+        parentAssetId: moveDraft.selectedParent?.id
+      });
+      setMoveDraft(undefined);
+      await reloadAsset();
+    } catch (error) {
+      Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  async function openMoveThingsHere(target: AssetDetailViewModel): Promise<void> {
+    const matches = await parentLookupQuery.execute('');
+    setMoveIntoDraft({
+      target,
+      query: '',
+      matches: matches.filter((match) => match.id !== target.id),
+      selectedAsset: undefined
+    });
+  }
+
+  async function updateMoveIntoQuery(query: string, target: AssetDetailViewModel): Promise<void> {
+    setMoveIntoDraft((current) => current ? { ...current, query } : current);
+    const matches = await parentLookupQuery.execute(query);
+    setMoveIntoDraft((current) => current
+      && current.query === query
+      ? {
+          ...current,
+          matches: matches.filter((match) => match.id !== target.id)
+        }
+      : current);
+  }
+
+  async function saveMoveInto(): Promise<void> {
+    if (!moveIntoDraft?.selectedAsset) {
+      return;
+    }
+    setPendingAction('move');
+    try {
+      await moveAssetCommand.execute({
+        assetId: moveIntoDraft.selectedAsset.id,
+        parentAssetId: moveIntoDraft.target.id
+      });
+      setMoveIntoDraft(undefined);
+      await reloadAsset();
+    } catch (error) {
+      Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  function choosePhotos(currentPhotoCount: number): void {
+    showPhotoSourceChooser({
+      onCamera: () => {
+        void addPhotos('camera', currentPhotoCount);
+      },
+      onLibrary: () => {
+        void addPhotos('library', currentPhotoCount);
+      }
+    });
+  }
+
+  async function addPhotos(source: 'camera' | 'library', currentPhotoCount: number): Promise<void> {
+    setPendingAction('photos');
+    try {
+      const photos = source === 'camera'
+        ? await photoSelectionQuery.captureFromCamera(currentPhotoCount)
+        : await photoSelectionQuery.selectFromLibrary(currentPhotoCount);
+      if (photos.length === 0) {
+        return;
+      }
+      const result = await addAssetPhotosCommand.execute({ assetId, photos });
+      setPhotoStatus(result);
+      setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
+      await reloadAsset();
+    } catch (error) {
+      Alert.alert('Could not add photos', readableError(error, 'Photo upload failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  async function retryPhotos(): Promise<void> {
+    const photos = failedPhotoDrafts;
+    if (photos.length === 0) {
+      return;
+    }
+    setPendingAction('photos');
+    try {
+      const result = await addAssetPhotosCommand.execute({ assetId, photos });
+      setPhotoStatus(result);
+      setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
+      await reloadAsset();
+    } catch (error) {
+      Alert.alert('Could not retry photos', readableError(error, 'Photo retry failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  function confirmRemovePhoto(photoId: string): void {
+    Alert.alert('Remove photo?', 'This removes the photo from this asset.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => void removePhoto(photoId) }
+    ]);
+  }
+
+  async function removePhoto(photoId: string): Promise<void> {
+    setPendingAction('photos');
+    try {
+      const result = await deleteAssetPhotoCommand.execute({ assetId, photoId });
+      setPhotoStatus({
+        attachedCount: 0,
+        failedCount: 0,
+        failedPhotos: [],
+        message: result.message,
+        canRetry: false
+      });
+      setFailedPhotoDrafts([]);
+      await reloadAsset();
+    } catch (error) {
+      Alert.alert('Could not remove photo', readableError(error, 'Photo removal failed.'));
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
+  function showMoreActions(asset: AssetDetailViewModel): void {
+    if (Platform.OS === 'ios') {
+      const actions = lifecycleActions(asset);
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...actions.map((action) => action.label), 'Cancel'],
+          cancelButtonIndex: actions.length,
+          destructiveButtonIndex: actions.findIndex((action) => action.kind === 'delete')
+        },
+        (index) => {
+          const action = actions[index];
+          if (action) {
+            action.run();
+          }
+        }
+      );
+      return;
+    }
+    Alert.alert('Asset actions', undefined, [
+      ...lifecycleActions(asset).map((action) => ({
+        text: action.label,
+        style: action.kind === 'delete' ? 'destructive' as const : 'default' as const,
+        onPress: action.run
+      })),
+      { text: 'Cancel', style: 'cancel' }
+    ]);
+  }
+
+  function lifecycleActions(asset: AssetDetailViewModel) {
+    return [
+      asset.canArchive ? { kind: 'archive' as const, label: 'Archive', run: confirmArchive } : undefined,
+      asset.canRestore ? { kind: 'restore' as const, label: 'Restore', run: confirmRestore } : undefined,
+      asset.canDeletePermanently ? { kind: 'delete' as const, label: 'Delete permanently', run: confirmDelete } : undefined
+    ].filter((action): action is { readonly kind: 'archive' | 'restore' | 'delete'; readonly label: string; readonly run: () => void } => action !== undefined);
+  }
+
   function confirmArchive(): void {
     Alert.alert(
       'Archive asset?',
       'Archived assets are hidden from normal inventory work and can be restored later.',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Archive',
-          style: 'destructive',
-          onPress: () => {
-            void runLifecycleAction('archive');
-          }
-        }
+        { text: 'Archive', style: 'destructive', onPress: () => void runLifecycleAction('archive') }
       ]
     );
   }
@@ -96,28 +405,17 @@ export function AssetDetailRouteScreen({
   function confirmRestore(): void {
     Alert.alert('Restore asset?', 'This returns the asset to active inventory work.', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Restore',
-        onPress: () => {
-          void runLifecycleAction('restore');
-        }
-      }
+      { text: 'Restore', onPress: () => void runLifecycleAction('restore') }
     ]);
   }
 
   function confirmDelete(): void {
     Alert.alert(
       'Delete permanently?',
-      'This removes the asset permanently. Audit history is preserved.',
+      'This permanently removes the asset. Audit history is preserved, but the asset itself cannot be restored.',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void runLifecycleAction('delete');
-          }
-        }
+        { text: 'Delete permanently', style: 'destructive', onPress: () => void runLifecycleAction('delete') }
       ]
     );
   }
@@ -133,8 +431,7 @@ export function AssetDetailRouteScreen({
         return;
       }
 
-      const asset = await assetDetailQuery.execute(assetId);
-      setScreenState({ status: 'ready', asset });
+      await reloadAsset();
     } catch (error) {
       Alert.alert('Could not update asset', readableError(error, 'Lifecycle action failed.'));
     } finally {
@@ -151,10 +448,18 @@ export function AssetDetailRouteScreen({
           <Stack.Screen options={{ title: screenState.asset.title }} />
           <AssetDetailView
             asset={screenState.asset}
-            isLifecycleActionPending={pendingAction !== undefined}
-            onArchive={confirmArchive}
-            onRestore={confirmRestore}
-            onDeletePermanently={confirmDelete}
+            canRetryPhotos={photoStatus?.canRetry}
+            isActionPending={pendingAction !== undefined}
+            onAddHere={() => router.push('/add')}
+            onAddPhotos={() => choosePhotos(screenState.asset.photos.length)}
+            onChildPress={(childId) => router.push(`/assets/${childId}`)}
+            onEdit={() => openEdit(screenState.asset)}
+            onMoreActions={lifecycleActions(screenState.asset).length > 0 ? () => showMoreActions(screenState.asset) : undefined}
+            onMove={() => void openMove(screenState.asset)}
+            onMoveThingsHere={() => void openMoveThingsHere(screenState.asset)}
+            onRemovePhoto={confirmRemovePhoto}
+            onRetryPhotos={() => void retryPhotos()}
+            photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
@@ -162,6 +467,32 @@ export function AssetDetailRouteScreen({
                 onRefresh={refreshAsset}
               />
             }
+          />
+          <EditAssetSheet
+            draft={editDraft}
+            isSaving={pendingAction === 'edit'}
+            onChange={setEditDraft}
+            onClose={() => requestCloseEdit(screenState.asset)}
+            onSave={() => void saveEdit()}
+          />
+          <MoveAssetSheet
+            asset={screenState.asset}
+            draft={moveDraft}
+            isSaving={pendingAction === 'move'}
+            onChangeQuery={(query) => void updateMoveQuery(query, screenState.asset)}
+            onClose={() => setMoveDraft(undefined)}
+            onCreateDestination={() => void createMoveDestination(screenState.asset)}
+            onSelectParent={(selectedParent) => setMoveDraft((current) => current ? { ...current, selectedParent } : current)}
+            onSelectRoot={() => setMoveDraft((current) => current ? { ...current, selectedParent: null } : current)}
+            onSave={() => void saveMove()}
+          />
+          <MoveThingsHereSheet
+            draft={moveIntoDraft}
+            isSaving={pendingAction === 'move'}
+            onChangeQuery={(query) => void updateMoveIntoQuery(query, screenState.asset)}
+            onClose={() => setMoveIntoDraft(undefined)}
+            onSave={() => void saveMoveInto()}
+            onSelectAsset={(selectedAsset) => setMoveIntoDraft((current) => current ? { ...current, selectedAsset } : current)}
           />
         </>
       ) : null}

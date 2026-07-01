@@ -32,6 +32,18 @@ export interface InventorySummaryRepository {
   searchLocations(query: string): Promise<readonly LocationSummary[]>;
 }
 
+export interface InventoryAssetUpdateRepository {
+  updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary>;
+}
+
+export interface InventoryAssetPhotoAddRepository {
+  addAssetPhoto(assetId: AssetId, input: CreateInventoryAssetPhotoInput): Promise<void>;
+}
+
+export interface InventoryAssetPhotoDeletionRepository {
+  deleteAssetPhoto(assetId: AssetId, photoId: string): Promise<void>;
+}
+
 export type AssetBrowseLifecycleFilter = AssetLifecycleState | 'all';
 
 export type AssetBrowseKindFilter = AssetKind | 'all';
@@ -58,6 +70,13 @@ export type CreateInventoryAssetInput = {
   readonly title: string;
   readonly description: string;
   readonly parentAssetId?: AssetId;
+};
+
+export type UpdateInventoryAssetInput = {
+  readonly assetId: AssetId;
+  readonly title?: string;
+  readonly description?: string;
+  readonly parentAssetId?: AssetId | null;
 };
 
 export type CreateInventoryAssetPhotoInput = {

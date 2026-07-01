@@ -38,6 +38,18 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
           description: 'Travel documents and copies.',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
+        },
+        {
+          id: assetId('asset-birth-certificate'),
+          title: 'Birth certificate',
+          kind: 'item',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-passport'),
+          locationLabel: 'Passport folder',
+          locationTrail: ['Home', 'Office closet', 'Passport folder', 'Birth certificate'],
+          description: '',
+          updatedAtLabel: 'Updated yesterday',
+          hasPhoto: false
         }
       ]
     };
@@ -94,22 +106,44 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 }
 
 describe('AssetDetailQuery', () => {
-  it('builds a reusable read-only asset detail view model', async () => {
+  it('builds a reusable asset workspace view model', async () => {
     const query = new AssetDetailQuery(new FakeInventorySummaryRepository());
 
     await expect(query.execute('asset-passport')).resolves.toEqual({
       id: 'asset-passport',
       title: 'Passport folder',
+      kind: 'container',
       kindLabel: 'Container',
       customTypeLabel: 'Documents',
       description: 'Travel documents and copies.',
+      parentAssetId: undefined,
       locationTrailLabel: 'Office closet / Passport folder',
       lifecycleLabel: 'Active',
+      isActive: true,
+      canEdit: true,
+      canMove: true,
+      canAddPhotos: true,
       canArchive: true,
       canRestore: false,
       canDeletePermanently: false,
+      canContainAssets: true,
+      containedAssetsLabel: '1 thing inside',
+      containedAssets: [{
+        id: 'asset-birth-certificate',
+        title: 'Birth certificate',
+        kindLabel: 'Item',
+        customTypeLabel: undefined,
+        description: '',
+        locationTrailLabel: 'Office closet / Passport folder / Birth certificate',
+        updatedAtLabel: 'Updated yesterday',
+        photoLabel: 'Needs photo',
+        photo: undefined,
+        imagePlaceholderLabel: 'Item'
+      }],
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
+      photos: [],
+      photo: undefined,
       imagePlaceholderLabel: 'Box'
     });
   });

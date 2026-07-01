@@ -1,6 +1,6 @@
 import {
-  Pressable,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,26 +8,44 @@ import {
 } from 'react-native';
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
+import { Camera, MoreHorizontal, MoveRight, Pencil, X } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import { AssetCard } from './AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
 
 type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
-  readonly isLifecycleActionPending?: boolean;
+  readonly isActionPending?: boolean;
+  readonly photoStatusMessage?: string;
+  readonly canRetryPhotos?: boolean;
   readonly onBack?: () => void;
-  readonly onArchive?: () => void;
-  readonly onRestore?: () => void;
-  readonly onDeletePermanently?: () => void;
+  readonly onEdit?: () => void;
+  readonly onMove?: () => void;
+  readonly onAddPhotos?: () => void;
+  readonly onRemovePhoto?: (photoId: string) => void;
+  readonly onRetryPhotos?: () => void;
+  readonly onMoreActions?: () => void;
+  readonly onChildPress?: (assetId: string) => void;
+  readonly onAddHere?: () => void;
+  readonly onMoveThingsHere?: () => void;
   readonly refreshControl?: ReactElement<RefreshControlProps>;
 };
 
 export function AssetDetailView({
   asset,
-  isLifecycleActionPending = false,
-  onArchive,
+  canRetryPhotos = false,
+  isActionPending = false,
+  onAddHere,
+  onAddPhotos,
   onBack,
-  onDeletePermanently,
-  onRestore,
+  onChildPress,
+  onEdit,
+  onMoreActions,
+  onMove,
+  onRemovePhoto,
+  onMoveThingsHere,
+  onRetryPhotos,
+  photoStatusMessage,
   refreshControl
 }: AssetDetailViewProps) {
   return (
@@ -38,135 +56,229 @@ export function AssetDetailView({
         </Pressable>
       ) : null}
 
-      <AssetDetailPanel
-        asset={asset}
-        isLifecycleActionPending={isLifecycleActionPending}
-        onArchive={onArchive}
-        onDeletePermanently={onDeletePermanently}
-        onRestore={onRestore}
-      />
+      <View style={styles.stack}>
+        <PhotoWorkspace
+          asset={asset}
+          disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
+          onAddPhotos={onAddPhotos}
+          onRemovePhoto={onRemovePhoto}
+        />
+
+        <View style={styles.panel}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerText}>
+              <View style={styles.badgeRow}>
+                <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
+                {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
+              </View>
+              <Text style={styles.title}>{asset.title}</Text>
+            </View>
+            {onMoreActions ? (
+              <Pressable
+                accessibilityLabel="More asset actions"
+                accessibilityRole="button"
+                disabled={isActionPending}
+                onPress={onMoreActions}
+                style={[styles.iconButton, isActionPending ? styles.disabledAction : null]}
+              >
+                <MoreHorizontal color={colors.text} size={22} />
+              </Pressable>
+            ) : null}
+          </View>
+
+          {asset.description.trim().length > 0 ? (
+            <Text style={styles.description}>{asset.description}</Text>
+          ) : (
+            <Text style={styles.emptyDescription}>No description yet.</Text>
+          )}
+
+          <View style={styles.primaryActions}>
+            <WorkspaceAction
+              disabled={isActionPending || !asset.canEdit || !onEdit}
+              icon={<Pencil color={colors.onAction} size={18} />}
+              label="Edit"
+              primary
+              onPress={onEdit}
+            />
+            <WorkspaceAction
+              disabled={isActionPending || !asset.canMove || !onMove}
+              icon={<MoveRight color={colors.text} size={18} />}
+              label="Move"
+              onPress={onMove}
+            />
+            <WorkspaceAction
+              disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
+              icon={<Camera color={colors.text} size={18} />}
+              label="Photos"
+              onPress={onAddPhotos}
+            />
+          </View>
+
+          {photoStatusMessage ? (
+            <View style={styles.photoStatusPanel}>
+              <Text style={styles.photoStatusText}>{photoStatusMessage}</Text>
+              {canRetryPhotos && onRetryPhotos ? (
+                <Pressable accessibilityRole="button" onPress={onRetryPhotos} style={styles.retryButton}>
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+
+          <View style={styles.metadataList}>
+            <MetadataRow label="Location" value={asset.locationTrailLabel} />
+            <MetadataRow label="Status" value={asset.lifecycleLabel} />
+            <MetadataRow label="Updated" value={asset.updatedAtLabel} />
+          </View>
+        </View>
+
+        {asset.canContainAssets ? (
+          <ContainedAssetsSection
+            asset={asset}
+            onAddHere={onAddHere}
+            onChildPress={onChildPress}
+            onMoveThingsHere={onMoveThingsHere}
+          />
+        ) : null}
+      </View>
     </ScrollView>
   );
 }
 
-export function AssetDetailPanel({
+function PhotoWorkspace({
   asset,
-  isLifecycleActionPending = false,
-  onArchive,
-  onDeletePermanently,
-  onRestore
+  disabled,
+  onAddPhotos,
+  onRemovePhoto
 }: {
   readonly asset: AssetDetailViewModel;
-  readonly isLifecycleActionPending?: boolean;
-  readonly onArchive?: () => void;
-  readonly onRestore?: () => void;
-  readonly onDeletePermanently?: () => void;
+  readonly disabled: boolean;
+  readonly onAddPhotos?: () => void;
+  readonly onRemovePhoto?: (photoId: string) => void;
 }) {
-  const showLifecycleActions =
-    asset.canArchive || asset.canRestore || asset.canDeletePermanently;
+  const photos = asset.photos.length > 0 ? asset.photos : undefined;
 
   return (
-    <View style={styles.stack}>
-      <View style={styles.photoHero}>
-        {asset.photo ? (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.photoStrip}
+    >
+      {photos ? photos.map((photo, index) => (
+        <View key={photo.id ?? photo.uri} style={index === 0 ? styles.photoHero : styles.photoThumb}>
           <Image
             accessibilityIgnoresInvertColors
-            source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
+            accessibilityLabel={photo.label}
+            source={{ uri: photo.uri, headers: photo.headers }}
             style={styles.heroImage}
           />
-        ) : (
+          <Text style={styles.photoStatus}>{index === 0 ? asset.photoLabel : photo.label}</Text>
+          {photo.id && onRemovePhoto ? (
+            <Pressable
+              accessibilityLabel={`Remove ${photo.label}`}
+              accessibilityRole="button"
+              disabled={disabled}
+              onPress={() => onRemovePhoto(photo.id as string)}
+              style={[styles.removePhotoButton, disabled ? styles.disabledAction : null]}
+            >
+              <X color={colors.text} size={18} />
+            </Pressable>
+          ) : null}
+        </View>
+      )) : (
+        <View style={styles.photoHero}>
           <Text style={styles.photoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
-        )}
-        <Text style={styles.photoStatus}>{asset.photoLabel}</Text>
+          <Text style={styles.photoStatus}>{asset.photoLabel}</Text>
+        </View>
+      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        onPress={onAddPhotos}
+        style={[styles.addPhotoTile, disabled ? styles.disabledAction : null]}
+      >
+        <Camera color={colors.action} size={26} />
+        <Text style={styles.addPhotoText}>Add photos</Text>
+      </Pressable>
+    </ScrollView>
+  );
+}
+
+function WorkspaceAction({
+  disabled,
+  icon,
+  label,
+  onPress,
+  primary = false
+}: {
+  readonly disabled: boolean;
+  readonly icon: ReactElement;
+  readonly label: string;
+  readonly onPress?: () => void;
+  readonly primary?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={[
+        styles.workspaceAction,
+        primary ? styles.primaryAction : styles.secondaryAction,
+        disabled ? styles.disabledAction : null
+      ]}
+    >
+      {icon}
+      <Text style={primary ? styles.primaryActionText : styles.secondaryActionText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function ContainedAssetsSection({
+  asset,
+  onAddHere,
+  onChildPress,
+  onMoveThingsHere
+}: {
+  readonly asset: AssetDetailViewModel;
+  readonly onAddHere?: () => void;
+  readonly onChildPress?: (assetId: string) => void;
+  readonly onMoveThingsHere?: () => void;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionEyebrow}>Inside</Text>
+          <Text style={styles.sectionTitle}>{asset.containedAssetsLabel}</Text>
+        </View>
       </View>
-
-      <View style={styles.panel}>
-        <View style={styles.badgeRow}>
-          <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
-          {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
+      {asset.containedAssets.length > 0 ? (
+        <View style={styles.childGrid}>
+          {asset.containedAssets.map((child) => (
+            <AssetCard key={child.id} asset={child} onPress={() => onChildPress?.(child.id)} />
+          ))}
         </View>
-        <Text style={styles.title}>{asset.title}</Text>
-        <Text style={styles.description}>{asset.description}</Text>
-
-        <View style={styles.metadataList}>
-          <MetadataRow label="Location" value={asset.locationTrailLabel} />
-          <MetadataRow label="Status" value={asset.lifecycleLabel} />
-          <MetadataRow label="Updated" value={asset.updatedAtLabel} />
-        </View>
-
-        {showLifecycleActions ? (
-          <View style={styles.lifecycleActions}>
-            {asset.canArchive ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: isLifecycleActionPending || !onArchive }}
-                disabled={isLifecycleActionPending || !onArchive}
-                onPress={onArchive}
-                style={[
-                  styles.lifecycleAction,
-                  styles.archiveAction,
-                  isLifecycleActionPending || !onArchive ? styles.disabledAction : null
-                ]}
-              >
-                <Text style={styles.archiveActionText}>Archive</Text>
-              </Pressable>
-            ) : null}
-            {asset.canRestore ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: isLifecycleActionPending || !onRestore }}
-                disabled={isLifecycleActionPending || !onRestore}
-                onPress={onRestore}
-                style={[
-                  styles.lifecycleAction,
-                  styles.restoreAction,
-                  isLifecycleActionPending || !onRestore ? styles.disabledAction : null
-                ]}
-              >
-                <Text style={styles.restoreActionText}>Restore</Text>
-              </Pressable>
-            ) : null}
-            {asset.canDeletePermanently ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{
-                  disabled: isLifecycleActionPending || !onDeletePermanently
-                }}
-                disabled={isLifecycleActionPending || !onDeletePermanently}
-                onPress={onDeletePermanently}
-                style={[
-                  styles.lifecycleAction,
-                  styles.deleteAction,
-                  isLifecycleActionPending || !onDeletePermanently
-                    ? styles.disabledAction
-                    : null
-                ]}
-              >
-                <Text style={styles.deleteActionText}>Delete permanently</Text>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyContainerTitle}>Nothing inside yet</Text>
+          <Text style={styles.emptyContainerText}>
+            Add something here or move existing things into this place.
+          </Text>
+          <View style={styles.emptyActions}>
+            <Pressable accessibilityRole="button" onPress={onAddHere} style={styles.emptyPrimary}>
+              <Text style={styles.emptyPrimaryText}>Add here</Text>
+            </Pressable>
+            {onMoveThingsHere ? (
+              <Pressable accessibilityRole="button" onPress={onMoveThingsHere} style={styles.emptySecondary}>
+                <Text style={styles.emptySecondaryText}>Move things here</Text>
               </Pressable>
             ) : null}
           </View>
-        ) : null}
-
-        <View style={styles.actionRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={[styles.primaryAction, styles.disabledAction]}
-          >
-            <Text style={styles.primaryActionText}>Edit</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={[styles.secondaryAction, styles.disabledAction]}
-          >
-            <Text style={styles.secondaryActionText}>Move</Text>
-          </Pressable>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -184,7 +296,7 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
     padding: spacing.lg,
-    paddingBottom: spacing.xl
+    paddingBottom: spacing.xl * 2
   },
   stack: {
     gap: spacing.md
@@ -200,12 +312,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   },
+  photoStrip: {
+    gap: spacing.sm,
+    paddingRight: spacing.lg
+  },
   photoHero: {
     alignItems: 'center',
     aspectRatio: 4 / 3,
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
     justifyContent: 'center',
+    minWidth: 300,
     overflow: 'hidden'
   },
   photoPlaceholder: {
@@ -221,7 +338,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0,
-    marginTop: spacing.xs,
     overflow: 'hidden',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -233,12 +349,70 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%'
   },
+  addPhotoTile: {
+    alignItems: 'center',
+    aspectRatio: 3 / 4,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+    justifyContent: 'center',
+    minWidth: 132,
+    padding: spacing.md
+  },
+  photoThumb: {
+    alignItems: 'center',
+    aspectRatio: 4 / 3,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    minWidth: 180,
+    overflow: 'hidden'
+  },
+  removePhotoButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    height: 36,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: spacing.sm,
+    bottom: spacing.sm,
+    width: 36
+  },
+  addPhotoText: {
+    color: colors.action,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textAlign: 'center'
+  },
   panel: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
     padding: spacing.md
+  },
+  headerRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.sm
+  },
+  headerText: {
+    flex: 1
+  },
+  iconButton: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: 'center',
+    width: 44
   },
   badgeRow: {
     flexDirection: 'row',
@@ -282,6 +456,79 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: spacing.sm
   },
+  emptyDescription: {
+    color: colors.textMuted,
+    fontSize: 15,
+    fontStyle: 'italic',
+    lineHeight: 22,
+    marginTop: spacing.sm
+  },
+  primaryActions: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    paddingTop: spacing.md
+  },
+  workspaceAction: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'center',
+    minHeight: 46,
+    paddingHorizontal: spacing.sm
+  },
+  primaryAction: {
+    backgroundColor: colors.action
+  },
+  primaryActionText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  secondaryAction: {
+    borderColor: colors.border,
+    borderWidth: 1
+  },
+  secondaryActionText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  photoStatusPanel: {
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    padding: spacing.md
+  },
+  photoStatusText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 20
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  retryButtonText: {
+    color: colors.action,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
   metadataList: {
     borderTopColor: colors.border,
     borderTopWidth: 1,
@@ -306,85 +553,79 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     lineHeight: 21
   },
-  actionRow: {
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
+  section: {
+    gap: spacing.md
+  },
+  sectionHeader: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    paddingTop: spacing.md
+    justifyContent: 'space-between'
   },
-  lifecycleActions: {
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    paddingTop: spacing.md
+  sectionEyebrow: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textTransform: 'uppercase'
   },
-  lifecycleAction: {
-    alignItems: 'center',
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 0,
+    lineHeight: 28
   },
-  archiveAction: {
-    backgroundColor: colors.warningSurface,
-    borderColor: colors.warning,
-    borderWidth: 1
+  childGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm
   },
-  archiveActionText: {
-    color: colors.warning,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  restoreAction: {
-    backgroundColor: colors.action
-  },
-  restoreActionText: {
-    color: colors.onAction,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  deleteAction: {
-    borderColor: colors.danger,
-    borderWidth: 1
-  },
-  deleteActionText: {
-    color: colors.danger,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  primaryAction: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  primaryActionText: {
-    color: colors.onAction,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  secondaryAction: {
-    alignItems: 'center',
+  emptyContainer: {
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
+    gap: spacing.sm,
+    padding: spacing.md
   },
-  secondaryActionText: {
+  emptyContainerTitle: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  emptyContainerText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  emptyActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs
+  },
+  emptyPrimary: {
+    backgroundColor: colors.action,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  emptyPrimaryText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  emptySecondary: {
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  emptySecondaryText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900',
     letterSpacing: 0
   },
   disabledAction: {

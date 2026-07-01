@@ -16,7 +16,9 @@ export class AssetDetailQuery {
     }
 
     return toAssetDetailViewModel(asset, {
-      canManageLifecycle: inventory.permissions.includes('edit_asset')
+      canManageLifecycle: inventory.permissions.includes('edit_asset'),
+      canEditAsset: inventory.permissions.includes('edit_asset'),
+      allAssets: inventory.assets
     });
   }
 }

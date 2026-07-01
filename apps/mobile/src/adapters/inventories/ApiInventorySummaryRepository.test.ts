@@ -71,6 +71,11 @@ class FakeInventoryApiClient {
     readonly lifecycleState?: string;
     readonly sort?: string;
   }> = [];
+  listAttachmentRequests: Array<{
+    readonly assetId: string;
+    readonly limit?: number;
+    readonly cursor?: string;
+  }> = [];
   createdAssetInput:
     | {
         readonly tenantId: string;
@@ -87,6 +92,16 @@ class FakeInventoryApiClient {
         readonly fileName: string;
     }
     | undefined;
+  updatedAssetInput:
+    | {
+        readonly tenantId: string;
+        readonly inventoryId: string;
+        readonly assetId: string;
+        readonly title?: string;
+        readonly description?: string;
+        readonly parentAssetId?: string | null;
+      }
+    | undefined;
   initiatedDirectUploadInput:
     | {
         readonly tenantId: string;
@@ -102,6 +117,14 @@ class FakeInventoryApiClient {
         readonly inventoryId: string;
         readonly assetId: string;
         readonly uploadId: string;
+      }
+    | undefined;
+  deletedAttachmentInput:
+    | {
+        readonly tenantId: string;
+        readonly inventoryId: string;
+        readonly assetId: string;
+        readonly attachmentId: string;
       }
     | undefined;
   directUploadURL = 'https://uploads.example.test/object-one';
@@ -151,10 +174,32 @@ class FakeInventoryApiClient {
   async listAssetAttachments(
     _tenantId: string,
     _inventoryId: string,
-    assetIdValue: string
+    assetIdValue: string,
+    limit?: number,
+    cursor?: string
   ): Promise<Page<Attachment>> {
+    this.listAttachmentRequests.push({ assetId: assetIdValue, limit, cursor });
     if (this.shouldFailAttachmentLookup) {
       throw new Error('Attachment lookup failed.');
+    }
+
+    if (assetIdValue === 'asset-many-photos') {
+      const firstPhoto = {
+        id: 'attachment-many-one',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: assetIdValue,
+        fileName: 'many-one.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 1024,
+        lifecycleState: 'active' as const
+      };
+      const secondPhoto = {
+        ...firstPhoto,
+        id: 'attachment-many-two',
+        fileName: 'many-two.jpg'
+      };
+      return cursor ? page([secondPhoto]) : pageWithCursor([firstPhoto], 'next-photo-page');
     }
 
     if (assetIdValue !== 'asset-filters') {
@@ -170,6 +215,16 @@ class FakeInventoryApiClient {
         fileName: 'filters.jpg',
         contentType: 'image/jpeg',
         sizeBytes: 1024,
+        lifecycleState: 'active'
+      },
+      {
+        id: 'attachment-filters-label',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: assetIdValue,
+        fileName: 'filters-label.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 512,
         lifecycleState: 'active'
       }
     ]);
@@ -211,6 +266,33 @@ class FakeInventoryApiClient {
       customFields: {},
       createdAt: '2026-06-24T10:00:00Z',
       updatedAt: '2026-06-24T10:00:00Z'
+    };
+  }
+
+  async updateAsset(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    input: { readonly title?: string; readonly description?: string; readonly parentAssetId?: string | null }
+  ): Promise<Asset> {
+    this.updatedAssetInput = {
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      title: input.title,
+      description: input.description,
+      parentAssetId: input.parentAssetId
+    };
+    const current = this.assets.find((asset) => asset.id === assetIdValue);
+    if (!current) {
+      throw new Error('Asset not found.');
+    }
+    return {
+      ...current,
+      title: input.title ?? current.title,
+      description: input.description ?? current.description,
+      parentAssetId: input.parentAssetId === undefined ? current.parentAssetId : input.parentAssetId,
+      updatedAt: '2026-06-25T10:00:00Z'
     };
   }
 
@@ -284,6 +366,20 @@ class FakeInventoryApiClient {
       contentType: 'image/jpeg',
       sizeBytes: 8,
       lifecycleState: 'active'
+    };
+  }
+
+  async deleteAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    attachmentId: string
+  ): Promise<void> {
+    this.deletedAttachmentInput = {
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      attachmentId
     };
   }
 
@@ -468,6 +564,16 @@ describe('ApiInventorySummaryRepository', () => {
               locationLabel: 'Garage',
               locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
               hasPhoto: true,
+              photos: [
+                {
+                  id: 'attachment-filters-photo',
+                  fileName: 'filters.jpg'
+                },
+                {
+                  id: 'attachment-filters-label',
+                  fileName: 'filters-label.jpg'
+                }
+              ],
               photo: {
                 uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small'
               }
@@ -717,6 +823,130 @@ describe('ApiInventorySummaryRepository', () => {
     expect(client.searchedQuery).toBe('tenant-home:filters');
   });
 
+  it('updates asset fields and parent placement through the generated client wrapper', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.updateAsset({
+      assetId: assetId('asset-filters'),
+      title: 'HEPA filters',
+      description: 'Replacement filters.',
+      parentAssetId: null
+    })).resolves.toMatchObject({
+      id: 'asset-filters',
+      title: 'HEPA filters',
+      parentAssetId: undefined,
+      locationLabel: 'Inventory root'
+    });
+
+    expect(client.updatedAssetInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-filters',
+      title: 'HEPA filters',
+      description: 'Replacement filters.',
+      parentAssetId: null
+    });
+  });
+
+  it('maps nested parent trails for asset workspace paths', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      ...client.assets,
+      {
+        id: 'asset-cabinet',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Big cabinet',
+        description: '',
+        parentAssetId: 'asset-garage',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-24T10:00:00Z',
+        updatedAt: '2026-06-24T10:00:00Z'
+      },
+      {
+        id: 'asset-shelf',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Second shelf',
+        description: '',
+        parentAssetId: 'asset-cabinet',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T10:00:00Z',
+        updatedAt: '2026-06-25T10:00:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.browseAssets({
+      query: '',
+      limit: 10,
+      lifecycleState: 'all',
+      kind: 'all',
+      sort: 'updated_desc'
+    })).resolves.toMatchObject({
+      assets: expect.arrayContaining([
+        expect.objectContaining({
+          id: 'asset-shelf',
+          locationTrail: ['Home Inventory', 'Garage', 'Big cabinet', 'Second shelf']
+        })
+      ])
+    });
+  });
+
+  it('loads paged asset photo metadata for the detail workspace strip', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-many-photos',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Photo album',
+        description: '',
+        parentAssetId: 'asset-garage',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T10:00:00Z',
+        updatedAt: '2026-06-25T10:00:00Z'
+      },
+      ...client.assets
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.browseAssets({
+      query: '',
+      limit: 10,
+      lifecycleState: 'all',
+      kind: 'all',
+      sort: 'updated_desc'
+    })).resolves.toMatchObject({
+      assets: expect.arrayContaining([
+        expect.objectContaining({
+          id: 'asset-many-photos',
+          photos: [
+            expect.objectContaining({ id: 'attachment-many-one', fileName: 'many-one.jpg' }),
+            expect.objectContaining({ id: 'attachment-many-two', fileName: 'many-two.jpg' })
+          ]
+        })
+      ])
+    });
+    expect(client.listAttachmentRequests).toContainEqual({
+      assetId: 'asset-many-photos',
+      limit: 50,
+      cursor: undefined
+    });
+    expect(client.listAttachmentRequests).toContainEqual({
+      assetId: 'asset-many-photos',
+      limit: 50,
+      cursor: 'next-photo-page'
+    });
+  });
+
   it('prefers direct upload targets when adding asset photos', async () => {
     const client = new FakeInventoryApiClient();
     const directUploads = new FakeDirectUploadTransport();
@@ -749,6 +979,20 @@ describe('ApiInventorySummaryRepository', () => {
       uploadId: 'upload-one'
     });
     expect(client.createdAttachmentInput).toBeUndefined();
+  });
+
+  it('deletes asset photos through the generated client wrapper', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.deleteAssetPhoto(assetId('asset-filters'), 'attachment-filters-photo');
+
+    expect(client.deletedAttachmentInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-filters',
+      attachmentId: 'attachment-filters-photo'
+    });
   });
 
   it('falls back to JSON attachment upload for local-only direct upload targets', async () => {

@@ -7,16 +7,22 @@ export type AssetSummary = {
   readonly title: string;
   readonly kind: AssetKind;
   readonly lifecycleState: AssetLifecycleState;
+  readonly parentAssetId?: AssetId;
   readonly locationLabel: string;
   readonly locationTrail: readonly string[];
   readonly customType?: string;
   readonly description: string;
   readonly updatedAtLabel: string;
   readonly hasPhoto: boolean;
+  readonly photos?: readonly AssetPhoto[];
   readonly photo?: AssetPhoto;
 };
 
 export type AssetPhoto = {
+  readonly id?: string;
+  readonly fileName?: string;
+  readonly contentType?: string;
+  readonly sizeBytes?: number;
   readonly uri: string;
   readonly headers?: Readonly<Record<string, string>>;
 };

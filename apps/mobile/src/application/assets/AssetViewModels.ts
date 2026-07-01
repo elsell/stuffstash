@@ -16,20 +16,38 @@ export type AssetCardViewModel = {
   };
 };
 
+export type AssetPhotoViewModel = {
+  readonly id?: string;
+  readonly fileName?: string;
+  readonly label: string;
+  readonly uri: string;
+  readonly headers?: Readonly<Record<string, string>>;
+};
+
 export type AssetDetailViewModel = {
   readonly id: string;
   readonly title: string;
+  readonly kind: AssetSummary['kind'];
   readonly kindLabel: string;
   readonly customTypeLabel?: string;
   readonly description: string;
+  readonly parentAssetId?: string;
   readonly locationTrailLabel: string;
   readonly lifecycleLabel: string;
+  readonly isActive: boolean;
+  readonly canEdit: boolean;
+  readonly canMove: boolean;
+  readonly canAddPhotos: boolean;
   readonly canArchive: boolean;
   readonly canRestore: boolean;
   readonly canDeletePermanently: boolean;
+  readonly containedAssets: readonly AssetCardViewModel[];
+  readonly containedAssetsLabel: string;
+  readonly canContainAssets: boolean;
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
   readonly imagePlaceholderLabel: string;
+  readonly photos: readonly AssetPhotoViewModel[];
   readonly photo?: {
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
@@ -53,16 +71,40 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
 
 export function toAssetDetailViewModel(
   asset: AssetSummary,
-  options: { readonly canManageLifecycle?: boolean } = {}
+  options: {
+    readonly canManageLifecycle?: boolean;
+    readonly canEditAsset?: boolean;
+    readonly allAssets?: readonly AssetSummary[];
+  } = {}
 ): AssetDetailViewModel {
   const canManageLifecycle = options.canManageLifecycle ?? true;
+  const canEditAsset = options.canEditAsset ?? canManageLifecycle;
+  const containedAssets = (options.allAssets ?? [])
+    .filter((candidate) => candidate.parentAssetId === asset.id)
+    .map(toAssetCardViewModel);
 
   return {
     ...toAssetCardViewModel(asset),
+    kind: asset.kind,
+    parentAssetId: asset.parentAssetId,
+    photos: (asset.photos ?? (asset.photo ? [asset.photo] : [])).map((photo, index) => ({
+      id: photo.id,
+      fileName: photo.fileName,
+      label: photo.fileName ?? `Photo ${(index + 1).toString()}`,
+      uri: photo.uri,
+      headers: photo.headers
+    })),
     lifecycleLabel: asset.lifecycleState === 'active' ? 'Active' : 'Archived',
+    isActive: asset.lifecycleState === 'active',
+    canEdit: canEditAsset && asset.lifecycleState === 'active',
+    canMove: canEditAsset && asset.lifecycleState === 'active',
+    canAddPhotos: canEditAsset && asset.lifecycleState === 'active',
     canArchive: canManageLifecycle && asset.lifecycleState === 'active',
     canRestore: canManageLifecycle && asset.lifecycleState === 'archived',
-    canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived'
+    canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived',
+    containedAssets,
+    containedAssetsLabel: containedAssets.length === 1 ? '1 thing inside' : `${containedAssets.length.toString()} things inside`,
+    canContainAssets: asset.kind === 'container' || asset.kind === 'location'
   };
 }
 

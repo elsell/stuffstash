@@ -94,21 +94,46 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Locations are assets with kind `location`.
   - Recently added, full asset lists, and search results open the same asset-detail language.
   - Add creates one asset in the selected inventory and optional parent asset.
-- The first mobile asset detail view must support selecting an API-backed asset and showing a read-only detail route based on the web asset-detail candidate:
-  - A photo-first hero area.
-  - Asset kind and optional custom type badges.
-  - Title and description.
-  - Location, lifecycle state, and updated-at metadata.
-  - Edit and move affordances remain unavailable until editing and movement commands are specified.
+- Mobile asset detail must be an asset workspace, not a read-only card or a pile of unrelated buttons:
+  - A photo-first hero area must support multiple visible photo positions, stable placeholder space, and an obvious `Add photos` affordance.
+  - The first implementation may show a locally ordered carousel/strip for available attachment thumbnails and newly selected upload drafts. Full cover-photo selection, persisted attachment reordering, and attachment deletion require a future media-management API slice.
+  - The workspace must show title, kind, optional custom type, location path, lifecycle state, and updated-at metadata without hiding the primary actions below low-value chrome.
+  - Active assets with edit permission must expose clear primary actions for `Edit`, `Move`, and `Add photos`.
+  - Secondary lifecycle actions must live behind an overflow/action-sheet style control instead of occupying the primary action row.
+  - The same workspace component must be reusable across Home recent assets, selected-inventory asset lists, Search results, and Location asset lists.
+- Mobile asset detail edit must be a native-feeling sheet or pushed form backed by mobile application commands:
+  - Users may edit title and description.
+  - Kind changes remain unavailable until the API exposes a safe conversion/promotion command; the UI may display kind as read-only helper context.
+  - Save must call the API update asset endpoint through a mobile application command and generated API-client adapter.
+  - Canceling with unsaved changes must ask for confirmation.
+  - After save, the asset workspace must refresh from the application query so server validation, audit-backed updates, updated-at labels, and downstream lists converge.
+- Mobile asset movement must be a dedicated placement picker:
+  - The picker must show the current location path and the proposed destination before saving.
+  - Users may search selectable parent candidates by title/path.
+  - Users may choose `No parent` to move the asset to the inventory root.
+  - Users may create a missing destination inline as a location in the current inventory, then immediately select it as the destination. More nuanced container/location intent selection may wait for a future parent-intent API slice.
+  - The picker must reject moving an asset into itself. Server validation remains authoritative for cycles, invalid parent kind, archived parents, cross-tenant, and cross-inventory attempts.
+  - After move, the asset workspace must refresh and show the new path.
+- Mobile asset detail photo management must use the existing authorized attachment APIs:
+  - `Add photos` must use the same native camera/library chooser and selected-photo model as the Add and voice flows.
+  - Detail photo upload must prefer the direct-upload path and may use the explicit local-development sentinel fallback, keeping transport details behind adapters.
+  - Existing asset photos must render as an ordered horizontal strip backed by attachment metadata and authorized thumbnail references.
+  - Removing an existing photo must call the attachment hard-delete endpoint through a mobile application command and generated API-client adapter, with native confirmation before mutation.
+  - Upload progress/status must be visible at the asset workspace, and failed uploads must offer retry without claiming the asset update failed.
+  - The first implementation may upload selected photos in the visible order. Persisted attachment reordering and cover-photo selection require a future media-management API slice because the current attachment API does not expose ordering or cover-image commands.
 - Mobile asset detail must expose the asset lifecycle controls currently supported by the API for items, containers, and locations:
   - Active assets show an `Archive` action.
   - Archived assets show a `Restore` action and a destructive `Delete permanently` action.
   - Archive, restore, and permanent delete must call the generated API client through mobile application ports and commands. UI code must not call generated DTO clients directly.
-  - Archive, restore, and permanent delete must use native confirmation before mutation.
+  - Archive, restore, and permanent delete must use native confirmation before mutation. Permanent delete must be framed as irreversible and must not share the same visual weight as ordinary edit or move actions.
   - Archive and restore must refresh the asset detail view from the application query after success so lifecycle state, updated-at labels, and downstream lists converge with API state.
   - Permanent delete must navigate away from the deleted asset detail after success because the asset is no longer readable.
   - API validation failures, including attempts to archive or delete assets with active children or restore assets whose parent is archived, must be shown as safe user-facing errors without client-side lifecycle workarounds.
-- The asset detail view remains mobile UI/application-layer behavior. It must not introduce editing commands, move commands, recursive lifecycle changes, media upload from detail, or camera behavior.
+- Mobile asset detail for containers and locations must show contained assets directly below the workspace metadata:
+  - The first implementation may derive immediate children from the selected inventory summary already loaded by the mobile application query.
+  - Child rows must use the same image-first asset-card language and open the same asset workspace route.
+  - Empty container/location states must offer `Add here` and `Move things here` affordances. `Add here` may navigate to Add with placement preselected only after Add supports route-scoped parent prefill; until then it may open Add normally with contextual copy.
+  - Recursive tree editing and bulk move flows remain future work.
 - Search must be a combined browse-and-search asset surface for the selected inventory:
   - With an empty query it must browse selected-inventory assets through the API asset list endpoint.
   - With a non-empty query it must call the API search endpoint through the generated API client wrapper.
@@ -123,13 +148,12 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Sort controls may remain visible in search mode if clearly disabled or described by compact state language; the client must not fake sorted search by loading every result page locally.
 - Search and browse results must render as image-first asset cards and open the same mobile asset detail view as other asset entry points.
 - Location cards must open a location-scoped asset list for the selected inventory. The first location list may be assembled from the selected inventory asset summary by selecting assets whose current location or immediate parent is the selected location.
-- Location-scoped asset lists must render image-first asset cards and open the same read-only mobile asset detail view as search results.
+- Location-scoped asset lists must render image-first asset cards and open the same mobile asset workspace as search results.
 - Search result details, location-scoped asset lists, and location asset details must be native stack routes above the native tab shell so iOS owns the standard edge-swipe back gesture.
 - Swipe-back must not be the only navigation path. Native stack back affordances or visible Back controls remain required for accessibility and users who do not use gestures.
 - Image-first asset cards must reserve stable media space even when the API has no asset photo URL. When no user photo is available, the card must show a calm type/kind placeholder rather than a decorative illustration.
-- When API asset attachments exist, mobile asset cards, recent asset cards, location cards, and read-only asset detail views must render the first active attachment thumbnail through the generated API client wrapper. Authorization details remain adapter-owned infrastructure and must not leak generated DTOs into UI components.
-- The selected-inventory asset list must render image-first asset cards and open the same read-only mobile asset detail view as search results and location-scoped lists.
-- The first mobile asset detail view must be reusable across Home recent assets, selected-inventory asset lists, Search results, and Location asset lists. It remains read-only until editing, move, media, and archive commands are specified.
+- When API asset attachments exist, mobile asset cards, recent asset cards, location cards, and asset workspace hero areas must render active attachment thumbnails through the generated API client wrapper. Authorization details remain adapter-owned infrastructure and must not leak generated DTOs into UI components.
+- The selected-inventory asset list must render image-first asset cards and open the same mobile asset workspace as search results and location-scoped lists.
 - Add must call the API create asset endpoint through the generated API client wrapper for base asset fields supported by the current API: kind, title, description, and optional parent asset ID.
 - Add is a fallback for moments when voice is not usable and must optimize for low-friction capture over taxonomy-first data entry.
 - Add must not ask users to choose between `item` and `container` before capture. New non-location assets start as items; container behavior is inferred later when another asset is placed inside them. If the current API still requires `kind`, the mobile command may send `item` by default while keeping the UI free of the item/container distinction.
