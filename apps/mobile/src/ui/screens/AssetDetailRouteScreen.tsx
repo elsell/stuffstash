@@ -69,6 +69,7 @@ import {
 import {
   createdMoveDestinationParent,
   isSelectableMoveDestination,
+  isSelectableMoveIntoCandidate,
   moveDestinationCreateInput,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
@@ -292,7 +293,7 @@ export function AssetDetailRouteScreen({
     setMoveIntoDraft({
       target,
       query: '',
-      matches: matches.filter((match) => match.id !== target.id),
+      matches: matches.filter((match) => isSelectableMoveIntoCandidate(match, target)),
       selectedAsset: undefined
     });
   }
@@ -304,7 +305,7 @@ export function AssetDetailRouteScreen({
       && current.query === query
       ? {
           ...current,
-          matches: matches.filter((match) => match.id !== target.id)
+          matches: matches.filter((match) => isSelectableMoveIntoCandidate(match, target))
         }
       : current);
   }

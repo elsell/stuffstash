@@ -43,6 +43,11 @@ export type MoveDestinationRow = {
   readonly pathLabel: string;
 };
 
+export type MoveIntoEmptyState = {
+  readonly title: string;
+  readonly message: string;
+};
+
 export function movePlacementPreview(
   asset: Pick<AssetDetailViewModel, 'parentAssetId' | 'parentLocationTrailLabel'>,
   selectedParent: ParentLookupResult | null
@@ -77,6 +82,32 @@ export function moveIntoCandidateRow(asset: ParentLookupResult): MoveDestination
 
 export function isSelectableMoveDestination(parent: ParentLookupResult): boolean {
   return parent.kind === 'container' || parent.kind === 'location';
+}
+
+export function isSelectableMoveIntoCandidate(
+  candidate: Pick<ParentLookupResult, 'id' | 'parentAssetId'>,
+  target: Pick<AssetDetailViewModel, 'id' | 'containedAssets'>
+): boolean {
+  if (candidate.id === target.id) {
+    return false;
+  }
+  if (candidate.parentAssetId === target.id) {
+    return false;
+  }
+  return !target.containedAssets.some((child) => child.id === candidate.id);
+}
+
+export function moveIntoEmptyState(query: string): MoveIntoEmptyState {
+  if (query.trim().length === 0) {
+    return {
+      title: 'Search for something to move here',
+      message: 'Start typing to find an item, box, or place from this inventory.'
+    };
+  }
+  return {
+    title: 'No movable matches',
+    message: 'Search for something that is not already inside this place.'
+  };
 }
 
 export function canCreateMoveDestination({

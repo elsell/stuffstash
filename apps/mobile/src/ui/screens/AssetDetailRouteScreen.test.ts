@@ -6,6 +6,8 @@ import {
   canSaveMoveAsset,
   createdMoveDestinationParent,
   isSelectableMoveDestination,
+  isSelectableMoveIntoCandidate,
+  moveIntoEmptyState,
   moveIntoCandidateRow,
   moveDestinationRow,
   moveDestinationCreateInput,
@@ -227,6 +229,43 @@ describe('asset detail move helpers', () => {
       title: 'Suitcase',
       kindLabel: 'Item',
       pathLabel: 'Bedroom closet / Suitcase'
+    });
+  });
+
+  it('hides the current target and existing direct children from move-here candidates', () => {
+    const target = {
+      id: 'asset-cabinet',
+      containedAssets: [
+        {
+          id: 'asset-mug',
+          title: 'Mug',
+          kindLabel: 'Item',
+          description: '',
+          locationTrailLabel: 'Kitchen / Cabinet / Mug',
+          updatedAtLabel: 'Updated today',
+          photoLabel: 'Needs photo',
+          imagePlaceholderLabel: 'Item'
+        }
+      ]
+    };
+
+    expect(isSelectableMoveIntoCandidate({ id: 'asset-cabinet' }, target)).toBe(false);
+    expect(isSelectableMoveIntoCandidate({ id: 'asset-mug' }, target)).toBe(false);
+    expect(isSelectableMoveIntoCandidate({
+      id: 'asset-hidden-direct-child',
+      parentAssetId: 'asset-cabinet'
+    }, target)).toBe(false);
+    expect(isSelectableMoveIntoCandidate({ id: 'asset-spoon' }, target)).toBe(true);
+  });
+
+  it('does not claim no move-here matches before the user searches', () => {
+    expect(moveIntoEmptyState('')).toEqual({
+      title: 'Search for something to move here',
+      message: 'Start typing to find an item, box, or place from this inventory.'
+    });
+    expect(moveIntoEmptyState('spoon')).toEqual({
+      title: 'No movable matches',
+      message: 'Search for something that is not already inside this place.'
     });
   });
 

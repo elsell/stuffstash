@@ -5,6 +5,7 @@ export type ParentLookupResult = {
   readonly id: string;
   readonly title: string;
   readonly kind: AssetKind;
+  readonly parentAssetId?: string;
   readonly subtitle: string;
   readonly pathLabel: string;
   readonly selectionHint: string;
@@ -44,6 +45,7 @@ function toParentLookupResult(asset: AssetSummary): ParentLookupResult {
     id: asset.id,
     title: asset.title,
     kind: asset.kind,
+    parentAssetId: asset.parentAssetId,
     subtitle: parentSubtitle(asset),
     pathLabel: asset.locationTrail.length > 1
       ? asset.locationTrail.slice(1).join(' / ')

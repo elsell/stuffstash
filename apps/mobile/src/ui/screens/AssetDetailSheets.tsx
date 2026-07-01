@@ -20,6 +20,7 @@ import {
   canCreateMoveDestination,
   canSaveMoveAsset,
   moveIntoCandidateRow,
+  moveIntoEmptyState,
   moveDestinationRow,
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
@@ -229,6 +230,7 @@ export function MoveThingsHereSheet({
   readonly onSelectAsset: (asset: ParentLookupResult) => void;
 }) {
   const canSave = draft?.selectedAsset !== undefined && !isSaving;
+  const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
     <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
@@ -247,6 +249,12 @@ export function MoveThingsHereSheet({
             value={draft?.query ?? ''}
           />
           <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
+            {draft?.matches.length === 0 ? (
+              <View style={styles.parentEmptyState}>
+                <Text style={styles.parentTitle}>{emptyState.title}</Text>
+                <Text style={styles.parentSubtitle}>{emptyState.message}</Text>
+              </View>
+            ) : null}
             {draft?.matches.map((match) => (
               <ParentRow
                 key={match.id}
@@ -558,6 +566,13 @@ const styles = StyleSheet.create({
   parentCreateRow: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
+    padding: spacing.md
+  },
+  parentEmptyState: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+    marginVertical: spacing.xs,
     padding: spacing.md
   },
   parentTextColumn: {
