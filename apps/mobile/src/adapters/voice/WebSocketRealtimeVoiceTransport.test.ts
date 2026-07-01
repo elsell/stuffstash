@@ -63,7 +63,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       sessionId: 'session-1',
       planId: 'plan-1',
       status: 'executed',
-      message: 'The approved change was applied.'
+      message: 'The approved change was applied.',
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }]
     });
 
     await run;
@@ -123,7 +129,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         sessionId: 'session-1',
         planId: 'plan-1',
         status: 'executed',
-        message: 'The approved change was applied.'
+        message: 'The approved change was applied.',
+        commandResults: [{
+          commandId: 'cmd-water-bottle',
+          assetId: 'asset-water-bottle',
+          operation: 'create',
+          assetKind: 'item'
+        }]
       }
     ]);
   });

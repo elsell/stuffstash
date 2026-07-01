@@ -172,27 +172,28 @@ type realtimeOutputAudio struct {
 }
 
 type realtimeServerMessage struct {
-	Type                 string                       `json:"type"`
-	Seq                  int                          `json:"seq"`
-	SessionID            string                       `json:"sessionId,omitempty"`
-	Code                 string                       `json:"code,omitempty"`
-	Message              string                       `json:"message,omitempty"`
-	Text                 string                       `json:"text,omitempty"`
-	Detail               string                       `json:"detail,omitempty"`
-	Status               string                       `json:"status,omitempty"`
-	ToolCallID           string                       `json:"toolCallId,omitempty"`
-	ToolLabel            string                       `json:"toolLabel,omitempty"`
-	ActionPlan           *realtimeActionPlanProposal  `json:"actionPlan,omitempty"`
-	PlanID               string                       `json:"planId,omitempty"`
-	ResponseID           string                       `json:"responseId,omitempty"`
-	Response             *realtimeStructuredResponse  `json:"response,omitempty"`
-	Format               *realtimeAudioFormatResponse `json:"format,omitempty"`
-	ChunkID              string                       `json:"chunkId,omitempty"`
-	AudioBase64          string                       `json:"audioBase64,omitempty"`
-	IsFinalChunk         bool                         `json:"isFinalChunk,omitempty"`
-	AcceptedInputAudio   realtimeInputAudio           `json:"acceptedInputAudio,omitempty"`
-	AcceptedOutputAudio  realtimeOutputAudio          `json:"acceptedOutputAudio,omitempty"`
-	AcceptedCapabilities []string                     `json:"acceptedCapabilities,omitempty"`
+	Type                 string                            `json:"type"`
+	Seq                  int                               `json:"seq"`
+	SessionID            string                            `json:"sessionId,omitempty"`
+	Code                 string                            `json:"code,omitempty"`
+	Message              string                            `json:"message,omitempty"`
+	Text                 string                            `json:"text,omitempty"`
+	Detail               string                            `json:"detail,omitempty"`
+	Status               string                            `json:"status,omitempty"`
+	ToolCallID           string                            `json:"toolCallId,omitempty"`
+	ToolLabel            string                            `json:"toolLabel,omitempty"`
+	ActionPlan           *realtimeActionPlanProposal       `json:"actionPlan,omitempty"`
+	PlanID               string                            `json:"planId,omitempty"`
+	CommandResults       []realtimeActionPlanCommandResult `json:"commandResults,omitempty"`
+	ResponseID           string                            `json:"responseId,omitempty"`
+	Response             *realtimeStructuredResponse       `json:"response,omitempty"`
+	Format               *realtimeAudioFormatResponse      `json:"format,omitempty"`
+	ChunkID              string                            `json:"chunkId,omitempty"`
+	AudioBase64          string                            `json:"audioBase64,omitempty"`
+	IsFinalChunk         bool                              `json:"isFinalChunk,omitempty"`
+	AcceptedInputAudio   realtimeInputAudio                `json:"acceptedInputAudio,omitempty"`
+	AcceptedOutputAudio  realtimeOutputAudio               `json:"acceptedOutputAudio,omitempty"`
+	AcceptedCapabilities []string                          `json:"acceptedCapabilities,omitempty"`
 }
 
 type realtimeStructuredResponse struct {
@@ -227,6 +228,13 @@ type realtimeActionPlanCommand struct {
 	ParentTitle     string `json:"parentTitle,omitempty"`
 	ParentKind      string `json:"parentKind,omitempty"`
 	ParentCommandID string `json:"parentCommandId,omitempty"`
+}
+
+type realtimeActionPlanCommandResult struct {
+	CommandID string `json:"commandId"`
+	AssetID   string `json:"assetId"`
+	Operation string `json:"operation"`
+	AssetKind string `json:"assetKind"`
 }
 
 type realtimeAudioFormatResponse struct {
@@ -373,7 +381,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		}
 		*serverSeq = *serverSeq + 1
 
-		executed, err := application.ExecuteActionPlan(ctx, app.ActionPlanDecisionInput{
+		executed, err := application.ExecuteActionPlanDetailed(ctx, app.ActionPlanDecisionInput{
 			Principal:   session.Principal,
 			TenantID:    session.TenantID,
 			InventoryID: session.InventoryID,
@@ -382,19 +390,20 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		outcomeType := app.RealtimeVoiceEventActionPlanExecuted
 		outcomeMessage := "The approved change was applied."
 		if err != nil {
-			if executed.State != actionplan.StateFailed {
+			if executed.Record.State != actionplan.StateFailed {
 				return "", err
 			}
 			outcomeType = app.RealtimeVoiceEventActionPlanFailed
 			outcomeMessage = "The approved change could not be applied safely."
 		}
 		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{
-			Type:      outcomeType,
-			Seq:       *serverSeq,
-			SessionID: session.ID,
-			PlanID:    planID,
-			Status:    string(executed.State),
-			Message:   outcomeMessage,
+			Type:           outcomeType,
+			Seq:            *serverSeq,
+			SessionID:      session.ID,
+			PlanID:         planID,
+			Status:         string(executed.Record.State),
+			Message:        outcomeMessage,
+			CommandResults: realtimeActionPlanCommandResultsFromApp(executed.CommandResults),
 		}); err != nil {
 			return "", err
 		}
@@ -425,18 +434,19 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 
 func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realtimeServerMessage {
 	message := realtimeServerMessage{
-		Type:       event.Type,
-		Seq:        seq,
-		SessionID:  event.SessionID,
-		Status:     event.Status,
-		Code:       event.Code,
-		Message:    event.Message,
-		Text:       event.Text,
-		Detail:     event.Detail,
-		ToolCallID: event.ToolCallID,
-		ToolLabel:  event.ToolLabel,
-		PlanID:     event.PlanID,
-		ChunkID:    event.ChunkID,
+		Type:           event.Type,
+		Seq:            seq,
+		SessionID:      event.SessionID,
+		Status:         event.Status,
+		Code:           event.Code,
+		Message:        event.Message,
+		Text:           event.Text,
+		Detail:         event.Detail,
+		ToolCallID:     event.ToolCallID,
+		ToolLabel:      event.ToolLabel,
+		PlanID:         event.PlanID,
+		CommandResults: realtimeVoiceEventCommandResultsFromApp(event.CommandResults),
+		ChunkID:        event.ChunkID,
 	}
 	switch event.Type {
 	case app.RealtimeVoiceEventAssistantResponseStarted:
@@ -458,6 +468,38 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 		message.IsFinalChunk = event.FinalChunk
 	}
 	return message
+}
+
+func realtimeActionPlanCommandResultsFromApp(results []app.ActionPlanCommandExecutionResult) []realtimeActionPlanCommandResult {
+	if len(results) == 0 {
+		return nil
+	}
+	mapped := make([]realtimeActionPlanCommandResult, 0, len(results))
+	for _, result := range results {
+		mapped = append(mapped, realtimeActionPlanCommandResult{
+			CommandID: result.CommandID,
+			AssetID:   result.AssetID,
+			Operation: result.Operation,
+			AssetKind: result.AssetKind,
+		})
+	}
+	return mapped
+}
+
+func realtimeVoiceEventCommandResultsFromApp(results []app.RealtimeVoiceActionPlanCommandResult) []realtimeActionPlanCommandResult {
+	if len(results) == 0 {
+		return nil
+	}
+	mapped := make([]realtimeActionPlanCommandResult, 0, len(results))
+	for _, result := range results {
+		mapped = append(mapped, realtimeActionPlanCommandResult{
+			CommandID: result.CommandID,
+			AssetID:   result.AssetID,
+			Operation: result.Operation,
+			AssetKind: result.AssetKind,
+		})
+	}
+	return mapped
 }
 
 func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *realtimeActionPlanProposal {

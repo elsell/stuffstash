@@ -10,12 +10,13 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input ActionPlanDecisionInput, record ports.ActionPlanRecord) (ports.ActionPlanRecord, error) {
+func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input ActionPlanDecisionInput, record ports.ActionPlanRecord) (ActionPlanExecutionResult, error) {
 	if err := validateActionPlanCommandDependencies(record.Commands); err != nil {
-		return ports.ActionPlanRecord{}, err
+		return ActionPlanExecutionResult{}, err
 	}
 	preparedCreates := make([]ports.ActionPlanCreateAssetOperation, 0, len(record.Commands))
 	preparedUpdates := make([]ports.ActionPlanUpdateAssetOperation, 0, len(record.Commands))
+	commandResults := make([]ActionPlanCommandExecutionResult, 0, len(record.Commands))
 	createdByCommand := map[string]asset.Asset{}
 	pendingParentKinds := map[asset.ID]asset.Kind{}
 	pendingParentIDs := map[asset.ID]asset.ID{}
@@ -24,26 +25,27 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 		case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 			assetInput, err := actionPlanCreateAssetInput(input, command)
 			if err != nil {
-				return ports.ActionPlanRecord{}, err
+				return ActionPlanExecutionResult{}, err
 			}
 			args, err := parseActionPlanCreateArguments(command)
 			if err != nil {
-				return ports.ActionPlanRecord{}, err
+				return ActionPlanExecutionResult{}, err
 			}
 			if args.ParentCommandID != "" {
 				parent, ok := createdByCommand[args.ParentCommandID]
 				if !ok || !parent.Kind.CanContainChildren() {
-					return ports.ActionPlanRecord{}, ErrValidation
+					return ActionPlanExecutionResult{}, ErrValidation
 				}
 				assetInput.ParentAssetID = parent.ID.String()
 			}
 			prepared, err := a.assetService.PrepareCreateAssetWithPendingParents(ctx, assetInput, pendingParentKinds)
 			if err != nil {
-				return ports.ActionPlanRecord{}, err
+				return ActionPlanExecutionResult{}, err
 			}
 			createdByCommand[command.ID] = prepared.Asset
 			pendingParentKinds[prepared.Asset.ID] = prepared.Asset.Kind
 			pendingParentIDs[prepared.Asset.ID] = prepared.Asset.ParentAssetID
+			commandResults = append(commandResults, actionPlanCommandAssetResult(command, prepared.Asset, "create"))
 			preparedCreates = append(preparedCreates, ports.ActionPlanCreateAssetOperation{
 				Item:              prepared.Asset,
 				AuditRecord:       prepared.AuditRecord,
@@ -52,25 +54,25 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 		case actionplan.CommandKindMoveAsset:
 			moveInput, err := actionPlanMoveAssetInput(input, command)
 			if err != nil {
-				return ports.ActionPlanRecord{}, err
+				return ActionPlanExecutionResult{}, err
 			}
 			args, err := parseActionPlanMoveArguments(command)
 			if err != nil {
-				return ports.ActionPlanRecord{}, err
+				return ActionPlanExecutionResult{}, err
 			}
 			if args.ParentCommandID != "" {
 				parent, ok := createdByCommand[args.ParentCommandID]
 				if !ok || !parent.Kind.CanContainChildren() {
-					return ports.ActionPlanRecord{}, ErrValidation
+					return ActionPlanExecutionResult{}, ErrValidation
 				}
 				if err := a.validatePendingMoveParentDoesNotCreateCycle(ctx, input, args.AssetID, parent.ID, pendingParentIDs); err != nil {
-					return ports.ActionPlanRecord{}, err
+					return ActionPlanExecutionResult{}, err
 				}
 				moveInput.ParentAssetID = AssetParentUpdate{Present: true, Value: parent.ID.String()}
 			}
 			prepared, err := a.assetService.PrepareUpdateAssetWithPendingParents(ctx, moveInput, pendingParentKinds)
 			if err != nil {
-				return ports.ActionPlanRecord{}, err
+				return ActionPlanExecutionResult{}, err
 			}
 			preparedUpdates = append(preparedUpdates, ports.ActionPlanUpdateAssetOperation{
 				ExpectedCurrent:   prepared.PreviousAsset,
@@ -79,7 +81,7 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 				UndoableOperation: prepared.UndoableOperation,
 			})
 		default:
-			return ports.ActionPlanRecord{}, ErrValidation
+			return ActionPlanExecutionResult{}, ErrValidation
 		}
 	}
 	executed, found, err := a.actionPlans.ExecuteCreateAndUpdateAssetsActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
@@ -90,12 +92,12 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 	}, preparedCreates, preparedUpdates)
 	if err != nil {
 		if errors.Is(err, ports.ErrConflict) {
-			return ports.ActionPlanRecord{}, ErrConflict
+			return ActionPlanExecutionResult{}, ErrConflict
 		}
-		return ports.ActionPlanRecord{}, err
+		return ActionPlanExecutionResult{}, err
 	}
 	if !found {
-		return ports.ActionPlanRecord{}, ErrNotFound
+		return ActionPlanExecutionResult{}, ErrNotFound
 	}
 	for _, create := range preparedCreates {
 		a.assetService.RecordAssetCreated(ctx, create.Item, input.Principal.ID)
@@ -103,7 +105,7 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 	for _, update := range preparedUpdates {
 		a.assetService.RecordAssetUpdated(ctx, update.Item, input.Principal.ID)
 	}
-	return executed, nil
+	return ActionPlanExecutionResult{Record: executed, CommandResults: commandResults}, nil
 }
 
 func (a App) validatePendingMoveParentDoesNotCreateCycle(ctx context.Context, input ActionPlanDecisionInput, movedAssetID asset.ID, parentAssetID asset.ID, pendingParentIDs map[asset.ID]asset.ID) error {

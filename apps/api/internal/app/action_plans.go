@@ -51,6 +51,18 @@ type ActionPlanDecisionInput struct {
 	PlanID      string
 }
 
+type ActionPlanExecutionResult struct {
+	Record         ports.ActionPlanRecord
+	CommandResults []ActionPlanCommandExecutionResult
+}
+
+type ActionPlanCommandExecutionResult struct {
+	CommandID string
+	AssetID   string
+	Operation string
+	AssetKind string
+}
+
 func (a App) CreateActionPlan(ctx context.Context, input CreateActionPlanInput) (ports.ActionPlanRecord, error) {
 	if err := a.ensureActionPlanDependencies(); err != nil {
 		return ports.ActionPlanRecord{}, err
@@ -102,33 +114,38 @@ func (a App) CancelActionPlan(ctx context.Context, input ActionPlanDecisionInput
 }
 
 func (a App) ExecuteActionPlan(ctx context.Context, input ActionPlanDecisionInput) (ports.ActionPlanRecord, error) {
+	result, err := a.ExecuteActionPlanDetailed(ctx, input)
+	return result.Record, err
+}
+
+func (a App) ExecuteActionPlanDetailed(ctx context.Context, input ActionPlanDecisionInput) (ActionPlanExecutionResult, error) {
 	if err := a.ensureActionPlanDependencies(); err != nil {
-		return ports.ActionPlanRecord{}, err
+		return ActionPlanExecutionResult{}, err
 	}
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
-		return ports.ActionPlanRecord{}, err
+		return ActionPlanExecutionResult{}, err
 	}
 	record, found, err := a.actionPlans.ActionPlanByID(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID))
 	if err != nil {
-		return ports.ActionPlanRecord{}, err
+		return ActionPlanExecutionResult{}, err
 	}
 	if !found {
-		return ports.ActionPlanRecord{}, ErrNotFound
+		return ActionPlanExecutionResult{}, ErrNotFound
 	}
 	if record.PrincipalID != input.Principal.ID || record.State != actionplan.StateApproved {
-		return ports.ActionPlanRecord{}, ErrConflict
+		return ActionPlanExecutionResult{}, ErrConflict
 	}
 
 	executed, err := a.executeApprovedActionPlanCommands(ctx, input, record)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		failed, failErr := a.transitionActionPlan(ctx, input, actionplan.StateFailed)
 		if failErr != nil {
-			return ports.ActionPlanRecord{}, failErr
+			return ActionPlanExecutionResult{}, failErr
 		}
-		return failed, err
+		return ActionPlanExecutionResult{Record: failed}, err
 	}
 	return executed, nil
 }
@@ -173,9 +190,9 @@ func actionPlanTransitionFromState(to actionplan.State) actionplan.State {
 	}
 }
 
-func (a App) executeApprovedActionPlanCommands(ctx context.Context, input ActionPlanDecisionInput, record ports.ActionPlanRecord) (ports.ActionPlanRecord, error) {
+func (a App) executeApprovedActionPlanCommands(ctx context.Context, input ActionPlanDecisionInput, record ports.ActionPlanRecord) (ActionPlanExecutionResult, error) {
 	if len(record.Commands) == 0 {
-		return ports.ActionPlanRecord{}, ErrValidation
+		return ActionPlanExecutionResult{}, ErrValidation
 	}
 	if len(record.Commands) > 1 {
 		return a.executeApprovedCreateActionPlanCommands(ctx, input, record)
@@ -185,11 +202,11 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 		assetInput, err := actionPlanCreateAssetInput(input, command)
 		if err != nil {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		prepared, err := a.assetService.PrepareCreateAsset(ctx, assetInput)
 		if err != nil {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		executed, found, err := a.actionPlans.ExecuteCreateAssetActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
 			PrincipalID: input.Principal.ID,
@@ -199,23 +216,26 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		}, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
 		if err != nil {
 			if errors.Is(err, ports.ErrConflict) {
-				return ports.ActionPlanRecord{}, ErrConflict
+				return ActionPlanExecutionResult{}, ErrConflict
 			}
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		if !found {
-			return ports.ActionPlanRecord{}, ErrNotFound
+			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetCreated(ctx, prepared.Asset, input.Principal.ID)
-		return executed, nil
+		return ActionPlanExecutionResult{
+			Record:         executed,
+			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "create")},
+		}, nil
 	case actionplan.CommandKindMoveAsset:
 		moveInput, err := actionPlanMoveAssetInput(input, command)
 		if err != nil {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		prepared, err := a.assetService.PrepareUpdateAsset(ctx, moveInput)
 		if err != nil {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		executed, found, err := a.actionPlans.ExecuteUpdateAssetActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
 			PrincipalID: input.Principal.ID,
@@ -225,26 +245,26 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		}, prepared.PreviousAsset, prepared.Asset, prepared.AuditRecords, prepared.UndoableOperation)
 		if err != nil {
 			if errors.Is(err, ports.ErrConflict) {
-				return ports.ActionPlanRecord{}, ErrConflict
+				return ActionPlanExecutionResult{}, ErrConflict
 			}
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		if !found {
-			return ports.ActionPlanRecord{}, ErrNotFound
+			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
-		return executed, nil
+		return ActionPlanExecutionResult{Record: executed}, nil
 	case actionplan.CommandKindArchiveAsset:
 		archiveInput, err := actionPlanLifecycleAssetInput(input, command)
 		if err != nil {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		prepared, err := a.assetService.PrepareArchiveAsset(ctx, archiveInput)
 		if err != nil {
 			if errors.Is(err, ErrValidation) {
-				return ports.ActionPlanRecord{}, ErrConflict
+				return ActionPlanExecutionResult{}, ErrConflict
 			}
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		executed, found, err := a.actionPlans.ExecuteUpdateAssetLifecycleActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
 			PrincipalID: input.Principal.ID,
@@ -254,26 +274,26 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		}, prepared.PreviousAsset, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
 		if err != nil {
 			if errors.Is(err, ports.ErrConflict) {
-				return ports.ActionPlanRecord{}, ErrConflict
+				return ActionPlanExecutionResult{}, ErrConflict
 			}
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		if !found {
-			return ports.ActionPlanRecord{}, ErrNotFound
+			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
-		return executed, nil
+		return ActionPlanExecutionResult{Record: executed}, nil
 	case actionplan.CommandKindRestoreAsset:
 		restoreInput, err := actionPlanLifecycleAssetInput(input, command)
 		if err != nil {
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		prepared, err := a.assetService.PrepareRestoreAsset(ctx, restoreInput)
 		if err != nil {
 			if errors.Is(err, ErrValidation) {
-				return ports.ActionPlanRecord{}, ErrConflict
+				return ActionPlanExecutionResult{}, ErrConflict
 			}
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		executed, found, err := a.actionPlans.ExecuteUpdateAssetLifecycleActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
 			PrincipalID: input.Principal.ID,
@@ -283,17 +303,26 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		}, prepared.PreviousAsset, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
 		if err != nil {
 			if errors.Is(err, ports.ErrConflict) {
-				return ports.ActionPlanRecord{}, ErrConflict
+				return ActionPlanExecutionResult{}, ErrConflict
 			}
-			return ports.ActionPlanRecord{}, err
+			return ActionPlanExecutionResult{}, err
 		}
 		if !found {
-			return ports.ActionPlanRecord{}, ErrNotFound
+			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
-		return executed, nil
+		return ActionPlanExecutionResult{Record: executed}, nil
 	default:
-		return ports.ActionPlanRecord{}, ErrValidation
+		return ActionPlanExecutionResult{}, ErrValidation
+	}
+}
+
+func actionPlanCommandAssetResult(command ports.ActionPlanCommandRecord, item asset.Asset, operation string) ActionPlanCommandExecutionResult {
+	return ActionPlanCommandExecutionResult{
+		CommandID: command.ID,
+		AssetID:   item.ID.String(),
+		Operation: operation,
+		AssetKind: item.Kind.String(),
 	}
 }
 

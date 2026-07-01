@@ -87,22 +87,23 @@ type RealtimeVoiceQueryInput struct {
 }
 
 type RealtimeVoiceEvent struct {
-	Type       string
-	SessionID  string
-	ToolCallID string
-	ToolLabel  string
-	Status     string
-	Code       string
-	Message    string
-	Text       string
-	Detail     string
-	Response   *ports.StructuredAgentResponse
-	ActionPlan *RealtimeVoiceActionPlanProposal
-	PlanID     string
-	Audio      []byte
-	AudioMime  string
-	ChunkID    string
-	FinalChunk bool
+	Type           string
+	SessionID      string
+	ToolCallID     string
+	ToolLabel      string
+	Status         string
+	Code           string
+	Message        string
+	Text           string
+	Detail         string
+	Response       *ports.StructuredAgentResponse
+	ActionPlan     *RealtimeVoiceActionPlanProposal
+	PlanID         string
+	CommandResults []RealtimeVoiceActionPlanCommandResult
+	Audio          []byte
+	AudioMime      string
+	ChunkID        string
+	FinalChunk     bool
 }
 
 type RealtimeVoiceEventSink func(RealtimeVoiceEvent) error
@@ -125,6 +126,13 @@ type RealtimeVoiceActionPlanCommand struct {
 	ParentTitle     string
 	ParentKind      string
 	ParentCommandID string
+}
+
+type RealtimeVoiceActionPlanCommandResult struct {
+	CommandID string
+	AssetID   string
+	Operation string
+	AssetKind string
 }
 
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {

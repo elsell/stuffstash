@@ -1,4 +1,7 @@
 import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type { CreateInventoryAssetPhotoInput } from '../home/InventorySummaryRepository';
+import { assetId } from '../../domain/assets/AssetSummary';
+import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
 
 export type RecordedVoiceAudio = {
   readonly mimeType: 'audio/mp4';
@@ -81,6 +84,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       readonly planId: string;
       readonly status: 'approved' | 'cancelled' | 'executed' | 'failed';
       readonly message?: string;
+      readonly commandResults?: readonly VoiceActionPlanCommandResult[];
     }
   | { readonly type: 'assistant.response.started'; readonly responseId: string }
   | {
@@ -121,6 +125,23 @@ export type VoiceActionPlanCommand = {
   readonly parentCommandId?: string;
 };
 
+export type VoiceActionPlanCommandResult = {
+  readonly commandId: string;
+  readonly assetId: string;
+  readonly operation: string;
+  readonly assetKind: string;
+};
+
+export type VoiceActionPlanPhotoDrafts = Record<string, readonly CreateInventoryAssetPhotoInput[]>;
+
+type VoiceActionPlanExecutedEvent = VoiceRealtimeEventMetadata & {
+  readonly type: 'action.plan.executed';
+  readonly planId: string;
+  readonly status: 'executed';
+  readonly message?: string;
+  readonly commandResults?: readonly VoiceActionPlanCommandResult[];
+};
+
 export type VoiceRealtimeState = {
   readonly status: 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
   readonly tenantName: string;
@@ -135,6 +156,13 @@ export type VoiceRealtimeState = {
   readonly debugEvents: readonly VoiceSafeDiagnosticEvent[];
   readonly failureCode?: VoiceRealtimeFailureCode;
   readonly errorMessage?: string;
+  readonly photoAttachmentStatus?: VoicePhotoAttachmentStatus;
+};
+
+export type VoicePhotoAttachmentStatus = {
+  readonly status: 'attached' | 'partial_failed' | 'failed';
+  readonly message: string;
+  readonly canRetry?: boolean;
 };
 
 export type VoiceRealtimeFailureCode =
@@ -161,11 +189,13 @@ export type VoiceSafeDiagnosticEvent = {
 };
 
 export class RealtimeVoiceSessionController {
-  private currentContext: { readonly tenantId: string; readonly inventoryId: string; readonly tenantName: string; readonly inventoryName: string } | null = null;
+  private currentContext: { readonly tenantId: TenantId; readonly inventoryId: InventoryId; readonly tenantName: string; readonly inventoryName: string } | null = null;
   private recordingStarted = false;
   private activeRunAbortController: AbortController | null = null;
   private activeSessionGeneration = 0;
   private cancelledThroughSessionGeneration = 0;
+  private pendingPhotoDraftsByPlanId = new Map<string, VoiceActionPlanPhotoDrafts>();
+  private pendingPhotoRetriesByPlanId = new Map<string, VoiceActionPlanPhotoRetry>();
   private ttsMimeType = 'audio/mpeg';
 
   constructor(
@@ -269,12 +299,37 @@ export class RealtimeVoiceSessionController {
     };
   }
 
-  async approveActionPlan(planId: string): Promise<void> {
-    await this.transport.approveActionPlan(safeBoundedText(planId, 80));
+  async approveActionPlan(planId: string, photoDrafts: VoiceActionPlanPhotoDrafts = {}): Promise<void> {
+    const safePlanId = safeBoundedText(planId, 80);
+    const boundedDrafts = boundedPhotoDrafts(photoDrafts);
+    if (Object.keys(boundedDrafts).length > 0) {
+      this.pendingPhotoDraftsByPlanId.set(safePlanId, boundedDrafts);
+    }
+    try {
+      await this.transport.approveActionPlan(safePlanId);
+    } catch (error) {
+      this.pendingPhotoDraftsByPlanId.delete(safePlanId);
+      throw error;
+    }
   }
 
   async cancelActionPlan(planId: string): Promise<void> {
     await this.transport.cancelActionPlan(safeBoundedText(planId, 80));
+  }
+
+  async retryPhotoAttachments(planId: string): Promise<VoicePhotoAttachmentStatus> {
+    const safePlanId = safeBoundedText(planId, 80);
+    const retry = this.pendingPhotoRetriesByPlanId.get(safePlanId);
+    if (!retry) {
+      return {
+        status: 'failed',
+        message: 'There are no photos ready to retry.'
+      };
+    }
+    return await this.uploadPhotoRetry(safePlanId, retry) ?? {
+      status: 'failed',
+      message: 'There are no photos ready to retry.'
+    };
   }
 
   private isSessionGenerationCancelled(generation: number): boolean {
@@ -326,12 +381,18 @@ export class RealtimeVoiceSessionController {
             : state.actionPlan
         });
       case 'action.plan.executed':
+        const photoAttachmentStatus = await this.attachApprovedPlanPhotos({
+          ...event,
+          type: 'action.plan.executed',
+          status: 'executed'
+        }, state.actionPlan);
         return withProgressStep(state, 'Change applied', {
           status: 'completed',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'executed' }
             : state.actionPlan,
-          reviewDecisionPending: false
+          reviewDecisionPending: false,
+          photoAttachmentStatus
         });
       case 'action.plan.failed':
         await this.player.stop();
@@ -396,7 +457,120 @@ export class RealtimeVoiceSessionController {
       inventoryName: inventory.name
     };
   }
+
+  private async attachApprovedPlanPhotos(
+    event: VoiceActionPlanExecutedEvent,
+    reviewedPlan: VoiceActionPlanProposal | undefined
+  ): Promise<VoicePhotoAttachmentStatus | undefined> {
+    const drafts = this.pendingPhotoDraftsByPlanId.get(event.planId);
+    this.pendingPhotoDraftsByPlanId.delete(event.planId);
+    if (!drafts || Object.keys(drafts).length === 0) {
+      return undefined;
+    }
+    this.pendingPhotoRetriesByPlanId.delete(event.planId);
+
+    const reviewedCreateCommands = new Map(
+      (reviewedPlan?.commands ?? [])
+        .filter((command) => command.id && isPhotoAttachableReviewedCommand(command))
+        .map((command) => [command.id ?? '', command])
+    );
+    const context = this.currentContext ?? (await this.selectedInventoryContext());
+    const assetIdsByCommandId = new Map<string, string>(
+      (event.commandResults ?? [])
+        .filter((result) => result.commandId && result.assetId)
+        .map((result) => [result.commandId, result.assetId])
+    );
+    const retry: VoiceActionPlanPhotoRetry = {
+      tenantId: context.tenantId,
+      inventoryId: context.inventoryId,
+      commandAssetIds: {},
+      photos: {}
+    };
+
+    for (const [commandId, photos] of Object.entries(drafts)) {
+      const targetAssetId = assetIdsByCommandId.get(commandId);
+      const reviewedCommand = reviewedCreateCommands.get(commandId);
+      const commandResult = (event.commandResults ?? []).find((result) => result.commandId === commandId);
+      if (!targetAssetId || !reviewedCommand || !commandResult || commandResult.operation !== 'create' || !assetKindMatchesReviewedCommand(commandResult.assetKind, reviewedCommand)) {
+        retry.photos[commandId] = photos;
+        continue;
+      }
+      retry.commandAssetIds[commandId] = targetAssetId;
+      retry.photos[commandId] = photos;
+    }
+
+    return this.uploadPhotoRetry(event.planId, retry);
+  }
+
+  private async uploadPhotoRetry(planId: string, retry: VoiceActionPlanPhotoRetry): Promise<VoicePhotoAttachmentStatus | undefined> {
+    let attempted = 0;
+    let failed = 0;
+    const remaining: VoiceActionPlanPhotoRetry = {
+      tenantId: retry.tenantId,
+      inventoryId: retry.inventoryId,
+      commandAssetIds: { ...retry.commandAssetIds },
+      photos: {}
+    };
+    for (const [commandId, photos] of Object.entries(retry.photos)) {
+      const targetAssetId = retry.commandAssetIds[commandId];
+      for (const photo of photos) {
+        attempted += 1;
+        if (!targetAssetId) {
+          failed += 1;
+          remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
+          continue;
+        }
+        try {
+          if (!this.inventories.addInventoryAssetPhoto) {
+            throw new Error('Photo attachments are not available in this build.');
+          }
+          await this.inventories.addInventoryAssetPhoto({
+            tenantId: retry.tenantId,
+            inventoryId: retry.inventoryId,
+            assetId: assetId(targetAssetId),
+            ...photo
+          });
+        } catch {
+          failed += 1;
+          remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
+        }
+      }
+    }
+    if (failed > 0) {
+      this.pendingPhotoRetriesByPlanId.set(planId, remaining);
+    } else {
+      this.pendingPhotoRetriesByPlanId.delete(planId);
+    }
+    if (attempted === 0) {
+      return undefined;
+    }
+    if (failed === 0) {
+      return {
+        status: 'attached',
+        message: `${attempted.toString()} ${attempted === 1 ? 'photo' : 'photos'} attached.`
+      };
+    }
+    if (failed < attempted) {
+      return {
+        status: 'partial_failed',
+        message: `${(attempted - failed).toString()} of ${attempted.toString()} photos attached.`,
+        canRetry: true
+      };
+    }
+    return {
+      status: 'failed',
+      message: 'The change was applied, but photos could not be attached.',
+      canRetry: true
+    };
+  }
 }
+
+type VoiceActionPlanPhotoRetry = {
+  readonly tenantId: TenantId;
+  readonly inventoryId: InventoryId;
+  readonly commandAssetIds: Record<string, string>;
+  readonly photos: VoiceActionPlanPhotoDrafts;
+};
 
 const maxVisibleProgressSteps = 12;
 
@@ -501,6 +675,36 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedText(risk, 180)).filter(Boolean)
   };
+}
+
+function boundedPhotoDrafts(drafts: VoiceActionPlanPhotoDrafts): VoiceActionPlanPhotoDrafts {
+  const bounded: VoiceActionPlanPhotoDrafts = {};
+  for (const [commandId, photos] of Object.entries(drafts).slice(0, 10)) {
+    const safeCommandId = safeBoundedText(commandId, 80);
+    if (!safeCommandId || photos.length === 0) {
+      continue;
+    }
+    bounded[safeCommandId] = photos.slice(0, 10).map((photo) => ({
+      fileName: safeBoundedText(photo.fileName, 160) || 'voice-photo.jpg',
+      contentType: photo.contentType,
+      contentBase64: photo.contentBase64
+    }));
+  }
+  return bounded;
+}
+
+function isPhotoAttachableReviewedCommand(command: VoiceActionPlanCommand): boolean {
+  return command.operation === 'create' ||
+    command.kind === 'create_asset' ||
+    command.kind === 'create_location';
+}
+
+function assetKindMatchesReviewedCommand(resultKind: string, command: VoiceActionPlanCommand): boolean {
+  const expectedKind = command.assetKind || (command.kind === 'create_location' ? 'location' : undefined);
+  if (!expectedKind) {
+    return true;
+  }
+  return resultKind === expectedKind;
 }
 
 function voiceFailureCode(code: string): VoiceRealtimeFailureCode {

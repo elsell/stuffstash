@@ -23,6 +23,7 @@ export interface InventorySummaryRepository {
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   addAssetPhoto(assetId: AssetId, input: CreateInventoryAssetPhotoInput): Promise<void>;
+  addInventoryAssetPhoto?(input: AddInventoryAssetPhotoInput): Promise<void>;
   archiveAsset(assetId: AssetId): Promise<void>;
   restoreAsset(assetId: AssetId): Promise<void>;
   deleteAsset(assetId: AssetId): Promise<void>;
@@ -63,4 +64,10 @@ export type CreateInventoryAssetPhotoInput = {
   readonly fileName: string;
   readonly contentType: 'image/jpeg' | 'image/png' | 'image/webp';
   readonly contentBase64: string;
+};
+
+export type AddInventoryAssetPhotoInput = CreateInventoryAssetPhotoInput & {
+  readonly tenantId: TenantContext['id'];
+  readonly inventoryId: InventoryId;
+  readonly assetId: AssetId;
 };

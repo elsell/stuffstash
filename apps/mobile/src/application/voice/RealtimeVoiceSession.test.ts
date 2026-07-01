@@ -258,6 +258,142 @@ describe('RealtimeVoiceSessionController', () => {
     expect(observed.at(-1)).toBe('completed:Change applied:executed');
   });
 
+  it('attaches staged photos to executed command result assets after approval', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }]
+    });
+    const repository = new FakeInventoryRepository();
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'cGhvdG8='
+      }]
+    });
+    const states = await stop;
+
+    expect(repository.addedPhotos).toEqual([
+      {
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-water-bottle',
+        fileName: 'water-bottle.jpg'
+      }
+    ]);
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      photoAttachmentStatus: {
+        status: 'attached',
+        message: '1 photo attached.'
+      }
+    });
+  });
+
+  it('does not attach staged photos when execution result is not a reviewed create command', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'move',
+        assetKind: 'item'
+      }]
+    });
+    const repository = new FakeInventoryRepository();
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'cGhvdG8='
+      }]
+    });
+    const states = await stop;
+
+    expect(repository.addedPhotos).toEqual([]);
+    expect(states.at(-1)?.photoAttachmentStatus).toMatchObject({
+      status: 'failed',
+      canRetry: true
+    });
+  });
+
+  it('retains failed photo uploads so the user can retry after the plan applied', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }]
+    });
+    const repository = new FakeInventoryRepository();
+    repository.failPhotoUploads = 1;
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'cGhvdG8='
+      }]
+    });
+    const states = await stop;
+
+    expect(states.at(-1)?.photoAttachmentStatus).toMatchObject({
+      status: 'failed',
+      canRetry: true
+    });
+
+    const retry = await controller.retryPhotoAttachments('plan-1');
+
+    expect(retry).toEqual({
+      status: 'attached',
+      message: '1 photo attached.'
+    });
+    expect(repository.addedPhotos).toEqual([
+      {
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-water-bottle',
+        fileName: 'water-bottle.jpg'
+      }
+    ]);
+  });
+
   it('cancels a proposed action plan through the active realtime transport', async () => {
     const transport = new ReviewDecisionTransport();
     const controller = new RealtimeVoiceSessionController(
@@ -683,6 +819,15 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
     this.reviewReadyResolve = resolve;
   });
 
+  constructor(private readonly options: {
+    readonly commandResults?: readonly {
+      readonly commandId: string;
+      readonly assetId: string;
+      readonly operation: string;
+      readonly assetKind: string;
+    }[];
+  } = {}) {}
+
   async run(
     _input: Parameters<RealtimeVoiceTransport['run']>[0],
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>
@@ -697,7 +842,7 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
         planId: 'plan-1',
         status: 'proposed',
         confirmationSummary: 'Create item water bottle?',
-        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        commands: [{ id: 'cmd-water-bottle', kind: 'create_asset', summary: 'Create item water bottle' }],
         risks: ['Adds a new item to this inventory.']
       }
     });
@@ -723,7 +868,8 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
       sessionId: 'session-1',
       planId,
       status: 'executed',
-      message: 'The approved change was applied.'
+      message: 'The approved change was applied.',
+      ...(this.options.commandResults ? { commandResults: this.options.commandResults } : {})
     });
     this.finishResolve?.();
   }
@@ -863,6 +1009,9 @@ class FakePlayer implements VoiceAudioPlayer {
 }
 
 class FakeInventoryRepository implements InventorySummaryRepository {
+  readonly addedPhotos: Array<{ readonly tenantId?: string; readonly inventoryId?: string; readonly assetId: string; readonly fileName: string }> = [];
+  failPhotoUploads = 0;
+
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
       tenants: [{ id: tenantId('tenant-home'), name: 'Home tenant' }],
@@ -892,7 +1041,21 @@ class FakeInventoryRepository implements InventorySummaryRepository {
     throw new Error('Not used.');
   }
 
-  async addAssetPhoto(): Promise<void> {}
+  async addAssetPhoto(assetIdValue: string, input: { readonly fileName: string }): Promise<void> {
+    this.addedPhotos.push({ assetId: assetIdValue, fileName: input.fileName });
+  }
+  async addInventoryAssetPhoto(input: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly fileName: string }): Promise<void> {
+    if (this.failPhotoUploads > 0) {
+      this.failPhotoUploads -= 1;
+      throw new Error('Photo upload failed.');
+    }
+    this.addedPhotos.push({
+      tenantId: input.tenantId,
+      inventoryId: input.inventoryId,
+      assetId: input.assetId,
+      fileName: input.fileName
+    });
+  }
   async archiveAsset(): Promise<void> {}
   async restoreAsset(): Promise<void> {}
   async deleteAsset(): Promise<void> {}

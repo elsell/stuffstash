@@ -82,7 +82,7 @@ export function VoicePlanPhotoDraftStrip({
         </ScrollView>
       ) : null}
       {photos.length > 0 ? (
-        <Text style={styles.planPhotoDraftNote}>Draft only. Not attached on approval yet.</Text>
+        <Text style={styles.planPhotoDraftNote}>Attaches after approval.</Text>
       ) : null}
     </View>
   );

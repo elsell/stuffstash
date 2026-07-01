@@ -11,6 +11,7 @@ import {
   AssetBrowsePageInput,
   CreateInventoryAssetInput,
   CreateInventoryAssetPhotoInput,
+  AddInventoryAssetPhotoInput,
   InventorySummaryRepository,
   InventoryWorkspace
 } from '../../application/home/InventorySummaryRepository';
@@ -124,7 +125,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     input: CreateInventoryAssetPhotoInput
   ): Promise<void> {
     const inventory = await this.getDefaultInventorySummary();
-    await this.client.createAssetAttachment(inventory.tenantId, inventory.id, assetIdValue, {
+    await this.addInventoryAssetPhoto({
+      tenantId: inventory.tenantId,
+      inventoryId: inventory.id,
+      assetId: assetIdValue,
+      ...input
+    });
+  }
+
+  async addInventoryAssetPhoto(input: AddInventoryAssetPhotoInput): Promise<void> {
+    await this.client.createAssetAttachment(input.tenantId, input.inventoryId, input.assetId, {
       fileName: input.fileName,
       contentType: input.contentType,
       contentBase64: input.contentBase64

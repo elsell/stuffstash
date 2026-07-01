@@ -33,6 +33,7 @@ export function VoiceSessionSheetScreen() {
     cancelRealtimeActionPlan,
     diagnosticsEnabled,
     reset,
+    retryRealtimeActionPlanPhotos,
     startRealtime,
     state,
     stopRealtime
@@ -90,10 +91,13 @@ export function VoiceSessionSheetScreen() {
         void cancelRealtime();
       }}
       onApproveActionPlan={(planId) => {
-        void approveRealtimeActionPlan(planId);
+        void approveRealtimeActionPlan(planId, photoDrafts);
       }}
       onCancelActionPlan={(planId) => {
         void cancelRealtimeActionPlan(planId);
+      }}
+      onRetryPhotos={(planId) => {
+        void retryRealtimeActionPlanPhotos(planId);
       }}
       onAddPhotos={(commandKey) => {
         const existingCount = photoDrafts[commandKey]?.length ?? 0;
@@ -151,6 +155,7 @@ function VoiceSessionSheet({
   onCancelActionPlan,
   onAddPhotos,
   onRemovePhoto,
+  onRetryPhotos,
   onOpenProviderProfiles,
   onReset,
   onSessionMic,
@@ -165,6 +170,7 @@ function VoiceSessionSheet({
   readonly onCancelActionPlan: (planId: string) => void;
   readonly onAddPhotos: (commandKey: string) => void;
   readonly onRemovePhoto: (commandKey: string, photoId: string) => void;
+  readonly onRetryPhotos: (planId: string) => void;
   readonly onClose: () => void;
   readonly onCancelSession: () => void;
   readonly onOpenProviderProfiles: () => void;
@@ -292,7 +298,21 @@ function VoiceSessionSheet({
                   <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
                 ) : null}
                 {actionPlan.status === 'executed' ? (
-                  <Text style={styles.actionPlanStatus}>Applied.</Text>
+                  <View style={styles.actionPlanStatusGroup}>
+                    <Text style={styles.actionPlanStatus}>
+                      {state.realtime?.photoAttachmentStatus?.message ?? 'Applied.'}
+                    </Text>
+                    {state.realtime?.photoAttachmentStatus?.canRetry ? (
+                      <Pressable
+                        accessibilityLabel="Retry attaching voice photos"
+                        accessibilityRole="button"
+                        onPress={() => onRetryPhotos(actionPlan.planId)}
+                        style={styles.retryPhotosButton}
+                      >
+                        <Text style={styles.retryPhotosButtonText}>Retry photos</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
                 ) : null}
                 {actionPlan.status === 'failed' ? (
                   <Text style={styles.actionPlanStatus}>Could not apply this change.</Text>
@@ -577,6 +597,11 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: spacing.sm
   },
+  actionPlanStatusGroup: {
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginTop: spacing.sm
+  },
   actionPlanText: {
     color: colors.text,
     flex: 1,
@@ -754,6 +779,20 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     fontWeight: '800'
+  },
+  retryPhotosButton: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+    minHeight: 34,
+    paddingHorizontal: spacing.md
+  },
+  retryPhotosButtonText: {
+    color: colors.accentStrong,
+    fontSize: 12,
+    fontWeight: '900'
   },
   recoveryButton: {
     alignItems: 'center',

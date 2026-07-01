@@ -7,7 +7,8 @@ import {
   RealtimeVoiceSessionController,
   VoiceRealtimeFailureCode,
   VoiceRealtimeCancelledError,
-  VoiceRealtimeState
+  VoiceRealtimeState,
+  type VoiceActionPlanPhotoDrafts
 } from '../../application/voice/RealtimeVoiceSession';
 
 export type VoiceInteractionStage = 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
@@ -28,8 +29,9 @@ type VoiceInteractionStateContextValue = {
   readonly setStage: (stage: VoiceInteractionStage) => void;
   readonly startRealtime: () => Promise<void>;
   readonly stopRealtime: () => Promise<void>;
-  readonly approveRealtimeActionPlan: (planId: string) => Promise<void>;
+  readonly approveRealtimeActionPlan: (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts) => Promise<void>;
   readonly cancelRealtimeActionPlan: (planId: string) => Promise<void>;
+  readonly retryRealtimeActionPlanPhotos: (planId: string) => Promise<void>;
   readonly cancelRealtime: () => Promise<void>;
   readonly reset: () => void;
 };
@@ -146,10 +148,10 @@ export function VoiceInteractionStateProvider({
           setStage('failed');
         }
       },
-      approveRealtimeActionPlan: async (planId: string) => {
+      approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts) => {
         setRealtime(markReviewDecisionPending(realtime, 'Approving change'));
         try {
-          await realtimeController.approveActionPlan(planId);
+          await realtimeController.approveActionPlan(planId, photoDrafts);
         } catch (error) {
           setRealtime(buildFailedVoiceRealtimeState(error));
           setStage('failed');
@@ -162,6 +164,23 @@ export function VoiceInteractionStateProvider({
         } catch (error) {
           setRealtime(buildFailedVoiceRealtimeState(error));
           setStage('failed');
+        }
+      },
+      retryRealtimeActionPlanPhotos: async (planId: string) => {
+        setRealtime(realtime ? { ...realtime, progressLabel: 'Adding photos' } : realtime);
+        try {
+          const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
+          setRealtime((current) => current ? { ...current, progressLabel: 'Photos updated', photoAttachmentStatus } : current);
+        } catch (error) {
+          setRealtime((current) => current ? {
+            ...current,
+            progressLabel: 'Photo upload failed',
+            photoAttachmentStatus: {
+              status: 'failed',
+              message: readableError(error, 'Photos could not be attached.'),
+              canRetry: true
+            }
+          } : buildFailedVoiceRealtimeState(error));
         }
       },
       cancelRealtime: async () => {

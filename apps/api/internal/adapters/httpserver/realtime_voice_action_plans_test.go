@@ -77,6 +77,14 @@ func TestRealtimeVoiceActionPlanApprovalUsesOpenReviewSession(t *testing.T) {
 	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
 		t.Fatalf("expected safe execution event, got %+v", executed)
 	}
+	commandResults, ok := executed["commandResults"].([]any)
+	if !ok || len(commandResults) != 1 {
+		t.Fatalf("expected one command result for photo attachment, got %+v", executed["commandResults"])
+	}
+	commandResult, ok := commandResults[0].(map[string]any)
+	if !ok || commandResult["commandId"] == "" || commandResult["assetId"] == "" || commandResult["operation"] != "create" || commandResult["assetKind"] != "item" || commandResult["title"] != nil {
+		t.Fatalf("unexpected command result: %+v", commandResult)
+	}
 	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
 }
 

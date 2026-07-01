@@ -298,15 +298,18 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
     case 'action.plan.approved':
     case 'action.plan.cancelled':
     case 'action.plan.executed':
-    case 'action.plan.failed':
+    case 'action.plan.failed': {
+      const commandResults = actionPlanCommandResultsField(message);
       return {
         ...metadata,
         type: message.type,
         sessionId: stringField(message, 'sessionId'),
         planId: stringField(message, 'planId'),
         status: actionPlanStatusField(message, message.type),
-        message: optionalStringField(message, 'message')
+        message: optionalStringField(message, 'message'),
+        ...(commandResults ? { commandResults } : {})
       };
+    }
 		case 'assistant.response.started':
 			return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
 		case 'assistant.response.completed': {
@@ -434,6 +437,25 @@ function actionPlanField(message: Record<string, unknown>) {
 
 function optionalObjectField<T extends string>(field: T, value: string | undefined): { readonly [key in T]?: string } {
   return value ? { [field]: value } as { readonly [key in T]?: string } : {};
+}
+
+function actionPlanCommandResultsField(message: Record<string, unknown>) {
+  const raw = message.commandResults;
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(raw)) {
+    throw new Error('Voice event field commandResults must be an array.');
+  }
+  return raw.map((item) => {
+    const result = objectValue(item, 'commandResults');
+    return {
+      commandId: stringField(result, 'commandId'),
+      assetId: stringField(result, 'assetId'),
+      operation: stringField(result, 'operation'),
+      assetKind: stringField(result, 'assetKind')
+    };
+  });
 }
 
 function actionPlanStatusField(

@@ -283,6 +283,37 @@ func TestExecuteActionPlanCreatesAssetAndMarksExecuted(t *testing.T) {
 	}
 }
 
+func TestExecuteActionPlanDetailedReturnsCreatedAssetCommandResult(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindCreateAsset, `{"title":"Water bottle","kind":"item","description":"Blue bottle"}`),
+		},
+	}
+	repository.records["plan-1"].Commands[0].ID = "cmd-water-bottle"
+	application := newActionPlanExecutionTestApp(repository, &fakeAssetRepository{}, &fakeIDGenerator{ids: []string{"asset-1", "undo-1", "audit-1"}})
+
+	result, err := application.ExecuteActionPlanDetailed(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if err != nil {
+		t.Fatalf("execute action plan: %v", err)
+	}
+	if result.Record.State != actionplan.StateExecuted {
+		t.Fatalf("expected executed plan, got %+v", result.Record)
+	}
+	if len(result.CommandResults) != 1 {
+		t.Fatalf("expected one command result, got %+v", result.CommandResults)
+	}
+	if got := result.CommandResults[0]; got.CommandID != "cmd-water-bottle" || got.AssetID != "asset-1" || got.Operation != "create" || got.AssetKind != "item" {
+		t.Fatalf("unexpected command result: %+v", got)
+	}
+}
+
 func TestExecuteActionPlanCreatesLocationAndMarksExecuted(t *testing.T) {
 	t.Parallel()
 
