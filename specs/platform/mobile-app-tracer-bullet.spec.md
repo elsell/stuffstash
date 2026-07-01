@@ -99,8 +99,15 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The first implementation may show a locally ordered carousel/strip for available attachment thumbnails and newly selected upload drafts. Full cover-photo selection, persisted attachment reordering, and attachment deletion require a future media-management API slice.
   - The workspace must show title, kind, optional custom type, location path, lifecycle state, and updated-at metadata without hiding the primary actions below low-value chrome.
   - Active assets with edit permission must expose clear primary actions for `Edit`, `Move`, and `Add photos`.
-  - Secondary lifecycle actions must live behind an overflow/action-sheet style control instead of occupying the primary action row.
+  - Secondary actions must live behind an overflow/action-sheet style control instead of occupying the primary action row.
+  - The overflow must expose lifecycle actions when available and an `Audit history` action for read-authorized assets.
   - The same workspace component must be reusable across Home recent assets, selected-inventory asset lists, Search results, and Location asset lists.
+- Mobile asset detail audit history must be read-only and scoped to the current inventory and asset:
+  - The first implementation may call the generated inventory audit-record list endpoint and client-filter records whose target ID matches the current asset.
+  - The detail workspace must display safe audit metadata only: action label, source, principal ID, occurred-at label, request ID when present, and safe metadata values returned by the API.
+  - The mobile UI must not expose raw provider prompts, raw voice transcripts, credentials, storage keys, blob paths, authorization internals, or other sensitive implementation detail.
+  - The audit surface may be a native-feeling sheet opened from the asset overflow. It must show loading, empty, and safe error states.
+  - The first implementation may load enough inventory-audit pages to find a bounded number of records for the asset. Full cursor browsing and asset-scoped server filtering require a future audit API slice.
 - Mobile asset detail edit must be a native-feeling sheet or pushed form backed by mobile application commands:
   - Users may edit title and description.
   - Kind changes remain unavailable until the API exposes a safe conversion/promotion command; the UI may display kind as read-only helper context.

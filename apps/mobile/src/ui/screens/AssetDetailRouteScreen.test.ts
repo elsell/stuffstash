@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import { canSaveMoveAsset, parentFromCurrentAssetPath } from './AssetDetailMovePresentation';
+import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 
 describe('navigateAfterDeletedAsset', () => {
   it('uses native back navigation when the asset detail route has history', () => {
@@ -78,5 +79,12 @@ describe('asset detail move helpers', () => {
       id: 'asset-cabinet',
       title: 'Big cabinet'
     });
+  });
+});
+
+describe('asset audit history presentation helpers', () => {
+  it('rejects stale audit history requests after close or navigation', () => {
+    expect(isCurrentAuditHistoryRequest(3, 3)).toBe(true);
+    expect(isCurrentAuditHistoryRequest(4, 3)).toBe(false);
   });
 });

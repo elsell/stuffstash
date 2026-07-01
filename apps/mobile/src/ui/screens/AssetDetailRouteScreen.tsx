@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   ActionSheetIOS,
@@ -15,6 +15,7 @@ import {
   AddAssetPhotosCommand,
   AddAssetPhotosCommandResult
 } from '../../application/assets/AddAssetPhotosCommand';
+import { AssetAuditHistoryQuery } from '../../application/assets/AssetAuditHistoryQuery';
 import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
@@ -28,6 +29,11 @@ import {
   SelectedAssetPhoto
 } from '../../application/add/PhotoSelectionQuery';
 import { AssetDetailView } from '../components/AssetDetailView';
+import {
+  AssetAuditHistorySheet,
+  AssetAuditHistorySheetState
+} from './AssetAuditHistorySheet';
+import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import {
   EditAssetSheet,
   EditDraft,
@@ -43,6 +49,7 @@ import { colors, radius, spacing } from '../theme/tokens';
 
 type AssetDetailRouteScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
+  readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly createAssetCommand: CreateAssetCommand;
@@ -63,6 +70,7 @@ type PendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photo
 
 export function AssetDetailRouteScreen({
   addAssetPhotosCommand,
+  assetAuditHistoryQuery,
   assetDetailQuery,
   assetLifecycleCommand,
   assetId,
@@ -81,9 +89,15 @@ export function AssetDetailRouteScreen({
   const [moveIntoDraft, setMoveIntoDraft] = useState<MoveIntoDraft | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
+  const [auditHistoryState, setAuditHistoryState] = useState<AssetAuditHistorySheetState>({
+    status: 'closed'
+  });
+  const auditHistoryRequestRef = useRef(0);
 
   useEffect(() => {
     let isCurrent = true;
+    auditHistoryRequestRef.current += 1;
+    setAuditHistoryState({ status: 'closed' });
 
     assetDetailQuery
       .execute(assetId)
@@ -360,14 +374,18 @@ export function AssetDetailRouteScreen({
       const actions = lifecycleActions(asset);
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [...actions.map((action) => action.label), 'Cancel'],
-          cancelButtonIndex: actions.length,
+          options: [...actions.map((action) => action.label), 'Audit history', 'Cancel'],
+          cancelButtonIndex: actions.length + 1,
           destructiveButtonIndex: actions.findIndex((action) => action.kind === 'delete')
         },
         (index) => {
           const action = actions[index];
           if (action) {
             action.run();
+            return;
+          }
+          if (index === actions.length) {
+            void openAuditHistory(asset);
           }
         }
       );
@@ -379,8 +397,34 @@ export function AssetDetailRouteScreen({
         style: action.kind === 'delete' ? 'destructive' as const : 'default' as const,
         onPress: action.run
       })),
+      { text: 'Audit history', onPress: () => void openAuditHistory(asset) },
       { text: 'Cancel', style: 'cancel' }
     ]);
+  }
+
+  async function openAuditHistory(asset: AssetDetailViewModel): Promise<void> {
+    const requestId = auditHistoryRequestRef.current + 1;
+    auditHistoryRequestRef.current = requestId;
+    setAuditHistoryState({ status: 'loading', assetTitle: asset.title });
+    try {
+      const history = await assetAuditHistoryQuery.execute({ assetId: asset.id, limit: 20 });
+      if (isCurrentAuditHistoryRequest(auditHistoryRequestRef.current, requestId)) {
+        setAuditHistoryState({ status: 'ready', assetTitle: asset.title, history });
+      }
+    } catch (error) {
+      if (isCurrentAuditHistoryRequest(auditHistoryRequestRef.current, requestId)) {
+        setAuditHistoryState({
+          status: 'error',
+          assetTitle: asset.title,
+          message: readableError(error, 'Audit history failed.')
+        });
+      }
+    }
+  }
+
+  function closeAuditHistory(): void {
+    auditHistoryRequestRef.current += 1;
+    setAuditHistoryState({ status: 'closed' });
   }
 
   function lifecycleActions(asset: AssetDetailViewModel) {
@@ -454,7 +498,7 @@ export function AssetDetailRouteScreen({
             onAddPhotos={() => choosePhotos(screenState.asset.photos.length)}
             onChildPress={(childId) => router.push(`/assets/${childId}`)}
             onEdit={() => openEdit(screenState.asset)}
-            onMoreActions={lifecycleActions(screenState.asset).length > 0 ? () => showMoreActions(screenState.asset) : undefined}
+            onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => void openMove(screenState.asset)}
             onMoveThingsHere={() => void openMoveThingsHere(screenState.asset)}
             onRemovePhoto={confirmRemovePhoto}
@@ -493,6 +537,10 @@ export function AssetDetailRouteScreen({
             onClose={() => setMoveIntoDraft(undefined)}
             onSave={() => void saveMoveInto()}
             onSelectAsset={(selectedAsset) => setMoveIntoDraft((current) => current ? { ...current, selectedAsset } : current)}
+          />
+          <AssetAuditHistorySheet
+            state={auditHistoryState}
+            onClose={closeAuditHistory}
           />
         </>
       ) : null}

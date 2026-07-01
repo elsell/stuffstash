@@ -1,4 +1,5 @@
 import { StuffStashClient } from '@stuff-stash/api-client';
+import { ApiAssetAuditHistoryRepository } from '../adapters/audit/ApiAssetAuditHistoryRepository';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
 import { ApiOnboardingGateway } from '../adapters/onboarding/ApiOnboardingGateway';
@@ -14,6 +15,7 @@ import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
 import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
+import { AssetAuditHistoryQuery } from '../application/assets/AssetAuditHistoryQuery';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
@@ -44,6 +46,7 @@ export type MobileComposition = {
   readonly homeDashboardQuery: HomeDashboardQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
+  readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
@@ -97,6 +100,7 @@ export function createSeedConnectionProfile(): ConnectionProfile | undefined {
 export function createMobileComposition(profile: ConnectionProfile): MobileComposition {
   const client = createStuffStashClient(profile);
   const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '');
+  const assetAuditHistory = new ApiAssetAuditHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
@@ -107,6 +111,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
+    assetAuditHistoryQuery: new AssetAuditHistoryQuery(assetAuditHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),
