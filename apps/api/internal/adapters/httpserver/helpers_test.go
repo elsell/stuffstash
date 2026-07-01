@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -104,6 +105,7 @@ func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blob
 		Attachments:               store,
 		AttachmentUnitOfWork:      store,
 		Blobs:                     blobStorage,
+		DirectUploads:             blobstore.NewLocalDirectAttachmentUploader(blobStorage),
 		BlobDeletionOutbox:        store,
 		Audit:                     store,
 		Outbox:                    store,

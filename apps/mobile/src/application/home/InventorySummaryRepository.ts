@@ -66,6 +66,17 @@ export type CreateInventoryAssetPhotoInput = {
   readonly contentBase64?: string;
   readonly uri?: string;
   readonly sizeBytes?: number;
+  readonly directUpload?: InventoryAssetPhotoDirectUpload;
+};
+
+export type InventoryAssetPhotoDirectUpload = {
+  readonly uploadId: string;
+  readonly attachmentId: string;
+  readonly method: string;
+  readonly url: string;
+  readonly headers: Readonly<Record<string, string>>;
+  readonly formFields: Readonly<Record<string, string>>;
+  readonly expiresAt: string;
 };
 
 export type AddInventoryAssetPhotoInput = CreateInventoryAssetPhotoInput & {

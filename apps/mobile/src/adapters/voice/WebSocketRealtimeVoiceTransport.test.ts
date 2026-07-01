@@ -54,7 +54,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     socket.receive({ type: 'session.completed', seq: 8, sessionId: 'session-1' });
     await waitForSentMessageCount(socket, 3);
     await waitForEventType(events, 'action.plan.proposed');
-    await transport.approveActionPlan('plan-1');
+    await transport.approveActionPlan('plan-1', [{
+      commandId: 'cmd-water-bottle',
+      photoIndex: 0,
+      fileName: 'water-bottle.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 123
+    }]);
     await expect(transport.cancelActionPlan('plan-1')).rejects.toThrow('not active');
     socket.receive({ type: 'action.plan.approved', seq: 9, sessionId: 'session-1', planId: 'plan-1', status: 'approved' });
     socket.receive({
@@ -69,6 +75,23 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         assetId: 'asset-water-bottle',
         operation: 'create',
         assetKind: 'item'
+      }],
+      attachmentUploadIntents: [{
+        commandId: 'cmd-water-bottle',
+        photoIndex: 0,
+        assetId: 'asset-water-bottle',
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 123,
+        directUpload: {
+          uploadId: 'upload-one',
+          attachmentId: 'attachment-one',
+          method: 'POST',
+          url: 'https://uploads.example.test/upload-one',
+          headers: {},
+          formFields: { key: 'object-one' },
+          expiresAt: '2026-07-01T12:00:00Z'
+        }
       }]
     });
 
@@ -92,7 +115,14 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(socket.sent[3]).toMatchObject({
       seq: 4,
       sessionId: 'session-1',
-      planId: 'plan-1'
+      planId: 'plan-1',
+      photoAttachments: [{
+        commandId: 'cmd-water-bottle',
+        photoIndex: 0,
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 123
+      }]
     });
     expect(events).toEqual([
       { type: 'session.started', seq: 1, sessionId: 'session-1' },
@@ -135,6 +165,23 @@ describe('WebSocketRealtimeVoiceTransport', () => {
           assetId: 'asset-water-bottle',
           operation: 'create',
           assetKind: 'item'
+        }],
+        attachmentUploadIntents: [{
+          commandId: 'cmd-water-bottle',
+          photoIndex: 0,
+          assetId: 'asset-water-bottle',
+          fileName: 'water-bottle.jpg',
+          contentType: 'image/jpeg',
+          sizeBytes: 123,
+          directUpload: {
+            uploadId: 'upload-one',
+            attachmentId: 'attachment-one',
+            method: 'POST',
+            url: 'https://uploads.example.test/upload-one',
+            headers: {},
+            formFields: { key: 'object-one' },
+            expiresAt: '2026-07-01T12:00:00Z'
+          }
         }]
       }
     ]);

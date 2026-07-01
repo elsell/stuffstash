@@ -383,16 +383,13 @@ func TestReplayLocalDevelopmentAuthorizationSkipsProductionAuthorizationModes(t 
 	}
 }
 
-func TestBuildBlobStorageAcceptsFilesystemMode(t *testing.T) {
+func TestBuildBlobStorageAcceptsFilesystemModeWithLocalDirectUploadSentinel(t *testing.T) {
 	store, directUploads, err := buildBlobStorage(config.Config{BlobStorageMode: "filesystem", BlobStoragePath: t.TempDir()})
 	if err != nil {
 		t.Fatalf("build filesystem blob storage: %v", err)
 	}
-	if store == nil {
-		t.Fatalf("expected blob storage")
-	}
-	if directUploads != nil {
-		t.Fatalf("filesystem mode must not expose an unusable direct upload target")
+	if store == nil || directUploads == nil {
+		t.Fatalf("expected filesystem blob storage with local direct upload sentinel")
 	}
 }
 

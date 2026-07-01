@@ -4,6 +4,7 @@ import {
   RecordedVoiceAudio,
   RealtimeVoiceSessionController,
   RealtimeVoiceTransport,
+  VoiceActionPlanAttachmentUploadIntent,
   VoiceActionPlanCommand,
   VoiceAudioPlayer,
   VoiceAudioRecorder,
@@ -266,7 +267,8 @@ describe('RealtimeVoiceSessionController', () => {
         assetId: 'asset-water-bottle',
         operation: 'create',
         assetKind: 'item'
-      }]
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg')]
     });
     const repository = new FakeInventoryRepository();
     const controller = new RealtimeVoiceSessionController(
@@ -284,7 +286,8 @@ describe('RealtimeVoiceSessionController', () => {
       'cmd-water-bottle': [{
         fileName: 'water-bottle.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'cGhvdG8='
+        contentBase64: 'cGhvdG8=',
+        sizeBytes: 5
       }]
     });
     const states = await stop;
@@ -294,7 +297,8 @@ describe('RealtimeVoiceSessionController', () => {
         tenantId: 'tenant-home',
         inventoryId: 'inventory-home',
         assetId: 'asset-water-bottle',
-        fileName: 'water-bottle.jpg'
+        fileName: 'water-bottle.jpg',
+        uploadId: 'upload-cmd-water-bottle'
       }
     ]);
     expect(states.at(-1)).toMatchObject({
@@ -321,7 +325,8 @@ describe('RealtimeVoiceSessionController', () => {
         assetId: 'asset-water-bottle',
         operation: 'move',
         assetKind: 'item'
-      }]
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg')]
     });
     const repository = new FakeInventoryRepository();
     const controller = new RealtimeVoiceSessionController(
@@ -339,7 +344,8 @@ describe('RealtimeVoiceSessionController', () => {
       'cmd-water-bottle': [{
         fileName: 'water-bottle.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'cGhvdG8='
+        contentBase64: 'cGhvdG8=',
+        sizeBytes: 5
       }]
     });
     const states = await stop;
@@ -349,7 +355,8 @@ describe('RealtimeVoiceSessionController', () => {
         tenantId: 'tenant-home',
         inventoryId: 'inventory-home',
         assetId: 'asset-water-bottle',
-        fileName: 'water-bottle.jpg'
+        fileName: 'water-bottle.jpg',
+        uploadId: 'upload-cmd-water-bottle'
       }
     ]);
     expect(states.at(-1)?.photoAttachmentStatus).toMatchObject({
@@ -365,7 +372,8 @@ describe('RealtimeVoiceSessionController', () => {
         assetId: 'asset-water-bottle',
         operation: 'create',
         assetKind: 'item'
-      }]
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg')]
     });
     const repository = new FakeInventoryRepository();
     repository.failPhotoUploads = 1;
@@ -384,7 +392,8 @@ describe('RealtimeVoiceSessionController', () => {
       'cmd-water-bottle': [{
         fileName: 'water-bottle.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'cGhvdG8='
+        contentBase64: 'cGhvdG8=',
+        sizeBytes: 5
       }]
     });
     const states = await stop;
@@ -405,7 +414,8 @@ describe('RealtimeVoiceSessionController', () => {
         tenantId: 'tenant-home',
         inventoryId: 'inventory-home',
         assetId: 'asset-water-bottle',
-        fileName: 'water-bottle.jpg'
+        fileName: 'water-bottle.jpg',
+        uploadId: 'upload-cmd-water-bottle'
       }
     ]);
   });
@@ -417,7 +427,8 @@ describe('RealtimeVoiceSessionController', () => {
         assetId: 'asset-water-bottle',
         operation: 'create',
         assetKind: 'item'
-      }]
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg', 123)]
     });
     const repository = new FakeInventoryRepository();
     repository.failPhotoUploads = 1;
@@ -447,6 +458,150 @@ describe('RealtimeVoiceSessionController', () => {
       status: 'failed',
       message: 'The change was applied, but photos could not be attached: Attachment content is not available for JSON upload fallback.',
       canRetry: true
+    });
+  });
+
+  it('does not offer retry when the server omits the required upload intent', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }]
+    });
+    const repository = new FakeInventoryRepository();
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'cGhvdG8=',
+        sizeBytes: 5
+      }]
+    });
+    const states = await stop;
+
+    expect(states.at(-1)?.photoAttachmentStatus).toEqual({
+      status: 'failed',
+      message: 'The change was applied, but photos could not be attached: The server did not return an upload intent for this photo.',
+      canRetry: false
+    });
+    expect(repository.addedPhotos).toEqual([]);
+    await expect(controller.retryPhotoAttachments('plan-1')).resolves.toEqual({
+      status: 'failed',
+      message: 'There are no photos ready to retry.'
+    });
+  });
+
+  it('rejects staged photos without size metadata before approving a plan', async () => {
+    const transport = new ReviewDecisionTransport();
+    const repository = new FakeInventoryRepository();
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await expect(controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'cGhvdG8='
+      }]
+    })).rejects.toThrow('Photo size is required before approving this change.');
+
+    await transport.cancelActionPlan('plan-1');
+    await stop;
+    expect(transport.approvedPhotoRequests).toEqual([]);
+    expect(repository.addedPhotos).toEqual([]);
+  });
+
+  it('attaches staged photos through server upload intents for dependent created items', async () => {
+    const transport = new ReviewDecisionTransport({
+      commands: [
+        { id: 'cmd-room', kind: 'create_location', summary: 'Create Henry room', operation: 'create', assetKind: 'location', title: 'Henry room' },
+        { id: 'cmd-closet', kind: 'create_asset', summary: 'Create closet', operation: 'create', assetKind: 'container', title: 'closet', parentCommandId: 'cmd-room' },
+        { id: 'cmd-refills', kind: 'create_asset', summary: 'Create diaper genie refills', operation: 'create', assetKind: 'item', title: 'diaper genie refills', parentCommandId: 'cmd-closet' }
+      ],
+      commandResults: [
+        { commandId: 'cmd-room', assetId: 'asset-room', operation: 'create', assetKind: 'location' },
+        { commandId: 'cmd-closet', assetId: 'asset-closet', operation: 'create', assetKind: 'container' },
+        { commandId: 'cmd-refills', assetId: 'asset-refills', operation: 'create', assetKind: 'item' }
+      ],
+      attachmentUploadIntents: [{
+        commandId: 'cmd-refills',
+        photoIndex: 0,
+        assetId: 'asset-refills',
+        fileName: 'refills.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 4,
+        directUpload: {
+          uploadId: 'upload-one',
+          attachmentId: 'attachment-one',
+          method: 'PUT',
+          url: 'stuffstash-local://direct-uploads/upload-one',
+          headers: { 'content-type': 'image/jpeg' },
+          formFields: {},
+          expiresAt: '2026-07-01T12:00:00Z'
+        }
+      }]
+    });
+    const repository = new FakeInventoryRepository();
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-refills': [{
+        fileName: 'refills.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'ZmFrZQ==',
+        uri: 'file:///refills.jpg',
+        sizeBytes: 4
+      }]
+    });
+    const states = await stop;
+
+    expect(transport.approvedPhotoRequests).toEqual([{
+      commandId: 'cmd-refills',
+      photoIndex: 0,
+      fileName: 'refills.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 4
+    }]);
+    expect(repository.addedPhotos).toEqual([{
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-refills',
+      fileName: 'refills.jpg',
+      uploadId: 'upload-one'
+    }]);
+    expect(states.at(-1)?.photoAttachmentStatus).toMatchObject({
+      status: 'attached',
+      message: '1 photo attached.'
     });
   });
 
@@ -867,6 +1022,7 @@ class FakeTransport implements RealtimeVoiceTransport {
 
 class ReviewDecisionTransport implements RealtimeVoiceTransport {
   readonly approvedPlanIds: string[] = [];
+  readonly approvedPhotoRequests: unknown[] = [];
   readonly cancelledPlanIds: string[] = [];
   protected onEvent: ((event: VoiceRealtimeEvent) => Promise<void>) | undefined;
   private reviewReadyResolve: (() => void) | undefined;
@@ -883,6 +1039,7 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
       readonly operation: string;
       readonly assetKind: string;
     }[];
+    readonly attachmentUploadIntents?: readonly VoiceActionPlanAttachmentUploadIntent[];
   } = {}) {}
 
   async run(
@@ -910,8 +1067,9 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
     });
   }
 
-  async approveActionPlan(planId: string): Promise<void> {
+  async approveActionPlan(planId: string, photos: readonly unknown[] = []): Promise<void> {
     this.approvedPlanIds.push(planId);
+    this.approvedPhotoRequests.push(...photos);
     await this.onEvent?.({
       type: 'action.plan.approved',
       seq: 4,
@@ -926,7 +1084,8 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
       planId,
       status: 'executed',
       message: 'The approved change was applied.',
-      ...(this.options.commandResults ? { commandResults: this.options.commandResults } : {})
+      ...(this.options.commandResults ? { commandResults: this.options.commandResults } : {}),
+      ...(this.options.attachmentUploadIntents ? { attachmentUploadIntents: this.options.attachmentUploadIntents } : {})
     });
     this.finishResolve?.();
   }
@@ -1065,8 +1224,28 @@ class FakePlayer implements VoiceAudioPlayer {
   }
 }
 
+function testUploadIntent(commandId: string, assetIdValue: string, fileName: string, sizeBytes = 5): VoiceActionPlanAttachmentUploadIntent {
+  return {
+    commandId,
+    photoIndex: 0,
+    assetId: assetIdValue,
+    fileName,
+    contentType: 'image/jpeg',
+    sizeBytes,
+    directUpload: {
+      uploadId: `upload-${commandId}`,
+      attachmentId: `attachment-${commandId}`,
+      method: 'PUT',
+      url: `stuffstash-local://direct-uploads/upload-${commandId}`,
+      headers: { 'content-type': 'image/jpeg' },
+      formFields: {},
+      expiresAt: '2026-07-01T12:00:00Z'
+    }
+  };
+}
+
 class FakeInventoryRepository implements InventorySummaryRepository {
-  readonly addedPhotos: Array<{ readonly tenantId?: string; readonly inventoryId?: string; readonly assetId: string; readonly fileName: string }> = [];
+  readonly addedPhotos: Array<{ readonly tenantId?: string; readonly inventoryId?: string; readonly assetId: string; readonly fileName: string; readonly uploadId?: string }> = [];
   failPhotoUploads = 0;
   photoUploadFailureMessage = 'Photo upload failed.';
 
@@ -1102,7 +1281,7 @@ class FakeInventoryRepository implements InventorySummaryRepository {
   async addAssetPhoto(assetIdValue: string, input: { readonly fileName: string }): Promise<void> {
     this.addedPhotos.push({ assetId: assetIdValue, fileName: input.fileName });
   }
-  async addInventoryAssetPhoto(input: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly fileName: string }): Promise<void> {
+  async addInventoryAssetPhoto(input: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly fileName: string; readonly directUpload?: { readonly uploadId: string } }): Promise<void> {
     if (this.failPhotoUploads > 0) {
       this.failPhotoUploads -= 1;
       throw new Error(this.photoUploadFailureMessage);
@@ -1111,7 +1290,8 @@ class FakeInventoryRepository implements InventorySummaryRepository {
       tenantId: input.tenantId,
       inventoryId: input.inventoryId,
       assetId: input.assetId,
-      fileName: input.fileName
+      fileName: input.fileName,
+      uploadId: input.directUpload?.uploadId
     });
   }
   async archiveAsset(): Promise<void> {}

@@ -32,6 +32,7 @@ func (u *LocalDirectAttachmentUploader) CreateDirectAttachmentUpload(_ context.C
 	}
 
 	u.mu.Lock()
+	u.pruneExpiredLocked(time.Now().UTC())
 	u.pending[request.UploadID] = request
 	u.mu.Unlock()
 
@@ -51,6 +52,7 @@ func (u *LocalDirectAttachmentUploader) CompleteDirectAttachmentUpload(ctx conte
 	}
 
 	u.mu.Lock()
+	u.pruneExpiredLocked(time.Now().UTC())
 	request, ok := u.pending[uploadID]
 	if ok {
 		delete(u.pending, uploadID)
@@ -93,4 +95,12 @@ func (u *LocalDirectAttachmentUploader) CompleteDirectAttachmentUpload(ctx conte
 		SHA256:       hash,
 		ExpiresAt:    request.ExpiresAt,
 	}, nil
+}
+
+func (u *LocalDirectAttachmentUploader) pruneExpiredLocked(now time.Time) {
+	for uploadID, request := range u.pending {
+		if !request.ExpiresAt.After(now) {
+			delete(u.pending, uploadID)
+		}
+	}
 }

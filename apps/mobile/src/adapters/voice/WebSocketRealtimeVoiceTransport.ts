@@ -2,6 +2,7 @@ import type {
   RealtimeVoiceTransport,
   RealtimeVoiceTransportInput,
   RealtimeVoiceTransportRunOptions,
+  VoiceActionPlanPhotoApprovalRequest,
   VoiceRealtimeEvent
 } from '../../application/voice/RealtimeVoiceSession';
 import { VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
@@ -18,7 +19,7 @@ type VoiceWebSocket = {
 type VoiceWebSocketFactory = (url: string, headers: Record<string, string>) => VoiceWebSocket;
 
 type ActiveRealtimeReviewSession = {
-  readonly sendDecision: (type: 'action.plan.approve' | 'action.plan.cancel', planId: string) => void;
+  readonly sendDecision: (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]) => void;
 };
 
 export type WebSocketRealtimeVoiceTransportOptions = {
@@ -61,7 +62,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let settled = false;
       let decisionSent = false;
       let messageChain = Promise.resolve();
-      const sendDecision = (type: 'action.plan.approve' | 'action.plan.cancel', planId: string) => {
+      const sendDecision = (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []) => {
         if (!sessionId || settled) {
           throw new Error('Voice review session is not active.');
         }
@@ -74,7 +75,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           type,
           seq: seq++,
           sessionId,
-          planId
+          planId,
+          ...(type === 'action.plan.approve' && photos.length > 0 ? { photoAttachments: photos } : {})
         }));
       };
       const abortHandler = () => {
@@ -205,11 +207,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     });
   }
 
-  async approveActionPlan(planId: string): Promise<void> {
+  async approveActionPlan(planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []): Promise<void> {
     if (!this.activeReviewSession) {
       throw new Error('Voice review session is not active.');
     }
-    this.activeReviewSession.sendDecision('action.plan.approve', planId);
+    this.activeReviewSession.sendDecision('action.plan.approve', planId, photos);
   }
 
   async cancelActionPlan(planId: string): Promise<void> {
@@ -300,6 +302,7 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
     case 'action.plan.executed':
     case 'action.plan.failed': {
       const commandResults = actionPlanCommandResultsField(message);
+      const attachmentUploadIntents = actionPlanAttachmentUploadIntentsField(message);
       return {
         ...metadata,
         type: message.type,
@@ -307,7 +310,8 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
         planId: stringField(message, 'planId'),
         status: actionPlanStatusField(message, message.type),
         message: optionalStringField(message, 'message'),
-        ...(commandResults ? { commandResults } : {})
+        ...(commandResults ? { commandResults } : {}),
+        ...(attachmentUploadIntents ? { attachmentUploadIntents } : {})
       };
     }
 		case 'assistant.response.started':
@@ -384,6 +388,14 @@ function numberField(message: Record<string, unknown>, field: string): number {
   return value;
 }
 
+function nonNegativeNumberField(message: Record<string, unknown>, field: string): number {
+  const value = message[field];
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error(`Voice event field ${field} must be a non-negative integer.`);
+  }
+  return value;
+}
+
 function stringField(message: Record<string, unknown>, field: string): string {
   const value = message[field];
   if (typeof value !== 'string' || value.trim().length === 0) {
@@ -456,6 +468,57 @@ function actionPlanCommandResultsField(message: Record<string, unknown>) {
       assetKind: stringField(result, 'assetKind')
     };
   });
+}
+
+function actionPlanAttachmentUploadIntentsField(message: Record<string, unknown>) {
+  const raw = message.attachmentUploadIntents;
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(raw)) {
+    throw new Error('Voice event field attachmentUploadIntents must be an array.');
+  }
+  return raw.map((item) => {
+    const intent = objectValue(item, 'attachmentUploadIntents');
+    const directUpload = objectField(intent, 'directUpload');
+    return {
+      commandId: stringField(intent, 'commandId'),
+      photoIndex: nonNegativeNumberField(intent, 'photoIndex'),
+      assetId: stringField(intent, 'assetId'),
+      fileName: stringField(intent, 'fileName'),
+      contentType: photoContentTypeField(intent, 'contentType'),
+      sizeBytes: numberField(intent, 'sizeBytes'),
+      directUpload: {
+        uploadId: stringField(directUpload, 'uploadId'),
+        attachmentId: stringField(directUpload, 'attachmentId'),
+        method: stringField(directUpload, 'method'),
+        url: stringField(directUpload, 'url'),
+        headers: stringRecordField(directUpload, 'headers'),
+        formFields: stringRecordField(directUpload, 'formFields'),
+        expiresAt: stringField(directUpload, 'expiresAt')
+      }
+    };
+  });
+}
+
+function photoContentTypeField(message: Record<string, unknown>, field: string): 'image/jpeg' | 'image/png' | 'image/webp' {
+  const value = stringField(message, field);
+  if (value === 'image/jpeg' || value === 'image/png' || value === 'image/webp') {
+    return value;
+  }
+  throw new Error(`Voice event field ${field} has unsupported photo content type.`);
+}
+
+function stringRecordField(message: Record<string, unknown>, field: string): Readonly<Record<string, string>> {
+  const raw = objectField(message, field);
+  const values: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value !== 'string') {
+      throw new Error(`Voice event field ${field} must be a string record.`);
+    }
+    values[key] = value;
+  }
+  return values;
 }
 
 function actionPlanStatusField(

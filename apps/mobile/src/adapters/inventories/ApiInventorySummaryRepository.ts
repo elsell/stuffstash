@@ -2,7 +2,6 @@ import type {
   Asset,
   AssetPhotoReference,
   AssetSearchResult,
-  DirectUpload,
   Inventory,
   StuffStashClient,
   Tenant
@@ -13,6 +12,7 @@ import {
   CreateInventoryAssetInput,
   CreateInventoryAssetPhotoInput,
   AddInventoryAssetPhotoInput,
+  InventoryAssetPhotoDirectUpload,
   InventorySummaryRepository,
   InventoryWorkspace
 } from '../../application/home/InventorySummaryRepository';
@@ -50,7 +50,7 @@ type DirectUploadTransport = {
 };
 
 type DirectUploadTransportInput = {
-  readonly upload: DirectUpload;
+  readonly upload: InventoryAssetPhotoDirectUpload;
   readonly fileUri: string;
   readonly fileName: string;
   readonly contentType: CreateInventoryAssetPhotoInput['contentType'];
@@ -150,7 +150,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   async addInventoryAssetPhoto(input: AddInventoryAssetPhotoInput): Promise<void> {
     if (input.uri && input.sizeBytes && input.sizeBytes > 0) {
-      const directUpload = await this.client.initiateAssetAttachmentDirectUpload(input.tenantId, input.inventoryId, input.assetId, {
+      const directUpload = input.directUpload ?? await this.client.initiateAssetAttachmentDirectUpload(input.tenantId, input.inventoryId, input.assetId, {
         fileName: input.fileName,
         contentType: input.contentType,
         sizeBytes: input.sizeBytes

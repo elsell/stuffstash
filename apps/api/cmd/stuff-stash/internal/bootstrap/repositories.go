@@ -89,7 +89,7 @@ func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachm
 	switch strings.ToLower(strings.TrimSpace(cfg.BlobStorageMode)) {
 	case "", "filesystem":
 		store := blobstore.NewFileSystemStoreWithMaxBytes(cfg.BlobStoragePath, int64(cfg.MaxAttachmentBytes))
-		return store, nil, nil
+		return store, blobstore.NewLocalDirectAttachmentUploader(store), nil
 	case "s3":
 		store, err := blobstore.NewS3Store(blobstore.S3Config{
 			Endpoint:  cfg.S3Endpoint,

@@ -56,6 +56,20 @@ func TestLocalDirectAttachmentUploaderRejectsUnknownUpload(t *testing.T) {
 	}
 }
 
+func TestLocalDirectAttachmentUploaderPrunesExpiredPendingUploads(t *testing.T) {
+	uploader := NewLocalDirectAttachmentUploader(NewFileSystemStore(t.TempDir()))
+	expired := directUploadRequest(t, time.Now().Add(-time.Minute))
+	expired.UploadID = "expired-upload"
+	uploader.pending[expired.UploadID] = expired
+
+	if _, err := uploader.CreateDirectAttachmentUpload(context.Background(), directUploadRequest(t, time.Now().Add(time.Hour))); err != nil {
+		t.Fatalf("create direct upload: %v", err)
+	}
+	if _, found := uploader.pending[expired.UploadID]; found {
+		t.Fatalf("expected expired pending upload to be pruned")
+	}
+}
+
 func TestS3DirectAttachmentUploaderCreatesBoundedPostPolicy(t *testing.T) {
 	store, err := NewS3Store(S3Config{
 		Endpoint:  "127.0.0.1:3900",

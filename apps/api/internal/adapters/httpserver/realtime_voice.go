@@ -14,6 +14,8 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -143,22 +145,23 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 }
 
 type realtimeClientMessage struct {
-	Type                  string                 `json:"type"`
-	Seq                   int                    `json:"seq"`
-	SessionID             string                 `json:"sessionId"`
-	TenantID              string                 `json:"tenantId"`
-	InventoryID           string                 `json:"inventoryId"`
-	Source                string                 `json:"source"`
-	RequestedCapabilities []string               `json:"requestedCapabilities"`
-	InputAudio            realtimeInputAudio     `json:"inputAudio"`
-	OutputAudio           realtimeOutputAudio    `json:"outputAudio"`
-	DeveloperDiagnostics  bool                   `json:"developerDiagnostics,omitempty"`
-	ChunkID               string                 `json:"chunkId"`
-	PlanID                string                 `json:"planId"`
-	AudioBase64           string                 `json:"audioBase64"`
-	IsFinalChunk          bool                   `json:"isFinalChunk"`
-	Reason                string                 `json:"reason"`
-	Arguments             map[string]interface{} `json:"arguments"`
+	Type                  string                           `json:"type"`
+	Seq                   int                              `json:"seq"`
+	SessionID             string                           `json:"sessionId"`
+	TenantID              string                           `json:"tenantId"`
+	InventoryID           string                           `json:"inventoryId"`
+	Source                string                           `json:"source"`
+	RequestedCapabilities []string                         `json:"requestedCapabilities"`
+	InputAudio            realtimeInputAudio               `json:"inputAudio"`
+	OutputAudio           realtimeOutputAudio              `json:"outputAudio"`
+	DeveloperDiagnostics  bool                             `json:"developerDiagnostics,omitempty"`
+	ChunkID               string                           `json:"chunkId"`
+	PlanID                string                           `json:"planId"`
+	AudioBase64           string                           `json:"audioBase64"`
+	IsFinalChunk          bool                             `json:"isFinalChunk"`
+	Reason                string                           `json:"reason"`
+	Arguments             map[string]interface{}           `json:"arguments"`
+	PhotoAttachments      []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
 }
 
 type realtimeInputAudio struct {
@@ -172,28 +175,29 @@ type realtimeOutputAudio struct {
 }
 
 type realtimeServerMessage struct {
-	Type                 string                            `json:"type"`
-	Seq                  int                               `json:"seq"`
-	SessionID            string                            `json:"sessionId,omitempty"`
-	Code                 string                            `json:"code,omitempty"`
-	Message              string                            `json:"message,omitempty"`
-	Text                 string                            `json:"text,omitempty"`
-	Detail               string                            `json:"detail,omitempty"`
-	Status               string                            `json:"status,omitempty"`
-	ToolCallID           string                            `json:"toolCallId,omitempty"`
-	ToolLabel            string                            `json:"toolLabel,omitempty"`
-	ActionPlan           *realtimeActionPlanProposal       `json:"actionPlan,omitempty"`
-	PlanID               string                            `json:"planId,omitempty"`
-	CommandResults       []realtimeActionPlanCommandResult `json:"commandResults,omitempty"`
-	ResponseID           string                            `json:"responseId,omitempty"`
-	Response             *realtimeStructuredResponse       `json:"response,omitempty"`
-	Format               *realtimeAudioFormatResponse      `json:"format,omitempty"`
-	ChunkID              string                            `json:"chunkId,omitempty"`
-	AudioBase64          string                            `json:"audioBase64,omitempty"`
-	IsFinalChunk         bool                              `json:"isFinalChunk,omitempty"`
-	AcceptedInputAudio   realtimeInputAudio                `json:"acceptedInputAudio,omitempty"`
-	AcceptedOutputAudio  realtimeOutputAudio               `json:"acceptedOutputAudio,omitempty"`
-	AcceptedCapabilities []string                          `json:"acceptedCapabilities,omitempty"`
+	Type                    string                            `json:"type"`
+	Seq                     int                               `json:"seq"`
+	SessionID               string                            `json:"sessionId,omitempty"`
+	Code                    string                            `json:"code,omitempty"`
+	Message                 string                            `json:"message,omitempty"`
+	Text                    string                            `json:"text,omitempty"`
+	Detail                  string                            `json:"detail,omitempty"`
+	Status                  string                            `json:"status,omitempty"`
+	ToolCallID              string                            `json:"toolCallId,omitempty"`
+	ToolLabel               string                            `json:"toolLabel,omitempty"`
+	ActionPlan              *realtimeActionPlanProposal       `json:"actionPlan,omitempty"`
+	PlanID                  string                            `json:"planId,omitempty"`
+	CommandResults          []realtimeActionPlanCommandResult `json:"commandResults,omitempty"`
+	AttachmentUploadIntents []realtimeAttachmentUploadIntent  `json:"attachmentUploadIntents,omitempty"`
+	ResponseID              string                            `json:"responseId,omitempty"`
+	Response                *realtimeStructuredResponse       `json:"response,omitempty"`
+	Format                  *realtimeAudioFormatResponse      `json:"format,omitempty"`
+	ChunkID                 string                            `json:"chunkId,omitempty"`
+	AudioBase64             string                            `json:"audioBase64,omitempty"`
+	IsFinalChunk            bool                              `json:"isFinalChunk,omitempty"`
+	AcceptedInputAudio      realtimeInputAudio                `json:"acceptedInputAudio,omitempty"`
+	AcceptedOutputAudio     realtimeOutputAudio               `json:"acceptedOutputAudio,omitempty"`
+	AcceptedCapabilities    []string                          `json:"acceptedCapabilities,omitempty"`
 }
 
 type realtimeStructuredResponse struct {
@@ -237,6 +241,34 @@ type realtimeActionPlanCommandResult struct {
 	AssetKind string `json:"assetKind"`
 }
 
+type realtimePhotoAttachmentRequest struct {
+	CommandID   string `json:"commandId"`
+	PhotoIndex  int    `json:"photoIndex"`
+	FileName    string `json:"fileName"`
+	ContentType string `json:"contentType"`
+	SizeBytes   int64  `json:"sizeBytes"`
+}
+
+type realtimeAttachmentUploadIntent struct {
+	CommandID    string                     `json:"commandId"`
+	PhotoIndex   int                        `json:"photoIndex"`
+	AssetID      string                     `json:"assetId"`
+	FileName     string                     `json:"fileName"`
+	ContentType  string                     `json:"contentType"`
+	SizeBytes    int64                      `json:"sizeBytes"`
+	DirectUpload realtimeDirectUploadIntent `json:"directUpload"`
+}
+
+type realtimeDirectUploadIntent struct {
+	UploadID     string            `json:"uploadId"`
+	AttachmentID string            `json:"attachmentId"`
+	Method       string            `json:"method"`
+	URL          string            `json:"url"`
+	Headers      map[string]string `json:"headers"`
+	FormFields   map[string]string `json:"formFields"`
+	ExpiresAt    string            `json:"expiresAt"`
+}
+
 type realtimeAudioFormatResponse struct {
 	MimeType string `json:"mimeType"`
 }
@@ -271,25 +303,42 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 	}
 	for field := range raw {
 		switch field {
-		case "type", "seq", "sessionId", "planId":
+		case "type", "seq", "sessionId", "planId", "photoAttachments":
 		default:
 			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
 		}
 	}
 	var message struct {
-		Type      string `json:"type"`
-		Seq       int    `json:"seq"`
-		SessionID string `json:"sessionId"`
-		PlanID    string `json:"planId"`
+		Type             string                           `json:"type"`
+		Seq              int                              `json:"seq"`
+		SessionID        string                           `json:"sessionId"`
+		PlanID           string                           `json:"planId"`
+		PhotoAttachments []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
 	}
 	if err := json.Unmarshal(payload, &message); err != nil {
 		return realtimeClientMessage{}, err
 	}
+	if len(message.PhotoAttachments) > 10 {
+		return realtimeClientMessage{}, ports.ErrInvalidProviderInput
+	}
+	seenPhotos := map[string]struct{}{}
+	for _, photo := range message.PhotoAttachments {
+		commandID := strings.TrimSpace(photo.CommandID)
+		if commandID == "" || photo.PhotoIndex < 0 || photo.PhotoIndex > 9 || strings.TrimSpace(photo.FileName) == "" || strings.TrimSpace(photo.ContentType) == "" || photo.SizeBytes <= 0 {
+			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
+		}
+		key := commandID + ":" + strconv.Itoa(photo.PhotoIndex)
+		if _, exists := seenPhotos[key]; exists {
+			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
+		}
+		seenPhotos[key] = struct{}{}
+	}
 	return realtimeClientMessage{
-		Type:      strings.TrimSpace(message.Type),
-		Seq:       message.Seq,
-		SessionID: message.SessionID,
-		PlanID:    message.PlanID,
+		Type:             strings.TrimSpace(message.Type),
+		Seq:              message.Seq,
+		SessionID:        message.SessionID,
+		PlanID:           message.PlanID,
+		PhotoAttachments: message.PhotoAttachments,
 	}, nil
 }
 
@@ -365,6 +414,17 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 	var status string
 	switch message.Type {
 	case "action.plan.approve":
+		if err := application.ValidateActionPlanPhotoAttachmentMetadata(ctx, app.ActionPlanPhotoAttachmentMetadataInput{
+			Decision: app.ActionPlanDecisionInput{
+				Principal:   session.Principal,
+				TenantID:    session.TenantID,
+				InventoryID: session.InventoryID,
+				PlanID:      planID,
+			},
+			Photos: realtimePhotoAttachmentMetadataFromRequests(message.PhotoAttachments),
+		}); err != nil {
+			return "", err
+		}
 		record, err := application.ApproveActionPlan(ctx, app.ActionPlanDecisionInput{
 			Principal:   session.Principal,
 			TenantID:    session.TenantID,
@@ -396,14 +456,22 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 			outcomeType = app.RealtimeVoiceEventActionPlanFailed
 			outcomeMessage = "The approved change could not be applied safely."
 		}
+		uploadIntents, err := realtimeAttachmentUploadIntentsFromDecision(ctx, application, session, message.PhotoAttachments, executed.CommandResults)
+		if err != nil {
+			uploadIntents = nil
+			if outcomeType == app.RealtimeVoiceEventActionPlanExecuted {
+				outcomeMessage = "The approved change was applied, but photos could not be prepared for upload."
+			}
+		}
 		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{
-			Type:           outcomeType,
-			Seq:            *serverSeq,
-			SessionID:      session.ID,
-			PlanID:         planID,
-			Status:         string(executed.Record.State),
-			Message:        outcomeMessage,
-			CommandResults: realtimeActionPlanCommandResultsFromApp(executed.CommandResults),
+			Type:                    outcomeType,
+			Seq:                     *serverSeq,
+			SessionID:               session.ID,
+			PlanID:                  planID,
+			Status:                  string(executed.Record.State),
+			Message:                 outcomeMessage,
+			CommandResults:          realtimeActionPlanCommandResultsFromApp(executed.CommandResults),
+			AttachmentUploadIntents: uploadIntents,
 		}); err != nil {
 			return "", err
 		}
@@ -430,6 +498,90 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 	}
 	*serverSeq = *serverSeq + 1
 	return ports.RealtimeSessionStateCancelled, nil
+}
+
+func realtimePhotoAttachmentMetadataFromRequests(photos []realtimePhotoAttachmentRequest) []app.ActionPlanPhotoAttachmentMetadata {
+	if len(photos) == 0 {
+		return nil
+	}
+	metadata := make([]app.ActionPlanPhotoAttachmentMetadata, 0, len(photos))
+	for _, photo := range photos {
+		metadata = append(metadata, app.ActionPlanPhotoAttachmentMetadata{
+			CommandID:   photo.CommandID,
+			FileName:    photo.FileName,
+			ContentType: photo.ContentType,
+			SizeBytes:   photo.SizeBytes,
+		})
+	}
+	return metadata
+}
+
+func realtimeAttachmentUploadIntentsFromDecision(ctx context.Context, application app.App, session app.RealtimeVoiceSession, photos []realtimePhotoAttachmentRequest, results []app.ActionPlanCommandExecutionResult) ([]realtimeAttachmentUploadIntent, error) {
+	if len(photos) == 0 || len(results) == 0 {
+		return nil, nil
+	}
+	resultsByCommandID := map[string]app.ActionPlanCommandExecutionResult{}
+	for _, result := range results {
+		if result.CommandID != "" && result.AssetID != "" && photoAttachableCommandResult(result) {
+			resultsByCommandID[result.CommandID] = result
+		}
+	}
+	intents := make([]realtimeAttachmentUploadIntent, 0, len(photos))
+	for _, photo := range photos {
+		commandID := strings.TrimSpace(photo.CommandID)
+		result, ok := resultsByCommandID[commandID]
+		if !ok {
+			continue
+		}
+		upload, err := application.InitiateAttachmentDirectUpload(ctx, app.InitiateAttachmentDirectUploadInput{
+			Principal:   session.Principal,
+			Source:      audit.SourceConversation,
+			RequestID:   session.ID + ":" + commandID,
+			TenantID:    session.TenantID,
+			InventoryID: session.InventoryID,
+			AssetID:     asset.ID(result.AssetID),
+			FileName:    photo.FileName,
+			ContentType: photo.ContentType,
+			SizeBytes:   photo.SizeBytes,
+		})
+		if err != nil {
+			return nil, err
+		}
+		intents = append(intents, realtimeAttachmentUploadIntent{
+			CommandID:   commandID,
+			PhotoIndex:  photo.PhotoIndex,
+			AssetID:     result.AssetID,
+			FileName:    strings.TrimSpace(photo.FileName),
+			ContentType: strings.TrimSpace(photo.ContentType),
+			SizeBytes:   photo.SizeBytes,
+			DirectUpload: realtimeDirectUploadIntent{
+				UploadID:     upload.UploadID,
+				AttachmentID: upload.AttachmentID.String(),
+				Method:       upload.Method,
+				URL:          upload.URL,
+				Headers:      copyRealtimeStringMap(upload.Headers),
+				FormFields:   copyRealtimeStringMap(upload.FormFields),
+				ExpiresAt:    upload.ExpiresAt.UTC().Format(time.RFC3339),
+			},
+		})
+	}
+	if len(intents) != len(photos) {
+		return nil, ports.ErrInvalidProviderInput
+	}
+	return intents, nil
+}
+
+func photoAttachableCommandResult(result app.ActionPlanCommandExecutionResult) bool {
+	return (result.Operation == "create" || result.Operation == "move") &&
+		(result.AssetKind == "item" || result.AssetKind == "container" || result.AssetKind == "location")
+}
+
+func copyRealtimeStringMap(values map[string]string) map[string]string {
+	copied := map[string]string{}
+	for key, value := range values {
+		copied[key] = value
+	}
+	return copied
 }
 
 func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realtimeServerMessage {
