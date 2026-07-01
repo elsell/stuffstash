@@ -13,7 +13,7 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
-      base64: false,
+      base64: true,
       mediaTypes: ['images'],
       quality: 1
     });
@@ -29,7 +29,7 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      base64: false,
+      base64: true,
       mediaTypes: ['images'],
       quality: 1
     });

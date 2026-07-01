@@ -410,6 +410,46 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
   });
 
+  it('surfaces the safe photo upload failure reason when all staged photos fail', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }]
+    });
+    const repository = new FakeInventoryRepository();
+    repository.failPhotoUploads = 1;
+    repository.photoUploadFailureMessage = 'Attachment content is not available for JSON upload fallback.';
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        uri: 'ph://photo-one',
+        sizeBytes: 123
+      }]
+    });
+    const states = await stop;
+
+    expect(states.at(-1)?.photoAttachmentStatus).toEqual({
+      status: 'failed',
+      message: 'The change was applied, but photos could not be attached: Attachment content is not available for JSON upload fallback.',
+      canRetry: true
+    });
+  });
+
   it('cancels a proposed action plan through the active realtime transport', async () => {
     const transport = new ReviewDecisionTransport();
     const controller = new RealtimeVoiceSessionController(
@@ -1028,6 +1068,7 @@ class FakePlayer implements VoiceAudioPlayer {
 class FakeInventoryRepository implements InventorySummaryRepository {
   readonly addedPhotos: Array<{ readonly tenantId?: string; readonly inventoryId?: string; readonly assetId: string; readonly fileName: string }> = [];
   failPhotoUploads = 0;
+  photoUploadFailureMessage = 'Photo upload failed.';
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
@@ -1064,7 +1105,7 @@ class FakeInventoryRepository implements InventorySummaryRepository {
   async addInventoryAssetPhoto(input: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly fileName: string }): Promise<void> {
     if (this.failPhotoUploads > 0) {
       this.failPhotoUploads -= 1;
-      throw new Error('Photo upload failed.');
+      throw new Error(this.photoUploadFailureMessage);
     }
     this.addedPhotos.push({
       tenantId: input.tenantId,

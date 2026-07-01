@@ -105,6 +105,7 @@ Initial upload size limit:
 - The JSON upload route must set a larger request body cap derived from the attachment limit so base64 overhead does not reject valid uploads before application validation runs.
 - Blob adapters that read from external storage must enforce the same maximum before buffering content in memory.
 - Mobile clients should prefer direct upload targets for camera and library images so original selected file bytes are uploaded to blob storage instead of carried through the JSON attachment route. The JSON route remains a compatibility fallback for the explicit local-development sentinel `stuffstash-local://direct-uploads/` or clients that cannot use direct upload, but it must not become the preferred mobile media path.
+- Mobile clients may request base64 fallback content from the native camera or photo picker at selection time so the local-development sentinel can still attach photos when platform photo-library URIs cannot be read later. This fallback content must not be compressed, resized, logged, sent to the language provider, or stored in the database; it exists only to call the authorized JSON attachment API when direct upload is not available.
 
 Attachment listing:
 

@@ -34,6 +34,7 @@ describe('ExpoPhotoSelectionProvider', () => {
     }, 0);
 
     expect(photos[0]?.sizeBytes).toBe(4);
+    expect(photos[0]?.contentBase64).toBe('ZmFrZQ==');
   });
 
   it('drops unsupported selected file types', async () => {

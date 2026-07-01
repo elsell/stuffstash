@@ -511,12 +511,14 @@ export class RealtimeVoiceSessionController {
       commandAssetIds: { ...retry.commandAssetIds },
       photos: {}
     };
+    const failureMessages: string[] = [];
     for (const [commandId, photos] of Object.entries(retry.photos)) {
       const targetAssetId = retry.commandAssetIds[commandId];
       for (const photo of photos) {
         attempted += 1;
         if (!targetAssetId) {
           failed += 1;
+          failureMessages.push('The changed item could not be matched after approval.');
           remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
           continue;
         }
@@ -530,8 +532,9 @@ export class RealtimeVoiceSessionController {
             assetId: assetId(targetAssetId),
             ...photo
           });
-        } catch {
+        } catch (error) {
           failed += 1;
+          failureMessages.push(safePhotoUploadFailureReason(error));
           remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
         }
       }
@@ -559,7 +562,7 @@ export class RealtimeVoiceSessionController {
     }
     return {
       status: 'failed',
-      message: 'The change was applied, but photos could not be attached.',
+      message: photoUploadFailureMessage(failureMessages),
       canRetry: true
     };
   }
@@ -590,6 +593,21 @@ function withProgressStep(
     progressLabel: safeLabel,
     progressSteps: nextSteps
   };
+}
+
+function safePhotoUploadFailureReason(error: unknown): string {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return safeBoundedText(error.message, 160);
+  }
+  return 'Photo upload failed.';
+}
+
+function photoUploadFailureMessage(reasons: readonly string[]): string {
+  const firstReason = reasons.find((reason) => reason.trim().length > 0);
+  if (!firstReason) {
+    return 'The change was applied, but photos could not be attached.';
+  }
+  return `The change was applied, but photos could not be attached: ${firstReason}`;
 }
 
 function safeDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'tool.call.started' | 'tool.call.completed' | 'tool.call.failed' }>): VoiceSafeDiagnosticEvent {

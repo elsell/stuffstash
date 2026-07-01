@@ -170,7 +170,11 @@ export function VoiceInteractionStateProvider({
         setRealtime(realtime ? { ...realtime, progressLabel: 'Adding photos' } : realtime);
         try {
           const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
-          setRealtime((current) => current ? { ...current, progressLabel: 'Photos updated', photoAttachmentStatus } : current);
+          setRealtime((current) => current ? {
+            ...current,
+            progressLabel: photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
+            photoAttachmentStatus
+          } : current);
         } catch (error) {
           setRealtime((current) => current ? {
             ...current,
