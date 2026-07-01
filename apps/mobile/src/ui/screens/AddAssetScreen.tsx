@@ -42,6 +42,7 @@ import {
   resolveParentAssetId,
   resolveSelectedParent
 } from './AddAssetResolution';
+import { applyInitialParentToDraft } from './AddAssetInitialParent';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 
 type AddAssetScreenProps = {
@@ -49,6 +50,7 @@ type AddAssetScreenProps = {
   readonly addDraftScopeQuery: AddDraftScopeQuery;
   readonly createAssetCommand: CreateAssetCommand;
   readonly dashboardQuery: HomeDashboardQuery;
+  readonly initialParent?: ParentSelection;
   readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
 };
@@ -80,6 +82,7 @@ export function AddAssetScreen({
   addDraftScopeQuery,
   createAssetCommand,
   dashboardQuery,
+  initialParent,
   parentLookupQuery,
   photoSelectionQuery
 }: AddAssetScreenProps) {
@@ -118,7 +121,7 @@ export function AddAssetScreen({
           };
           setLoadState({ status: 'ready', dashboard });
           setDraftContext(nextContext);
-          applyDraft(addAssetDraftStore.load(nextContext) ?? emptyDraft);
+          applyDraft(applyInitialParentToDraft(addAssetDraftStore.load(nextContext) ?? emptyDraft, initialParent));
         }
       })
       .catch((error: unknown) => {
@@ -133,7 +136,7 @@ export function AddAssetScreen({
     return () => {
       isCurrent = false;
     };
-  }, [addAssetDraftStore, addDraftScopeQuery, dashboardQuery]);
+  }, [addAssetDraftStore, addDraftScopeQuery, dashboardQuery, initialParent]);
 
   useEffect(() => {
     let isCurrent = true;

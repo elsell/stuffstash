@@ -52,6 +52,7 @@ import {
   hasDirtyEditAssetDraft,
   normalizedEditDraft
 } from './AssetDetailEditPresentation';
+import { addHereParams } from './AddAssetInitialParent';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import {
   assetLifecycleActionRows,
@@ -549,13 +550,16 @@ export function AssetDetailRouteScreen({
             asset={screenState.asset}
             canRetryPhotos={photoStatus?.canRetry}
             isActionPending={pendingAction !== undefined}
-            onAddHere={() => router.push('/add')}
+            onAddHere={screenState.asset.canAddContainedAssets ? () => router.push({
+              pathname: '/add',
+              params: addHereParams(screenState.asset)
+            }) : undefined}
             onAddPhotos={() => choosePhotos(screenState.asset.photos.length)}
             onChildPress={(childId) => router.push(`/assets/${childId}`)}
             onEdit={() => openEdit(screenState.asset)}
             onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => void openMove(screenState.asset)}
-            onMoveThingsHere={() => void openMoveThingsHere(screenState.asset)}
+            onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => void openMoveThingsHere(screenState.asset) : undefined}
             onPhotoPress={setSelectedPhotoId}
             onRemovePhoto={confirmRemovePhoto}
             onRetryPhotos={() => void retryPhotos()}

@@ -45,6 +45,7 @@ export type AssetDetailViewModel = {
   readonly containedAssets: readonly AssetCardViewModel[];
   readonly containedAssetsLabel: string;
   readonly canContainAssets: boolean;
+  readonly canAddContainedAssets: boolean;
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
   readonly imagePlaceholderLabel: string;
@@ -75,11 +76,13 @@ export function toAssetDetailViewModel(
   options: {
     readonly canManageLifecycle?: boolean;
     readonly canEditAsset?: boolean;
+    readonly canCreateAsset?: boolean;
     readonly allAssets?: readonly AssetSummary[];
   } = {}
 ): AssetDetailViewModel {
   const canManageLifecycle = options.canManageLifecycle ?? true;
   const canEditAsset = options.canEditAsset ?? canManageLifecycle;
+  const canCreateAsset = options.canCreateAsset ?? canEditAsset;
   const containedAssets = (options.allAssets ?? [])
     .filter((candidate) => candidate.parentAssetId === asset.id)
     .map(toAssetCardViewModel);
@@ -106,7 +109,8 @@ export function toAssetDetailViewModel(
     canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived',
     containedAssets,
     containedAssetsLabel: containedAssets.length === 1 ? '1 thing inside' : `${containedAssets.length.toString()} things inside`,
-    canContainAssets: asset.kind === 'container' || asset.kind === 'location'
+    canContainAssets: asset.kind === 'container' || asset.kind === 'location',
+    canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
 }
 

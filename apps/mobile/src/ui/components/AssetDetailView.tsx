@@ -343,9 +343,11 @@ function ContainedAssetsSection({
             Add something here or move existing things into this place.
           </Text>
           <View style={styles.emptyActions}>
-            <Pressable accessibilityRole="button" onPress={onAddHere} style={styles.emptyPrimary}>
-              <Text style={styles.emptyPrimaryText}>Add here</Text>
-            </Pressable>
+            {asset.canAddContainedAssets && onAddHere ? (
+              <Pressable accessibilityRole="button" onPress={onAddHere} style={styles.emptyPrimary}>
+                <Text style={styles.emptyPrimaryText}>Add item here</Text>
+              </Pressable>
+            ) : null}
             {onMoveThingsHere ? (
               <Pressable accessibilityRole="button" onPress={onMoveThingsHere} style={styles.emptySecondary}>
                 <Text style={styles.emptySecondaryText}>Move things here</Text>

@@ -147,6 +147,7 @@ describe('LocationAssetsQuery', () => {
           canRestore: false,
           canDeletePermanently: false,
           canContainAssets: false,
+          canAddContainedAssets: false,
           containedAssetsLabel: '0 things inside',
           containedAssets: [],
           updatedAtLabel: 'Updated today',

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
+import { addHereParams } from './AddAssetInitialParent';
 import {
   canSaveMoveAsset,
   movePlacementPreview,
@@ -52,6 +53,45 @@ describe('navigateAfterDeletedAsset', () => {
   });
 });
 
+describe('addHereParams', () => {
+  it('builds route params that preselect the current container as the Add parent', () => {
+    expect(addHereParams({
+      id: 'asset-tv-box',
+      title: 'TV box',
+      kind: 'container',
+      kindLabel: 'Container',
+      description: '',
+      parentAssetId: 'asset-living-room',
+      locationTrailLabel: 'Living room / TV box',
+      parentLocationTrailLabel: 'Living room',
+      lifecycleLabel: 'Active',
+      isActive: true,
+      canEdit: true,
+      canMove: true,
+      canAddPhotos: true,
+      canArchive: true,
+      canRestore: false,
+      canDeletePermanently: false,
+      containedAssets: [],
+      containedAssetsLabel: '0 things inside',
+      canContainAssets: true,
+      canAddContainedAssets: true,
+      updatedAtLabel: 'Updated today',
+      photoLabel: 'Needs photo',
+      photos: [],
+      imagePlaceholderLabel: 'Box'
+    })).toEqual({
+      parentAssetId: 'asset-tv-box',
+      parentTitle: 'TV box',
+      parentKind: 'container',
+      parentSubtitle: 'Living room',
+      parentPathLabel: 'Living room / TV box',
+      parentSelectionHint: 'Container',
+      parentWillPromoteToContainer: 'false'
+    });
+  });
+});
+
 describe('asset detail move helpers', () => {
   it('does not allow saving a move until the destination differs', () => {
     expect(canSaveMoveAsset({ parentAssetId: 'asset-kitchen' }, {
@@ -88,6 +128,7 @@ describe('asset detail move helpers', () => {
       containedAssets: [],
       containedAssetsLabel: '0 things inside',
       canContainAssets: false,
+      canAddContainedAssets: false,
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
       photos: [],

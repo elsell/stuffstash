@@ -11,6 +11,7 @@ import type {
   InventoryWorkspace
 } from '../home/InventorySummaryRepository';
 import { AssetDetailQuery } from './AssetDetailQuery';
+import { toAssetDetailViewModel } from './AssetViewModels';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
   private readonly inventory: InventorySummary;
@@ -128,6 +129,7 @@ describe('AssetDetailQuery', () => {
       canRestore: false,
       canDeletePermanently: false,
       canContainAssets: true,
+      canAddContainedAssets: true,
       containedAssetsLabel: '1 thing inside',
       containedAssets: [{
         id: 'asset-birth-certificate',
@@ -164,6 +166,34 @@ describe('AssetDetailQuery', () => {
       canArchive: false,
       canRestore: false,
       canDeletePermanently: false
+    });
+  });
+
+  it('requires create permission before offering Add item here inside containers', async () => {
+    const query = new AssetDetailQuery(new FakeInventorySummaryRepository(['view', 'edit_asset']));
+
+    await expect(query.execute('asset-passport')).resolves.toMatchObject({
+      canContainAssets: true,
+      canAddContainedAssets: false
+    });
+  });
+
+  it('keeps archived containers spatial but disables adding contained assets', () => {
+    expect(toAssetDetailViewModel({
+      id: assetId('asset-archive-box'),
+      title: 'Archive box',
+      kind: 'container',
+      lifecycleState: 'archived',
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home', 'Archive box'],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    })).toMatchObject({
+      canContainAssets: true,
+      canAddContainedAssets: false,
+      canEdit: false,
+      canMove: false
     });
   });
 });

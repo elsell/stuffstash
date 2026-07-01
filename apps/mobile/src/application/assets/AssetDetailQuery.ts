@@ -18,6 +18,7 @@ export class AssetDetailQuery {
     return toAssetDetailViewModel(asset, {
       canManageLifecycle: inventory.permissions.includes('edit_asset'),
       canEditAsset: inventory.permissions.includes('edit_asset'),
+      canCreateAsset: inventory.permissions.includes('create_asset'),
       allAssets: inventory.assets
     });
   }
