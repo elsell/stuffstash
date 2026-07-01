@@ -53,6 +53,28 @@ func (s Store) ListInventoryAuditRecords(ctx context.Context, tenantID tenant.ID
 	return s.listAuditRecords(query, page)
 }
 
+func (s Store) ListAssetAuditRecords(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, targetID string, request ports.AssetAuditRecordListRequest) ([]audit.Record, error) {
+	query := s.db.WithContext(ctx).Where(&auditRecordModel{
+		TenantID:   tenantID.String(),
+		TargetType: audit.TargetAsset.String(),
+		TargetID:   targetID,
+	})
+	query = query.Where(&auditRecordModel{InventoryID: stringPtrFromInventoryID(inventoryID)})
+	var models []auditRecordModel
+	if request.Limit > 0 {
+		query = query.Limit(request.Limit)
+	}
+	if err := query.Order(clause.OrderBy{
+		Columns: []clause.OrderByColumn{
+			{Column: clause.Column{Name: "occurred_at"}, Desc: true},
+			{Column: clause.Column{Name: "id"}, Desc: true},
+		},
+	}).Find(&models).Error; err != nil {
+		return nil, err
+	}
+	return auditRecordModelsToDomain(models)
+}
+
 func (s Store) listAuditRecords(query *gorm.DB, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
 	var models []auditRecordModel
 	if !page.AfterOccurredAt.IsZero() && page.AfterRecordID.String() != "" {
@@ -76,6 +98,10 @@ func (s Store) listAuditRecords(query *gorm.DB, page ports.AuditRecordPageReques
 		return nil, err
 	}
 
+	return auditRecordModelsToDomain(models)
+}
+
+func auditRecordModelsToDomain(models []auditRecordModel) ([]audit.Record, error) {
 	items := make([]audit.Record, 0, len(models))
 	for _, model := range models {
 		item, ok := model.toDomain()

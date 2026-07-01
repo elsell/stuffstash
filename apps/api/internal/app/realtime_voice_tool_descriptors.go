@@ -58,6 +58,26 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			},
 		},
 		{
+			Name:             RealtimeVoiceToolListAssetAuditHistory,
+			Label:            realtimeVoiceListAssetAuditHistoryPublicName,
+			Description:      "List safe audit history for one visible asset already returned by an authorized read tool in this voice session. Use this for history, movement, when-created, when-moved, when-updated, archive/restore, and who-changed questions. Arguments: assetId from a prior read tool result, optional limit number. Results are JSON with safe audit entries, timestamps, action names, source, asset kind, current title, movement parent titles when available, lifecycle state changes when available, and concise summaries. Do not guess history from current location alone. Do not speak or display asset IDs to the user.",
+			ReadOnly:         true,
+			ProviderCallable: true,
+			Parameters: ports.AgentToolParameters{
+				Required: []string{"assetId"},
+				Properties: map[string]ports.AgentToolParameter{
+					"assetId": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Opaque asset ID copied exactly from an earlier authorized read tool result in this session.",
+					},
+					"limit": {
+						Type:        ports.AgentToolParameterTypeInteger,
+						Description: "Maximum number of safe audit entries to return. Defaults to 10 and is capped at 20.",
+					},
+				},
+			},
+		},
+		{
 			Name:             RealtimeVoiceToolProposeActionPlan,
 			Label:            realtimeVoiceProposeActionPlanPublicName,
 			Description:      "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use commandKind plus arguments for single-command create, move, update, archive, or restore plans. Prefer commands array for multi-step plans. Each command object has id, kind, summary, and arguments. Use create_asset for new items and containers. Use create_location only for a true location. Never put assetId in create_asset arguments; assetId is only for move_asset, archive_asset, or restore_asset of an existing asset returned by a read tool. For create or move into an existing location/container, resolve the parent with read tools and use its assetId as parentAssetId. For create or move into something created earlier in the same plan, use parentCommandId. If the user asks to add a new item into a missing container under an existing location, create the missing container first with parentAssetId set to the existing location, then create the item with parentCommandId set to the container command id. If the user asks to move an existing asset to a missing but clearly named location or container, assume they want it created unless the words are ambiguous or likely mistranscribed. Propose creating the missing destination first and then moving the existing asset using parentCommandId. Do not ask a final yes/no clarification for clear missing destinations; this proposal is the review step.",
@@ -171,6 +191,13 @@ func realtimeVoiceReadToolDescriptors() []ports.AgentToolDescriptor {
 	return readTools
 }
 
+func realtimeVoiceInitialReadToolDescriptors() []ports.AgentToolDescriptor {
+	return []ports.AgentToolDescriptor{
+		realtimeVoiceSearchAuthorizedAssetsToolDescriptor(),
+		realtimeVoiceListAuthorizedAssetsToolDescriptor(),
+	}
+}
+
 func realtimeVoiceSearchAuthorizedAssetsToolDescriptor() ports.AgentToolDescriptor {
 	for _, tool := range realtimeVoiceToolDescriptors() {
 		if tool.Name == RealtimeVoiceToolSearchAuthorizedAssets {
@@ -195,6 +222,8 @@ func realtimeVoiceToolLabel(name string) string {
 		return realtimeVoiceProposeActionPlanPublicName
 	case RealtimeVoiceToolListAuthorizedAssets:
 		return realtimeVoiceListAuthorizedAssetsPublicName
+	case RealtimeVoiceToolListAssetAuditHistory:
+		return realtimeVoiceListAssetAuditHistoryPublicName
 	default:
 		return realtimeVoiceSearchAuthorizedAssetsPublicName
 	}

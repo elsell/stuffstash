@@ -37,3 +37,31 @@ func TestRealtimeVoiceActionPlanToolGuidesMissingDestinationsToCreate(t *testing
 		}
 	}
 }
+
+func TestRealtimeVoiceAuditHistoryToolRequiresVisibleAsset(t *testing.T) {
+	t.Parallel()
+
+	var historyDescription string
+	var historyReadOnly bool
+	var historyProviderCallable bool
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolListAssetAuditHistory {
+			historyDescription = tool.Description
+			historyReadOnly = tool.ReadOnly
+			historyProviderCallable = tool.ProviderCallable
+		}
+	}
+	if !historyReadOnly || !historyProviderCallable {
+		t.Fatalf("expected audit history tool to be provider-callable read-only")
+	}
+	for _, required := range []string{
+		"already returned by an authorized read tool",
+		"movement",
+		"when",
+		"Do not guess",
+	} {
+		if !strings.Contains(historyDescription, required) {
+			t.Fatalf("expected audit history guidance to include %q, got %q", required, historyDescription)
+		}
+	}
+}

@@ -24,6 +24,9 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	case RealtimeVoiceToolListAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceListTool(ctx, session, call)
 		return result, nil, err
+	case RealtimeVoiceToolListAssetAuditHistory:
+		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(ctx, session, call, visibleAssetIDs)
+		return result, nil, err
 	case RealtimeVoiceToolProposeActionPlan:
 		return a.executeRealtimeVoiceProposeActionPlanTool(ctx, session, transcript, priorResults, call, visibleAssetIDs)
 	default:

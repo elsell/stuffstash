@@ -13,10 +13,15 @@ type AuditRepository interface {
 	SaveAuditRecord(ctx context.Context, record audit.Record) error
 	ListTenantAuditRecords(ctx context.Context, tenantID tenant.ID, page AuditRecordPageRequest) ([]audit.Record, error)
 	ListInventoryAuditRecords(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AuditRecordPageRequest) ([]audit.Record, error)
+	ListAssetAuditRecords(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, targetID string, request AssetAuditRecordListRequest) ([]audit.Record, error)
 }
 
 type AuditRecordPageRequest struct {
 	AfterOccurredAt time.Time
 	AfterRecordID   audit.ID
 	Limit           int
+}
+
+type AssetAuditRecordListRequest struct {
+	Limit int
 }

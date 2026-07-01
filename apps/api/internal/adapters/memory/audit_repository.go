@@ -56,9 +56,35 @@ func (s *Store) ListInventoryAuditRecords(_ context.Context, tenantID tenant.ID,
 	return pagedAuditRecords(items, page.Limit), nil
 }
 
+func (s *Store) ListAssetAuditRecords(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, targetID string, request ports.AssetAuditRecordListRequest) ([]audit.Record, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []audit.Record{}
+	for _, record := range s.auditRecords {
+		if record.TenantID.String() == tenantID.String() &&
+			record.InventoryID.String() == inventoryID.String() &&
+			record.TargetType == audit.TargetAsset &&
+			record.TargetID == targetID {
+			items = append(items, record)
+		}
+	}
+	return limitedNewestFirstAuditRecords(items, request.Limit), nil
+}
+
 func pagedAuditRecords(items []audit.Record, limit int) []audit.Record {
 	sort.Slice(items, func(left int, right int) bool {
 		return items[left].Before(items[right])
+	})
+	if limit > 0 && len(items) > limit {
+		items = items[:limit]
+	}
+	return items
+}
+
+func limitedNewestFirstAuditRecords(items []audit.Record, limit int) []audit.Record {
+	sort.Slice(items, func(left int, right int) bool {
+		return items[right].Before(items[left])
 	})
 	if limit > 0 && len(items) > limit {
 		items = items[:limit]

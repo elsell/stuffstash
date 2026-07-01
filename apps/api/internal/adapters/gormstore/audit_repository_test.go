@@ -67,6 +67,41 @@ func TestStorePersistsAndScopesAuditRecords(t *testing.T) {
 	}
 }
 
+func TestStoreListsAssetAuditRecordsNewestFirstWithTargetFilter(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+
+	tenantOne := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryOne := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	saveTenant(t, ctx, store, tenantOne, "Home")
+	saveInventory(t, ctx, store, inventoryOne.String(), tenantOne, "Tools")
+	occurredAt := time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC)
+	for index := 0; index < 25; index++ {
+		record := auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G6A"+string(rune('A'+index)), tenantOne, inventoryOne, audit.ActionAssetViewed, occurredAt.Add(time.Duration(index)*time.Minute))
+		record.TargetID = "unrelated"
+		if err := store.SaveAuditRecord(ctx, record); err != nil {
+			t.Fatalf("save unrelated audit record: %v", err)
+		}
+	}
+	older := auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantOne, inventoryOne, audit.ActionAssetCreated, occurredAt)
+	older.TargetID = "asset-one"
+	newer := auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantOne, inventoryOne, audit.ActionAssetMoved, occurredAt.Add(2*time.Hour))
+	newer.TargetID = "asset-one"
+	for _, record := range []audit.Record{older, newer} {
+		if err := store.SaveAuditRecord(ctx, record); err != nil {
+			t.Fatalf("save target audit record %s: %v", record.ID, err)
+		}
+	}
+
+	records, err := store.ListAssetAuditRecords(ctx, tenantOne, inventoryOne, "asset-one", ports.AssetAuditRecordListRequest{Limit: 10})
+	if err != nil {
+		t.Fatalf("list asset audit records: %v", err)
+	}
+	if len(records) != 2 || records[0].ID != newer.ID || records[1].ID != older.ID {
+		t.Fatalf("expected newest-first target records only, got %+v", records)
+	}
+}
+
 func TestStoreRollsBackTenantAndOutboxWhenAuditInsertFails(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

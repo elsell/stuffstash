@@ -183,6 +183,10 @@ func (auditRepository) ListInventoryAuditRecords(context.Context, tenant.ID, inv
 	return nil, nil
 }
 
+func (auditRepository) ListAssetAuditRecords(context.Context, tenant.ID, inventory.InventoryID, string, ports.AssetAuditRecordListRequest) ([]audit.Record, error) {
+	return nil, nil
+}
+
 type fixedIDGenerator struct{}
 
 func (fixedIDGenerator) NewID() string {

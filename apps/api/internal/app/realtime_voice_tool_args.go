@@ -49,6 +49,21 @@ func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, err
 	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentTitle: parentTitle, LocationTitle: locationTitle, Limit: limit}, nil
 }
 
+func parseRealtimeVoiceAssetAuditHistoryArgs(args map[string]any) (realtimeVoiceAssetAuditHistoryArgs, error) {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "assetId", "limit"); err != nil {
+		return realtimeVoiceAssetAuditHistoryArgs{}, err
+	}
+	assetID := strings.TrimSpace(stringArg(args["assetId"]))
+	if _, ok := asset.NewID(assetID); !ok {
+		return realtimeVoiceAssetAuditHistoryArgs{}, ports.ErrInvalidProviderInput
+	}
+	limit, err := realtimeVoiceToolLimit(args["limit"])
+	if err != nil {
+		return realtimeVoiceAssetAuditHistoryArgs{}, err
+	}
+	return realtimeVoiceAssetAuditHistoryArgs{AssetID: assetID, Limit: limit}, nil
+}
+
 func rejectUnknownRealtimeVoiceArgs(args map[string]any, allowed ...string) error {
 	allowedSet := map[string]struct{}{}
 	for _, key := range allowed {
@@ -90,6 +105,11 @@ type realtimeVoiceListArgs struct {
 	Limit          int
 }
 
+type realtimeVoiceAssetAuditHistoryArgs struct {
+	AssetID string
+	Limit   int
+}
+
 type realtimeVoiceAssetToolOutput struct {
 	Tool    string                       `json:"tool"`
 	Query   string                       `json:"query,omitempty"`
@@ -112,4 +132,28 @@ type realtimeVoiceAssetToolItem struct {
 	LocationTitle   string   `json:"locationTitle,omitempty"`
 	ContainmentPath []string `json:"containmentPath,omitempty"`
 	MatchFields     []string `json:"matchFields,omitempty"`
+}
+
+type realtimeVoiceAssetAuditHistoryToolOutput struct {
+	Tool    string                                `json:"tool"`
+	Asset   realtimeVoiceAssetToolItem            `json:"asset"`
+	Order   string                                `json:"order"`
+	Count   int                                   `json:"count"`
+	HasMore bool                                  `json:"hasMore,omitempty"`
+	Note    string                                `json:"note,omitempty"`
+	Entries []realtimeVoiceAssetAuditHistoryEntry `json:"entries"`
+}
+
+type realtimeVoiceAssetAuditHistoryEntry struct {
+	Action              string `json:"action"`
+	Source              string `json:"source"`
+	OccurredAt          string `json:"occurredAt"`
+	Actor               string `json:"actor,omitempty"`
+	TargetType          string `json:"targetType"`
+	AssetKind           string `json:"assetKind,omitempty"`
+	PreviousParentTitle string `json:"previousParentTitle,omitempty"`
+	NewParentTitle      string `json:"newParentTitle,omitempty"`
+	PreviousState       string `json:"previousState,omitempty"`
+	LifecycleState      string `json:"lifecycleState,omitempty"`
+	Summary             string `json:"summary"`
 }

@@ -24,6 +24,9 @@ func realtimeVoiceShouldRequireReadTool(transcript string, turn int, toolResults
 }
 
 func realtimeVoiceReadToolsForTurn(transcript string, turn int, toolResults []ports.AgentToolResult) []ports.AgentToolDescriptor {
+	if turn == 0 {
+		return realtimeVoiceInitialReadToolDescriptors()
+	}
 	if realtimeVoiceShouldRequireContentsList(transcript, toolResults) {
 		return []ports.AgentToolDescriptor{realtimeVoiceListAuthorizedAssetsToolDescriptor()}
 	}
@@ -215,6 +218,9 @@ func realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript string, toolRes
 	if realtimeVoiceLooksLikeWriteRequest(transcript) || realtimeVoiceReadToolResultCount(toolResults) == 0 {
 		return false
 	}
+	if realtimeVoiceLooksLikeHistoryQuestion(transcript) && !realtimeVoiceHasAssetAuditHistoryResult(toolResults) {
+		return false
+	}
 	if realtimeVoiceShouldRequireContentsList(transcript, toolResults) {
 		return false
 	}
@@ -223,6 +229,25 @@ func realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript string, toolRes
 		return false
 	}
 	return true
+}
+
+func realtimeVoiceLooksLikeHistoryQuestion(transcript string) bool {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, token := range []string{" when ", " history ", " audit ", " log ", " moved ", " move ", " changed ", " created ", " updated ", " archived ", " restored ", " before "} {
+		if strings.Contains(text, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceHasAssetAuditHistoryResult(toolResults []ports.AgentToolResult) bool {
+	for _, result := range toolResults {
+		if result.Name == RealtimeVoiceToolListAssetAuditHistory {
+			return true
+		}
+	}
+	return false
 }
 
 func realtimeVoiceReadToolResultCount(toolResults []ports.AgentToolResult) int {

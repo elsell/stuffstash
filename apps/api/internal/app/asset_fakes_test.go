@@ -76,6 +76,22 @@ func (f *fakeAuditRepository) ListInventoryAuditRecords(_ context.Context, tenan
 	return pagedFakeAuditRecords(items, page.Limit), nil
 }
 
+func (f *fakeAuditRepository) ListAssetAuditRecords(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, targetID string, request ports.AssetAuditRecordListRequest) ([]audit.Record, error) {
+	items := []audit.Record{}
+	for _, record := range f.items {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.TargetType == audit.TargetAsset && record.TargetID == targetID {
+			items = append(items, record)
+		}
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		return items[right].Before(items[left])
+	})
+	if request.Limit > 0 && len(items) > request.Limit {
+		items = items[:request.Limit]
+	}
+	return items, nil
+}
+
 func pagedFakeAuditRecords(items []audit.Record, limit int) []audit.Record {
 	sort.Slice(items, func(left int, right int) bool {
 		return items[left].Before(items[right])

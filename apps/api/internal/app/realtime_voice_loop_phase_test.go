@@ -8,6 +8,8 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -67,6 +69,215 @@ func TestRealtimeVoiceFinalizesReadOnlyAnswerWithConstrainedFinalTurn(t *testing
 	}
 	if tts.lastText != "Your water bottle is in the Office." {
 		t.Fatalf("expected final response to be spoken, got %q", tts.lastText)
+	}
+}
+
+func TestRealtimeVoiceAnswersMovementHistoryFromAssetAuditTool(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-water-bottle",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "history-water-bottle",
+				Name:      RealtimeVoiceToolListAssetAuditHistory,
+				Arguments: map[string]any{"assetId": "water-bottle-1", "limit": float64(5)},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "You moved the water bottle from the Office to the Kitchen on June 28, 2026.",
+				DisplayResponse: "You moved the water bottle from the Office to the Kitchen on June 28, 2026.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "When did I move my water bottle to the kitchen?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	office := assetItem("office-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	officeTitle, _ := asset.NewTitle("Office")
+	office.Title = officeTitle
+	kitchen := assetItem("kitchen-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	kitchenTitle, _ := asset.NewTitle("Kitchen")
+	kitchen.Title = kitchenTitle
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "kitchen-1")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, office, "audit-office")
+	seedRealtimeVoiceLoopAsset(t, store, kitchen, "audit-kitchen")
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
+	for index := 0; index < 25; index++ {
+		if err := store.SaveAuditRecord(context.Background(), audit.Record{
+			ID:          audit.ID("audit-unrelated-" + strings.Repeat("x", index%3) + string(rune('a'+index))),
+			TenantID:    audit.TenantID("tenant-home"),
+			InventoryID: audit.InventoryID("inventory-home"),
+			PrincipalID: audit.PrincipalID("user-1"),
+			Action:      audit.ActionAssetViewed,
+			Source:      audit.SourceAPI,
+			TargetType:  audit.TargetAsset,
+			TargetID:    "office-1",
+			OccurredAt:  time.Date(2026, 6, 27, 9, index, 0, 0, time.UTC),
+			Metadata:    map[string]string{"asset_kind": "location"},
+		}); err != nil {
+			t.Fatalf("seed unrelated audit: %v", err)
+		}
+	}
+	if err := store.SaveAuditRecord(context.Background(), audit.Record{
+		ID:          audit.ID("audit-water-bottle-moved"),
+		TenantID:    audit.TenantID("tenant-home"),
+		InventoryID: audit.InventoryID("inventory-home"),
+		PrincipalID: audit.PrincipalID("user-1"),
+		Action:      audit.ActionAssetMoved,
+		Source:      audit.SourceAPI,
+		TargetType:  audit.TargetAsset,
+		TargetID:    "water-bottle-1",
+		OccurredAt:  time.Date(2026, 6, 28, 9, 30, 0, 0, time.UTC),
+		Metadata: map[string]string{
+			"asset_kind":      "item",
+			"previous_parent": "office-1",
+			"new_parent":      "kitchen-1",
+			"operation_id":    "hidden-operation-id",
+		},
+	}); err != nil {
+		t.Fatalf("seed move audit: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error {
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %T %[1]v", err)
+	}
+
+	if len(language.seenToolResults) < 3 || len(language.seenToolResults[2]) < 2 {
+		t.Fatalf("expected search and audit tool results before final answer, got %+v", language.seenToolResults)
+	}
+	history := language.seenToolResults[2][1]
+	if history.Name != RealtimeVoiceToolListAssetAuditHistory {
+		t.Fatalf("expected audit history tool result, got %+v", history)
+	}
+	for _, required := range []string{"asset.moved", "Office", "Kitchen", "2026-06-28T09:30:00Z"} {
+		if !strings.Contains(history.Content, required) {
+			t.Fatalf("expected audit history to include %q, got %s", required, history.Content)
+		}
+	}
+	if strings.Contains(history.Content, "hidden-operation-id") {
+		t.Fatalf("expected operation id to be redacted from audit tool result, got %s", history.Content)
+	}
+	if strings.Contains(history.Content, "audit_record.listed") || strings.Contains(history.Content, "asset.viewed") {
+		t.Fatalf("expected audit history result to include only target asset history, got %s", history.Content)
+	}
+	auditRecords, err := store.ListInventoryAuditRecords(context.Background(), tenant.ID("tenant-home"), inventory.InventoryID("inventory-home"), ports.AuditRecordPageRequest{Limit: 200})
+	if err != nil {
+		t.Fatalf("list audit records after voice history query: %v", err)
+	}
+	auditHistoryReads := 0
+	for _, record := range auditRecords {
+		if record.Action == audit.ActionAuditRecordListed {
+			auditHistoryReads++
+		}
+	}
+	if auditHistoryReads != 1 {
+		t.Fatalf("expected one audit-history read audit record, got %d in %+v", auditHistoryReads, auditRecords)
+	}
+	if tts.lastText != "You moved the water bottle from the Office to the Kitchen on June 28, 2026." {
+		t.Fatalf("expected history answer to be spoken, got %q", tts.lastText)
+	}
+}
+
+func TestRealtimeVoiceAuditHistoryRejectsAssetNotVisibleInSession(t *testing.T) {
+	t.Parallel()
+
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	_, _, err = application.executeRealtimeVoiceTool(context.Background(), session, "When did I move my water bottle?", nil, ports.AgentToolCall{
+		ID:        "history-water-bottle",
+		Name:      RealtimeVoiceToolListAssetAuditHistory,
+		Arguments: map[string]any{"assetId": "water-bottle-1"},
+	}, map[string]struct{}{})
+	if err == nil {
+		t.Fatalf("expected unseen asset audit history request to be rejected")
+	}
+}
+
+func TestRealtimeVoiceAuditHistoryToolAddsOnlyOneAuditReadRecord(t *testing.T) {
+	t.Parallel()
+
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
+	office := assetItem("office-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	officeTitle, _ := asset.NewTitle("Office")
+	office.Title = officeTitle
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "office-1")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, office, "audit-office")
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
+	if err := store.SaveAuditRecord(context.Background(), audit.Record{
+		ID:          audit.ID("audit-water-bottle-moved"),
+		TenantID:    audit.TenantID("tenant-home"),
+		InventoryID: audit.InventoryID("inventory-home"),
+		PrincipalID: audit.PrincipalID("user-1"),
+		Action:      audit.ActionAssetMoved,
+		Source:      audit.SourceAPI,
+		TargetType:  audit.TargetAsset,
+		TargetID:    "water-bottle-1",
+		OccurredAt:  time.Date(2026, 6, 28, 9, 30, 0, 0, time.UTC),
+		Metadata: map[string]string{
+			"asset_kind":      "item",
+			"previous_parent": "",
+			"new_parent":      "office-1",
+		},
+	}); err != nil {
+		t.Fatalf("seed move audit: %v", err)
+	}
+	before, err := store.ListInventoryAuditRecords(context.Background(), tenant.ID("tenant-home"), inventory.InventoryID("inventory-home"), ports.AuditRecordPageRequest{Limit: 200})
+	if err != nil {
+		t.Fatalf("list audit records before history query: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	result, _, err := application.executeRealtimeVoiceTool(context.Background(), session, "When did I move my water bottle?", nil, ports.AgentToolCall{
+		ID:        "history-water-bottle",
+		Name:      RealtimeVoiceToolListAssetAuditHistory,
+		Arguments: map[string]any{"assetId": "water-bottle-1"},
+	}, map[string]struct{}{"water-bottle-1": {}})
+	if err != nil {
+		t.Fatalf("execute audit history tool: %v", err)
+	}
+	if !strings.Contains(result.Content, "Office") || !strings.Contains(result.Content, "asset.moved") {
+		t.Fatalf("expected safe history output, got %s", result.Content)
+	}
+	after, err := store.ListInventoryAuditRecords(context.Background(), tenant.ID("tenant-home"), inventory.InventoryID("inventory-home"), ports.AuditRecordPageRequest{Limit: 200})
+	if err != nil {
+		t.Fatalf("list audit records after history query: %v", err)
+	}
+	newRecords := auditRecordsAfterSnapshot(before, after)
+	if len(newRecords) != 1 || newRecords[0].Action != audit.ActionAuditRecordListed {
+		t.Fatalf("expected exactly one audit history read record, got %+v", newRecords)
 	}
 }
 
@@ -317,6 +528,21 @@ func seedRealtimeVoiceLoopAsset(t *testing.T, store interface {
 	if err := store.CreateAsset(context.Background(), item, audit.Record{ID: audit.ID(auditID), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: item.ID.String(), OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
 		t.Fatalf("seed asset %s: %v", item.ID, err)
 	}
+}
+
+func auditRecordsAfterSnapshot(before []audit.Record, after []audit.Record) []audit.Record {
+	seen := map[audit.ID]struct{}{}
+	for _, record := range before {
+		seen[record.ID] = struct{}{}
+	}
+	newRecords := []audit.Record{}
+	for _, record := range after {
+		if _, ok := seen[record.ID]; ok {
+			continue
+		}
+		newRecords = append(newRecords, record)
+	}
+	return newRecords
 }
 
 func containsAll(text string, terms ...string) bool {

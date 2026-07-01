@@ -24,11 +24,24 @@ type ListAuditRecordsInput struct {
 	Cursor      string
 }
 
+type ListAssetAuditHistoryInput struct {
+	Principal   identity.Principal
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     string
+	Limit       int
+}
+
 type ListAuditRecordsResult struct {
 	Items      []audit.Record
 	Limit      int
 	NextCursor *string
 	HasMore    bool
+}
+
+type ListAssetAuditHistoryResult struct {
+	Items []audit.Record
+	Limit int
 }
 
 type auditRecordInput = appsupport.AuditRecordInput
@@ -85,6 +98,50 @@ func (a App) ListInventoryAuditRecords(ctx context.Context, input ListAuditRecor
 		return ListAuditRecordsResult{}, err
 	}
 	return a.auditRecordListResult(ctx, input, items, limit)
+}
+
+func (a App) ListAssetAuditHistory(ctx context.Context, input ListAssetAuditHistoryInput) (ListAssetAuditHistoryResult, error) {
+	if err := a.ensureInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+		return ListAssetAuditHistoryResult{}, err
+	}
+	if strings.TrimSpace(input.AssetID) == "" {
+		return ListAssetAuditHistoryResult{}, ErrInvalidInput
+	}
+
+	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
+	items, err := a.audit.ListAssetAuditRecords(ctx, input.TenantID, input.InventoryID, input.AssetID, ports.AssetAuditRecordListRequest{
+		Limit: limit,
+	})
+	if err != nil {
+		return ListAssetAuditHistoryResult{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAuditRecordsListed,
+		Message: "asset audit history listed",
+		Fields: map[string]string{
+			"tenant_id":    input.TenantID.String(),
+			"inventory_id": input.InventoryID.String(),
+			"principal_id": input.Principal.ID.String(),
+			"target_type":  audit.TargetAsset.String(),
+			"limit":        strconv.Itoa(limit),
+		},
+	})
+	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
+		PrincipalID: input.Principal.ID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      audit.SourceAPI,
+		Action:      audit.ActionAuditRecordListed,
+		TargetType:  audit.TargetAuditRecord,
+		TargetID:    audit.TargetAsset.String(),
+		Metadata: map[string]string{
+			"limit":       strconv.Itoa(limit),
+			"target_type": audit.TargetAsset.String(),
+		},
+	}); err != nil {
+		return ListAssetAuditHistoryResult{}, err
+	}
+	return ListAssetAuditHistoryResult{Items: items, Limit: limit}, nil
 }
 
 func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsInput, items []audit.Record, limit int) (ListAuditRecordsResult, error) {
