@@ -1,7 +1,12 @@
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ImageViewing from 'react-native-image-viewing';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
-import type { AssetPhotoViewerModel } from '../components/AssetPhotoWorkspacePresentation';
+import {
+  assetPhotoViewerControls,
+  assetPhotoViewerModelAtIndex,
+  type AssetPhotoViewerModel
+} from '../components/AssetPhotoWorkspacePresentation';
 import { colors, spacing } from '../theme/tokens';
 
 export function AssetPhotoViewerSheet({
@@ -22,10 +27,9 @@ export function AssetPhotoViewerSheet({
   const selectedIndex = model
     ? Math.max(0, photos.findIndex((photo) => photo.id === model.photo.id))
     : 0;
-  const currentPhoto = model?.photo;
 
-  function removeCurrentPhoto(): void {
-    if (!currentPhoto?.id) {
+  function removeCurrentPhoto(photoId: string | undefined): void {
+    if (!photoId) {
       return;
     }
 
@@ -34,7 +38,7 @@ export function AssetPhotoViewerSheet({
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => onRemove(currentPhoto.id as string)
+        onPress: () => onRemove(photoId)
       }
     ]);
   }
@@ -45,37 +49,21 @@ export function AssetPhotoViewerSheet({
       backgroundColor="#05080A"
       doubleTapToZoomEnabled
       FooterComponent={({ imageIndex }) => (
-        <View style={styles.previewFooter}>
-          <Text style={styles.previewCount}>
-            {`${(imageIndex + 1).toString()} / ${photos.length.toString()}`}
-          </Text>
-          <Text style={styles.previewFileName} numberOfLines={1}>
-            {photos[imageIndex]?.fileName ?? photos[imageIndex]?.label ?? 'Photo'}
-          </Text>
-        </View>
+        <PhotoViewerFooter
+          canRemove={canRemove}
+          imageIndex={imageIndex}
+          onSelectPhoto={onSelectPhoto}
+          photos={photos}
+        />
       )}
-      HeaderComponent={() => (
-        <View style={styles.previewHeader}>
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={12}
-            onPress={onClose}
-            style={styles.previewHeaderButton}
-          >
-            <Text style={styles.previewHeaderText}>Close</Text>
-          </Pressable>
-          {canRemove ? (
-            <Pressable
-              accessibilityRole="button"
-              disabled={!currentPhoto?.id}
-              hitSlop={12}
-              onPress={removeCurrentPhoto}
-              style={styles.previewHeaderButton}
-            >
-              <Text style={styles.previewRemoveText}>Remove</Text>
-            </Pressable>
-          ) : null}
-        </View>
+      HeaderComponent={({ imageIndex }) => (
+        <PhotoViewerHeader
+          canRemove={canRemove}
+          imageIndex={imageIndex}
+          onClose={onClose}
+          onRemove={removeCurrentPhoto}
+          photos={photos}
+        />
       )}
       imageIndex={selectedIndex}
       images={photos.map((photo) => ({ uri: photo.uri, headers: photo.headers }))}
@@ -94,6 +82,120 @@ export function AssetPhotoViewerSheet({
   );
 }
 
+function PhotoViewerHeader({
+  canRemove,
+  imageIndex,
+  onClose,
+  onRemove,
+  photos
+}: {
+  readonly canRemove: boolean;
+  readonly imageIndex: number;
+  readonly onClose: () => void;
+  readonly onRemove: (photoId: string | undefined) => void;
+  readonly photos: readonly AssetPhotoViewModel[];
+}) {
+  const currentModel = assetPhotoViewerModelAtIndex(photos, imageIndex);
+  const controls = assetPhotoViewerControls(currentModel, canRemove);
+  return (
+    <View style={styles.previewHeader}>
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={12}
+        onPress={onClose}
+        style={styles.previewHeaderButton}
+      >
+        <Text style={styles.previewHeaderText}>Close</Text>
+      </Pressable>
+      {canRemove ? (
+        <Pressable
+          accessibilityRole="button"
+          disabled={!controls.canRemove}
+          hitSlop={12}
+          onPress={() => onRemove(currentModel?.photo.id)}
+          style={[styles.previewHeaderButton, !controls.canRemove ? styles.previewDisabledButton : null]}
+        >
+          <Text style={styles.previewRemoveText}>Remove</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function PhotoViewerFooter({
+  canRemove,
+  imageIndex,
+  onSelectPhoto,
+  photos
+}: {
+  readonly canRemove: boolean;
+  readonly imageIndex: number;
+  readonly onSelectPhoto: (photoId: string) => void;
+  readonly photos: readonly AssetPhotoViewModel[];
+}) {
+  const currentModel = assetPhotoViewerModelAtIndex(photos, imageIndex);
+  const controls = assetPhotoViewerControls(currentModel, canRemove);
+  return (
+    <View style={styles.previewFooter}>
+      <Text style={styles.previewCount}>{controls.positionLabel}</Text>
+      <Text style={styles.previewFileName} numberOfLines={1}>
+        {controls.fileLabel}
+      </Text>
+      {photos.length > 1 ? (
+        <View style={styles.previewNavigation}>
+          <PhotoNavigationButton
+            accessibilityLabel="Previous photo"
+            disabled={!controls.canGoPrevious}
+            direction="previous"
+            onPress={() => {
+              if (currentModel?.previousPhotoId) {
+                onSelectPhoto(currentModel.previousPhotoId);
+              }
+            }}
+          />
+          <PhotoNavigationButton
+            accessibilityLabel="Next photo"
+            disabled={!controls.canGoNext}
+            direction="next"
+            onPress={() => {
+              if (currentModel?.nextPhotoId) {
+                onSelectPhoto(currentModel.nextPhotoId);
+              }
+            }}
+          />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function PhotoNavigationButton({
+  accessibilityLabel,
+  direction,
+  disabled,
+  onPress
+}: {
+  readonly accessibilityLabel: string;
+  readonly direction: 'next' | 'previous';
+  readonly disabled: boolean;
+  readonly onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={[styles.previewNavButton, disabled ? styles.previewDisabledButton : null]}
+    >
+      {direction === 'previous'
+        ? <ChevronLeft color={colors.onAction} size={24} />
+        : <ChevronRight color={colors.onAction} size={24} />}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   previewHeader: {
     flexDirection: 'row',
@@ -105,6 +207,9 @@ const styles = StyleSheet.create({
     minHeight: 44,
     minWidth: 72,
     justifyContent: 'center'
+  },
+  previewDisabledButton: {
+    opacity: 0.45
   },
   previewHeaderText: {
     color: colors.onAction,
@@ -139,5 +244,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg
+  },
+  previewNavigation: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.sm
+  },
+  previewNavButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: 22,
+    height: 44,
+    justifyContent: 'center',
+    width: 44
   }
 });

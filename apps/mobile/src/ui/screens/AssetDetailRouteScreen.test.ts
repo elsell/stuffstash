@@ -20,6 +20,8 @@ import {
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import {
   assetPhotoViewerModel,
+  assetPhotoViewerModelAtIndex,
+  assetPhotoViewerControls,
   assetPhotoStatusLabel,
   localAssetPhotoOrderNotice,
   moveAssetPhotoOrder,
@@ -399,6 +401,49 @@ describe('asset photo workspace presentation helpers', () => {
     expect(assetPhotoViewerModel([
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' }
     ], 'photo-two')).toBeUndefined();
+  });
+
+  it('builds explicit viewer control state from current photo position', () => {
+    const model = assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
+      { id: 'photo-two', label: 'fallback label', fileName: 'two.jpg', uri: 'https://photos/two.jpg' },
+      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+    ], 'photo-two');
+
+    expect(assetPhotoViewerControls(model, true)).toEqual({
+      canGoPrevious: true,
+      canGoNext: true,
+      canRemove: true,
+      fileLabel: 'two.jpg',
+      positionLabel: '2 of 3'
+    });
+    expect(assetPhotoViewerControls(model, false)).toMatchObject({
+      canRemove: false
+    });
+    expect(assetPhotoViewerControls(undefined, true)).toEqual({
+      canGoPrevious: false,
+      canGoNext: false,
+      canRemove: false,
+      fileLabel: 'Photo',
+      positionLabel: '0 of 0'
+    });
+  });
+
+  it('builds viewer control state from an image viewer index', () => {
+    const photos = [
+      { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
+      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' },
+      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+    ];
+
+    expect(assetPhotoViewerControls(assetPhotoViewerModelAtIndex(photos, 1), true)).toEqual({
+      canGoPrevious: true,
+      canGoNext: true,
+      canRemove: true,
+      fileLabel: 'two.jpg',
+      positionLabel: '2 of 3'
+    });
+    expect(assetPhotoViewerModelAtIndex(photos, 99)).toBeUndefined();
   });
 
   it('applies local photo ordering without losing new server photos', () => {

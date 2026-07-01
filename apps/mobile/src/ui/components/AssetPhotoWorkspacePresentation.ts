@@ -7,6 +7,14 @@ export type AssetPhotoViewerModel = {
   readonly nextPhotoId?: string;
 };
 
+export type AssetPhotoViewerControls = {
+  readonly canGoPrevious: boolean;
+  readonly canGoNext: boolean;
+  readonly canRemove: boolean;
+  readonly fileLabel: string;
+  readonly positionLabel: string;
+};
+
 export const localAssetPhotoOrderNotice = 'Preview order only. Resets after refresh.';
 
 export function assetPhotoViewerModel(
@@ -27,6 +35,35 @@ export function assetPhotoViewerModel(
     positionLabel: `${(selectedIndex + 1).toString()} of ${photos.length.toString()}`,
     previousPhotoId: photos[selectedIndex - 1]?.id,
     nextPhotoId: photos[selectedIndex + 1]?.id
+  };
+}
+
+export function assetPhotoViewerControls(
+  model: AssetPhotoViewerModel | undefined,
+  canRemoveAssetPhoto: boolean
+): AssetPhotoViewerControls {
+  return {
+    canGoPrevious: model?.previousPhotoId !== undefined,
+    canGoNext: model?.nextPhotoId !== undefined,
+    canRemove: canRemoveAssetPhoto && model?.photo.id !== undefined,
+    fileLabel: model?.photo.fileName ?? model?.photo.label ?? 'Photo',
+    positionLabel: model?.positionLabel ?? '0 of 0'
+  };
+}
+
+export function assetPhotoViewerModelAtIndex(
+  photos: readonly AssetPhotoViewModel[],
+  imageIndex: number
+): AssetPhotoViewerModel | undefined {
+  const photo = photos[imageIndex];
+  if (!photo) {
+    return undefined;
+  }
+  return {
+    photo,
+    positionLabel: `${(imageIndex + 1).toString()} of ${photos.length.toString()}`,
+    previousPhotoId: photos[imageIndex - 1]?.id,
+    nextPhotoId: photos[imageIndex + 1]?.id
   };
 }
 
