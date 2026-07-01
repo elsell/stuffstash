@@ -230,7 +230,9 @@ export function AddAssetScreen({
         photos: selectedPhotos.map((photo) => ({
           fileName: photo.fileName,
           contentType: photo.contentType,
-          contentBase64: photo.contentBase64
+          contentBase64: photo.contentBase64,
+          uri: photo.uri,
+          sizeBytes: photo.sizeBytes
         }))
       });
       const nextParent = resolveSelectedParent(

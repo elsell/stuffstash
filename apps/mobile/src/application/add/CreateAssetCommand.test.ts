@@ -7,6 +7,7 @@ import {
 } from '../../domain/inventories/InventorySummary';
 import type {
   CreateInventoryAssetInput,
+  CreateInventoryAssetPhotoInput,
   InventorySummaryRepository,
   InventoryWorkspace
 } from '../home/InventorySummaryRepository';
@@ -14,7 +15,7 @@ import { CreateAssetCommand } from './CreateAssetCommand';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
   createdInput: CreateInventoryAssetInput | undefined;
-  addedPhotos: Array<{ readonly assetId: string; readonly fileName: string }> = [];
+  addedPhotos: Array<{ readonly assetId: string; readonly photo: CreateInventoryAssetPhotoInput }> = [];
   shouldFailPhotoUpload = false;
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
@@ -47,11 +48,11 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
     };
   }
 
-  async addAssetPhoto(assetIdValue: string, input: { readonly fileName: string }): Promise<void> {
+  async addAssetPhoto(assetIdValue: string, input: CreateInventoryAssetPhotoInput): Promise<void> {
     if (this.shouldFailPhotoUpload) {
       throw new Error('Photo upload failed.');
     }
-    this.addedPhotos.push({ assetId: assetIdValue, fileName: input.fileName });
+    this.addedPhotos.push({ assetId: assetIdValue, photo: input });
   }
 
   async archiveAsset(): Promise<void> {}
@@ -101,7 +102,9 @@ describe('CreateAssetCommand', () => {
           {
             fileName: 'filters.jpg',
             contentType: 'image/jpeg',
-            contentBase64: 'ZmFrZQ=='
+            contentBase64: 'ZmFrZQ==',
+            uri: 'file:///filters.jpg',
+            sizeBytes: 4
           }
         ]
       })
@@ -118,7 +121,16 @@ describe('CreateAssetCommand', () => {
       parentAssetId: 'asset-garage'
     });
     expect(repository.addedPhotos).toEqual([
-      { assetId: 'asset-created', fileName: 'filters.jpg' }
+      {
+        assetId: 'asset-created',
+        photo: {
+          fileName: 'filters.jpg',
+          contentType: 'image/jpeg',
+          contentBase64: 'ZmFrZQ==',
+          uri: 'file:///filters.jpg',
+          sizeBytes: 4
+        }
+      }
     ]);
   });
 

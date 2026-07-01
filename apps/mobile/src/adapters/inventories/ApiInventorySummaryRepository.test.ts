@@ -4,6 +4,7 @@ import type {
   AssetPhotoReference,
   AssetSearchResult,
   Attachment,
+  DirectUpload,
   Inventory,
   Page,
   Tenant
@@ -84,8 +85,26 @@ class FakeInventoryApiClient {
         readonly inventoryId: string;
         readonly assetId: string;
         readonly fileName: string;
+    }
+    | undefined;
+  initiatedDirectUploadInput:
+    | {
+        readonly tenantId: string;
+        readonly inventoryId: string;
+        readonly assetId: string;
+        readonly fileName: string;
+        readonly sizeBytes: number;
       }
     | undefined;
+  completedDirectUploadInput:
+    | {
+        readonly tenantId: string;
+        readonly inventoryId: string;
+        readonly assetId: string;
+        readonly uploadId: string;
+      }
+    | undefined;
+  directUploadURL = 'https://uploads.example.test/object-one';
   lifecycleInputs: Array<{
     readonly action: 'archive' | 'restore' | 'delete';
     readonly tenantId: string;
@@ -220,6 +239,54 @@ class FakeInventoryApiClient {
     };
   }
 
+  async initiateAssetAttachmentDirectUpload(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    input: { readonly fileName: string; readonly contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf'; readonly sizeBytes: number }
+  ): Promise<DirectUpload> {
+    this.initiatedDirectUploadInput = {
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      fileName: input.fileName,
+      sizeBytes: input.sizeBytes
+    };
+    return {
+      uploadId: 'upload-one',
+      attachmentId: 'attachment-one',
+      method: 'PUT',
+      url: this.directUploadURL,
+      headers: { 'Content-Type': input.contentType },
+      formFields: {},
+      expiresAt: '2026-06-24T10:15:00Z'
+    };
+  }
+
+  async completeAssetAttachmentDirectUpload(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    uploadId: string
+  ): Promise<Attachment> {
+    this.completedDirectUploadInput = {
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      uploadId
+    };
+    return {
+      id: 'attachment-one',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      fileName: 'uploaded.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 8,
+      lifecycleState: 'active'
+    };
+  }
+
   async archiveAsset(tenantId: string, inventoryId: string, assetIdValue: string): Promise<Asset> {
     this.lifecycleInputs.push({
       action: 'archive',
@@ -338,6 +405,32 @@ class FakeInventoryApiClient {
         matches: []
       }
     ]);
+  }
+}
+
+class FakeDirectUploadTransport {
+  readonly uploads: Array<{
+    readonly url: string;
+    readonly fileUri: string;
+    readonly fileName: string;
+    readonly contentType: string;
+  }> = [];
+
+  constructor(private readonly result = true) {}
+
+  async upload(input: {
+    readonly upload: DirectUpload;
+    readonly fileUri: string;
+    readonly fileName: string;
+    readonly contentType: string;
+  }): Promise<boolean> {
+    this.uploads.push({
+      url: input.upload.url,
+      fileUri: input.fileUri,
+      fileName: input.fileName,
+      contentType: input.contentType
+    });
+    return this.result;
   }
 }
 
@@ -622,6 +715,101 @@ describe('ApiInventorySummaryRepository', () => {
     ]);
     await expect(repository.searchAssets('filters')).resolves.toHaveLength(1);
     expect(client.searchedQuery).toBe('tenant-home:filters');
+  });
+
+  it('prefers direct upload targets when adding asset photos', async () => {
+    const client = new FakeInventoryApiClient();
+    const directUploads = new FakeDirectUploadTransport();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', directUploads);
+
+    await repository.addAssetPhoto(assetId('asset-created'), {
+      fileName: 'created.jpg',
+      contentType: 'image/jpeg',
+      uri: 'file:///created.jpg',
+      sizeBytes: 4
+    });
+
+    expect(client.initiatedDirectUploadInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-created',
+      fileName: 'created.jpg',
+      sizeBytes: 4
+    });
+    expect(directUploads.uploads).toEqual([{
+      url: 'https://uploads.example.test/object-one',
+      fileUri: 'file:///created.jpg',
+      fileName: 'created.jpg',
+      contentType: 'image/jpeg'
+    }]);
+    expect(client.completedDirectUploadInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-created',
+      uploadId: 'upload-one'
+    });
+    expect(client.createdAttachmentInput).toBeUndefined();
+  });
+
+  it('falls back to JSON attachment upload for local-only direct upload targets', async () => {
+    const client = new FakeInventoryApiClient();
+    client.directUploadURL = 'stuffstash-local://direct-uploads/upload-one';
+    const directUploads = new FakeDirectUploadTransport(false);
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', directUploads);
+
+    await repository.addAssetPhoto(assetId('asset-created'), {
+      fileName: 'created.jpg',
+      contentType: 'image/jpeg',
+      contentBase64: 'ZmFrZQ==',
+      uri: 'file:///created.jpg',
+      sizeBytes: 4
+    });
+
+    expect(client.completedDirectUploadInput).toBeUndefined();
+    expect(client.createdAttachmentInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-created',
+      fileName: 'created.jpg'
+    });
+  });
+
+  it('rejects unexpected direct upload target schemes instead of silently falling back', async () => {
+    const client = new FakeInventoryApiClient();
+    client.directUploadURL = 'ftp://uploads.example.test/object-one';
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', new FakeDirectUploadTransport());
+
+    await expect(
+      repository.addAssetPhoto(assetId('asset-created'), {
+        fileName: 'created.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'ZmFrZQ==',
+        uri: 'file:///created.jpg',
+        sizeBytes: 4
+      })
+    ).rejects.toThrow('Unsupported direct attachment upload target.');
+
+    expect(client.createdAttachmentInput).toBeUndefined();
+    expect(client.completedDirectUploadInput).toBeUndefined();
+  });
+
+  it('rejects cleartext direct upload targets', async () => {
+    const client = new FakeInventoryApiClient();
+    client.directUploadURL = 'http://uploads.example.test/object-one';
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', new FakeDirectUploadTransport());
+
+    await expect(
+      repository.addAssetPhoto(assetId('asset-created'), {
+        fileName: 'created.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'ZmFrZQ==',
+        uri: 'file:///created.jpg',
+        sizeBytes: 4
+      })
+    ).rejects.toThrow('Unsupported direct attachment upload target.');
+
+    expect(client.createdAttachmentInput).toBeUndefined();
+    expect(client.completedDirectUploadInput).toBeUndefined();
   });
 
   it('updates asset lifecycle through the generated client wrapper', async () => {

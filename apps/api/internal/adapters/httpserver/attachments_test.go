@@ -654,6 +654,9 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 	store := memory.NewStore()
 	authorizer := memory.NewAuthorizer()
 	seedMemoryStore(t, context.Background(), store, authorizer, state)
+	if fakeDirectUploads, ok := directUploads.(*httpFakeDirectAttachmentUploader); ok {
+		fakeDirectUploads.blobs = store
+	}
 
 	return app.New(app.Dependencies{
 		Observer:                  &fakeObserver{},
@@ -693,6 +696,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 
 type httpFakeDirectAttachmentUploader struct {
 	request ports.DirectAttachmentUploadRequest
+	blobs   ports.BlobStorage
 	err     error
 }
 
@@ -720,6 +724,11 @@ func (f *httpFakeDirectAttachmentUploader) CompleteDirectAttachmentUpload(_ cont
 	hash, ok := media.NewSHA256(hex.EncodeToString(hashBytes[:]))
 	if !ok {
 		return ports.CompletedDirectAttachmentUpload{}, app.ErrInvalidInput
+	}
+	if f.blobs != nil {
+		if err := f.blobs.PutBlob(context.Background(), f.request.StorageKey, f.request.ContentType, content); err != nil {
+			return ports.CompletedDirectAttachmentUpload{}, err
+		}
 	}
 	return ports.CompletedDirectAttachmentUpload{
 		UploadID:     uploadID,

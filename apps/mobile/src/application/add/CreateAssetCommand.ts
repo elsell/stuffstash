@@ -1,5 +1,8 @@
 import { assetId, type AssetKind } from '../../domain/assets/AssetSummary';
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type {
+  CreateInventoryAssetPhotoInput,
+  InventorySummaryRepository
+} from '../home/InventorySummaryRepository';
 
 export type CreateAssetCommandInput = {
   readonly kind?: AssetKind;
@@ -9,11 +12,7 @@ export type CreateAssetCommandInput = {
   readonly photos?: readonly CreateAssetPhotoInput[];
 };
 
-export type CreateAssetPhotoInput = {
-  readonly fileName: string;
-  readonly contentType: 'image/jpeg' | 'image/png' | 'image/webp';
-  readonly contentBase64: string;
-};
+export type CreateAssetPhotoInput = CreateInventoryAssetPhotoInput;
 
 export type CreateAssetCommandResult = {
   readonly id: string;

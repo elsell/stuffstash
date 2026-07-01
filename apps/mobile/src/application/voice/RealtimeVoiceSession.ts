@@ -687,7 +687,9 @@ function boundedPhotoDrafts(drafts: VoiceActionPlanPhotoDrafts): VoiceActionPlan
     bounded[safeCommandId] = photos.slice(0, 10).map((photo) => ({
       fileName: safeBoundedText(photo.fileName, 160) || 'voice-photo.jpg',
       contentType: photo.contentType,
-      contentBase64: photo.contentBase64
+      contentBase64: photo.contentBase64,
+      uri: photo.uri ? safeBoundedText(photo.uri, 2048) : undefined,
+      sizeBytes: photo.sizeBytes
     }));
   }
   return bounded;

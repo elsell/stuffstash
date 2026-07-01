@@ -1,16 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { __expoPhotoSelectionProviderTestHooks } from './ExpoPhotoSelectionProvider';
 
-vi.mock('expo-image-manipulator', () => ({
-  SaveFormat: { JPEG: 'jpeg' },
-  manipulateAsync: vi.fn(async () => ({
-    uri: 'file:///normalized.jpg',
-    base64: 'bm9ybWFsaXplZA=='
-  }))
-}));
-
 describe('ExpoPhotoSelectionProvider', () => {
-  it('normalizes selected images to jpeg when the native manipulator is available', async () => {
+  it('preserves original selected image metadata for attachment upload', async () => {
     const photos = await __expoPhotoSelectionProviderTestHooks.mapImagePickerResult({
       canceled: false,
       assets: [{
@@ -18,34 +10,7 @@ describe('ExpoPhotoSelectionProvider', () => {
         uri: 'file:///original.png',
         fileName: 'original.png',
         mimeType: 'image/png',
-        base64: 'b3JpZ2luYWw=',
-        width: 3024,
-        height: 4032
-      }]
-    }, 0);
-
-    expect(photos[0]).toMatchObject({
-      uri: 'file:///normalized.jpg',
-      fileName: 'original.jpg',
-      contentType: 'image/jpeg',
-      contentBase64: 'bm9ybWFsaXplZA=='
-    });
-  });
-
-  it('preserves the original mime type when normalization cannot run', async () => {
-    const ImageManipulator = await import('expo-image-manipulator');
-    vi.mocked(ImageManipulator.manipulateAsync).mockRejectedValueOnce(new Error('native module unavailable'));
-
-    const photos = await __expoPhotoSelectionProviderTestHooks.mapImagePickerResult({
-      canceled: false,
-      assets: [{
-        assetId: 'photo-1',
-        uri: 'file:///original.png',
-        fileName: 'original.png',
-        mimeType: 'image/png',
-        base64: 'b3JpZ2luYWw=',
-        width: 3024,
-        height: 4032
+        fileSize: 8
       }]
     }, 0);
 
@@ -53,8 +18,22 @@ describe('ExpoPhotoSelectionProvider', () => {
       uri: 'file:///original.png',
       fileName: 'original.png',
       contentType: 'image/png',
-      contentBase64: 'b3JpZ2luYWw='
+      sizeBytes: 8
     });
+  });
+
+  it('derives byte size from base64 when fallback content is already available', async () => {
+    const photos = await __expoPhotoSelectionProviderTestHooks.mapImagePickerResult({
+      canceled: false,
+      assets: [{
+        uri: 'file:///photo.jpg',
+        fileName: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        base64: 'ZmFrZQ=='
+      }]
+    }, 0);
+
+    expect(photos[0]?.sizeBytes).toBe(4);
   });
 
   it('drops unsupported selected file types', async () => {
@@ -64,7 +43,7 @@ describe('ExpoPhotoSelectionProvider', () => {
         uri: 'file:///document.gif',
         fileName: 'document.gif',
         mimeType: 'image/gif',
-        base64: 'Z2lm'
+        fileSize: 3
       }]
     }, 0);
 

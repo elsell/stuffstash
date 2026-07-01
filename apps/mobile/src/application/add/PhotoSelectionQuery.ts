@@ -3,7 +3,8 @@ export type SelectedAssetPhoto = {
   readonly uri: string;
   readonly fileName: string;
   readonly contentType: 'image/jpeg' | 'image/png' | 'image/webp';
-  readonly contentBase64: string;
+  readonly contentBase64?: string;
+  readonly sizeBytes: number;
 };
 
 export interface PhotoSelectionProvider {

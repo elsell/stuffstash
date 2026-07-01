@@ -13,9 +13,9 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
-      base64: true,
+      base64: false,
       mediaTypes: ['images'],
-      quality: 0.72
+      quality: 1
     });
 
     return mapImagePickerResult(result, existingCount);
@@ -29,9 +29,9 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      base64: true,
+      base64: false,
       mediaTypes: ['images'],
-      quality: 0.72
+      quality: 1
     });
 
     return mapImagePickerResult(result, existingCount);
@@ -50,16 +50,17 @@ async function mapImagePickerResult(
   const selectedPhotos: SelectedAssetPhoto[] = [];
 
   for (const [index, asset] of (result.assets ?? []).entries()) {
-    const normalized = await normalizeSelectedPhoto(asset);
-    if (!normalized) {
+    const contentType = normalizeImageContentType(asset.mimeType);
+    if (!contentType) {
       continue;
     }
     selectedPhotos.push({
-      id: `${asset.assetId ?? normalized.uri}-${selectedAt}-${index.toString()}`,
-      uri: normalized.uri,
-      fileName: normalizedFileName(asset.fileName, existingCount + index + 1, normalized.contentType),
-      contentType: normalized.contentType,
-      contentBase64: normalized.base64
+      id: `${asset.assetId ?? asset.uri}-${selectedAt}-${index.toString()}`,
+      uri: asset.uri,
+      fileName: normalizedFileName(asset.fileName, existingCount + index + 1, contentType),
+      contentType,
+      contentBase64: asset.base64 ?? undefined,
+      sizeBytes: asset.fileSize ?? decodedBase64ByteLength(asset.base64 ?? '')
     });
   }
 
@@ -74,58 +75,8 @@ type ImagePickerAssetLike = {
   readonly base64?: string | null;
   readonly width?: number;
   readonly height?: number;
+  readonly fileSize?: number;
 };
-
-type NormalizedPhoto = {
-  readonly uri: string;
-  readonly base64: string;
-  readonly contentType: SelectedAssetPhoto['contentType'];
-};
-
-const maxVoicePhotoLongEdge = 1600;
-const voicePhotoCompression = 0.72;
-
-async function normalizeSelectedPhoto(asset: ImagePickerAssetLike): Promise<NormalizedPhoto | undefined> {
-  if (!isSupportedImageContentType(asset.mimeType)) {
-    return undefined;
-  }
-  try {
-    const ImageManipulator = await import('expo-image-manipulator');
-    const actions = resizeActionsForAsset(asset);
-    const normalized = await ImageManipulator.manipulateAsync(asset.uri, actions, {
-      base64: true,
-      compress: voicePhotoCompression,
-      format: ImageManipulator.SaveFormat.JPEG
-    });
-    if (normalized.base64) {
-      return {
-        uri: normalized.uri,
-        base64: normalized.base64,
-        contentType: 'image/jpeg'
-      };
-    }
-  } catch {
-    // Existing dev-client builds may not include newly added native modules yet.
-  }
-  const fallbackContentType = normalizeImageContentType(asset.mimeType);
-  if (!asset.base64 || !fallbackContentType) {
-    return undefined;
-  }
-  return { uri: asset.uri, base64: asset.base64, contentType: fallbackContentType };
-}
-
-function resizeActionsForAsset(asset: ImagePickerAssetLike): { readonly resize: { readonly width?: number; readonly height?: number } }[] {
-  if (!asset.width || !asset.height) {
-    return [{ resize: { width: maxVoicePhotoLongEdge } }];
-  }
-  if (asset.width <= maxVoicePhotoLongEdge && asset.height <= maxVoicePhotoLongEdge) {
-    return [];
-  }
-  if (asset.width >= asset.height) {
-    return [{ resize: { width: maxVoicePhotoLongEdge } }];
-  }
-  return [{ resize: { height: maxVoicePhotoLongEdge } }];
-}
 
 function normalizedFileName(fileName: string | null | undefined, fallbackIndex: number, contentType: SelectedAssetPhoto['contentType']): string {
   const safeName = fileName?.trim();
@@ -134,10 +85,6 @@ function normalizedFileName(fileName: string | null | undefined, fallbackIndex: 
     return `asset-photo-${fallbackIndex}.${extension}`;
   }
   return safeName.replace(/\.[^.]+$/, '') + `.${extension}`;
-}
-
-function isSupportedImageContentType(value: string | undefined): boolean {
-  return normalizeImageContentType(value) !== undefined;
 }
 
 function normalizeImageContentType(value: string | undefined): SelectedAssetPhoto['contentType'] | undefined {
@@ -153,6 +100,11 @@ function normalizeImageContentType(value: string | undefined): SelectedAssetPhot
     default:
       return undefined;
   }
+}
+
+function decodedBase64ByteLength(value: string): number {
+  const padding = value.endsWith('==') ? 2 : value.endsWith('=') ? 1 : 0;
+  return Math.max(0, Math.floor((value.length * 3) / 4) - padding);
 }
 
 function extensionForContentType(contentType: SelectedAssetPhoto['contentType']): string {

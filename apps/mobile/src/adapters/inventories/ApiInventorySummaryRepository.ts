@@ -2,6 +2,7 @@ import type {
   Asset,
   AssetPhotoReference,
   AssetSearchResult,
+  DirectUpload,
   Inventory,
   StuffStashClient,
   Tenant
@@ -35,6 +36,8 @@ type InventoryApiClient = Pick<
   | 'restoreAsset'
   | 'deleteAsset'
   | 'createAssetAttachment'
+  | 'initiateAssetAttachmentDirectUpload'
+  | 'completeAssetAttachmentDirectUpload'
   | 'searchAssets'
   | 'listAssetAttachments'
   | 'assetAttachmentThumbnailReference'
@@ -42,12 +45,24 @@ type InventoryApiClient = Pick<
 
 const inventoryAssetPageSize = 100;
 
+type DirectUploadTransport = {
+  upload(input: DirectUploadTransportInput): Promise<boolean>;
+};
+
+type DirectUploadTransportInput = {
+  readonly upload: DirectUpload;
+  readonly fileUri: string;
+  readonly fileName: string;
+  readonly contentType: CreateInventoryAssetPhotoInput['contentType'];
+};
+
 export class ApiInventorySummaryRepository implements InventorySummaryRepository {
   private selectedInventoryId: InventoryId | undefined;
 
   constructor(
     private readonly client: InventoryApiClient,
-    private readonly configuredTenantId: string
+    private readonly configuredTenantId: string,
+    private readonly directUploadTransport: DirectUploadTransport = new ExpoDirectUploadTransport()
   ) {}
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
@@ -134,10 +149,31 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async addInventoryAssetPhoto(input: AddInventoryAssetPhotoInput): Promise<void> {
+    if (input.uri && input.sizeBytes && input.sizeBytes > 0) {
+      const directUpload = await this.client.initiateAssetAttachmentDirectUpload(input.tenantId, input.inventoryId, input.assetId, {
+        fileName: input.fileName,
+        contentType: input.contentType,
+        sizeBytes: input.sizeBytes
+      });
+      if (!isDirectUploadTargetSupported(directUpload.url)) {
+        throw new Error('Unsupported direct attachment upload target.');
+      }
+      const uploaded = await this.directUploadTransport.upload({
+        upload: directUpload,
+        fileUri: input.uri,
+        fileName: input.fileName,
+        contentType: input.contentType
+      });
+      if (uploaded) {
+        await this.client.completeAssetAttachmentDirectUpload(input.tenantId, input.inventoryId, input.assetId, directUpload.uploadId);
+        return;
+      }
+    }
+
     await this.client.createAssetAttachment(input.tenantId, input.inventoryId, input.assetId, {
       fileName: input.fileName,
       contentType: input.contentType,
-      contentBase64: input.contentBase64
+      contentBase64: await attachmentContentBase64(input)
     });
   }
 
@@ -397,6 +433,71 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       hasMore
     };
   }
+}
+
+class ExpoDirectUploadTransport implements DirectUploadTransport {
+  async upload(input: DirectUploadTransportInput): Promise<boolean> {
+    if (isLocalDirectUploadURL(input.upload.url)) {
+      return false;
+    }
+    if (!isSecureDirectUploadURL(input.upload.url)) {
+      throw new Error('Direct attachment upload target must use HTTPS.');
+    }
+    const FileSystem = await import('expo-file-system/legacy');
+    const uploadMethod = directUploadMethod(input.upload.method);
+    const result = await FileSystem.uploadAsync(input.upload.url, input.fileUri, {
+      httpMethod: uploadMethod,
+      headers: input.upload.headers,
+      ...(Object.keys(input.upload.formFields).length > 0
+        ? {
+            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+            fieldName: 'file',
+            mimeType: input.contentType,
+            parameters: input.upload.formFields
+          }
+        : {
+            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT
+          })
+    });
+    if (result.status < 200 || result.status >= 300) {
+      throw new Error('Direct attachment upload failed.');
+    }
+    return true;
+  }
+}
+
+function isDirectUploadTargetSupported(value: string): boolean {
+  return isSecureDirectUploadURL(value) || isLocalDirectUploadURL(value);
+}
+
+function isSecureDirectUploadURL(value: string): boolean {
+  return value.startsWith('https://');
+}
+
+function isLocalDirectUploadURL(value: string): boolean {
+  return value.startsWith('stuffstash-local://direct-uploads/');
+}
+
+function directUploadMethod(value: string): 'POST' | 'PUT' | 'PATCH' {
+  switch (value.toUpperCase()) {
+    case 'POST':
+      return 'POST';
+    case 'PATCH':
+      return 'PATCH';
+    default:
+      return 'PUT';
+  }
+}
+
+async function attachmentContentBase64(input: CreateInventoryAssetPhotoInput): Promise<string> {
+  if (input.contentBase64) {
+    return input.contentBase64;
+  }
+  if (!input.uri) {
+    throw new Error('Attachment content is not available for JSON upload fallback.');
+  }
+  const FileSystem = await import('expo-file-system/legacy');
+  return FileSystem.readAsStringAsync(input.uri, { encoding: FileSystem.EncodingType.Base64 });
 }
 
 function mapAccessRole(relationship: string): AccessRole {

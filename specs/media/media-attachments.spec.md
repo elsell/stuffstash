@@ -104,7 +104,7 @@ Initial upload size limit:
 - The default is 5 MiB.
 - The JSON upload route must set a larger request body cap derived from the attachment limit so base64 overhead does not reject valid uploads before application validation runs.
 - Blob adapters that read from external storage must enforce the same maximum before buffering content in memory.
-- Mobile clients using the JSON upload route must normalize camera and library images before upload by resizing and recompressing image files into a supported MIME type. This normalization is a client-side transport optimization for the first JSON upload slice; it must not replace server-side size, type, authorization, and content validation.
+- Mobile clients should prefer direct upload targets for camera and library images so original selected file bytes are uploaded to blob storage instead of carried through the JSON attachment route. The JSON route remains a compatibility fallback for the explicit local-development sentinel `stuffstash-local://direct-uploads/` or clients that cannot use direct upload, but it must not become the preferred mobile media path.
 
 Attachment listing:
 
@@ -196,7 +196,7 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 - Garage/S3 direct upload targets must use presigned object-storage POST policies behind the direct upload port.
 - S3-compatible direct upload initiation must include policy form fields that constrain object key, content type, content length, and expiration.
 - S3-compatible direct upload completion must not rely on process-local pending state. Completion state must be durable or encoded in a signed opaque upload token so restarts and multi-replica routing do not break completion.
-- Local filesystem and memory runtime modes must not advertise direct upload targets unless a real local upload target adapter is implemented.
+- Local filesystem and memory runtime modes may advertise only the explicit non-uploadable local-development sentinel `stuffstash-local://direct-uploads/{uploadId}` until a real local HTTP upload target adapter is implemented. Browser and mobile clients must treat this sentinel as a signal to use the JSON attachment route; they must not treat arbitrary non-HTTP schemes as safe fallback targets.
 - Public buckets must not be used for private tenant inventory files.
 - Error messages must not leak storage keys, credentials, bucket internals, or filesystem paths.
 - Oversized or externally mutated blobs must not cause unbounded memory reads.

@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"strconv"
 	"strings"
@@ -114,7 +116,7 @@ func (a App) CompleteAttachmentDirectUpload(ctx context.Context, input CompleteA
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return media.Attachment{}, err
 	}
-	if a.directUploads == nil {
+	if a.directUploads == nil || a.blobs == nil {
 		return media.Attachment{}, ErrInvalidInput
 	}
 	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
@@ -144,6 +146,17 @@ func (a App) CompleteAttachmentDirectUpload(ctx context.Context, input CompleteA
 		completed.SHA256.String() == "" ||
 		completed.ExpiresAt.IsZero() ||
 		!completed.ExpiresAt.After(a.clock.Now().UTC()) {
+		return media.Attachment{}, ErrInvalidInput
+	}
+	content, err := a.blobs.GetBlob(ctx, completed.StorageKey)
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "direct upload content validation failed"})
+		return media.Attachment{}, err
+	}
+	hashBytes := sha256.Sum256(content)
+	if int64(len(content)) != completed.SizeBytes ||
+		completed.SHA256.String() != hex.EncodeToString(hashBytes[:]) ||
+		!contentMatchesType(completed.ContentType, content) {
 		return media.Attachment{}, ErrInvalidInput
 	}
 	attachment, err := a.persistVerifiedAttachment(ctx, verifiedAttachmentInput{

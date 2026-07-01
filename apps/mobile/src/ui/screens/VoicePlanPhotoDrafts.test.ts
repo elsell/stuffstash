@@ -13,7 +13,8 @@ describe('VoicePlanPhotoDrafts', () => {
         uri: 'file:///existing.jpg',
         fileName: 'existing.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'ZXhpc3Rpbmc='
+        contentBase64: 'ZXhpc3Rpbmc=',
+        sizeBytes: 8
       }]
     };
 
@@ -22,7 +23,8 @@ describe('VoicePlanPhotoDrafts', () => {
       uri: 'file:///new.jpg',
       fileName: 'new.jpg',
       contentType: 'image/jpeg',
-      contentBase64: 'bmV3'
+      contentBase64: 'bmV3',
+      sizeBytes: 3
     }])).toEqual({
       'cmd-location': current['cmd-location'],
       'cmd-item': [{
@@ -30,7 +32,8 @@ describe('VoicePlanPhotoDrafts', () => {
         uri: 'file:///new.jpg',
         fileName: 'new.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'bmV3'
+        contentBase64: 'bmV3',
+        sizeBytes: 3
       }]
     });
   });
@@ -48,13 +51,15 @@ describe('VoicePlanPhotoDrafts', () => {
         uri: 'file:///one.jpg',
         fileName: 'one.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'b25l'
+        contentBase64: 'b25l',
+        sizeBytes: 3
       }, {
         id: 'photo-two',
         uri: 'file:///two.jpg',
         fileName: 'two.jpg',
         contentType: 'image/jpeg',
-        contentBase64: 'dHdv'
+        contentBase64: 'dHdv',
+        sizeBytes: 3
       }]
     };
 

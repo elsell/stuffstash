@@ -63,7 +63,9 @@ export type CreateInventoryAssetInput = {
 export type CreateInventoryAssetPhotoInput = {
   readonly fileName: string;
   readonly contentType: 'image/jpeg' | 'image/png' | 'image/webp';
-  readonly contentBase64: string;
+  readonly contentBase64?: string;
+  readonly uri?: string;
+  readonly sizeBytes?: number;
 };
 
 export type AddInventoryAssetPhotoInput = CreateInventoryAssetPhotoInput & {
