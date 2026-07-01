@@ -1,7 +1,7 @@
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ImageViewing from 'react-native-image-viewing';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
-import type { AssetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
+import type { AssetPhotoViewerModel } from '../components/AssetPhotoWorkspacePresentation';
 import { colors, spacing } from '../theme/tokens';
 
 export function AssetPhotoViewerSheet({

@@ -8,8 +8,13 @@ import {
 } from 'react-native';
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
-import { Camera, MoreHorizontal, MoveRight, Pencil, X } from 'lucide-react-native';
+import { Camera, ChevronLeft, ChevronRight, MoreHorizontal, MoveRight, Pencil, X } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import {
+  assetPhotoStatusLabel,
+  localAssetPhotoOrderNotice,
+  orderedAssetPhotos
+} from './AssetPhotoWorkspacePresentation';
 import { AssetCard } from './AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
 
@@ -23,12 +28,14 @@ type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending?: boolean;
   readonly photoUploads?: readonly AssetPhotoUploadProgressViewModel[];
+  readonly photoOrder?: readonly string[];
   readonly photoStatusMessage?: string;
   readonly canRetryPhotos?: boolean;
   readonly onBack?: () => void;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onAddPhotos?: () => void;
+  readonly onMovePhoto?: (photoId: string, direction: -1 | 1) => void;
   readonly onPhotoPress?: (photoId: string) => void;
   readonly onRemovePhoto?: (photoId: string) => void;
   readonly onRetryPhotos?: () => void;
@@ -50,11 +57,13 @@ export function AssetDetailView({
   onEdit,
   onMoreActions,
   onMove,
+  onMovePhoto,
   onPhotoPress,
   onRemovePhoto,
   onMoveThingsHere,
   onRetryPhotos,
   photoUploads = [],
+  photoOrder = [],
   photoStatusMessage,
   refreshControl
 }: AssetDetailViewProps) {
@@ -71,8 +80,10 @@ export function AssetDetailView({
           asset={asset}
           disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
           onAddPhotos={onAddPhotos}
+          onMovePhoto={onMovePhoto}
           onPhotoPress={onPhotoPress}
           onRemovePhoto={onRemovePhoto}
+          photoOrder={photoOrder}
         />
 
         <View style={styles.panel}>
@@ -162,70 +173,132 @@ function PhotoWorkspace({
   asset,
   disabled,
   onAddPhotos,
+  onMovePhoto,
   onPhotoPress,
-  onRemovePhoto
+  onRemovePhoto,
+  photoOrder
 }: {
   readonly asset: AssetDetailViewModel;
   readonly disabled: boolean;
   readonly onAddPhotos?: () => void;
+  readonly onMovePhoto?: (photoId: string, direction: -1 | 1) => void;
   readonly onPhotoPress?: (photoId: string) => void;
   readonly onRemovePhoto?: (photoId: string) => void;
+  readonly photoOrder: readonly string[];
 }) {
-  const photos = asset.photos.length > 0 ? asset.photos : undefined;
+  const orderedPhotos = orderedAssetPhotos(asset.photos, photoOrder);
+  const photos = orderedPhotos.length > 0 ? orderedPhotos : undefined;
+  const hasLocalOrder = photoOrder.length > 0;
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.photoStrip}
-    >
-      {photos ? photos.map((photo, index) => (
-        <View key={photo.id ?? photo.uri} style={index === 0 ? styles.photoHero : styles.photoThumb}>
-          <Pressable
-            accessibilityLabel={`Open ${photo.label}`}
-            accessibilityRole="imagebutton"
-            disabled={!photo.id || !onPhotoPress}
-            onPress={() => photo.id && onPhotoPress ? onPhotoPress(photo.id) : undefined}
-            style={styles.photoPressable}
-          >
-            <Image
-              accessibilityIgnoresInvertColors
-              accessibilityLabel={photo.label}
-              source={{ uri: photo.uri, headers: photo.headers }}
-              style={styles.heroImage}
-            />
-            <Text style={styles.photoPosition}>{(index + 1).toString()} / {photos.length.toString()}</Text>
-          </Pressable>
-          <Text style={styles.photoStatus}>{index === 0 ? 'First photo' : photo.label}</Text>
-          {photo.id && onRemovePhoto ? (
-            <Pressable
-              accessibilityLabel={`Remove ${photo.label}`}
-              accessibilityRole="button"
-              disabled={disabled}
-              onPress={() => onRemovePhoto(photo.id as string)}
-              style={[styles.removePhotoButton, disabled ? styles.disabledAction : null]}
-            >
-              <X color={colors.text} size={18} />
-            </Pressable>
-          ) : null}
+    <View style={styles.photoWorkspace}>
+      {hasLocalOrder ? (
+        <View style={styles.localOrderNotice}>
+          <Text style={styles.localOrderNoticeText}>{localAssetPhotoOrderNotice}</Text>
         </View>
-      )) : (
-        <View style={styles.photoHero}>
-          <Text style={styles.photoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
-          <Text style={styles.photoStatus}>{asset.photoLabel}</Text>
-        </View>
-      )}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={onAddPhotos}
-        style={[styles.addPhotoTile, disabled ? styles.disabledAction : null]}
+      ) : null}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.photoStrip}
       >
-        <Camera color={colors.action} size={26} />
-        <Text style={styles.addPhotoText}>Add photos</Text>
-      </Pressable>
-    </ScrollView>
+        {photos ? photos.map((photo, index) => (
+          <View key={photo.id ?? photo.uri} style={index === 0 ? styles.photoHero : styles.photoThumb}>
+            <Pressable
+              accessibilityLabel={`Open ${photo.label}`}
+              accessibilityRole="imagebutton"
+              disabled={!photo.id || !onPhotoPress}
+              onPress={() => photo.id && onPhotoPress ? onPhotoPress(photo.id) : undefined}
+              style={styles.photoPressable}
+            >
+              <Image
+                accessibilityIgnoresInvertColors
+                accessibilityLabel={photo.label}
+                source={{ uri: photo.uri, headers: photo.headers }}
+                style={styles.heroImage}
+              />
+              <Text style={styles.photoPosition}>{(index + 1).toString()} / {photos.length.toString()}</Text>
+            </Pressable>
+            <Text style={styles.photoStatus}>
+              {assetPhotoStatusLabel({ hasLocalOrder, index, label: photo.label })}
+            </Text>
+            {photo.id && onMovePhoto && photos.length > 1 ? (
+              <View style={styles.photoReorderControls}>
+                <PhotoReorderButton
+                  accessibilityLabel={`Move ${photo.label} earlier`}
+                  disabled={disabled || index === 0}
+                  direction={-1}
+                  photoId={photo.id}
+                  onMovePhoto={onMovePhoto}
+                />
+                <PhotoReorderButton
+                  accessibilityLabel={`Move ${photo.label} later`}
+                  disabled={disabled || index === photos.length - 1}
+                  direction={1}
+                  photoId={photo.id}
+                  onMovePhoto={onMovePhoto}
+                />
+              </View>
+            ) : null}
+            {photo.id && onRemovePhoto ? (
+              <Pressable
+                accessibilityLabel={`Remove ${photo.label}`}
+                accessibilityRole="button"
+                disabled={disabled}
+                onPress={() => onRemovePhoto(photo.id as string)}
+                style={[styles.removePhotoButton, disabled ? styles.disabledAction : null]}
+              >
+                <X color={colors.text} size={18} />
+              </Pressable>
+            ) : null}
+          </View>
+        )) : (
+          <View style={styles.photoHero}>
+            <Text style={styles.photoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
+            <Text style={styles.photoStatus}>{asset.photoLabel}</Text>
+          </View>
+        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled }}
+          disabled={disabled}
+          onPress={onAddPhotos}
+          style={[styles.addPhotoTile, disabled ? styles.disabledAction : null]}
+        >
+          <Camera color={colors.action} size={26} />
+          <Text style={styles.addPhotoText}>Add photos</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+}
+
+function PhotoReorderButton({
+  accessibilityLabel,
+  direction,
+  disabled,
+  onMovePhoto,
+  photoId
+}: {
+  readonly accessibilityLabel: string;
+  readonly direction: -1 | 1;
+  readonly disabled: boolean;
+  readonly onMovePhoto: (photoId: string, direction: -1 | 1) => void;
+  readonly photoId: string;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={() => onMovePhoto(photoId, direction)}
+      style={[styles.photoReorderButton, disabled ? styles.disabledAction : null]}
+    >
+      {direction < 0
+        ? <ChevronLeft color={colors.text} size={18} />
+        : <ChevronRight color={colors.text} size={18} />}
+    </Pressable>
   );
 }
 
@@ -389,6 +462,22 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   },
+  photoWorkspace: {
+    gap: spacing.sm
+  },
+  localOrderNotice: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  localOrderNoticeText: {
+    color: colors.accentStrong,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
   photoStrip: {
     gap: spacing.sm,
     paddingRight: spacing.lg
@@ -477,6 +566,28 @@ const styles = StyleSheet.create({
     right: spacing.sm,
     bottom: spacing.sm,
     width: 36
+  },
+  photoReorderControls: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    bottom: spacing.sm,
+    flexDirection: 'row',
+    gap: 2,
+    left: '50%',
+    padding: 2,
+    position: 'absolute',
+    transform: [{ translateX: -47 }]
+  },
+  photoReorderButton: {
+    alignItems: 'center',
+    borderRadius: 16,
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    width: 44
   },
   addPhotoText: {
     color: colors.action,

@@ -39,7 +39,12 @@ import {
 } from './AssetAuditHistorySheet';
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
-import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
+import {
+  assetPhotoViewerModel,
+  moveAssetPhotoOrder,
+  orderedAssetPhotos,
+  resetLocalAssetPhotoOrder
+} from '../components/AssetPhotoWorkspacePresentation';
 import {
   EditAssetSheet,
   MoveAssetSheet,
@@ -113,6 +118,7 @@ export function AssetDetailRouteScreen({
   const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
+  const [photoOrder, setPhotoOrder] = useState<readonly string[]>([]);
   const [auditHistoryState, setAuditHistoryState] = useState<AssetAuditHistorySheetState>({
     status: 'closed'
   });
@@ -125,6 +131,7 @@ export function AssetDetailRouteScreen({
     setPhotoUploads([]);
     setPhotoStatus(undefined);
     setSelectedPhotoId(undefined);
+    setPhotoOrder(resetLocalAssetPhotoOrder());
 
     assetDetailQuery
       .execute(assetId)
@@ -165,6 +172,7 @@ export function AssetDetailRouteScreen({
   async function reloadAsset(): Promise<AssetDetailViewModel> {
     const asset = await assetDetailQuery.execute(assetId);
     setScreenState({ status: 'ready', asset });
+    setPhotoOrder(resetLocalAssetPhotoOrder());
     return asset;
   }
 
@@ -391,6 +399,18 @@ export function AssetDetailRouteScreen({
     ]);
   }
 
+  function movePhoto(photoId: string, direction: -1 | 1): void {
+    if (screenState.status !== 'ready') {
+      return;
+    }
+    setPhotoOrder((current) => moveAssetPhotoOrder({
+      direction,
+      photoId,
+      photoOrder: current,
+      photos: screenState.asset.photos
+    }));
+  }
+
   async function removePhoto(photoId: string): Promise<void> {
     setPendingAction('photos');
     try {
@@ -532,7 +552,8 @@ export function AssetDetailRouteScreen({
       {screenState.status === 'ready' ? (
         <>
           {(() => {
-            const photoViewer = assetPhotoViewerModel(screenState.asset.photos, selectedPhotoId);
+            const visiblePhotos = orderedAssetPhotos(screenState.asset.photos, photoOrder);
+            const photoViewer = assetPhotoViewerModel(visiblePhotos, selectedPhotoId);
             return (
               <AssetPhotoViewerSheet
                 canRemove={screenState.asset.canAddPhotos}
@@ -540,7 +561,7 @@ export function AssetDetailRouteScreen({
                 onClose={() => setSelectedPhotoId(undefined)}
                 onRemove={(photoId) => void removePhoto(photoId)}
                 onSelectPhoto={setSelectedPhotoId}
-                photos={screenState.asset.photos}
+                photos={visiblePhotos}
               />
             );
           })()}
@@ -559,9 +580,11 @@ export function AssetDetailRouteScreen({
             onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => void openMove(screenState.asset)}
             onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => void openMoveThingsHere(screenState.asset) : undefined}
+            onMovePhoto={movePhoto}
             onPhotoPress={setSelectedPhotoId}
             onRemovePhoto={confirmRemovePhoto}
             onRetryPhotos={() => void retryPhotos()}
+            photoOrder={photoOrder}
             photoUploads={photoUploads}
             photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
             refreshControl={

@@ -13,7 +13,14 @@ import {
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
-import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
+import {
+  assetPhotoViewerModel,
+  assetPhotoStatusLabel,
+  localAssetPhotoOrderNotice,
+  moveAssetPhotoOrder,
+  orderedAssetPhotos,
+  resetLocalAssetPhotoOrder
+} from '../components/AssetPhotoWorkspacePresentation';
 import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation
@@ -295,6 +302,69 @@ describe('asset photo workspace presentation helpers', () => {
     expect(assetPhotoViewerModel([
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' }
     ], 'photo-two')).toBeUndefined();
+  });
+
+  it('applies local photo ordering without losing new server photos', () => {
+    const photos = [
+      { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
+      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' },
+      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+    ];
+
+    expect(orderedAssetPhotos(photos, ['photo-two', 'photo-one']).map((photo) => photo.id)).toEqual([
+      'photo-two',
+      'photo-one',
+      'photo-three'
+    ]);
+  });
+
+  it('moves photos locally within the currently visible strip boundaries', () => {
+    const photos = [
+      { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
+      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' },
+      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+    ];
+
+    expect(moveAssetPhotoOrder({
+      direction: -1,
+      photoId: 'photo-three',
+      photoOrder: [],
+      photos
+    })).toEqual(['photo-one', 'photo-three', 'photo-two']);
+
+    expect(moveAssetPhotoOrder({
+      direction: -1,
+      photoId: 'photo-one',
+      photoOrder: [],
+      photos
+    })).toEqual([]);
+
+    expect(moveAssetPhotoOrder({
+      direction: 1,
+      photoId: 'photo-two',
+      photoOrder: ['photo-three', 'photo-one', 'photo-two'],
+      photos
+    })).toEqual(['photo-three', 'photo-one', 'photo-two']);
+  });
+
+  it('labels locally reordered photos as a temporary preview', () => {
+    expect(localAssetPhotoOrderNotice).toBe('Preview order only. Resets after refresh.');
+    expect(assetPhotoStatusLabel({
+      hasLocalOrder: false,
+      index: 0,
+      label: 'one.jpg'
+    })).toBe('First photo');
+    expect(assetPhotoStatusLabel({
+      hasLocalOrder: true,
+      index: 0,
+      label: 'one.jpg'
+    })).toBe('Preview first');
+    expect(assetPhotoStatusLabel({
+      hasLocalOrder: true,
+      index: 1,
+      label: 'two.jpg'
+    })).toBe('two.jpg');
+    expect(resetLocalAssetPhotoOrder()).toEqual([]);
   });
 });
 
