@@ -438,23 +438,62 @@ describe('VoiceSessionPresentation', () => {
         {
           title: 'Living room',
           subtitle: 'Use existing location',
+          photoDraftEligible: false,
           tone: 'use'
         },
         {
           title: 'Box underneath the TV',
           subtitle: 'Create container',
           placement: 'Inside Living room',
+          photoDraftEligible: true,
           tone: 'create'
         },
         {
           title: 'Apple TV remote',
           subtitle: 'Create item',
           placement: 'Inside new Box underneath the TV',
+          photoDraftEligible: true,
           tone: 'create'
         }
       ]
     });
     expect(session.actionPlan?.commands.map((command) => command.title).join(' ')).not.toContain('location-1');
+  });
+
+  it('requires stable command ids before voice review rows can stage photos', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{
+            kind: 'create_asset',
+            operation: 'create',
+            title: 'Water bottle',
+            assetKind: 'item',
+            summary: 'Create Water bottle'
+          }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan?.commands[0]).toMatchObject({
+      title: 'Water bottle',
+      photoDraftEligible: false,
+      tone: 'create'
+    });
   });
 
   it('disables action plan decisions while a review decision is pending', () => {

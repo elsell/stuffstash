@@ -194,6 +194,7 @@ export type VoiceSessionActionPlanCommand = {
   readonly title: string;
   readonly subtitle: string;
   readonly placement?: string;
+  readonly photoDraftEligible: boolean;
   readonly tone: 'create' | 'use' | 'update';
 };
 
@@ -301,6 +302,7 @@ function formatExistingParentUseCommand(command: VoiceActionPlanCommand): VoiceS
     id: command.parentAssetId ? `use-${command.parentAssetId}` : undefined,
     title: command.parentTitle ?? 'Existing place',
     subtitle: `Use existing ${parentKind}`,
+    photoDraftEligible: false,
     tone: 'use'
   };
 }
@@ -316,6 +318,7 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     title,
     subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
     placement: placementLabel(command, titlesByID),
+    photoDraftEligible: tone === 'create' && Boolean(command.id),
     tone
   };
 }

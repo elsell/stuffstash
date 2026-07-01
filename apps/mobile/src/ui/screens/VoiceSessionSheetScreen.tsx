@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MessageCircle, Mic, Pause, RotateCcw, X } from 'lucide-react-native';
 import {
@@ -13,9 +13,20 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, radius, spacing } from '../theme/tokens';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
+import { useAppServices } from '../navigation/AppServicesContext';
 import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
+import {
+  showVoicePlanPhotoSourceChooser,
+  VoicePlanPhotoDraftStrip
+} from './VoicePlanPhotoDrafts';
+import {
+  appendVoicePlanPhotoDrafts,
+  removeVoicePlanPhotoDraft,
+  type VoicePlanPhotoDrafts
+} from './VoicePlanPhotoDraftState';
 
 export function VoiceSessionSheetScreen() {
+  const { photoSelectionQuery } = useAppServices();
   const {
     approveRealtimeActionPlan,
     cancelRealtime,
@@ -27,7 +38,24 @@ export function VoiceSessionSheetScreen() {
     stopRealtime
   } = useVoiceInteractionState();
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
+  const [photoDrafts, setPhotoDrafts] = useState<VoicePlanPhotoDrafts>({});
   const safeAreaInsets = useSafeAreaInsets();
+  const activePlanId = state.status === 'ready' ? state.realtime?.actionPlan?.planId : undefined;
+  const activePlanStatus = state.status === 'ready' ? state.realtime?.actionPlan?.status : undefined;
+  const activePlanIdRef = useRef(activePlanId);
+  const activePlanStatusRef = useRef(activePlanStatus);
+
+  useEffect(() => {
+    activePlanIdRef.current = activePlanId;
+  }, [activePlanId]);
+
+  useEffect(() => {
+    activePlanStatusRef.current = activePlanStatus;
+  }, [activePlanStatus]);
+
+  useEffect(() => {
+    setPhotoDrafts({});
+  }, [activePlanId, activePlanStatus]);
 
   async function handleSessionMic(): Promise<void> {
     if (state.status !== 'ready') {
@@ -67,15 +95,47 @@ export function VoiceSessionSheetScreen() {
       onCancelActionPlan={(planId) => {
         void cancelRealtimeActionPlan(planId);
       }}
+      onAddPhotos={(commandKey) => {
+        const existingCount = photoDrafts[commandKey]?.length ?? 0;
+        const planIdAtOpen = activePlanId;
+        const planStatusAtOpen = activePlanStatus;
+        showVoicePlanPhotoSourceChooser({
+          onCamera: async () => {
+            const photos = await photoSelectionQuery.captureFromCamera(existingCount);
+            setPhotoDrafts((current) => (
+              activePlanIdRef.current === planIdAtOpen &&
+              activePlanStatusRef.current === planStatusAtOpen &&
+              activePlanStatusRef.current === 'proposed'
+                ? appendVoicePlanPhotoDrafts(current, commandKey, photos)
+                : current
+            ));
+          },
+          onLibrary: async () => {
+            const photos = await photoSelectionQuery.selectFromLibrary(existingCount);
+            setPhotoDrafts((current) => (
+              activePlanIdRef.current === planIdAtOpen &&
+              activePlanStatusRef.current === planStatusAtOpen &&
+              activePlanStatusRef.current === 'proposed'
+                ? appendVoicePlanPhotoDrafts(current, commandKey, photos)
+                : current
+            ));
+          }
+        });
+      }}
+      onRemovePhoto={(commandKey, photoId) => {
+        setPhotoDrafts((current) => removeVoicePlanPhotoDraft(current, commandKey, photoId));
+      }}
       onReset={() => {
         reset();
         setDiagnosticsExpanded(false);
+        setPhotoDrafts({});
       }}
       onOpenProviderProfiles={() => router.push('/provider-profiles')}
       onSessionMic={() => {
         void handleSessionMic();
       }}
       onToggleDiagnostics={() => setDiagnosticsExpanded((current) => !current)}
+      photoDrafts={photoDrafts}
       safeAreaBottom={safeAreaInsets.bottom}
       state={state}
     />
@@ -89,10 +149,13 @@ function VoiceSessionSheet({
   onCancelSession,
   onApproveActionPlan,
   onCancelActionPlan,
+  onAddPhotos,
+  onRemovePhoto,
   onOpenProviderProfiles,
   onReset,
   onSessionMic,
   onToggleDiagnostics,
+  photoDrafts,
   safeAreaBottom,
   state
 }: {
@@ -100,12 +163,15 @@ function VoiceSessionSheet({
   readonly diagnosticsEnabled: boolean;
   readonly onApproveActionPlan: (planId: string) => void;
   readonly onCancelActionPlan: (planId: string) => void;
+  readonly onAddPhotos: (commandKey: string) => void;
+  readonly onRemovePhoto: (commandKey: string, photoId: string) => void;
   readonly onClose: () => void;
   readonly onCancelSession: () => void;
   readonly onOpenProviderProfiles: () => void;
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
   readonly onToggleDiagnostics: () => void;
+  readonly photoDrafts: VoicePlanPhotoDrafts;
   readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
@@ -120,6 +186,7 @@ function VoiceSessionSheet({
   });
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
   const bottomAction = session.bottomAction;
+  const actionPlan = session.actionPlan;
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
@@ -161,15 +228,75 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
-            {session.progressSteps.length ? (
-              <View style={styles.progressSection}>
-                <Text style={styles.sectionLabel}>Progress</Text>
-                {session.progressSteps.map((step, index) => (
-                  <View key={`${step}-${index.toString()}`} style={styles.progressStepRow}>
-                    <Text style={styles.progressStepIndex}>{(index + 1).toString()}</Text>
-                    <Text style={styles.progressStepText}>{step}</Text>
+            {actionPlan ? (
+              <View style={styles.actionPlanSection}>
+                <View style={styles.actionPlanHeader}>
+                  <View style={styles.actionPlanHeaderText}>
+                    <Text style={styles.sectionLabel}>Review change</Text>
+                    <Text style={styles.actionPlanTitle}>{actionPlan.confirmationSummary}</Text>
                   </View>
-                ))}
+                  <View style={styles.actionPlanCountPill}>
+                    <Text style={styles.actionPlanCountText}>{actionPlan.summary}</Text>
+                  </View>
+                </View>
+                <View style={styles.actionPlanCommandList}>
+                  {actionPlan.commands.map((command, index) => {
+                    const commandKey = command.id ?? `${command.title}-${index.toString()}`;
+                    return (
+                      <View key={commandKey} style={styles.actionPlanCommandBlock}>
+                        <View style={styles.actionPlanRow}>
+                          <View style={[
+                            styles.actionPlanStepMarker,
+                            command.tone === 'create' && styles.actionPlanCreateMarker,
+                            command.tone === 'use' && styles.actionPlanUseMarker
+                          ]}>
+                            {command.tone === 'use' ? (
+                              <Check color={colors.accentStrong} size={15} strokeWidth={2.8} />
+                            ) : (
+                              <Text style={styles.actionPlanStepText}>{(index + 1).toString()}</Text>
+                            )}
+                          </View>
+                          <View style={styles.actionPlanCommandTextGroup}>
+                            <Text style={styles.actionPlanText}>{command.title}</Text>
+                            <Text style={styles.actionPlanCommandMeta}>{command.subtitle}</Text>
+                            {command.placement ? (
+                              <Text style={styles.actionPlanPlacement}>{command.placement}</Text>
+                            ) : null}
+                          </View>
+                        </View>
+                        {actionPlan.status === 'proposed' && command.photoDraftEligible ? (
+                          <VoicePlanPhotoDraftStrip
+                            commandKey={commandKey}
+                            onAddPhotos={onAddPhotos}
+                            onRemovePhoto={onRemovePhoto}
+                            photos={photoDrafts[commandKey] ?? []}
+                          />
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </View>
+                {actionPlan.risks.length ? (
+                  <View style={styles.actionPlanRisks}>
+                    {actionPlan.risks.map((risk, index) => (
+                      <Text key={`${risk}-${index.toString()}`} style={styles.actionPlanRisk}>
+                        {risk}
+                      </Text>
+                    ))}
+                  </View>
+                ) : null}
+                {actionPlan.status === 'approved' ? (
+                  <Text style={styles.actionPlanStatus}>Approved. Applying change.</Text>
+                ) : null}
+                {actionPlan.status === 'cancelled' ? (
+                  <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
+                ) : null}
+                {actionPlan.status === 'executed' ? (
+                  <Text style={styles.actionPlanStatus}>Applied.</Text>
+                ) : null}
+                {actionPlan.status === 'failed' ? (
+                  <Text style={styles.actionPlanStatus}>Could not apply this change.</Text>
+                ) : null}
               </View>
             ) : null}
 
@@ -179,65 +306,6 @@ function VoiceSessionSheet({
                   <MessageCircle color={colors.accentStrong} size={18} strokeWidth={2.4} />
                 </View>
                 <Text style={styles.responseText}>{session.response}</Text>
-              </View>
-            ) : null}
-
-            {session.actionPlan ? (
-              <View style={styles.actionPlanSection}>
-                <View style={styles.actionPlanHeader}>
-                  <View style={styles.actionPlanHeaderText}>
-                    <Text style={styles.sectionLabel}>Review change</Text>
-                    <Text style={styles.actionPlanTitle}>{session.actionPlan.confirmationSummary}</Text>
-                  </View>
-                  <View style={styles.actionPlanCountPill}>
-                    <Text style={styles.actionPlanCountText}>{session.actionPlan.summary}</Text>
-                  </View>
-                </View>
-                <View style={styles.actionPlanCommandList}>
-                  {session.actionPlan.commands.map((command, index) => (
-                    <View key={`${command.id ?? command.title}-${index.toString()}`} style={styles.actionPlanRow}>
-                      <View style={[
-                        styles.actionPlanStepMarker,
-                        command.tone === 'create' && styles.actionPlanCreateMarker,
-                        command.tone === 'use' && styles.actionPlanUseMarker
-                      ]}>
-                        {command.tone === 'use' ? (
-                          <Check color={colors.accentStrong} size={15} strokeWidth={2.8} />
-                        ) : (
-                          <Text style={styles.actionPlanStepText}>{(index + 1).toString()}</Text>
-                        )}
-                      </View>
-                      <View style={styles.actionPlanCommandTextGroup}>
-                        <Text style={styles.actionPlanText}>{command.title}</Text>
-                        <Text style={styles.actionPlanCommandMeta}>{command.subtitle}</Text>
-                        {command.placement ? (
-                          <Text style={styles.actionPlanPlacement}>{command.placement}</Text>
-                        ) : null}
-                      </View>
-                    </View>
-                  ))}
-                </View>
-                {session.actionPlan.risks.length ? (
-                  <View style={styles.actionPlanRisks}>
-                    {session.actionPlan.risks.map((risk, index) => (
-                      <Text key={`${risk}-${index.toString()}`} style={styles.actionPlanRisk}>
-                        {risk}
-                      </Text>
-                    ))}
-                  </View>
-                ) : null}
-                {session.actionPlan.status === 'approved' ? (
-                  <Text style={styles.actionPlanStatus}>Approved. Applying change.</Text>
-                ) : null}
-                {session.actionPlan.status === 'cancelled' ? (
-                  <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
-                ) : null}
-                {session.actionPlan.status === 'executed' ? (
-                  <Text style={styles.actionPlanStatus}>Applied.</Text>
-                ) : null}
-                {session.actionPlan.status === 'failed' ? (
-                  <Text style={styles.actionPlanStatus}>Could not apply this change.</Text>
-                ) : null}
               </View>
             ) : null}
 
@@ -436,7 +504,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     flexDirection: 'row',
     gap: spacing.md,
-    paddingVertical: spacing.sm
+    paddingVertical: spacing.xs
   },
   actionPlanCommandList: {
     borderColor: colors.border,
@@ -444,6 +512,12 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     marginTop: spacing.sm,
     paddingHorizontal: spacing.sm
+  },
+  actionPlanCommandBlock: {
+    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingBottom: spacing.sm,
+    paddingTop: spacing.sm
   },
   actionPlanCommandMeta: {
     color: colors.textMuted,
@@ -657,34 +731,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: spacing.xs
-  },
-  progressSection: {
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  progressStepIndex: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '900',
-    width: 24
-  },
-  progressStepRow: {
-    alignItems: 'flex-start',
-    borderTopColor: colors.border,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm
-  },
-  progressStepText: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    lineHeight: 20
   },
   progressTitle: {
     color: colors.text,

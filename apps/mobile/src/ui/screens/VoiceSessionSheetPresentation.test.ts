@@ -9,7 +9,7 @@ describe('VoiceSessionSheetPresentation', () => {
     });
   });
 
-  it('uses the body for transcript, response, progress, errors, and diagnostics', () => {
+  it('uses the body for transcript, response, action-plan review, errors, and diagnostics', () => {
     expect(
       buildVoiceSessionSheetBodyPresentation(readyVoiceState(null), {
         transcript: 'Where is my water bottle?'
@@ -22,7 +22,7 @@ describe('VoiceSessionSheetPresentation', () => {
     ).toBe(true);
     expect(
       buildVoiceSessionSheetBodyPresentation(readyVoiceState(null), {
-        progressSteps: ['Sending audio']
+        actionPlan: { planId: 'plan-one' }
       }, false).hasBodyContent
     ).toBe(true);
     expect(
@@ -39,6 +39,19 @@ describe('VoiceSessionSheetPresentation', () => {
         false
       ).hasBodyContent
     ).toBe(true);
+  });
+
+  it('keeps progress out of body content so approval review stays high in the sheet', () => {
+    expect(
+      buildVoiceSessionSheetBodyPresentation(readyVoiceState({
+        status: 'processing',
+        tenantName: 'Home tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Checking your inventory',
+        progressSteps: ['Sending audio', 'Checking your inventory'],
+        debugEvents: []
+      }), {}, false).hasBodyContent
+    ).toBe(false);
   });
 
   it('requires explicit diagnostics enablement before diagnostics occupy body content', () => {

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Alert,
   Image,
@@ -43,6 +42,7 @@ import {
   resolveParentAssetId,
   resolveSelectedParent
 } from './AddAssetResolution';
+import { showPhotoSourceChooser } from './PhotoSourceChooser';
 
 type AddAssetScreenProps = {
   readonly addAssetDraftStore: AddAssetDraftStore;
@@ -353,29 +353,10 @@ export function AddAssetScreen({
   }
 
   function choosePhotoSource(): void {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Take Photo', 'Choose from Library', 'Cancel'],
-          cancelButtonIndex: 2
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) {
-            void takePhoto();
-          }
-          if (buttonIndex === 1) {
-            void addPhotosFromLibrary();
-          }
-        }
-      );
-      return;
-    }
-
-    Alert.alert('Add photos', undefined, [
-      { text: 'Take Photo', onPress: () => void takePhoto() },
-      { text: 'Choose from Library', onPress: () => void addPhotosFromLibrary() },
-      { text: 'Cancel', style: 'cancel' }
-    ]);
+    showPhotoSourceChooser({
+      onCamera: () => void takePhoto(),
+      onLibrary: () => void addPhotosFromLibrary()
+    });
   }
 
   function movePhoto(photoId: string, direction: number): void {
