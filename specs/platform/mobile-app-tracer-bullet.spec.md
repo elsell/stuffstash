@@ -121,7 +121,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The picker must show the current location path and the proposed destination before saving.
   - Users may search selectable parent candidates by title/path.
   - Users may choose `No parent` to move the asset to the inventory root.
-  - Users may create a missing destination inline as a location in the current inventory, then immediately select it as the destination. More nuanced container/location intent selection may wait for a future parent-intent API slice.
+  - Users may create a missing destination inline as either a location or a container in the current inventory, then immediately select it as the destination. The picker must expose a compact native kind choice so rooms and broad places become locations while boxes, shelves, bins, cabinets, and similar storage objects become containers.
   - The picker must reject moving an asset into itself. Server validation remains authoritative for cycles, invalid parent kind, archived parents, cross-tenant, and cross-inventory attempts.
   - After move, the asset workspace must refresh and show the new path.
 - Mobile asset detail photo management must use the existing authorized attachment APIs:

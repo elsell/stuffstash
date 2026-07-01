@@ -17,7 +17,12 @@ import {
   EditDraft
 } from './AssetDetailEditPresentation';
 import {
+  canCreateMoveDestination,
   canSaveMoveAsset,
+  moveDestinationCreateButtonLabel,
+  moveDestinationCreateKindHelp,
+  moveDestinationCreateKindLabel,
+  MoveDestinationCreateKind,
   movePlacementPreview,
   MovePlacementPreview
 } from './AssetDetailMovePresentation';
@@ -27,6 +32,7 @@ export type MoveDraft = {
   readonly query: string;
   readonly matches: readonly ParentLookupResult[];
   readonly selectedParent: ParentLookupResult | null;
+  readonly createKind: MoveDestinationCreateKind;
 };
 
 export type MoveIntoDraft = {
@@ -101,6 +107,7 @@ export function MoveAssetSheet({
   draft,
   isSaving,
   onChangeQuery,
+  onChangeCreateKind,
   onClose,
   onCreateDestination,
   onSave,
@@ -110,6 +117,7 @@ export function MoveAssetSheet({
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
   readonly isSaving: boolean;
+  readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
   readonly onCreateDestination: () => void;
@@ -117,10 +125,13 @@ export function MoveAssetSheet({
   readonly onSelectParent: (parent: ParentLookupResult) => void;
   readonly onSelectRoot: () => void;
 }) {
-  const exactMatch = draft?.matches.some((match) => normalize(match.title) === normalize(draft.query)) ?? false;
-  const canCreate = (draft?.query.trim().length ?? 0) > 0 && !exactMatch;
   const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !isSaving : false;
   const placement = draft ? movePlacementPreview(asset, draft.selectedParent) : undefined;
+  const createTitle = draft?.query.trim() ?? '';
+  const createKind = draft?.createKind ?? 'location';
+  const canCreate = draft
+    ? canCreateMoveDestination({ kind: createKind, matches: draft.matches, query: draft.query }) && !isSaving
+    : false;
   return (
     <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
@@ -141,10 +152,33 @@ export function MoveAssetSheet({
           />
           <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
             {canCreate ? (
-              <Pressable accessibilityRole="button" onPress={onCreateDestination} style={styles.parentCreateRow}>
-                <Text style={styles.parentTitle}>Create new location "{draft?.query.trim()}"</Text>
-                <Text style={styles.parentSubtitle}>Then select it as the destination</Text>
-              </Pressable>
+              <View style={styles.createDestinationPanel}>
+                <View style={styles.createKindSegment} accessibilityRole="tablist">
+                  <CreateKindOption
+                    kind="location"
+                    disabled={isSaving}
+                    selectedKind={createKind}
+                    onPress={onChangeCreateKind}
+                  />
+                  <CreateKindOption
+                    kind="container"
+                    disabled={isSaving}
+                    selectedKind={createKind}
+                    onPress={onChangeCreateKind}
+                  />
+                </View>
+                <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: isSaving }}
+                  disabled={isSaving}
+                  onPress={onCreateDestination}
+                  style={[styles.parentCreateRow, isSaving ? styles.disabledAction : null]}
+                >
+                  <Text style={styles.parentTitle}>{moveDestinationCreateButtonLabel(createKind, createTitle)}</Text>
+                  <Text style={styles.parentSubtitle}>Then select it as the destination</Text>
+                </Pressable>
+              </View>
             ) : null}
             <ParentRow
               isSelected={draft?.selectedParent === null}
@@ -234,6 +268,33 @@ export function MoveThingsHereSheet({
   );
 }
 
+function CreateKindOption({
+  disabled,
+  kind,
+  onPress,
+  selectedKind
+}: {
+  readonly disabled: boolean;
+  readonly kind: MoveDestinationCreateKind;
+  readonly onPress: (kind: MoveDestinationCreateKind) => void;
+  readonly selectedKind: MoveDestinationCreateKind;
+}) {
+  const isSelected = kind === selectedKind;
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ disabled, selected: isSelected }}
+      disabled={disabled}
+      onPress={() => onPress(kind)}
+      style={[styles.createKindOption, isSelected ? styles.createKindOptionSelected : null, disabled ? styles.disabledAction : null]}
+    >
+      <Text style={[styles.createKindOptionText, isSelected ? styles.createKindOptionTextSelected : null]}>
+        {moveDestinationCreateKindLabel(kind)}
+      </Text>
+    </Pressable>
+  );
+}
+
 function ParentRow({
   isSelected,
   onPress,
@@ -317,10 +378,6 @@ function SheetActions({
       </Pressable>
     </View>
   );
-}
-
-function normalize(value: string | undefined): string {
-  return (value ?? '').trim().toLocaleLowerCase();
 }
 
 const styles = StyleSheet.create({
@@ -439,6 +496,47 @@ const styles = StyleSheet.create({
   parentList: {
     maxHeight: 280
   },
+  createDestinationPanel: {
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    marginVertical: spacing.xs,
+    padding: spacing.sm
+  },
+  createKindSegment: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    padding: 4
+  },
+  createKindOption: {
+    alignItems: 'center',
+    borderRadius: radius.sm,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 36
+  },
+  createKindOptionSelected: {
+    backgroundColor: colors.action
+  },
+  createKindOptionText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  createKindOptionTextSelected: {
+    color: colors.onAction
+  },
+  createKindHelp: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    paddingHorizontal: spacing.xs
+  },
   parentRow: {
     alignItems: 'center',
     borderBottomColor: colors.border,
@@ -453,9 +551,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.selected
   },
   parentCreateRow: {
-    backgroundColor: colors.brandDustyBlueSoft,
+    backgroundColor: colors.surface,
     borderRadius: radius.md,
-    marginVertical: spacing.xs,
     padding: spacing.md
   },
   parentTitle: {

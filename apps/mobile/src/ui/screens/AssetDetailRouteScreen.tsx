@@ -24,7 +24,7 @@ import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
 import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
-import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
+import { ParentLookupQuery } from '../../application/add/ParentLookupQuery';
 import {
   PhotoSelectionQuery,
   SelectedAssetPhoto
@@ -59,7 +59,11 @@ import {
   assetLifecycleConfirmation,
   AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
-import { parentFromCurrentAssetPath } from './AssetDetailMovePresentation';
+import {
+  createdMoveDestinationParent,
+  moveDestinationCreateInput,
+  parentFromCurrentAssetPath
+} from './AssetDetailMovePresentation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 import { colors, radius, spacing } from '../theme/tokens';
 
@@ -207,6 +211,7 @@ export function AssetDetailRouteScreen({
       ? safeMatches.find((match) => match.id === asset.parentAssetId) ?? parentFromCurrentAssetPath(asset)
       : null;
     setMoveDraft({
+      createKind: 'location',
       query: currentParent?.title ?? '',
       matches: safeMatches,
       selectedParent: currentParent
@@ -227,26 +232,20 @@ export function AssetDetailRouteScreen({
 
   async function createMoveDestination(asset: AssetDetailViewModel): Promise<void> {
     const name = moveDraft?.query.trim() ?? '';
+    const createKind = moveDraft?.createKind ?? 'location';
     if (name.length === 0) {
       return;
     }
     setPendingAction('move');
     try {
-      const created = await createAssetCommand.execute({
-        kind: 'location',
-        title: name,
-        description: ''
-      });
-      const createdParent: ParentLookupResult = {
+      const created = await createAssetCommand.execute(moveDestinationCreateInput(createKind, name));
+      const createdParent = createdMoveDestinationParent({
         id: created.id,
-        title: created.title,
-        kind: 'location',
-        subtitle: 'New location',
-        pathLabel: created.title,
-        selectionHint: 'Location',
-        willPromoteToContainer: false
-      };
+        kind: createKind,
+        title: created.title
+      });
       setMoveDraft({
+        createKind,
         query: created.title,
         matches: [createdParent, ...(moveDraft?.matches ?? []).filter((match) => match.id !== asset.id)],
         selectedParent: createdParent
@@ -585,6 +584,7 @@ export function AssetDetailRouteScreen({
             asset={screenState.asset}
             draft={moveDraft}
             isSaving={pendingAction === 'move'}
+            onChangeCreateKind={(createKind) => setMoveDraft((current) => current ? { ...current, createKind } : current)}
             onChangeQuery={(query) => void updateMoveQuery(query, screenState.asset)}
             onClose={() => setMoveDraft(undefined)}
             onCreateDestination={() => void createMoveDestination(screenState.asset)}

@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import { addHereParams } from './AddAssetInitialParent';
 import {
+  canCreateMoveDestination,
   canSaveMoveAsset,
+  createdMoveDestinationParent,
+  moveDestinationCreateInput,
+  moveDestinationCreateButtonLabel,
+  moveDestinationCreateKindHelp,
+  moveDestinationCreateKindLabel,
   movePlacementPreview,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
@@ -187,6 +193,77 @@ describe('asset detail move helpers', () => {
       proposedLocationLabel: 'Pantry / dry goods',
       hasChanged: true
     });
+  });
+
+  it('labels inline destination creation by the selected asset kind', () => {
+    expect(moveDestinationCreateKindLabel('location')).toBe('Location');
+    expect(moveDestinationCreateKindLabel('container')).toBe('Container');
+    expect(moveDestinationCreateKindHelp('location')).toBe('Best for rooms, places, and areas.');
+    expect(moveDestinationCreateKindHelp('container')).toBe('Best for boxes, shelves, bins, and cabinets.');
+    expect(moveDestinationCreateButtonLabel('container', 'big cabinet')).toBe('Create container "big cabinet"');
+  });
+
+  it('builds a selectable parent from a newly created move destination', () => {
+    expect(createdMoveDestinationParent({
+      id: 'asset-cabinet',
+      kind: 'container',
+      title: 'big cabinet'
+    })).toEqual({
+      id: 'asset-cabinet',
+      title: 'big cabinet',
+      kind: 'container',
+      subtitle: 'New container',
+      pathLabel: 'big cabinet',
+      selectionHint: 'Container',
+      willPromoteToContainer: false
+    });
+
+    expect(createdMoveDestinationParent({
+      id: 'asset-kitchen',
+      kind: 'location',
+      title: 'Kitchen'
+    })).toMatchObject({
+      kind: 'location',
+      subtitle: 'New location',
+      selectionHint: 'Location'
+    });
+  });
+
+  it('builds the create command input from the selected destination kind', () => {
+    expect(moveDestinationCreateInput('container', '  big cabinet  ')).toEqual({
+      kind: 'container',
+      title: 'big cabinet',
+      description: ''
+    });
+  });
+
+  it('allows inline creation when an exact title exists only for another destination kind', () => {
+    const matches = [
+      {
+        title: 'Cabinet',
+        kind: 'location'
+      },
+      {
+        title: 'Shelf',
+        kind: 'container'
+      }
+    ] as const;
+
+    expect(canCreateMoveDestination({
+      kind: 'container',
+      matches,
+      query: 'Cabinet'
+    })).toBe(true);
+    expect(canCreateMoveDestination({
+      kind: 'location',
+      matches,
+      query: 'cabinet'
+    })).toBe(false);
+    expect(canCreateMoveDestination({
+      kind: 'container',
+      matches,
+      query: '   '
+    })).toBe(false);
   });
 });
 
