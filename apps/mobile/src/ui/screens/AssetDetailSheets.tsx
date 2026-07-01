@@ -12,16 +12,16 @@ import {
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
+  assetEditContext,
+  canSaveEditAsset,
+  EditDraft
+} from './AssetDetailEditPresentation';
+import {
   canSaveMoveAsset,
   movePlacementPreview,
   MovePlacementPreview
 } from './AssetDetailMovePresentation';
 import { colors, radius, spacing } from '../theme/tokens';
-
-export type EditDraft = {
-  readonly title: string;
-  readonly description: string;
-};
 
 export type MoveDraft = {
   readonly query: string;
@@ -37,25 +37,37 @@ export type MoveIntoDraft = {
 };
 
 export function EditAssetSheet({
+  asset,
   draft,
   isSaving,
   onChange,
   onClose,
   onSave
 }: {
+  readonly asset: AssetDetailViewModel;
   readonly draft: EditDraft | undefined;
   readonly isSaving: boolean;
   readonly onChange: (draft: EditDraft) => void;
   readonly onClose: () => void;
   readonly onSave: () => void;
 }) {
+  const editContext = assetEditContext(asset);
+  const canSave = canSaveEditAsset(asset, draft) && !isSaving;
   return (
     <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>Edit asset</Text>
-          <Text style={styles.sheetSubtitle}>Kind is managed by Stuff Stash rules for now.</Text>
+          <View style={styles.readOnlyContextPanel}>
+            <Text style={styles.readOnlyContextLabel}>Kind</Text>
+            <Text style={styles.readOnlyContextValue}>
+              {editContext.customTypeLabel
+                ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
+                : editContext.kindLabel}
+            </Text>
+            <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
+          </View>
           <Text style={styles.inputLabel}>Name</Text>
           <TextInput
             autoCapitalize="sentences"
@@ -73,7 +85,7 @@ export function EditAssetSheet({
             value={draft?.description ?? ''}
           />
           <SheetActions
-            disabled={isSaving}
+            disabled={!canSave}
             primaryLabel={isSaving ? 'Saving' : 'Save'}
             onClose={onClose}
             onSave={onSave}
@@ -343,6 +355,30 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20
+  },
+  readOnlyContextPanel: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  readOnlyContextLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textTransform: 'uppercase'
+  },
+  readOnlyContextValue: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  readOnlyContextHelp: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18
   },
   inputLabel: {
     color: colors.text,

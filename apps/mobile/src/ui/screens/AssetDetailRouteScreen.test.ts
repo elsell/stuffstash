@@ -11,6 +11,12 @@ import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation
 } from './AssetLifecyclePresentation';
+import {
+  assetEditContext,
+  canSaveEditAsset,
+  hasDirtyEditAssetDraft,
+  normalizedEditDraft
+} from './AssetDetailEditPresentation';
 
 describe('navigateAfterDeletedAsset', () => {
   it('uses native back navigation when the asset detail route has history', () => {
@@ -233,6 +239,43 @@ describe('asset lifecycle presentation helpers', () => {
       message: 'Water bottle will return to active inventory work.',
       confirmLabel: 'Restore',
       isDestructive: false
+    });
+  });
+});
+
+describe('asset edit presentation helpers', () => {
+  it('saves only meaningful dirty edits with a non-empty title', () => {
+    const asset = { title: 'Water bottle', description: 'On the desk.' };
+
+    expect(canSaveEditAsset(asset, undefined)).toBe(false);
+    expect(canSaveEditAsset(asset, { title: '   ', description: 'On the desk.' })).toBe(false);
+    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the desk.' })).toBe(false);
+    expect(canSaveEditAsset(asset, { title: '  Water bottle  ', description: '  On the desk.  ' })).toBe(false);
+    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the shelf.' })).toBe(true);
+    expect(canSaveEditAsset(asset, { title: 'Big water bottle', description: 'On the desk.' })).toBe(true);
+  });
+
+  it('uses the same normalized edit state for discard warnings and save payloads', () => {
+    const asset = { title: 'Water bottle', description: 'On the desk.' };
+    const whitespaceOnly = { title: '  Water bottle  ', description: '  On the desk.  ' };
+    const changed = { title: '  Water bottle  ', description: '  On the shelf.  ' };
+
+    expect(hasDirtyEditAssetDraft(asset, whitespaceOnly)).toBe(false);
+    expect(hasDirtyEditAssetDraft(asset, changed)).toBe(true);
+    expect(normalizedEditDraft(changed)).toEqual({
+      title: 'Water bottle',
+      description: 'On the shelf.'
+    });
+  });
+
+  it('shows kind and custom type as read-only edit context', () => {
+    expect(assetEditContext({
+      kindLabel: 'Container',
+      customTypeLabel: 'Documents'
+    })).toEqual({
+      kindLabel: 'Container',
+      customTypeLabel: 'Documents',
+      helperText: 'Kind and type changes need a future conversion flow.'
     });
   });
 });

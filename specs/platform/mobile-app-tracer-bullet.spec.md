@@ -111,6 +111,9 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Mobile asset detail edit must be a native-feeling sheet or pushed form backed by mobile application commands:
   - Users may edit title and description.
   - Kind changes remain unavailable until the API exposes a safe conversion/promotion command; the UI may display kind as read-only helper context.
+  - The edit surface must show the current kind and custom type, when present, as read-only context so users understand why the editable fields are limited.
+  - Save must remain unavailable until the title is non-empty and at least one editable field differs from the loaded asset.
+  - Save and discard handling must use the same normalized edit-state rules. Leading and trailing whitespace in editable fields is not meaningful and must not trigger dirty-state warnings or be submitted to the update command.
   - Save must call the API update asset endpoint through a mobile application command and generated API-client adapter.
   - Canceling with unsaved changes must ask for confirmation.
   - After save, the asset workspace must refresh from the application query so server validation, audit-backed updates, updated-at labels, and downstream lists converge.

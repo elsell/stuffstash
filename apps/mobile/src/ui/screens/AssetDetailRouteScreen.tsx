@@ -42,12 +42,16 @@ import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
 import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
 import {
   EditAssetSheet,
-  EditDraft,
   MoveAssetSheet,
   MoveDraft,
   MoveIntoDraft,
   MoveThingsHereSheet
 } from './AssetDetailSheets';
+import {
+  EditDraft,
+  hasDirtyEditAssetDraft,
+  normalizedEditDraft
+} from './AssetDetailEditPresentation';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import {
   assetLifecycleActionRows,
@@ -164,7 +168,7 @@ export function AssetDetailRouteScreen({
   }
 
   function requestCloseEdit(asset: AssetDetailViewModel): void {
-    if (!editDraft || (editDraft.title === asset.title && editDraft.description === asset.description)) {
+    if (!hasDirtyEditAssetDraft(asset, editDraft)) {
       setEditDraft(undefined);
       return;
     }
@@ -180,10 +184,11 @@ export function AssetDetailRouteScreen({
     }
     setPendingAction('edit');
     try {
+      const normalized = normalizedEditDraft(editDraft);
       await updateAssetCommand.execute({
         assetId,
-        title: editDraft.title,
-        description: editDraft.description
+        title: normalized.title,
+        description: normalized.description
       });
       setEditDraft(undefined);
       await reloadAsset();
@@ -565,6 +570,7 @@ export function AssetDetailRouteScreen({
             }
           />
           <EditAssetSheet
+            asset={screenState.asset}
             draft={editDraft}
             isSaving={pendingAction === 'edit'}
             onChange={setEditDraft}
