@@ -318,9 +318,24 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     title,
     subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
     placement: placementLabel(command, titlesByID),
-    photoDraftEligible: tone === 'create' && Boolean(command.id),
+    photoDraftEligible: isPhotoDraftEligible(command),
     tone
   };
+}
+
+function isPhotoDraftEligible(command: VoiceActionPlanCommand): boolean {
+  if (!command.id) {
+    return false;
+  }
+  const assetKind = command.assetKind || command.kind;
+  if (command.kind === 'move_asset' || command.operation === 'move') {
+    return assetKind === 'item' || assetKind === 'container' || assetKind === 'location';
+  }
+  return assetKind === 'item' ||
+    assetKind === 'container' ||
+    assetKind === 'location' ||
+    command.kind === 'create_asset' ||
+    command.kind === 'create_location';
 }
 
 function placementLabel(command: VoiceActionPlanCommand, titlesByID: ReadonlyMap<string, string>): string | undefined {

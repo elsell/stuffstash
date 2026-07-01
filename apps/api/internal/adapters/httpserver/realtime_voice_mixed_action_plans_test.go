@@ -43,6 +43,7 @@ func TestRealtimeVoiceActionPlanApprovalCreatesMissingLocationThenMovesAsset(t *
 	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
 		t.Fatalf("expected safe mixed-plan execution event, got %+v", executed)
 	}
+	assertMixedMoveCommandResults(t, executed)
 	assets, err := application.ListAssets(context.Background(), app.ListAssetsInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
 		Source:      audit.SourceAPI,
@@ -96,13 +97,44 @@ func assertMixedMoveProposalForKitchen(t *testing.T, actionPlan map[string]any) 
 		t.Fatalf("unexpected create command proposal: %+v", commands[0])
 	}
 	moveCommand, ok := commands[1].(map[string]any)
-	if !ok || moveCommand["id"] != "cmd-move-water-bottle" || moveCommand["kind"] != "move_asset" || moveCommand["operation"] != "move" || moveCommand["parentCommandId"] != "cmd-kitchen" {
+	if !ok || moveCommand["id"] != "cmd-move-water-bottle" || moveCommand["kind"] != "move_asset" || moveCommand["operation"] != "move" || moveCommand["assetKind"] != "item" || moveCommand["parentCommandId"] != "cmd-kitchen" {
 		t.Fatalf("unexpected move command proposal: %+v", commands[1])
 	}
 	if _, leaked := moveCommand["parentAssetId"]; leaked {
 		t.Fatalf("expected move proposal to target command dependency instead of raw parent asset id: %+v", moveCommand)
 	}
 	assertSafeRealtimeEvents(t, []map[string]any{actionPlan}, []string{"apiKey", "Bearer", "provider_session_id"})
+}
+
+func assertMixedMoveCommandResults(t *testing.T, executed map[string]any) {
+	t.Helper()
+
+	commandResults, ok := executed["commandResults"].([]any)
+	if !ok || len(commandResults) != 2 {
+		t.Fatalf("expected create and move command results, got %+v", executed["commandResults"])
+	}
+	resultsByCommandID := map[string]map[string]any{}
+	for _, raw := range commandResults {
+		result, ok := raw.(map[string]any)
+		if !ok {
+			t.Fatalf("unexpected command result shape: %+v", raw)
+		}
+		commandID, ok := result["commandId"].(string)
+		if !ok || commandID == "" {
+			t.Fatalf("expected safe command result id, got %+v", result)
+		}
+		if result["title"] != nil {
+			t.Fatalf("expected command result to omit titles, got %+v", result)
+		}
+		resultsByCommandID[commandID] = result
+	}
+	if result := resultsByCommandID["cmd-kitchen"]; result["assetId"] == "" || result["operation"] != "create" || result["assetKind"] != "location" {
+		t.Fatalf("unexpected kitchen command result: %+v", result)
+	}
+	if result := resultsByCommandID["cmd-move-water-bottle"]; result["assetId"] == "" || result["operation"] != "move" || result["assetKind"] != "item" {
+		t.Fatalf("unexpected move command result: %+v", result)
+	}
+	assertSafeRealtimeEvents(t, []map[string]any{executed}, []string{"Water bottle", "Kitchen", "apiKey", "Bearer", "provider_session_id"})
 }
 
 type moveToMissingLocationActionPlanProposalLanguageModel struct{}

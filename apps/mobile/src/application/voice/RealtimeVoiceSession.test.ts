@@ -4,6 +4,7 @@ import {
   RecordedVoiceAudio,
   RealtimeVoiceSessionController,
   RealtimeVoiceTransport,
+  VoiceActionPlanCommand,
   VoiceAudioPlayer,
   VoiceAudioRecorder,
   VoiceRealtimeEvent
@@ -305,8 +306,16 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
-  it('does not attach staged photos when execution result is not a reviewed create command', async () => {
+  it('attaches staged photos to reviewed move command results after approval', async () => {
     const transport = new ReviewDecisionTransport({
+      commands: [{
+        id: 'cmd-water-bottle',
+        kind: 'move_asset',
+        summary: 'Move Water bottle to Kitchen',
+        operation: 'move',
+        assetKind: 'item',
+        title: 'Move Water bottle to Kitchen'
+      }],
       commandResults: [{
         commandId: 'cmd-water-bottle',
         assetId: 'asset-water-bottle',
@@ -335,10 +344,17 @@ describe('RealtimeVoiceSessionController', () => {
     });
     const states = await stop;
 
-    expect(repository.addedPhotos).toEqual([]);
+    expect(repository.addedPhotos).toEqual([
+      {
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-water-bottle',
+        fileName: 'water-bottle.jpg'
+      }
+    ]);
     expect(states.at(-1)?.photoAttachmentStatus).toMatchObject({
-      status: 'failed',
-      canRetry: true
+      status: 'attached',
+      message: '1 photo attached.'
     });
   });
 
@@ -820,6 +836,7 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
   });
 
   constructor(private readonly options: {
+    readonly commands?: readonly VoiceActionPlanCommand[];
     readonly commandResults?: readonly {
       readonly commandId: string;
       readonly assetId: string;
@@ -842,7 +859,7 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
         planId: 'plan-1',
         status: 'proposed',
         confirmationSummary: 'Create item water bottle?',
-        commands: [{ id: 'cmd-water-bottle', kind: 'create_asset', summary: 'Create item water bottle' }],
+        commands: this.options.commands ?? [{ id: 'cmd-water-bottle', kind: 'create_asset', summary: 'Create item water bottle' }],
         risks: ['Adds a new item to this inventory.']
       }
     });

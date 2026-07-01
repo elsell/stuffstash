@@ -104,6 +104,7 @@ Initial upload size limit:
 - The default is 5 MiB.
 - The JSON upload route must set a larger request body cap derived from the attachment limit so base64 overhead does not reject valid uploads before application validation runs.
 - Blob adapters that read from external storage must enforce the same maximum before buffering content in memory.
+- Mobile clients using the JSON upload route must normalize camera and library images before upload by resizing and recompressing image files into a supported MIME type. This normalization is a client-side transport optimization for the first JSON upload slice; it must not replace server-side size, type, authorization, and content validation.
 
 Attachment listing:
 

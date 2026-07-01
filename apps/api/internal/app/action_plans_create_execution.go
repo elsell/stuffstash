@@ -74,6 +74,7 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 			if err != nil {
 				return ActionPlanExecutionResult{}, err
 			}
+			commandResults = append(commandResults, actionPlanCommandAssetResult(command, prepared.Asset, "move"))
 			preparedUpdates = append(preparedUpdates, ports.ActionPlanUpdateAssetOperation{
 				ExpectedCurrent:   prepared.PreviousAsset,
 				Item:              prepared.Asset,

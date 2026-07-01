@@ -253,7 +253,10 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
-		return ActionPlanExecutionResult{Record: executed}, nil
+		return ActionPlanExecutionResult{
+			Record:         executed,
+			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "move")},
+		}, nil
 	case actionplan.CommandKindArchiveAsset:
 		archiveInput, err := actionPlanLifecycleAssetInput(input, command)
 		if err != nil {

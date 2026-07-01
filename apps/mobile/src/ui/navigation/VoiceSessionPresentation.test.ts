@@ -496,6 +496,43 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('allows photo drafts on reviewed move rows for concrete assets', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Move the shed to the backyard?',
+          commands: [{
+            id: 'cmd-move-shed',
+            kind: 'move_asset',
+            operation: 'move',
+            title: 'Move the shed to the backyard.',
+            assetKind: 'item',
+            summary: 'Move the shed to the backyard.'
+          }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan?.commands[0]).toMatchObject({
+      title: 'Move the shed to the backyard.',
+      photoDraftEligible: true,
+      tone: 'update'
+    });
+  });
+
   it('disables action plan decisions while a review decision is pending', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

@@ -469,7 +469,7 @@ export class RealtimeVoiceSessionController {
     }
     this.pendingPhotoRetriesByPlanId.delete(event.planId);
 
-    const reviewedCreateCommands = new Map(
+    const reviewedPhotoCommands = new Map(
       (reviewedPlan?.commands ?? [])
         .filter((command) => command.id && isPhotoAttachableReviewedCommand(command))
         .map((command) => [command.id ?? '', command])
@@ -489,9 +489,9 @@ export class RealtimeVoiceSessionController {
 
     for (const [commandId, photos] of Object.entries(drafts)) {
       const targetAssetId = assetIdsByCommandId.get(commandId);
-      const reviewedCommand = reviewedCreateCommands.get(commandId);
+      const reviewedCommand = reviewedPhotoCommands.get(commandId);
       const commandResult = (event.commandResults ?? []).find((result) => result.commandId === commandId);
-      if (!targetAssetId || !reviewedCommand || !commandResult || commandResult.operation !== 'create' || !assetKindMatchesReviewedCommand(commandResult.assetKind, reviewedCommand)) {
+      if (!targetAssetId || !reviewedCommand || !commandResult || !commandResultMatchesReviewedCommand(commandResult, reviewedCommand)) {
         retry.photos[commandId] = photos;
         continue;
       }
@@ -695,14 +695,28 @@ function boundedPhotoDrafts(drafts: VoiceActionPlanPhotoDrafts): VoiceActionPlan
 
 function isPhotoAttachableReviewedCommand(command: VoiceActionPlanCommand): boolean {
   return command.operation === 'create' ||
+    command.operation === 'move' ||
     command.kind === 'create_asset' ||
-    command.kind === 'create_location';
+    command.kind === 'create_location' ||
+    command.kind === 'move_asset';
+}
+
+function commandResultMatchesReviewedCommand(result: VoiceActionPlanCommandResult, command: VoiceActionPlanCommand): boolean {
+  if (!operationMatchesReviewedCommand(result.operation, command)) {
+    return false;
+  }
+  return assetKindMatchesReviewedCommand(result.assetKind, command);
+}
+
+function operationMatchesReviewedCommand(resultOperation: string, command: VoiceActionPlanCommand): boolean {
+  const expectedOperation = command.operation || (command.kind === 'create_asset' || command.kind === 'create_location' ? 'create' : undefined);
+  return !expectedOperation || resultOperation === expectedOperation;
 }
 
 function assetKindMatchesReviewedCommand(resultKind: string, command: VoiceActionPlanCommand): boolean {
   const expectedKind = command.assetKind || (command.kind === 'create_location' ? 'location' : undefined);
   if (!expectedKind) {
-    return true;
+    return command.operation === 'create' || command.kind === 'create_asset';
   }
   return resultKind === expectedKind;
 }

@@ -112,6 +112,14 @@ func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
 	if executed["type"] != "action.plan.executed" || executed["planId"] != planID || executed["status"] != "executed" {
 		t.Fatalf("expected safe move execution event, got %+v", executed)
 	}
+	commandResults, ok := executed["commandResults"].([]any)
+	if !ok || len(commandResults) != 1 {
+		t.Fatalf("expected one move command result for photo attachment, got %+v", executed["commandResults"])
+	}
+	commandResult, ok := commandResults[0].(map[string]any)
+	if !ok || commandResult["commandId"] == "" || commandResult["assetId"] == "" || commandResult["operation"] != "move" || commandResult["assetKind"] != "item" || commandResult["title"] != nil {
+		t.Fatalf("unexpected move command result: %+v", commandResult)
+	}
 	moved, err := application.GetAsset(context.Background(), app.GetAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
 		Source:      audit.SourceAPI,

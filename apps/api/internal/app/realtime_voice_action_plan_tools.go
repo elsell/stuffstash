@@ -408,6 +408,14 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 	} else if command.Kind == actionplan.CommandKindMoveAsset {
 		args, err := parseActionPlanMoveArguments(command)
 		if err == nil {
+			moved, found, err := a.assets.AssetByID(ctx, session.TenantID, session.InventoryID, args.AssetID)
+			if err != nil {
+				return RealtimeVoiceActionPlanCommand{}, err
+			}
+			if !found {
+				return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
+			}
+			proposal.AssetKind = moved.Kind.String()
 			proposal.ParentAssetID = args.ParentAssetID
 			if args.ParentAssetID != "" {
 				parentID, ok := asset.NewID(args.ParentAssetID)
