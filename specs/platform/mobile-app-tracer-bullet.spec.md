@@ -119,7 +119,8 @@ This spec defines camera behavior only for attaching still photos during the Add
   - After save, the asset workspace must refresh from the application query so server validation, audit-backed updates, updated-at labels, and downstream lists converge.
 - Mobile asset movement must be a dedicated placement picker:
   - The picker must show the current location path and the proposed destination before saving.
-  - Users may search selectable parent candidates by title/path.
+  - Users may search selectable parent candidates by title/path, and result rows must show the candidate title, kind hint, and structured path breadcrumb from the parent lookup result.
+  - The move destination picker must not present item assets as valid destinations until item-to-container promotion exists as a real application command.
   - Users may choose `No parent` to move the asset to the inventory root.
   - Users may create a missing destination inline as either a location or a container in the current inventory, then immediately select it as the destination. The picker must expose a compact native kind choice so rooms and broad places become locations while boxes, shelves, bins, cabinets, and similar storage objects become containers.
   - The picker must reject moving an asset into itself. Server validation remains authoritative for cycles, invalid parent kind, archived parents, cross-tenant, and cross-inventory attempts.

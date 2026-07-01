@@ -5,6 +5,9 @@ import {
   canCreateMoveDestination,
   canSaveMoveAsset,
   createdMoveDestinationParent,
+  isSelectableMoveDestination,
+  moveIntoCandidateRow,
+  moveDestinationRow,
   moveDestinationCreateInput,
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
@@ -172,6 +175,58 @@ describe('asset detail move helpers', () => {
       currentLocationLabel: 'Kitchen / Big cabinet',
       proposedLocationLabel: 'Kitchen / Big cabinet / Second shelf',
       hasChanged: true
+    });
+  });
+
+  it('builds move destination rows with path breadcrumbs and kind hints', () => {
+    expect(moveDestinationRow({
+      id: 'asset-shelf',
+      title: 'Second shelf',
+      kind: 'container',
+      subtitle: 'Kitchen / Big cabinet',
+      pathLabel: 'Kitchen / Big cabinet / Second shelf',
+      selectionHint: 'Container',
+      willPromoteToContainer: false
+    })).toEqual({
+      title: 'Second shelf',
+      kindLabel: 'Container',
+      pathLabel: 'Kitchen / Big cabinet / Second shelf'
+    });
+  });
+
+  it('does not treat item assets as selectable move destinations until promotion is implemented', () => {
+    const itemCandidate = {
+      id: 'asset-suitcase',
+      title: 'Suitcase',
+      kind: 'item',
+      subtitle: 'Bedroom closet',
+      pathLabel: 'Bedroom closet / Suitcase',
+      selectionHint: 'Will become a container for this item',
+      willPromoteToContainer: true
+    } as const;
+
+    expect(isSelectableMoveDestination(itemCandidate)).toBe(false);
+    expect(isSelectableMoveDestination({
+      ...itemCandidate,
+      kind: 'container',
+      selectionHint: 'Container',
+      willPromoteToContainer: false
+    })).toBe(true);
+  });
+
+  it('builds move-here candidate rows without destination promotion copy', () => {
+    expect(moveIntoCandidateRow({
+      id: 'asset-suitcase',
+      title: 'Suitcase',
+      kind: 'item',
+      subtitle: 'Bedroom closet',
+      pathLabel: 'Bedroom closet / Suitcase',
+      selectionHint: 'Will become a container for this item',
+      willPromoteToContainer: true
+    })).toEqual({
+      title: 'Suitcase',
+      kindLabel: 'Item',
+      pathLabel: 'Bedroom closet / Suitcase'
     });
   });
 

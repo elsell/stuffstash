@@ -68,6 +68,7 @@ import {
 } from './AssetLifecyclePresentation';
 import {
   createdMoveDestinationParent,
+  isSelectableMoveDestination,
   moveDestinationCreateInput,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
@@ -216,7 +217,7 @@ export function AssetDetailRouteScreen({
 
   async function openMove(asset: AssetDetailViewModel): Promise<void> {
     const matches = await parentLookupQuery.execute('');
-    const safeMatches = matches.filter((match) => match.id !== asset.id);
+    const safeMatches = matches.filter((match) => match.id !== asset.id && isSelectableMoveDestination(match));
     const currentParent = asset.parentAssetId
       ? safeMatches.find((match) => match.id === asset.parentAssetId) ?? parentFromCurrentAssetPath(asset)
       : null;
@@ -235,7 +236,7 @@ export function AssetDetailRouteScreen({
       && current.query === query
       ? {
           ...current,
-          matches: matches.filter((match) => match.id !== asset.id)
+          matches: matches.filter((match) => match.id !== asset.id && isSelectableMoveDestination(match))
         }
       : current);
   }

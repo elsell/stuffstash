@@ -37,6 +37,12 @@ export type MovePlacementPreview = {
   readonly hasChanged: boolean;
 };
 
+export type MoveDestinationRow = {
+  readonly title: string;
+  readonly kindLabel: string;
+  readonly pathLabel: string;
+};
+
 export function movePlacementPreview(
   asset: Pick<AssetDetailViewModel, 'parentAssetId' | 'parentLocationTrailLabel'>,
   selectedParent: ParentLookupResult | null
@@ -51,6 +57,26 @@ export function movePlacementPreview(
     proposedLocationLabel,
     hasChanged: canSaveMoveAsset(asset, selectedParent)
   };
+}
+
+export function moveDestinationRow(parent: ParentLookupResult): MoveDestinationRow {
+  return {
+    title: parent.title,
+    kindLabel: parent.kind === 'location' ? 'Location' : 'Container',
+    pathLabel: parent.pathLabel
+  };
+}
+
+export function moveIntoCandidateRow(asset: ParentLookupResult): MoveDestinationRow {
+  return {
+    title: asset.title,
+    kindLabel: moveCandidateKindLabel(asset.kind),
+    pathLabel: asset.pathLabel
+  };
+}
+
+export function isSelectableMoveDestination(parent: ParentLookupResult): boolean {
+  return parent.kind === 'container' || parent.kind === 'location';
 }
 
 export function canCreateMoveDestination({
@@ -116,4 +142,15 @@ export function createdMoveDestinationParent({
 
 function normalizeForMoveDestination(value: string): string {
   return value.trim().toLocaleLowerCase();
+}
+
+function moveCandidateKindLabel(kind: ParentLookupResult['kind']): string {
+  switch (kind) {
+    case 'container':
+      return 'Container';
+    case 'item':
+      return 'Item';
+    case 'location':
+      return 'Location';
+  }
 }

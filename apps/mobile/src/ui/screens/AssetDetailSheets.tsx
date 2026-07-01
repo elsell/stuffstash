@@ -19,10 +19,13 @@ import {
 import {
   canCreateMoveDestination,
   canSaveMoveAsset,
+  moveIntoCandidateRow,
+  moveDestinationRow,
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
   moveDestinationCreateKindLabel,
-  MoveDestinationCreateKind,
+  type MoveDestinationCreateKind,
+  type MoveDestinationRow,
   movePlacementPreview,
   MovePlacementPreview
 } from './AssetDetailMovePresentation';
@@ -182,16 +185,18 @@ export function MoveAssetSheet({
             ) : null}
             <ParentRow
               isSelected={draft?.selectedParent === null}
-              subtitle="Top level"
-              title="No parent"
+              row={{
+                title: 'No parent',
+                kindLabel: 'Top level',
+                pathLabel: 'Inventory root'
+              }}
               onPress={onSelectRoot}
             />
             {draft?.matches.map((match) => (
               <ParentRow
                 key={match.id}
                 isSelected={draft.selectedParent?.id === match.id}
-                subtitle={`${match.selectionHint} / ${match.subtitle}`}
-                title={match.title}
+                row={moveDestinationRow(match)}
                 onPress={() => onSelectParent(match)}
               />
             ))}
@@ -246,8 +251,7 @@ export function MoveThingsHereSheet({
               <ParentRow
                 key={match.id}
                 isSelected={draft.selectedAsset?.id === match.id}
-                subtitle={`${match.selectionHint} / ${match.subtitle}`}
-                title={match.title}
+                row={moveIntoCandidateRow(match)}
                 onPress={() => onSelectAsset(match)}
               />
             ))}
@@ -298,19 +302,20 @@ function CreateKindOption({
 function ParentRow({
   isSelected,
   onPress,
-  subtitle,
-  title
+  row
 }: {
   readonly isSelected: boolean;
   readonly onPress: () => void;
-  readonly subtitle: string;
-  readonly title: string;
+  readonly row: MoveDestinationRow;
 }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null]}>
-      <View>
-        <Text style={styles.parentTitle}>{title}</Text>
-        <Text style={styles.parentSubtitle}>{subtitle}</Text>
+      <View style={styles.parentTextColumn}>
+        <View style={styles.parentTitleRow}>
+          <Text style={styles.parentTitle}>{row.title}</Text>
+          <Text style={styles.parentKindPill}>{row.kindLabel}</Text>
+        </View>
+        <Text style={styles.parentPath}>{row.pathLabel}</Text>
       </View>
       {isSelected ? <Text style={styles.parentSelected}>Selected</Text> : null}
     </Pressable>
@@ -555,11 +560,39 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md
   },
+  parentTextColumn: {
+    flex: 1,
+    gap: spacing.xs,
+    minWidth: 0
+  },
+  parentTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs
+  },
   parentTitle: {
     color: colors.text,
+    flexShrink: 1,
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0
+  },
+  parentKindPill: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
+    color: colors.accentStrong,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 3
+  },
+  parentPath: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18
   },
   parentSubtitle: {
     color: colors.textMuted,
@@ -568,6 +601,7 @@ const styles = StyleSheet.create({
   },
   parentSelected: {
     color: colors.action,
+    flexShrink: 0,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0
