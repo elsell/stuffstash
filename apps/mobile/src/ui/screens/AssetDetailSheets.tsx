@@ -11,7 +11,11 @@ import {
 } from 'react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
-import { canSaveMoveAsset } from './AssetDetailMovePresentation';
+import {
+  canSaveMoveAsset,
+  movePlacementPreview,
+  MovePlacementPreview
+} from './AssetDetailMovePresentation';
 import { colors, radius, spacing } from '../theme/tokens';
 
 export type EditDraft = {
@@ -104,13 +108,15 @@ export function MoveAssetSheet({
   const exactMatch = draft?.matches.some((match) => normalize(match.title) === normalize(draft.query)) ?? false;
   const canCreate = (draft?.query.trim().length ?? 0) > 0 && !exactMatch;
   const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !isSaving : false;
+  const placement = draft ? movePlacementPreview(asset, draft.selectedParent) : undefined;
   return (
     <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>Move {asset.title}</Text>
-          <Text style={styles.sheetSubtitle}>Currently in {asset.locationTrailLabel}.</Text>
+          <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
+          {placement ? <PlacementPanel preview={placement} /> : null}
           <Text style={styles.inputLabel}>Put in</Text>
           <TextInput
             autoCapitalize="sentences"
@@ -124,8 +130,8 @@ export function MoveAssetSheet({
           <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
             {canCreate ? (
               <Pressable accessibilityRole="button" onPress={onCreateDestination} style={styles.parentCreateRow}>
-                <Text style={styles.parentTitle}>Create "{draft?.query.trim()}"</Text>
-                <Text style={styles.parentSubtitle}>New location</Text>
+                <Text style={styles.parentTitle}>Create new location "{draft?.query.trim()}"</Text>
+                <Text style={styles.parentSubtitle}>Then select it as the destination</Text>
               </Pressable>
             ) : null}
             <ParentRow
@@ -144,7 +150,6 @@ export function MoveAssetSheet({
               />
             ))}
           </ScrollView>
-          <MovePreview left={asset.title} right={draft?.selectedParent?.title ?? 'No parent'} />
           <SheetActions
             disabled={!canSaveMove}
             primaryLabel={isSaving ? 'Moving' : 'Move'}
@@ -236,6 +241,32 @@ function ParentRow({
       </View>
       {isSelected ? <Text style={styles.parentSelected}>Selected</Text> : null}
     </Pressable>
+  );
+}
+
+function PlacementPanel({ preview }: { readonly preview: MovePlacementPreview }) {
+  return (
+    <View style={styles.placementPanel}>
+      <PlacementRow label="From" value={preview.currentLocationLabel} />
+      <PlacementRow label="To" value={preview.proposedLocationLabel} isEmphasized={preview.hasChanged} />
+    </View>
+  );
+}
+
+function PlacementRow({
+  isEmphasized = false,
+  label,
+  value
+}: {
+  readonly isEmphasized?: boolean;
+  readonly label: string;
+  readonly value: string;
+}) {
+  return (
+    <View style={styles.placementRow}>
+      <Text style={styles.placementLabel}>{label}</Text>
+      <Text style={[styles.placementValue, isEmphasized ? styles.placementValueEmphasized : null]}>{value}</Text>
+    </View>
   );
 }
 
@@ -407,6 +438,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0
+  },
+  placementPanel: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    padding: spacing.md
+  },
+  placementRow: {
+    gap: 2
+  },
+  placementLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textTransform: 'uppercase'
+  },
+  placementValue: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 21
+  },
+  placementValueEmphasized: {
+    color: colors.action,
+    fontWeight: '900'
   },
   movePreview: {
     backgroundColor: colors.surfaceMuted,

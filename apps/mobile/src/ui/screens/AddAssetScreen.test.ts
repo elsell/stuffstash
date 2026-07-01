@@ -10,6 +10,7 @@ const garage: ParentLookupResult = {
   title: 'Garage',
   kind: 'location',
   subtitle: 'No parent',
+  pathLabel: 'Garage',
   selectionHint: 'Location',
   willPromoteToContainer: false
 };
@@ -33,6 +34,7 @@ describe('AddAssetScreen parent resolution', () => {
       title: 'Basement shelf',
       kind: 'location',
       subtitle: 'New location',
+      pathLabel: 'Basement shelf',
       selectionHint: 'Location',
       willPromoteToContainer: false
     };

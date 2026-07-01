@@ -5,6 +5,7 @@ export type ParentSelection = {
   readonly title: string;
   readonly kind: ParentLookupResult['kind'];
   readonly subtitle: string;
+  readonly pathLabel: string;
   readonly selectionHint: string;
   readonly willPromoteToContainer: boolean;
 };
@@ -50,6 +51,7 @@ export function resolveSelectedParent(
       title: parentQuery,
       kind: 'container',
       subtitle: 'Selected parent',
+      pathLabel: parentQuery,
       selectionHint: 'Container',
       willPromoteToContainer: false
     }

@@ -7,6 +7,7 @@ export type AddAssetDraftParent = {
   readonly kind: AssetKind;
   readonly selectionHint: string;
   readonly subtitle: string;
+  readonly pathLabel: string;
   readonly willPromoteToContainer: boolean;
 };
 

@@ -282,6 +282,7 @@ export function AddAssetScreen({
         title: result.title,
         kind: 'location' as const,
         subtitle: 'New location',
+        pathLabel: result.title,
         selectionHint: 'Location',
         willPromoteToContainer: false
       };

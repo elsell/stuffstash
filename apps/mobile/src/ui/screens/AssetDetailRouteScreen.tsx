@@ -231,6 +231,7 @@ export function AssetDetailRouteScreen({
         title: created.title,
         kind: 'location',
         subtitle: 'New location',
+        pathLabel: created.title,
         selectionHint: 'Location',
         willPromoteToContainer: false
       };

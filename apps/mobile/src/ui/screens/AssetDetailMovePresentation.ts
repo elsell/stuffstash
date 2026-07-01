@@ -12,14 +12,35 @@ export function parentFromCurrentAssetPath(asset: AssetDetailViewModel): ParentL
   if (!asset.parentAssetId) {
     return null;
   }
-  const parts = asset.locationTrailLabel.split('/').map((part) => part.trim()).filter(Boolean);
-  const title = parts.length > 1 ? parts[parts.length - 2] : asset.locationTrailLabel;
   return {
     id: asset.parentAssetId,
-    title,
+    title: asset.parentLocationTrailLabel,
     kind: 'container',
     subtitle: 'Current parent',
+    pathLabel: asset.parentLocationTrailLabel,
     selectionHint: 'Current parent',
     willPromoteToContainer: false
+  };
+}
+
+export type MovePlacementPreview = {
+  readonly currentLocationLabel: string;
+  readonly proposedLocationLabel: string;
+  readonly hasChanged: boolean;
+};
+
+export function movePlacementPreview(
+  asset: Pick<AssetDetailViewModel, 'parentAssetId' | 'parentLocationTrailLabel'>,
+  selectedParent: ParentLookupResult | null
+): MovePlacementPreview {
+  const currentLocationLabel = asset.parentLocationTrailLabel;
+  const proposedLocationLabel = selectedParent
+    ? selectedParent.pathLabel
+    : 'Inventory root';
+
+  return {
+    currentLocationLabel,
+    proposedLocationLabel,
+    hasChanged: canSaveMoveAsset(asset, selectedParent)
   };
 }

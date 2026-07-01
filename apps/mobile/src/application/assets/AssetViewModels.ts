@@ -33,6 +33,7 @@ export type AssetDetailViewModel = {
   readonly description: string;
   readonly parentAssetId?: string;
   readonly locationTrailLabel: string;
+  readonly parentLocationTrailLabel: string;
   readonly lifecycleLabel: string;
   readonly isActive: boolean;
   readonly canEdit: boolean;
@@ -87,6 +88,7 @@ export function toAssetDetailViewModel(
     ...toAssetCardViewModel(asset),
     kind: asset.kind,
     parentAssetId: asset.parentAssetId,
+    parentLocationTrailLabel: labelParentLocationTrail(asset),
     photos: (asset.photos ?? (asset.photo ? [asset.photo] : [])).map((photo, index) => ({
       id: photo.id,
       fileName: photo.fileName,
@@ -116,6 +118,20 @@ function labelLocationTrail(locationTrail: readonly string[]): string {
   }
 
   return localTrail.join(' / ');
+}
+
+function labelParentLocationTrail(asset: AssetSummary): string {
+  if (!asset.parentAssetId) {
+    return 'Inventory root';
+  }
+
+  const localParentTrail = asset.locationTrail.slice(1, -1);
+
+  if (localParentTrail.length === 0) {
+    return 'Inventory root';
+  }
+
+  return localParentTrail.join(' / ');
 }
 
 function labelAssetKind(kind: AssetSummary['kind']): string {

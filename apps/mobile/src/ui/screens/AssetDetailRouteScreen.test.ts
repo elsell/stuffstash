@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
-import { canSaveMoveAsset, parentFromCurrentAssetPath } from './AssetDetailMovePresentation';
+import {
+  canSaveMoveAsset,
+  movePlacementPreview,
+  parentFromCurrentAssetPath
+} from './AssetDetailMovePresentation';
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
 
@@ -45,6 +49,7 @@ describe('asset detail move helpers', () => {
       title: 'Kitchen',
       kind: 'location',
       subtitle: 'Current parent',
+      pathLabel: 'Kitchen',
       selectionHint: 'Location',
       willPromoteToContainer: false
     })).toBe(false);
@@ -61,6 +66,7 @@ describe('asset detail move helpers', () => {
       description: '',
       parentAssetId: 'asset-cabinet',
       locationTrailLabel: 'Kitchen / Big cabinet / Mug',
+      parentLocationTrailLabel: 'Kitchen / Big cabinet',
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,
@@ -78,7 +84,57 @@ describe('asset detail move helpers', () => {
       imagePlaceholderLabel: 'Item'
     })).toMatchObject({
       id: 'asset-cabinet',
-      title: 'Big cabinet'
+      title: 'Kitchen / Big cabinet',
+      pathLabel: 'Kitchen / Big cabinet'
+    });
+  });
+
+  it('summarizes current and proposed placement without repeating the moved asset title', () => {
+    expect(movePlacementPreview({
+      parentAssetId: 'asset-cabinet',
+      parentLocationTrailLabel: 'Kitchen / Big cabinet'
+    }, {
+      id: 'asset-shelf',
+      title: 'Second shelf',
+      kind: 'container',
+      subtitle: 'Kitchen / Big cabinet',
+      pathLabel: 'Kitchen / Big cabinet / Second shelf',
+      selectionHint: 'Container',
+      willPromoteToContainer: false
+    })).toEqual({
+      currentLocationLabel: 'Kitchen / Big cabinet',
+      proposedLocationLabel: 'Kitchen / Big cabinet / Second shelf',
+      hasChanged: true
+    });
+  });
+
+  it('labels root placement clearly', () => {
+    expect(movePlacementPreview({
+      parentAssetId: undefined,
+      parentLocationTrailLabel: 'Inventory root'
+    }, null)).toEqual({
+      currentLocationLabel: 'Inventory root',
+      proposedLocationLabel: 'Inventory root',
+      hasChanged: false
+    });
+  });
+
+  it('uses structured path labels instead of parsing slashes from titles', () => {
+    expect(movePlacementPreview({
+      parentAssetId: 'asset-cabinet',
+      parentLocationTrailLabel: 'Kitchen / AC/DC bin'
+    }, {
+      id: 'asset-pantry',
+      title: 'Pantry / dry goods',
+      kind: 'location',
+      subtitle: 'New location',
+      pathLabel: 'Pantry / dry goods',
+      selectionHint: 'Location',
+      willPromoteToContainer: false
+    })).toEqual({
+      currentLocationLabel: 'Kitchen / AC/DC bin',
+      proposedLocationLabel: 'Pantry / dry goods',
+      hasChanged: true
     });
   });
 });

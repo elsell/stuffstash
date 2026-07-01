@@ -118,6 +118,7 @@ describe('AssetDetailQuery', () => {
       description: 'Travel documents and copies.',
       parentAssetId: undefined,
       locationTrailLabel: 'Office closet / Passport folder',
+      parentLocationTrailLabel: 'Inventory root',
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,

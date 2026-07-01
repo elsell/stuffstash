@@ -6,6 +6,7 @@ export type ParentLookupResult = {
   readonly title: string;
   readonly kind: AssetKind;
   readonly subtitle: string;
+  readonly pathLabel: string;
   readonly selectionHint: string;
   readonly willPromoteToContainer: boolean;
 };
@@ -44,6 +45,9 @@ function toParentLookupResult(asset: AssetSummary): ParentLookupResult {
     title: asset.title,
     kind: asset.kind,
     subtitle: parentSubtitle(asset),
+    pathLabel: asset.locationTrail.length > 1
+      ? asset.locationTrail.slice(1).join(' / ')
+      : asset.title,
     selectionHint: willPromoteToContainer
       ? 'Will become a container for this item'
       : parentKindLabel(asset.kind),
