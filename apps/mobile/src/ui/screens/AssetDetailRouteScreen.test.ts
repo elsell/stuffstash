@@ -533,7 +533,14 @@ describe('asset photo workspace presentation helpers', () => {
   it('builds explicit viewer control state from current photo position', () => {
     const model = assetPhotoViewerModel([
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
-      { id: 'photo-two', label: 'fallback label', fileName: 'two.jpg', uri: 'https://photos/two.jpg' },
+      {
+        id: 'photo-two',
+        label: 'fallback label',
+        fileName: 'two.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 1536000,
+        uri: 'https://photos/two.jpg'
+      },
       { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
     ], 'photo-two');
 
@@ -542,6 +549,7 @@ describe('asset photo workspace presentation helpers', () => {
       canGoNext: true,
       canRemove: true,
       fileLabel: 'two.jpg',
+      metadataLabel: 'JPEG image · 1.5 MB',
       positionLabel: '2 of 3'
     });
     expect(assetPhotoViewerControls(model, false)).toMatchObject({
@@ -552,8 +560,24 @@ describe('asset photo workspace presentation helpers', () => {
       canGoNext: false,
       canRemove: false,
       fileLabel: 'Photo',
+      metadataLabel: undefined,
       positionLabel: '0 of 0'
     });
+  });
+
+  it('formats only safe image metadata for the photo viewer', () => {
+    expect(assetPhotoViewerControls(assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', contentType: 'image/png', sizeBytes: 512, uri: 'https://photos/one.jpg' }
+    ], 'photo-one'), true).metadataLabel).toBe('PNG image · 512 B');
+    expect(assetPhotoViewerControls(assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', contentType: 'image/webp', sizeBytes: 2048, uri: 'https://photos/one.jpg' }
+    ], 'photo-one'), true).metadataLabel).toBe('WebP image · 2.0 KB');
+    expect(assetPhotoViewerControls(assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', contentType: 'image/jpeg;private=x', sizeBytes: 0, uri: 'https://photos/one.jpg' }
+    ], 'photo-one'), true).metadataLabel).toBeUndefined();
+    expect(assetPhotoViewerControls(assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', contentType: 'application/pdf', sizeBytes: -1, uri: 'https://photos/one.jpg' }
+    ], 'photo-one'), true).metadataLabel).toBeUndefined();
   });
 
   it('builds viewer control state from an image viewer index', () => {
@@ -568,6 +592,7 @@ describe('asset photo workspace presentation helpers', () => {
       canGoNext: true,
       canRemove: true,
       fileLabel: 'two.jpg',
+      metadataLabel: undefined,
       positionLabel: '2 of 3'
     });
     expect(assetPhotoViewerModelAtIndex(photos, 99)).toBeUndefined();

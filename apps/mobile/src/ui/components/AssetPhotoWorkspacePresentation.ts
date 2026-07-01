@@ -12,6 +12,7 @@ export type AssetPhotoViewerControls = {
   readonly canGoNext: boolean;
   readonly canRemove: boolean;
   readonly fileLabel: string;
+  readonly metadataLabel?: string;
   readonly positionLabel: string;
 };
 
@@ -47,6 +48,7 @@ export function assetPhotoViewerControls(
     canGoNext: model?.nextPhotoId !== undefined,
     canRemove: canRemoveAssetPhoto && model?.photo.id !== undefined,
     fileLabel: model?.photo.fileName ?? model?.photo.label ?? 'Photo',
+    metadataLabel: assetPhotoMetadataLabel(model?.photo),
     positionLabel: model?.positionLabel ?? '0 of 0'
   };
 }
@@ -132,4 +134,52 @@ export function assetPhotoStatusLabel({
 
 export function resetLocalAssetPhotoOrder(): readonly string[] {
   return [];
+}
+
+function assetPhotoMetadataLabel(photo: AssetPhotoViewModel | undefined): string | undefined {
+  if (!photo) {
+    return undefined;
+  }
+
+  const parts = [
+    safeImageContentTypeLabel(photo.contentType),
+    formatByteSize(photo.sizeBytes)
+  ].filter((value): value is string => value !== undefined && value.length > 0);
+
+  return parts.length > 0 ? parts.join(' · ') : undefined;
+}
+
+function safeImageContentTypeLabel(contentType: string | undefined): string | undefined {
+  switch (contentType?.trim().toLocaleLowerCase()) {
+    case 'image/jpeg':
+      return 'JPEG image';
+    case 'image/png':
+      return 'PNG image';
+    case 'image/webp':
+      return 'WebP image';
+    default:
+      return undefined;
+  }
+}
+
+function formatByteSize(sizeBytes: number | undefined): string | undefined {
+  if (!sizeBytes || sizeBytes <= 0) {
+    return undefined;
+  }
+
+  if (sizeBytes < 1024) {
+    return `${sizeBytes.toString()} B`;
+  }
+
+  const units = ['KB', 'MB', 'GB'] as const;
+  let value = sizeBytes / 1024;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const rounded = value >= 10 ? Math.round(value).toString() : value.toFixed(1);
+  return `${rounded} ${units[unitIndex]}`;
 }

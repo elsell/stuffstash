@@ -141,6 +141,11 @@ function PhotoViewerFooter({
       <Text style={styles.previewFileName} numberOfLines={1}>
         {controls.fileLabel}
       </Text>
+      {controls.metadataLabel ? (
+        <Text style={styles.previewMetadata} numberOfLines={1}>
+          {controls.metadataLabel}
+        </Text>
+      ) : null}
       {photos.length > 1 ? (
         <View style={styles.previewNavigation}>
           <PhotoNavigationButton
@@ -237,6 +242,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0,
     opacity: 0.8,
+    textAlign: 'center'
+  },
+  previewMetadata: {
+    color: colors.onAction,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0,
+    opacity: 0.65,
     textAlign: 'center'
   },
   previewFooter: {

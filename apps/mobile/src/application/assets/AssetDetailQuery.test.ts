@@ -196,4 +196,32 @@ describe('AssetDetailQuery', () => {
       canMove: false
     });
   });
+
+  it('carries safe attachment metadata into asset detail photo view models', () => {
+    expect(toAssetDetailViewModel({
+      id: assetId('asset-water-bottle'),
+      title: 'Water bottle',
+      kind: 'item',
+      lifecycleState: 'active',
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home', 'Water bottle'],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: true,
+      photos: [{
+        id: 'attachment-one',
+        fileName: 'bottle.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 1536000,
+        uri: 'https://photos/bottle.jpg'
+      }]
+    })).toMatchObject({
+      photos: [{
+        id: 'attachment-one',
+        fileName: 'bottle.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 1536000
+      }]
+    });
+  });
 });

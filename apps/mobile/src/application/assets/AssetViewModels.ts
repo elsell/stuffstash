@@ -19,6 +19,8 @@ export type AssetCardViewModel = {
 export type AssetPhotoViewModel = {
   readonly id?: string;
   readonly fileName?: string;
+  readonly contentType?: string;
+  readonly sizeBytes?: number;
   readonly label: string;
   readonly uri: string;
   readonly headers?: Readonly<Record<string, string>>;
@@ -95,6 +97,8 @@ export function toAssetDetailViewModel(
     photos: (asset.photos ?? (asset.photo ? [asset.photo] : [])).map((photo, index) => ({
       id: photo.id,
       fileName: photo.fileName,
+      contentType: photo.contentType,
+      sizeBytes: photo.sizeBytes,
       label: photo.fileName ?? `Photo ${(index + 1).toString()}`,
       uri: photo.uri,
       headers: photo.headers
