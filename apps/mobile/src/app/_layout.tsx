@@ -2,6 +2,12 @@ import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
 import { AppServicesProvider } from '../ui/navigation/AppServicesContext';
 import { colors } from '../ui/theme/tokens';
+import {
+  assetAuditNativeSheetOptions,
+  assetEditNativeSheetOptions,
+  assetMoveHereNativeSheetOptions,
+  assetMoveNativeSheetOptions
+} from '../ui/screens/AssetNativeSheetOptions';
 
 export default function RootLayout() {
   return (
@@ -35,6 +41,22 @@ export default function RootLayout() {
         />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
         <Stack.Screen name="provider-profiles" options={{ title: 'Voice providers' }} />
+        <Stack.Screen
+          name="assets/[assetId]/edit"
+          options={assetEditNativeSheetOptions}
+        />
+        <Stack.Screen
+          name="assets/[assetId]/move"
+          options={assetMoveNativeSheetOptions}
+        />
+        <Stack.Screen
+          name="assets/[assetId]/move-here"
+          options={assetMoveHereNativeSheetOptions}
+        />
+        <Stack.Screen
+          name="assets/[assetId]/audit"
+          options={assetAuditNativeSheetOptions}
+        />
         <Stack.Screen
           name="tenant-switcher"
           options={{

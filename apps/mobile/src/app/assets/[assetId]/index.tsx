@@ -5,30 +5,20 @@ import { AssetDetailRouteScreen } from '../../../ui/screens/AssetDetailRouteScre
 export default function AssetDetailRoute() {
   const {
     addAssetPhotosCommand,
-    assetAuditHistoryQuery,
     assetDetailQuery,
     assetLifecycleCommand,
-    createAssetCommand,
     deleteAssetPhotoCommand,
-    moveAssetCommand,
-    parentLookupQuery,
-    photoSelectionQuery,
-    updateAssetCommand
+    photoSelectionQuery
   } = useAppServices();
   const { assetId } = useLocalSearchParams<{ readonly assetId: string }>();
 
   return (
     <AssetDetailRouteScreen
       addAssetPhotosCommand={addAssetPhotosCommand}
-      assetAuditHistoryQuery={assetAuditHistoryQuery}
       assetDetailQuery={assetDetailQuery}
       assetLifecycleCommand={assetLifecycleCommand}
-      createAssetCommand={createAssetCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}
-      moveAssetCommand={moveAssetCommand}
-      parentLookupQuery={parentLookupQuery}
       photoSelectionQuery={photoSelectionQuery}
-      updateAssetCommand={updateAssetCommand}
       assetId={assetId}
     />
   );

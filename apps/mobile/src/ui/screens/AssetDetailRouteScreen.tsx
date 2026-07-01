@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -16,15 +16,10 @@ import {
   AddAssetPhotoProgressEvent,
   AddAssetPhotosCommandResult
 } from '../../application/assets/AddAssetPhotosCommand';
-import { AssetAuditHistoryQuery } from '../../application/assets/AssetAuditHistoryQuery';
 import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
-import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
-import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand';
-import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
-import { ParentLookupQuery } from '../../application/add/ParentLookupQuery';
 import {
   PhotoSelectionQuery,
   SelectedAssetPhoto
@@ -33,11 +28,6 @@ import {
   AssetDetailView,
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
-import {
-  AssetAuditHistorySheet,
-  AssetAuditHistorySheetState
-} from './AssetAuditHistorySheet';
-import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
 import {
   assetPhotoViewerModel,
@@ -45,18 +35,6 @@ import {
   orderedAssetPhotos,
   resetLocalAssetPhotoOrder
 } from '../components/AssetPhotoWorkspacePresentation';
-import {
-  EditAssetSheet,
-  MoveAssetSheet,
-  MoveDraft,
-  MoveIntoDraft,
-  MoveThingsHereSheet
-} from './AssetDetailSheets';
-import {
-  EditDraft,
-  hasDirtyEditAssetDraft,
-  normalizedEditDraft
-} from './AssetDetailEditPresentation';
 import { addHereParams } from './AddAssetInitialParent';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import {
@@ -71,32 +49,20 @@ import {
   visibleAssetWorkspaceStatus,
   AssetWorkspaceStatus
 } from './AssetWorkspaceStatusPresentation';
-import {
-  createdMoveDestinationParent,
-  isSelectableMoveDestination,
-  isSelectableMoveIntoCandidate,
-  moveDestinationCreatePlacement,
-  moveDestinationCreateInput,
-  parentFromCurrentAssetPath
-} from './AssetDetailMovePresentation';
+import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 import {
   applyPhotoUploadProgress,
   photoUploadRows
 } from './AssetPhotoUploadProgressPresentation';
-import { colors, radius, spacing } from '../theme/tokens';
+import { colors, spacing } from '../theme/tokens';
 
 type AssetDetailRouteScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
-  readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
-  readonly createAssetCommand: CreateAssetCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
-  readonly moveAssetCommand: MoveAssetCommand;
-  readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
-  readonly updateAssetCommand: UpdateAssetCommand;
   readonly assetId: string;
 };
 
@@ -111,38 +77,24 @@ type PhotoUploadRow = AssetPhotoUploadProgressViewModel;
 
 export function AssetDetailRouteScreen({
   addAssetPhotosCommand,
-  assetAuditHistoryQuery,
   assetDetailQuery,
   assetLifecycleCommand,
   assetId,
-  createAssetCommand,
   deleteAssetPhotoCommand,
-  moveAssetCommand,
-  parentLookupQuery,
-  photoSelectionQuery,
-  updateAssetCommand
+  photoSelectionQuery
 }: AssetDetailRouteScreenProps) {
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
-  const [editDraft, setEditDraft] = useState<EditDraft | undefined>();
-  const [moveDraft, setMoveDraft] = useState<MoveDraft | undefined>();
-  const [moveIntoDraft, setMoveIntoDraft] = useState<MoveIntoDraft | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
   const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
   const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
   const [photoOrder, setPhotoOrder] = useState<readonly string[]>([]);
-  const [auditHistoryState, setAuditHistoryState] = useState<AssetAuditHistorySheetState>({
-    status: 'closed'
-  });
-  const auditHistoryRequestRef = useRef(0);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let isCurrent = true;
-    auditHistoryRequestRef.current += 1;
-    setAuditHistoryState({ status: 'closed' });
     setPhotoUploads([]);
     setPhotoStatus(undefined);
     setWorkspaceStatus(undefined);
@@ -154,6 +106,10 @@ export function AssetDetailRouteScreen({
       .then((asset) => {
         if (isCurrent) {
           setScreenState({ status: 'ready', asset });
+          const completion = consumeAssetActionCompletion(assetId);
+          if (completion) {
+            setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
+          }
         }
       })
       .catch((error: unknown) => {
@@ -168,7 +124,7 @@ export function AssetDetailRouteScreen({
     return () => {
       isCurrent = false;
     };
-  }, [assetDetailQuery, assetId]);
+  }, [assetDetailQuery, assetId]));
 
   async function refreshAsset(): Promise<void> {
     setIsRefreshing(true);
@@ -191,166 +147,6 @@ export function AssetDetailRouteScreen({
     setScreenState({ status: 'ready', asset });
     setPhotoOrder(resetLocalAssetPhotoOrder());
     return asset;
-  }
-
-  function openEdit(asset: AssetDetailViewModel): void {
-    setEditDraft({ title: asset.title, description: asset.description });
-  }
-
-  function requestCloseEdit(asset: AssetDetailViewModel): void {
-    if (!hasDirtyEditAssetDraft(asset, editDraft)) {
-      setEditDraft(undefined);
-      return;
-    }
-    Alert.alert('Discard changes?', 'Your edits have not been saved.', [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => setEditDraft(undefined) }
-    ]);
-  }
-
-  async function saveEdit(): Promise<void> {
-    if (!editDraft) {
-      return;
-    }
-    setPendingAction('edit');
-    setWorkspaceStatus(undefined);
-    try {
-      const normalized = normalizedEditDraft(editDraft);
-      const result = await updateAssetCommand.execute({
-        assetId,
-        title: normalized.title,
-        description: normalized.description
-      });
-      setEditDraft(undefined);
-      await reloadAsset();
-      setWorkspaceStatus(assetWorkspaceSuccessStatus('edit', result));
-    } catch (error) {
-      Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  async function openMove(asset: AssetDetailViewModel): Promise<void> {
-    const matches = await parentLookupQuery.execute('');
-    const safeMatches = matches.filter((match) => match.id !== asset.id && isSelectableMoveDestination(match));
-    const currentParent = asset.parentAssetId
-      ? safeMatches.find((match) => match.id === asset.parentAssetId) ?? parentFromCurrentAssetPath(asset)
-      : null;
-    setMoveDraft({
-      createKind: 'location',
-      query: currentParent?.title ?? '',
-      matches: safeMatches,
-      selectedParent: currentParent
-    });
-  }
-
-  async function updateMoveQuery(query: string, asset: AssetDetailViewModel): Promise<void> {
-    setMoveDraft((current) => current ? { ...current, query } : current);
-    const matches = await parentLookupQuery.execute(query);
-    setMoveDraft((current) => current
-      && current.query === query
-      ? {
-          ...current,
-          matches: matches.filter((match) => match.id !== asset.id && isSelectableMoveDestination(match))
-        }
-      : current);
-  }
-
-  async function createMoveDestination(asset: AssetDetailViewModel): Promise<void> {
-    const name = moveDraft?.query.trim() ?? '';
-    const createKind = moveDraft?.createKind ?? 'location';
-    if (name.length === 0) {
-      return;
-    }
-    setPendingAction('move');
-    setWorkspaceStatus(undefined);
-    try {
-      const placement = moveDestinationCreatePlacement(asset);
-      const created = await createAssetCommand.execute(
-        moveDestinationCreateInput(createKind, name, placement)
-      );
-      const createdParent = createdMoveDestinationParent({
-        id: created.id,
-        kind: createKind,
-        placement,
-        title: created.title
-      });
-      setMoveDraft({
-        createKind,
-        query: created.title,
-        matches: [createdParent, ...(moveDraft?.matches ?? []).filter((match) => match.id !== asset.id)],
-        selectedParent: createdParent
-      });
-    } catch (error) {
-      Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  async function saveMove(): Promise<void> {
-    if (!moveDraft) {
-      return;
-    }
-    setPendingAction('move');
-    setWorkspaceStatus(undefined);
-    try {
-      const result = await moveAssetCommand.execute({
-        assetId,
-        parentAssetId: moveDraft.selectedParent?.id
-      });
-      setMoveDraft(undefined);
-      await reloadAsset();
-      setWorkspaceStatus(assetWorkspaceSuccessStatus('move', result));
-    } catch (error) {
-      Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  async function openMoveThingsHere(target: AssetDetailViewModel): Promise<void> {
-    const matches = await parentLookupQuery.execute('');
-    setMoveIntoDraft({
-      target,
-      query: '',
-      matches: matches.filter((match) => isSelectableMoveIntoCandidate(match, target)),
-      selectedAsset: undefined
-    });
-  }
-
-  async function updateMoveIntoQuery(query: string, target: AssetDetailViewModel): Promise<void> {
-    setMoveIntoDraft((current) => current ? { ...current, query } : current);
-    const matches = await parentLookupQuery.execute(query);
-    setMoveIntoDraft((current) => current
-      && current.query === query
-      ? {
-          ...current,
-          matches: matches.filter((match) => isSelectableMoveIntoCandidate(match, target))
-        }
-      : current);
-  }
-
-  async function saveMoveInto(): Promise<void> {
-    if (!moveIntoDraft?.selectedAsset) {
-      return;
-    }
-    setPendingAction('move');
-    setWorkspaceStatus(undefined);
-    try {
-      const result = await moveAssetCommand.execute({
-        assetId: moveIntoDraft.selectedAsset.id,
-        parentAssetId: moveIntoDraft.target.id
-      });
-      setMoveIntoDraft(undefined);
-      await reloadAsset();
-      setWorkspaceStatus(assetWorkspaceSuccessStatus('move', result));
-    } catch (error) {
-      Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
-    } finally {
-      setPendingAction(undefined);
-    }
   }
 
   function choosePhotos(currentPhotoCount: number): void {
@@ -483,7 +279,7 @@ export function AssetDetailRouteScreen({
             return;
           }
           if (index === overflow.auditIndex) {
-            void openAuditHistory(asset);
+            router.push(`/assets/${asset.id}/audit`);
           }
         }
       );
@@ -495,34 +291,9 @@ export function AssetDetailRouteScreen({
         style: action.isDestructive ? 'destructive' as const : 'default' as const,
         onPress: () => confirmLifecycleAction(action.kind, asset)
       })),
-      { text: 'Audit history', onPress: () => void openAuditHistory(asset) },
+      { text: 'Audit history', onPress: () => router.push(`/assets/${asset.id}/audit`) },
       { text: 'Cancel', style: 'cancel' }
     ]);
-  }
-
-  async function openAuditHistory(asset: AssetDetailViewModel): Promise<void> {
-    const requestId = auditHistoryRequestRef.current + 1;
-    auditHistoryRequestRef.current = requestId;
-    setAuditHistoryState({ status: 'loading', assetTitle: asset.title });
-    try {
-      const history = await assetAuditHistoryQuery.execute({ assetId: asset.id, limit: 20 });
-      if (isCurrentAuditHistoryRequest(auditHistoryRequestRef.current, requestId)) {
-        setAuditHistoryState({ status: 'ready', assetTitle: asset.title, history });
-      }
-    } catch (error) {
-      if (isCurrentAuditHistoryRequest(auditHistoryRequestRef.current, requestId)) {
-        setAuditHistoryState({
-          status: 'error',
-          assetTitle: asset.title,
-          message: readableError(error, 'Audit history failed.')
-        });
-      }
-    }
-  }
-
-  function closeAuditHistory(): void {
-    auditHistoryRequestRef.current += 1;
-    setAuditHistoryState({ status: 'closed' });
   }
 
   function lifecycleActions(asset: AssetDetailViewModel) {
@@ -600,10 +371,10 @@ export function AssetDetailRouteScreen({
             }) : undefined}
             onAddPhotos={() => choosePhotos(screenState.asset.photos.length)}
             onChildPress={(childId) => router.push(`/assets/${childId}`)}
-            onEdit={() => openEdit(screenState.asset)}
+            onEdit={() => router.push(`/assets/${screenState.asset.id}/edit`)}
             onMoreActions={() => showMoreActions(screenState.asset)}
-            onMove={() => void openMove(screenState.asset)}
-            onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => void openMoveThingsHere(screenState.asset) : undefined}
+            onMove={() => router.push(`/assets/${screenState.asset.id}/move`)}
+            onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => router.push(`/assets/${screenState.asset.id}/move-here`) : undefined}
             onMovePhoto={movePhoto}
             onPhotoPress={setSelectedPhotoId}
             onRemovePhoto={confirmRemovePhoto}
@@ -620,38 +391,6 @@ export function AssetDetailRouteScreen({
                 onRefresh={refreshAsset}
               />
             }
-          />
-          <EditAssetSheet
-            asset={screenState.asset}
-            draft={editDraft}
-            isSaving={pendingAction === 'edit'}
-            onChange={setEditDraft}
-            onClose={() => requestCloseEdit(screenState.asset)}
-            onSave={() => void saveEdit()}
-          />
-          <MoveAssetSheet
-            asset={screenState.asset}
-            draft={moveDraft}
-            isSaving={pendingAction === 'move'}
-            onChangeCreateKind={(createKind) => setMoveDraft((current) => current ? { ...current, createKind } : current)}
-            onChangeQuery={(query) => void updateMoveQuery(query, screenState.asset)}
-            onClose={() => setMoveDraft(undefined)}
-            onCreateDestination={() => void createMoveDestination(screenState.asset)}
-            onSelectParent={(selectedParent) => setMoveDraft((current) => current ? { ...current, selectedParent } : current)}
-            onSelectRoot={() => setMoveDraft((current) => current ? { ...current, selectedParent: null } : current)}
-            onSave={() => void saveMove()}
-          />
-          <MoveThingsHereSheet
-            draft={moveIntoDraft}
-            isSaving={pendingAction === 'move'}
-            onChangeQuery={(query) => void updateMoveIntoQuery(query, screenState.asset)}
-            onClose={() => setMoveIntoDraft(undefined)}
-            onSave={() => void saveMoveInto()}
-            onSelectAsset={(selectedAsset) => setMoveIntoDraft((current) => current ? { ...current, selectedAsset } : current)}
-          />
-          <AssetAuditHistorySheet
-            state={auditHistoryState}
-            onClose={closeAuditHistory}
           />
         </>
       ) : null}

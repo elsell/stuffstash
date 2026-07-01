@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import { addHereParams } from './AddAssetInitialParent';
 import {
+  consumeAssetActionCompletion,
+  recordAssetActionCompletion
+} from './AssetActionCompletion';
+import {
+  assetAuditNativeSheetOptions,
+  assetEditNativeSheetOptions,
+  assetMoveHereNativeSheetOptions,
+  assetMoveNativeSheetOptions
+} from './AssetNativeSheetOptions';
+import {
   canCreateMoveDestination,
   canSaveMoveAsset,
   createdMoveDestinationParent,
@@ -123,6 +133,48 @@ describe('addHereParams', () => {
       parentSelectionHint: 'Container',
       parentWillPromoteToContainer: 'false'
     });
+  });
+});
+
+describe('asset native sheet route options', () => {
+  it('uses stack-native form sheets with grabbers and detents for asset actions', () => {
+    for (const options of [
+      assetEditNativeSheetOptions,
+      assetMoveNativeSheetOptions,
+      assetMoveHereNativeSheetOptions,
+      assetAuditNativeSheetOptions
+    ]) {
+      expect(options.presentation).toBe('formSheet');
+      expect(options.headerShown).toBe(false);
+      expect(options.sheetGrabberVisible).toBe(true);
+      expect(options.sheetExpandsWhenScrolledToEdge).toBe(true);
+      expect(options.sheetLargestUndimmedDetentIndex).toBe('none');
+      expect(options.sheetAllowedDetents.length).toBeGreaterThan(1);
+    }
+  });
+
+  it('keeps edit cancellation explicit until dirty native sheet dismissal can be intercepted', () => {
+    expect(assetEditNativeSheetOptions.gestureEnabled).toBe(false);
+    expect(assetMoveNativeSheetOptions.gestureEnabled).toBeUndefined();
+    expect(assetMoveHereNativeSheetOptions.gestureEnabled).toBeUndefined();
+    expect(assetAuditNativeSheetOptions.gestureEnabled).toBeUndefined();
+  });
+});
+
+describe('asset action completion handoff', () => {
+  it('consumes one native sheet completion once for the asset detail refresh', () => {
+    recordAssetActionCompletion({
+      assetId: 'asset-water-bottle',
+      action: 'move',
+      message: 'Moved Water bottle.'
+    });
+
+    expect(consumeAssetActionCompletion('asset-water-bottle')).toEqual({
+      assetId: 'asset-water-bottle',
+      action: 'move',
+      message: 'Moved Water bottle.'
+    });
+    expect(consumeAssetActionCompletion('asset-water-bottle')).toBeUndefined();
   });
 });
 

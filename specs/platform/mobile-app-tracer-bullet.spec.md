@@ -107,9 +107,12 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The detail workspace must display safe audit metadata only: action label, source, principal ID, occurred-at label, request ID when present, and safe metadata values returned by the API.
   - The mobile UI must not expose raw provider prompts, raw voice transcripts, credentials, storage keys, blob paths, authorization internals, or other sensitive implementation detail.
   - Mobile audit metadata rows must be allowlisted in the application query before rendering. The first allowlist may include user-facing movement, title/name, lifecycle/status, kind/type, attachment file name, content type, file size, and count summaries. Unknown metadata keys and values that look like prompts, transcripts, credentials, storage paths, blob keys, authorization internals, or provider internals must be omitted from the asset detail audit sheet.
-  - The audit surface may be a native-feeling sheet opened from the asset overflow. It must show loading, empty, and safe error states.
+  - The audit surface must be opened from the asset overflow as a platform-native stack sheet when the current Expo and platform stack support native sheet presentation. It must not use a custom transparent modal, fake scrim, or fake grabber when native `formSheet` presentation is available. It must show loading, empty, and safe error states.
   - The first implementation may load enough inventory-audit pages to find a bounded number of records for the asset. Full cursor browsing and asset-scoped server filtering require a future audit API slice.
-- Mobile asset detail edit must be a native-feeling sheet or pushed form backed by mobile application commands:
+- Mobile asset detail edit must be a platform-native stack sheet or pushed form backed by mobile application commands:
+  - On Expo Router/native-stack builds that support `formSheet`, edit must use the route-level native sheet presentation, native grabber, and platform dismissal semantics rather than a custom transparent modal.
+  - Edit sheets must not allow gesture dismissal to silently discard dirty edits. Until native prevent-remove confirmation is wired for form-sheet gestures, edit sheets may disable gesture dismissal and require the visible cancel action so the discard confirmation remains authoritative.
+  - If a platform cannot render a native sheet, the fallback must be the closest platform-native modal screen, not a custom bottom card inside a dimmed overlay.
   - Users may edit title and description.
   - Kind changes remain unavailable until the API exposes a safe conversion/promotion command; the UI may display kind as read-only helper context.
   - The edit surface must show the current kind and custom type, when present, as read-only context so users understand why the editable fields are limited.
@@ -120,6 +123,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - After save, the asset workspace must refresh from the application query so server validation, audit-backed updates, updated-at labels, and downstream lists converge.
   - After successful edit, move, archive, or restore operations, the workspace must show a concise native status message near the primary actions and still refresh from the server. This status message must not replace photo upload status, lifecycle confirmations, or safe error alerts.
 - Mobile asset movement must be a dedicated placement picker:
+  - Move and move-here pickers must use the same native stack sheet presentation rules as edit and audit surfaces.
   - The picker must show the current location path and the proposed destination before saving.
   - Users may search selectable parent candidates by title/path, and result rows must show the candidate title, kind hint, and structured path breadcrumb from the parent lookup result.
   - The move destination picker must not present item assets as valid destinations until item-to-container promotion exists as a real application command.

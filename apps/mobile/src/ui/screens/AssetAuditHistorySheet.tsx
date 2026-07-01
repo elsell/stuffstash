@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,32 +23,22 @@ export function AssetAuditHistorySheet({
   readonly state: AssetAuditHistorySheetState;
 }) {
   return (
-    <Modal
-      animationType="slide"
-      transparent
-      visible={state.status !== 'closed'}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalShell}>
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <View style={styles.headerRow}>
-            <View style={styles.headerText}>
-              <Text style={styles.sheetTitle}>Audit history</Text>
-              <Text style={styles.sheetSubtitle}>
-                {state.status === 'closed' ? 'Asset history' : state.assetTitle}
-              </Text>
-            </View>
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </Pressable>
-          </View>
-          {state.status === 'loading' ? <LoadingHistory /> : null}
-          {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}
-          {state.status === 'ready' ? <ReadyHistory history={state.history} /> : null}
+    <View style={styles.sheet}>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <Text style={styles.sheetTitle}>Audit history</Text>
+          <Text style={styles.sheetSubtitle}>
+            {state.status === 'closed' ? 'Asset history' : state.assetTitle}
+          </Text>
         </View>
+        <Pressable accessibilityRole="button" onPress={onClose} style={styles.closeButton}>
+          <Text style={styles.closeButtonText}>Close</Text>
+        </Pressable>
       </View>
-    </Modal>
+      {state.status === 'loading' ? <LoadingHistory /> : null}
+      {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}
+      {state.status === 'ready' ? <ReadyHistory history={state.history} /> : null}
+    </View>
   );
 }
 
@@ -112,25 +101,12 @@ function ReadyHistory({ history }: { readonly history: AssetAuditHistoryViewMode
 }
 
 const styles = StyleSheet.create({
-  modalShell: {
-    backgroundColor: colors.scrim,
-    flex: 1,
-    justifyContent: 'flex-end'
-  },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    flex: 1,
     gap: spacing.md,
-    maxHeight: '88%',
-    padding: spacing.lg
-  },
-  sheetHandle: {
-    alignSelf: 'center',
-    backgroundColor: colors.border,
-    borderRadius: radius.sm,
-    height: 5,
-    width: 44
+    padding: spacing.lg,
+    paddingTop: spacing.xl
   },
   headerRow: {
     alignItems: 'flex-start',

@@ -1,6 +1,5 @@
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -66,45 +65,40 @@ export function EditAssetSheet({
   const editContext = assetEditContext(asset);
   const canSave = canSaveEditAsset(asset, draft) && !isSaving;
   return (
-    <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Edit asset</Text>
-          <View style={styles.readOnlyContextPanel}>
-            <Text style={styles.readOnlyContextLabel}>Kind</Text>
-            <Text style={styles.readOnlyContextValue}>
-              {editContext.customTypeLabel
-                ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
-                : editContext.kindLabel}
-            </Text>
-            <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
-          </View>
-          <Text style={styles.inputLabel}>Name</Text>
-          <TextInput
-            autoCapitalize="sentences"
-            editable={!isSaving}
-            onChangeText={(title) => onChange({ title, description: draft?.description ?? '' })}
-            style={styles.input}
-            value={draft?.title ?? ''}
-          />
-          <Text style={styles.inputLabel}>Description</Text>
-          <TextInput
-            editable={!isSaving}
-            multiline
-            onChangeText={(description) => onChange({ title: draft?.title ?? '', description })}
-            style={[styles.input, styles.multilineInput]}
-            value={draft?.description ?? ''}
-          />
-          <SheetActions
-            disabled={!canSave}
-            primaryLabel={isSaving ? 'Saving' : 'Save'}
-            onClose={onClose}
-            onSave={onSave}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+      <Text style={styles.sheetTitle}>Edit asset</Text>
+      <View style={styles.readOnlyContextPanel}>
+        <Text style={styles.readOnlyContextLabel}>Kind</Text>
+        <Text style={styles.readOnlyContextValue}>
+          {editContext.customTypeLabel
+            ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
+            : editContext.kindLabel}
+        </Text>
+        <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
+      </View>
+      <Text style={styles.inputLabel}>Name</Text>
+      <TextInput
+        autoCapitalize="sentences"
+        editable={!isSaving}
+        onChangeText={(title) => onChange({ title, description: draft?.description ?? '' })}
+        style={styles.input}
+        value={draft?.title ?? ''}
+      />
+      <Text style={styles.inputLabel}>Description</Text>
+      <TextInput
+        editable={!isSaving}
+        multiline
+        onChangeText={(description) => onChange({ title: draft?.title ?? '', description })}
+        style={[styles.input, styles.multilineInput]}
+        value={draft?.description ?? ''}
+      />
+      <SheetActions
+        disabled={!canSave}
+        primaryLabel={isSaving ? 'Saving' : 'Save'}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
@@ -145,83 +139,78 @@ export function MoveAssetSheet({
       }) && !isSaving
     : false;
   return (
-    <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Move {asset.title}</Text>
-          <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
-          {placement ? <PlacementPanel preview={placement} /> : null}
-          <Text style={styles.inputLabel}>Put in</Text>
-          <TextInput
-            autoCapitalize="sentences"
-            editable={!isSaving}
-            onChangeText={onChangeQuery}
-            placeholder="Search places, boxes, shelves"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            value={draft?.query ?? ''}
-          />
-          <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
-            {canCreate ? (
-              <View style={styles.createDestinationPanel}>
-                <View style={styles.createKindSegment} accessibilityRole="tablist">
-                  <CreateKindOption
-                    kind="location"
-                    disabled={isSaving}
-                    selectedKind={createKind}
-                    onPress={onChangeCreateKind}
-                  />
-                  <CreateKindOption
-                    kind="container"
-                    disabled={isSaving}
-                    selectedKind={createKind}
-                    onPress={onChangeCreateKind}
-                  />
-                </View>
-                <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
-                <Text style={styles.createPlacementText}>
-                  {moveDestinationCreatePlacementLabel(createPlacement)}
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: isSaving }}
-                  disabled={isSaving}
-                  onPress={onCreateDestination}
-                  style={[styles.parentCreateRow, isSaving ? styles.disabledAction : null]}
-                >
-                  <Text style={styles.parentTitle}>{moveDestinationCreateButtonLabel(createKind, createTitle)}</Text>
-                  <Text style={styles.parentSubtitle}>Then select it as the destination</Text>
-                </Pressable>
-              </View>
-            ) : null}
-            <ParentRow
-              isSelected={draft?.selectedParent === null}
-              row={{
-                title: 'No parent',
-                kindLabel: 'Top level',
-                pathLabel: 'Inventory root'
-              }}
-              onPress={onSelectRoot}
-            />
-            {draft?.matches.map((match) => (
-              <ParentRow
-                key={match.id}
-                isSelected={draft.selectedParent?.id === match.id}
-                row={moveDestinationRow(match)}
-                onPress={() => onSelectParent(match)}
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+      <Text style={styles.sheetTitle}>Move {asset.title}</Text>
+      <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
+      {placement ? <PlacementPanel preview={placement} /> : null}
+      <Text style={styles.inputLabel}>Put in</Text>
+      <TextInput
+        autoCapitalize="sentences"
+        editable={!isSaving}
+        onChangeText={onChangeQuery}
+        placeholder="Search places, boxes, shelves"
+        placeholderTextColor={colors.textMuted}
+        style={styles.input}
+        value={draft?.query ?? ''}
+      />
+      <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
+        {canCreate ? (
+          <View style={styles.createDestinationPanel}>
+            <View style={styles.createKindSegment} accessibilityRole="tablist">
+              <CreateKindOption
+                kind="location"
+                disabled={isSaving}
+                selectedKind={createKind}
+                onPress={onChangeCreateKind}
               />
-            ))}
-          </ScrollView>
-          <SheetActions
-            disabled={!canSaveMove}
-            primaryLabel={isSaving ? 'Moving' : 'Move'}
-            onClose={onClose}
-            onSave={onSave}
+              <CreateKindOption
+                kind="container"
+                disabled={isSaving}
+                selectedKind={createKind}
+                onPress={onChangeCreateKind}
+              />
+            </View>
+            <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
+            <Text style={styles.createPlacementText}>
+              {moveDestinationCreatePlacementLabel(createPlacement)}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isSaving }}
+              disabled={isSaving}
+              onPress={onCreateDestination}
+              style={[styles.parentCreateRow, isSaving ? styles.disabledAction : null]}
+            >
+              <Text style={styles.parentTitle}>{moveDestinationCreateButtonLabel(createKind, createTitle)}</Text>
+              <Text style={styles.parentSubtitle}>Then select it as the destination</Text>
+            </Pressable>
+          </View>
+        ) : null}
+        <ParentRow
+          isSelected={draft?.selectedParent === null}
+          row={{
+            title: 'No parent',
+            kindLabel: 'Top level',
+            pathLabel: 'Inventory root'
+          }}
+          onPress={onSelectRoot}
+        />
+        {draft?.matches.map((match) => (
+          <ParentRow
+            key={match.id}
+            isSelected={draft.selectedParent?.id === match.id}
+            row={moveDestinationRow(match)}
+            onPress={() => onSelectParent(match)}
           />
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        ))}
+      </ScrollView>
+      <SheetActions
+        disabled={!canSaveMove}
+        primaryLabel={isSaving ? 'Moving' : 'Move'}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
@@ -243,51 +232,46 @@ export function MoveThingsHereSheet({
   const canSave = draft?.selectedAsset !== undefined && !isSaving;
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
-    <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalShell}>
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Move something here</Text>
-          <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
-          <Text style={styles.inputLabel}>Find item, box, or place</Text>
-          <TextInput
-            autoCapitalize="sentences"
-            editable={!isSaving}
-            onChangeText={onChangeQuery}
-            placeholder="Search your inventory"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            value={draft?.query ?? ''}
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+      <Text style={styles.sheetTitle}>Move something here</Text>
+      <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
+      <Text style={styles.inputLabel}>Find item, box, or place</Text>
+      <TextInput
+        autoCapitalize="sentences"
+        editable={!isSaving}
+        onChangeText={onChangeQuery}
+        placeholder="Search your inventory"
+        placeholderTextColor={colors.textMuted}
+        style={styles.input}
+        value={draft?.query ?? ''}
+      />
+      <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
+        {draft?.matches.length === 0 ? (
+          <View style={styles.parentEmptyState}>
+            <Text style={styles.parentTitle}>{emptyState.title}</Text>
+            <Text style={styles.parentSubtitle}>{emptyState.message}</Text>
+          </View>
+        ) : null}
+        {draft?.matches.map((match) => (
+          <ParentRow
+            key={match.id}
+            isSelected={draft.selectedAsset?.id === match.id}
+            row={moveIntoCandidateRow(match)}
+            onPress={() => onSelectAsset(match)}
           />
-          <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
-            {draft?.matches.length === 0 ? (
-              <View style={styles.parentEmptyState}>
-                <Text style={styles.parentTitle}>{emptyState.title}</Text>
-                <Text style={styles.parentSubtitle}>{emptyState.message}</Text>
-              </View>
-            ) : null}
-            {draft?.matches.map((match) => (
-              <ParentRow
-                key={match.id}
-                isSelected={draft.selectedAsset?.id === match.id}
-                row={moveIntoCandidateRow(match)}
-                onPress={() => onSelectAsset(match)}
-              />
-            ))}
-          </ScrollView>
-          <MovePreview
-            left={draft?.selectedAsset?.title ?? 'Choose something'}
-            right={draft?.target.title ?? 'Here'}
-          />
-          <SheetActions
-            disabled={!canSave}
-            primaryLabel={isSaving ? 'Moving' : 'Move here'}
-            onClose={onClose}
-            onSave={onSave}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        ))}
+      </ScrollView>
+      <MovePreview
+        left={draft?.selectedAsset?.title ?? 'Choose something'}
+        right={draft?.target.title ?? 'Here'}
+      />
+      <SheetActions
+        disabled={!canSave}
+        primaryLabel={isSaving ? 'Moving' : 'Move here'}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
@@ -405,26 +389,12 @@ function SheetActions({
 }
 
 const styles = StyleSheet.create({
-  modalShell: {
-    backgroundColor: colors.scrim,
-    flex: 1,
-    justifyContent: 'flex-end'
-  },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    flex: 1,
     gap: spacing.sm,
-    maxHeight: '88%',
-    padding: spacing.lg
-  },
-  sheetHandle: {
-    alignSelf: 'center',
-    backgroundColor: colors.border,
-    borderRadius: radius.sm,
-    height: 5,
-    marginBottom: spacing.xs,
-    width: 44
+    padding: spacing.lg,
+    paddingTop: spacing.xl
   },
   sheetTitle: {
     color: colors.text,
