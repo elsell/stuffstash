@@ -145,7 +145,8 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Mobile asset detail for containers and locations must show contained assets directly below the workspace metadata:
   - The first implementation may derive immediate children from the selected inventory summary already loaded by the mobile application query.
   - Child rows must use the same image-first asset-card language and open the same asset workspace route.
-  - Empty container/location states must offer `Add item here` and `Move things here` affordances.
+  - Active container/location workspaces with edit permission must keep `Add item here` and `Move things here` available as spatial actions whether the container is empty or already has contents.
+  - Empty container/location states must still explain that nothing is inside yet and reinforce the same `Add item here` and `Move things here` affordances.
   - `Add item here` must be available only for active containers or locations that the user may edit. It must navigate to Add with the current container or location preselected as the parent. This route-scoped parent prefill may update only the placement fields of the current Add draft so typed title, description, selected photos, and details state are not lost.
   - Add parent prefill route parameters must be encoded and decoded through one typed mobile route contract. The Add route must ignore incomplete, unsupported, item-kind, or otherwise inapplicable parent-prefill parameters instead of showing an unverified parent as selected.
   - Recursive tree editing and bulk move flows remain future work.

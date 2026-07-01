@@ -15,6 +15,12 @@ import {
   localAssetPhotoOrderNotice,
   orderedAssetPhotos
 } from './AssetPhotoWorkspacePresentation';
+import {
+  canUseContainedAssetAction,
+  containedAssetActions,
+  containedAssetsEmptyState,
+  type ContainedAssetAction
+} from './ContainedAssetsPresentation';
 import { AssetCard } from './AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
 
@@ -159,6 +165,7 @@ export function AssetDetailView({
         {asset.canContainAssets ? (
           <ContainedAssetsSection
             asset={asset}
+            isActionPending={isActionPending}
             onAddHere={onAddHere}
             onChildPress={onChildPress}
             onMoveThingsHere={onMoveThingsHere}
@@ -386,15 +393,20 @@ function WorkspaceAction({
 
 function ContainedAssetsSection({
   asset,
+  isActionPending,
   onAddHere,
   onChildPress,
   onMoveThingsHere
 }: {
   readonly asset: AssetDetailViewModel;
+  readonly isActionPending: boolean;
   readonly onAddHere?: () => void;
   readonly onChildPress?: (assetId: string) => void;
   readonly onMoveThingsHere?: () => void;
 }) {
+  const actions = containedAssetActions(asset);
+  const emptyState = containedAssetsEmptyState(asset);
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -403,6 +415,18 @@ function ContainedAssetsSection({
           <Text style={styles.sectionTitle}>{asset.containedAssetsLabel}</Text>
         </View>
       </View>
+      {actions.length > 0 ? (
+        <View style={styles.containedActionBar}>
+          {actions.map((action) => (
+            <ContainedAssetActionButton
+              key={action.kind}
+              action={action}
+              isActionPending={isActionPending}
+              onPress={action.kind === 'add_here' ? onAddHere : onMoveThingsHere}
+            />
+          ))}
+        </View>
+      ) : null}
       {asset.containedAssets.length > 0 ? (
         <View style={styles.childGrid}>
           {asset.containedAssets.map((child) => (
@@ -411,25 +435,40 @@ function ContainedAssetsSection({
         </View>
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyContainerTitle}>Nothing inside yet</Text>
-          <Text style={styles.emptyContainerText}>
-            Add something here or move existing things into this place.
-          </Text>
-          <View style={styles.emptyActions}>
-            {asset.canAddContainedAssets && onAddHere ? (
-              <Pressable accessibilityRole="button" onPress={onAddHere} style={styles.emptyPrimary}>
-                <Text style={styles.emptyPrimaryText}>Add item here</Text>
-              </Pressable>
-            ) : null}
-            {onMoveThingsHere ? (
-              <Pressable accessibilityRole="button" onPress={onMoveThingsHere} style={styles.emptySecondary}>
-                <Text style={styles.emptySecondaryText}>Move things here</Text>
-              </Pressable>
-            ) : null}
-          </View>
+          <Text style={styles.emptyContainerTitle}>{emptyState.title}</Text>
+          <Text style={styles.emptyContainerText}>{emptyState.message}</Text>
         </View>
       )}
     </View>
+  );
+}
+
+function ContainedAssetActionButton({
+  action,
+  isActionPending,
+  onPress
+}: {
+  readonly action: ContainedAssetAction;
+  readonly isActionPending: boolean;
+  readonly onPress?: () => void;
+}) {
+  const canUseAction = canUseContainedAssetAction({ isActionPending, onPress });
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !canUseAction }}
+      disabled={!canUseAction}
+      onPress={onPress}
+      style={[
+        styles.containedAction,
+        action.isPrimary ? styles.containedPrimaryAction : styles.containedSecondaryAction,
+        !canUseAction ? styles.disabledAction : null
+      ]}
+    >
+      <Text style={action.isPrimary ? styles.containedPrimaryActionText : styles.containedSecondaryActionText}>
+        {action.label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -836,6 +875,39 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm
   },
+  containedActionBar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm
+  },
+  containedAction: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  containedPrimaryAction: {
+    backgroundColor: colors.action
+  },
+  containedPrimaryActionText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  containedSecondaryAction: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1
+  },
+  containedSecondaryActionText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
   emptyContainer: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -854,36 +926,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20
-  },
-  emptyActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs
-  },
-  emptyPrimary: {
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  emptyPrimaryText: {
-    color: colors.onAction,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  emptySecondary: {
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  emptySecondaryText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
   },
   disabledAction: {
     opacity: 0.55
