@@ -46,6 +46,50 @@ export type AssetAuditMetadataRowViewModel = {
   readonly value: string;
 };
 
+const safeMetadataKeys = new Set([
+  'attachment_count',
+  'content_type',
+  'count',
+  'file_count',
+  'file_name',
+  'file_size',
+  'from',
+  'kind',
+  'lifecycle_state',
+  'name',
+  'photo_count',
+  'previous_name',
+  'previous_title',
+  'size_bytes',
+  'status',
+  'title',
+  'to',
+  'type',
+  'updated_name',
+  'updated_title'
+]);
+
+const unsafeMetadataKeyFragments = [
+  'authorization',
+  'blob',
+  'credential',
+  'endpoint',
+  'internal',
+  'key',
+  'permission',
+  'prompt',
+  'provider',
+  'relationship',
+  'secret',
+  'signed',
+  'storage',
+  'token',
+  'transcript',
+  'url'
+];
+
+const maxMetadataValueLength = 160;
+
 export class AssetAuditHistoryQuery {
   constructor(private readonly repository: AssetAuditHistoryRepository) {}
 
@@ -85,12 +129,57 @@ function toRecordViewModel(record: AssetAuditRecord): AssetAuditRecordViewModel 
     principalLabel: `Principal ${record.principalId}`,
     requestLabel: record.requestId ? `Request ${record.requestId}` : undefined,
     metadataRows: Object.entries(record.metadata)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, value]) => ({
-        label: labelMetadataKey(key),
-        value
-      }))
+      .flatMap(toSafeMetadataRow)
+      .sort((left, right) => left.label.localeCompare(right.label))
   };
+}
+
+function toSafeMetadataRow([key, value]: [string, string]): AssetAuditMetadataRowViewModel[] {
+  const normalizedKey = normalizeMetadataKey(key);
+  if (!isSafeMetadataKey(normalizedKey)) {
+    return [];
+  }
+
+  const safeValue = safeMetadataValue(value);
+  if (!safeValue) {
+    return [];
+  }
+
+  return [{
+    label: labelMetadataKey(normalizedKey),
+    value: safeValue
+  }];
+}
+
+function isSafeMetadataKey(normalizedKey: string): boolean {
+  if (unsafeMetadataKeyFragments.some((fragment) => normalizedKey.includes(fragment))) {
+    return false;
+  }
+  return safeMetadataKeys.has(normalizedKey);
+}
+
+function safeMetadataValue(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  if (looksUnsafeMetadataValue(trimmed)) {
+    return undefined;
+  }
+  return trimmed.length > maxMetadataValueLength
+    ? `${trimmed.slice(0, maxMetadataValueLength - 3)}...`
+    : trimmed;
+}
+
+function looksUnsafeMetadataValue(value: string): boolean {
+  const normalized = value.toLowerCase();
+  return normalized.includes('bearer ')
+    || normalized.includes('-----begin ')
+    || normalized.startsWith('http://')
+    || normalized.startsWith('https://')
+    || normalized.startsWith('s3://')
+    || normalized.startsWith('gs://')
+    || normalized.startsWith('garage/');
 }
 
 function labelAction(action: string): string {
@@ -120,6 +209,10 @@ function labelMetadataKey(key: string): string {
   return key
     .replaceAll('_', ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeMetadataKey(key: string): string {
+  return key.trim().toLowerCase().replaceAll('-', '_');
 }
 
 function labelOccurredAt(value: string): string {

@@ -106,6 +106,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The first implementation may call the generated inventory audit-record list endpoint and client-filter records whose target ID matches the current asset.
   - The detail workspace must display safe audit metadata only: action label, source, principal ID, occurred-at label, request ID when present, and safe metadata values returned by the API.
   - The mobile UI must not expose raw provider prompts, raw voice transcripts, credentials, storage keys, blob paths, authorization internals, or other sensitive implementation detail.
+  - Mobile audit metadata rows must be allowlisted in the application query before rendering. The first allowlist may include user-facing movement, title/name, lifecycle/status, kind/type, attachment file name, content type, file size, and count summaries. Unknown metadata keys and values that look like prompts, transcripts, credentials, storage paths, blob keys, authorization internals, or provider internals must be omitted from the asset detail audit sheet.
   - The audit surface may be a native-feeling sheet opened from the asset overflow. It must show loading, empty, and safe error states.
   - The first implementation may load enough inventory-audit pages to find a bounded number of records for the asset. Full cursor browsing and asset-scoped server filtering require a future audit API slice.
 - Mobile asset detail edit must be a native-feeling sheet or pushed form backed by mobile application commands:
