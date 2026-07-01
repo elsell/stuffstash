@@ -19,6 +19,10 @@ func RegisterCredential(api huma.API, application app.App) {
 		if err != nil {
 			return nil, err
 		}
+		var raw []byte
+		if input.Body.Credential != nil {
+			raw = []byte(*input.Body.Credential)
+		}
 		profile, err := application.ReplaceProviderProfileCredential(ctx, app.ReplaceProviderProfileCredentialInput{
 			Principal: principal,
 			Source:    audit.SourceAPI,
@@ -26,7 +30,7 @@ func RegisterCredential(api huma.API, application app.App) {
 			TenantID:  tenant.ID(input.TenantID),
 			ProfileID: agentmodel.ProviderProfileID(input.ProviderProfileID),
 			Purpose:   input.Body.Purpose,
-			Raw:       []byte(input.Body.Credential),
+			Raw:       raw,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

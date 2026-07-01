@@ -136,8 +136,8 @@ type ReplaceProviderProfileCredentialInput struct {
 }
 
 type ReplaceProviderProfileCredentialBody struct {
-	Purpose    string `json:"purpose" doc:"Credential purpose"`
-	Credential string `json:"credential,omitempty" doc:"Raw provider credential for this request only; omit for server_adc"`
+	Purpose    string  `json:"purpose" doc:"Credential purpose"`
+	Credential *string `json:"credential,omitempty" doc:"Raw provider credential for this request only; omit for server_adc"`
 }
 
 type TestProviderProfileInput struct {

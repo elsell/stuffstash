@@ -188,6 +188,17 @@ func TestProviderProfileCredentialEndpointAcceptsServerADCWithoutRawSecret(t *te
 	if withCredential.Data.CredentialStatus != "configured" {
 		t.Fatalf("expected configured credential status, got %+v", withCredential.Data)
 	}
+
+	withRawCredential := performRequest(server, http.MethodPut, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/credential", "Bearer dev:tenant-owner", map[string]any{
+		"purpose":    "server_adc",
+		"credential": "should-not-be-accepted",
+	})
+	if withRawCredential.Code != http.StatusUnprocessableEntity && withRawCredential.Code != http.StatusBadRequest {
+		t.Fatalf("expected raw server ADC credential to be rejected, got status %d body %s", withRawCredential.Code, withRawCredential.Body.String())
+	}
+	if strings.Contains(withRawCredential.Body.String(), "should-not-be-accepted") {
+		t.Fatalf("server ADC credential rejection leaked request secret: %s", withRawCredential.Body.String())
+	}
 }
 
 func TestProviderProfileEndpointsRejectUnauthorizedUsers(t *testing.T) {

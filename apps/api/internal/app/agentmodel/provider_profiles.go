@@ -295,6 +295,9 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 	}
 	raw := input.Raw
 	if purpose == ports.ProviderCredentialPurposeServerADC {
+		if len(bytes.TrimSpace(raw)) != 0 {
+			return domain.ProviderProfile{}, apperrors.ErrValidation
+		}
 		raw = []byte(serverADCCredentialMarker)
 	} else if len(bytes.TrimSpace(raw)) == 0 {
 		return domain.ProviderProfile{}, apperrors.ErrValidation

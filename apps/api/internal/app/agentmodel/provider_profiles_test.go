@@ -180,6 +180,31 @@ func TestServiceReplacesProviderProfileCredentialWithServerADCMarker(t *testing.
 	}
 }
 
+func TestServiceRejectsRawCredentialMaterialForServerADC(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	service := newProviderProfileTestService(repository, allowTenantConfigureAuthorizer{})
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileDisabled)
+	repository.saved[profile.ID.String()] = profile
+
+	_, err := service.ReplaceProviderProfileCredential(ctx, ReplaceProviderProfileCredentialInput{
+		Principal: testPrincipal(),
+		Source:    audit.SourceAPI,
+		TenantID:  tenant.ID("tenant-home"),
+		ProfileID: profile.ID,
+		Purpose:   "server_adc",
+		Raw:       []byte("should-not-be-accepted"),
+	})
+	if !errors.Is(err, apperrors.ErrValidation) {
+		t.Fatalf("expected validation error for raw server ADC credential, got %v", err)
+	}
+	if repository.lastCredential.ID != "" {
+		t.Fatalf("expected no credential to be persisted, got %+v", repository.lastCredential)
+	}
+}
+
 func TestServiceRejectsServerADCForUnsupportedProviderProfile(t *testing.T) {
 	t.Parallel()
 
