@@ -15,6 +15,24 @@ export type AssetLifecycleConfirmation = {
   readonly isDestructive: boolean;
 };
 
+export type AssetLifecycleOverflowPresentation = {
+  readonly title: string;
+  readonly message: string;
+};
+
+export type AssetLifecycleFailurePresentation = {
+  readonly title: string;
+  readonly message: string;
+};
+
+export type AssetLifecycleOverflowMenu = AssetLifecycleOverflowPresentation & {
+  readonly options: readonly string[];
+  readonly actionRows: readonly AssetLifecycleActionRow[];
+  readonly auditIndex: number;
+  readonly cancelIndex: number;
+  readonly destructiveIndex?: number;
+};
+
 export function assetLifecycleActionRows(
   asset: Pick<AssetDetailViewModel, 'canArchive' | 'canRestore' | 'canDeletePermanently'>
 ): readonly AssetLifecycleActionRow[] {
@@ -64,6 +82,75 @@ export function assetLifecycleConfirmation(
         isDestructive: true
       };
   }
+}
+
+export function assetLifecycleOverflowPresentation(
+  asset: Pick<AssetDetailViewModel, 'title' | 'lifecycleLabel'>
+): AssetLifecycleOverflowPresentation {
+  return {
+    title: `${asset.title} actions`,
+    message: `Lifecycle actions for this ${asset.lifecycleLabel.toLowerCase()} asset.`
+  };
+}
+
+export function assetLifecycleOverflowMenu(
+  asset: Pick<AssetDetailViewModel, 'title' | 'lifecycleLabel' | 'canArchive' | 'canRestore' | 'canDeletePermanently'>
+): AssetLifecycleOverflowMenu {
+  const overflow = assetLifecycleOverflowPresentation(asset);
+  const actionRows = assetLifecycleActionRows(asset);
+  const auditIndex = actionRows.length;
+  const cancelIndex = actionRows.length + 1;
+  const destructiveIndex = actionRows.findIndex((action) => action.isDestructive);
+  return {
+    ...overflow,
+    actionRows,
+    options: [...actionRows.map((action) => action.label), 'Audit history', 'Cancel'],
+    auditIndex,
+    cancelIndex,
+    destructiveIndex: destructiveIndex >= 0 ? destructiveIndex : undefined
+  };
+}
+
+export function assetLifecycleFailurePresentation(
+  action: AssetLifecycleActionKind,
+  asset: Pick<AssetDetailViewModel, 'title' | 'canContainAssets'>,
+  cause: string
+): AssetLifecycleFailurePresentation {
+  const validationKind = lifecycleValidationKind(cause);
+  switch (action) {
+    case 'archive':
+      return {
+        title: `Could not archive ${asset.title}`,
+        message: validationKind === 'active_children' && asset.canContainAssets
+          ? `${cause} Move or archive active things inside this asset, then try again.`
+          : cause
+      };
+    case 'restore':
+      return {
+        title: `Could not restore ${asset.title}`,
+        message: validationKind === 'archived_parent'
+          ? `${cause} Check that its parent is active, then try again.`
+          : cause
+      };
+    case 'delete':
+      return {
+        title: `Could not permanently delete ${asset.title}`,
+        message: validationKind === 'active_children' && asset.canContainAssets
+          ? `${cause} Permanent delete will not continue while active things are inside it.`
+          : cause
+      };
+  }
+}
+
+function lifecycleValidationKind(cause: string): 'active_children' | 'archived_parent' | 'generic' {
+  const normalized = cause.toLowerCase();
+  if (normalized.includes('active child') || normalized.includes('active children') || normalized.includes('active things')) {
+    return 'active_children';
+  }
+  if (normalized.includes('parent') && normalized.includes('archived')) {
+    return 'archived_parent';
+  }
+  return 'generic';
 }
 
 function permanentDeleteMessage(

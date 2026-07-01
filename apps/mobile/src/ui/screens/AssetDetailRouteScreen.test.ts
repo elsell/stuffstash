@@ -23,7 +23,10 @@ import {
 } from '../components/AssetPhotoWorkspacePresentation';
 import {
   assetLifecycleActionRows,
-  assetLifecycleConfirmation
+  assetLifecycleConfirmation,
+  assetLifecycleFailurePresentation,
+  assetLifecycleOverflowMenu,
+  assetLifecycleOverflowPresentation
 } from './AssetLifecyclePresentation';
 import {
   assetEditContext,
@@ -427,6 +430,79 @@ describe('asset lifecycle presentation helpers', () => {
       message: 'Water bottle will return to active inventory work.',
       confirmLabel: 'Restore',
       isDestructive: false
+    });
+  });
+
+  it('names the current asset in the lifecycle overflow context', () => {
+    expect(assetLifecycleOverflowPresentation({
+      title: 'Water bottle',
+      lifecycleLabel: 'Active'
+    })).toEqual({
+      title: 'Water bottle actions',
+      message: 'Lifecycle actions for this active asset.'
+    });
+  });
+
+  it('builds native lifecycle overflow menu ordering and destructive index', () => {
+    expect(assetLifecycleOverflowMenu({
+      title: 'Tool box',
+      lifecycleLabel: 'Archived',
+      canArchive: false,
+      canRestore: true,
+      canDeletePermanently: true
+    })).toEqual({
+      title: 'Tool box actions',
+      message: 'Lifecycle actions for this archived asset.',
+      actionRows: [
+        { kind: 'restore', label: 'Restore', isDestructive: false },
+        { kind: 'delete', label: 'Delete permanently', isDestructive: true }
+      ],
+      options: ['Restore', 'Delete permanently', 'Audit history', 'Cancel'],
+      auditIndex: 2,
+      cancelIndex: 3,
+      destructiveIndex: 1
+    });
+  });
+
+  it('turns lifecycle failures into action-specific recovery copy', () => {
+    expect(assetLifecycleFailurePresentation('archive', {
+      title: 'Tool box',
+      canContainAssets: true
+    }, 'Asset has active children.')).toEqual({
+      title: 'Could not archive Tool box',
+      message: 'Asset has active children. Move or archive active things inside this asset, then try again.'
+    });
+
+    expect(assetLifecycleFailurePresentation('restore', {
+      title: 'Water bottle',
+      canContainAssets: false
+    }, 'Parent is archived.')).toEqual({
+      title: 'Could not restore Water bottle',
+      message: 'Parent is archived. Check that its parent is active, then try again.'
+    });
+
+    expect(assetLifecycleFailurePresentation('delete', {
+      title: 'Tool box',
+      canContainAssets: true
+    }, 'Asset has active children.')).toEqual({
+      title: 'Could not permanently delete Tool box',
+      message: 'Asset has active children. Permanent delete will not continue while active things are inside it.'
+    });
+
+    expect(assetLifecycleFailurePresentation('archive', {
+      title: 'Tool box',
+      canContainAssets: true
+    }, 'Network request failed.')).toEqual({
+      title: 'Could not archive Tool box',
+      message: 'Network request failed.'
+    });
+
+    expect(assetLifecycleFailurePresentation('restore', {
+      title: 'Water bottle',
+      canContainAssets: false
+    }, 'Session expired.')).toEqual({
+      title: 'Could not restore Water bottle',
+      message: 'Session expired.'
     });
   });
 });

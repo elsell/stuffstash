@@ -62,6 +62,8 @@ import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
+  assetLifecycleFailurePresentation,
+  assetLifecycleOverflowMenu,
   AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
 import {
@@ -452,30 +454,31 @@ export function AssetDetailRouteScreen({
   }
 
   function showMoreActions(asset: AssetDetailViewModel): void {
+    const overflow = assetLifecycleOverflowMenu(asset);
     if (Platform.OS === 'ios') {
-      const actions = lifecycleActions(asset);
-      const destructiveActionIndex = actions.findIndex((action) => action.isDestructive);
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [...actions.map((action) => action.label), 'Audit history', 'Cancel'],
-          cancelButtonIndex: actions.length + 1,
-          destructiveButtonIndex: destructiveActionIndex >= 0 ? destructiveActionIndex : undefined
+          title: overflow.title,
+          message: overflow.message,
+          options: [...overflow.options],
+          cancelButtonIndex: overflow.cancelIndex,
+          destructiveButtonIndex: overflow.destructiveIndex
         },
         (index) => {
-          const action = actions[index];
+          const action = overflow.actionRows[index];
           if (action) {
             confirmLifecycleAction(action.kind, asset);
             return;
           }
-          if (index === actions.length) {
+          if (index === overflow.auditIndex) {
             void openAuditHistory(asset);
           }
         }
       );
       return;
     }
-    Alert.alert('Asset actions', undefined, [
-      ...lifecycleActions(asset).map((action) => ({
+    Alert.alert(overflow.title, overflow.message, [
+      ...overflow.actionRows.map((action) => ({
         text: action.label,
         style: action.isDestructive ? 'destructive' as const : 'default' as const,
         onPress: () => confirmLifecycleAction(action.kind, asset)
@@ -521,12 +524,12 @@ export function AssetDetailRouteScreen({
       {
         text: confirmation.confirmLabel,
         style: confirmation.isDestructive ? 'destructive' : 'default',
-        onPress: () => void runLifecycleAction(action)
+        onPress: () => void runLifecycleAction(action, asset)
       }
     ]);
   }
 
-  async function runLifecycleAction(action: 'archive' | 'restore' | 'delete'): Promise<void> {
+  async function runLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): Promise<void> {
     setPendingAction(action);
 
     try {
@@ -539,7 +542,12 @@ export function AssetDetailRouteScreen({
 
       await reloadAsset();
     } catch (error) {
-      Alert.alert('Could not update asset', readableError(error, 'Lifecycle action failed.'));
+      const failure = assetLifecycleFailurePresentation(
+        action,
+        asset,
+        readableError(error, 'Lifecycle action failed.')
+      );
+      Alert.alert(failure.title, failure.message);
     } finally {
       setPendingAction(undefined);
     }
