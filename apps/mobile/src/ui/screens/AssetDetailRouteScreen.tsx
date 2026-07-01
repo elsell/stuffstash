@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AddAssetPhotosCommand,
+  AddAssetPhotoProgressEvent,
   AddAssetPhotosCommandResult
 } from '../../application/assets/AddAssetPhotosCommand';
 import { AssetAuditHistoryQuery } from '../../application/assets/AssetAuditHistoryQuery';
@@ -28,12 +29,17 @@ import {
   PhotoSelectionQuery,
   SelectedAssetPhoto
 } from '../../application/add/PhotoSelectionQuery';
-import { AssetDetailView } from '../components/AssetDetailView';
+import {
+  AssetDetailView,
+  AssetPhotoUploadProgressViewModel
+} from '../components/AssetDetailView';
 import {
   AssetAuditHistorySheet,
   AssetAuditHistorySheetState
 } from './AssetAuditHistorySheet';
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
+import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
+import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
 import {
   EditAssetSheet,
   EditDraft,
@@ -68,6 +74,8 @@ type ScreenState =
 
 type PendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos';
 
+type PhotoUploadRow = AssetPhotoUploadProgressViewModel;
+
 export function AssetDetailRouteScreen({
   addAssetPhotosCommand,
   assetAuditHistoryQuery,
@@ -88,7 +96,9 @@ export function AssetDetailRouteScreen({
   const [moveDraft, setMoveDraft] = useState<MoveDraft | undefined>();
   const [moveIntoDraft, setMoveIntoDraft] = useState<MoveIntoDraft | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
+  const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
   const [auditHistoryState, setAuditHistoryState] = useState<AssetAuditHistorySheetState>({
     status: 'closed'
   });
@@ -98,6 +108,9 @@ export function AssetDetailRouteScreen({
     let isCurrent = true;
     auditHistoryRequestRef.current += 1;
     setAuditHistoryState({ status: 'closed' });
+    setPhotoUploads([]);
+    setPhotoStatus(undefined);
+    setSelectedPhotoId(undefined);
 
     assetDetailQuery
       .execute(assetId)
@@ -313,10 +326,19 @@ export function AssetDetailRouteScreen({
       if (photos.length === 0) {
         return;
       }
-      const result = await addAssetPhotosCommand.execute({ assetId, photos });
+      setPhotoStatus(undefined);
+      setPhotoUploads(photoUploadRows(photos));
+      const result = await addAssetPhotosCommand.execute({
+        assetId,
+        photos,
+        onPhotoProgress: updatePhotoUploadProgress
+      });
       setPhotoStatus(result);
       setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
       await reloadAsset();
+      if (result.failedCount === 0) {
+        setPhotoUploads([]);
+      }
     } catch (error) {
       Alert.alert('Could not add photos', readableError(error, 'Photo upload failed.'));
     } finally {
@@ -331,10 +353,19 @@ export function AssetDetailRouteScreen({
     }
     setPendingAction('photos');
     try {
-      const result = await addAssetPhotosCommand.execute({ assetId, photos });
+      setPhotoStatus(undefined);
+      setPhotoUploads(photoUploadRows(photos));
+      const result = await addAssetPhotosCommand.execute({
+        assetId,
+        photos,
+        onPhotoProgress: updatePhotoUploadProgress
+      });
       setPhotoStatus(result);
       setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
       await reloadAsset();
+      if (result.failedCount === 0) {
+        setPhotoUploads([]);
+      }
     } catch (error) {
       Alert.alert('Could not retry photos', readableError(error, 'Photo retry failed.'));
     } finally {
@@ -361,12 +392,32 @@ export function AssetDetailRouteScreen({
         canRetry: false
       });
       setFailedPhotoDrafts([]);
+      setSelectedPhotoId(undefined);
+      setPhotoUploads([]);
       await reloadAsset();
     } catch (error) {
       Alert.alert('Could not remove photo', readableError(error, 'Photo removal failed.'));
     } finally {
       setPendingAction(undefined);
     }
+  }
+
+  function updatePhotoUploadProgress(event: AddAssetPhotoProgressEvent): void {
+    setPhotoUploads((current) =>
+      current.map((upload) =>
+        upload.index === event.index
+          ? { ...upload, status: event.status }
+          : upload
+      )
+    );
+  }
+
+  function photoUploadRows(photos: readonly SelectedAssetPhoto[]): readonly PhotoUploadRow[] {
+    return photos.map((photo, index) => ({
+      index,
+      fileName: photo.fileName,
+      status: 'pending'
+    }));
   }
 
   function showMoreActions(asset: AssetDetailViewModel): void {
@@ -489,6 +540,19 @@ export function AssetDetailRouteScreen({
       {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
       {screenState.status === 'ready' ? (
         <>
+          {(() => {
+            const photoViewer = assetPhotoViewerModel(screenState.asset.photos, selectedPhotoId);
+            return (
+              <AssetPhotoViewerSheet
+                canRemove={screenState.asset.canAddPhotos}
+                model={photoViewer}
+                onClose={() => setSelectedPhotoId(undefined)}
+                onRemove={(photoId) => void removePhoto(photoId)}
+                onSelectPhoto={setSelectedPhotoId}
+                photos={screenState.asset.photos}
+              />
+            );
+          })()}
           <Stack.Screen options={{ title: screenState.asset.title }} />
           <AssetDetailView
             asset={screenState.asset}
@@ -501,8 +565,10 @@ export function AssetDetailRouteScreen({
             onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => void openMove(screenState.asset)}
             onMoveThingsHere={() => void openMoveThingsHere(screenState.asset)}
+            onPhotoPress={setSelectedPhotoId}
             onRemovePhoto={confirmRemovePhoto}
             onRetryPhotos={() => void retryPhotos()}
+            photoUploads={photoUploads}
             photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
             refreshControl={
               <RefreshControl

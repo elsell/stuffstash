@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
 import { canSaveMoveAsset, parentFromCurrentAssetPath } from './AssetDetailMovePresentation';
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
+import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
 
 describe('navigateAfterDeletedAsset', () => {
   it('uses native back navigation when the asset detail route has history', () => {
@@ -86,5 +87,29 @@ describe('asset audit history presentation helpers', () => {
   it('rejects stale audit history requests after close or navigation', () => {
     expect(isCurrentAuditHistoryRequest(3, 3)).toBe(true);
     expect(isCurrentAuditHistoryRequest(4, 3)).toBe(false);
+  });
+});
+
+describe('asset photo workspace presentation helpers', () => {
+  it('builds viewer navigation around the selected photo', () => {
+    expect(assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
+      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' },
+      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+    ], 'photo-two')).toMatchObject({
+      positionLabel: '2 of 3',
+      previousPhotoId: 'photo-one',
+      nextPhotoId: 'photo-three',
+      photo: {
+        id: 'photo-two',
+        label: 'two.jpg'
+      }
+    });
+  });
+
+  it('does not show a stale selected photo after refresh', () => {
+    expect(assetPhotoViewerModel([
+      { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' }
+    ], 'photo-two')).toBeUndefined();
   });
 });

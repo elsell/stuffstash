@@ -13,15 +13,23 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import { AssetCard } from './AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
 
+export type AssetPhotoUploadProgressViewModel = {
+  readonly index: number;
+  readonly fileName: string;
+  readonly status: 'pending' | 'uploading' | 'attached' | 'failed';
+};
+
 type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending?: boolean;
+  readonly photoUploads?: readonly AssetPhotoUploadProgressViewModel[];
   readonly photoStatusMessage?: string;
   readonly canRetryPhotos?: boolean;
   readonly onBack?: () => void;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onAddPhotos?: () => void;
+  readonly onPhotoPress?: (photoId: string) => void;
   readonly onRemovePhoto?: (photoId: string) => void;
   readonly onRetryPhotos?: () => void;
   readonly onMoreActions?: () => void;
@@ -42,9 +50,11 @@ export function AssetDetailView({
   onEdit,
   onMoreActions,
   onMove,
+  onPhotoPress,
   onRemovePhoto,
   onMoveThingsHere,
   onRetryPhotos,
+  photoUploads = [],
   photoStatusMessage,
   refreshControl
 }: AssetDetailViewProps) {
@@ -61,6 +71,7 @@ export function AssetDetailView({
           asset={asset}
           disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
           onAddPhotos={onAddPhotos}
+          onPhotoPress={onPhotoPress}
           onRemovePhoto={onRemovePhoto}
         />
 
@@ -125,6 +136,8 @@ export function AssetDetailView({
             </View>
           ) : null}
 
+          {photoUploads.length > 0 ? <PhotoUploadProgressList uploads={photoUploads} /> : null}
+
           <View style={styles.metadataList}>
             <MetadataRow label="Location" value={asset.locationTrailLabel} />
             <MetadataRow label="Status" value={asset.lifecycleLabel} />
@@ -149,11 +162,13 @@ function PhotoWorkspace({
   asset,
   disabled,
   onAddPhotos,
+  onPhotoPress,
   onRemovePhoto
 }: {
   readonly asset: AssetDetailViewModel;
   readonly disabled: boolean;
   readonly onAddPhotos?: () => void;
+  readonly onPhotoPress?: (photoId: string) => void;
   readonly onRemovePhoto?: (photoId: string) => void;
 }) {
   const photos = asset.photos.length > 0 ? asset.photos : undefined;
@@ -166,13 +181,22 @@ function PhotoWorkspace({
     >
       {photos ? photos.map((photo, index) => (
         <View key={photo.id ?? photo.uri} style={index === 0 ? styles.photoHero : styles.photoThumb}>
-          <Image
-            accessibilityIgnoresInvertColors
-            accessibilityLabel={photo.label}
-            source={{ uri: photo.uri, headers: photo.headers }}
-            style={styles.heroImage}
-          />
-          <Text style={styles.photoStatus}>{index === 0 ? asset.photoLabel : photo.label}</Text>
+          <Pressable
+            accessibilityLabel={`Open ${photo.label}`}
+            accessibilityRole="imagebutton"
+            disabled={!photo.id || !onPhotoPress}
+            onPress={() => photo.id && onPhotoPress ? onPhotoPress(photo.id) : undefined}
+            style={styles.photoPressable}
+          >
+            <Image
+              accessibilityIgnoresInvertColors
+              accessibilityLabel={photo.label}
+              source={{ uri: photo.uri, headers: photo.headers }}
+              style={styles.heroImage}
+            />
+            <Text style={styles.photoPosition}>{(index + 1).toString()} / {photos.length.toString()}</Text>
+          </Pressable>
+          <Text style={styles.photoStatus}>{index === 0 ? 'First photo' : photo.label}</Text>
           {photo.id && onRemovePhoto ? (
             <Pressable
               accessibilityLabel={`Remove ${photo.label}`}
@@ -203,6 +227,57 @@ function PhotoWorkspace({
       </Pressable>
     </ScrollView>
   );
+}
+
+function PhotoUploadProgressList({
+  uploads
+}: {
+  readonly uploads: readonly AssetPhotoUploadProgressViewModel[];
+}) {
+  return (
+    <View style={styles.uploadPanel}>
+      <Text style={styles.uploadPanelTitle}>Photo uploads</Text>
+      {uploads.map((upload) => (
+        <View key={`${upload.index.toString()}-${upload.fileName}`} style={styles.uploadRow}>
+          <View>
+            <Text style={styles.uploadFileName} numberOfLines={1}>{upload.fileName}</Text>
+            <Text style={styles.uploadStatusText}>{labelUploadStatus(upload.status)}</Text>
+          </View>
+          <View style={[styles.uploadStatusPill, upload.status === 'failed' ? styles.uploadFailedPill : null]}>
+            <Text style={[styles.uploadStatusPillText, upload.status === 'failed' ? styles.uploadFailedPillText : null]}>
+              {labelUploadPill(upload.status)}
+            </Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function labelUploadStatus(status: AssetPhotoUploadProgressViewModel['status']): string {
+  switch (status) {
+    case 'attached':
+      return 'Attached to this asset';
+    case 'failed':
+      return 'Needs retry';
+    case 'uploading':
+      return 'Uploading original file';
+    case 'pending':
+      return 'Waiting to upload';
+  }
+}
+
+function labelUploadPill(status: AssetPhotoUploadProgressViewModel['status']): string {
+  switch (status) {
+    case 'attached':
+      return 'Done';
+    case 'failed':
+      return 'Failed';
+    case 'uploading':
+      return 'Now';
+    case 'pending':
+      return 'Queued';
+  }
 }
 
 function WorkspaceAction({
@@ -344,6 +419,24 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: spacing.sm,
     top: spacing.sm
+  },
+  photoPressable: {
+    height: '100%',
+    width: '100%'
+  },
+  photoPosition: {
+    backgroundColor: colors.brandCharcoal,
+    borderRadius: radius.sm,
+    bottom: spacing.sm,
+    color: colors.onAction,
+    fontSize: 12,
+    fontWeight: '900',
+    left: spacing.sm,
+    letterSpacing: 0,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    position: 'absolute'
   },
   heroImage: {
     height: '100%',
@@ -528,6 +621,57 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0
+  },
+  uploadPanel: {
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    padding: spacing.md
+  },
+  uploadPanelTitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textTransform: 'uppercase'
+  },
+  uploadRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'space-between'
+  },
+  uploadFileName: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0,
+    maxWidth: 210
+  },
+  uploadStatusText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  uploadStatusPill: {
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  uploadStatusPillText: {
+    color: colors.accentStrong,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  uploadFailedPill: {
+    backgroundColor: colors.warningSurface
+  },
+  uploadFailedPillText: {
+    color: colors.warning
   },
   metadataList: {
     borderTopColor: colors.border,

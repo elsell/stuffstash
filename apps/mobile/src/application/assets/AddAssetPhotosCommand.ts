@@ -7,6 +7,15 @@ import type {
 export type AddAssetPhotosCommandInput = {
   readonly assetId: string;
   readonly photos: readonly CreateInventoryAssetPhotoInput[];
+  readonly onPhotoProgress?: (event: AddAssetPhotoProgressEvent) => void;
+};
+
+export type AddAssetPhotoProgressStatus = 'uploading' | 'attached' | 'failed';
+
+export type AddAssetPhotoProgressEvent = {
+  readonly index: number;
+  readonly fileName: string;
+  readonly status: AddAssetPhotoProgressStatus;
 };
 
 export type AddAssetPhotosCommandResult = {
@@ -29,11 +38,26 @@ export class AddAssetPhotosCommand {
     let attachedCount = 0;
     let failedCount = 0;
     const failedPhotos: CreateInventoryAssetPhotoInput[] = [];
-    for (const photo of input.photos) {
+    for (const [index, photo] of input.photos.entries()) {
+      input.onPhotoProgress?.({
+        index,
+        fileName: photo.fileName,
+        status: 'uploading'
+      });
       try {
         await this.inventories.addAssetPhoto(targetAssetId, photo);
+        input.onPhotoProgress?.({
+          index,
+          fileName: photo.fileName,
+          status: 'attached'
+        });
         attachedCount += 1;
       } catch {
+        input.onPhotoProgress?.({
+          index,
+          fileName: photo.fileName,
+          status: 'failed'
+        });
         failedCount += 1;
         failedPhotos.push(photo);
       }

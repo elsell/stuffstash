@@ -57,6 +57,29 @@ describe('AddAssetPhotosCommand', () => {
     });
   });
 
+  it('reports per-photo upload progress in selected order', async () => {
+    const repository = new FakeAssetPhotoAddRepository();
+    repository.failUploads = 1;
+    const command = new AddAssetPhotosCommand(repository);
+    const progress: Array<{ readonly index: number; readonly fileName: string; readonly status: string }> = [];
+
+    await command.execute({
+      assetId: 'asset-water-bottle',
+      photos: [
+        { fileName: 'one.jpg', contentType: 'image/jpeg', contentBase64: 'MQ==' },
+        { fileName: 'two.jpg', contentType: 'image/jpeg', contentBase64: 'Mg==' }
+      ],
+      onPhotoProgress: (event) => progress.push(event)
+    });
+
+    expect(progress).toEqual([
+      { index: 0, fileName: 'one.jpg', status: 'uploading' },
+      { index: 0, fileName: 'one.jpg', status: 'failed' },
+      { index: 1, fileName: 'two.jpg', status: 'uploading' },
+      { index: 1, fileName: 'two.jpg', status: 'attached' }
+    ]);
+  });
+
   it('requires at least one selected photo', async () => {
     const command = new AddAssetPhotosCommand(new FakeAssetPhotoAddRepository());
 

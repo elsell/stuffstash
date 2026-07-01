@@ -125,9 +125,10 @@ This spec defines camera behavior only for attaching still photos during the Add
   - `Add photos` must use the same native camera/library chooser and selected-photo model as the Add and voice flows.
   - Detail photo upload must prefer the direct-upload path and may use the explicit local-development sentinel fallback, keeping transport details behind adapters.
   - Existing asset photos must render as an ordered horizontal strip backed by attachment metadata and authorized thumbnail references.
+  - Tapping an existing photo must open a focused viewer sheet with the current photo, position within the asset's photo set, safe file metadata when available, next/previous navigation when multiple photos exist, and a removal action when the caller can edit the asset.
   - Removing an existing photo must call the attachment hard-delete endpoint through a mobile application command and generated API-client adapter, with native confirmation before mutation.
-  - Upload progress/status must be visible at the asset workspace, and failed uploads must offer retry without claiming the asset update failed.
-  - The first implementation may upload selected photos in the visible order. Persisted attachment reordering and cover-photo selection require a future media-management API slice because the current attachment API does not expose ordering or cover-image commands.
+  - Upload progress/status must be visible per selected photo at the asset workspace, including pending, uploading, attached, and failed states. Failed uploads must offer retry without claiming the asset update failed.
+  - The first implementation may upload selected photos in the visible order. Persisted attachment reordering and cover-photo selection require a future media-management API slice because the current attachment API does not expose ordering or cover-image commands. The detail workspace may show position labels and next/previous carousel affordances, but must not imply that reordered attachment order has been saved when no persistence command exists.
 - Mobile asset detail must expose the asset lifecycle controls currently supported by the API for items, containers, and locations:
   - Active assets show an `Archive` action.
   - Archived assets show a `Restore` action and a destructive `Delete permanently` action.
