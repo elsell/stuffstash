@@ -18,6 +18,7 @@ import {
 } from '../../application/providerProfiles/ProviderProfileSettingsQuery';
 import {
   ProviderProfileLifecycleAction,
+  ProviderCredentialPurpose,
   ProviderProfileSummary,
   VoiceProviderConfiguration,
   VoiceProviderSlot
@@ -45,7 +46,7 @@ type ScreenState =
 type CredentialEditorState = {
   readonly profileId: string;
   readonly profileName: string;
-  readonly purpose: 'api_key' | 'oauth_bearer';
+  readonly purpose: ProviderCredentialPurpose;
   readonly value: string;
 };
 
@@ -543,17 +544,26 @@ function InlineSecretEditor({
   return (
     <View style={styles.panel}>
       <Text style={styles.sectionTitle}>Replace credential</Text>
-      <Text style={styles.editorHint}>{editor.profileName} / {editor.purpose}</Text>
-      <TextInput
-        autoCapitalize="none"
-        autoCorrect={false}
-        placeholder="Paste credential"
-        placeholderTextColor={colors.textMuted}
-        secureTextEntry
-        style={styles.textInput}
-        value={editor.value}
-        onChangeText={onChange}
-      />
+      <Text style={styles.editorHint}>{editor.profileName} / {formatCredentialPurpose(editor.purpose)}</Text>
+      {editor.purpose === 'server_adc' ? (
+        <View style={styles.serverCredentialPanel}>
+          <Text style={styles.serverCredentialTitle}>Use server Application Default Credentials</Text>
+          <Text style={styles.serverCredentialText}>
+            Stuff Stash will use the Google credentials configured on the API server. No provider secret is stored for this profile.
+          </Text>
+        </View>
+      ) : (
+        <TextInput
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="Paste credential"
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry
+          style={styles.textInput}
+          value={editor.value}
+          onChangeText={onChange}
+        />
+      )}
       <EditorActions isSaving={isSaving} onCancel={onCancel} onSave={onSave} />
     </View>
   );
@@ -702,6 +712,17 @@ function ErrorState({ message }: { readonly message: string }) {
 
 function formatCapability(value: string): string {
   return value.replace(/_/g, ' ');
+}
+
+function formatCredentialPurpose(value: ProviderCredentialPurpose): string {
+  switch (value) {
+    case 'api_key':
+      return 'API key';
+    case 'oauth_bearer':
+      return 'OAuth bearer token';
+    case 'server_adc':
+      return 'Server ADC';
+  }
 }
 
 function readableError(error: unknown, fallback: string): string {
@@ -876,6 +897,27 @@ const styles = StyleSheet.create({
   promptInput: {
     minHeight: 112,
     textAlignVertical: 'top'
+  },
+  serverCredentialPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md
+  },
+  serverCredentialTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  serverCredentialText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0,
+    lineHeight: 20,
+    marginTop: spacing.xs
   },
   editorActions: {
     flexDirection: 'row',

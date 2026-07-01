@@ -22,6 +22,7 @@ class FakeProviderProfileClient {
   testedProfileId: string | undefined;
   voiceConfiguration: VoiceProviderConfiguration = voiceProviderConfiguration();
   updatedVoiceInput: UpdateVoiceProviderConfigurationInput | undefined;
+  replacedCredentialInput: unknown;
 
   async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
     this.listedTenantId = tenantId;
@@ -83,7 +84,12 @@ class FakeProviderProfileClient {
     };
   }
 
-  async replaceProviderProfileCredential(): Promise<ProviderProfile> {
+  async replaceProviderProfileCredential(
+    _tenantId: string,
+    _providerProfileId: string,
+    input: unknown
+  ): Promise<ProviderProfile> {
+    this.replacedCredentialInput = input;
     return {
       ...providerProfile(),
       credentialStatus: 'configured'
@@ -150,6 +156,33 @@ describe('ApiProviderProfileRepository', () => {
     expect(client.listedTenantId).toBe('tenant-home');
   });
 
+  it('maps server ADC profile metadata and omits credential material on replacement', async () => {
+    const client = new FakeProviderProfileClient();
+    client.profiles = [
+      {
+        ...providerProfile(),
+        id: 'profile-tts',
+        capability: 'text_to_speech',
+        displayName: 'Google Cloud voice',
+        runtimeOptions: { credentialType: 'server_adc', languageCode: 'en-US', voiceName: 'en-US-Standard-C' }
+      }
+    ];
+    const repository = new ApiProviderProfileRepository(client, 'tenant-home');
+
+    await expect(repository.listProviderProfiles()).resolves.toMatchObject([
+      {
+        id: 'profile-tts',
+        credentialPurpose: 'server_adc'
+      }
+    ]);
+    await repository.replaceProviderProfileCredential({
+      providerProfileId: 'profile-tts',
+      purpose: 'server_adc'
+    });
+
+    expect(client.replacedCredentialInput).toEqual({ purpose: 'server_adc' });
+  });
+
   it('runs safe tests with the configured tenant scope', async () => {
     const client = new FakeProviderProfileClient();
     const repository = new ApiProviderProfileRepository(client, 'tenant-home');
@@ -174,6 +207,7 @@ describe('ApiProviderProfileRepository', () => {
             displayName: 'Gemini speech',
             modelName: 'gemini-2.5-flash-lite',
             credentialStatus: 'configured',
+            credentialPurpose: 'server_adc',
             lifecycleState: 'enabled',
             lastTestedAt: '2026-06-26T12:00:00Z'
           },
@@ -194,7 +228,7 @@ describe('ApiProviderProfileRepository', () => {
           label: 'Speech input',
           selectedProfile: {
             id: 'profile-stt',
-            credentialPurpose: 'api_key',
+            credentialPurpose: 'server_adc',
             hasPromptTemplate: false
           }
         }

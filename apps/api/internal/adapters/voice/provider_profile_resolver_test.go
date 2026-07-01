@@ -40,8 +40,11 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if set.LanguagePromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected language prompt template from selected language profile, got %q", set.LanguagePromptTemplate)
 	}
-	if len(vault.scopes) != 3 {
-		t.Fatalf("expected three credential vault reads, got %+v", vault.scopes)
+	if len(vault.scopes) != 4 {
+		t.Fatalf("expected four credential vault reads, got %+v", vault.scopes)
+	}
+	if vault.scopes[2].Purpose != ports.ProviderCredentialPurposeServerADC || vault.scopes[3].Purpose != ports.ProviderCredentialPurposeOAuthBearer {
+		t.Fatalf("expected tts credential lookup to try server ADC before oauth bearer, got %+v", vault.scopes)
 	}
 	if got := factory.configs["stt-profile"]; string(got.Credential) != "raw-stt-profile" || got.CredentialPurpose != ports.ProviderCredentialPurposeAPIKey {
 		t.Fatalf("unexpected stt factory config: %+v", got)
@@ -80,6 +83,34 @@ func TestProviderProfileResolverUsesExplicitVoiceProviderConfiguration(t *testin
 	}
 	if set.SpeechToTextProfileID != "stt-explicit" {
 		t.Fatalf("expected explicit speech profile, got %+v", set)
+	}
+}
+
+func TestProviderProfileResolverUsesServerADCProviderCredential(t *testing.T) {
+	t.Parallel()
+
+	profiles := []agentmodel.ProviderProfile{
+		providerResolverProfile(t, "stt-profile", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "lm-profile", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "tts-profile", agentmodel.ProviderCapabilityTextToSpeech, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+	}
+	vault := newProviderResolverCredentialVault(profiles[0], profiles[1])
+	ttsScope := ports.ProviderCredentialScope{
+		TenantID:          tenant.ID("tenant-home"),
+		ProviderProfileID: "tts-profile",
+		Capability:        ports.ProviderCapabilityTextToSpeech,
+		ProviderKind:      ports.ProviderKindGemini,
+		Purpose:           ports.ProviderCredentialPurposeServerADC,
+	}
+	vault.credentials[ttsScope] = []byte("server_adc")
+	factory := &providerResolverFactory{}
+	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, providerResolverVoiceConfigurationRepository{}, vault, factory)
+
+	if _, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: tenant.ID("tenant-home")}); err != nil {
+		t.Fatalf("resolve providers: %v", err)
+	}
+	if got := factory.configs["tts-profile"]; got.CredentialPurpose != ports.ProviderCredentialPurposeServerADC || string(got.Credential) != "server_adc" {
+		t.Fatalf("unexpected tts factory config: %+v", got)
 	}
 }
 

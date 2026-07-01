@@ -1,9 +1,12 @@
-import { ProviderProfileSummary } from '../../application/providerProfiles/ProviderProfileRepository';
+import {
+  ProviderCredentialPurpose,
+  ProviderProfileSummary
+} from '../../application/providerProfiles/ProviderProfileRepository';
 
 export type CredentialEditorPresentation = {
   readonly profileId: string;
   readonly profileName: string;
-  readonly purpose: 'api_key' | 'oauth_bearer';
+  readonly purpose: ProviderCredentialPurpose;
   readonly value: string;
 };
 

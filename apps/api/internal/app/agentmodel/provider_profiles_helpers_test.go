@@ -209,7 +209,7 @@ func (fakeCredentialSealer) SealProviderCredential(_ context.Context, scope port
 		KeyID:      "test-key",
 		Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
 		Nonce:      []byte("123456789012"),
-		Ciphertext: []byte("sealed:" + scope.ProviderProfileID),
+		Ciphertext: []byte("sealed:" + string(raw)),
 	}, nil
 }
 

@@ -7,6 +7,7 @@ import type {
 } from '@stuff-stash/api-client';
 import {
   CreateProviderProfileInput,
+  ProviderCredentialPurpose,
   ProviderProfileLifecycleAction,
   ProviderProfileRepository,
   ProviderProfileSummary,
@@ -74,11 +75,12 @@ export class ApiProviderProfileRepository implements ProviderProfileRepository {
     input: ReplaceProviderProfileCredentialInput
   ): Promise<ProviderProfileSummary> {
     this.requireTenant();
+    const body = input.purpose === 'server_adc'
+      ? { purpose: input.purpose }
+      : { purpose: input.purpose, credential: input.credential ?? '' };
+
     return mapProviderProfile(
-      await this.client.replaceProviderProfileCredential(this.tenantId, input.providerProfileId, {
-        purpose: input.purpose,
-        credential: input.credential
-      })
+      await this.client.replaceProviderProfileCredential(this.tenantId, input.providerProfileId, body)
     );
   }
 
@@ -132,7 +134,7 @@ function mapApiProviderProfileSummary(profile: ApiProviderProfileSummary): Provi
     displayName: profile.displayName,
     modelName: profile.modelName,
     credentialStatus: profile.credentialStatus,
-    credentialPurpose: credentialPurposeForSummary(profile),
+    credentialPurpose: parseCredentialPurpose(profile.credentialPurpose) ?? credentialPurposeForSummary(profile),
     lifecycleState: profile.lifecycleState,
     lastTestedAt: profile.lastTestedAt,
     hasPromptTemplate: false
@@ -161,17 +163,35 @@ function mapVoiceProviderConfiguration(
   };
 }
 
-function credentialPurposeForProfile(profile: ProviderProfile): 'api_key' | 'oauth_bearer' | undefined {
+function credentialPurposeForProfile(profile: ProviderProfile): ProviderCredentialPurpose | undefined {
+  const credentialType = profile.runtimeOptions.credentialType;
+  if (credentialType === 'server_adc') {
+    return 'server_adc';
+  }
+  if (credentialType === 'api_key') {
+    return 'api_key';
+  }
   if (profile.capability === 'text_to_speech') {
     return 'oauth_bearer';
   }
 
-  return profile.runtimeOptions.credentialType === 'api_key' ? 'api_key' : undefined;
+  return undefined;
 }
 
-function credentialPurposeForSummary(profile: ApiProviderProfileSummary): 'api_key' | 'oauth_bearer' | undefined {
+function credentialPurposeForSummary(profile: ApiProviderProfileSummary): ProviderCredentialPurpose | undefined {
   if (profile.providerKind !== 'gemini') {
     return undefined;
   }
   return profile.capability === 'text_to_speech' ? 'oauth_bearer' : 'api_key';
+}
+
+function parseCredentialPurpose(value: string | undefined): ProviderCredentialPurpose | undefined {
+  switch (value) {
+    case 'api_key':
+    case 'oauth_bearer':
+    case 'server_adc':
+      return value;
+    default:
+      return undefined;
+  }
 }

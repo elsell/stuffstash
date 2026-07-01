@@ -111,13 +111,14 @@ func providerProfileSummariesToResponse(profiles []app.ProviderProfileSummary) [
 
 func providerProfileSummaryToResponse(profile app.ProviderProfileSummary) dto.ProviderProfileSummaryResponse {
 	return dto.ProviderProfileSummaryResponse{
-		ID:               profile.ID,
-		Capability:       profile.Capability,
-		ProviderKind:     profile.ProviderKind,
-		DisplayName:      profile.DisplayName,
-		ModelName:        profile.ModelName,
-		CredentialStatus: profile.CredentialStatus,
-		LifecycleState:   profile.LifecycleState,
-		LastTestedAt:     profile.LastTestedAt,
+		ID:                profile.ID,
+		Capability:        profile.Capability,
+		ProviderKind:      profile.ProviderKind,
+		DisplayName:       profile.DisplayName,
+		ModelName:         profile.ModelName,
+		CredentialStatus:  profile.CredentialStatus,
+		CredentialPurpose: profile.CredentialPurpose,
+		LifecycleState:    profile.LifecycleState,
+		LastTestedAt:      profile.LastTestedAt,
 	}
 }

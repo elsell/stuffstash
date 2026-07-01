@@ -7,6 +7,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"golang.org/x/oauth2"
 )
 
 func TestGoogleProviderProfileFactoryBuildsOAuthBackedProviders(t *testing.T) {
@@ -81,6 +82,75 @@ func TestGoogleProviderProfileFactoryBuildsAPIKeyBackedGeminiProviders(t *testin
 	}
 }
 
+func TestGoogleProviderProfileFactoryBuildsServerADCBackedProviders(t *testing.T) {
+	t.Parallel()
+
+	tokenSource := countingTokenSource{}
+	factory := GoogleProviderProfileFactory{
+		DefaultTokenSource: func(context.Context) (oauth2.TokenSource, error) {
+			return tokenSource, nil
+		},
+		ServerADCProjectID:    "project",
+		ServerADCLocation:     "us-central1",
+		ServerADCQuotaProject: "quota-project",
+	}
+	options := `{"projectId":"project","location":"us-central1","quotaProject":"quota-project","languageCode":"en-US","voiceName":"en-US-Standard-C"}`
+	config := ProviderProfileProviderConfig{
+		CredentialPurpose: ports.ProviderCredentialPurposeServerADC,
+		Credential:        []byte("server_adc"),
+	}
+
+	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, options)
+	language, err := factory.LanguageInferenceProvider(context.Background(), config)
+	if err != nil {
+		t.Fatalf("build ADC language provider: %v", err)
+	}
+	languageProvider, ok := language.(GoogleGeminiLanguageInference)
+	if !ok || languageProvider.client.tokenSource == nil || languageProvider.client.quotaProject != "quota-project" {
+		t.Fatalf("unexpected ADC language provider: %#v", language)
+	}
+
+	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityTextToSpeech, options)
+	tts, err := factory.TextToSpeechProvider(context.Background(), config)
+	if err != nil {
+		t.Fatalf("build ADC text-to-speech provider: %v", err)
+	}
+	ttsProvider, ok := tts.(GoogleTextToSpeech)
+	if !ok || ttsProvider.client.tokenSource == nil || ttsProvider.client.quotaProject != "quota-project" {
+		t.Fatalf("unexpected ADC text-to-speech provider: %#v", tts)
+	}
+}
+
+func TestGoogleProviderProfileFactoryRejectsServerADCProjectOverride(t *testing.T) {
+	t.Parallel()
+
+	factory := GoogleProviderProfileFactory{
+		DefaultTokenSource: func(context.Context) (oauth2.TokenSource, error) {
+			return countingTokenSource{}, nil
+		},
+		ServerADCProjectID:    "allowed-project",
+		ServerADCLocation:     "us-central1",
+		ServerADCQuotaProject: "allowed-project",
+	}
+	_, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
+		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{"projectId":"other-project","location":"us-central1","quotaProject":"allowed-project"}`),
+		CredentialPurpose: ports.ProviderCredentialPurposeServerADC,
+		Credential:        []byte("server_adc"),
+	})
+	if err != ports.ErrInvalidProviderInput {
+		t.Fatalf("expected server ADC project override rejection, got %v", err)
+	}
+
+	_, err = factory.TextToSpeechProvider(context.Background(), ProviderProfileProviderConfig{
+		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityTextToSpeech, `{"languageCode":"en-US","voiceName":"en-US-Standard-C","quotaProject":"other-project"}`),
+		CredentialPurpose: ports.ProviderCredentialPurposeServerADC,
+		Credential:        []byte("server_adc"),
+	})
+	if err != ports.ErrInvalidProviderInput {
+		t.Fatalf("expected server ADC quota project override rejection, got %v", err)
+	}
+}
+
 func TestGoogleProviderProfileFactoryAppliesProfileHTTPTimeout(t *testing.T) {
 	t.Parallel()
 
@@ -148,4 +218,10 @@ func googleFactoryProfile(t *testing.T, capability agentmodel.ProviderCapability
 		t.Fatalf("expected valid profile")
 	}
 	return profile
+}
+
+type countingTokenSource struct{}
+
+func (countingTokenSource) Token() (*oauth2.Token, error) {
+	return &oauth2.Token{AccessToken: "adc-token", TokenType: "Bearer"}, nil
 }

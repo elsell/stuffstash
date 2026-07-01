@@ -149,6 +149,63 @@ func TestServiceReplacesProviderProfileCredentialWithSealedMaterial(t *testing.T
 	}
 }
 
+func TestServiceReplacesProviderProfileCredentialWithServerADCMarker(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	service := newProviderProfileTestService(repository, allowTenantConfigureAuthorizer{})
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileDisabled)
+	repository.saved[profile.ID.String()] = profile
+
+	updated, err := service.ReplaceProviderProfileCredential(ctx, ReplaceProviderProfileCredentialInput{
+		Principal: testPrincipal(),
+		Source:    audit.SourceAPI,
+		RequestID: "request-1",
+		TenantID:  tenant.ID("tenant-home"),
+		ProfileID: profile.ID,
+		Purpose:   "server_adc",
+	})
+	if err != nil {
+		t.Fatalf("replace server ADC provider profile credential: %v", err)
+	}
+	if updated.CredentialStatus != domain.CredentialStatusConfigured {
+		t.Fatalf("expected configured credential status, got %+v", updated)
+	}
+	if repository.lastCredential.Scope.Purpose != ports.ProviderCredentialPurposeServerADC {
+		t.Fatalf("expected server ADC credential scope, got %+v", repository.lastCredential.Scope)
+	}
+	if string(repository.lastCredential.Sealed.Ciphertext) != "sealed:server_adc" {
+		t.Fatalf("expected sealed non-secret server ADC marker, got %+v", repository.lastCredential.Sealed)
+	}
+}
+
+func TestServiceRejectsServerADCForUnsupportedProviderProfile(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	repository := newFakeProviderProfileRepository()
+	service := newProviderProfileTestService(repository, allowTenantConfigureAuthorizer{})
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileDisabled)
+	profile.ProviderKind = domain.ProviderKind("local_http")
+	repository.saved[profile.ID.String()] = profile
+
+	_, err := service.ReplaceProviderProfileCredential(ctx, ReplaceProviderProfileCredentialInput{
+		Principal: testPrincipal(),
+		Source:    audit.SourceAPI,
+		RequestID: "request-1",
+		TenantID:  tenant.ID("tenant-home"),
+		ProfileID: profile.ID,
+		Purpose:   "server_adc",
+	})
+	if !errors.Is(err, apperrors.ErrValidation) {
+		t.Fatalf("expected validation error for unsupported server ADC purpose, got %v", err)
+	}
+	if repository.lastCredential.ID != "" {
+		t.Fatalf("expected no credential to be persisted for unsupported server ADC purpose, got %+v", repository.lastCredential)
+	}
+}
+
 func TestServiceRejectsCredentialReplacementWhenSealerUnavailable(t *testing.T) {
 	t.Parallel()
 
@@ -440,13 +497,26 @@ func TestServiceTestsProviderProfileWithUnsealedCredentialAndUpdatesLastTestedAt
 	}
 }
 
-func TestServiceProviderCredentialPurposesPreferOAuthForGeminiTextToSpeech(t *testing.T) {
+func TestServiceProviderCredentialPurposesPreferServerADCForGeminiTextToSpeech(t *testing.T) {
 	t.Parallel()
 
 	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileDisabled)
 	got := providerCredentialPurposes(profile)
-	if len(got) != 1 || got[0] != ports.ProviderCredentialPurposeOAuthBearer {
+	if len(got) != 2 || got[0] != ports.ProviderCredentialPurposeServerADC || got[1] != ports.ProviderCredentialPurposeOAuthBearer {
 		t.Fatalf("unexpected Gemini text-to-speech credential order: %+v", got)
+	}
+}
+
+func TestServiceProviderCredentialPurposesPreferAPIKeyThenServerADCForGeminiLanguage(t *testing.T) {
+	t.Parallel()
+
+	profile := mustProviderProfile(t, "profile-one", "tenant-home", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileDisabled)
+	got := providerCredentialPurposes(profile)
+	if len(got) != 3 ||
+		got[0] != ports.ProviderCredentialPurposeAPIKey ||
+		got[1] != ports.ProviderCredentialPurposeServerADC ||
+		got[2] != ports.ProviderCredentialPurposeOAuthBearer {
+		t.Fatalf("unexpected Gemini language credential order: %+v", got)
 	}
 }
 

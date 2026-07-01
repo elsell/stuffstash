@@ -154,6 +154,42 @@ func TestProviderProfileManagementFlowRedactsCredentials(t *testing.T) {
 	}
 }
 
+func TestProviderProfileCredentialEndpointAcceptsServerADCWithoutRawSecret(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	server := NewServer(":0", newProviderProfileTestApp(t, seededState{
+		tenants: []seedTenant{{id: tenantID, name: "Home", owner: "tenant-owner"}},
+		ids: []string{
+			"01ARZ3NDEKTSV4RRFFQ69G5FAW", "audit-create-profile",
+			"credential-one", "audit-replace-credential",
+		},
+	}))
+
+	create := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/provider-profiles", "Bearer dev:tenant-owner", map[string]any{
+		"capability":     "text_to_speech",
+		"providerKind":   "gemini",
+		"displayName":    "Google voice via ADC",
+		"runtimeOptions": map[string]any{"languageCode": "en-US", "voiceName": "en-US-Standard-C", "quotaProject": "pianotechpros"},
+	})
+	if create.Code != http.StatusCreated {
+		t.Fatalf("expected provider profile create status %d, got %d with body %s", http.StatusCreated, create.Code, create.Body.String())
+	}
+	created := decodeProviderProfile(t, create)
+
+	replaceCredential := performRequest(server, http.MethodPut, "/tenants/"+tenantID+"/provider-profiles/"+created.Data.ID+"/credential", "Bearer dev:tenant-owner", map[string]any{
+		"purpose": "server_adc",
+	})
+	if replaceCredential.Code != http.StatusOK {
+		t.Fatalf("expected server ADC credential replacement status %d, got %d with body %s", http.StatusOK, replaceCredential.Code, replaceCredential.Body.String())
+	}
+	if strings.Contains(replaceCredential.Body.String(), "server_adc") || strings.Contains(replaceCredential.Body.String(), "sealed") || strings.Contains(replaceCredential.Body.String(), "test-key") {
+		t.Fatalf("server ADC credential replacement leaked credential internals: %s", replaceCredential.Body.String())
+	}
+	withCredential := decodeProviderProfile(t, replaceCredential)
+	if withCredential.Data.CredentialStatus != "configured" {
+		t.Fatalf("expected configured credential status, got %+v", withCredential.Data)
+	}
+}
+
 func TestProviderProfileEndpointsRejectUnauthorizedUsers(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FB0"

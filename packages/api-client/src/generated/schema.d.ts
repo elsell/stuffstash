@@ -1402,6 +1402,7 @@ export interface components {
         };
         ProviderProfileSummaryResponse: {
             capability: string;
+            credentialPurpose?: string;
             credentialStatus: string;
             displayName: string;
             id: string;
@@ -1433,8 +1434,8 @@ export interface components {
              * @example https://example.com/schemas/ReplaceProviderProfileCredentialBody.json
              */
             readonly $schema?: string;
-            /** @description Raw provider credential for this request only */
-            credential: string;
+            /** @description Raw provider credential for this request only; omit for server_adc */
+            credential?: string;
             /** @description Credential purpose */
             purpose: string;
         };

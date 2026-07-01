@@ -80,15 +80,15 @@ The first REST management API must live under the tenant scope:
 
 All provider-profile management endpoints must require the same bearer-token authentication boundary as the rest of the API and tenant configuration permission for the requested tenant. Viewers, editors, unrelated users, unauthenticated users, wrong-tenant users, expired-token users, and malformed-token users must be rejected.
 
-Provider profile responses must include safe profile metadata only: profile ID, tenant ID, capability, provider kind, display name, endpoint URL, model name, non-secret runtime options, capability metadata, prompt template when configured for language inference profiles, credential status, lifecycle state, and timestamps. Responses must never include raw credentials, sealed credential ciphertext, nonce material, encryption key IDs, provider account details, provider session tokens, provider-specific realtime URLs, raw final prompts, raw transcripts, raw model responses, raw audio, or generated speech.
+Provider profile responses must include safe profile metadata only: profile ID, tenant ID, capability, provider kind, display name, endpoint URL, model name, non-secret runtime options, capability metadata, prompt template when configured for language inference profiles, credential status, lifecycle state, and timestamps. Voice configuration summaries may include the safe credential purpose (`api_key`, `server_adc`, or `oauth_bearer`) so clients can present the correct setup action without inferring from capability alone. Responses must never include raw credentials, sealed credential ciphertext, nonce material, encryption key IDs, provider account details, provider session tokens, provider-specific realtime URLs, raw final prompts, raw transcripts, raw model responses, raw audio, or generated speech.
 
 Provider profile update requests may change only non-secret configuration: display name, endpoint URL, model name, non-secret runtime options, capability metadata, and the language-inference prompt template. They must not change provider profile ID, tenant ID, capability, provider kind, credential status, lifecycle state, creation timestamp, or raw credentials, and callers must not provide an arbitrary last-tested timestamp. Updating configuration must clear `lastTestedAt` because the previous diagnostic result no longer proves the changed configuration. Archived profiles cannot be updated in the first slice.
 
-Credential replacement requests must accept raw credential material only in the request body for the duration of that request. The application service must seal the credential through the configured credential-sealing port before persistence, store it through the credential repository boundary, supersede prior active credentials for the same tenant/profile/capability/provider-kind/purpose, update the provider profile credential status to `configured`, and return only safe profile metadata.
+Credential replacement requests must accept raw credential material only in the request body for the duration of that request, except for explicit server-managed credential purposes that do not require user-supplied secret material. The requested credential purpose must be supported by the selected provider profile's provider kind and capability before the profile can be marked configured. The application service must seal the credential or non-secret credential marker through the configured credential-sealing port before persistence, store it through the credential repository boundary, supersede prior active credentials for the same tenant/profile/capability/provider-kind/purpose, update the provider profile credential status to `configured`, and return only safe profile metadata.
 
 Provider test requests must require tenant configuration permission and return safe metadata only: provider profile ID, capability, provider kind, status, safe message, and test timestamp. Provider test requests may be run for `enabled` or `disabled` configured profiles so tenant administrators can verify a profile before enabling it for realtime sessions. Provider test requests must reject archived, missing, unsupported, malformed, credential-missing, or credential-unusable profiles safely. Successful tests must update the provider profile `lastTestedAt` timestamp and write audit history. Failed tests must return a safe failure and must not expose provider credentials, raw provider responses, stack traces, endpoint internals, prompts, transcripts, audio, generated speech, hidden inventory data, or provider account details.
 
-Provider test credential selection must be based on the provider profile capability and provider kind, not incidental repository order. Gemini provider profiles that use Vertex AI runtime options must support `oauth_bearer` credentials. Gemini provider profiles for speech-to-text and language inference must also support Google AI Gemini API `api_key` credentials by sending `x-goog-api-key` to the Gemini API `generateContent` endpoint, and should prefer active `api_key` credentials before `oauth_bearer` credentials when both exist. Google Cloud Text-to-Speech provider profiles remain `oauth_bearer` only until a separate provider kind or adapter is specified for API-key-backed speech synthesis.
+Provider test credential selection must be based on the provider profile capability and provider kind, not incidental repository order. Gemini provider profiles that use Vertex AI runtime options must support `server_adc` and `oauth_bearer` credentials. `server_adc` uses the API process's Application Default Credentials or workload identity and stores only a non-secret marker so tenant administrators can choose server-managed Google authentication through the UI without pasting a short-lived access token. Tenant-managed `server_adc` profiles must not allow a tenant to spend or authenticate the server identity against arbitrary Google projects: the adapter must use an operator-configured default or allowlist for project, location, and quota project, and must reject profile runtime options outside those bounds. Gemini provider profiles for speech-to-text and language inference must also support Google AI Gemini API `api_key` credentials by sending `x-goog-api-key` to the Gemini API `generateContent` endpoint, and should prefer active `api_key` credentials before `server_adc` before `oauth_bearer` credentials when more than one exists. Google Cloud Text-to-Speech provider profiles support `server_adc` and `oauth_bearer` until a separate provider kind or adapter is specified for API-key-backed speech synthesis.
 
 ## Authorization
 
@@ -111,6 +111,7 @@ Credential replacement must still remain atomic with provider profile status upd
 Credential sealing must follow these rules:
 
 - Raw provider credentials must never be persisted.
+- `server_adc` credential records must persist only a non-secret marker. The marker exists so normal profile readiness, audit, testing, and credential replacement semantics remain tenant-scoped; the provider adapter must resolve fresh server ADC tokens at provider call time.
 - Raw provider credentials must never be returned by API responses after creation or update.
 - Raw provider credentials must never be logged, audited, included in observability metadata, or exposed in generated OpenAPI examples.
 - The encryption scheme must provide authenticated encryption, not only confidentiality.
@@ -184,10 +185,13 @@ Resolution must verify:
 - Required endpoint, model, runtime options, and credentials are present and valid enough to attempt provider use.
 - The authenticated principal is authorized for the tenant and inventory scope requested by the realtime session.
 
-For Gemini speech-to-text and language inference, runtime profile construction must support two credential modes:
+For Gemini speech-to-text and language inference, runtime profile construction must support three credential modes:
 
+- `server_adc`: uses Vertex AI Gemini with project, location, optional quota project, model name, and a fresh token from server Application Default Credentials. Project, location, and quota project must be resolved through operator-controlled defaults or allowlists before tenant runtime options are applied.
 - `oauth_bearer`: uses Vertex AI Gemini with `projectId`, `location`, optional `quotaProject`, model name, and bearer authorization.
 - `api_key`: uses the Google AI Gemini API with model name, optional endpoint URL, and `x-goog-api-key` authorization. It must not require `projectId`, `location`, or `quotaProject`.
+
+For Gemini-backed Google Cloud Text-to-Speech, runtime profile construction must support `server_adc` and `oauth_bearer`. `server_adc` must use the configured `languageCode`, `voiceName`, operator-bounded quota project, and fresh server ADC tokens. `oauth_bearer` remains supported for compatibility but must not be used for long-running local or production deployments unless the operator accepts token-expiration risk.
 
 Resolution must fail safely with user-safe errors and safe observability when a profile is missing, disabled, archived, malformed, unsupported, or has unusable credentials.
 
@@ -261,6 +265,7 @@ Tests must cover:
 - Viewer, editor, unrelated user, wrong-tenant user, unauthenticated user, expired-token user, and malformed-token rejection.
 - Cross-tenant and cross-profile ciphertext swapping attempts.
 - Wrong capability, wrong provider kind, wrong credential purpose, and wrong profile unseal attempts.
+- Tenant-configured `server_adc` provider profiles resolving through the provider factory without persisted bearer-token material.
 - Missing, malformed, disabled, archived, unsupported, and unusable provider profiles.
 - Missing or misconfigured credential-sealing adapter fail-closed behavior for startup, create, update, credential replacement, and provider test operations.
 - Provider test failure safety.

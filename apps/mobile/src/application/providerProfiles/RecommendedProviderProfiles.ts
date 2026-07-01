@@ -1,10 +1,14 @@
-import { CreateProviderProfileInput, ProviderProfileCapability } from './ProviderProfileRepository';
+import {
+  CreateProviderProfileInput,
+  ProviderCredentialPurpose,
+  ProviderProfileCapability
+} from './ProviderProfileRepository';
 
 export type RecommendedProviderProfileTemplate = {
   readonly key: string;
   readonly title: string;
   readonly description: string;
-  readonly credentialPurpose: 'api_key' | 'oauth_bearer';
+  readonly credentialPurpose: ProviderCredentialPurpose;
   readonly input: CreateProviderProfileInput;
 };
 
@@ -27,15 +31,16 @@ export const recommendedProviderProfiles: readonly RecommendedProviderProfileTem
     }
   },
   {
-    key: 'google-cloud-tts-oauth',
+    key: 'google-cloud-tts-server-adc',
     title: 'Google Cloud text-to-speech',
-    description: 'Standard voice for spoken responses using an OAuth bearer token.',
-    credentialPurpose: 'oauth_bearer',
+    description: 'Standard voice for spoken responses using server Application Default Credentials.',
+    credentialPurpose: 'server_adc',
     input: {
       capability: 'text_to_speech',
       providerKind: 'gemini',
       displayName: 'Google Cloud Standard voice',
       runtimeOptions: {
+        credentialType: 'server_adc',
         languageCode: 'en-US',
         voiceName: 'en-US-Standard-C'
       },

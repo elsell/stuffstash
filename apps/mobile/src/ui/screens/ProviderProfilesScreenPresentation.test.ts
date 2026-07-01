@@ -19,6 +19,15 @@ describe('ProviderProfilesScreenPresentation', () => {
     });
   });
 
+  it('opens server ADC replacement without requiring secret text', () => {
+    expect(buildCredentialEditorPresentation(profile({ credentialPurpose: 'server_adc' }))).toEqual({
+      profileId: 'profile-language',
+      profileName: 'Gemini language',
+      purpose: 'server_adc',
+      value: ''
+    });
+  });
+
   it('opens prompt replacement without rendering hidden existing prompt text', () => {
     expect(buildPromptEditorPresentation(profile({ hasPromptTemplate: true }))).toEqual({
       profileId: 'profile-language',

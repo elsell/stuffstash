@@ -273,7 +273,7 @@ export interface UpdateProviderProfileInput {
 
 export interface ReplaceProviderProfileCredentialInput {
   purpose: string;
-  credential: string;
+  credential?: string;
 }
 
 export interface ProviderProfileTestResult {
@@ -292,6 +292,7 @@ export interface ProviderProfileSummary {
   displayName: string;
   modelName: string;
   credentialStatus: string;
+  credentialPurpose?: string;
   lifecycleState: string;
   lastTestedAt?: string;
 }
@@ -1457,6 +1458,7 @@ function mapProviderProfileSummary(response: ProviderProfileSummary): ProviderPr
     displayName: response.displayName,
     modelName: response.modelName,
     credentialStatus: response.credentialStatus,
+    credentialPurpose: response.credentialPurpose,
     lifecycleState: response.lifecycleState,
     lastTestedAt: response.lastTestedAt
   };

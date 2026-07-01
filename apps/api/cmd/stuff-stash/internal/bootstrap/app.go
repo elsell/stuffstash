@@ -55,7 +55,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		ProviderProfileUnitOfWork:     repositories.providerProfileUnitOfWork,
 		VoiceProviderConfigs:          repositories.voiceProviderConfigs,
 		ProviderCredentialVault:       providerCredentialVault,
-		ProviderProfileTester:         voice.NewProviderProfileTester(voice.GoogleProviderProfileFactory{}),
+		ProviderProfileTester:         voice.NewProviderProfileTester(googleProviderProfileFactory(cfg)),
 		RealtimeSessions:              repositories.realtimeSessions,
 		ActionPlans:                   repositories.actionPlans,
 		IDs:                           idgen.NewULIDGenerator(),

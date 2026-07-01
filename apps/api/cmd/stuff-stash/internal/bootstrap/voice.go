@@ -102,7 +102,16 @@ func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories reposito
 	if repositories.providerProfiles == nil || vault == nil {
 		return nil
 	}
-	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, voice.GoogleProviderProfileFactory{})
+	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, googleProviderProfileFactory(cfg))
+}
+
+func googleProviderProfileFactory(cfg config.Config) voice.GoogleProviderProfileFactory {
+	projectID := strings.TrimSpace(cfg.GoogleCloudProject)
+	return voice.GoogleProviderProfileFactory{
+		ServerADCProjectID:    projectID,
+		ServerADCLocation:     strings.TrimSpace(cfg.GoogleCloudLocation),
+		ServerADCQuotaProject: projectID,
+	}
 }
 
 func validateGoogleVoiceConfig(cfg config.Config) error {

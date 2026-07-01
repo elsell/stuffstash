@@ -85,14 +85,15 @@ type VoiceProviderSlotResponse struct {
 }
 
 type ProviderProfileSummaryResponse struct {
-	ID               string `json:"id"`
-	Capability       string `json:"capability"`
-	ProviderKind     string `json:"providerKind"`
-	DisplayName      string `json:"displayName"`
-	ModelName        string `json:"modelName"`
-	CredentialStatus string `json:"credentialStatus"`
-	LifecycleState   string `json:"lifecycleState"`
-	LastTestedAt     string `json:"lastTestedAt,omitempty"`
+	ID                string `json:"id"`
+	Capability        string `json:"capability"`
+	ProviderKind      string `json:"providerKind"`
+	DisplayName       string `json:"displayName"`
+	ModelName         string `json:"modelName"`
+	CredentialStatus  string `json:"credentialStatus"`
+	CredentialPurpose string `json:"credentialPurpose,omitempty"`
+	LifecycleState    string `json:"lifecycleState"`
+	LastTestedAt      string `json:"lastTestedAt,omitempty"`
 }
 
 type GetProviderProfileInput struct {
@@ -136,7 +137,7 @@ type ReplaceProviderProfileCredentialInput struct {
 
 type ReplaceProviderProfileCredentialBody struct {
 	Purpose    string `json:"purpose" doc:"Credential purpose"`
-	Credential string `json:"credential" doc:"Raw provider credential for this request only"`
+	Credential string `json:"credential,omitempty" doc:"Raw provider credential for this request only; omit for server_adc"`
 }
 
 type TestProviderProfileInput struct {

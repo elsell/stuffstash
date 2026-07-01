@@ -215,6 +215,33 @@ describe('ManageProviderProfileCommand', () => {
     expect(recommendedProviderProfiles[1].credentialPurpose).toBe('api_key');
   });
 
+  it('creates recommended server ADC text-to-speech profiles without requiring a pasted token', async () => {
+    const repository = new FakeProviderProfileRepository();
+    const command = new ManageProviderProfileCommand(repository);
+
+    await command.createRecommended(recommendedProviderProfiles[2]);
+    await command.replaceCredential({
+      providerProfileId: 'profile-tts',
+      purpose: 'server_adc'
+    });
+
+    expect(repository.createdProfile).toMatchObject({
+      capability: 'text_to_speech',
+      providerKind: 'gemini',
+      displayName: 'Google Cloud Standard voice',
+      runtimeOptions: {
+        credentialType: 'server_adc',
+        languageCode: 'en-US',
+        voiceName: 'en-US-Standard-C'
+      }
+    });
+    expect(repository.replacedCredential).toEqual({
+      providerProfileId: 'profile-tts',
+      purpose: 'server_adc',
+      credential: undefined
+    });
+  });
+
   it('routes prompt updates, credential replacement, and lifecycle actions', async () => {
     const repository = new FakeProviderProfileRepository();
     const command = new ManageProviderProfileCommand(repository);

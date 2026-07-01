@@ -35,6 +35,7 @@ type ProviderCredentialPurpose string
 const (
 	ProviderCredentialPurposeAPIKey      ProviderCredentialPurpose = "api_key"
 	ProviderCredentialPurposeOAuthBearer ProviderCredentialPurpose = "oauth_bearer"
+	ProviderCredentialPurposeServerADC   ProviderCredentialPurpose = "server_adc"
 )
 
 func NewProviderCredentialPurpose(value string) (ProviderCredentialPurpose, bool) {
@@ -43,6 +44,8 @@ func NewProviderCredentialPurpose(value string) (ProviderCredentialPurpose, bool
 		return ProviderCredentialPurposeAPIKey, true
 	case ProviderCredentialPurposeOAuthBearer:
 		return ProviderCredentialPurposeOAuthBearer, true
+	case ProviderCredentialPurposeServerADC:
+		return ProviderCredentialPurposeServerADC, true
 	default:
 		return "", false
 	}

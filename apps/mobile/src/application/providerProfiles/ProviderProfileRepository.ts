@@ -4,6 +4,8 @@ export type ProviderProfileCapability =
   | 'text_to_speech'
   | string;
 
+export type ProviderCredentialPurpose = 'api_key' | 'oauth_bearer' | 'server_adc';
+
 export type ProviderProfileSummary = {
   readonly id: string;
   readonly capability: ProviderProfileCapability;
@@ -11,7 +13,7 @@ export type ProviderProfileSummary = {
   readonly displayName: string;
   readonly modelName: string;
   readonly credentialStatus: string;
-  readonly credentialPurpose?: 'api_key' | 'oauth_bearer';
+  readonly credentialPurpose?: ProviderCredentialPurpose;
   readonly lifecycleState: string;
   readonly lastTestedAt?: string;
   readonly hasPromptTemplate: boolean;
@@ -87,8 +89,8 @@ export type UpdateProviderProfileInput = {
 
 export type ReplaceProviderProfileCredentialInput = {
   readonly providerProfileId: string;
-  readonly purpose: 'api_key' | 'oauth_bearer';
-  readonly credential: string;
+  readonly purpose: ProviderCredentialPurpose;
+  readonly credential?: string;
 };
 
 export type ProviderProfileLifecycleAction = 'enable' | 'disable' | 'archive';

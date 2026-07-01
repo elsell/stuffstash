@@ -33,10 +33,14 @@ export class ManageProviderProfileCommand {
   async replaceCredential(
     input: ReplaceProviderProfileCredentialInput
   ): Promise<ProviderProfileSummary> {
+    const credential = input.purpose === 'server_adc'
+      ? undefined
+      : requireText(input.credential ?? '', 'Enter the provider credential.');
+
     return this.profiles.replaceProviderProfileCredential({
       providerProfileId: requireText(input.providerProfileId, 'Choose a provider profile.'),
       purpose: input.purpose,
-      credential: requireText(input.credential, 'Enter the provider credential.')
+      credential
     });
   }
 

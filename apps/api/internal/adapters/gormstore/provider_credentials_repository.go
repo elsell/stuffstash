@@ -156,7 +156,7 @@ func validateProviderCredentialScope(scope ports.ProviderCredentialScope) error 
 		return ports.ErrInvalidProviderCredential
 	}
 	switch scope.Purpose {
-	case ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer:
+	case ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer, ports.ProviderCredentialPurposeServerADC:
 	default:
 		return ports.ErrInvalidProviderCredential
 	}

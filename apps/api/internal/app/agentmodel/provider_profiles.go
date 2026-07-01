@@ -80,6 +80,8 @@ type ReplaceProviderProfileCredentialInput struct {
 	Raw       []byte
 }
 
+const serverADCCredentialMarker = "server_adc"
+
 type TestProviderProfileInput struct {
 	Principal identity.Principal
 	Source    audit.Source
@@ -288,7 +290,13 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 		return domain.ProviderProfile{}, apperrors.ErrPrecondition
 	}
 	purpose, ok := ports.NewProviderCredentialPurpose(input.Purpose)
-	if !ok || len(bytes.TrimSpace(input.Raw)) == 0 {
+	if !ok {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
+	}
+	raw := input.Raw
+	if purpose == ports.ProviderCredentialPurposeServerADC {
+		raw = []byte(serverADCCredentialMarker)
+	} else if len(bytes.TrimSpace(raw)) == 0 {
 		return domain.ProviderProfile{}, apperrors.ErrValidation
 	}
 	current, found, err := s.providerProfiles.ProviderProfileByID(ctx, input.TenantID, input.ProfileID)
@@ -297,6 +305,9 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 	}
 	if !found {
 		return domain.ProviderProfile{}, apperrors.ErrNotFound
+	}
+	if !providerCredentialPurposeSupported(current, purpose) {
+		return domain.ProviderProfile{}, apperrors.ErrValidation
 	}
 	updated, ok := current.WithCredentialConfigured(s.clock.Now())
 	if !ok {
@@ -316,7 +327,7 @@ func (s Service) ReplaceProviderProfileCredential(ctx context.Context, input Rep
 	credential, err := s.providerCredentialVault.PrepareProviderCredential(ctx, ports.PrepareProviderCredentialInput{
 		ID:        credentialID,
 		Scope:     scope,
-		Raw:       input.Raw,
+		Raw:       raw,
 		CreatedAt: updated.UpdatedAt,
 		UpdatedAt: updated.UpdatedAt,
 	})
@@ -442,11 +453,20 @@ func (s Service) activeProviderCredential(ctx context.Context, tenantID tenant.I
 func providerCredentialPurposes(profile domain.ProviderProfile) []ports.ProviderCredentialPurpose {
 	if profile.ProviderKind == domain.ProviderKindGemini {
 		if profile.Capability == domain.ProviderCapabilityTextToSpeech {
-			return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeOAuthBearer}
+			return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeServerADC, ports.ProviderCredentialPurposeOAuthBearer}
 		}
-		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
+		return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeServerADC, ports.ProviderCredentialPurposeOAuthBearer}
 	}
 	return []ports.ProviderCredentialPurpose{ports.ProviderCredentialPurposeAPIKey, ports.ProviderCredentialPurposeOAuthBearer}
+}
+
+func providerCredentialPurposeSupported(profile domain.ProviderProfile, purpose ports.ProviderCredentialPurpose) bool {
+	for _, supported := range providerCredentialPurposes(profile) {
+		if supported == purpose {
+			return true
+		}
+	}
+	return false
 }
 
 func (s Service) updateLifecycle(ctx context.Context, input ProviderProfileLifecycleInput, action audit.Action, eventName ports.EventName, transition func(domain.ProviderProfile) (domain.ProviderProfile, bool)) (domain.ProviderProfile, error) {

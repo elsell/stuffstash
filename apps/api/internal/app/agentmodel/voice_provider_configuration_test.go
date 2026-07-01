@@ -20,7 +20,7 @@ func TestServiceBuildsVoiceProviderConfigurationDiagnostics(t *testing.T) {
 	stt := providerProfileForVoiceConfig(t, "stt-ready", domain.ProviderCapabilitySpeechToText, domain.ProviderProfileEnabled, domain.CredentialStatusConfigured, testedAt())
 	duplicate := providerProfileForVoiceConfig(t, "stt-duplicate", domain.ProviderCapabilitySpeechToText, domain.ProviderProfileEnabled, domain.CredentialStatusConfigured, testedAt())
 	language := providerProfileForVoiceConfig(t, "language-missing-credential", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileEnabled, domain.CredentialStatusMissing, nil)
-	tts := providerProfileForVoiceConfig(t, "tts-untested", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileEnabled, domain.CredentialStatusConfigured, nil)
+	tts := providerProfileForVoiceConfigWithRuntimeOptions(t, "tts-untested", domain.ProviderCapabilityTextToSpeech, domain.ProviderProfileEnabled, domain.CredentialStatusConfigured, nil, `{"credentialType":"server_adc"}`)
 	for _, profile := range []domain.ProviderProfile{stt, duplicate, language, tts} {
 		repository.saved[profile.ID.String()] = profile
 	}
@@ -48,6 +48,9 @@ func TestServiceBuildsVoiceProviderConfigurationDiagnostics(t *testing.T) {
 	}
 	if view.Slots[2].Readiness != VoiceProviderSlotUntested {
 		t.Fatalf("expected tts untested warning, got %+v", view.Slots[2])
+	}
+	if view.Slots[2].SelectedProfile == nil || view.Slots[2].SelectedProfile.CredentialPurpose != string(ports.ProviderCredentialPurposeServerADC) {
+		t.Fatalf("expected tts selected profile to expose server ADC credential purpose, got %+v", view.Slots[2].SelectedProfile)
 	}
 }
 
@@ -138,6 +141,11 @@ func TestServiceReportsArchivedSelectedVoiceProviderProfile(t *testing.T) {
 
 func providerProfileForVoiceConfig(t *testing.T, id string, capability domain.ProviderCapability, lifecycle domain.ProviderProfileLifecycleState, credential domain.CredentialStatus, tested *time.Time) domain.ProviderProfile {
 	t.Helper()
+	return providerProfileForVoiceConfigWithRuntimeOptions(t, id, capability, lifecycle, credential, tested, `{}`)
+}
+
+func providerProfileForVoiceConfigWithRuntimeOptions(t *testing.T, id string, capability domain.ProviderCapability, lifecycle domain.ProviderProfileLifecycleState, credential domain.CredentialStatus, tested *time.Time, runtimeOptions string) domain.ProviderProfile {
+	t.Helper()
 	now := time.Date(2026, 6, 26, 10, 0, 0, 0, time.UTC)
 	profile, ok := domain.NewProviderProfile(domain.ProviderProfileInput{
 		ID:                 domain.ProviderProfileID(id),
@@ -146,7 +154,7 @@ func providerProfileForVoiceConfig(t *testing.T, id string, capability domain.Pr
 		ProviderKind:       domain.ProviderKindGemini,
 		DisplayName:        domain.DisplayName(id),
 		ModelName:          domain.ModelName("gemini-2.5-flash-lite"),
-		RuntimeOptionsJSON: []byte(`{}`),
+		RuntimeOptionsJSON: []byte(runtimeOptions),
 		CapabilityJSON:     []byte(`{}`),
 		CredentialStatus:   credential,
 		LifecycleState:     lifecycle,

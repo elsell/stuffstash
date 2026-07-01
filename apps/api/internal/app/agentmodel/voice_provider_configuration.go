@@ -2,6 +2,7 @@ package agentmodel
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sort"
 	"strings"
@@ -79,14 +80,15 @@ type VoiceProviderSlotView struct {
 }
 
 type ProviderProfileSummary struct {
-	ID               string
-	Capability       string
-	ProviderKind     string
-	DisplayName      string
-	ModelName        string
-	CredentialStatus string
-	LifecycleState   string
-	LastTestedAt     string
+	ID                string
+	Capability        string
+	ProviderKind      string
+	DisplayName       string
+	ModelName         string
+	CredentialStatus  string
+	CredentialPurpose string
+	LifecycleState    string
+	LastTestedAt      string
 }
 
 func (s Service) GetVoiceProviderConfiguration(ctx context.Context, input VoiceProviderConfigurationInput) (VoiceProviderConfigurationView, error) {
@@ -363,15 +365,37 @@ func providerProfileSummaries(profiles []domain.ProviderProfile) []ProviderProfi
 
 func providerProfileSummary(profile domain.ProviderProfile) ProviderProfileSummary {
 	return ProviderProfileSummary{
-		ID:               profile.ID.String(),
-		Capability:       profile.Capability.String(),
-		ProviderKind:     profile.ProviderKind.String(),
-		DisplayName:      profile.DisplayName.String(),
-		ModelName:        profile.ModelName.String(),
-		CredentialStatus: profile.CredentialStatus.String(),
-		LifecycleState:   profile.LifecycleState.String(),
-		LastTestedAt:     safeTimePtr(profile.LastTestedAt),
+		ID:                profile.ID.String(),
+		Capability:        profile.Capability.String(),
+		ProviderKind:      profile.ProviderKind.String(),
+		DisplayName:       profile.DisplayName.String(),
+		ModelName:         profile.ModelName.String(),
+		CredentialStatus:  profile.CredentialStatus.String(),
+		CredentialPurpose: providerProfileSummaryCredentialPurpose(profile),
+		LifecycleState:    profile.LifecycleState.String(),
+		LastTestedAt:      safeTimePtr(profile.LastTestedAt),
 	}
+}
+
+func providerProfileSummaryCredentialPurpose(profile domain.ProviderProfile) string {
+	options := map[string]any{}
+	_ = json.Unmarshal([]byte(profile.RuntimeOptionsJSON.String()), &options)
+	credentialType, _ := options["credentialType"].(string)
+	switch strings.TrimSpace(credentialType) {
+	case string(ports.ProviderCredentialPurposeServerADC):
+		return string(ports.ProviderCredentialPurposeServerADC)
+	case string(ports.ProviderCredentialPurposeAPIKey):
+		return string(ports.ProviderCredentialPurposeAPIKey)
+	case string(ports.ProviderCredentialPurposeOAuthBearer):
+		return string(ports.ProviderCredentialPurposeOAuthBearer)
+	}
+	if profile.ProviderKind == domain.ProviderKindGemini {
+		if profile.Capability == domain.ProviderCapabilityTextToSpeech {
+			return string(ports.ProviderCredentialPurposeOAuthBearer)
+		}
+		return string(ports.ProviderCredentialPurposeAPIKey)
+	}
+	return ""
 }
 
 func safeTimePtr(value *time.Time) string {
