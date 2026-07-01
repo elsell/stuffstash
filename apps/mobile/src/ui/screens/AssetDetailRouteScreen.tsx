@@ -80,6 +80,10 @@ import {
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
+import {
+  applyPhotoUploadProgress,
+  photoUploadRows
+} from './AssetPhotoUploadProgressPresentation';
 import { colors, radius, spacing } from '../theme/tokens';
 
 type AssetDetailRouteScreenProps = {
@@ -458,21 +462,7 @@ export function AssetDetailRouteScreen({
   }
 
   function updatePhotoUploadProgress(event: AddAssetPhotoProgressEvent): void {
-    setPhotoUploads((current) =>
-      current.map((upload) =>
-        upload.index === event.index
-          ? { ...upload, status: event.status }
-          : upload
-      )
-    );
-  }
-
-  function photoUploadRows(photos: readonly SelectedAssetPhoto[]): readonly PhotoUploadRow[] {
-    return photos.map((photo, index) => ({
-      index,
-      fileName: photo.fileName,
-      status: 'pending'
-    }));
+    setPhotoUploads((current) => applyPhotoUploadProgress(current, event));
   }
 
   function showMoreActions(asset: AssetDetailViewModel): void {

@@ -31,6 +31,10 @@ import {
   resetLocalAssetPhotoOrder
 } from '../components/AssetPhotoWorkspacePresentation';
 import {
+  applyPhotoUploadProgress,
+  photoUploadRows
+} from './AssetPhotoUploadProgressPresentation';
+import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
   assetLifecycleFailurePresentation,
@@ -508,6 +512,37 @@ describe('asset audit history presentation helpers', () => {
 });
 
 describe('asset photo workspace presentation helpers', () => {
+  it('builds upload progress rows from selected photo order', () => {
+    expect(photoUploadRows([
+      { id: 'selected-one', fileName: 'one.jpg', contentType: 'image/jpeg', uri: 'file://one', sizeBytes: 1 },
+      { id: 'selected-two', fileName: 'two.png', contentType: 'image/png', uri: 'file://two', sizeBytes: 2 }
+    ])).toEqual([
+      { index: 0, fileName: 'one.jpg', status: 'pending' },
+      { index: 1, fileName: 'two.png', status: 'pending' }
+    ]);
+  });
+
+  it('updates only the upload progress row that matches index and file name', () => {
+    const rows = photoUploadRows([
+      { id: 'selected-one', fileName: 'one.jpg', contentType: 'image/jpeg', uri: 'file://one', sizeBytes: 1 },
+      { id: 'selected-two', fileName: 'two.png', contentType: 'image/png', uri: 'file://two', sizeBytes: 2 }
+    ]);
+
+    expect(applyPhotoUploadProgress(rows, {
+      index: 1,
+      fileName: 'two.png',
+      status: 'uploading'
+    })).toEqual([
+      { index: 0, fileName: 'one.jpg', status: 'pending' },
+      { index: 1, fileName: 'two.png', status: 'uploading' }
+    ]);
+    expect(applyPhotoUploadProgress(rows, {
+      index: 1,
+      fileName: 'stale-selection.png',
+      status: 'failed'
+    })).toBe(rows);
+  });
+
   it('builds viewer navigation around the selected photo', () => {
     expect(assetPhotoViewerModel([
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
