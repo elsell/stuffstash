@@ -124,6 +124,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The move destination picker must not present item assets as valid destinations until item-to-container promotion exists as a real application command.
   - Users may choose `No parent` to move the asset to the inventory root.
   - Users may create a missing destination inline as either a location or a container in the current inventory, then immediately select it as the destination. The picker must expose a compact native kind choice so rooms and broad places become locations while boxes, shelves, bins, cabinets, and similar storage objects become containers.
+  - Inline destination creation should preserve spatial context by creating the new destination under the asset's current parent when the asset has one, then selecting the new destination for the move. Root-level assets may create root-level destinations.
   - The picker must reject moving an asset into itself. Server validation remains authoritative for cycles, invalid parent kind, archived parents, cross-tenant, and cross-inventory attempts.
   - After move, the asset workspace must refresh and show the new path.
 - Mobile asset detail photo management must use the existing authorized attachment APIs:

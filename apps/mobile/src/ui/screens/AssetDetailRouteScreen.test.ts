@@ -14,6 +14,8 @@ import {
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
   moveDestinationCreateKindLabel,
+  moveDestinationCreatePlacement,
+  moveDestinationCreatePlacementLabel,
   movePlacementPreview,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
@@ -312,19 +314,31 @@ describe('asset detail move helpers', () => {
     expect(moveDestinationCreateKindHelp('location')).toBe('Best for rooms, places, and areas.');
     expect(moveDestinationCreateKindHelp('container')).toBe('Best for boxes, shelves, bins, and cabinets.');
     expect(moveDestinationCreateButtonLabel('container', 'big cabinet')).toBe('Create container "big cabinet"');
+    expect(moveDestinationCreatePlacementLabel({
+      parentAssetId: 'asset-kitchen',
+      parentPathLabel: 'Kitchen'
+    })).toBe('Creates inside Kitchen');
+    expect(moveDestinationCreatePlacementLabel({})).toBe('Creates at inventory root');
   });
 
   it('builds a selectable parent from a newly created move destination', () => {
+    const placement = {
+      parentAssetId: 'asset-kitchen',
+      parentPathLabel: 'Kitchen'
+    };
+
     expect(createdMoveDestinationParent({
       id: 'asset-cabinet',
       kind: 'container',
+      placement,
       title: 'big cabinet'
     })).toEqual({
       id: 'asset-cabinet',
       title: 'big cabinet',
       kind: 'container',
+      parentAssetId: 'asset-kitchen',
       subtitle: 'New container',
-      pathLabel: 'big cabinet',
+      pathLabel: 'Kitchen / big cabinet',
       selectionHint: 'Container',
       willPromoteToContainer: false
     });
@@ -332,49 +346,89 @@ describe('asset detail move helpers', () => {
     expect(createdMoveDestinationParent({
       id: 'asset-kitchen',
       kind: 'location',
+      placement: {},
       title: 'Kitchen'
-    })).toMatchObject({
+    })).toEqual({
+      id: 'asset-kitchen',
+      title: 'Kitchen',
       kind: 'location',
+      parentAssetId: undefined,
       subtitle: 'New location',
-      selectionHint: 'Location'
+      pathLabel: 'Kitchen',
+      selectionHint: 'Location',
+      willPromoteToContainer: false
     });
   });
 
   it('builds the create command input from the selected destination kind', () => {
-    expect(moveDestinationCreateInput('container', '  big cabinet  ')).toEqual({
+    expect(moveDestinationCreateInput('container', '  big cabinet  ', {
+      parentAssetId: 'asset-kitchen',
+      parentPathLabel: 'Kitchen'
+    })).toEqual({
       kind: 'container',
       title: 'big cabinet',
+      description: '',
+      parentAssetId: 'asset-kitchen'
+    });
+    expect(moveDestinationCreateInput('location', 'Kitchen', {})).toEqual({
+      kind: 'location',
+      title: 'Kitchen',
       description: ''
     });
+  });
+
+  it('derives inline destination creation placement from the moved asset current parent', () => {
+    expect(moveDestinationCreatePlacement({
+      parentAssetId: 'asset-kitchen',
+      parentLocationTrailLabel: 'Kitchen'
+    })).toEqual({
+      parentAssetId: 'asset-kitchen',
+      parentPathLabel: 'Kitchen'
+    });
+    expect(moveDestinationCreatePlacement({
+      parentAssetId: undefined,
+      parentLocationTrailLabel: 'Inventory root'
+    })).toEqual({});
   });
 
   it('allows inline creation when an exact title exists only for another destination kind', () => {
     const matches = [
       {
         title: 'Cabinet',
-        kind: 'location'
+        kind: 'location',
+        parentAssetId: 'asset-kitchen'
       },
       {
         title: 'Shelf',
-        kind: 'container'
+        kind: 'container',
+        parentAssetId: 'asset-kitchen'
       }
     ] as const;
 
     expect(canCreateMoveDestination({
       kind: 'container',
       matches,
+      parentAssetId: 'asset-kitchen',
       query: 'Cabinet'
     })).toBe(true);
     expect(canCreateMoveDestination({
       kind: 'location',
       matches,
+      parentAssetId: 'asset-kitchen',
       query: 'cabinet'
     })).toBe(false);
     expect(canCreateMoveDestination({
       kind: 'container',
       matches,
+      parentAssetId: 'asset-kitchen',
       query: '   '
     })).toBe(false);
+    expect(canCreateMoveDestination({
+      kind: 'container',
+      matches,
+      parentAssetId: 'asset-office',
+      query: 'Shelf'
+    })).toBe(true);
   });
 });
 

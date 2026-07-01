@@ -7,6 +7,12 @@ export type MoveDestinationCreateInput = {
   readonly kind: MoveDestinationCreateKind;
   readonly title: string;
   readonly description: string;
+  readonly parentAssetId?: string;
+};
+
+export type MoveDestinationCreatePlacement = {
+  readonly parentAssetId?: string;
+  readonly parentPathLabel?: string;
 };
 
 export function canSaveMoveAsset(
@@ -113,10 +119,12 @@ export function moveIntoEmptyState(query: string): MoveIntoEmptyState {
 export function canCreateMoveDestination({
   kind,
   matches,
+  parentAssetId,
   query
 }: {
   readonly kind: MoveDestinationCreateKind;
-  readonly matches: readonly Pick<ParentLookupResult, 'kind' | 'title'>[];
+  readonly matches: readonly Pick<ParentLookupResult, 'kind' | 'parentAssetId' | 'title'>[];
+  readonly parentAssetId?: string;
   readonly query: string;
 }): boolean {
   const title = query.trim();
@@ -124,15 +132,35 @@ export function canCreateMoveDestination({
     return false;
   }
   return !matches.some((match) =>
-    match.kind === kind && normalizeForMoveDestination(match.title) === normalizeForMoveDestination(title)
+    match.kind === kind
+      && (match.parentAssetId ?? undefined) === (parentAssetId ?? undefined)
+      && normalizeForMoveDestination(match.title) === normalizeForMoveDestination(title)
   );
 }
 
-export function moveDestinationCreateInput(kind: MoveDestinationCreateKind, title: string): MoveDestinationCreateInput {
+export function moveDestinationCreatePlacement(
+  asset: Pick<AssetDetailViewModel, 'parentAssetId' | 'parentLocationTrailLabel'>
+): MoveDestinationCreatePlacement {
+  if (!asset.parentAssetId) {
+    return {};
+  }
+
+  return {
+    parentAssetId: asset.parentAssetId,
+    parentPathLabel: asset.parentLocationTrailLabel
+  };
+}
+
+export function moveDestinationCreateInput(
+  kind: MoveDestinationCreateKind,
+  title: string,
+  placement: MoveDestinationCreatePlacement
+): MoveDestinationCreateInput {
   return {
     kind,
     title: title.trim(),
-    description: ''
+    description: '',
+    ...(placement.parentAssetId ? { parentAssetId: placement.parentAssetId } : {})
   };
 }
 
@@ -150,13 +178,19 @@ export function moveDestinationCreateButtonLabel(kind: MoveDestinationCreateKind
   return `Create ${kind} "${title}"`;
 }
 
+export function moveDestinationCreatePlacementLabel(placement: MoveDestinationCreatePlacement): string {
+  return placement.parentPathLabel ? `Creates inside ${placement.parentPathLabel}` : 'Creates at inventory root';
+}
+
 export function createdMoveDestinationParent({
   id,
   kind,
+  placement,
   title
 }: {
   readonly id: string;
   readonly kind: MoveDestinationCreateKind;
+  readonly placement: MoveDestinationCreatePlacement;
   readonly title: string;
 }): ParentLookupResult {
   const kindLabel = moveDestinationCreateKindLabel(kind);
@@ -164,8 +198,9 @@ export function createdMoveDestinationParent({
     id,
     title,
     kind,
+    parentAssetId: placement.parentAssetId,
     subtitle: `New ${kind}`,
-    pathLabel: title,
+    pathLabel: placement.parentPathLabel ? `${placement.parentPathLabel} / ${title}` : title,
     selectionHint: kindLabel,
     willPromoteToContainer: false
   };

@@ -25,6 +25,8 @@ import {
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
   moveDestinationCreateKindLabel,
+  moveDestinationCreatePlacement,
+  moveDestinationCreatePlacementLabel,
   type MoveDestinationCreateKind,
   type MoveDestinationRow,
   movePlacementPreview,
@@ -131,10 +133,16 @@ export function MoveAssetSheet({
 }) {
   const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !isSaving : false;
   const placement = draft ? movePlacementPreview(asset, draft.selectedParent) : undefined;
+  const createPlacement = moveDestinationCreatePlacement(asset);
   const createTitle = draft?.query.trim() ?? '';
   const createKind = draft?.createKind ?? 'location';
   const canCreate = draft
-    ? canCreateMoveDestination({ kind: createKind, matches: draft.matches, query: draft.query }) && !isSaving
+    ? canCreateMoveDestination({
+        kind: createKind,
+        matches: draft.matches,
+        parentAssetId: createPlacement.parentAssetId,
+        query: draft.query
+      }) && !isSaving
     : false;
   return (
     <Modal animationType="slide" transparent visible={draft !== undefined} onRequestClose={onClose}>
@@ -172,6 +180,9 @@ export function MoveAssetSheet({
                   />
                 </View>
                 <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
+                <Text style={styles.createPlacementText}>
+                  {moveDestinationCreatePlacementLabel(createPlacement)}
+                </Text>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{ disabled: isSaving }}
@@ -547,6 +558,14 @@ const styles = StyleSheet.create({
   createKindHelp: {
     color: colors.textMuted,
     fontSize: 13,
+    lineHeight: 18,
+    paddingHorizontal: spacing.xs
+  },
+  createPlacementText: {
+    color: colors.accentStrong,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0,
     lineHeight: 18,
     paddingHorizontal: spacing.xs
   },

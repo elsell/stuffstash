@@ -75,6 +75,7 @@ import {
   createdMoveDestinationParent,
   isSelectableMoveDestination,
   isSelectableMoveIntoCandidate,
+  moveDestinationCreatePlacement,
   moveDestinationCreateInput,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
@@ -261,10 +262,14 @@ export function AssetDetailRouteScreen({
     setPendingAction('move');
     setWorkspaceStatus(undefined);
     try {
-      const created = await createAssetCommand.execute(moveDestinationCreateInput(createKind, name));
+      const placement = moveDestinationCreatePlacement(asset);
+      const created = await createAssetCommand.execute(
+        moveDestinationCreateInput(createKind, name, placement)
+      );
       const createdParent = createdMoveDestinationParent({
         id: created.id,
         kind: createKind,
+        placement,
         title: created.title
       });
       setMoveDraft({
