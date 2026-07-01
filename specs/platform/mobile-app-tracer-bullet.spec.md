@@ -134,6 +134,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Archived assets show a `Restore` action and a destructive `Delete permanently` action.
   - Archive, restore, and permanent delete must call the generated API client through mobile application ports and commands. UI code must not call generated DTO clients directly.
   - Archive, restore, and permanent delete must use native confirmation before mutation. Permanent delete must be framed as irreversible and must not share the same visual weight as ordinary edit or move actions.
+  - Lifecycle confirmation copy must name the asset and explain the consequence of the selected operation. Permanent delete confirmation must state that the asset itself and its photos are removed while audit history remains.
   - Archive and restore must refresh the asset detail view from the application query after success so lifecycle state, updated-at labels, and downstream lists converge with API state.
   - Permanent delete must navigate away from the deleted asset detail after success because the asset is no longer readable.
   - API validation failures, including attempts to archive or delete assets with active children or restore assets whose parent is archived, must be shown as safe user-facing errors without client-side lifecycle workarounds.

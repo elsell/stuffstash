@@ -7,6 +7,10 @@ import {
 } from './AssetDetailMovePresentation';
 import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import { assetPhotoViewerModel } from './AssetPhotoWorkspacePresentation';
+import {
+  assetLifecycleActionRows,
+  assetLifecycleConfirmation
+} from './AssetLifecyclePresentation';
 
 describe('navigateAfterDeletedAsset', () => {
   it('uses native back navigation when the asset detail route has history', () => {
@@ -167,5 +171,68 @@ describe('asset photo workspace presentation helpers', () => {
     expect(assetPhotoViewerModel([
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' }
     ], 'photo-two')).toBeUndefined();
+  });
+});
+
+describe('asset lifecycle presentation helpers', () => {
+  it('shows active and archived lifecycle actions with destructive delete separated', () => {
+    expect(assetLifecycleActionRows({
+      canArchive: true,
+      canRestore: false,
+      canDeletePermanently: false
+    })).toEqual([
+      { kind: 'archive', label: 'Archive', isDestructive: false }
+    ]);
+
+    expect(assetLifecycleActionRows({
+      canArchive: false,
+      canRestore: true,
+      canDeletePermanently: true
+    })).toEqual([
+      { kind: 'restore', label: 'Restore', isDestructive: false },
+      { kind: 'delete', label: 'Delete permanently', isDestructive: true }
+    ]);
+  });
+
+  it('names the asset and removed media in permanent delete confirmation copy', () => {
+    expect(assetLifecycleConfirmation('delete', {
+      title: 'Passport folder',
+      photos: [
+        { id: 'photo-one', label: 'photo-one.jpg', uri: 'https://photos/one.jpg' },
+        { id: 'photo-two', label: 'photo-two.jpg', uri: 'https://photos/two.jpg' }
+      ],
+      containedAssetsLabel: '1 thing inside',
+      canContainAssets: true
+    })).toEqual({
+      title: 'Delete Passport folder permanently?',
+      message: 'This permanently removes Passport folder. 2 photos will be removed with it. Current contents: 1 thing inside. Deletion will not continue while active things are inside it. Audit history remains, but the asset itself cannot be restored.',
+      confirmLabel: 'Delete permanently',
+      isDestructive: true
+    });
+  });
+
+  it('explains archive and restore without treating them like permanent delete', () => {
+    expect(assetLifecycleConfirmation('archive', {
+      title: 'Water bottle',
+      photos: [],
+      containedAssetsLabel: '0 things inside',
+      canContainAssets: false
+    })).toEqual({
+      title: 'Archive Water bottle?',
+      message: 'Water bottle will be hidden from normal inventory work. You can restore it later from archived asset views.',
+      confirmLabel: 'Archive',
+      isDestructive: false
+    });
+    expect(assetLifecycleConfirmation('restore', {
+      title: 'Water bottle',
+      photos: [],
+      containedAssetsLabel: '0 things inside',
+      canContainAssets: false
+    })).toEqual({
+      title: 'Restore Water bottle?',
+      message: 'Water bottle will return to active inventory work.',
+      confirmLabel: 'Restore',
+      isDestructive: false
+    });
   });
 });

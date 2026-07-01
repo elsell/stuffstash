@@ -49,6 +49,11 @@ import {
   MoveThingsHereSheet
 } from './AssetDetailSheets';
 import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
+import {
+  assetLifecycleActionRows,
+  assetLifecycleConfirmation,
+  AssetLifecycleActionKind
+} from './AssetLifecyclePresentation';
 import { parentFromCurrentAssetPath } from './AssetDetailMovePresentation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 import { colors, radius, spacing } from '../theme/tokens';
@@ -424,16 +429,17 @@ export function AssetDetailRouteScreen({
   function showMoreActions(asset: AssetDetailViewModel): void {
     if (Platform.OS === 'ios') {
       const actions = lifecycleActions(asset);
+      const destructiveActionIndex = actions.findIndex((action) => action.isDestructive);
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options: [...actions.map((action) => action.label), 'Audit history', 'Cancel'],
           cancelButtonIndex: actions.length + 1,
-          destructiveButtonIndex: actions.findIndex((action) => action.kind === 'delete')
+          destructiveButtonIndex: destructiveActionIndex >= 0 ? destructiveActionIndex : undefined
         },
         (index) => {
           const action = actions[index];
           if (action) {
-            action.run();
+            confirmLifecycleAction(action.kind, asset);
             return;
           }
           if (index === actions.length) {
@@ -446,8 +452,8 @@ export function AssetDetailRouteScreen({
     Alert.alert('Asset actions', undefined, [
       ...lifecycleActions(asset).map((action) => ({
         text: action.label,
-        style: action.kind === 'delete' ? 'destructive' as const : 'default' as const,
-        onPress: action.run
+        style: action.isDestructive ? 'destructive' as const : 'default' as const,
+        onPress: () => confirmLifecycleAction(action.kind, asset)
       })),
       { text: 'Audit history', onPress: () => void openAuditHistory(asset) },
       { text: 'Cancel', style: 'cancel' }
@@ -480,40 +486,19 @@ export function AssetDetailRouteScreen({
   }
 
   function lifecycleActions(asset: AssetDetailViewModel) {
-    return [
-      asset.canArchive ? { kind: 'archive' as const, label: 'Archive', run: confirmArchive } : undefined,
-      asset.canRestore ? { kind: 'restore' as const, label: 'Restore', run: confirmRestore } : undefined,
-      asset.canDeletePermanently ? { kind: 'delete' as const, label: 'Delete permanently', run: confirmDelete } : undefined
-    ].filter((action): action is { readonly kind: 'archive' | 'restore' | 'delete'; readonly label: string; readonly run: () => void } => action !== undefined);
+    return assetLifecycleActionRows(asset);
   }
 
-  function confirmArchive(): void {
-    Alert.alert(
-      'Archive asset?',
-      'Archived assets are hidden from normal inventory work and can be restored later.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Archive', style: 'destructive', onPress: () => void runLifecycleAction('archive') }
-      ]
-    );
-  }
-
-  function confirmRestore(): void {
-    Alert.alert('Restore asset?', 'This returns the asset to active inventory work.', [
+  function confirmLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
+    const confirmation = assetLifecycleConfirmation(action, asset);
+    Alert.alert(confirmation.title, confirmation.message, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Restore', onPress: () => void runLifecycleAction('restore') }
+      {
+        text: confirmation.confirmLabel,
+        style: confirmation.isDestructive ? 'destructive' : 'default',
+        onPress: () => void runLifecycleAction(action)
+      }
     ]);
-  }
-
-  function confirmDelete(): void {
-    Alert.alert(
-      'Delete permanently?',
-      'This permanently removes the asset. Audit history is preserved, but the asset itself cannot be restored.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete permanently', style: 'destructive', onPress: () => void runLifecycleAction('delete') }
-      ]
-    );
   }
 
   async function runLifecycleAction(action: 'archive' | 'restore' | 'delete'): Promise<void> {
