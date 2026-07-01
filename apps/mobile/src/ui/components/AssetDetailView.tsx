@@ -36,6 +36,8 @@ type AssetDetailViewProps = {
   readonly photoUploads?: readonly AssetPhotoUploadProgressViewModel[];
   readonly photoOrder?: readonly string[];
   readonly photoStatusMessage?: string;
+  readonly workspaceStatusMessage?: string;
+  readonly workspaceStatusKind?: 'success' | 'working';
   readonly canRetryPhotos?: boolean;
   readonly onBack?: () => void;
   readonly onEdit?: () => void;
@@ -71,6 +73,8 @@ export function AssetDetailView({
   photoUploads = [],
   photoOrder = [],
   photoStatusMessage,
+  workspaceStatusKind = 'success',
+  workspaceStatusMessage,
   refreshControl
 }: AssetDetailViewProps) {
   return (
@@ -141,6 +145,20 @@ export function AssetDetailView({
               onPress={onAddPhotos}
             />
           </View>
+
+          {workspaceStatusMessage ? (
+            <View
+              accessible
+              accessibilityLiveRegion="polite"
+              accessibilityRole="alert"
+              style={[
+                styles.workspaceStatusPanel,
+                workspaceStatusKind === 'working' ? styles.workspaceStatusWorkingPanel : null
+              ]}
+            >
+              <Text style={styles.workspaceStatusText}>{workspaceStatusMessage}</Text>
+            </View>
+          ) : null}
 
           {photoStatusMessage ? (
             <View style={styles.photoStatusPanel}>
@@ -751,6 +769,24 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
     padding: spacing.md
+  },
+  workspaceStatusPanel: {
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.md,
+    padding: spacing.md
+  },
+  workspaceStatusWorkingPanel: {
+    backgroundColor: colors.surfaceMuted
+  },
+  workspaceStatusText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 20
   },
   photoStatusText: {
     color: colors.text,

@@ -67,6 +67,11 @@ import {
   AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
 import {
+  assetWorkspaceSuccessStatus,
+  visibleAssetWorkspaceStatus,
+  AssetWorkspaceStatus
+} from './AssetWorkspaceStatusPresentation';
+import {
   createdMoveDestinationParent,
   isSelectableMoveDestination,
   isSelectableMoveIntoCandidate,
@@ -121,6 +126,7 @@ export function AssetDetailRouteScreen({
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
   const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
+  const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
   const [photoOrder, setPhotoOrder] = useState<readonly string[]>([]);
   const [auditHistoryState, setAuditHistoryState] = useState<AssetAuditHistorySheetState>({
@@ -134,6 +140,7 @@ export function AssetDetailRouteScreen({
     setAuditHistoryState({ status: 'closed' });
     setPhotoUploads([]);
     setPhotoStatus(undefined);
+    setWorkspaceStatus(undefined);
     setSelectedPhotoId(undefined);
     setPhotoOrder(resetLocalAssetPhotoOrder());
 
@@ -160,6 +167,7 @@ export function AssetDetailRouteScreen({
 
   async function refreshAsset(): Promise<void> {
     setIsRefreshing(true);
+    setWorkspaceStatus(undefined);
 
     try {
       await reloadAsset();
@@ -200,15 +208,17 @@ export function AssetDetailRouteScreen({
       return;
     }
     setPendingAction('edit');
+    setWorkspaceStatus(undefined);
     try {
       const normalized = normalizedEditDraft(editDraft);
-      await updateAssetCommand.execute({
+      const result = await updateAssetCommand.execute({
         assetId,
         title: normalized.title,
         description: normalized.description
       });
       setEditDraft(undefined);
       await reloadAsset();
+      setWorkspaceStatus(assetWorkspaceSuccessStatus('edit', result));
     } catch (error) {
       Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
     } finally {
@@ -249,6 +259,7 @@ export function AssetDetailRouteScreen({
       return;
     }
     setPendingAction('move');
+    setWorkspaceStatus(undefined);
     try {
       const created = await createAssetCommand.execute(moveDestinationCreateInput(createKind, name));
       const createdParent = createdMoveDestinationParent({
@@ -274,13 +285,15 @@ export function AssetDetailRouteScreen({
       return;
     }
     setPendingAction('move');
+    setWorkspaceStatus(undefined);
     try {
-      await moveAssetCommand.execute({
+      const result = await moveAssetCommand.execute({
         assetId,
         parentAssetId: moveDraft.selectedParent?.id
       });
       setMoveDraft(undefined);
       await reloadAsset();
+      setWorkspaceStatus(assetWorkspaceSuccessStatus('move', result));
     } catch (error) {
       Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
     } finally {
@@ -315,13 +328,15 @@ export function AssetDetailRouteScreen({
       return;
     }
     setPendingAction('move');
+    setWorkspaceStatus(undefined);
     try {
-      await moveAssetCommand.execute({
+      const result = await moveAssetCommand.execute({
         assetId: moveIntoDraft.selectedAsset.id,
         parentAssetId: moveIntoDraft.target.id
       });
       setMoveIntoDraft(undefined);
       await reloadAsset();
+      setWorkspaceStatus(assetWorkspaceSuccessStatus('move', result));
     } catch (error) {
       Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
     } finally {
@@ -533,6 +548,7 @@ export function AssetDetailRouteScreen({
 
   async function runLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): Promise<void> {
     setPendingAction(action);
+    setWorkspaceStatus(undefined);
 
     try {
       await assetLifecycleCommand.execute({ action, assetId });
@@ -543,6 +559,7 @@ export function AssetDetailRouteScreen({
       }
 
       await reloadAsset();
+      setWorkspaceStatus(assetWorkspaceSuccessStatus(action, asset));
     } catch (error) {
       const failure = assetLifecycleFailurePresentation(
         action,
@@ -554,6 +571,8 @@ export function AssetDetailRouteScreen({
       setPendingAction(undefined);
     }
   }
+
+  const presentedWorkspaceStatus = visibleAssetWorkspaceStatus(pendingAction, workspaceStatus);
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
@@ -597,6 +616,8 @@ export function AssetDetailRouteScreen({
             photoOrder={photoOrder}
             photoUploads={photoUploads}
             photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
+            workspaceStatusKind={presentedWorkspaceStatus?.kind}
+            workspaceStatusMessage={presentedWorkspaceStatus?.message}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}

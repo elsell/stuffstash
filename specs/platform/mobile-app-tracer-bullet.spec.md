@@ -117,6 +117,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Save must call the API update asset endpoint through a mobile application command and generated API-client adapter.
   - Canceling with unsaved changes must ask for confirmation.
   - After save, the asset workspace must refresh from the application query so server validation, audit-backed updates, updated-at labels, and downstream lists converge.
+  - After successful edit, move, archive, or restore operations, the workspace must show a concise native status message near the primary actions and still refresh from the server. This status message must not replace photo upload status, lifecycle confirmations, or safe error alerts.
 - Mobile asset movement must be a dedicated placement picker:
   - The picker must show the current location path and the proposed destination before saving.
   - Users may search selectable parent candidates by title/path, and result rows must show the candidate title, kind hint, and structured path breadcrumb from the parent lookup result.

@@ -36,6 +36,11 @@ import {
   assetLifecycleOverflowPresentation
 } from './AssetLifecyclePresentation';
 import {
+  assetWorkspaceSuccessStatus,
+  assetWorkspaceWorkingStatus,
+  visibleAssetWorkspaceStatus
+} from './AssetWorkspaceStatusPresentation';
+import {
   assetEditContext,
   canSaveEditAsset,
   hasDirtyEditAssetDraft,
@@ -370,6 +375,74 @@ describe('asset detail move helpers', () => {
       matches,
       query: '   '
     })).toBe(false);
+  });
+});
+
+describe('asset workspace status presentation', () => {
+  it('describes in-flight workspace mutations near the primary actions', () => {
+    expect(assetWorkspaceWorkingStatus('edit')).toEqual({
+      kind: 'working',
+      message: 'Saving changes...'
+    });
+    expect(assetWorkspaceWorkingStatus('move')).toEqual({
+      kind: 'working',
+      message: 'Moving asset...'
+    });
+    expect(assetWorkspaceWorkingStatus('archive')).toEqual({
+      kind: 'working',
+      message: 'Archiving asset...'
+    });
+  });
+
+  it('builds concise success copy from command results and the loaded asset', () => {
+    expect(assetWorkspaceSuccessStatus('edit', { message: 'Updated Water bottle.' })).toEqual({
+      kind: 'success',
+      message: 'Updated Water bottle.'
+    });
+    expect(assetWorkspaceSuccessStatus('move', { message: 'Moved Water bottle.' })).toEqual({
+      kind: 'success',
+      message: 'Moved Water bottle.'
+    });
+    expect(assetWorkspaceSuccessStatus('archive', {
+      id: 'asset-water-bottle',
+      title: 'Water bottle',
+      kind: 'item',
+      kindLabel: 'Item',
+      description: '',
+      parentAssetId: 'asset-office',
+      locationTrailLabel: 'Office / Water bottle',
+      parentLocationTrailLabel: 'Office',
+      lifecycleLabel: 'Active',
+      isActive: true,
+      canEdit: true,
+      canMove: true,
+      canAddPhotos: true,
+      canArchive: true,
+      canRestore: false,
+      canDeletePermanently: false,
+      containedAssets: [],
+      containedAssetsLabel: '0 things inside',
+      canContainAssets: false,
+      canAddContainedAssets: false,
+      updatedAtLabel: 'Updated today',
+      photoLabel: 'Needs photo',
+      photos: [],
+      imagePlaceholderLabel: 'Item'
+    })).toEqual({
+      kind: 'success',
+      message: 'Archived Water bottle.'
+    });
+  });
+
+  it('keeps photo upload progress separate from workspace mutation status', () => {
+    const currentStatus = { kind: 'success' as const, message: 'Moved Water bottle.' };
+
+    expect(visibleAssetWorkspaceStatus('move', currentStatus)).toEqual({
+      kind: 'working',
+      message: 'Moving asset...'
+    });
+    expect(visibleAssetWorkspaceStatus('photos', currentStatus)).toBe(currentStatus);
+    expect(visibleAssetWorkspaceStatus(undefined, currentStatus)).toBe(currentStatus);
   });
 });
 
