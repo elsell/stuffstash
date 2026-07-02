@@ -78,6 +78,7 @@
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
+  let moveParentSearch = $state('');
   let customFieldValues = $state<Record<string, string>>({});
   let saveError = $state('');
   let uploadError = $state('');
@@ -89,6 +90,17 @@
   let actionPanelElement = $state<HTMLElement | null>(null);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
+  let moveParentQuery = $derived(moveParentSearch.trim().toLowerCase());
+  let matchingMoveParentTargets = $derived(
+    parentTargets.filter((target) => {
+      if (!moveParentQuery) {
+        return true;
+      }
+      return target.title.toLowerCase().includes(moveParentQuery) || target.containmentTrail.toLowerCase().includes(moveParentQuery);
+    })
+  );
+  let visibleMoveParentTargets = $derived(matchingMoveParentTargets.slice(0, 8));
+  let selectedMoveParentTarget = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
@@ -155,6 +167,7 @@
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
+    moveParentSearch = '';
     customFieldValues = Object.fromEntries(
       applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
     );
@@ -285,6 +298,11 @@
 
   function setCustomFieldValue(key: string, value: string): void {
     customFieldValues = { ...customFieldValues, [key]: value };
+  }
+
+  function selectMoveParent(id: string | null): void {
+    parentAssetId = id;
+    moveParentSearch = id ? parentTargets.find((target) => target.id === id)?.title ?? moveParentSearch : '';
   }
 
   function buildCustomFields(): Record<string, unknown> {
@@ -539,13 +557,18 @@
                       onSelect={(value) => setCustomFieldValue(field.key, value)}
                     />
                   {:else if field.type === 'enum'}
-                    <div class="parent-picker" role="group" aria-label={field.displayName}>
-                      <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
+                    <div class="parent-picker option-grid" role="group" aria-label={field.displayName}>
+                      <Button.Root
+                        variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'}
+                        aria-pressed={(customFieldValues[field.key] ?? '') === ''}
+                        onclick={() => setCustomFieldValue(field.key, '')}
+                      >
                         Unset
                       </Button.Root>
                       {#each field.enumOptions as option}
                         <Button.Root
                           variant={customFieldValues[field.key] === option ? 'secondary' : 'outline'}
+                          aria-pressed={customFieldValues[field.key] === option}
                           onclick={() => setCustomFieldValue(field.key, option)}
                         >
                           {option}
@@ -580,27 +603,41 @@
           tabindex="-1"
         >
           <h2 id="move-asset-panel-title">Move asset</h2>
-          <div class="field-stack">
-            <Label>Parent</Label>
-            <div class="parent-picker" role="group" aria-label="Move target">
+          <fieldset class="selection-field">
+            <legend>Parent</legend>
+            <div class="field-stack">
+              <Label for="move-parent-search">Find parent</Label>
+              <Input id="move-parent-search" bind:value={moveParentSearch} placeholder="Search locations or containers" />
+            </div>
+            <p class="selection-summary">
+              {selectedMoveParentTarget ? `Selected ${selectedMoveParentTarget.title}` : 'Selected inventory root'}
+            </p>
+            <div class="parent-picker option-grid" role="group" aria-label="Move target">
               <Button.Root
                 variant={parentAssetId === null ? 'secondary' : 'outline'}
                 aria-pressed={parentAssetId === null}
-                onclick={() => { parentAssetId = null; }}
+                onclick={() => selectMoveParent(null)}
               >
                 Inventory root
               </Button.Root>
-              {#each parentTargets as target}
+              {#each visibleMoveParentTargets as target}
                 <Button.Root
                   variant={parentAssetId === target.id ? 'secondary' : 'outline'}
+                  class="parent-target-button"
                   aria-pressed={parentAssetId === target.id}
-                  onclick={() => { parentAssetId = target.id; }}
+                  onclick={() => selectMoveParent(target.id)}
                 >
-                  {target.title}
+                  <span>{target.title}</span>
+                  <small>{target.containmentTrail}</small>
                 </Button.Root>
               {/each}
             </div>
-          </div>
+            {#if moveParentQuery && visibleMoveParentTargets.length === 0}
+              <p class="muted-note">No matching locations or containers.</p>
+            {:else if matchingMoveParentTargets.length > visibleMoveParentTargets.length}
+              <p class="muted-note">Showing the first {visibleMoveParentTargets.length} of {matchingMoveParentTargets.length} matches.</p>
+            {/if}
+          </fieldset>
           <div class="tray-actions">
             <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
             <Button.Root disabled={saving} onclick={() => { void save(); }}>Move</Button.Root>

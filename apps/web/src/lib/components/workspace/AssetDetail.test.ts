@@ -133,20 +133,20 @@ describe('AssetDetail', () => {
     let savedDraft: UpdateAssetDraft | null = null;
     mountAssetDetail({
       customFieldDefinitions: [
-          {
-            id: 'field-expiration',
-            tenantId: 'tenant-one',
-            inventoryId: 'inventory-one',
-            scope: 'inventory',
-            key: 'expiration-date',
-            displayName: 'Expiration date',
-            type: 'date',
-            enumOptions: [],
-            applicability: 'custom_asset_types',
-            customAssetTypeIds: ['type-medicine'],
-            lifecycleState: 'active'
-          }
-        ],
+        {
+          id: 'field-expiration',
+          tenantId: 'tenant-one',
+          inventoryId: 'inventory-one',
+          scope: 'inventory',
+          key: 'expiration-date',
+          displayName: 'Expiration date',
+          type: 'date',
+          enumOptions: [],
+          applicability: 'custom_asset_types',
+          customAssetTypeIds: ['type-medicine'],
+          lifecycleState: 'active'
+        }
+      ],
       onSave: async (draft) => {
         savedDraft = draft;
       }
@@ -162,6 +162,96 @@ describe('AssetDetail', () => {
       parentAssetId: null,
       customFields: { 'expiration-date': '2027-01-01' }
     });
+  });
+
+  it('filters move targets with grouped picker semantics', async () => {
+    let savedDraft: UpdateAssetDraft | null = null;
+    mountAssetDetail({
+      parentTargets: [
+        parentTarget('garage-shelf', 'Garage shelf', 'Garage'),
+        parentTarget('hall-closet', 'Hall closet', 'Hall'),
+        parentTarget('pantry-bin', 'Pantry bin', 'Kitchen')
+      ],
+      onSave: async (draft) => {
+        savedDraft = draft;
+      }
+    });
+
+    clickFirst('Move');
+    await flush();
+
+    const fieldset = Array.from(document.body.querySelectorAll('fieldset')).find((candidate) =>
+      candidate.textContent?.includes('Parent')
+    );
+    expect(fieldset).toBeTruthy();
+
+    setInputValue(requiredElement('#move-parent-search') as HTMLInputElement, 'closet');
+    await flush();
+
+    expect(document.body.textContent).toContain('Hall closet');
+    expect(document.body.textContent).not.toContain('Garage shelf');
+    clickFirst('Hall closet');
+    await flush();
+
+    expect(buttons('Hall closet')[0]?.getAttribute('aria-pressed')).toBe('true');
+    clickLast('Move');
+    await flush();
+
+    expect(savedDraft).toMatchObject({ parentAssetId: 'hall-closet' });
+  });
+
+  it('opens route-linked move panels with an unfiltered parent picker', async () => {
+    mountAssetDetail({
+      action: 'move',
+      asset: {
+        ...asset(),
+        parentAssetId: 'garage-shelf'
+      },
+      parentTargets: [
+        parentTarget('garage-shelf', 'Garage shelf', 'Garage'),
+        parentTarget('hall-closet', 'Hall closet', 'Hall'),
+        parentTarget('pantry-bin', 'Pantry bin', 'Kitchen')
+      ]
+    });
+    await flush();
+
+    expect((requiredElement('#move-parent-search') as HTMLInputElement).value).toBe('');
+    expect(document.body.textContent).toContain('Selected Garage shelf');
+    expect(document.body.textContent).toContain('Garage shelf');
+    expect(document.body.textContent).toContain('Hall closet');
+    expect(document.body.textContent).toContain('Pantry bin');
+  });
+
+  it('uses pressed states for enum custom fields in the edit panel', async () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        customFields: { condition: 'open' }
+      },
+      customFieldDefinitions: [
+        {
+          id: 'field-condition',
+          tenantId: 'tenant-one',
+          inventoryId: 'inventory-one',
+          scope: 'inventory',
+          key: 'condition',
+          displayName: 'Condition',
+          type: 'enum',
+          enumOptions: ['new', 'open', 'closed'],
+          applicability: 'all_assets',
+          customAssetTypeIds: [],
+          lifecycleState: 'active'
+        }
+      ]
+    });
+
+    clickFirst('Edit');
+    await flush();
+
+    expect(buttons('open')[0]?.getAttribute('aria-pressed')).toBe('true');
+    clickFirst('closed');
+    await flush();
+    expect(buttons('closed')[0]?.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('uploads a selected attachment through the detail callback', async () => {
@@ -296,10 +386,27 @@ function attachment(
   };
 }
 
+function parentTarget(id: string, title: string, containmentTrail: string): AssetViewModel {
+  return {
+    ...asset(),
+    id,
+    title,
+    kind: 'container',
+    parentAssetId: null,
+    containmentTrail
+  };
+}
+
 function chooseAttachment(file: File, label: string): void {
   const input = fileInput(label);
   Object.defineProperty(input, 'files', { value: [file], configurable: true, writable: true });
   input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function setInputValue(input: HTMLInputElement, value: string): void {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  setter?.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function fileInput(label = 'Choose file'): HTMLInputElement {
