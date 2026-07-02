@@ -189,9 +189,20 @@ small {
 
 .inventory-menu,
 .nav-list,
+.side-nav-groups,
+.nav-section,
 .parent-picker {
   display: grid;
   gap: 6px;
+}
+
+.side-nav-groups {
+  align-content: start;
+  gap: 18px;
+}
+
+.nav-section {
+  min-width: 0;
 }
 
 .tenant-row {
@@ -214,6 +225,34 @@ small {
 .nav-button {
   justify-content: flex-start;
   width: 100%;
+  height: auto;
+  min-height: 54px;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: normal;
+}
+
+.nav-button span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.nav-button strong,
+.nav-button small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-button small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 520;
+}
+
+.nav-button[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--primary);
 }
 
 .nav-eyebrow {
