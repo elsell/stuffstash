@@ -136,6 +136,8 @@ export interface AssetPhotoReference {
   headers: Record<string, string>;
 }
 
+export type AssetPhotoVariant = 'small' | 'medium' | 'large';
+
 export interface CreateAssetInput {
   kind: AssetKind;
   title: string;
@@ -1171,7 +1173,8 @@ export class StuffStashClient {
     tenantId: string,
     inventoryId: string,
     assetId: string,
-    attachmentId: string
+    attachmentId: string,
+    variant: AssetPhotoVariant = 'small'
   ): Promise<AssetPhotoReference> {
     return {
       uri: [
@@ -1184,7 +1187,7 @@ export class StuffStashClient {
         encodeURIComponent(assetId),
         'attachments',
         encodeURIComponent(attachmentId),
-        'thumbnail?variant=small'
+        `thumbnail?${new URLSearchParams({ variant: safeAssetPhotoVariant(variant) }).toString()}`
       ].join('/'),
       headers: await this.authHeaders()
     };
@@ -1225,6 +1228,17 @@ export class StuffStashClient {
     }
   }
 
+}
+
+function safeAssetPhotoVariant(variant: AssetPhotoVariant): AssetPhotoVariant {
+  switch (variant) {
+    case 'small':
+    case 'medium':
+    case 'large':
+      return variant;
+    default:
+      return 'small';
+  }
 }
 
 function readableAPIErrorMessage(status: number, error: ErrorEnvelope | undefined): string {

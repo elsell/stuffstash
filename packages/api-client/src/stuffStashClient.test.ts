@@ -469,11 +469,26 @@ describe('StuffStashClient', () => {
         'tenant one',
         'inventory/one',
         'asset one',
-        'attachment/one'
+        'attachment/one',
+        'medium'
       )
     ).resolves.toEqual({
-      uri: 'http://api.local/tenants/tenant%20one/inventories/inventory%2Fone/assets/asset%20one/attachments/attachment%2Fone/thumbnail?variant=small',
+      uri: 'http://api.local/tenants/tenant%20one/inventories/inventory%2Fone/assets/asset%20one/attachments/attachment%2Fone/thumbnail?variant=medium',
       headers: { Authorization: 'Bearer id-token' }
+    });
+  });
+
+  it('falls back to small thumbnail references for invalid runtime variants', async () => {
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local/',
+      tokenProvider: () => 'id-token',
+      fetch: async () => Response.json({ data: {}, meta: {} })
+    });
+
+    await expect(
+      client.assetAttachmentThumbnailReference('tenant-one', 'inventory-one', 'asset-one', 'attachment-one', 'large&bad=true' as never)
+    ).resolves.toMatchObject({
+      uri: 'http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/attachment-one/thumbnail?variant=small'
     });
   });
 

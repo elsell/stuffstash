@@ -127,7 +127,12 @@ Attachment content download:
 Thumbnails and image processing:
 
 - Thumbnails are generated through an image processing port.
-- The first thumbnail variant is `small`.
+- Thumbnail variants are `small`, `medium`, and `large`.
+- `small` is optimized for dense cards and list rows.
+- `medium` is optimized for asset detail hero presentation.
+- `large` is optimized for focused full-screen mobile preview without requiring the original attachment bytes.
+- Thumbnail variants must preserve aspect ratio and use a quality-oriented resize algorithm rather than nearest-neighbor scaling.
+- Image processors must inspect image dimensions before full decode and reject excessive dimensions or pixel counts before resizing, so small-byte images with hostile dimensions cannot force unbounded memory or CPU work.
 - Thumbnail generation must be authorized with `inventory.view` and scoped to the requested tenant, inventory, asset, and attachment.
 - Thumbnail generation is supported only for image attachments.
 - The application must not contain image codec, resize, crop, EXIF, or color-management implementation details.

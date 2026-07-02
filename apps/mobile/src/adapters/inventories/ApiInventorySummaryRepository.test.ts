@@ -234,10 +234,11 @@ class FakeInventoryApiClient {
     tenantId: string,
     inventoryId: string,
     assetIdValue: string,
-    attachmentId: string
+    attachmentId: string,
+    variant: 'small' | 'medium' | 'large' = 'small'
   ): Promise<AssetPhotoReference> {
     return {
-      uri: `https://api.example.test/tenants/${tenantId}/inventories/${inventoryId}/assets/${assetIdValue}/attachments/${attachmentId}/thumbnail?variant=small`,
+      uri: `https://api.example.test/tenants/${tenantId}/inventories/${inventoryId}/assets/${assetIdValue}/attachments/${attachmentId}/thumbnail?variant=${variant}`,
       headers: { Authorization: 'Bearer dev-token' }
     };
   }
@@ -575,7 +576,11 @@ describe('ApiInventorySummaryRepository', () => {
                 }
               ],
               photo: {
-                uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small'
+                uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small',
+                heroUri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=medium',
+                heroHeaders: { Authorization: 'Bearer dev-token' },
+                viewerUri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=large',
+                viewerHeaders: { Authorization: 'Bearer dev-token' }
               }
             },
             {

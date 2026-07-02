@@ -89,7 +89,7 @@ type DownloadAssetAttachmentThumbnailInput struct {
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
 	AssetID       string `path:"assetId" doc:"Asset ID"`
 	AttachmentID  string `path:"attachmentId" doc:"Attachment ID"`
-	Variant       string `query:"variant" enum:"small" doc:"Thumbnail variant"`
+	Variant       string `query:"variant" enum:"small,medium,large" doc:"Thumbnail variant"`
 }
 
 type DownloadAssetAttachmentThumbnailOutput struct {

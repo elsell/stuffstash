@@ -105,13 +105,19 @@ func (contentType ContentType) IsImage() bool {
 type ThumbnailVariant string
 
 const (
-	ThumbnailVariantSmall ThumbnailVariant = "small"
+	ThumbnailVariantSmall  ThumbnailVariant = "small"
+	ThumbnailVariantMedium ThumbnailVariant = "medium"
+	ThumbnailVariantLarge  ThumbnailVariant = "large"
 )
 
 func NewThumbnailVariant(value string) (ThumbnailVariant, bool) {
 	switch ThumbnailVariant(strings.TrimSpace(strings.ToLower(value))) {
 	case "", ThumbnailVariantSmall:
 		return ThumbnailVariantSmall, true
+	case ThumbnailVariantMedium:
+		return ThumbnailVariantMedium, true
+	case ThumbnailVariantLarge:
+		return ThumbnailVariantLarge, true
 	default:
 		return "", false
 	}

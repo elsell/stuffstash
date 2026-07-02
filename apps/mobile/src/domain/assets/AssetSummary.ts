@@ -24,6 +24,10 @@ export type AssetPhoto = {
   readonly contentType?: string;
   readonly sizeBytes?: number;
   readonly uri: string;
+  readonly heroUri?: string;
+  readonly heroHeaders?: Readonly<Record<string, string>>;
+  readonly viewerUri?: string;
+  readonly viewerHeaders?: Readonly<Record<string, string>>;
   readonly headers?: Readonly<Record<string, string>>;
 };
 

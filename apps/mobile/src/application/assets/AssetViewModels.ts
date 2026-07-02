@@ -23,6 +23,10 @@ export type AssetPhotoViewModel = {
   readonly sizeBytes?: number;
   readonly label: string;
   readonly uri: string;
+  readonly heroUri?: string;
+  readonly heroHeaders?: Readonly<Record<string, string>>;
+  readonly viewerUri?: string;
+  readonly viewerHeaders?: Readonly<Record<string, string>>;
   readonly headers?: Readonly<Record<string, string>>;
 };
 
@@ -101,6 +105,10 @@ export function toAssetDetailViewModel(
       sizeBytes: photo.sizeBytes,
       label: photo.fileName ?? `Photo ${(index + 1).toString()}`,
       uri: photo.uri,
+      heroUri: photo.heroUri,
+      heroHeaders: photo.heroHeaders,
+      viewerUri: photo.viewerUri,
+      viewerHeaders: photo.viewerHeaders,
       headers: photo.headers
     })),
     lifecycleLabel: asset.lifecycleState === 'active' ? 'Active' : 'Archived',

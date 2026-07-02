@@ -66,7 +66,10 @@ export function AssetPhotoViewerSheet({
         />
       )}
       imageIndex={selectedIndex}
-      images={photos.map((photo) => ({ uri: photo.uri, headers: photo.headers }))}
+      images={photos.map((photo) => ({
+        uri: photo.viewerUri ?? photo.heroUri ?? photo.uri,
+        headers: photo.viewerHeaders ?? photo.heroHeaders ?? photo.headers
+      }))}
       keyExtractor={(_image, index) => photos[index]?.id ?? index.toString()}
       onImageIndexChange={(index) => {
         const photoId = photos[index]?.id;

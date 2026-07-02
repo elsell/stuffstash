@@ -286,6 +286,17 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 	if len(thumbnail.Body.Bytes()) >= len(content) {
 		t.Fatalf("expected thumbnail to be smaller than uploaded image")
 	}
+	mediumThumbnail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=medium", "Bearer dev:owner", nil)
+	if mediumThumbnail.Code != http.StatusOK {
+		t.Fatalf("expected medium thumbnail status %d, got %d with body %s", http.StatusOK, mediumThumbnail.Code, mediumThumbnail.Body.String())
+	}
+	mediumThumbnailImage, err := png.Decode(bytes.NewReader(mediumThumbnail.Body.Bytes()))
+	if err != nil {
+		t.Fatalf("expected decodable medium thumbnail png: %v", err)
+	}
+	if mediumThumbnailImage.Bounds().Dx() != 512 || mediumThumbnailImage.Bounds().Dy() != 128 {
+		t.Fatalf("expected medium thumbnail to preserve smaller source dimensions, got %dx%d", mediumThumbnailImage.Bounds().Dx(), mediumThumbnailImage.Bounds().Dy())
+	}
 
 	grantViewer := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]any{
 		"principalId":  "viewer",

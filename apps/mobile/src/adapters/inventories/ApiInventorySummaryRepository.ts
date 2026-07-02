@@ -352,19 +352,38 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       attachments
         .filter((item) => item.lifecycleState === 'active' && item.contentType.startsWith('image/'))
         .map(async (attachment) => {
-          const reference = await this.client.assetAttachmentThumbnailReference(
+          const smallReference = await this.client.assetAttachmentThumbnailReference(
             asset.tenantId,
             asset.inventoryId,
             asset.id,
-            attachment.id
+            attachment.id,
+            'small'
+          );
+          const mediumReference = await this.client.assetAttachmentThumbnailReference(
+            asset.tenantId,
+            asset.inventoryId,
+            asset.id,
+            attachment.id,
+            'medium'
+          );
+          const largeReference = await this.client.assetAttachmentThumbnailReference(
+            asset.tenantId,
+            asset.inventoryId,
+            asset.id,
+            attachment.id,
+            'large'
           );
           return {
             id: attachment.id,
             fileName: attachment.fileName,
             contentType: attachment.contentType,
             sizeBytes: attachment.sizeBytes,
-            uri: reference.uri,
-            headers: reference.headers
+            uri: smallReference.uri,
+            heroUri: mediumReference.uri,
+            heroHeaders: mediumReference.headers,
+            viewerUri: largeReference.uri,
+            viewerHeaders: largeReference.headers,
+            headers: smallReference.headers
           };
         })
     );

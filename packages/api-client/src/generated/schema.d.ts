@@ -4087,7 +4087,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Thumbnail variant */
-                variant?: "small";
+                variant?: "small" | "medium" | "large";
             };
             header?: {
                 /** @description Bearer dev:<principal-id> */

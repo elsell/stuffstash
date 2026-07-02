@@ -12,10 +12,17 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"golang.org/x/image/draw"
 	_ "golang.org/x/image/webp"
 )
 
-const thumbnailMaxDimension = 256
+const (
+	thumbnailSmallMaxDimension  = 256
+	thumbnailMediumMaxDimension = 768
+	thumbnailLargeMaxDimension  = 1600
+	maxImageInputDimension      = 12000
+	maxImageInputPixels         = 50000000
+)
 
 type StandardImageProcessor struct{}
 
@@ -23,11 +30,14 @@ func (StandardImageProcessor) CreateThumbnail(_ context.Context, request ports.I
 	if !request.ContentType.IsImage() || len(request.Content) == 0 {
 		return ports.ImageDerivative{}, errors.New("thumbnail source must be an image")
 	}
+	if err := validateImageBounds(request.Content); err != nil {
+		return ports.ImageDerivative{}, err
+	}
 	source, _, err := image.Decode(bytes.NewReader(request.Content))
 	if err != nil {
 		return ports.ImageDerivative{}, err
 	}
-	thumbnail := resizeNearest(source, thumbnailMaxDimension)
+	thumbnail := resizeImage(source, thumbnailMaxDimension(request.Variant))
 	output := bytes.Buffer{}
 	if err := png.Encode(&output, thumbnail); err != nil {
 		return ports.ImageDerivative{}, err
@@ -41,6 +51,9 @@ func (StandardImageProcessor) CreateThumbnail(_ context.Context, request ports.I
 func (StandardImageProcessor) PrepareImageForModelUse(_ context.Context, request ports.ModelImageRequest) (ports.ModelImage, error) {
 	if !request.ContentType.IsImage() || len(request.Content) == 0 {
 		return ports.ModelImage{}, errors.New("model image source must be an image")
+	}
+	if err := validateImageBounds(request.Content); err != nil {
+		return ports.ModelImage{}, err
 	}
 	source, _, err := image.Decode(bytes.NewReader(request.Content))
 	if err != nil {
@@ -61,7 +74,35 @@ func (StandardImageProcessor) PrepareImageForModelUse(_ context.Context, request
 	}, nil
 }
 
-func resizeNearest(source image.Image, maxDimension int) image.Image {
+func validateImageBounds(content []byte) error {
+	config, _, err := image.DecodeConfig(bytes.NewReader(content))
+	if err != nil {
+		return err
+	}
+	if config.Width <= 0 || config.Height <= 0 {
+		return errors.New("image dimensions invalid")
+	}
+	if config.Width > maxImageInputDimension || config.Height > maxImageInputDimension {
+		return errors.New("image dimensions too large")
+	}
+	if config.Width > maxImageInputPixels/config.Height {
+		return errors.New("image pixel count too large")
+	}
+	return nil
+}
+
+func thumbnailMaxDimension(variant media.ThumbnailVariant) int {
+	switch variant {
+	case media.ThumbnailVariantMedium:
+		return thumbnailMediumMaxDimension
+	case media.ThumbnailVariantLarge:
+		return thumbnailLargeMaxDimension
+	default:
+		return thumbnailSmallMaxDimension
+	}
+}
+
+func resizeImage(source image.Image, maxDimension int) image.Image {
 	bounds := source.Bounds()
 	width := bounds.Dx()
 	height := bounds.Dy()
@@ -79,13 +120,7 @@ func resizeNearest(source image.Image, maxDimension int) image.Image {
 	targetWidth := max(1, int(float64(width)*scale))
 	targetHeight := max(1, int(float64(height)*scale))
 	target := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
-	for y := range targetHeight {
-		sourceY := bounds.Min.Y + y*height/targetHeight
-		for x := range targetWidth {
-			sourceX := bounds.Min.X + x*width/targetWidth
-			target.Set(x, y, source.At(sourceX, sourceY))
-		}
-	}
+	draw.CatmullRom.Scale(target, target.Bounds(), source, bounds, draw.Over, nil)
 	return target
 }
 

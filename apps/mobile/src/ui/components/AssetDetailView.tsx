@@ -239,7 +239,9 @@ function PhotoWorkspace({
               <Image
                 accessibilityIgnoresInvertColors
                 accessibilityLabel={photo.label}
-                source={{ uri: photo.uri, headers: photo.headers }}
+                source={index === 0
+                  ? { uri: photo.heroUri ?? photo.uri, headers: photo.heroHeaders ?? photo.headers }
+                  : { uri: photo.uri, headers: photo.headers }}
                 style={styles.heroImage}
               />
               <Text style={styles.photoPosition}>{(index + 1).toString()} / {photos.length.toString()}</Text>

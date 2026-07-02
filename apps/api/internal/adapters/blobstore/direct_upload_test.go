@@ -5,8 +5,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"hash/crc32"
 	"image"
 	"image/color"
 	"image/png"
@@ -162,8 +164,62 @@ func TestStandardImageProcessorPreparesBoundedImageData(t *testing.T) {
 	if modelImage.SizeBytes != int64(len(thumbnail.Content)) || modelImage.SHA256.String() == "" {
 		t.Fatalf("unexpected model image: %+v", modelImage)
 	}
-	if modelImage.Width > thumbnailMaxDimension || modelImage.Height > thumbnailMaxDimension {
+	if modelImage.Width > thumbnailSmallMaxDimension || modelImage.Height > thumbnailSmallMaxDimension {
 		t.Fatalf("expected thumbnail-sized model image dimensions, got %dx%d", modelImage.Width, modelImage.Height)
+	}
+}
+
+func TestStandardImageProcessorSupportsThumbnailVariants(t *testing.T) {
+	processor := StandardImageProcessor{}
+	content := testPNG(t, 2400, 1200)
+
+	cases := []struct {
+		name    string
+		variant media.ThumbnailVariant
+		wantMax int
+	}{
+		{name: "small default", wantMax: thumbnailSmallMaxDimension},
+		{name: "medium", variant: media.ThumbnailVariantMedium, wantMax: thumbnailMediumMaxDimension},
+		{name: "large", variant: media.ThumbnailVariantLarge, wantMax: thumbnailLargeMaxDimension},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			thumbnail, err := processor.CreateThumbnail(context.Background(), ports.ImageDerivativeRequest{
+				ContentType: media.ContentTypePNG,
+				Content:     content,
+				Variant:     tc.variant,
+			})
+			if err != nil {
+				t.Fatalf("create thumbnail: %v", err)
+			}
+			decoded, err := png.Decode(bytes.NewReader(thumbnail.Content))
+			if err != nil {
+				t.Fatalf("decode thumbnail: %v", err)
+			}
+			if decoded.Bounds().Dx() != tc.wantMax || decoded.Bounds().Dy() != tc.wantMax/2 {
+				t.Fatalf("expected %dx%d thumbnail, got %dx%d", tc.wantMax, tc.wantMax/2, decoded.Bounds().Dx(), decoded.Bounds().Dy())
+			}
+		})
+	}
+}
+
+func TestStandardImageProcessorRejectsExcessiveImageDimensionsBeforeResize(t *testing.T) {
+	processor := StandardImageProcessor{}
+	content := oversizedPNGHeader()
+
+	if _, err := processor.CreateThumbnail(context.Background(), ports.ImageDerivativeRequest{
+		ContentType: media.ContentTypePNG,
+		Content:     content,
+		Variant:     media.ThumbnailVariantLarge,
+	}); err == nil {
+		t.Fatalf("expected oversized thumbnail source to fail")
+	}
+	if _, err := processor.PrepareImageForModelUse(context.Background(), ports.ModelImageRequest{
+		ContentType: media.ContentTypePNG,
+		Content:     content,
+	}); err == nil {
+		t.Fatalf("expected oversized model source to fail")
 	}
 }
 
@@ -192,6 +248,30 @@ func TestStandardImageProcessorHandlesWebP(t *testing.T) {
 	if modelImage.Width <= 0 || modelImage.Height <= 0 || modelImage.SHA256.String() == "" {
 		t.Fatalf("unexpected webp model image: %+v", modelImage)
 	}
+}
+
+func oversizedPNGHeader() []byte {
+	var content []byte
+	content = append(content, []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}...)
+	ihdr := make([]byte, 13)
+	binary.BigEndian.PutUint32(ihdr[0:4], uint32(maxImageInputDimension+1))
+	binary.BigEndian.PutUint32(ihdr[4:8], 1)
+	ihdr[8] = 8
+	ihdr[9] = 2
+	content = appendPNGChunk(content, "IHDR", ihdr)
+	return content
+}
+
+func appendPNGChunk(content []byte, chunkType string, data []byte) []byte {
+	length := make([]byte, 4)
+	binary.BigEndian.PutUint32(length, uint32(len(data)))
+	content = append(content, length...)
+	content = append(content, []byte(chunkType)...)
+	content = append(content, data...)
+	checksum := crc32.ChecksumIEEE(append([]byte(chunkType), data...))
+	crc := make([]byte, 4)
+	binary.BigEndian.PutUint32(crc, checksum)
+	return append(content, crc...)
 }
 
 func directUploadRequest(t *testing.T, expiresAt time.Time) ports.DirectAttachmentUploadRequest {
