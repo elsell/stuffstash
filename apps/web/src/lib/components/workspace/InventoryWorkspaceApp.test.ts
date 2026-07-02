@@ -2,6 +2,7 @@ import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
+import type { Asset, AssetAttachment, SelectedPhoto } from '$lib/domain/inventory';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
 
@@ -44,9 +45,19 @@ const seed: WorkspaceSeed = {
   ]
 };
 
-async function mountWorkspace(path: string): Promise<SeededInventoryRepository> {
+class PhotoUploadFailingRepository extends SeededInventoryRepository {
+  async uploadAssetPhoto(
+    _tenantId: string,
+    _inventoryId: string,
+    _assetId: string,
+    _photo: SelectedPhoto
+  ): Promise<AssetAttachment> {
+    throw new Error('Upload failed.');
+  }
+}
+
+async function mountWorkspace(path: string, repository = new SeededInventoryRepository(structuredClone(seed))): Promise<SeededInventoryRepository> {
   window.history.replaceState({}, '', path);
-  const repository = new SeededInventoryRepository(structuredClone(seed));
   component = mount(InventoryWorkspaceApp, {
     target: document.body,
     props: {
@@ -126,4 +137,66 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
     });
   });
+
+  it('closes the add tray after a saved asset with a photo upload warning', async () => {
+    const repository = await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/add/item',
+      new PhotoUploadFailingRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add stuff');
+    });
+
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Camera bag');
+    await tick();
+
+    const photoInput = document.body.querySelector<HTMLInputElement>('#asset-photos');
+    if (!photoInput) throw new Error('Missing photo input');
+    Object.defineProperty(photoInput, 'files', {
+      value: [new File(['photo'], 'front.jpg', { type: 'image/jpeg' })],
+      configurable: true
+    });
+    photoInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const saveButton = await waitForSaveButton();
+    saveButton.click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.body.textContent).toContain('Camera bag');
+      expect(document.body.textContent).toContain('1 photo upload failed');
+      expect(window.location.pathname).toMatch(/\/assets\/asset-local-\d+$/);
+    });
+
+    const savedAssets = await repository.searchAssets({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      query: 'Camera bag',
+      lifecycleState: 'active',
+      mode: 'exact'
+    });
+    expect(savedAssets).toHaveLength(1);
+  });
 });
+
+function setInputValue(input: HTMLInputElement, value: string): void {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  setter?.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+async function waitForSaveButton(): Promise<HTMLButtonElement> {
+  let button: HTMLButtonElement | undefined;
+  await waitFor(() => {
+    button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
+      (candidate) => candidate.textContent?.trim() === 'Save'
+    );
+    expect(button).toBeTruthy();
+    expect(button?.disabled).toBe(false);
+  });
+  if (!button) throw new Error('Missing Save button');
+  return button;
+}

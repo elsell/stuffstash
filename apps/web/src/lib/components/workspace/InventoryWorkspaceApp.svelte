@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import {
     type AssetRouteAction,
     type SettingsSection,
@@ -20,7 +21,6 @@
     canCreateAsset,
     canEditAsset,
     canCreateInventory,
-    type AddAssetDraft,
     type AddAssetSaveResult,
     type AddAssetSubmission,
     type Asset,
@@ -183,79 +183,37 @@
     busy = true;
     error = '';
     message = '';
-    let createdParent: Asset | null = null;
     try {
-      createdParent = draft.parentQuickCreate
-        ? await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, {
-            kind: draft.parentQuickCreate.kind,
-            title: draft.parentQuickCreate.title,
-            description: '',
-            parentAssetId: draft.parentAssetId,
-            customFields: {},
-            photos: []
-          })
-        : null;
-      const { parentQuickCreate: _parentQuickCreate, ...assetDraft } = draft;
-      const childDraft: AddAssetDraft = {
-        ...assetDraft,
-        parentAssetId: createdParent?.id ?? draft.parentAssetId
-      };
-      const asset = await repository.createAsset(data.context.selectedTenantId, selectedInventory.id, childDraft);
-      if (data.context.assetLifecycleState === 'active') {
-        let uploadFailures = 0;
-        const uploaded = [];
-        for (const photo of draft.photos) {
-          try {
-            uploaded.push(await repository.uploadAssetPhoto(asset.tenantId, asset.inventoryId, asset.id, photo));
-          } catch {
-            uploadFailures += 1;
-          }
-        }
-        const firstPhoto = uploaded[0];
-        const savedAsset = firstPhoto
-          ? {
-              ...asset,
-              photo: {
-                id: firstPhoto.id,
-                assetId: asset.id,
-                url: draft.photos[0]?.previewUrl ?? firstPhoto.thumbnailUrl ?? '',
-                alt: asset.title
-              }
-            }
-          : asset;
-        data = { ...data, assets: createdParent ? [savedAsset, createdParent, ...data.assets] : [savedAsset, ...data.assets] };
-        message =
-          uploadFailures > 0
-            ? `Saved ${asset.title}. ${uploadFailures} photo upload ${uploadFailures === 1 ? 'failed' : 'failed'}.`
-            : draft.photos.length > 0
-              ? `Saved ${asset.title} with ${draft.photos.length} photo upload.`
-              : createdParent
-                ? `Saved ${asset.title} in ${createdParent.title}.`
-                : `Saved ${asset.title}.`;
-        if (uploadFailures > 0) {
-          return { saved: false };
-        }
-      } else {
-        data = await repository.selectAssetLifecycle(asset.tenantId, asset.inventoryId, 'active');
-        mode = 'home';
+      const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
+      data = result.data;
+      if (result.message) {
+        message = result.message;
+      }
+      if (result.error) {
+        error = result.error;
+      }
+      if (result.closeAdd) {
+        addOpen = false;
+      }
+      if (result.mode) {
+        mode = result.mode;
+      }
+      if (result.clearDetail) {
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
-        message = `Saved ${asset.title}.`;
       }
-      addOpen = false;
-      replaceRoute({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id });
-      return { saved: true };
-    } catch (caught) {
-      const failure = caught instanceof Error ? caught.message : 'Action failed.';
-      if (createdParent && data.context.assetLifecycleState === 'active' && !data.assets.some((asset) => asset.id === createdParent?.id)) {
-        data = { ...data, assets: [createdParent, ...data.assets] };
+      if (result.selectedAsset) {
+        selectedLocationId = null;
+        selectedAssetId = result.selectedAsset.id;
+        loadedAssetDetail = result.selectedAsset;
+        selectedAssetAttachments = [];
       }
-      error = createdParent
-        ? `Created ${createdParent.title}, but could not save ${draft.title}. ${failure}`
-        : failure;
-      return createdParent ? { saved: false, createdParentId: createdParent.id } : { saved: false };
+      if (result.route) {
+        replaceRoute(result.route);
+      }
+      return result.saveResult;
     } finally {
       busy = false;
     }
@@ -279,7 +237,7 @@
         selectedAsset.id,
         draft
       );
-      replaceWorkspaceAsset(asset);
+      data = replaceWorkspaceAsset(data, asset);
       loadedAssetDetail = asset;
       message = `Saved ${asset.title}.`;
     } catch (caught) {
@@ -705,7 +663,7 @@
         return false;
       }
       selectedAssetAttachments = attachments;
-      replaceWorkspaceAsset(asset);
+      data = replaceWorkspaceAsset(data, asset);
       loadedAssetDetail = asset;
       selectedAssetId = asset.id;
       mode = 'asset';
@@ -716,29 +674,6 @@
     } finally {
       busy = false;
     }
-  }
-
-  function replaceWorkspaceAsset(asset: Asset): void {
-    if (asset.tenantId !== data.context.selectedTenantId || asset.inventoryId !== data.context.selectedInventoryId) {
-      return;
-    }
-    if (asset.lifecycleState !== data.context.assetLifecycleState) {
-      return;
-    }
-    const existing = data.assets.some(
-      (candidate) =>
-        candidate.tenantId === asset.tenantId && candidate.inventoryId === asset.inventoryId && candidate.id === asset.id
-    );
-    data = {
-      ...data,
-      assets: existing
-        ? data.assets.map((candidate) =>
-            candidate.tenantId === asset.tenantId && candidate.inventoryId === asset.inventoryId && candidate.id === asset.id
-              ? asset
-              : candidate
-          )
-        : [asset, ...data.assets]
-    };
   }
 
   async function refreshSelectedAssetLifecycle(): Promise<void> {

@@ -459,6 +459,7 @@ Required boundaries:
 - Runtime configuration must own API/auth/provider URLs and feature flags.
 - Observability must use domain-oriented helper/port events, not raw `console.log`, `print`, or one-off diagnostics.
 - Meaningful UI states must use typed concepts or enums, not loose strings.
+- Multi-step asset workflow transitions, such as create-with-quick-parent, create-with-photo-upload, and local workspace asset replacement, must live in focused application helpers rather than accumulating in the product shell component.
 - Files must stay cohesive. Do not create broad "god" files that mix route state, mock data, adapter mapping, observability, UI primitives, and product components.
 
 The first promoted implementation should split at least these concerns:
