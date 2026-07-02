@@ -351,6 +351,11 @@ small {
   gap: 2px;
 }
 
+.suggestion-row[data-active='true'] {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--primary) 10%, var(--accent));
+}
+
 .header-add-wrap {
   position: relative;
 }
