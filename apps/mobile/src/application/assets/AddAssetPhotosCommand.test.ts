@@ -53,7 +53,24 @@ describe('AddAssetPhotosCommand', () => {
       failedCount: 1,
       failedPhotos: [{ fileName: 'one.jpg', contentType: 'image/jpeg', contentBase64: 'MQ==' }],
       message: '1 of 2 photos added.',
-      canRetry: true
+      canRetry: true,
+      failureMessage: 'Upload failed.'
+    });
+  });
+
+  it('preserves the first safe failure reason when every selected photo fails', async () => {
+    const repository = new FakeAssetPhotoAddRepository();
+    repository.failUploads = 1;
+    const command = new AddAssetPhotosCommand(repository);
+
+    await expect(command.execute({
+      assetId: 'asset-water-bottle',
+      photos: [{ fileName: 'one.jpg', contentType: 'image/jpeg', contentBase64: 'MQ==' }]
+    })).resolves.toMatchObject({
+      attachedCount: 0,
+      failedCount: 1,
+      message: 'Photos could not be uploaded: Upload failed.',
+      failureMessage: 'Upload failed.'
     });
   });
 

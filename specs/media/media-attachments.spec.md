@@ -106,6 +106,8 @@ Initial upload size limit:
 - Blob adapters that read from external storage must enforce the same maximum before buffering content in memory.
 - Mobile clients should prefer direct upload targets for camera and library images so original selected file bytes are uploaded to blob storage instead of carried through the JSON attachment route. The JSON route remains a compatibility fallback for the explicit local-development sentinel `stuffstash-local://direct-uploads/` or clients that cannot use direct upload, but it must not become the preferred mobile media path.
 - Mobile clients may request base64 fallback content from the native camera or photo picker at selection time so the local-development sentinel can still attach photos when platform photo-library URIs cannot be read later. This fallback content must not be compressed, resized, logged, sent to the language provider, or stored in the database; it exists only to call the authorized JSON attachment API when direct upload is not available.
+- Mobile clients must surface safe upload-stage failure reasons when all selected photos fail, such as unsupported direct-upload targets, direct-upload transport failures, missing fallback content, or server attachment validation errors. The UI must not collapse every upload failure into an opaque generic message when the mobile application layer has a safe error message.
+- Mobile clients must require HTTPS for production direct-upload targets. For local S3/Garage development where the API is intentionally configured with `STUFF_STASH_S3_SECURE=false`, mobile may upload to HTTP targets only when the target host is loopback, localhost, `.local`, or an RFC1918/private-network address. Public cleartext HTTP direct-upload targets must still be rejected.
 
 Attachment listing:
 
@@ -198,6 +200,7 @@ Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
 - S3-compatible direct upload initiation must include policy form fields that constrain object key, content type, content length, and expiration.
 - S3-compatible direct upload completion must not rely on process-local pending state. Completion state must be durable or encoded in a signed opaque upload token so restarts and multi-replica routing do not break completion.
 - Local filesystem and memory runtime modes may advertise only the explicit non-uploadable local-development sentinel `stuffstash-local://direct-uploads/{uploadId}` until a real local HTTP upload target adapter is implemented. Browser and mobile clients must treat this sentinel as a signal to use the JSON attachment route; they must not treat arbitrary non-HTTP schemes as safe fallback targets.
+- S3-compatible direct-upload adapters may advertise HTTP upload targets only when the deployment is explicitly configured for local/plain-HTTP development. Clients must treat these as development targets and should bound support to loopback, localhost, `.local`, or private-network hosts.
 - Public buckets must not be used for private tenant inventory files.
 - Error messages must not leak storage keys, credentials, bucket internals, or filesystem paths.
 - Oversized or externally mutated blobs must not cause unbounded memory reads.

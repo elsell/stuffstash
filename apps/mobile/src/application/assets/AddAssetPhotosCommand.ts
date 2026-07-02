@@ -24,6 +24,7 @@ export type AddAssetPhotosCommandResult = {
   readonly failedPhotos: readonly CreateInventoryAssetPhotoInput[];
   readonly message: string;
   readonly canRetry: boolean;
+  readonly failureMessage?: string;
 };
 
 export class AddAssetPhotosCommand {
@@ -37,6 +38,7 @@ export class AddAssetPhotosCommand {
     const targetAssetId = assetId(input.assetId);
     let attachedCount = 0;
     let failedCount = 0;
+    let failureMessage: string | undefined;
     const failedPhotos: CreateInventoryAssetPhotoInput[] = [];
     for (const [index, photo] of input.photos.entries()) {
       input.onPhotoProgress?.({
@@ -52,13 +54,14 @@ export class AddAssetPhotosCommand {
           status: 'attached'
         });
         attachedCount += 1;
-      } catch {
+      } catch (error) {
         input.onPhotoProgress?.({
           index,
           fileName: photo.fileName,
           status: 'failed'
         });
         failedCount += 1;
+        failureMessage ??= readableUploadError(error);
         failedPhotos.push(photo);
       }
     }
@@ -67,18 +70,30 @@ export class AddAssetPhotosCommand {
       attachedCount,
       failedCount,
       failedPhotos,
-      message: photoUploadMessage(attachedCount, failedCount),
+      message: photoUploadMessage(attachedCount, failedCount, failureMessage),
+      ...(failureMessage ? { failureMessage } : {}),
       canRetry: failedCount > 0
     };
   }
 }
 
-function photoUploadMessage(attachedCount: number, failedCount: number): string {
+function photoUploadMessage(attachedCount: number, failedCount: number, failureMessage: string | undefined): string {
   if (failedCount === 0) {
     return `${attachedCount.toString()} ${attachedCount === 1 ? 'photo' : 'photos'} added.`;
   }
   if (attachedCount === 0) {
+    if (failureMessage) {
+      return `Photos could not be uploaded: ${failureMessage}`;
+    }
     return 'Photos could not be uploaded.';
   }
   return `${attachedCount.toString()} of ${(attachedCount + failedCount).toString()} photos added.`;
+}
+
+function readableUploadError(error: unknown): string | undefined {
+  if (!(error instanceof Error)) {
+    return undefined;
+  }
+  const message = error.message.trim();
+  return message.length > 0 ? message : undefined;
 }

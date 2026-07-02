@@ -981,6 +981,34 @@ describe('ApiInventorySummaryRepository', () => {
     expect(client.createdAttachmentInput).toBeUndefined();
   });
 
+  it('allows private-network HTTP direct upload targets for local Garage development', async () => {
+    const client = new FakeInventoryApiClient();
+    client.directUploadURL = 'http://192.168.2.52:3900/stuffstash/object-one';
+    const directUploads = new FakeDirectUploadTransport();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', directUploads);
+
+    await repository.addAssetPhoto(assetId('asset-created'), {
+      fileName: 'created.jpg',
+      contentType: 'image/jpeg',
+      uri: 'file:///created.jpg',
+      sizeBytes: 4
+    });
+
+    expect(directUploads.uploads).toEqual([{
+      url: 'http://192.168.2.52:3900/stuffstash/object-one',
+      fileUri: 'file:///created.jpg',
+      fileName: 'created.jpg',
+      contentType: 'image/jpeg'
+    }]);
+    expect(client.completedDirectUploadInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-created',
+      uploadId: 'upload-one'
+    });
+    expect(client.createdAttachmentInput).toBeUndefined();
+  });
+
   it('deletes asset photos through the generated client wrapper', async () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
@@ -1037,7 +1065,7 @@ describe('ApiInventorySummaryRepository', () => {
     expect(client.completedDirectUploadInput).toBeUndefined();
   });
 
-  it('rejects cleartext direct upload targets', async () => {
+  it('rejects public cleartext direct upload targets', async () => {
     const client = new FakeInventoryApiClient();
     client.directUploadURL = 'http://uploads.example.test/object-one';
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home', new FakeDirectUploadTransport());
