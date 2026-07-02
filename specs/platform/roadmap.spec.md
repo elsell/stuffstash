@@ -111,6 +111,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Approved mobile voice action plans can now execute a single `restore_asset` command through the existing asset lifecycle boundary, atomically persist the restore/audit/undoable operation with the terminal action-plan state, and stream safe execution outcomes back to mobile.
 - `.codex/skills/stuffstash-voice-evaluation` now provides a repo-local Codex skill and harness for live voice corpus trace capture, Codex-judge-assisted review, and primary-agent product-quality evaluation.
 - The live Gemini realistic voice corpus passed all 19 scenarios with `gemini-2.5-flash-lite` and ADC after server-selected read optimization, full failure trace logging, bounded language retry handling, and planner repair-path tolerance.
+- `.codex/skills/stuffstash-self-host-audit` now provides a repo-local Codex skill for ruthless outside-in self-hosting documentation audits on user-provided SSH targets, covering public docs, Docker Compose SQLite/Postgres, Dex OIDC verification, browser onboarding, image upload, production-readiness friction, redaction, cleanup, and reproducibility.
 
 ## Known Gaps
 

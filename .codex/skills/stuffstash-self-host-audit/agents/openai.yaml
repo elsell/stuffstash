@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stuff Stash Self-Host Audit"
+  short_description: "Audit Stuff Stash self-hosting docs."
+  default_prompt: "Use $stuffstash-self-host-audit to audit the public Stuff Stash self-hosting flow; ask me for the SSH target first."
