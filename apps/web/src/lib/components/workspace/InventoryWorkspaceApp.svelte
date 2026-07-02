@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
+  import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
   import {
     type AssetRouteAction,
     type SettingsSection,
@@ -249,13 +250,6 @@
   }
 
   async function search(): Promise<void> {
-    const query = searchQuery.trim();
-    if (!query || !data.context.selectedTenantId) {
-      searchResults = [];
-      searchSubmitted = false;
-      searchError = '';
-      return;
-    }
     busy = true;
     error = '';
     message = '';
@@ -263,34 +257,29 @@
     searchResults = [];
     searchSubmitted = true;
     try {
-      searchResults = await repository.searchAssets({
+      const result = await executeWorkspaceSearch({
+        repository,
         tenantId: data.context.selectedTenantId,
         inventoryId: data.context.selectedInventoryId,
-        query,
+        query: searchQuery,
         lifecycleState: searchLifecycleState,
         mode: searchMode
       });
-      mode = 'search';
-      if (!applyingRoute) {
-        replaceRoute({
-          mode: 'search',
-          tenantId: data.context.selectedTenantId,
-          inventoryId: data.context.selectedInventoryId,
-          searchQuery: query,
-          searchLifecycleState,
-          searchMode
-        });
+      searchQuery = result.query;
+      searchResults = result.results;
+      searchSubmitted = result.submitted;
+      searchError = result.error;
+      error = result.error;
+      if (!result.query) {
+        return;
       }
-    } catch (caught) {
-      searchError = caught instanceof Error ? caught.message : 'Search failed.';
-      error = searchError;
       mode = 'search';
       if (!applyingRoute) {
         replaceRoute({
           mode: 'search',
           tenantId: data.context.selectedTenantId,
           inventoryId: data.context.selectedInventoryId,
-          searchQuery: query,
+          searchQuery: result.query,
           searchLifecycleState,
           searchMode
         });
@@ -783,19 +772,6 @@
     };
   }
 
-  function buildSearchSuggestions(items: Asset[], query: string): Asset[] {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) {
-      return [];
-    }
-    return items.filter((asset) => {
-      return (
-        asset.title.toLowerCase().includes(normalized) ||
-        asset.description.toLowerCase().includes(normalized) ||
-        asset.customAssetTypeLabel?.toLowerCase().includes(normalized)
-      );
-    });
-  }
 </script>
 
 <div class="product-shell">
