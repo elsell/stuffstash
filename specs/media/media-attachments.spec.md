@@ -99,15 +99,16 @@ Initial supported content types:
 
 Initial upload size limit:
 
-- 5 MiB decoded content per attachment.
+- 25 MiB decoded content per attachment.
 - The limit must come from `STUFF_STASH_MAX_ATTACHMENT_BYTES`.
-- The default is 5 MiB.
+- The default is 25 MiB so original mobile camera and library photos can be attached without client-side compression in normal local and production configurations.
 - The JSON upload route must set a larger request body cap derived from the attachment limit so base64 overhead does not reject valid uploads before application validation runs.
 - Blob adapters that read from external storage must enforce the same maximum before buffering content in memory.
 - Mobile clients should prefer direct upload targets for camera and library images so original selected file bytes are uploaded to blob storage instead of carried through the JSON attachment route. The JSON route remains a compatibility fallback for the explicit local-development sentinel `stuffstash-local://direct-uploads/` or clients that cannot use direct upload, but it must not become the preferred mobile media path.
 - Mobile clients may request base64 fallback content from the native camera or photo picker at selection time so the local-development sentinel can still attach photos when platform photo-library URIs cannot be read later. This fallback content must not be compressed, resized, logged, sent to the language provider, or stored in the database; it exists only to call the authorized JSON attachment API when direct upload is not available.
 - Mobile clients must surface safe upload-stage failure reasons when all selected photos fail, such as unsupported direct-upload targets, direct-upload transport failures, missing fallback content, or server attachment validation errors. The UI must not collapse every upload failure into an opaque generic message when the mobile application layer has a safe error message.
 - Mobile clients must require HTTPS for production direct-upload targets. For local S3/Garage development where the API is intentionally configured with `STUFF_STASH_S3_SECURE=false`, mobile may upload to HTTP targets only when the target host is loopback, localhost, `.local`, or an RFC1918/private-network address. Public cleartext HTTP direct-upload targets must still be rejected.
+- Attachment upload validation errors must be safe but specific enough for clients to guide the user. Oversized uploads must report that the file is too large, unsupported media types must report unsupported file type, and content-signature mismatches must report that the file content does not match the declared type.
 
 Attachment listing:
 

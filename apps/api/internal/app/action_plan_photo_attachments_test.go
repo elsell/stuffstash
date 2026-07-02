@@ -60,7 +60,7 @@ func TestValidateActionPlanPhotoAttachmentMetadataRejectsUnsafeMetadataBeforeApp
 				CommandID:   "command-1",
 				FileName:    "water-bottle.jpg",
 				ContentType: "image/jpeg",
-				SizeBytes:   6 * 1024 * 1024,
+				SizeBytes:   26 * 1024 * 1024,
 			},
 			wantErr: ErrInvalidInput,
 		},

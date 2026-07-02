@@ -97,11 +97,20 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 	}
 	fileName, ok := media.NewFileName(input.FileName)
 	if !ok {
-		return media.Attachment{}, ErrInvalidInput
+		return media.Attachment{}, ErrAttachmentFileNameInvalid
 	}
 	contentType, ok := media.NewContentType(input.ContentType)
-	if !ok || len(input.Content) == 0 || len(input.Content) > a.maxAttachmentBytes || !contentMatchesType(contentType, input.Content) {
+	if !ok {
+		return media.Attachment{}, ErrAttachmentContentTypeUnsupported
+	}
+	if len(input.Content) == 0 {
 		return media.Attachment{}, ErrInvalidInput
+	}
+	if len(input.Content) > a.maxAttachmentBytes {
+		return media.Attachment{}, ErrAttachmentTooLarge
+	}
+	if !contentMatchesType(contentType, input.Content) {
+		return media.Attachment{}, ErrAttachmentContentMismatch
 	}
 	attachmentID, ok := media.NewID(a.ids.NewID())
 	if !ok {

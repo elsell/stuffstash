@@ -242,7 +242,7 @@ func (a App) MaxAttachmentJSONBodyBytes() int64 {
 
 func normalizeMaxAttachmentBytes(maxBytes int) int {
 	if maxBytes <= 0 {
-		return 5 * 1024 * 1024
+		return 25 * 1024 * 1024
 	}
 	return maxBytes
 }

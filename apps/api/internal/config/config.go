@@ -93,7 +93,7 @@ const (
 	defaultBlobStoragePath           = ".stuffstash/blobs"
 	defaultS3Region                  = "garage"
 	defaultS3Secure                  = true
-	defaultMaxAttachmentBytes        = 5 * 1024 * 1024
+	defaultMaxAttachmentBytes        = 25 * 1024 * 1024
 	defaultSpiceDBTLSEnabled         = true
 	defaultSpiceDBBootstrapMode      = false
 	defaultVoiceDevFakeEnabled       = false

@@ -152,7 +152,7 @@ func TestRealtimeVoiceActionPlanApprovalRejectsInvalidPhotoMetadataBeforeApprova
 				"photoIndex":  float64(0),
 				"fileName":    "refills.jpg",
 				"contentType": "image/jpeg",
-				"sizeBytes":   float64(6 * 1024 * 1024),
+				"sizeBytes":   float64(26 * 1024 * 1024),
 			},
 		},
 	}

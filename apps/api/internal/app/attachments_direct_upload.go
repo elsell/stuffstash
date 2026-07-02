@@ -66,11 +66,17 @@ func (a App) InitiateAttachmentDirectUpload(ctx context.Context, input InitiateA
 	}
 	fileName, ok := media.NewFileName(input.FileName)
 	if !ok {
-		return ports.DirectAttachmentUpload{}, ErrInvalidInput
+		return ports.DirectAttachmentUpload{}, ErrAttachmentFileNameInvalid
 	}
 	contentType, ok := media.NewContentType(input.ContentType)
-	if !ok || input.SizeBytes <= 0 || input.SizeBytes > int64(a.maxAttachmentBytes) {
+	if !ok {
+		return ports.DirectAttachmentUpload{}, ErrAttachmentContentTypeUnsupported
+	}
+	if input.SizeBytes <= 0 {
 		return ports.DirectAttachmentUpload{}, ErrInvalidInput
+	}
+	if input.SizeBytes > int64(a.maxAttachmentBytes) {
+		return ports.DirectAttachmentUpload{}, ErrAttachmentTooLarge
 	}
 	uploadID := a.ids.NewID()
 	attachmentID, ok := media.NewID(a.ids.NewID())
@@ -138,7 +144,6 @@ func (a App) CompleteAttachmentDirectUpload(ctx context.Context, input CompleteA
 		completed.InventoryID != input.InventoryID ||
 		completed.AssetID != input.AssetID ||
 		completed.SizeBytes <= 0 ||
-		completed.SizeBytes > int64(a.maxAttachmentBytes) ||
 		completed.AttachmentID.String() == "" ||
 		completed.StorageKey.String() == "" ||
 		completed.FileName.String() == "" ||
@@ -148,6 +153,9 @@ func (a App) CompleteAttachmentDirectUpload(ctx context.Context, input CompleteA
 		!completed.ExpiresAt.After(a.clock.Now().UTC()) {
 		return media.Attachment{}, ErrInvalidInput
 	}
+	if completed.SizeBytes > int64(a.maxAttachmentBytes) {
+		return media.Attachment{}, ErrAttachmentTooLarge
+	}
 	content, err := a.blobs.GetBlob(ctx, completed.StorageKey)
 	if err != nil {
 		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "direct upload content validation failed"})
@@ -155,9 +163,11 @@ func (a App) CompleteAttachmentDirectUpload(ctx context.Context, input CompleteA
 	}
 	hashBytes := sha256.Sum256(content)
 	if int64(len(content)) != completed.SizeBytes ||
-		completed.SHA256.String() != hex.EncodeToString(hashBytes[:]) ||
-		!contentMatchesType(completed.ContentType, content) {
+		completed.SHA256.String() != hex.EncodeToString(hashBytes[:]) {
 		return media.Attachment{}, ErrInvalidInput
+	}
+	if !contentMatchesType(completed.ContentType, content) {
+		return media.Attachment{}, ErrAttachmentContentMismatch
 	}
 	attachment, err := a.persistVerifiedAttachment(ctx, verifiedAttachmentInput{
 		Principal:   input.Principal,

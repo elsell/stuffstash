@@ -50,6 +50,14 @@ func ToHumaError(err error) error {
 		return huma.Error401Unauthorized("Authentication required.")
 	case errors.Is(err, app.ErrUnauthorized):
 		return huma.Error403Forbidden("Forbidden.")
+	case errors.Is(err, app.ErrAttachmentFileNameInvalid):
+		return huma.Error400BadRequest("Invalid attachment file name.")
+	case errors.Is(err, app.ErrAttachmentContentTypeUnsupported):
+		return huma.Error400BadRequest("Unsupported attachment file type.")
+	case errors.Is(err, app.ErrAttachmentContentMismatch):
+		return huma.Error400BadRequest("Attachment content does not match its file type.")
+	case errors.Is(err, app.ErrAttachmentTooLarge):
+		return huma.Error400BadRequest("Attachment is too large.")
 	case errors.Is(err, app.ErrValidation), errors.Is(err, app.ErrInvalidInput):
 		return huma.Error400BadRequest("Invalid request.")
 	case errors.Is(err, app.ErrConflict):

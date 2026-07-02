@@ -543,32 +543,38 @@ func TestAttachmentUploadRejectsUnsafeInput(t *testing.T) {
 	path := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments"
 
 	cases := []struct {
-		name string
-		body map[string]any
+		name        string
+		body        map[string]any
+		wantMessage string
 	}{
 		{
-			name: "invalid base64",
-			body: map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": "not base64"},
+			name:        "invalid base64",
+			body:        map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": "not base64"},
+			wantMessage: "Invalid request.",
 		},
 		{
 			name: "unsupported content type",
 			body: map[string]any{"fileName": "receipt.txt", "contentType": "text/plain", "contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent())},
 		},
 		{
-			name: "empty content",
-			body: map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": ""},
+			name:        "empty content",
+			body:        map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": ""},
+			wantMessage: "Invalid request.",
 		},
 		{
-			name: "content type mismatch",
-			body: map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString([]byte("not a png"))},
+			name:        "content type mismatch",
+			body:        map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString([]byte("not a png"))},
+			wantMessage: "Attachment content does not match its file type.",
 		},
 		{
-			name: "unsafe file name",
-			body: map[string]any{"fileName": "../receipt.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent())},
+			name:        "unsafe file name",
+			body:        map[string]any{"fileName": "../receipt.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent())},
+			wantMessage: "Invalid attachment file name.",
 		},
 		{
-			name: "too large",
-			body: map[string]any{"fileName": "large.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(append(pngAttachmentContent(), []byte(strings.Repeat("x", 5*1024*1024))...))},
+			name:        "too large",
+			body:        map[string]any{"fileName": "large.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(append(pngAttachmentContent(), []byte(strings.Repeat("x", 25*1024*1024))...))},
+			wantMessage: "Attachment is too large.",
 		},
 	}
 	for _, tc := range cases {
@@ -577,7 +583,11 @@ func TestAttachmentUploadRejectsUnsafeInput(t *testing.T) {
 			if response.Code != http.StatusBadRequest && response.Code != http.StatusUnprocessableEntity {
 				t.Fatalf("expected status %d or %d, got %d with body %s", http.StatusBadRequest, http.StatusUnprocessableEntity, response.Code, response.Body.String())
 			}
-			assertErrorCode(t, response, "invalid_request")
+			if tc.wantMessage == "" {
+				assertErrorCode(t, response, "invalid_request")
+				return
+			}
+			assertSafeError(t, response, "invalid_request", tc.wantMessage)
 		})
 	}
 }
