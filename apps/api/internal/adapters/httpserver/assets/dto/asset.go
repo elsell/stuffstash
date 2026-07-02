@@ -85,16 +85,20 @@ type ListAssetsOutput struct {
 }
 
 type AssetResponse struct {
-	ID                string         `json:"id"`
-	TenantID          string         `json:"tenantId"`
-	InventoryID       string         `json:"inventoryId"`
-	ParentAssetID     string         `json:"parentAssetId,omitempty"`
-	CustomAssetTypeID string         `json:"customAssetTypeId,omitempty"`
-	Kind              string         `json:"kind"`
-	Title             string         `json:"title"`
-	Description       string         `json:"description"`
-	CustomFields      map[string]any `json:"customFields"`
-	LifecycleState    string         `json:"lifecycleState"`
-	CreatedAt         string         `json:"createdAt"`
-	UpdatedAt         string         `json:"updatedAt"`
+	ID                string             `json:"id"`
+	TenantID          string             `json:"tenantId"`
+	InventoryID       string             `json:"inventoryId"`
+	ParentAssetID     string             `json:"parentAssetId,omitempty"`
+	CustomAssetTypeID string             `json:"customAssetTypeId,omitempty"`
+	Kind              string             `json:"kind"`
+	Title             string             `json:"title"`
+	Description       string             `json:"description"`
+	CustomFields      map[string]any     `json:"customFields"`
+	LifecycleState    string             `json:"lifecycleState"`
+	CreatedAt         string             `json:"createdAt"`
+	UpdatedAt         string             `json:"updatedAt"`
+	PrimaryPhoto      *AssetPrimaryPhoto `json:"primaryPhoto,omitempty"`
 }
+
+type AssetPrimaryPhoto = shared.AssetPrimaryPhoto
+type AssetPhotoThumbnails = shared.AssetPhotoThumbnails

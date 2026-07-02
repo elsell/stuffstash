@@ -193,6 +193,7 @@ func New(deps Dependencies) App {
 		CustomAssetTypes: app.customAssetTypes,
 		CustomFields:     app.customFields,
 		Assets:           app.assets,
+		Attachments:      app.attachments,
 		AssetUnitOfWork:  app.assetUnitOfWork,
 		Undoables:        app.undoables,
 		Audit:            app.audit,

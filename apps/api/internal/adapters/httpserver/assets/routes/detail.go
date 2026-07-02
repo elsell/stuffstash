@@ -32,7 +32,7 @@ func RegisterDetail(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 		return &dto.GetAssetOutput{Body: shared.SuccessEnvelope[dto.AssetResponse]{
-			Data: mapper.AssetToResponse(item),
+			Data: mapper.AssetToResponse(item, nil),
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("assets"), shared.SecuredOperation)

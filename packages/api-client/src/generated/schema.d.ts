@@ -1037,6 +1037,19 @@ export interface components {
             permissions: string[] | null;
             relationship: string;
         };
+        AssetPhotoThumbnails: {
+            large: string;
+            medium: string;
+            small: string;
+        };
+        AssetPrimaryPhoto: {
+            contentType: string;
+            fileName: string;
+            id: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            thumbnails: components["schemas"]["AssetPhotoThumbnails"];
+        };
         AssetResponse: {
             createdAt: string;
             customAssetTypeId?: string;
@@ -1049,6 +1062,7 @@ export interface components {
             kind: string;
             lifecycleState: string;
             parentAssetId?: string;
+            primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
             tenantId: string;
             title: string;
             updatedAt: string;
@@ -1072,6 +1086,7 @@ export interface components {
             kind: string;
             lifecycleState: string;
             parentAssetId?: string;
+            primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
             title: string;
             updatedAt: string;
         };

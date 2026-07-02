@@ -7,6 +7,9 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -95,6 +98,10 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 		items = items[:limit]
 		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, items[len(items)-1])
 	}
+	primaryPhotos, err := s.primaryImageAttachments(ctx, input.TenantID, items)
+	if err != nil {
+		return ListAssetsResult{}, err
+	}
 
 	s.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAssetsListed,
@@ -127,9 +134,24 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	}
 
 	return ListAssetsResult{
-		Items:      items,
-		Limit:      limit,
-		NextCursor: nextCursor,
-		HasMore:    hasMore,
+		Items:         items,
+		PrimaryPhotos: primaryPhotos,
+		Limit:         limit,
+		NextCursor:    nextCursor,
+		HasMore:       hasMore,
 	}, nil
+}
+
+func (s Service) primaryImageAttachments(ctx context.Context, tenantID tenant.ID, items []asset.Asset) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	if s.attachments == nil || len(items) == 0 {
+		return nil, nil
+	}
+	assetRefs := make([]ports.AttachmentAssetReference, 0, len(items))
+	for _, item := range items {
+		assetRefs = append(assetRefs, ports.AttachmentAssetReference{
+			InventoryID: inventory.InventoryID(item.InventoryID.String()),
+			AssetID:     item.ID,
+		})
+	}
+	return s.attachments.FirstImageAttachmentsByAssets(ctx, tenantID, assetRefs)
 }

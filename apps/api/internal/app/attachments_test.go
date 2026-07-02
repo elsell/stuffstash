@@ -444,6 +444,10 @@ func (failingAttachmentRepository) ListAttachmentsByAsset(context.Context, tenan
 	return nil, nil
 }
 
+func (failingAttachmentRepository) FirstImageAttachmentsByAssets(context.Context, tenant.ID, []ports.AttachmentAssetReference) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	return nil, nil
+}
+
 type recordingAttachmentRepository struct {
 	attachment media.Attachment
 	found      bool
@@ -474,6 +478,16 @@ func (r *recordingAttachmentRepository) ListAttachmentsByAsset(context.Context, 
 		return nil, nil
 	}
 	return []media.Attachment{r.attachment}, nil
+}
+
+func (r *recordingAttachmentRepository) FirstImageAttachmentsByAssets(context.Context, tenant.ID, []ports.AttachmentAssetReference) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	if !r.found {
+		return nil, nil
+	}
+	return map[ports.AttachmentAssetReference]media.Attachment{{
+		InventoryID: inventory.InventoryID(r.attachment.InventoryID.String()),
+		AssetID:     asset.ID(r.attachment.AssetID.String()),
+	}: r.attachment}, nil
 }
 
 type recordingBlobStorage struct {

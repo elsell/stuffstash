@@ -96,6 +96,19 @@ export interface Asset {
   customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  primaryPhoto?: AssetPrimaryPhoto;
+}
+
+export interface AssetPrimaryPhoto {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  thumbnails: {
+    small: string;
+    medium: string;
+    large: string;
+  };
 }
 
 export interface Attachment {
@@ -1366,7 +1379,8 @@ function mapAsset(response: AssetResponse): Asset {
     customAssetTypeId: response.customAssetTypeId,
     customFields: response.customFields ?? {},
     createdAt: response.createdAt,
-    updatedAt: response.updatedAt
+    updatedAt: response.updatedAt,
+    primaryPhoto: mapAssetPrimaryPhoto(response.primaryPhoto)
   };
 }
 
@@ -1387,9 +1401,27 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
       customAssetTypeId: response.asset.customAssetTypeId,
       customFields: response.asset.customFields ?? {},
       createdAt: response.asset.createdAt,
-      updatedAt: response.asset.updatedAt
+      updatedAt: response.asset.updatedAt,
+      primaryPhoto: mapAssetPrimaryPhoto(response.asset.primaryPhoto)
     },
     matches: response.matches ?? []
+  };
+}
+
+function mapAssetPrimaryPhoto(response: components['schemas']['AssetPrimaryPhoto'] | undefined): AssetPrimaryPhoto | undefined {
+  if (!response) {
+    return undefined;
+  }
+  return {
+    id: response.id,
+    fileName: response.fileName,
+    contentType: response.contentType,
+    sizeBytes: response.sizeBytes,
+    thumbnails: {
+      small: response.thumbnails.small,
+      medium: response.thumbnails.medium,
+      large: response.thumbnails.large
+    }
   };
 }
 

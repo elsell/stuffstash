@@ -17,6 +17,7 @@ type Service struct {
 	customAssetTypes ports.CustomAssetTypeRepository
 	customFields     ports.CustomFieldDefinitionRepository
 	assets           ports.AssetRepository
+	attachments      ports.AttachmentRepository
 	assetUnitOfWork  ports.AssetUnitOfWork
 	undoables        ports.UndoableOperationRepository
 	audit            ports.AuditRepository
@@ -34,6 +35,7 @@ type Dependencies struct {
 	CustomAssetTypes ports.CustomAssetTypeRepository
 	CustomFields     ports.CustomFieldDefinitionRepository
 	Assets           ports.AssetRepository
+	Attachments      ports.AttachmentRepository
 	AssetUnitOfWork  ports.AssetUnitOfWork
 	Undoables        ports.UndoableOperationRepository
 	Audit            ports.AuditRepository
@@ -57,6 +59,7 @@ func New(deps Dependencies) Service {
 		customAssetTypes: deps.CustomAssetTypes,
 		customFields:     deps.CustomFields,
 		assets:           deps.Assets,
+		attachments:      deps.Attachments,
 		assetUnitOfWork:  deps.AssetUnitOfWork,
 		undoables:        deps.Undoables,
 		audit:            deps.Audit,

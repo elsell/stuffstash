@@ -34,7 +34,7 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 
 		return &dto.SearchAssetsOutput{
 			Body: shared.SuccessEnvelope[[]dto.AssetSearchResultResponse]{
-				Data: mapper.AssetSearchResultsToResponse(result.Items),
+				Data: mapper.AssetSearchResultsToResponse(result.Items, result.PrimaryPhotos),
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

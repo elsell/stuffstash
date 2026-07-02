@@ -5,7 +5,9 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type CreateAssetInput struct {
@@ -72,8 +74,9 @@ type UpdateAssetLifecycleInput struct {
 }
 
 type ListAssetsResult struct {
-	Items      []asset.Asset
-	Limit      int
-	NextCursor *string
-	HasMore    bool
+	Items         []asset.Asset
+	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
+	Limit         int
+	NextCursor    *string
+	HasMore       bool
 }

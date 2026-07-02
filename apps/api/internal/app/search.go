@@ -9,6 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -27,10 +28,11 @@ type SearchAssetsInput struct {
 }
 
 type SearchAssetsResult struct {
-	Items      []ports.AssetSearchResult
-	Limit      int
-	NextCursor *string
-	HasMore    bool
+	Items         []ports.AssetSearchResult
+	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
+	Limit         int
+	NextCursor    *string
+	HasMore       bool
 }
 
 func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchAssetsResult, error) {
@@ -106,6 +108,10 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		items = items[:limit]
 		nextCursor = encodePageCursor("search.assets", cursorScope, items[len(items)-1].CursorKey())
 	}
+	primaryPhotos, err := a.primaryImageAttachmentsForSearchResults(ctx, input.TenantID, items)
+	if err != nil {
+		return SearchAssetsResult{}, err
+	}
 
 	a.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAssetsSearched,
@@ -120,11 +126,26 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	})
 
 	return SearchAssetsResult{
-		Items:      items,
-		Limit:      limit,
-		NextCursor: nextCursor,
-		HasMore:    hasMore,
+		Items:         items,
+		PrimaryPhotos: primaryPhotos,
+		Limit:         limit,
+		NextCursor:    nextCursor,
+		HasMore:       hasMore,
 	}, nil
+}
+
+func (a App) primaryImageAttachmentsForSearchResults(ctx context.Context, tenantID tenant.ID, items []ports.AssetSearchResult) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	if a.attachments == nil || len(items) == 0 {
+		return nil, nil
+	}
+	assetRefs := make([]ports.AttachmentAssetReference, 0, len(items))
+	for _, item := range items {
+		assetRefs = append(assetRefs, ports.AttachmentAssetReference{
+			InventoryID: inventory.InventoryID(item.Asset.InventoryID.String()),
+			AssetID:     item.Asset.ID,
+		})
+	}
+	return a.attachments.FirstImageAttachmentsByAssets(ctx, tenantID, assetRefs)
 }
 
 func intersectInventoryCandidates(tenantCandidates []inventory.InventoryID, requested []inventory.InventoryID) []inventory.InventoryID {

@@ -18,6 +18,21 @@ type assetResponse struct {
 	LifecycleState    string                 `json:"lifecycleState"`
 	CreatedAt         string                 `json:"createdAt"`
 	UpdatedAt         string                 `json:"updatedAt"`
+	PrimaryPhoto      *assetPrimaryPhoto     `json:"primaryPhoto,omitempty"`
+}
+
+type assetPrimaryPhoto struct {
+	ID          string               `json:"id"`
+	FileName    string               `json:"fileName"`
+	ContentType string               `json:"contentType"`
+	SizeBytes   int64                `json:"sizeBytes"`
+	Thumbnails  assetPhotoThumbnails `json:"thumbnails"`
+}
+
+type assetPhotoThumbnails struct {
+	Small  string `json:"small"`
+	Medium string `json:"medium"`
+	Large  string `json:"large"`
 }
 
 type assetBody struct {

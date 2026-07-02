@@ -143,6 +143,13 @@ Thumbnails and image processing:
 - Hard-deleting an attachment must clean up the original blob and the known thumbnail derivative keys so derivative caching does not create unbounded orphaned storage.
 - Thumbnail responses must return bytes and the derivative content type; they must not expose derivative storage keys.
 
+Asset summary media:
+
+- API asset summary responses used by dense browse surfaces, including asset list and asset search results, must include a bounded first active image attachment summary when one exists.
+- The first image summary must expose only safe attachment metadata and authorized thumbnail endpoint references for `small`, `medium`, and `large`; it must not expose storage keys, bucket names, presigned provider URLs, filesystem paths, credentials, or original attachment bytes.
+- The first image summary must be assembled server-side using repository-level batch lookup for the returned assets. Clients must not need to issue one attachment-list request per asset to render Home or Browse cards.
+- Mobile Home and Browse must prefer the asset summary image references for cards and only fall back to attachment listing when a detail/photo-management surface needs the complete attachment set or when the API summary does not include media.
+
 Model image readiness:
 
 - Media may prepare image attachments for future model providers through an image preparation port.

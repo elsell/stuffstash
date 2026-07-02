@@ -61,7 +61,18 @@ class FakeInventoryApiClient {
       lifecycleState: 'active',
       customFields: {},
       createdAt: '2026-06-21T10:00:00Z',
-      updatedAt: '2026-06-23T10:00:00Z'
+      updatedAt: '2026-06-23T10:00:00Z',
+      primaryPhoto: {
+        id: 'attachment-filters-photo',
+        fileName: 'filters.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 1024,
+        thumbnails: {
+          small: '/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small',
+          medium: '/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=medium',
+          large: '/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=large'
+        }
+      }
     }
   ];
   listAssetRequests: Array<{
@@ -569,10 +580,6 @@ describe('ApiInventorySummaryRepository', () => {
                 {
                   id: 'attachment-filters-photo',
                   fileName: 'filters.jpg'
-                },
-                {
-                  id: 'attachment-filters-label',
-                  fileName: 'filters-label.jpg'
                 }
               ],
               photo: {
@@ -618,7 +625,7 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
-  it('keeps inventory loading usable when attachment metadata fails', async () => {
+  it('does not list attachments while loading dense inventory summaries', async () => {
     const client = new FakeInventoryApiClient();
     client.shouldFailAttachmentLookup = true;
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
@@ -626,10 +633,11 @@ describe('ApiInventorySummaryRepository', () => {
     await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
       id: 'inventory-home',
       assets: [
-        { id: 'asset-filters', hasPhoto: false },
+        { id: 'asset-filters', hasPhoto: true },
         { id: 'asset-garage', hasPhoto: false }
       ]
     });
+    expect(client.listAttachmentRequests).toEqual([]);
   });
 
   it('requests API-owned updated-descending asset order for mobile recency', async () => {
@@ -903,7 +911,7 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
-  it('loads paged asset photo metadata for the detail workspace strip', async () => {
+  it('uses primary photo summaries for browse cards without paged attachment lookups', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
       {
@@ -917,7 +925,18 @@ describe('ApiInventorySummaryRepository', () => {
         lifecycleState: 'active',
         customFields: {},
         createdAt: '2026-06-25T10:00:00Z',
-        updatedAt: '2026-06-25T10:00:00Z'
+        updatedAt: '2026-06-25T10:00:00Z',
+        primaryPhoto: {
+          id: 'attachment-many-one',
+          fileName: 'many-one.jpg',
+          contentType: 'image/jpeg',
+          sizeBytes: 1024,
+          thumbnails: {
+            small: '/tenants/tenant-home/inventories/inventory-home/assets/asset-many-photos/attachments/attachment-many-one/thumbnail?variant=small',
+            medium: '/tenants/tenant-home/inventories/inventory-home/assets/asset-many-photos/attachments/attachment-many-one/thumbnail?variant=medium',
+            large: '/tenants/tenant-home/inventories/inventory-home/assets/asset-many-photos/attachments/attachment-many-one/thumbnail?variant=large'
+          }
+        }
       },
       ...client.assets
     ];
@@ -934,22 +953,12 @@ describe('ApiInventorySummaryRepository', () => {
         expect.objectContaining({
           id: 'asset-many-photos',
           photos: [
-            expect.objectContaining({ id: 'attachment-many-one', fileName: 'many-one.jpg' }),
-            expect.objectContaining({ id: 'attachment-many-two', fileName: 'many-two.jpg' })
+            expect.objectContaining({ id: 'attachment-many-one', fileName: 'many-one.jpg' })
           ]
         })
       ])
     });
-    expect(client.listAttachmentRequests).toContainEqual({
-      assetId: 'asset-many-photos',
-      limit: 50,
-      cursor: undefined
-    });
-    expect(client.listAttachmentRequests).toContainEqual({
-      assetId: 'asset-many-photos',
-      limit: 50,
-      cursor: 'next-photo-page'
-    });
+    expect(client.listAttachmentRequests).toEqual([]);
   });
 
   it('prefers direct upload targets when adding asset photos', async () => {

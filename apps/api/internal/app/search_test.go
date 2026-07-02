@@ -3,9 +3,13 @@ package app
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -54,6 +58,68 @@ func TestSearchAssetsUsesAuthorizationVisibilityPort(t *testing.T) {
 	}
 	if len(search.inventoryIDs) != 1 || search.inventoryIDs[0] != inventory.InventoryID("inventory-two") {
 		t.Fatalf("expected search repository to receive visible inventory IDs only, got %+v", search.inventoryIDs)
+	}
+}
+
+func TestSearchAssetsIncludesPrimaryImageAttachments(t *testing.T) {
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	assetID := asset.ID("asset-one")
+	item := asset.Asset{
+		ID:             assetID,
+		TenantID:       asset.TenantID(tenantID.String()),
+		InventoryID:    asset.InventoryID(inventoryID.String()),
+		Kind:           asset.KindItem,
+		Title:          asset.Title("Water bottle"),
+		LifecycleState: asset.LifecycleStateActive,
+	}
+	photo := media.Attachment{
+		ID:             media.ID("attachment-one"),
+		TenantID:       media.TenantID(tenantID.String()),
+		InventoryID:    media.InventoryID(inventoryID.String()),
+		AssetID:        media.AssetID(assetID.String()),
+		StorageKey:     media.StorageKey("tenant-one/inventory-one/asset-one/photo.jpg"),
+		FileName:       media.FileName("photo.jpg"),
+		ContentType:    media.ContentTypeJPEG,
+		SizeBytes:      2048,
+		SHA256:         media.SHA256("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+		LifecycleState: media.LifecycleStateActive,
+		CreatedAt:      time.Date(2026, 7, 1, 12, 0, 0, 0, time.UTC),
+	}
+	ref := ports.AttachmentAssetReference{InventoryID: inventoryID, AssetID: assetID}
+	attachments := &searchAttachmentRepository{primaryImages: map[ports.AttachmentAssetReference]media.Attachment{ref: photo}}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &visibilityAuthorizer{t: t, tenantID: tenantID, visible: []inventory.InventoryID{inventoryID}},
+		Tenants:    &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
+		}},
+		Search: &recordingAssetSearchRepository{items: []ports.AssetSearchResult{{
+			Type:      search.ResultTypeAsset,
+			TenantID:  tenantID,
+			Inventory: inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
+			Asset:     item,
+		}}},
+		Attachments:      attachments,
+		DefaultPageLimit: 10,
+		MaxPageLimit:     20,
+	})
+
+	result, err := application.SearchAssets(context.Background(), SearchAssetsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:  tenantID,
+		Query:     "water",
+		Mode:      "exact",
+	})
+	if err != nil {
+		t.Fatalf("search assets: %v", err)
+	}
+	if len(attachments.assets) != 1 || attachments.assets[0].AssetID != assetID || attachments.assets[0].InventoryID != inventoryID {
+		t.Fatalf("expected primary image lookup for returned search asset, got %+v", attachments.assets)
+	}
+	if result.PrimaryPhotos[ref].ID != media.ID("attachment-one") {
+		t.Fatalf("expected primary photo in search result, got %+v", result.PrimaryPhotos)
 	}
 }
 
@@ -109,9 +175,28 @@ func (v *visibilityAuthorizer) RevokeInventoryEditor(context.Context, identity.P
 
 type recordingAssetSearchRepository struct {
 	inventoryIDs []inventory.InventoryID
+	items        []ports.AssetSearchResult
 }
 
 func (r *recordingAssetSearchRepository) SearchAssets(_ context.Context, _ tenant.ID, inventoryIDs []inventory.InventoryID, _ ports.AssetSearchPageRequest) ([]ports.AssetSearchResult, error) {
 	r.inventoryIDs = append([]inventory.InventoryID{}, inventoryIDs...)
-	return []ports.AssetSearchResult{}, nil
+	return r.items, nil
+}
+
+type searchAttachmentRepository struct {
+	assets        []ports.AttachmentAssetReference
+	primaryImages map[ports.AttachmentAssetReference]media.Attachment
+}
+
+func (r *searchAttachmentRepository) AttachmentByID(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID) (media.Attachment, bool, error) {
+	return media.Attachment{}, false, nil
+}
+
+func (r *searchAttachmentRepository) ListAttachmentsByAsset(context.Context, tenant.ID, inventory.InventoryID, asset.ID, ports.AttachmentListPageRequest) ([]media.Attachment, error) {
+	return nil, nil
+}
+
+func (r *searchAttachmentRepository) FirstImageAttachmentsByAssets(_ context.Context, _ tenant.ID, assets []ports.AttachmentAssetReference) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	r.assets = append([]ports.AttachmentAssetReference{}, assets...)
+	return r.primaryImages, nil
 }

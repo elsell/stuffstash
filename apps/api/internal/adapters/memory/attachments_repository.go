@@ -175,3 +175,43 @@ func (s *Store) ListAttachmentsByAsset(_ context.Context, tenantID tenant.ID, in
 	}
 	return items, nil
 }
+
+func (s *Store) FirstImageAttachmentsByAssets(_ context.Context, tenantID tenant.ID, assets []ports.AttachmentAssetReference) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	requested := map[string]struct{}{}
+	for _, item := range assets {
+		if item.InventoryID.String() != "" && item.AssetID.String() != "" {
+			requested[item.InventoryID.String()+":"+item.AssetID.String()] = struct{}{}
+		}
+	}
+	items := []media.Attachment{}
+	for _, attachment := range s.attachments {
+		attachmentAssetID := asset.ID(attachment.AssetID.String())
+		if _, ok := requested[attachment.InventoryID.String()+":"+attachmentAssetID.String()]; !ok {
+			continue
+		}
+		if attachment.TenantID.String() != tenantID.String() || !attachment.IsActive() || !attachment.ContentType.IsImage() {
+			continue
+		}
+		items = append(items, attachment)
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		if items[left].AssetID.String() == items[right].AssetID.String() {
+			return items[left].ID.String() < items[right].ID.String()
+		}
+		return items[left].AssetID.String() < items[right].AssetID.String()
+	})
+	result := map[ports.AttachmentAssetReference]media.Attachment{}
+	for _, item := range items {
+		ref := ports.AttachmentAssetReference{
+			InventoryID: inventory.InventoryID(item.InventoryID.String()),
+			AssetID:     asset.ID(item.AssetID.String()),
+		}
+		if _, exists := result[ref]; !exists {
+			result[ref] = item
+		}
+	}
+	return result, nil
+}

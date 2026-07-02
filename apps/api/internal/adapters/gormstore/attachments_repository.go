@@ -158,3 +158,103 @@ func (s Store) ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, i
 	}
 	return items, nil
 }
+
+func (s Store) FirstImageAttachmentsByAssets(ctx context.Context, tenantID tenant.ID, assets []ports.AttachmentAssetReference) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	if len(assets) == 0 {
+		return map[ports.AttachmentAssetReference]media.Attachment{}, nil
+	}
+	ids := make([]string, 0, len(assets))
+	inventoryIDs := make([]string, 0, len(assets))
+	allowed := map[string]struct{}{}
+	for _, item := range assets {
+		if item.InventoryID.String() != "" && item.AssetID.String() != "" {
+			ids = append(ids, item.AssetID.String())
+			inventoryIDs = append(inventoryIDs, item.InventoryID.String())
+			allowed[item.InventoryID.String()+":"+item.AssetID.String()] = struct{}{}
+		}
+	}
+	if len(ids) == 0 {
+		return map[ports.AttachmentAssetReference]media.Attachment{}, nil
+	}
+
+	idValues := make([]interface{}, 0, len(ids))
+	for _, id := range ids {
+		idValues = append(idValues, id)
+	}
+	inventoryIDValues := make([]interface{}, 0, len(inventoryIDs))
+	for _, id := range inventoryIDs {
+		inventoryIDValues = append(inventoryIDValues, id)
+	}
+	contentTypeValues := []interface{}{
+		media.ContentTypeJPEG.String(),
+		media.ContentTypePNG.String(),
+		media.ContentTypeWEBP.String(),
+	}
+
+	var firstRows []struct {
+		ID          string
+		InventoryID string
+		AssetID     string
+	}
+	err := s.db.WithContext(ctx).
+		Model(&attachmentModel{}).
+		Select("MIN(id) AS id, inventory_id, asset_id").
+		Where(&attachmentModel{
+			TenantID:       tenantID.String(),
+			LifecycleState: media.LifecycleStateActive.String(),
+		}).
+		Where(clause.IN{Column: clause.Column{Name: "inventory_id"}, Values: inventoryIDValues}).
+		Where(clause.IN{Column: clause.Column{Name: "asset_id"}, Values: idValues}).
+		Where(clause.IN{Column: clause.Column{Name: "content_type"}, Values: contentTypeValues}).
+		Group("inventory_id").
+		Group("asset_id").
+		Find(&firstRows).Error
+	if err != nil {
+		return nil, err
+	}
+	if len(firstRows) == 0 {
+		return map[ports.AttachmentAssetReference]media.Attachment{}, nil
+	}
+	attachmentIDs := make([]interface{}, 0, len(firstRows))
+	firstRefs := map[string]ports.AttachmentAssetReference{}
+	for _, row := range firstRows {
+		key := row.InventoryID + ":" + row.AssetID
+		if _, ok := allowed[key]; !ok || row.ID == "" {
+			continue
+		}
+		attachmentIDs = append(attachmentIDs, row.ID)
+		firstRefs[row.ID] = ports.AttachmentAssetReference{
+			InventoryID: inventory.InventoryID(row.InventoryID),
+			AssetID:     asset.ID(row.AssetID),
+		}
+	}
+	if len(attachmentIDs) == 0 {
+		return map[ports.AttachmentAssetReference]media.Attachment{}, nil
+	}
+
+	var models []attachmentModel
+	err = s.db.WithContext(ctx).
+		Where(&attachmentModel{TenantID: tenantID.String()}).
+		Where(clause.IN{Column: clause.Column{Name: "id"}, Values: attachmentIDs}).
+		Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+
+	items := make(map[ports.AttachmentAssetReference]media.Attachment)
+	for _, model := range models {
+		ref, ok := firstRefs[model.ID]
+		if !ok {
+			continue
+		}
+		if _, exists := items[ref]; exists {
+			continue
+		}
+		item, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid attachment row %q", model.ID)
+		}
+		items[ref] = item
+	}
+	return items, nil
+}

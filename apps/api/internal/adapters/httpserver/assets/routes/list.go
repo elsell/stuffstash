@@ -37,7 +37,7 @@ func RegisterList(api huma.API, application app.App) {
 
 		return &dto.ListAssetsOutput{
 			Body: shared.SuccessEnvelope[[]dto.AssetResponse]{
-				Data: mapper.AssetsToResponse(result.Items),
+				Data: mapper.AssetsToResponse(result.Items, result.PrimaryPhotos),
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

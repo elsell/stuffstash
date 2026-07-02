@@ -14,6 +14,7 @@ import (
 type AttachmentRepository interface {
 	AttachmentByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, bool, error)
 	ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page AttachmentListPageRequest) ([]media.Attachment, error)
+	FirstImageAttachmentsByAssets(ctx context.Context, tenantID tenant.ID, assets []AttachmentAssetReference) (map[AttachmentAssetReference]media.Attachment, error)
 }
 
 type AttachmentUnitOfWork interface {
@@ -25,6 +26,11 @@ type AttachmentUnitOfWork interface {
 type AttachmentListPageRequest struct {
 	AfterAttachmentID media.ID
 	Limit             int
+}
+
+type AttachmentAssetReference struct {
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
 }
 
 type BlobStorage interface {

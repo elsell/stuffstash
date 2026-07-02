@@ -246,7 +246,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       summaryToApiAsset(inventory.tenantId, inventory.id, item)
     );
     return Promise.all(
-      page.map((item) => this.mapAssetWithPhoto(inventory.name, item.asset, siblings))
+      page.map((item) => this.mapAssetWithPrimaryPhoto(inventory.name, item.asset, siblings))
     );
   }
 
@@ -270,7 +270,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
     return Promise.all(
       locationAssets.map(async (location) =>
-        mapLocation(location, knownAssets, (await this.photosForAsset(location))[0])
+        mapLocation(location, knownAssets, await this.primaryPhotoForAsset(location))
       )
     );
   }
@@ -283,11 +283,11 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const locations = await Promise.all(
       assets
         .filter((asset) => asset.kind === 'location')
-        .map(async (location) => mapLocation(location, assets, (await this.photosForAsset(location))[0]))
+        .map(async (location) => mapLocation(location, assets, await this.primaryPhotoForAsset(location)))
     );
 
     const mappedAssets = await Promise.all(
-      assets.map((asset) => this.mapAssetWithPhoto(inventory.name, asset, assets))
+      assets.map((asset) => this.mapAssetWithPrimaryPhoto(inventory.name, asset, assets))
     );
 
     return {
@@ -326,6 +326,54 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   ): Promise<AssetSummary> {
     const photos = await this.photosForAsset(asset);
     return mapAsset(inventoryName, asset, assets, photos);
+  }
+
+  private async mapAssetWithPrimaryPhoto(
+    inventoryName: string,
+    asset: Asset,
+    assets: readonly Asset[]
+  ): Promise<AssetSummary> {
+    const photo = await this.primaryPhotoForAsset(asset);
+    return mapAsset(inventoryName, asset, assets, photo ? [photo] : []);
+  }
+
+  private async primaryPhotoForAsset(asset: Asset): Promise<NonNullable<AssetSummary['photo']> | undefined> {
+    if (!asset.primaryPhoto) {
+      return undefined;
+    }
+    const smallReference = await this.client.assetAttachmentThumbnailReference(
+      asset.tenantId,
+      asset.inventoryId,
+      asset.id,
+      asset.primaryPhoto.id,
+      'small'
+    );
+    const mediumReference = await this.client.assetAttachmentThumbnailReference(
+      asset.tenantId,
+      asset.inventoryId,
+      asset.id,
+      asset.primaryPhoto.id,
+      'medium'
+    );
+    const largeReference = await this.client.assetAttachmentThumbnailReference(
+      asset.tenantId,
+      asset.inventoryId,
+      asset.id,
+      asset.primaryPhoto.id,
+      'large'
+    );
+    return {
+      id: asset.primaryPhoto.id,
+      fileName: asset.primaryPhoto.fileName,
+      contentType: asset.primaryPhoto.contentType,
+      sizeBytes: asset.primaryPhoto.sizeBytes,
+      uri: smallReference.uri,
+      heroUri: mediumReference.uri,
+      heroHeaders: mediumReference.headers,
+      viewerUri: largeReference.uri,
+      viewerHeaders: largeReference.headers,
+      headers: smallReference.headers
+    };
   }
 
   private async photosForAsset(asset: Asset): Promise<readonly NonNullable<AssetSummary['photo']>[]> {
@@ -440,7 +488,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const assets = await Promise.all(
       selectedAssets
         .slice(0, desiredMatches)
-        .map((asset) => this.mapAssetWithPhoto(inventory.name, asset, knownAssets))
+        .map((asset) => this.mapAssetWithPrimaryPhoto(inventory.name, asset, knownAssets))
     );
 
     return {
@@ -480,7 +528,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const assets = await Promise.all(
       selectedAssets
         .slice(0, desiredMatches)
-        .map((asset) => this.mapAssetWithPhoto(inventory.name, asset, knownAssets))
+        .map((asset) => this.mapAssetWithPrimaryPhoto(inventory.name, asset, knownAssets))
     );
 
     return {

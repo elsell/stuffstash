@@ -3,11 +3,13 @@ package assets
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -62,6 +64,66 @@ func TestListAssetsNormalizesZeroPaginationDefaults(t *testing.T) {
 	}
 	if result.HasMore || result.NextCursor != nil {
 		t.Fatalf("expected no next page, got hasMore=%v nextCursor=%v", result.HasMore, result.NextCursor)
+	}
+}
+
+func TestListAssetsIncludesPrimaryImageAttachments(t *testing.T) {
+	tenantID := tenant.ID("tenant-1")
+	inventoryID := inventory.InventoryID("inventory-1")
+	assetID := asset.ID("asset-1")
+	principal := identity.Principal{ID: identity.PrincipalID("principal-1")}
+	item := asset.Asset{
+		ID:             assetID,
+		TenantID:       asset.TenantID(tenantID.String()),
+		InventoryID:    asset.InventoryID(inventoryID.String()),
+		Kind:           asset.KindItem,
+		Title:          asset.Title("Water bottle"),
+		LifecycleState: asset.LifecycleStateActive,
+	}
+	attachment := media.Attachment{
+		ID:             media.ID("attachment-1"),
+		TenantID:       media.TenantID(tenantID.String()),
+		InventoryID:    media.InventoryID(inventoryID.String()),
+		AssetID:        media.AssetID(assetID.String()),
+		StorageKey:     media.StorageKey("tenant-1/inventory-1/asset-1/attachment-1.jpg"),
+		FileName:       media.FileName("photo.jpg"),
+		ContentType:    media.ContentTypeJPEG,
+		SizeBytes:      1234,
+		SHA256:         media.SHA256("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+		LifecycleState: media.LifecycleStateActive,
+		CreatedAt:      time.Date(2026, 7, 1, 12, 0, 0, 0, time.UTC),
+	}
+	ref := ports.AttachmentAssetReference{InventoryID: inventoryID, AssetID: assetID}
+	attachments := &recordingAttachmentRepository{primaryImages: map[ports.AttachmentAssetReference]media.Attachment{ref: attachment}}
+	service := New(Dependencies{
+		Observer:   noopObserver{},
+		Authorizer: allowAuthorizer{},
+		Tenants:    tenantExistsRepository{},
+		Inventories: inventoryRepository{item: inventory.Inventory{
+			ID:             inventoryID,
+			TenantID:       inventory.TenantID(tenantID.String()),
+			Name:           inventory.Name("Home"),
+			LifecycleState: inventory.LifecycleStateActive,
+		}},
+		Assets:      assetRepository{items: []asset.Asset{item}},
+		Attachments: attachments,
+		Audit:       auditRepository{},
+		IDs:         fixedIDGenerator{},
+	})
+
+	result, err := service.ListAssets(context.Background(), ListAssetsInput{
+		Principal:   principal,
+		TenantID:    tenantID,
+		InventoryID: inventoryID,
+	})
+	if err != nil {
+		t.Fatalf("ListAssets returned error: %v", err)
+	}
+	if len(attachments.assets) != 1 || attachments.assets[0].AssetID != assetID || attachments.assets[0].InventoryID != inventoryID {
+		t.Fatalf("expected primary image lookup for returned asset, got %+v", attachments.assets)
+	}
+	if result.PrimaryPhotos[ref].ID != media.ID("attachment-1") {
+		t.Fatalf("expected primary photo in result, got %+v", result.PrimaryPhotos)
 	}
 }
 
@@ -191,4 +253,22 @@ type fixedIDGenerator struct{}
 
 func (fixedIDGenerator) NewID() string {
 	return "audit-1"
+}
+
+type recordingAttachmentRepository struct {
+	assets        []ports.AttachmentAssetReference
+	primaryImages map[ports.AttachmentAssetReference]media.Attachment
+}
+
+func (r *recordingAttachmentRepository) AttachmentByID(context.Context, tenant.ID, inventory.InventoryID, asset.ID, media.ID) (media.Attachment, bool, error) {
+	return media.Attachment{}, false, nil
+}
+
+func (r *recordingAttachmentRepository) ListAttachmentsByAsset(context.Context, tenant.ID, inventory.InventoryID, asset.ID, ports.AttachmentListPageRequest) ([]media.Attachment, error) {
+	return nil, nil
+}
+
+func (r *recordingAttachmentRepository) FirstImageAttachmentsByAssets(_ context.Context, _ tenant.ID, assets []ports.AttachmentAssetReference) (map[ports.AttachmentAssetReference]media.Attachment, error) {
+	r.assets = append([]ports.AttachmentAssetReference{}, assets...)
+	return r.primaryImages, nil
 }
