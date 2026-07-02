@@ -14,6 +14,7 @@ import {
 } from '../../application/locations/LocationAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
 import { IdentityLabel } from '../components/IdentityIcon';
+import { locationAssetDetailHref } from './AssetDetailNavigation';
 import { colors, spacing } from '../theme/tokens';
 
 type LocationAssetsRouteScreenProps = {
@@ -124,7 +125,7 @@ function LocationAssetList({
         renderItem={({ item }) => (
           <AssetCard
             asset={item}
-            onPress={() => router.push(`/locations/${locationAssets.locationId}/assets/${item.id}`)}
+            onPress={() => router.push(locationAssetDetailHref(locationAssets.locationId, item.id))}
           />
         )}
       />

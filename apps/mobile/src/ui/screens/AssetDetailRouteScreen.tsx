@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActionSheetIOS,
@@ -31,12 +31,13 @@ import {
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
 import {
   assetPhotoViewerModel,
-  moveAssetPhotoOrder,
-  orderedAssetPhotos,
-  resetLocalAssetPhotoOrder
+  isAssetPhotoId
 } from '../components/AssetPhotoWorkspacePresentation';
 import { addHereParams } from './AddAssetInitialParent';
-import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
+import {
+  assetDetailHref,
+  navigateAfterDeletedAsset
+} from './AssetDetailNavigation';
 import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
@@ -91,7 +92,10 @@ export function AssetDetailRouteScreen({
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
   const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
-  const [photoOrder, setPhotoOrder] = useState<readonly string[]>([]);
+
+  useEffect(() => {
+    setSelectedPhotoId(undefined);
+  }, [assetId]);
 
   useFocusEffect(useCallback(() => {
     let isCurrent = true;
@@ -99,7 +103,6 @@ export function AssetDetailRouteScreen({
     setPhotoStatus(undefined);
     setWorkspaceStatus(undefined);
     setSelectedPhotoId(undefined);
-    setPhotoOrder(resetLocalAssetPhotoOrder());
 
     assetDetailQuery
       .execute(assetId)
@@ -145,7 +148,6 @@ export function AssetDetailRouteScreen({
   async function reloadAsset(): Promise<AssetDetailViewModel> {
     const asset = await assetDetailQuery.execute(assetId);
     setScreenState({ status: 'ready', asset });
-    setPhotoOrder(resetLocalAssetPhotoOrder());
     return asset;
   }
 
@@ -216,25 +218,6 @@ export function AssetDetailRouteScreen({
     }
   }
 
-  function confirmRemovePhoto(photoId: string): void {
-    Alert.alert('Remove photo?', 'This removes the photo from this asset.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => void removePhoto(photoId) }
-    ]);
-  }
-
-  function movePhoto(photoId: string, direction: -1 | 1): void {
-    if (screenState.status !== 'ready') {
-      return;
-    }
-    setPhotoOrder((current) => moveAssetPhotoOrder({
-      direction,
-      photoId,
-      photoOrder: current,
-      photos: screenState.asset.photos
-    }));
-  }
-
   async function removePhoto(photoId: string): Promise<void> {
     setPendingAction('photos');
     try {
@@ -259,6 +242,19 @@ export function AssetDetailRouteScreen({
 
   function updatePhotoUploadProgress(event: AddAssetPhotoProgressEvent): void {
     setPhotoUploads((current) => applyPhotoUploadProgress(current, event));
+  }
+
+  function selectAssetPhoto(asset: AssetDetailViewModel, photoId: string): void {
+    if (!isAssetPhotoId(asset.photos, photoId)) {
+      return;
+    }
+
+    setSelectedPhotoId(photoId);
+  }
+
+  function openChildAsset(childId: string): void {
+    setSelectedPhotoId(undefined);
+    router.push(assetDetailHref(childId));
   }
 
   function showMoreActions(asset: AssetDetailViewModel): void {
@@ -347,8 +343,7 @@ export function AssetDetailRouteScreen({
       {screenState.status === 'ready' ? (
         <>
           {(() => {
-            const visiblePhotos = orderedAssetPhotos(screenState.asset.photos, photoOrder);
-            const photoViewer = assetPhotoViewerModel(visiblePhotos, selectedPhotoId);
+            const photoViewer = assetPhotoViewerModel(screenState.asset.photos, selectedPhotoId);
             return (
               <AssetPhotoViewerSheet
                 canRemove={screenState.asset.canAddPhotos}
@@ -356,7 +351,7 @@ export function AssetDetailRouteScreen({
                 onClose={() => setSelectedPhotoId(undefined)}
                 onRemove={(photoId) => void removePhoto(photoId)}
                 onSelectPhoto={setSelectedPhotoId}
-                photos={visiblePhotos}
+                photos={screenState.asset.photos}
               />
             );
           })()}
@@ -370,16 +365,13 @@ export function AssetDetailRouteScreen({
               params: addHereParams(screenState.asset)
             }) : undefined}
             onAddPhotos={() => choosePhotos(screenState.asset.photos.length)}
-            onChildPress={(childId) => router.push(`/assets/${childId}`)}
+            onChildPress={openChildAsset}
             onEdit={() => router.push(`/assets/${screenState.asset.id}/edit`)}
             onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => router.push(`/assets/${screenState.asset.id}/move`)}
             onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => router.push(`/assets/${screenState.asset.id}/move-here`) : undefined}
-            onMovePhoto={movePhoto}
-            onPhotoPress={setSelectedPhotoId}
-            onRemovePhoto={confirmRemovePhoto}
+            onPhotoPress={(photoId) => selectAssetPhoto(screenState.asset, photoId)}
             onRetryPhotos={() => void retryPhotos()}
-            photoOrder={photoOrder}
             photoUploads={photoUploads}
             photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
             workspaceStatusKind={presentedWorkspaceStatus?.kind}

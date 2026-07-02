@@ -91,6 +91,8 @@ export function toAssetDetailViewModel(
   const canCreateAsset = options.canCreateAsset ?? canEditAsset;
   const containedAssets = (options.allAssets ?? [])
     .filter((candidate) => candidate.parentAssetId === asset.id)
+    .slice()
+    .sort(compareContainedAssetSummaries)
     .map(toAssetCardViewModel);
 
   return {
@@ -124,6 +126,41 @@ export function toAssetDetailViewModel(
     canContainAssets: asset.kind === 'container' || asset.kind === 'location',
     canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
+}
+
+function compareContainedAssetSummaries(left: AssetSummary, right: AssetSummary): number {
+  const kindRank = containedKindRank(left.kind) - containedKindRank(right.kind);
+  if (kindRank !== 0) {
+    return kindRank;
+  }
+
+  const titleOrder = compareStableText(left.title, right.title);
+  if (titleOrder !== 0) {
+    return titleOrder;
+  }
+
+  return left.id.localeCompare(right.id);
+}
+
+function compareStableText(left: string, right: string): number {
+  const leftKey = stableTextSortKey(left);
+  const rightKey = stableTextSortKey(right);
+
+  if (leftKey < rightKey) {
+    return -1;
+  }
+  if (leftKey > rightKey) {
+    return 1;
+  }
+  return 0;
+}
+
+function stableTextSortKey(value: string): string {
+  return value.trim().normalize('NFKD').toLowerCase();
+}
+
+function containedKindRank(kind: AssetSummary['kind']): number {
+  return kind === 'item' ? 1 : 0;
 }
 
 function labelLocationTrail(locationTrail: readonly string[]): string {

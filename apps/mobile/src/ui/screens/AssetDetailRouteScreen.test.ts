@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { navigateAfterDeletedAsset } from './AssetDetailNavigation';
+import {
+  assetDetailHref,
+  locationAssetDetailHref,
+  navigateAfterDeletedAsset
+} from './AssetDetailNavigation';
 import { addHereParams } from './AddAssetInitialParent';
 import {
   consumeAssetActionCompletion,
@@ -35,10 +39,8 @@ import {
   assetPhotoViewerModelAtIndex,
   assetPhotoViewerControls,
   assetPhotoStatusLabel,
-  localAssetPhotoOrderNotice,
-  moveAssetPhotoOrder,
-  orderedAssetPhotos,
-  resetLocalAssetPhotoOrder
+  isAssetPhotoId,
+  selectedAssetPhotoViewerIndex
 } from '../components/AssetPhotoWorkspacePresentation';
 import {
   applyPhotoUploadProgress,
@@ -64,6 +66,20 @@ import {
 } from './AssetDetailEditPresentation';
 
 describe('navigateAfterDeletedAsset', () => {
+  it('builds explicit asset detail route params for card navigation', () => {
+    expect(assetDetailHref('asset-water-bottle')).toEqual({
+      pathname: '/assets/[assetId]',
+      params: { assetId: 'asset-water-bottle' }
+    });
+    expect(locationAssetDetailHref('location-garage', 'asset-water-bottle')).toEqual({
+      pathname: '/locations/[locationId]/assets/[assetId]',
+      params: {
+        assetId: 'asset-water-bottle',
+        locationId: 'location-garage'
+      }
+    });
+  });
+
   it('uses native back navigation when the asset detail route has history', () => {
     const calls: string[] = [];
 
@@ -685,67 +701,39 @@ describe('asset photo workspace presentation helpers', () => {
     expect(assetPhotoViewerModelAtIndex(photos, 99)).toBeUndefined();
   });
 
-  it('applies local photo ordering without losing new server photos', () => {
+  it('distinguishes photo ids from asset ids before opening the photo viewer', () => {
     const photos = [
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
-      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' },
-      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' }
     ];
 
-    expect(orderedAssetPhotos(photos, ['photo-two', 'photo-one']).map((photo) => photo.id)).toEqual([
-      'photo-two',
-      'photo-one',
-      'photo-three'
-    ]);
+    expect(isAssetPhotoId(photos, 'photo-one')).toBe(true);
+    expect(isAssetPhotoId(photos, 'asset-contained-item')).toBe(false);
   });
 
-  it('moves photos locally within the currently visible strip boundaries', () => {
+  it('does not mount the photo viewer until a current asset photo is explicitly selected', () => {
     const photos = [
       { id: 'photo-one', label: 'one.jpg', uri: 'https://photos/one.jpg' },
-      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' },
-      { id: 'photo-three', label: 'three.jpg', uri: 'https://photos/three.jpg' }
+      { id: 'photo-two', label: 'two.jpg', uri: 'https://photos/two.jpg' }
     ];
 
-    expect(moveAssetPhotoOrder({
-      direction: -1,
-      photoId: 'photo-three',
-      photoOrder: [],
-      photos
-    })).toEqual(['photo-one', 'photo-three', 'photo-two']);
-
-    expect(moveAssetPhotoOrder({
-      direction: -1,
-      photoId: 'photo-one',
-      photoOrder: [],
-      photos
-    })).toEqual([]);
-
-    expect(moveAssetPhotoOrder({
-      direction: 1,
-      photoId: 'photo-two',
-      photoOrder: ['photo-three', 'photo-one', 'photo-two'],
-      photos
-    })).toEqual(['photo-three', 'photo-one', 'photo-two']);
+    expect(selectedAssetPhotoViewerIndex(photos, undefined)).toBeUndefined();
+    expect(selectedAssetPhotoViewerIndex(photos, {
+      photo: { id: 'photo-missing', label: 'missing.jpg', uri: 'https://photos/missing.jpg' },
+      positionLabel: '1 of 1'
+    })).toBeUndefined();
+    expect(selectedAssetPhotoViewerIndex(photos, assetPhotoViewerModel(photos, 'photo-two'))).toBe(1);
   });
 
-  it('labels locally reordered photos as a temporary preview', () => {
-    expect(localAssetPhotoOrderNotice).toBe('Preview order only. Resets after refresh.');
+  it('labels the first visible photo without implying unsaved local ordering', () => {
     expect(assetPhotoStatusLabel({
-      hasLocalOrder: false,
       index: 0,
       label: 'one.jpg'
     })).toBe('First photo');
     expect(assetPhotoStatusLabel({
-      hasLocalOrder: true,
-      index: 0,
-      label: 'one.jpg'
-    })).toBe('Preview first');
-    expect(assetPhotoStatusLabel({
-      hasLocalOrder: true,
       index: 1,
       label: 'two.jpg'
     })).toBe('two.jpg');
-    expect(resetLocalAssetPhotoOrder()).toEqual([]);
   });
 });
 

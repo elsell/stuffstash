@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   canUseContainedAssetAction,
   containedAssetActions,
-  containedAssetsEmptyState
+  containedAssetsEmptyState,
+  containedAssetRows
 } from './ContainedAssetsPresentation';
 
 describe('ContainedAssetsPresentation', () => {
@@ -57,5 +58,49 @@ describe('ContainedAssetsPresentation', () => {
       isActionPending: false,
       onPress: undefined
     })).toBe(false);
+  });
+
+  it('uses compact contained rows that omit redundant parent path metadata', () => {
+    expect(containedAssetRows([{
+      id: 'asset-battery-bin',
+      title: 'Battery bin',
+      kindLabel: 'Container',
+      customTypeLabel: undefined,
+      description: 'AA, AAA, and coin cells.',
+      locationTrailLabel: 'Garage / Shelf / Battery bin',
+      updatedAtLabel: 'Updated yesterday',
+      photoLabel: 'Photo ready',
+      imagePlaceholderLabel: 'Box',
+      photo: { uri: 'https://photos/battery-bin.jpg' }
+    }])).toEqual([{
+      id: 'asset-battery-bin',
+      title: 'Battery bin',
+      eyebrowLabel: 'Container',
+      supportingLabel: 'AA, AAA, and coin cells.',
+      imagePlaceholderLabel: 'Box',
+      photo: { uri: 'https://photos/battery-bin.jpg' }
+    }]);
+  });
+
+  it('falls back to kind and photo readiness when a contained row has no description or type', () => {
+    expect(containedAssetRows([{
+      id: 'asset-spare-key',
+      title: 'Spare key',
+      kindLabel: 'Item',
+      customTypeLabel: undefined,
+      description: '',
+      locationTrailLabel: 'Garage / Shelf / Spare key',
+      updatedAtLabel: 'Updated today',
+      photoLabel: 'Needs photo',
+      imagePlaceholderLabel: 'Item',
+      photo: undefined
+    }])).toEqual([{
+      id: 'asset-spare-key',
+      title: 'Spare key',
+      eyebrowLabel: 'Item',
+      supportingLabel: 'Needs photo',
+      imagePlaceholderLabel: 'Item',
+      photo: undefined
+    }]);
   });
 });

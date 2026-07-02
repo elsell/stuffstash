@@ -224,4 +224,87 @@ describe('AssetDetailQuery', () => {
       }]
     });
   });
+
+  it('orders contained assets by spatial usefulness and stable title within groups', () => {
+    expect(toAssetDetailViewModel({
+      id: assetId('asset-garage-shelf'),
+      title: 'Garage shelf',
+      kind: 'location',
+      lifecycleState: 'active',
+      locationLabel: 'Garage',
+      locationTrail: ['Home', 'Garage', 'Garage shelf'],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    }, {
+      allAssets: [
+        {
+          id: assetId('asset-zipties'),
+          title: 'Zip ties',
+          kind: 'item',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-garage-shelf'),
+          locationLabel: 'Garage shelf',
+          locationTrail: ['Home', 'Garage', 'Garage shelf', 'Zip ties'],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        },
+        {
+          id: assetId('asset-cable-bin-backup'),
+          title: 'Cable bin',
+          kind: 'container',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-garage-shelf'),
+          locationLabel: 'Garage shelf',
+          locationTrail: ['Home', 'Garage', 'Garage shelf', 'Cable bin'],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        },
+        {
+          id: assetId('asset-cable-bin'),
+          title: 'Cable bin',
+          kind: 'container',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-garage-shelf'),
+          locationLabel: 'Garage shelf',
+          locationTrail: ['Home', 'Garage', 'Garage shelf', 'Cable bin'],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        },
+        {
+          id: assetId('asset-archive-cubby'),
+          title: 'Archive cubby',
+          kind: 'location',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-garage-shelf'),
+          locationLabel: 'Garage shelf',
+          locationTrail: ['Home', 'Garage', 'Garage shelf', 'Archive cubby'],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        },
+        {
+          id: assetId('asset-aa-batteries'),
+          title: 'AA batteries',
+          kind: 'item',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-garage-shelf'),
+          locationLabel: 'Garage shelf',
+          locationTrail: ['Home', 'Garage', 'Garage shelf', 'AA batteries'],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        }
+      ]
+    }).containedAssets.map((asset) => asset.id)).toEqual([
+      'asset-archive-cubby',
+      'asset-cable-bin',
+      'asset-cable-bin-backup',
+      'asset-aa-batteries',
+      'asset-zipties'
+    ]);
+  });
 });

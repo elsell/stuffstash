@@ -8,20 +8,19 @@ import {
 } from 'react-native';
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
-import { Camera, ChevronLeft, ChevronRight, MoreHorizontal, MoveRight, Pencil, X } from 'lucide-react-native';
+import { Camera, ChevronRight, MoreHorizontal, MoveRight, Pencil } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import {
-  assetPhotoStatusLabel,
-  localAssetPhotoOrderNotice,
-  orderedAssetPhotos
+  assetPhotoStatusLabel
 } from './AssetPhotoWorkspacePresentation';
 import {
   canUseContainedAssetAction,
   containedAssetActions,
+  containedAssetRows,
   containedAssetsEmptyState,
-  type ContainedAssetAction
+  type ContainedAssetAction,
+  type ContainedAssetRowViewModel
 } from './ContainedAssetsPresentation';
-import { AssetCard } from './AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
 
 export type AssetPhotoUploadProgressViewModel = {
@@ -34,7 +33,6 @@ type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending?: boolean;
   readonly photoUploads?: readonly AssetPhotoUploadProgressViewModel[];
-  readonly photoOrder?: readonly string[];
   readonly photoStatusMessage?: string;
   readonly workspaceStatusMessage?: string;
   readonly workspaceStatusKind?: 'success' | 'working';
@@ -43,9 +41,7 @@ type AssetDetailViewProps = {
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onAddPhotos?: () => void;
-  readonly onMovePhoto?: (photoId: string, direction: -1 | 1) => void;
   readonly onPhotoPress?: (photoId: string) => void;
-  readonly onRemovePhoto?: (photoId: string) => void;
   readonly onRetryPhotos?: () => void;
   readonly onMoreActions?: () => void;
   readonly onChildPress?: (assetId: string) => void;
@@ -65,13 +61,10 @@ export function AssetDetailView({
   onEdit,
   onMoreActions,
   onMove,
-  onMovePhoto,
   onPhotoPress,
-  onRemovePhoto,
   onMoveThingsHere,
   onRetryPhotos,
   photoUploads = [],
-  photoOrder = [],
   photoStatusMessage,
   workspaceStatusKind = 'success',
   workspaceStatusMessage,
@@ -90,10 +83,7 @@ export function AssetDetailView({
           asset={asset}
           disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
           onAddPhotos={onAddPhotos}
-          onMovePhoto={onMovePhoto}
           onPhotoPress={onPhotoPress}
-          onRemovePhoto={onRemovePhoto}
-          photoOrder={photoOrder}
         />
 
         <View style={styles.panel}>
@@ -120,31 +110,7 @@ export function AssetDetailView({
 
           {asset.description.trim().length > 0 ? (
             <Text style={styles.description}>{asset.description}</Text>
-          ) : (
-            <Text style={styles.emptyDescription}>No description yet.</Text>
-          )}
-
-          <View style={styles.primaryActions}>
-            <WorkspaceAction
-              disabled={isActionPending || !asset.canEdit || !onEdit}
-              icon={<Pencil color={colors.onAction} size={18} />}
-              label="Edit"
-              primary
-              onPress={onEdit}
-            />
-            <WorkspaceAction
-              disabled={isActionPending || !asset.canMove || !onMove}
-              icon={<MoveRight color={colors.text} size={18} />}
-              label="Move"
-              onPress={onMove}
-            />
-            <WorkspaceAction
-              disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
-              icon={<Camera color={colors.text} size={18} />}
-              label="Photos"
-              onPress={onAddPhotos}
-            />
-          </View>
+          ) : null}
 
           {workspaceStatusMessage ? (
             <View
@@ -178,6 +144,28 @@ export function AssetDetailView({
             <MetadataRow label="Status" value={asset.lifecycleLabel} />
             <MetadataRow label="Updated" value={asset.updatedAtLabel} />
           </View>
+
+          <View style={styles.primaryActions}>
+            <WorkspaceAction
+              disabled={isActionPending || !asset.canEdit || !onEdit}
+              icon={<Pencil color={colors.onAction} size={18} />}
+              label="Edit"
+              primary
+              onPress={onEdit}
+            />
+            <WorkspaceAction
+              disabled={isActionPending || !asset.canMove || !onMove}
+              icon={<MoveRight color={colors.text} size={18} />}
+              label="Move"
+              onPress={onMove}
+            />
+            <WorkspaceAction
+              disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
+              icon={<Camera color={colors.text} size={18} />}
+              label="Photos"
+              onPress={onAddPhotos}
+            />
+          </View>
         </View>
 
         {asset.canContainAssets ? (
@@ -198,30 +186,17 @@ function PhotoWorkspace({
   asset,
   disabled,
   onAddPhotos,
-  onMovePhoto,
-  onPhotoPress,
-  onRemovePhoto,
-  photoOrder
+  onPhotoPress
 }: {
   readonly asset: AssetDetailViewModel;
   readonly disabled: boolean;
   readonly onAddPhotos?: () => void;
-  readonly onMovePhoto?: (photoId: string, direction: -1 | 1) => void;
   readonly onPhotoPress?: (photoId: string) => void;
-  readonly onRemovePhoto?: (photoId: string) => void;
-  readonly photoOrder: readonly string[];
 }) {
-  const orderedPhotos = orderedAssetPhotos(asset.photos, photoOrder);
-  const photos = orderedPhotos.length > 0 ? orderedPhotos : undefined;
-  const hasLocalOrder = photoOrder.length > 0;
+  const photos = asset.photos.length > 0 ? asset.photos : undefined;
 
   return (
     <View style={styles.photoWorkspace}>
-      {hasLocalOrder ? (
-        <View style={styles.localOrderNotice}>
-          <Text style={styles.localOrderNoticeText}>{localAssetPhotoOrderNotice}</Text>
-        </View>
-      ) : null}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -247,37 +222,8 @@ function PhotoWorkspace({
               <Text style={styles.photoPosition}>{(index + 1).toString()} / {photos.length.toString()}</Text>
             </Pressable>
             <Text style={styles.photoStatus}>
-              {assetPhotoStatusLabel({ hasLocalOrder, index, label: photo.label })}
+              {assetPhotoStatusLabel({ index, label: photo.label })}
             </Text>
-            {photo.id && onMovePhoto && photos.length > 1 ? (
-              <View style={styles.photoReorderControls}>
-                <PhotoReorderButton
-                  accessibilityLabel={`Move ${photo.label} earlier`}
-                  disabled={disabled || index === 0}
-                  direction={-1}
-                  photoId={photo.id}
-                  onMovePhoto={onMovePhoto}
-                />
-                <PhotoReorderButton
-                  accessibilityLabel={`Move ${photo.label} later`}
-                  disabled={disabled || index === photos.length - 1}
-                  direction={1}
-                  photoId={photo.id}
-                  onMovePhoto={onMovePhoto}
-                />
-              </View>
-            ) : null}
-            {photo.id && onRemovePhoto ? (
-              <Pressable
-                accessibilityLabel={`Remove ${photo.label}`}
-                accessibilityRole="button"
-                disabled={disabled}
-                onPress={() => onRemovePhoto(photo.id as string)}
-                style={[styles.removePhotoButton, disabled ? styles.disabledAction : null]}
-              >
-                <X color={colors.text} size={18} />
-              </Pressable>
-            ) : null}
           </View>
         )) : (
           <View style={styles.photoHero}>
@@ -297,35 +243,6 @@ function PhotoWorkspace({
         </Pressable>
       </ScrollView>
     </View>
-  );
-}
-
-function PhotoReorderButton({
-  accessibilityLabel,
-  direction,
-  disabled,
-  onMovePhoto,
-  photoId
-}: {
-  readonly accessibilityLabel: string;
-  readonly direction: -1 | 1;
-  readonly disabled: boolean;
-  readonly onMovePhoto: (photoId: string, direction: -1 | 1) => void;
-  readonly photoId: string;
-}) {
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={() => onMovePhoto(photoId, direction)}
-      style={[styles.photoReorderButton, disabled ? styles.disabledAction : null]}
-    >
-      {direction < 0
-        ? <ChevronLeft color={colors.text} size={18} />
-        : <ChevronRight color={colors.text} size={18} />}
-    </Pressable>
   );
 }
 
@@ -426,6 +343,7 @@ function ContainedAssetsSection({
 }) {
   const actions = containedAssetActions(asset);
   const emptyState = containedAssetsEmptyState(asset);
+  const childRows = containedAssetRows(asset.containedAssets);
 
   return (
     <View style={styles.section}>
@@ -447,10 +365,14 @@ function ContainedAssetsSection({
           ))}
         </View>
       ) : null}
-      {asset.containedAssets.length > 0 ? (
-        <View style={styles.childGrid}>
-          {asset.containedAssets.map((child) => (
-            <AssetCard key={child.id} asset={child} onPress={() => onChildPress?.(child.id)} />
+      {childRows.length > 0 ? (
+        <View style={styles.childList}>
+          {childRows.map((child) => (
+            <ContainedAssetRowView
+              key={child.id}
+              asset={child}
+              onPress={onChildPress ? () => onChildPress(child.id) : undefined}
+            />
           ))}
         </View>
       ) : (
@@ -460,6 +382,43 @@ function ContainedAssetsSection({
         </View>
       )}
     </View>
+  );
+}
+
+function ContainedAssetRowView({
+  asset,
+  onPress
+}: {
+  readonly asset: ContainedAssetRowViewModel;
+  readonly onPress?: () => void;
+}) {
+  const isDisabled = onPress === undefined;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
+      disabled={isDisabled}
+      onPress={onPress}
+      style={[styles.childRow, isDisabled ? styles.disabledAction : null]}
+    >
+      <View style={styles.childPhoto}>
+        {asset.photo ? (
+          <Image
+            accessibilityIgnoresInvertColors
+            source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
+            style={styles.childPhotoImage}
+          />
+        ) : (
+          <Text style={styles.childPhotoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
+        )}
+      </View>
+      <View style={styles.childRowText}>
+        <Text style={styles.childEyebrow}>{asset.eyebrowLabel}</Text>
+        <Text numberOfLines={2} style={styles.childTitle}>{asset.title}</Text>
+        <Text numberOfLines={2} style={styles.childSupporting}>{asset.supportingLabel}</Text>
+      </View>
+      <ChevronRight color={colors.textMuted} size={20} />
+    </Pressable>
   );
 }
 
@@ -523,19 +482,6 @@ const styles = StyleSheet.create({
   },
   photoWorkspace: {
     gap: spacing.sm
-  },
-  localOrderNotice: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.brandDustyBlueSoft,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
-  },
-  localOrderNoticeText: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
   },
   photoStrip: {
     gap: spacing.sm,
@@ -613,41 +559,6 @@ const styles = StyleSheet.create({
     minWidth: 180,
     overflow: 'hidden'
   },
-  removePhotoButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    height: 36,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: spacing.sm,
-    bottom: spacing.sm,
-    width: 36
-  },
-  photoReorderControls: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    bottom: spacing.sm,
-    flexDirection: 'row',
-    gap: 2,
-    left: '50%',
-    padding: 2,
-    position: 'absolute',
-    transform: [{ translateX: -47 }]
-  },
-  photoReorderButton: {
-    alignItems: 'center',
-    borderRadius: 16,
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
-    width: 44
-  },
   addPhotoText: {
     color: colors.action,
     fontSize: 14,
@@ -718,13 +629,6 @@ const styles = StyleSheet.create({
   description: {
     color: colors.textMuted,
     fontSize: 15,
-    lineHeight: 22,
-    marginTop: spacing.sm
-  },
-  emptyDescription: {
-    color: colors.textMuted,
-    fontSize: 15,
-    fontStyle: 'italic',
     lineHeight: 22,
     marginTop: spacing.sm
   },
@@ -908,10 +812,63 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     lineHeight: 28
   },
-  childGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  childList: {
     gap: spacing.sm
+  },
+  childRow: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 86,
+    padding: spacing.sm
+  },
+  childPhoto: {
+    alignItems: 'center',
+    aspectRatio: 1,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: 64
+  },
+  childPhotoImage: {
+    height: '100%',
+    width: '100%'
+  },
+  childPhotoPlaceholder: {
+    color: colors.accentStrong,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  childRowText: {
+    flex: 1,
+    gap: 2
+  },
+  childEyebrow: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textTransform: 'uppercase'
+  },
+  childTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: 0,
+    lineHeight: 22
+  },
+  childSupporting: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 18
   },
   containedActionBar: {
     flexDirection: 'row',

@@ -20,6 +20,7 @@ import type { AssetCardViewModel } from '../../application/assets/AssetViewModel
 import { BrandMark } from '../components/BrandMark';
 import { IdentityLabel } from '../components/IdentityIcon';
 import { colors } from '../theme/tokens';
+import { assetDetailHref } from './AssetDetailNavigation';
 import { styles } from './HomeScreen.styles';
 
 type HomeScreenProps = {
@@ -219,7 +220,7 @@ function DashboardHeader({ dashboard }: {
           <RecentAssetCard
             asset={asset}
             key={asset.id}
-            onPress={() => router.push(`/assets/${asset.id}`)}
+            onPress={() => router.push(assetDetailHref(asset.id))}
           />
         ))}
         {dashboard.recentAssets.length === 0 ? (

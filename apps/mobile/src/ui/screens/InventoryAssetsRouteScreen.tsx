@@ -14,6 +14,7 @@ import {
 } from '../../application/assets/InventoryAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
 import { IdentityLabel } from '../components/IdentityIcon';
+import { assetDetailHref } from './AssetDetailNavigation';
 import { colors, spacing } from '../theme/tokens';
 
 type InventoryAssetsRouteScreenProps = {
@@ -120,7 +121,7 @@ function InventoryAssetList({
         }
         ListEmptyComponent={<Text style={styles.emptyText}>No assets yet.</Text>}
         renderItem={({ item }) => (
-          <AssetCard asset={item} onPress={() => router.push(`/assets/${item.id}`)} />
+          <AssetCard asset={item} onPress={() => router.push(assetDetailHref(item.id))} />
         )}
       />
     </>

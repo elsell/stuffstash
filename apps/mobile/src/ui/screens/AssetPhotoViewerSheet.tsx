@@ -3,6 +3,7 @@ import type { AssetPhotoViewModel } from '../../application/assets/AssetViewMode
 import {
   assetPhotoMetadataLabel,
   assetPhotoViewerModelAtIndex,
+  selectedAssetPhotoViewerIndex,
   type AssetPhotoViewerModel
 } from '../components/AssetPhotoWorkspacePresentation';
 import {
@@ -25,10 +26,11 @@ export function AssetPhotoViewerSheet({
   readonly onSelectPhoto: (photoId: string) => void;
   readonly photos: readonly AssetPhotoViewModel[];
 }) {
-  const selectedPhotoIndex = model
-    ? photos.findIndex((photo) => photo.id === model.photo.id)
-    : -1;
-  const selectedIndex = selectedPhotoIndex >= 0 ? selectedPhotoIndex : undefined;
+  const selectedIndex = selectedAssetPhotoViewerIndex(photos, model);
+
+  if (selectedIndex === undefined) {
+    return null;
+  }
 
   function removePhoto(photo: FullScreenPhotoViewerPhoto): void {
     if (!photo.id) {

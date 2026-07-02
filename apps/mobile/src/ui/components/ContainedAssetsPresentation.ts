@@ -1,4 +1,5 @@
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 
 export type ContainedAssetActionKind = 'add_here' | 'move_here';
 
@@ -11,6 +12,15 @@ export type ContainedAssetAction = {
 export type ContainedAssetsEmptyState = {
   readonly title: string;
   readonly message: string;
+};
+
+export type ContainedAssetRowViewModel = {
+  readonly id: string;
+  readonly title: string;
+  readonly eyebrowLabel: string;
+  readonly supportingLabel: string;
+  readonly imagePlaceholderLabel: string;
+  readonly photo?: AssetCardViewModel['photo'];
 };
 
 export function containedAssetActions(
@@ -44,4 +54,28 @@ export function canUseContainedAssetAction({
   readonly onPress?: () => void;
 }): boolean {
   return !isActionPending && onPress !== undefined;
+}
+
+export function containedAssetRows(
+  assets: readonly AssetCardViewModel[]
+): readonly ContainedAssetRowViewModel[] {
+  return assets.map((asset) => ({
+    id: asset.id,
+    title: asset.title,
+    eyebrowLabel: [asset.kindLabel, asset.customTypeLabel]
+      .filter((value): value is string => value !== undefined && value.trim().length > 0)
+      .join(' · '),
+    supportingLabel: containedAssetSupportingLabel(asset),
+    imagePlaceholderLabel: asset.imagePlaceholderLabel,
+    photo: asset.photo
+  }));
+}
+
+function containedAssetSupportingLabel(asset: AssetCardViewModel): string {
+  const description = asset.description.trim();
+  if (description.length > 0) {
+    return description;
+  }
+
+  return asset.photoLabel;
 }
