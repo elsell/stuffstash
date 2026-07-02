@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
   import {
@@ -646,20 +647,20 @@
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
     try {
-      const asset = await repository.getAsset(tenantId, inventoryId, assetId);
-      const attachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
+      const result = await loadWorkspaceAssetDetail(repository, tenantId, inventoryId, assetId);
       if (requestId !== assetDetailRequestId) {
         return false;
       }
-      selectedAssetAttachments = attachments;
-      data = replaceWorkspaceAsset(data, asset);
-      loadedAssetDetail = asset;
-      selectedAssetId = asset.id;
+      if (!result.loaded || !result.asset) {
+        error = result.error;
+        return false;
+      }
+      selectedAssetAttachments = result.attachments;
+      data = replaceWorkspaceAsset(data, result.asset);
+      loadedAssetDetail = result.asset;
+      selectedAssetId = result.asset.id;
       mode = 'asset';
       return true;
-    } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Asset could not be loaded.';
-      return false;
     } finally {
       busy = false;
     }
@@ -698,7 +699,7 @@
   }
 
   async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
-    selectedAssetAttachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
+    selectedAssetAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
   }
 
   function closeDetailToHome(): void {

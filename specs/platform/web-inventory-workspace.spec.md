@@ -497,6 +497,7 @@ Required implementation split:
 - Route files may compose authentication, runtime configuration, repository construction, and top-level page state, but must not become the place where transport mapping, containment derivation, visual components, and API calls all accumulate.
 - Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
+- Asset-detail loading and attachment refresh orchestration must live in focused application helpers rather than accumulating in the product shell component.
 - Domain-oriented frontend observability must be represented through an explicit helper or port, even when the first implementation records events only in memory.
 
 The first promotion may include a local seeded adapter for unauthenticated browser review and for unavailable backend operations, but it must be truthful:
