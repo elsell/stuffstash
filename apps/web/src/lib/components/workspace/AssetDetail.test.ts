@@ -26,7 +26,7 @@ describe('AssetDetail', () => {
       asset: {
         ...asset(),
         description: 'Pain reliever bottle with child-safe cap.',
-        photo: { id: 'photo-one', url: 'blob:primary-photo', alt: 'Ibuprofen bottle' }
+        photo: { id: 'photo-one', assetId: 'asset-one', url: 'blob:primary-photo', alt: 'Ibuprofen bottle' }
       },
       attachments: [
         attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front-thumb'),
@@ -49,7 +49,7 @@ describe('AssetDetail', () => {
     mountAssetDetail({
       asset: {
         ...asset(),
-        photo: { id: 'photo-one', url: 'blob:primary-photo', alt: 'Ibuprofen bottle' }
+        photo: { id: 'photo-one', assetId: 'asset-one', url: 'blob:primary-photo', alt: 'Ibuprofen bottle' }
       },
       attachments: [
         attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front-thumb'),
@@ -68,6 +68,33 @@ describe('AssetDetail', () => {
     expect(gallery.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(details.compareDocumentPosition(files) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(document.body.querySelector<HTMLButtonElement>('button[aria-label="More asset actions"]')).toBeNull();
+  });
+
+  it('ignores a photo owned by a different asset', () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        photo: { id: 'photo-other', assetId: 'asset-other', url: 'blob:wrong-photo', alt: 'Wrong asset photo' }
+      }
+    });
+
+    expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+    expect(document.body.textContent).toContain('No photos yet.');
+  });
+
+  it('ignores image attachments owned by a different asset', () => {
+    mountAssetDetail({
+      attachments: [
+        {
+          ...attachment('photo-other', 'wrong.jpg', 'image/jpeg', 'blob:wrong-thumb'),
+          assetId: 'asset-other'
+        }
+      ]
+    });
+
+    expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+    expect(document.body.textContent).toContain('No photos yet.');
+    expect(document.body.textContent).not.toContain('wrong.jpg');
   });
 
   it('seeds route-opened edit panels from the current asset', async () => {

@@ -57,6 +57,7 @@ The approved direction was explored in a temporary SvelteKit candidate at `/priv
 - The primary day-to-day jobs are finding assets, browsing locations, and adding assets quickly.
 - The interface must not use explanatory product-pitch panels or third-person UI narration. State and actions should be apparent through layout, labels, hierarchy, and affordances.
 - Photos are a primary recognition layer. The UI should frame user inventory photos clearly and avoid competing decorative visuals.
+- A missing photo must render as an explicit kind fallback. The web app must never reuse, inherit, or visually carry over another asset's photo for an asset, container, or location that does not have its own primary photo.
 - Tenant and inventory context must always be knowable because tenant is the top-level security boundary, but the UI must not overemphasize technical tenancy language during ordinary work.
 - The home workspace must stay focused. Sharing, audit history, and recent activity are not primary home panels.
 
@@ -299,6 +300,7 @@ Asset detail loading and actions must use real API-backed boundaries:
 
 - Opening an asset detail must load the selected asset by ID through the frontend repository port and API adapter rather than relying only on the current list row.
 - Asset detail API responses must include the same safe primary photo summary used by asset list and search responses when the asset has an active image attachment.
+- Frontend API adapters must treat primary photo summaries as belonging only to the exact tenant, inventory, and asset response that carried them. If a response does not include a primary photo summary for an item, container, or location, the mapped frontend asset must not include a photo.
 - The API adapter must call the generated client wrapper for `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` and map the DTO into the frontend asset domain model.
 - Editing asset title and description must go through a repository update method backed by the generated client wrapper.
 - Moving an asset must update `parentAssetId` through the same API-backed update path and must use valid parent targets from the current inventory, not free-form IDs.

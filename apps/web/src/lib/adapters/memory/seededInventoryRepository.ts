@@ -157,8 +157,9 @@ export class SeededInventoryRepository
   async createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
     this.validateInventoryScope(tenantId, inventoryId);
     this.validateAssetParent(tenantId, inventoryId, null, draft.parentAssetId);
+    const assetId = this.nextAssetId();
     const asset: Asset = {
-      id: this.nextAssetId(),
+      id: assetId,
       tenantId,
       inventoryId,
       kind: draft.kind,
@@ -172,6 +173,7 @@ export class SeededInventoryRepository
       photo: draft.photos[0]
         ? {
             id: draft.photos[0].id,
+            assetId,
             url: draft.photos[0].previewUrl,
             alt: draft.title
           }

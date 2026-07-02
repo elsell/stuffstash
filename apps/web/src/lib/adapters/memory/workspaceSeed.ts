@@ -89,6 +89,7 @@ export const workspaceSeed: WorkspaceSeed = {
       customFields: {},
       photo: {
         id: 'photo-garage',
+        assetId: 'asset-garage',
         url: 'https://images.unsplash.com/photo-1585128792020-803d29415281?auto=format&fit=crop&w=900&q=70',
         alt: 'Garage shelving'
       }

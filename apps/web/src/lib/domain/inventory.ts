@@ -39,6 +39,7 @@ export interface Inventory {
 
 export interface AssetPhoto {
   id: string;
+  assetId: string;
   url: string;
   alt: string;
 }

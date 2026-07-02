@@ -685,6 +685,7 @@ export class StuffStashInventoryRepository
         ...mapped,
         photo: {
           id: asset.primaryPhoto.id,
+          assetId: asset.id,
           url: thumbnailUrl,
           alt: asset.title
         }

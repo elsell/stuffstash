@@ -68,6 +68,7 @@ describe('StuffStashInventoryRepository', () => {
 
     expect(data.assets[0]?.photo).toMatchObject({
       id: 'attachment-one',
+      assetId: 'asset-archived',
       url: expect.stringContaining('blob:'),
       alt: 'Archived Passport'
     });
@@ -75,6 +76,29 @@ describe('StuffStashInventoryRepository', () => {
       request.url.includes('/assets/asset-archived/attachments/attachment-one/thumbnail?variant=small')
     );
     expect(thumbnailRequest?.headers.get('Authorization')).toBe('Bearer id-token');
+  });
+
+  it('does not reuse a photographed item image for unphotographed containers or locations', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch, requests } = fakeFetch({
+      primaryPhotoAssetIds: ['asset-archived'],
+      includeUnphotographedContainerAndLocation: true
+    });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.loadWorkspace();
+
+    expect(data.assets.find((asset) => asset.id === 'asset-archived')).toMatchObject({
+      id: 'asset-archived',
+      kind: 'item',
+      photo: expect.objectContaining({ assetId: 'asset-archived' })
+    });
+    expect(data.assets.find((asset) => asset.id === 'asset-container')).toMatchObject({ id: 'asset-container', kind: 'container' });
+    expect(data.assets.find((asset) => asset.id === 'asset-container')).not.toHaveProperty('photo');
+    expect(data.assets.find((asset) => asset.id === 'asset-location')).toMatchObject({ id: 'asset-location', kind: 'location' });
+    expect(data.assets.find((asset) => asset.id === 'asset-location')).not.toHaveProperty('photo');
+    expect(requests.filter((request) => request.url.includes('/thumbnail'))).toHaveLength(1);
   });
 
   it('keeps workspace assets when a primary photo thumbnail cannot be fetched', async () => {
@@ -141,6 +165,7 @@ describe('StuffStashInventoryRepository', () => {
 
     expect(asset.photo).toMatchObject({
       id: 'attachment-one',
+      assetId: 'asset-passport',
       url: expect.stringContaining('blob:'),
       alt: 'Passport'
     });
@@ -148,6 +173,32 @@ describe('StuffStashInventoryRepository', () => {
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=medium'
     ]);
+  });
+
+  it('does not reuse search result photos across items, containers, or locations', async () => {
+    const { fetch } = fakeFetch({
+      primaryPhotoAssetIds: ['asset-passport'],
+      includeUnphotographedContainerAndLocation: true
+    });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const results = await repository.searchAssets({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      query: 'passport',
+      lifecycleState: 'all',
+      mode: 'fuzzy'
+    });
+
+    expect(results[0]?.asset).toMatchObject({
+      id: 'asset-passport',
+      kind: 'item',
+      photo: expect.objectContaining({ assetId: 'asset-passport' })
+    });
+    expect(results[1]?.asset).toMatchObject({ id: 'asset-container', kind: 'container' });
+    expect(results[1]?.asset).not.toHaveProperty('photo');
+    expect(results[2]?.asset).toMatchObject({ id: 'asset-location', kind: 'location' });
+    expect(results[2]?.asset).not.toHaveProperty('photo');
   });
 
   it('updates asset detail and movement through the generated client path', async () => {
@@ -398,7 +449,12 @@ describe('StuffStashInventoryRepository', () => {
 });
 
 function fakeFetch(
-  options: { directUploadUrl?: string; primaryPhotoAssetIds?: string[]; rejectedThumbnailAssetIds?: string[] } = {}
+  options: {
+    directUploadUrl?: string;
+    primaryPhotoAssetIds?: string[];
+    rejectedThumbnailAssetIds?: string[];
+    includeUnphotographedContainerAndLocation?: boolean;
+  } = {}
 ): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
   return {
@@ -438,7 +494,7 @@ function fakeFetch(
         return envelope([asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
-        return envelope([
+        const assets = [
           asset(
             'asset-archived',
             'tenant-home',
@@ -448,7 +504,14 @@ function fakeFetch(
             'archived',
             options.primaryPhotoAssetIds?.includes('asset-archived') ?? false
           )
-        ]);
+        ];
+        if (options.includeUnphotographedContainerAndLocation) {
+          assets.push(
+            asset('asset-container', 'tenant-home', 'inventory-household', 'Toolbox', null, 'active', false, 'container'),
+            asset('asset-location', 'tenant-home', 'inventory-household', 'Garage', null, 'active', false, 'location')
+          );
+        }
+        return envelope(assets);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/assets') {
         return envelope([]);
@@ -516,7 +579,7 @@ function fakeFetch(
         return new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 });
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/search/assets') {
-        return envelope([
+        const results = [
           {
             type: 'asset',
             tenantId: 'tenant-home',
@@ -528,10 +591,37 @@ function fakeFetch(
             type: 'asset',
             tenantId: 'tenant-home',
             inventory: { id: 'inventory-household', name: 'Household' },
-            asset: asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'),
+            asset: asset(
+              'asset-passport',
+              'tenant-home',
+              'inventory-household',
+              'Passport',
+              null,
+              'archived',
+              options.primaryPhotoAssetIds?.includes('asset-passport') ?? false
+            ),
             matches: [{ field: 'title', value: 'Passport' }]
           }
-        ]);
+        ];
+        if (options.includeUnphotographedContainerAndLocation) {
+          results.push(
+            {
+              type: 'asset',
+              tenantId: 'tenant-home',
+              inventory: { id: 'inventory-household', name: 'Household' },
+              asset: asset('asset-container', 'tenant-home', 'inventory-household', 'Toolbox', null, 'active', false, 'container'),
+              matches: [{ field: 'title', value: 'Toolbox' }]
+            },
+            {
+              type: 'asset',
+              tenantId: 'tenant-home',
+              inventory: { id: 'inventory-household', name: 'Household' },
+              asset: asset('asset-location', 'tenant-home', 'inventory-household', 'Garage', null, 'active', false, 'location'),
+              matches: [{ field: 'title', value: 'Garage' }]
+            }
+          );
+        }
+        return envelope(results);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-grants') {
         return envelope([
@@ -647,13 +737,14 @@ function asset(
   title: string,
   parentAssetId: string | null = null,
   lifecycleState = 'active',
-  withPrimaryPhoto = false
+  withPrimaryPhoto = false,
+  kind = 'item'
 ): object {
   return {
     id,
     tenantId,
     inventoryId,
-    kind: 'item',
+    kind,
     title,
     description: '',
     parentAssetId,

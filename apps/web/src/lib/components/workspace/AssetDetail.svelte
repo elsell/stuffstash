@@ -318,26 +318,28 @@
   }
 
   function buildDetailPhotos(currentAsset: AssetViewModel, imageAttachments: AssetAttachment[]): DetailPhoto[] {
+    const ownAssetPhoto = currentAsset.photo?.assetId === currentAsset.id ? currentAsset.photo : undefined;
     const photos: DetailPhoto[] = imageAttachments
+      .filter((attachment) => attachment.assetId === currentAsset.id)
       .filter((attachment) => attachment.thumbnailUrl)
       .map((attachment) => ({
         id: attachment.id,
-        url: attachment.id === currentAsset.photo?.id ? currentAsset.photo.url : (attachment.thumbnailUrl ?? ''),
-        alt: attachment.id === currentAsset.photo?.id ? currentAsset.photo.alt : attachment.fileName,
+        url: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.url : (attachment.thumbnailUrl ?? ''),
+        alt: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.alt : attachment.fileName,
         fileName: attachment.fileName,
         sizeBytes: attachment.sizeBytes,
-        isPrimary: attachment.id === currentAsset.photo?.id
+        isPrimary: attachment.id === ownAssetPhoto?.id
       }));
-    if (currentAsset.photo && !photos.some((photo) => photo.id === currentAsset.photo?.id)) {
+    if (ownAssetPhoto && !photos.some((photo) => photo.id === ownAssetPhoto.id)) {
       photos.unshift({
-        id: currentAsset.photo.id,
-        url: currentAsset.photo.url,
-        alt: currentAsset.photo.alt,
-        fileName: currentAsset.photo.alt,
+        id: ownAssetPhoto.id,
+        url: ownAssetPhoto.url,
+        alt: ownAssetPhoto.alt,
+        fileName: ownAssetPhoto.alt,
         isPrimary: true
       });
     }
-    if (currentAsset.photo && photos.length > 0 && !photos.some((photo) => photo.isPrimary)) {
+    if (ownAssetPhoto && photos.length > 0 && !photos.some((photo) => photo.isPrimary)) {
       photos[0] = { ...photos[0], isPrimary: true };
     }
     return photos;

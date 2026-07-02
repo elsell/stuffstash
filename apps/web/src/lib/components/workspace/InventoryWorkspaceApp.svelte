@@ -209,6 +209,7 @@
               ...asset,
               photo: {
                 id: firstPhoto.id,
+                assetId: asset.id,
                 url: draft.photos[0]?.previewUrl ?? firstPhoto.thumbnailUrl ?? '',
                 alt: asset.title
               }
