@@ -13,7 +13,6 @@ import {
   TextInput,
   View
 } from 'react-native';
-import ImageViewing from 'react-native-image-viewing';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, ChevronDown, ChevronUp, ImagePlus, X } from 'lucide-react-native';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
@@ -36,6 +35,8 @@ import {
   HomeDashboardViewModel
 } from '../../application/home/HomeDashboardQuery';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
+import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
+import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
 import { colors, radius, spacing } from '../theme/tokens';
 import {
   ParentSelection,
@@ -766,10 +767,8 @@ function PhotoPreviewModal({
   readonly onSetIndex: (index: number | undefined) => void;
   readonly photos: readonly SelectedAssetPhoto[];
 }) {
-  const currentPhoto = currentIndex === undefined ? undefined : photos[currentIndex];
-
-  function removeCurrentPhoto(): void {
-    if (!currentPhoto) {
+  function removeCurrentPhoto(photo: FullScreenPhotoViewerPhoto, index: number): void {
+    if (!photo.id) {
       return;
     }
 
@@ -779,59 +778,31 @@ function PhotoPreviewModal({
         text: 'Remove',
         style: 'destructive',
         onPress: () => {
-          onRemovePhoto(currentPhoto.id);
+          onRemovePhoto(photo.id as string);
           if (photos.length <= 1) {
             onClose();
             return;
           }
 
-          onSetIndex(Math.min(currentIndex ?? 0, photos.length - 2));
+          onSetIndex(Math.min(index, photos.length - 2));
         }
       }
     ]);
   }
 
   return (
-    <ImageViewing
-      animationType="fade"
-      backgroundColor="#05080A"
-      doubleTapToZoomEnabled
-      FooterComponent={({ imageIndex }) => (
-        <View style={styles.previewFooter}>
-          <Text style={styles.previewCount}>
-            {`${(imageIndex + 1).toString()} / ${photos.length.toString()}`}
-          </Text>
-        </View>
-      )}
-      HeaderComponent={() => (
-        <View style={styles.previewHeader}>
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={12}
-            onPress={onClose}
-            style={styles.previewHeaderButton}
-          >
-            <Text style={styles.previewHeaderText}>Close</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={!currentPhoto}
-            hitSlop={12}
-            onPress={removeCurrentPhoto}
-            style={styles.previewHeaderButton}
-          >
-            <Text style={styles.previewRemoveText}>Remove</Text>
-          </Pressable>
-        </View>
-      )}
-      imageIndex={Math.max(0, currentIndex ?? 0)}
-      images={photos.map((photo) => ({ uri: photo.uri }))}
-      keyExtractor={(_image, index) => photos[index]?.id ?? index.toString()}
-      onImageIndexChange={onSetIndex}
-      onRequestClose={onClose}
-      presentationStyle="overFullScreen"
-      swipeToCloseEnabled
-      visible={currentPhoto !== undefined}
+    <FullScreenPhotoViewer
+      canRemove
+      currentIndex={currentIndex}
+      onClose={onClose}
+      onRemove={removeCurrentPhoto}
+      onSelectIndex={onSetIndex}
+      photos={photos.map((photo) => ({
+        id: photo.id,
+        label: photo.fileName,
+        metadataLabel: photoMetadataLabel(photo),
+        uri: photo.uri
+      }))}
     />
   );
 }
@@ -1330,44 +1301,6 @@ const styles = StyleSheet.create({
     right: 6,
     top: 6,
     width: 28
-  },
-  previewHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xl
-  },
-  previewHeaderButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    minWidth: 76
-  },
-  previewHeaderText: {
-    color: colors.onAction,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  previewRemoveText: {
-    color: '#FF6B6B',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  previewCount: {
-    color: colors.onAction,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  previewFooter: {
-    alignItems: 'center',
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md
   },
   moreDetailsButton: {
     alignItems: 'center',

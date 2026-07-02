@@ -136,11 +136,18 @@ export function resetLocalAssetPhotoOrder(): readonly string[] {
   return [];
 }
 
-function assetPhotoMetadataLabel(photo: AssetPhotoViewModel | undefined): string | undefined {
+export function assetPhotoMetadataLabel(photo: AssetPhotoViewModel | undefined): string | undefined {
   if (!photo) {
     return undefined;
   }
 
+  return photoMetadataLabel(photo);
+}
+
+export function photoMetadataLabel(photo: {
+  readonly contentType?: string;
+  readonly sizeBytes?: number;
+}): string | undefined {
   const parts = [
     safeImageContentTypeLabel(photo.contentType),
     formatByteSize(photo.sizeBytes)
