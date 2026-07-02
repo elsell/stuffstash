@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import Camera from '@lucide/svelte/icons/camera';
   import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
@@ -46,6 +46,7 @@
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state('');
+  let parentSearch = $state('');
   let quickParentTitle = $state('');
   let quickParentKind = $state<'location' | 'container'>('location');
   let customAssetTypeId = $state('');
@@ -57,6 +58,7 @@
   let wasOpen = $state(false);
   let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
+  let fileInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
   const assetKindOptions = assetKinds.map((option) => ({ value: option, label: assetKindLabel(option) }));
   const parentKindOptions = [
@@ -71,6 +73,21 @@
 
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
+  let parentSearchQuery = $derived(parentSearch.trim().toLowerCase());
+  let matchingParentTargets = $derived(
+    parentTargets
+      .filter((target) => {
+        if (!parentSearchQuery) {
+          return true;
+        }
+        return (
+          target.title.toLowerCase().includes(parentSearchQuery) ||
+          target.containmentTrail.toLowerCase().includes(parentSearchQuery)
+        );
+      })
+  );
+  let visibleParentTargets = $derived(matchingParentTargets.slice(0, 8));
+  let selectedParentTarget = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
 
   $effect(() => {
     if (open && !wasOpen) {
@@ -80,12 +97,19 @@
       void tick().then(() => titleInput?.focus());
     } else if (!open && wasOpen) {
       wasOpen = false;
+      revokePhotoPreviews(selectedPhotos);
+      selectedPhotos = [];
+      photoError = '';
       returnFocusElement?.focus();
       returnFocusElement = null;
     } else if (open && initialKind !== lastInitialKind) {
       kind = initialKind;
       lastInitialKind = initialKind;
     }
+  });
+
+  onDestroy(() => {
+    revokePhotoPreviews(selectedPhotos);
   });
 
   async function save(): Promise<void> {
@@ -115,20 +139,24 @@
     title = '';
     description = '';
     parentAssetId = '';
+    parentSearch = '';
     quickParentTitle = '';
     quickParentKind = 'location';
     customAssetTypeId = '';
     customFieldValues = {};
+    revokePhotoPreviews(selectedPhotos);
     selectedPhotos = [];
     photoError = '';
     lastInitialKind = kind;
   }
 
   function resetDraft(nextKind: AssetKind): void {
+    revokePhotoPreviews(selectedPhotos);
     kind = nextKind;
     title = '';
     description = '';
     parentAssetId = '';
+    parentSearch = '';
     quickParentTitle = '';
     quickParentKind = 'location';
     customAssetTypeId = '';
@@ -152,7 +180,7 @@
       dialogElement.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
       )
-    ).filter((element) => !element.hasAttribute('disabled') && element.offsetParent !== null);
+    ).filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true');
     if (focusable.length === 0) {
       event.preventDefault();
       dialogElement.focus();
@@ -173,6 +201,7 @@
     if (!files) {
       return;
     }
+    revokePhotoPreviews(selectedPhotos);
     const nextPhotos: SelectedPhoto[] = [];
     const rejected: string[] = [];
     for (const file of Array.from(files)) {
@@ -198,11 +227,24 @@
     fileInputKey += 1;
   }
 
+  function openPhotoPicker(): void {
+    fileInput?.click();
+  }
+
   function removePhoto(id: string): void {
+    const removed = selectedPhotos.find((photo) => photo.id === id);
+    if (removed) {
+      URL.revokeObjectURL(removed.previewUrl);
+    }
     selectedPhotos = selectedPhotos.filter((photo) => photo.id !== id);
     if (selectedPhotos.length === 0) {
       photoError = '';
     }
+  }
+
+  function selectParentTarget(id: string): void {
+    parentAssetId = id;
+    parentSearch = id ? parentTargets.find((target) => target.id === id)?.title ?? parentSearch : '';
   }
 
   function setCustomAssetType(nextId: string): void {
@@ -239,6 +281,12 @@
     }
     return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
   }
+
+  function revokePhotoPreviews(photos: SelectedPhoto[]): void {
+    for (const photo of photos) {
+      URL.revokeObjectURL(photo.previewUrl);
+    }
+  }
 </script>
 
 {#if open}
@@ -257,34 +305,51 @@
       <Button.Root variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={onClose}><X /></Button.Root>
     </div>
 
-    <SegmentedControl label="Asset kind" value={kind} options={assetKindOptions} onSelect={(value) => { kind = value as AssetKind; }} />
+    <fieldset class="selection-field">
+      <legend>Asset kind</legend>
+      <SegmentedControl label="Asset kind" value={kind} options={assetKindOptions} onSelect={(value) => { kind = value as AssetKind; }} />
+    </fieldset>
 
     <div class="field-stack">
       <Label for="asset-title">Name</Label>
       <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder="Tomato fertilizer" />
     </div>
 
-    <div class="field-stack">
-      <Label>Place in existing parent</Label>
-      <div class="parent-picker" role="group" aria-label="Parent target">
+    <fieldset class="selection-field parent-selection">
+      <legend>Place in existing parent</legend>
+      <div class="field-stack">
+        <Label for="parent-search">Find parent</Label>
+        <Input id="parent-search" bind:value={parentSearch} placeholder="Search locations or containers" />
+      </div>
+      <p class="selection-summary">
+        {selectedParentTarget ? `Selected ${selectedParentTarget.title}` : 'Selected inventory root'}
+      </p>
+      <div class="parent-picker option-grid" role="group" aria-label="Parent target">
         <Button.Root
           variant={parentAssetId === '' ? 'secondary' : 'outline'}
           aria-pressed={parentAssetId === ''}
-          onclick={() => { parentAssetId = ''; }}
+          onclick={() => selectParentTarget('')}
         >
           Inventory root
         </Button.Root>
-        {#each parentTargets as target}
+        {#each visibleParentTargets as target}
           <Button.Root
             variant={parentAssetId === target.id ? 'secondary' : 'outline'}
+            class="parent-target-button"
             aria-pressed={parentAssetId === target.id}
-            onclick={() => { parentAssetId = target.id; }}
+            onclick={() => selectParentTarget(target.id)}
           >
-            {target.title}
+            <span>{target.title}</span>
+            <small>{target.containmentTrail}</small>
           </Button.Root>
         {/each}
       </div>
-    </div>
+      {#if parentSearchQuery && visibleParentTargets.length === 0}
+        <p class="muted-note">No matching locations or containers.</p>
+      {:else if matchingParentTargets.length > visibleParentTargets.length}
+        <p class="muted-note">Showing the first {visibleParentTargets.length} of {matchingParentTargets.length} matches.</p>
+      {/if}
+    </fieldset>
 
     <div class="field-stack">
       <Label for="quick-parent-title">Create a new parent inside that place</Label>
@@ -304,20 +369,27 @@
 
     {#if activeCustomAssetTypes.length > 0}
       <div class="field-stack">
-        <Label>Custom type</Label>
-        <div class="parent-picker" role="group" aria-label="Custom asset type">
-          <Button.Root variant={customAssetTypeId === '' ? 'secondary' : 'outline'} onclick={() => setCustomAssetType('')}>
-            Base asset
-          </Button.Root>
-          {#each activeCustomAssetTypes as assetType}
+        <fieldset class="selection-field">
+          <legend>Custom type</legend>
+          <div class="parent-picker option-grid" role="group" aria-label="Custom asset type">
             <Button.Root
-              variant={customAssetTypeId === assetType.id ? 'secondary' : 'outline'}
-              onclick={() => setCustomAssetType(assetType.id)}
+              variant={customAssetTypeId === '' ? 'secondary' : 'outline'}
+              aria-pressed={customAssetTypeId === ''}
+              onclick={() => setCustomAssetType('')}
             >
-              {assetType.displayName}
+              Base asset
             </Button.Root>
-          {/each}
-        </div>
+            {#each activeCustomAssetTypes as assetType}
+              <Button.Root
+                variant={customAssetTypeId === assetType.id ? 'secondary' : 'outline'}
+                aria-pressed={customAssetTypeId === assetType.id}
+                onclick={() => setCustomAssetType(assetType.id)}
+              >
+                {assetType.displayName}
+              </Button.Root>
+            {/each}
+          </div>
+        </fieldset>
       </div>
     {/if}
 
@@ -334,13 +406,18 @@
                 onSelect={(value) => setCustomFieldValue(field.key, value)}
               />
             {:else if field.type === 'enum'}
-              <div class="parent-picker" role="group" aria-label={field.displayName}>
-                <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
+              <div class="parent-picker option-grid" role="group" aria-label={field.displayName}>
+                <Button.Root
+                  variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'}
+                  aria-pressed={(customFieldValues[field.key] ?? '') === ''}
+                  onclick={() => setCustomFieldValue(field.key, '')}
+                >
                   Unset
                 </Button.Root>
                 {#each field.enumOptions as option}
                   <Button.Root
                     variant={customFieldValues[field.key] === option ? 'secondary' : 'outline'}
+                    aria-pressed={customFieldValues[field.key] === option}
                     onclick={() => setCustomFieldValue(field.key, option)}
                   >
                     {option}
@@ -361,10 +438,19 @@
     {/if}
 
     <div class="photo-actions">
-      <Label for="asset-photos" class="photo-label"><Upload /> Upload</Label>
-      <Label for="asset-photos" class="photo-label"><Camera /> Camera</Label>
+      <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Upload /> Upload</Button.Root>
+      <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Camera /> Camera</Button.Root>
       {#key fileInputKey}
-        <Input id="asset-photos" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" multiple onchange={(event) => captureFiles(event.currentTarget.files ?? undefined)} />
+        <Input
+          id="asset-photos"
+          bind:ref={fileInput}
+          class="visually-hidden"
+          type="file"
+          tabindex={-1}
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          onchange={(event) => captureFiles(event.currentTarget.files ?? undefined)}
+        />
       {/key}
     </div>
 

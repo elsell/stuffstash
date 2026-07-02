@@ -1189,6 +1189,50 @@ dd {
   gap: 6px;
 }
 
+.selection-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.selection-field legend {
+  margin-bottom: 6px;
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.selection-summary,
+.muted-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+.option-grid {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+.parent-target-button {
+  display: grid;
+  height: auto;
+  min-height: 46px;
+  justify-items: start;
+  gap: 2px;
+  white-space: normal;
+}
+
+.parent-target-button small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
 .photo-label {
   display: inline-flex;
   min-height: 36px;

@@ -375,6 +375,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Icon-only controls must have accessible names.
 - Creation and edit controls must use the local shadcn-style button, input, select/tabs, label, textarea, and dialog/sheet primitives or product-specific compositions over those primitives.
 - Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
+- The add surface parent picker must support filtering valid parent targets and must expose each picker group with honest grouped-control semantics rather than unlabeled piles of buttons.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 
 ## Inventory Settings
