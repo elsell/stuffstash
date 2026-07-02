@@ -173,6 +173,7 @@ Search:
 - Search must be front and center on desktop.
 - Search must be available across primary web pages.
 - Search should feel closer to Google Drive than a command palette: a visible field that accepts ordinary asset/location/container terms.
+- The dedicated search route must preserve the same autocomplete affordance as the global header search, including keyboard access to suggestions and direct opening of suggested assets.
 - Search must be scoped to the selected tenant and inventory unless a future search spec defines cross-inventory behavior.
 - Search must preserve tenant and inventory authorization boundaries.
 

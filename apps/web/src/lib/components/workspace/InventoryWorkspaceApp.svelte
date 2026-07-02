@@ -882,6 +882,7 @@
         bind:lifecycleState={searchLifecycleState}
         bind:searchMode={searchMode}
         results={searchResults}
+        suggestions={searchSuggestions}
         submitted={searchSubmitted}
         error={searchError}
         {busy}

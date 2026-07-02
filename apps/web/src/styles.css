@@ -349,6 +349,10 @@ small {
   max-width: 720px;
 }
 
+.search-page-wrap {
+  position: relative;
+}
+
 .global-search,
 .search-panel {
   display: grid;
