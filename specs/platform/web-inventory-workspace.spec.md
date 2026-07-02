@@ -412,7 +412,7 @@ Repeated segmented controls must be implemented through a reusable workspace con
 - Disabled options where needed.
 - Consistent wrapping, spacing, focus, and mobile behavior.
 
-Search suggestions must either implement a complete combobox pattern or use honest ordinary button/list semantics. Partial combobox/listbox/menu ARIA is not allowed.
+Search suggestions must use honest ordinary button/list semantics unless a future pass implements a complete combobox pattern. Partial combobox/listbox/menu ARIA is not allowed.
 
 ## Responsive Behavior
 

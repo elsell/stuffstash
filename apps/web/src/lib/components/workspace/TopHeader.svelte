@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import Plus from '@lucide/svelte/icons/plus';
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -41,12 +42,9 @@
   let searchFocused = $state(false);
   let activeSuggestionIndex = $state(-1);
   let addMenuOpen = $state(false);
+  let searchInput = $state<HTMLInputElement | null>(null);
+  let searchRegion = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
-  let activeSuggestion = $derived(
-    activeSuggestionIndex >= 0 && activeSuggestionIndex < visibleSuggestions.length
-      ? visibleSuggestions[activeSuggestionIndex]
-      : null
-  );
   const addKinds: AssetKind[] = ['item', 'container', 'location'];
 
   $effect(() => {
@@ -74,6 +72,19 @@
     return `global-search-suggestion-${index}`;
   }
 
+  function suggestionElement(index: number): HTMLButtonElement | null {
+    if (typeof document === 'undefined') {
+      return null;
+    }
+    return document.getElementById(suggestionId(index)) as HTMLButtonElement | null;
+  }
+
+  async function focusSuggestion(index: number): Promise<void> {
+    activeSuggestionIndex = index;
+    await tick();
+    suggestionElement(index)?.focus();
+  }
+
   function handleSearchKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       if (visibleSuggestions.length > 0) {
@@ -91,22 +102,53 @@
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       searchFocused = true;
-      activeSuggestionIndex = (activeSuggestionIndex + 1) % visibleSuggestions.length;
+      void focusSuggestion(0);
+      return;
+    }
+  }
+
+  function handleSuggestionKeydown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      searchInput?.focus();
+      closeSearchSuggestions();
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      void focusSuggestion((index + 1) % visibleSuggestions.length);
       return;
     }
 
     if (event.key === 'ArrowUp') {
       event.preventDefault();
-      searchFocused = true;
-      activeSuggestionIndex =
-        activeSuggestionIndex <= 0 ? visibleSuggestions.length - 1 : activeSuggestionIndex - 1;
+      if (index === 0) {
+        activeSuggestionIndex = -1;
+        searchInput?.focus();
+      } else {
+        void focusSuggestion(index - 1);
+      }
+    }
+  }
+
+  function closeSearchSuggestions(): void {
+    searchFocused = false;
+    activeSuggestionIndex = -1;
+  }
+
+  function handleSearchFocusout(event: FocusEvent): void {
+    const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+    if (nextTarget && searchRegion?.contains(nextTarget)) {
       return;
     }
-
-    if (event.key === 'Enter' && activeSuggestion) {
-      event.preventDefault();
-      openSuggestion(activeSuggestion);
-    }
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (activeElement && searchRegion?.contains(activeElement)) {
+        return;
+      }
+      closeSearchSuggestions();
+    }, 120);
   }
 </script>
 
@@ -123,52 +165,42 @@
       {onOpenSettings}
     />
   </div>
-  <div class="global-search-wrap">
+  <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
     <form class="global-search" onsubmit={(event) => { event.preventDefault(); onSearch(); }}>
       <Search aria-hidden="true" />
       <Input
+        bind:ref={searchInput}
         bind:value={query}
         placeholder="Search this inventory"
         aria-label="Search this inventory"
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={visibleSuggestions.length > 0}
-        aria-controls="global-search-suggestions"
-        aria-activedescendant={
-          activeSuggestion ? suggestionId(activeSuggestionIndex) : undefined
-        }
         onfocus={() => { searchFocused = true; }}
-        onblur={() => {
-          window.setTimeout(() => {
-            searchFocused = false;
-            activeSuggestionIndex = -1;
-          }, 120);
-        }}
         onkeydown={handleSearchKeydown}
       />
       <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
     </form>
     {#if visibleSuggestions.length > 0}
-      <div id="global-search-suggestions" class="search-suggestions" role="listbox" aria-label="Search suggestions">
+      <ul id="global-search-suggestions" class="search-suggestions" aria-label="Search suggestions">
         {#each visibleSuggestions as suggestion, index}
-          <Button.Root
-            id={suggestionId(index)}
-            role="option"
-            variant="ghost"
-            class="suggestion-row"
-            data-active={activeSuggestionIndex === index}
-            aria-selected={activeSuggestionIndex === index}
-            aria-label={`Open ${suggestion.title}`}
-            onpointerenter={() => { activeSuggestionIndex = index; }}
-            onclick={() => { openSuggestion(suggestion); }}
-          >
-            <span>
-              <strong>{suggestion.title}</strong>
-              <small>{assetKindLabel(suggestion.kind)}</small>
-            </span>
-          </Button.Root>
+          <li>
+            <Button.Root
+              id={suggestionId(index)}
+              variant="ghost"
+              class="suggestion-row"
+              data-active={activeSuggestionIndex === index}
+              aria-label={`Open ${suggestion.title}`}
+              onfocus={() => { activeSuggestionIndex = index; }}
+              onkeydown={(event) => handleSuggestionKeydown(event, index)}
+              onpointerenter={() => { activeSuggestionIndex = index; }}
+              onclick={() => { openSuggestion(suggestion); }}
+            >
+              <span>
+                <strong>{suggestion.title}</strong>
+                <small>{assetKindLabel(suggestion.kind)}</small>
+              </span>
+            </Button.Root>
+          </li>
         {/each}
-      </div>
+      </ul>
     {/if}
   </div>
   <div class="header-add-wrap">

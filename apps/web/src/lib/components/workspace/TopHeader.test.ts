@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Asset, Inventory, Tenant } from '$lib/domain/inventory';
 import TopHeader from './TopHeader.svelte';
 
@@ -66,6 +66,7 @@ afterEach(() => {
     component = null;
   }
   document.body.innerHTML = '';
+  vi.useRealTimers();
 });
 
 describe('TopHeader', () => {
@@ -73,33 +74,82 @@ describe('TopHeader', () => {
     const { selectedAssets } = mountHeader();
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
 
-    input?.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
-    await tick();
+    input?.focus();
+    await flush();
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-    await tick();
+    await flush();
 
-    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
+    expect(input?.getAttribute('role')).toBeNull();
+    expect(input?.getAttribute('aria-activedescendant')).toBeNull();
+    expect(document.body.querySelector('[role="listbox"]')).toBeNull();
+    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
 
-    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    await tick();
+    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await flush();
+    expect(document.activeElement?.id).toBe('global-search-suggestion-1');
+
+    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await flush();
+    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+
+    (document.activeElement as HTMLButtonElement | null)?.click();
+    await flush();
 
     expect(selectedAssets.map((selected) => selected.id)).toEqual(['tape']);
     expect(input?.value).toBe('Tape measure');
+  });
+
+  it('keeps suggestions open when keyboard focus moves into the suggestion list', async () => {
+    vi.useFakeTimers();
+    mountHeader();
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await flush();
+    vi.advanceTimersByTime(160);
+    await flush();
+
+    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(document.body.querySelector('#global-search-suggestions')).not.toBeNull();
+  });
+
+  it('closes suggestions with Escape from a focused suggestion and returns to the search field', async () => {
+    mountHeader();
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await flush();
+    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flush();
+
+    expect(document.activeElement).toBe(input);
+    expect(document.body.querySelector('#global-search-suggestions')).toBeNull();
   });
 
   it('closes search suggestions with Escape', async () => {
     mountHeader();
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
 
-    input?.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
-    await tick();
+    input?.focus();
+    await flush();
 
-    expect(document.body.querySelector('[role="listbox"]')).not.toBeNull();
+    expect(document.body.querySelector('#global-search-suggestions')).not.toBeNull();
 
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await tick();
+    await flush();
 
-    expect(document.body.querySelector('[role="listbox"]')).toBeNull();
-    expect(input?.getAttribute('aria-expanded')).toBe('false');
+    expect(document.body.querySelector('#global-search-suggestions')).toBeNull();
+    expect(input?.getAttribute('aria-expanded')).toBeNull();
   });
 });
+
+async function flush(): Promise<void> {
+  await Promise.resolve();
+  await tick();
+  await Promise.resolve();
+  await tick();
+}
