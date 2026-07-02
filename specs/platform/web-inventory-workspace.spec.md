@@ -431,6 +431,7 @@ Mobile:
 - Use one-column layouts for location and asset views.
 - Keep bottom navigation visible and reachable.
 - Keep add/search reachable without making the header tall.
+- Fixed bottom chrome such as mobile navigation, saved/status toasts, and local-auth/demo banners must not occlude the final reachable content in the main workspace.
 - Use sheets/trays for transient creation and context switching.
 - Ensure bottom navigation does not cover primary form actions; account for safe area insets.
 

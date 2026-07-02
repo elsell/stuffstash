@@ -484,11 +484,15 @@ small {
 
 .location-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
 }
 
 .location-tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   justify-content: start;
   width: 100%;
   height: auto;
@@ -504,13 +508,22 @@ small {
   min-width: 0;
   flex: 1;
   gap: 4px;
+  overflow: hidden;
   text-align: left;
 }
 
 .location-tile strong,
+.location-tile small,
 .asset-row strong {
   overflow-wrap: anywhere;
   color: var(--foreground);
+}
+
+.location-tile small {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recent-section {
@@ -1412,7 +1425,7 @@ dd {
 
   .workspace-main {
     width: 100%;
-    padding: 18px 14px 92px;
+    padding: 18px 14px calc(156px + env(safe-area-inset-bottom));
   }
 
   .section-heading,
@@ -1481,6 +1494,6 @@ dd {
   }
 
   .auth-banner {
-    bottom: 70px;
+    bottom: calc(70px + env(safe-area-inset-bottom));
   }
 }
