@@ -87,6 +87,7 @@ The first canonical URL model is:
 - `/` for the selected inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}` for an inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
+- `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/edit` for the location edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/edit` for the asset edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/move` for the asset move state when move is available.
@@ -112,6 +113,7 @@ Deep links must preserve tenant and inventory boundaries:
 - If the requested tenant is not visible to the principal, the app must show a calm unavailable or setup state rather than rendering stale local data.
 - If the requested inventory is not visible in the current tenant context, the app must show a calm unavailable or setup state rather than rendering stale local data.
 - A location deep link must only open an asset whose kind is `location`.
+- A location edit deep link must normalize to the same API-backed asset detail edit workflow used for editing the underlying location asset.
 - An asset deep link must load the selected asset through the repository port and API adapter.
 - Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
 - Asset action panels that materially change data, such as edit, move, and delete confirmation, are durable route states.

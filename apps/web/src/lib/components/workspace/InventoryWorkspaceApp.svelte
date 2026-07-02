@@ -420,6 +420,18 @@
     navigateTo({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id });
   }
 
+  function openLocationEdit(asset: Asset): void {
+    navigateTo({
+      mode: 'asset',
+      tenantId: asset.tenantId,
+      inventoryId: asset.inventoryId,
+      locationId: asset.id,
+      assetId: asset.id,
+      action: 'edit',
+      assetAction: 'edit'
+    });
+  }
+
   function openAssetById(assetId: string): void {
     const asset =
       assets.find((candidate) => candidate.id === assetId) ??
@@ -502,6 +514,13 @@
         if (!loaded) {
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
+        }
+        if (route.locationId) {
+          if (loadedAssetDetail?.kind !== 'location') {
+            showUnavailableRoute('That location is not available in this inventory.');
+            return;
+          }
+          selectedLocationId = route.locationId;
         }
         if (!assetRouteActionIsAvailable(route.assetAction, selectedInventory, loadedAssetDetail)) {
           assetAction = null;
@@ -833,7 +852,7 @@
         canEdit={editAssetAllowed}
         onBack={closeDetailToHome}
         onOpenLocation={openLocation}
-        onEditLocation={openAsset}
+        onEditLocation={openLocationEdit}
         onOpenAsset={openAsset}
       />
     {:else if mode === 'asset' && selectedAsset}

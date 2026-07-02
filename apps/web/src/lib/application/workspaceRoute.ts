@@ -73,8 +73,19 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
   const section = segments[inventoryOffset.nextIndex];
   const remaining = segments.length - inventoryOffset.nextIndex;
-  if (section === 'locations' && remaining === 2 && segments[inventoryOffset.nextIndex + 1]) {
-    return { ...route, mode: 'location', locationId: segments[inventoryOffset.nextIndex + 1] };
+  if (section === 'locations' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
+    const action = parseLocationAction(segments[inventoryOffset.nextIndex + 2]);
+    if (remaining === 3 && !action) {
+      return { ...defaultWorkspaceRoute };
+    }
+    return {
+      ...route,
+      mode: action === 'edit' ? 'asset' : 'location',
+      locationId: segments[inventoryOffset.nextIndex + 1],
+      assetId: action === 'edit' ? segments[inventoryOffset.nextIndex + 1] : null,
+      action,
+      assetAction: action
+    };
   }
   if (section === 'assets' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
     const action = parseAssetAction(segments[inventoryOffset.nextIndex + 2]);
@@ -109,6 +120,10 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
 function parseAssetAction(value: string | undefined): AssetRouteAction {
   return assetActions.has(value as AssetRouteAction) ? (value as AssetRouteAction) : null;
+}
+
+function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit'> | null {
+  return value === 'edit' ? 'edit' : null;
 }
 
 function parseSettingsSection(value: string | undefined): SettingsSection {
@@ -154,10 +169,18 @@ export function workspaceRouteHref(
 
   if (inventoryId && next.mode === 'location' && next.locationId) {
     path += `/locations/${encodeURIComponent(next.locationId)}`;
+    if ((next.assetAction ?? next.action) === 'edit') {
+      path += '/edit';
+    }
   } else if (inventoryId && next.mode === 'asset' && next.assetId) {
-    path += `/assets/${encodeURIComponent(next.assetId)}`;
     const action = next.assetAction ?? (next.action === 'edit' ? 'edit' : null);
-    if (action) {
+    const isLocationEdit = next.locationId === next.assetId && action === 'edit';
+    if (isLocationEdit) {
+      path += `/locations/${encodeURIComponent(next.assetId)}/edit`;
+    } else {
+      path += `/assets/${encodeURIComponent(next.assetId)}`;
+    }
+    if (action && !isLocationEdit) {
       path += `/${action}`;
     }
   } else if (inventoryId && next.mode === 'search') {

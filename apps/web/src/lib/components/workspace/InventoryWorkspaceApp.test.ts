@@ -33,6 +33,16 @@ const seed: WorkspaceSeed = {
       lifecycleState: 'active'
     },
     {
+      id: 'location-garage',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'location',
+      title: 'Garage',
+      description: 'Main storage area',
+      parentAssetId: null,
+      lifecycleState: 'active'
+    },
+    {
       id: 'asset-archived',
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
@@ -138,6 +148,37 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links location edit from the focused location view', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
+
+    await waitFor(() => {
+      expect(buttonWithLabel('Open location Garage')).toBeTruthy();
+    });
+    buttonWithLabel('Open location Garage').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Main storage area');
+    });
+
+    buttonContaining('Edit location').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage/edit');
+      expect(document.body.textContent).toContain('Edit asset');
+      expect(document.body.querySelector<HTMLInputElement>('#edit-asset-title')?.value).toBe('Garage');
+    });
+  });
+
+  it('rejects location edit routes for non-location assets', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/asset-home/edit');
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Workspace unavailable');
+      expect(document.body.textContent).toContain('That location is not available in this inventory.');
+    });
+  });
+
   it('closes the add tray after a saved asset with a photo upload warning', async () => {
     const repository = await mountWorkspace(
       '/tenants/tenant-home/inventories/inventory-household/add/item',
@@ -198,5 +239,23 @@ async function waitForSaveButton(): Promise<HTMLButtonElement> {
     expect(button?.disabled).toBe(false);
   });
   if (!button) throw new Error('Missing Save button');
+  return button;
+}
+
+function buttonContaining(text: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!button) {
+    throw new Error(`Missing button containing ${text}`);
+  }
+  return button;
+}
+
+function buttonWithLabel(label: string): HTMLButtonElement {
+  const button = document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+  if (!button) {
+    throw new Error(`Missing button labelled ${label}`);
+  }
   return button;
 }

@@ -30,6 +30,18 @@ describe('workspace route state', () => {
     });
   });
 
+  it('parses location edit as the underlying location asset edit route', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations/location_1/edit'))).toMatchObject({
+      mode: 'asset',
+      tenantId: 'tenant_1',
+      inventoryId: 'inv_1',
+      locationId: 'location_1',
+      assetId: 'location_1',
+      action: 'edit',
+      assetAction: 'edit'
+    });
+  });
+
   it('parses durable asset actions and settings sections', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'))).toMatchObject({
       mode: 'asset',
@@ -67,6 +79,13 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/activity'
     );
+    expect(
+      workspaceRouteHref(
+        { mode: 'asset', locationId: 'location_1', assetId: 'location_1', action: 'edit', assetAction: 'edit' },
+        'tenant_1',
+        'inv_1'
+      )
+    ).toBe('/tenants/tenant_1/inventories/inv_1/locations/location_1/edit');
   });
 
   it('accepts inventory-only compatibility aliases', () => {
