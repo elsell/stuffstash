@@ -95,6 +95,8 @@ describe('InventoryCustomizationManager', () => {
     click('date');
     click('Medicine');
     await flush();
+    expect(group('Field custom type targets')?.querySelector('button[aria-pressed="true"]')?.textContent).toContain('Medicine');
+    expect(document.body.textContent).toContain('1 custom type selected');
     click('Create field');
     await flush();
 
@@ -103,6 +105,28 @@ describe('InventoryCustomizationManager', () => {
       'field:inventory:expiration-date:date:custom_asset_types:type-medicine'
     ]);
     expect(schemaChanges).toEqual(['2:0', '2:1']);
+  });
+
+  it('shows a calm empty state when no custom types are eligible field targets', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    click('Types only');
+    await flush();
+
+    expect(document.body.textContent).toContain('No custom types selected');
+    expect(document.body.textContent).toContain('No eligible custom asset types for this scope.');
+    expect(group('Field custom type targets')).toBeNull();
   });
 });
 
@@ -134,6 +158,25 @@ function click(text: string): void {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(text));
   if (!button) throw new Error(`Missing button ${text}`);
   button.click();
+}
+
+function group(label: string): HTMLElement | null {
+  return document.body.querySelector<HTMLElement>(`[role="group"][aria-label="${label}"]`);
+}
+
+function fakeCustomizationRepository(): InventoryCustomizationRepository {
+  return {
+    listInventoryCustomAssetTypes: async () => ({ items: [], pagination: page() }),
+    createCustomAssetType: async () => failRepositoryCall(),
+    archiveCustomAssetType: async () => failRepositoryCall(),
+    listInventoryCustomFieldDefinitions: async () => ({ items: [], pagination: page() }),
+    createCustomFieldDefinition: async () => failRepositoryCall(),
+    archiveCustomFieldDefinition: async () => failRepositoryCall()
+  };
+}
+
+function failRepositoryCall(): never {
+  throw new Error('Unexpected repository call.');
 }
 
 async function flush(): Promise<void> {

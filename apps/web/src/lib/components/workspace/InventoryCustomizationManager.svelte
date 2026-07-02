@@ -65,6 +65,7 @@
   let activeAssetTypes = $derived(assetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let activeFieldDefinitions = $derived(fieldDefinitions.filter((definition) => definition.lifecycleState === 'active'));
   let targetableAssetTypes = $derived(activeAssetTypes.filter((assetType) => fieldScope === 'tenant' ? assetType.scope === 'tenant' : true));
+  let selectedTargetCount = $derived(fieldTargets.filter((id) => targetableAssetTypes.some((assetType) => assetType.id === id)).length);
 
   $effect(() => {
     assetTypes = initialAssetTypes;
@@ -290,13 +291,29 @@
           onSelect={(value) => { fieldApplicability = value as CustomFieldApplicability; }}
         />
         {#if fieldApplicability === 'custom_asset_types'}
-          <div class="parent-picker" role="group" aria-label="Field custom type targets">
-            {#each targetableAssetTypes as assetType}
-              <Button.Root variant={fieldTargets.includes(assetType.id) ? 'secondary' : 'outline'} onclick={() => toggleTarget(assetType.id)}>
-                {assetType.displayName}
-              </Button.Root>
-            {/each}
-          </div>
+          <fieldset class="selection-field">
+            <legend>Field custom type targets</legend>
+            <p class="selection-summary">
+              {selectedTargetCount === 0
+                ? 'No custom types selected'
+                : `${selectedTargetCount} custom ${selectedTargetCount === 1 ? 'type' : 'types'} selected`}
+            </p>
+            {#if targetableAssetTypes.length === 0}
+              <p class="muted-note">No eligible custom asset types for this scope.</p>
+            {:else}
+              <div class="parent-picker option-grid" role="group" aria-label="Field custom type targets">
+                {#each targetableAssetTypes as assetType}
+                  <Button.Root
+                    variant={fieldTargets.includes(assetType.id) ? 'secondary' : 'outline'}
+                    aria-pressed={fieldTargets.includes(assetType.id)}
+                    onclick={() => toggleTarget(assetType.id)}
+                  >
+                    {assetType.displayName}
+                  </Button.Root>
+                {/each}
+              </div>
+            {/if}
+          </fieldset>
         {/if}
         <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim()} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>
 
