@@ -12,16 +12,12 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="search">
-        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'magnifyingglass', selected: 'magnifyingglass' }} />
+        <NativeTabs.Trigger.Label>Browse</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' }} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="add">
         <NativeTabs.Trigger.Label>Add</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'plus.circle', selected: 'plus.circle.fill' }} />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="locations">
-        <NativeTabs.Trigger.Label>Locations</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'archivebox', selected: 'archivebox.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

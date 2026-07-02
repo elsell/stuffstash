@@ -229,7 +229,7 @@ function DashboardHeader({ dashboard }: {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Locations</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.navigate('/locations')}>
+        <Pressable accessibilityRole="button" onPress={() => router.navigate({ pathname: '/search', params: { scope: 'places' } })}>
           <Text style={styles.sectionAction}>View all</Text>
         </Pressable>
       </View>

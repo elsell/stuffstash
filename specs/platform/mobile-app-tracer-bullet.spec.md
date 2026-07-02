@@ -43,7 +43,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The local-development token may be supplied from `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN` while production mobile authentication is unspecified. The onboarding UI must not present this development token as a production account model.
   - After the instance URL is saved, onboarding must guide the user to create a tenant if the authenticated principal has no usable tenant.
   - After tenant creation, onboarding must guide the user to create an initial inventory if that tenant has no usable inventory.
-  - After initial inventory creation, the app must enter the regular Home/Search/Add/Locations tab shell backed by the newly created tenant and inventory.
+  - After initial inventory creation, the app must enter the regular Home/Browse/Add tab shell backed by the newly created tenant and inventory.
 - A saved connection profile may include the selected tenant ID. Until durable selected-inventory preferences are specified, inventory selection may remain session-scoped and default to the first visible inventory for the selected tenant.
 - Settings must expose a way to revisit or reset the saved instance connection profile. Changing the profile must rebuild mobile application services instead of requiring an app reinstall.
 - Until production mobile authentication is specified, onboarding may use the local-development auth token supplied by runtime configuration for local API validation.
@@ -59,9 +59,9 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Mobile product UI icons must use pinned icon packages rather than text initials or generic letter badges. Mobile surfaces that display tenant or inventory names must include the corresponding semantic icon next to that name so the tenant boundary remains visually distinct from inventory selection, except the compact Home inventory context control may show the tenant as muted inline prefix text before a slash and use the inventory icon only.
 - The first tab set must use the same primary navigation language as the web home-hub candidate while preserving enough native bottom-bar width for the persistent Voice accessory:
   - `Home` for inventory overview.
-  - `Search` for asset lookup inside the configured tenant.
+  - `Browse` for search, filtering, and location-first inventory exploration inside the configured tenant.
   - `Add` for creating a base item, container, or location asset through the API.
-  - `Locations` for location-first browsing.
+  - Location-first browsing must live inside `Browse` as the `Places` scope instead of consuming a separate top-level tab.
 - `Settings` must remain available as a native stack route from the Home surface rather than consuming a bottom-tab slot, because the bottom bar should reserve primary workflow tabs for inventory activity and leave the far-right accessory eligible for native inline placement.
 - A persistent far-right `Voice` native bottom accessory must provide the first conversational inventory entry point using a microphone symbol.
 - Voice must not be modeled as a sixth native tab and must not use the `search` tab role. The search role is reserved for search semantics and may keep system-controlled Search labeling or overflow behavior.
@@ -80,7 +80,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - A small preview of top-level location cards with a `View all` action.
   - No account affordance until there is a specified account, profile, or authentication interaction.
 - Home must not show dashboard metric tiles. The inventory home workspace is a browse and recency surface, not an analytics dashboard.
-- The Home locations preview must intentionally show only a few top-level locations. The full location browser remains the `Locations` tab.
+- The Home locations preview must intentionally show only a few top-level locations. The full location browser lives in the `Places` scope inside `Browse`.
 - The Home recent-assets ticker must open asset detail routes. Its `See all` action must open a native stack asset list for the selected inventory.
 - The Home recent-assets ticker must use the API asset recency contract, requesting assets in updated-descending order and deriving labels from API-provided timestamps. Mobile must not infer recency from asset IDs or page through an entire inventory only to sort locally.
 - The Home recent-assets ticker must include all asset kinds in API-provided recency order. After a successful Add flow, switching to Home or pulling to refresh must make the newly created item eligible to appear ahead of older locations and containers.
@@ -162,16 +162,17 @@ This spec defines camera behavior only for attaching still photos during the Add
   - `Add item here` must be available only for active containers or locations that the user may edit. It must navigate to Add with the current container or location preselected as the parent. This route-scoped parent prefill may update only the placement fields of the current Add draft so typed title, description, selected photos, and details state are not lost.
   - Add parent prefill route parameters must be encoded and decoded through one typed mobile route contract. The Add route must ignore incomplete, unsupported, item-kind, or otherwise inapplicable parent-prefill parameters instead of showing an unverified parent as selected.
   - Recursive tree editing and bulk move flows remain future work.
-- Search must be a combined browse-and-search asset surface for the selected inventory:
+- Browse must be a combined browse-and-search inventory surface for the selected inventory:
   - With an empty query it must browse selected-inventory assets through the API asset list endpoint.
   - With a non-empty query it must call the API search endpoint through the generated API client wrapper.
-  - Activating the Search tab must focus the search field and open the keyboard when platform navigation makes the screen current. Pressing the in-screen Search action must also focus the field so the user can immediately refine the query.
+  - Activating the Browse tab may focus the search field when platform navigation makes the screen current, but the screen must still read as browse-first rather than an empty search form.
   - The focused search field must have a visible focus state that is consistent with the Stuff Stash brand tokens.
-  - Search refinement controls must follow native search hierarchy: the search field comes first, lifecycle is the primary scope control, and secondary refinement controls such as type and sort are grouped under a compact refinement area rather than stacked as unrelated button rows.
+  - Browse refinement controls must follow native search hierarchy: the search field comes first, the primary scope control is `All`, `Places`, `Containers`, and `Items`, and secondary refinement controls such as lifecycle and sort are grouped as compact chips rather than stacked as unrelated button rows.
+  - `Places` must replace the previous top-level `Locations` tab by rendering location-first rows inside Browse. Places rows must show the location title, photo or stable placeholder, contained asset count, and recent contained assets when available.
   - It must render result rows using the same image-first asset card language as `Recently changed`.
   - It must lazy-load additional result pages as the user scrolls instead of assuming the first API page contains the whole inventory.
   - Pull-to-refresh must reload the first page for the current query, filters, and sort.
-  - Browse mode must support lifecycle filtering (`Active`, `Archived`, `All`), kind filtering (`All`, `Items`, `Containers`, `Locations`), and API-backed sorting (`Recently changed`, `Stable`). Alphabetical title sorting must wait until the API exposes that sort contract.
+  - Browse mode must support lifecycle filtering (`Active`, `Archived`, `All`), scope filtering (`All`, `Places`, `Containers`, `Items`), and API-backed sorting (`Recently changed`, `Stable`). Alphabetical title sorting must wait until the API exposes that sort contract.
   - Search mode must support lifecycle and kind filters. Search result order remains API relevance order until the search API exposes explicit sort controls.
   - Sort controls may remain visible in search mode if clearly disabled or described by compact state language; the client must not fake sorted search by loading every result page locally.
 - Search and browse results must render as image-first asset cards and open the same mobile asset detail view as other asset entry points.

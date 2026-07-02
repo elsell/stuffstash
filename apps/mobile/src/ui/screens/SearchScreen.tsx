@@ -4,56 +4,77 @@ import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import type {
-  AssetBrowseKindFilter,
   AssetBrowseLifecycleFilter,
   AssetBrowseSort
 } from '../../application/home/InventorySummaryRepository';
+import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import {
-  SearchAssetsQuery,
-  SearchAssetsViewModel
-} from '../../application/search/SearchAssetsQuery';
+  LocationBrowserItemViewModel,
+  LocationsQuery
+} from '../../application/locations/LocationsQuery';
+import { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
 import {
-  buildSearchFilterGroupPlacement,
-  focusSearchInput
+  BrowseScope,
+  browseScopeToKind,
+  buildBrowseScopeOptions,
+  focusSearchInput,
+  locationRowsFromAssetCards,
+  searchResultSummaryLabel
 } from './SearchScreenPresentation';
 
 type SearchScreenProps = {
+  readonly initialScope?: BrowseScope;
+  readonly locationsQuery: LocationsQuery;
   readonly searchAssetsQuery: SearchAssetsQuery;
 };
 
-type SearchState =
-  | { readonly status: 'loading'; readonly results: SearchAssetsViewModel }
-  | { readonly status: 'ready'; readonly results: SearchAssetsViewModel }
-  | { readonly status: 'error'; readonly message: string; readonly results: SearchAssetsViewModel };
+type BrowseResults = {
+  readonly scope: BrowseScope;
+  readonly query: string;
+  readonly assets: readonly AssetCardViewModel[];
+  readonly locations: readonly LocationBrowserItemViewModel[];
+  readonly nextCursor?: string;
+  readonly hasMore: boolean;
+};
+
+type BrowseState =
+  | { readonly status: 'loading'; readonly results: BrowseResults }
+  | { readonly status: 'ready'; readonly results: BrowseResults }
+  | { readonly status: 'error'; readonly message: string; readonly results: BrowseResults };
+
+type BrowseListItem =
+  | { readonly type: 'asset'; readonly asset: AssetCardViewModel }
+  | { readonly type: 'place'; readonly location: LocationBrowserItemViewModel };
 
 const pageSize = 20;
 
-const emptyResults: SearchAssetsViewModel = {
+const emptyResults: BrowseResults = {
+  scope: 'all',
   query: '',
-  mode: 'browse',
-  lifecycleState: 'active',
-  kind: 'all',
-  sort: 'updated_desc',
   assets: [],
+  locations: [],
   hasMore: false
 };
 
-export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
+export function SearchScreen({ initialScope = 'all', locationsQuery, searchAssetsQuery }: SearchScreenProps) {
   const [query, setQuery] = useState('');
+  const [scope, setScope] = useState<BrowseScope>(initialScope);
   const [lifecycleState, setLifecycleState] = useState<AssetBrowseLifecycleFilter>('active');
-  const [kind, setKind] = useState<AssetBrowseKindFilter>('all');
   const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
-  const [state, setState] = useState<SearchState>({ status: 'loading', results: emptyResults });
+  const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const requestSequence = useRef(0);
@@ -73,60 +94,40 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
   );
 
   useEffect(() => {
-    let isCurrent = true;
-    const requestId = nextRequestId(requestSequence);
-
-    searchAssetsQuery
-      .execute({
-        query: '',
-        lifecycleState,
-        kind,
-        sort,
-        limit: pageSize
-      })
-      .then((results) => {
-        if (isCurrent && isCurrentRequest(requestSequence, requestId)) {
-          setState({ status: 'ready', results });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent && isCurrentRequest(requestSequence, requestId)) {
-          setState({
-            status: 'error',
-            message: readableError(error, 'Browse failed.'),
-            results: emptyResults
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [searchAssetsQuery]);
+    setScope(initialScope);
+    setQuery('');
+    void loadFirstPage({ query: '', scope: initialScope });
+  }, [initialScope, locationsQuery, searchAssetsQuery]);
 
   async function loadFirstPage(next: {
     readonly query?: string;
     readonly lifecycleState?: AssetBrowseLifecycleFilter;
-    readonly kind?: AssetBrowseKindFilter;
+    readonly scope?: BrowseScope;
     readonly sort?: AssetBrowseSort;
   } = {}): Promise<void> {
     const requestId = nextRequestId(requestSequence);
     const nextQuery = next.query ?? query;
     const nextLifecycleState = next.lifecycleState ?? lifecycleState;
-    const nextKind = next.kind ?? kind;
+    const nextScope = next.scope ?? scope;
     const nextSort = next.sort ?? sort;
+    const loadingResults: BrowseResults = {
+      scope: nextScope,
+      query: nextQuery.trim(),
+      assets: [],
+      locations: [],
+      hasMore: false
+    };
 
     setIsLoadingMore(false);
     setIsRefreshing(false);
-    setState({ status: 'loading', results: state.results });
+    setState({ status: 'loading', results: loadingResults });
 
     try {
-      const results = await searchAssetsQuery.execute({
+      const results = await loadBrowseResults({
         query: nextQuery,
         lifecycleState: nextLifecycleState,
-        kind: nextKind,
-        sort: nextSort,
-        limit: pageSize
+        scope: nextScope,
+        sort: nextSort
       });
       if (isCurrentRequest(requestSequence, requestId)) {
         setState({ status: 'ready', results });
@@ -136,10 +137,64 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
         setState({
           status: 'error',
           message: readableError(error, 'Browse failed.'),
-          results: state.results
+          results: loadingResults
         });
       }
     }
+  }
+
+  async function loadBrowseResults({
+    cursor,
+    lifecycleState: nextLifecycleState,
+    query: nextQuery,
+    scope: nextScope,
+    sort: nextSort
+  }: {
+    readonly cursor?: string;
+    readonly lifecycleState: AssetBrowseLifecycleFilter;
+    readonly query: string;
+    readonly scope: BrowseScope;
+    readonly sort: AssetBrowseSort;
+  }): Promise<BrowseResults> {
+    if (nextScope === 'places') {
+      const [results, locations] = await Promise.all([
+        searchAssetsQuery.execute({
+          query: nextQuery,
+          cursor,
+          lifecycleState: nextLifecycleState,
+          kind: browseScopeToKind(nextScope),
+          sort: nextSort,
+          limit: pageSize
+        }),
+        locationsQuery.execute()
+      ]);
+      return {
+        scope: nextScope,
+        query: results.query,
+        assets: [],
+        locations: locationRowsFromAssetCards(results.assets, locations.locations),
+        nextCursor: results.nextCursor,
+        hasMore: results.hasMore
+      };
+    }
+
+    const results = await searchAssetsQuery.execute({
+      query: nextQuery,
+      cursor,
+      lifecycleState: nextLifecycleState,
+      kind: browseScopeToKind(nextScope),
+      sort: nextSort,
+      limit: pageSize
+    });
+
+    return {
+      scope: nextScope,
+      query: results.query,
+      assets: results.assets,
+      locations: [],
+      nextCursor: results.nextCursor,
+      hasMore: results.hasMore
+    };
   }
 
   async function refreshResults(): Promise<void> {
@@ -147,12 +202,11 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
     setIsRefreshing(true);
 
     try {
-      const results = await searchAssetsQuery.execute({
+      const results = await loadBrowseResults({
         query: state.results.query,
         lifecycleState,
-        kind,
-        sort,
-        limit: pageSize
+        scope,
+        sort
       });
       if (isCurrentRequest(requestSequence, requestId)) {
         setQuery(state.results.query);
@@ -188,20 +242,20 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
     setIsLoadingMore(true);
 
     try {
-      const nextPage = await searchAssetsQuery.execute({
+      const nextPage = await loadBrowseResults({
         query: state.results.query,
         cursor: state.results.nextCursor,
         lifecycleState,
-        kind,
-        sort,
-        limit: pageSize
+        scope,
+        sort
       });
       if (isCurrentRequest(requestSequence, requestId)) {
         setState({
           status: 'ready',
           results: {
             ...nextPage,
-            assets: [...state.results.assets, ...nextPage.assets]
+            assets: [...state.results.assets, ...nextPage.assets],
+            locations: [...state.results.locations, ...nextPage.locations]
           }
         });
       }
@@ -225,14 +279,19 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
     void loadFirstPage({ query });
   }
 
+  function clearSearch(): void {
+    setQuery('');
+    void loadFirstPage({ query: '' });
+  }
+
+  function updateScope(nextScope: BrowseScope): void {
+    setScope(nextScope);
+    void loadFirstPage({ scope: nextScope });
+  }
+
   function updateLifecycleState(nextLifecycleState: AssetBrowseLifecycleFilter): void {
     setLifecycleState(nextLifecycleState);
     void loadFirstPage({ lifecycleState: nextLifecycleState });
-  }
-
-  function updateKind(nextKind: AssetBrowseKindFilter): void {
-    setKind(nextKind);
-    void loadFirstPage({ kind: nextKind });
   }
 
   function updateSort(nextSort: AssetBrowseSort): void {
@@ -240,15 +299,19 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
     void loadFirstPage({ sort: nextSort });
   }
 
+  const listItems = toBrowseListItems(state.results);
+  const isPlacesScope = scope === 'places';
+
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       <FlatList
-        data={state.results.assets}
-        keyExtractor={(asset) => asset.id}
-        columnWrapperStyle={styles.cardRow}
+        key={isPlacesScope ? 'places' : 'assets'}
+        data={listItems}
+        keyExtractor={keyBrowseListItem}
+        columnWrapperStyle={isPlacesScope ? undefined : styles.cardRow}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        numColumns={2}
+        numColumns={isPlacesScope ? 1 : 2}
         refreshing={isRefreshing}
         onEndReached={loadNextPage}
         onEndReachedThreshold={0.55}
@@ -263,30 +326,37 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
         ListHeaderComponent={
           <SearchHeader
             isLoading={state.status === 'loading'}
-            kind={kind}
             lifecycleState={lifecycleState}
             query={query}
-            resultCount={state.results.assets.length}
-            resultsMode={state.results.mode}
+            resultCount={listItems.length}
+            scope={scope}
             searchInputRef={searchInputRef}
             searchInputFocused={isSearchFocused}
             sort={sort}
             statusMessage={state.status === 'error' ? state.message : undefined}
-            onChangeKind={updateKind}
+            submittedQuery={state.results.query}
             onChangeLifecycleState={updateLifecycleState}
             onChangeQuery={setQuery}
+            onChangeScope={updateScope}
             onChangeSort={updateSort}
+            onClearQuery={clearSearch}
             onSearchBlur={() => setIsSearchFocused(false)}
             onSearchFocus={() => setIsSearchFocused(true)}
             onSubmit={submitSearch}
           />
         }
         ListEmptyComponent={
-          state.status === 'loading' ? null : <Text style={styles.emptyText}>No matching assets.</Text>
+          state.status === 'loading' ? null : (
+            <EmptyBrowseState query={state.results.query} scope={scope} onClear={clearSearch} />
+          )
         }
-        renderItem={({ item }) => (
-          <AssetCard asset={item} onPress={() => router.push(`/assets/${item.id}`)} />
-        )}
+        renderItem={({ item }) => {
+          if (item.type === 'place') {
+            return <PlaceRow location={item.location} />;
+          }
+
+          return <AssetCard asset={item.asset} onPress={() => router.push(`/assets/${item.asset.id}`)} />;
+        }}
       />
     </SafeAreaView>
   );
@@ -294,47 +364,48 @@ export function SearchScreen({ searchAssetsQuery }: SearchScreenProps) {
 
 export function SearchHeader({
   isLoading,
-  kind,
   lifecycleState,
   query,
   resultCount,
-  resultsMode,
+  scope,
   searchInputRef,
   searchInputFocused,
   sort,
   statusMessage,
-  onChangeKind,
+  submittedQuery,
   onChangeLifecycleState,
   onChangeQuery,
+  onChangeScope,
   onChangeSort,
+  onClearQuery,
   onSearchBlur,
   onSearchFocus,
   onSubmit
 }: {
   readonly isLoading: boolean;
-  readonly kind: AssetBrowseKindFilter;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly query: string;
   readonly resultCount: number;
-  readonly resultsMode: SearchAssetsViewModel['mode'];
+  readonly scope: BrowseScope;
   readonly searchInputRef: RefObject<TextInput | null>;
   readonly searchInputFocused: boolean;
   readonly sort: AssetBrowseSort;
   readonly statusMessage?: string;
-  readonly onChangeKind: (kind: AssetBrowseKindFilter) => void;
+  readonly submittedQuery: string;
   readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
   readonly onChangeQuery: (query: string) => void;
+  readonly onChangeScope: (scope: BrowseScope) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
+  readonly onClearQuery: () => void;
   readonly onSearchBlur: () => void;
   readonly onSearchFocus: () => void;
   readonly onSubmit: () => void;
 }) {
-  const filterGroups = buildSearchFilterGroupPlacement(resultsMode);
-
   return (
     <View>
       <Text style={styles.title}>Browse</Text>
-      <View style={styles.searchRow}>
+      <View style={[styles.searchBar, searchInputFocused ? styles.searchBarFocused : null]}>
+        <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
         <TextInput
           accessibilityLabel="Search inventory"
           autoCapitalize="none"
@@ -343,116 +414,232 @@ export function SearchHeader({
           onBlur={onSearchBlur}
           onFocus={onSearchFocus}
           onSubmitEditing={onSubmit}
-          placeholder="Search assets"
+          placeholder="Search things, places, boxes"
           placeholderTextColor={colors.textMuted}
           returnKeyType="search"
-          style={[styles.searchInput, searchInputFocused ? styles.searchInputFocused : null]}
+          style={styles.searchInput}
           value={query}
         />
-        <Pressable accessibilityRole="button" onPress={onSubmit} style={styles.searchButton}>
-          {isLoading ? (
-            <ActivityIndicator color={colors.onAction} />
-          ) : (
-            <Text style={styles.searchButtonText}>Search</Text>
-          )}
-        </Pressable>
+        {query.length > 0 ? (
+          <Pressable
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+            hitSlop={10}
+            onPress={onClearQuery}
+            style={styles.clearButton}
+          >
+            <X color={colors.textMuted} size={18} strokeWidth={2.5} />
+          </Pressable>
+        ) : null}
+        {isLoading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
       </View>
-      <View style={styles.filterPanel}>
-        {filterGroups.map((group) => {
-          if (group.key === 'status') {
-            return (
-              <FilterGroup
-                isLast={group.isLast}
-                key={group.key}
-                label="Status"
-                options={[
-                  { label: 'Active', value: 'active' },
-                  { label: 'Archived', value: 'archived' },
-                  { label: 'All', value: 'all' }
-                ]}
-                selectedValue={lifecycleState}
-                onChange={onChangeLifecycleState}
-              />
-            );
-          }
-
-          if (group.key === 'type') {
-            return (
-              <FilterGroup
-                isLast={group.isLast}
-                key={group.key}
-                label="Type"
-                options={[
-                  { label: 'All', value: 'all' },
-                  { label: 'Items', value: 'item' },
-                  { label: 'Containers', value: 'container' },
-                  { label: 'Locations', value: 'location' }
-                ]}
-                selectedValue={kind}
-                onChange={onChangeKind}
-              />
-            );
-          }
-
-          return (
-            <FilterGroup
-              isLast={group.isLast}
-              key={group.key}
-              label="Sort"
-              options={[
-                { label: 'Recent', value: 'updated_desc' },
-                { label: 'Stable', value: 'id_asc' }
-              ]}
-              selectedValue={sort}
-              onChange={onChangeSort}
-            />
-          );
-        })}
-      </View>
+      <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
+      <RefinementBar
+        lifecycleState={lifecycleState}
+        scope={scope}
+        searchMode={submittedQuery.trim().length > 0}
+        sort={sort}
+        onChangeLifecycleState={onChangeLifecycleState}
+        onChangeSort={onChangeSort}
+      />
       {statusMessage ? <Text style={styles.errorText}>{statusMessage}</Text> : null}
       <Text style={styles.resultCount}>
-        {resultCount.toString()} {resultsMode === 'search' ? 'search results' : 'assets'}
+        {searchResultSummaryLabel({
+          lifecycleState,
+          query: submittedQuery,
+          resultCount,
+          scope,
+          sort
+        })}
       </Text>
     </View>
   );
 }
 
-function FilterGroup<T extends string>({
-  isLast,
-  label,
-  options,
-  selectedValue,
-  onChange
+function ScopeControl({
+  selectedScope,
+  onChangeScope
 }: {
-  readonly isLast: boolean;
-  readonly label: string;
-  readonly options: ReadonlyArray<{ readonly label: string; readonly value: T }>;
-  readonly selectedValue: T;
-  readonly onChange: (value: T) => void;
+  readonly selectedScope: BrowseScope;
+  readonly onChangeScope: (scope: BrowseScope) => void;
 }) {
   return (
-    <View style={[styles.filterGroup, isLast ? styles.filterGroupLast : null]}>
-      <Text style={styles.filterLabel}>{label}</Text>
-      <View style={styles.filterOptions}>
-        {options.map((option) => {
-          const isSelected = option.value === selectedValue;
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              key={option.value}
-              onPress={() => onChange(option.value)}
-              style={[styles.filterButton, isSelected ? styles.filterButtonSelected : null]}
-            >
-              <Text style={[styles.filterText, isSelected ? styles.filterTextSelected : null]}>
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    <View style={styles.scopeControl}>
+      {buildBrowseScopeOptions().map((option) => {
+        const selected = option.value === selectedScope;
+        return (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            key={option.value}
+            onPress={() => onChangeScope(option.value)}
+            style={[styles.scopeButton, selected ? styles.scopeButtonSelected : null]}
+          >
+            <Text style={[styles.scopeText, selected ? styles.scopeTextSelected : null]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
+}
+
+function RefinementBar({
+  lifecycleState,
+  searchMode,
+  scope,
+  sort,
+  onChangeLifecycleState,
+  onChangeSort
+}: {
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly searchMode: boolean;
+  readonly scope: BrowseScope;
+  readonly sort: AssetBrowseSort;
+  readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
+  readonly onChangeSort: (sort: AssetBrowseSort) => void;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.refinementBar}
+    >
+      <View style={styles.refinementIcon}>
+        <SlidersHorizontal color={colors.textMuted} size={17} strokeWidth={2.5} />
+      </View>
+      <FilterChip
+        label="Active"
+        selected={lifecycleState === 'active'}
+        onPress={() => onChangeLifecycleState('active')}
+      />
+      <FilterChip
+        label="Archived"
+        selected={lifecycleState === 'archived'}
+        onPress={() => onChangeLifecycleState('archived')}
+      />
+      <FilterChip
+        label="All status"
+        selected={lifecycleState === 'all'}
+        onPress={() => onChangeLifecycleState('all')}
+      />
+      {!searchMode ? (
+        <>
+          <View style={styles.refinementDivider} />
+          <FilterChip
+            label="Recent"
+            selected={sort === 'updated_desc'}
+            onPress={() => onChangeSort('updated_desc')}
+          />
+          <FilterChip
+            label="Stable"
+            selected={sort === 'id_asc'}
+            onPress={() => onChangeSort('id_asc')}
+          />
+        </>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+function FilterChip({
+  label,
+  selected,
+  onPress
+}: {
+  readonly label: string;
+  readonly selected: boolean;
+  readonly onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[styles.filterChip, selected ? styles.filterChipSelected : null]}
+    >
+      <Text style={[styles.filterChipText, selected ? styles.filterChipTextSelected : null]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function PlaceRow({ location }: { readonly location: LocationBrowserItemViewModel }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push(`/locations/${location.id}`)}
+      style={styles.placeRow}
+    >
+      <View style={styles.placeImageFrame}>
+        {location.photo ? (
+          <Image
+            accessibilityIgnoresInvertColors
+            source={{ uri: location.photo.uri, headers: location.photo.headers }}
+            style={styles.placeImage}
+          />
+        ) : (
+          <Text style={styles.placeImageLabel}>Place</Text>
+        )}
+      </View>
+      <View style={styles.placeBody}>
+        <View style={styles.placeHeader}>
+          <Text numberOfLines={1} style={styles.placeTitle}>{location.title}</Text>
+          <Text style={location.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
+            {location.photoLabel}
+          </Text>
+        </View>
+        {location.description ? (
+          <Text numberOfLines={2} style={styles.placeDescription}>{location.description}</Text>
+        ) : null}
+        <Text style={styles.placeCount}>{location.containedAssetCountLabel}</Text>
+        <Text numberOfLines={1} style={styles.recentAssetLabel}>{location.recentAssetLabel}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function EmptyBrowseState({
+  query,
+  scope,
+  onClear
+}: {
+  readonly query: string;
+  readonly scope: BrowseScope;
+  readonly onClear: () => void;
+}) {
+  const hasQuery = query.trim().length > 0;
+  return (
+    <View style={styles.emptyPanel}>
+      <Text style={styles.emptyTitle}>
+        {hasQuery ? `No matches for "${query}"` : `No ${scope === 'all' ? 'things' : scope} yet`}
+      </Text>
+      <Text style={styles.emptyText}>
+        {hasQuery
+          ? 'Try a broader search or switch scopes.'
+          : 'New inventory activity will appear here.'}
+      </Text>
+      {hasQuery ? (
+        <Pressable accessibilityRole="button" onPress={onClear} style={styles.emptyAction}>
+          <Text style={styles.emptyActionText}>Clear search</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function toBrowseListItems(results: BrowseResults): readonly BrowseListItem[] {
+  if (results.scope === 'places') {
+    return results.locations.map((location) => ({ type: 'place', location }));
+  }
+
+  return results.assets.map((asset) => ({ type: 'asset', asset }));
+}
+
+function keyBrowseListItem(item: BrowseListItem): string {
+  return item.type === 'place' ? `place:${item.location.id}` : `asset:${item.asset.id}`;
 }
 
 function readableError(error: unknown, fallback: string): string {
@@ -482,95 +669,110 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '900',
     letterSpacing: 0,
-    lineHeight: 36,
-    marginBottom: spacing.md
-  },
-  searchRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+    lineHeight: 38,
     marginBottom: spacing.sm
   },
-  searchInput: {
+  searchBar: {
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 48,
+    paddingHorizontal: spacing.md
+  },
+  searchBarFocused: {
+    borderColor: colors.focusRing,
+    borderWidth: 2
+  },
+  searchInput: {
     color: colors.text,
     flex: 1,
     fontSize: 16,
     minHeight: 46,
-    paddingHorizontal: spacing.md
+    paddingVertical: 0
   },
-  searchInputFocused: {
-    borderColor: colors.focusRing,
-    borderWidth: 2
-  },
-  searchButton: {
+  clearButton: {
     alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 46,
-    minWidth: 86,
-    paddingHorizontal: spacing.md
+    minHeight: 32,
+    minWidth: 32,
+    justifyContent: 'center'
   },
-  searchButtonText: {
-    color: colors.onAction,
-    fontSize: 15,
-    fontWeight: '800',
+  scopeControl: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    gap: 2,
+    marginTop: spacing.md,
+    padding: 3
+  },
+  scopeButton: {
+    alignItems: 'center',
+    borderRadius: radius.sm,
+    flex: 1,
+    minHeight: 38,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs
+  },
+  scopeButtonSelected: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }
+  },
+  scopeText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '900',
     letterSpacing: 0
   },
-  filterPanel: {
+  scopeTextSelected: {
+    color: colors.text
+  },
+  refinementBar: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm
+  },
+  refinementIcon: {
+    alignItems: 'center',
+    height: 34,
+    justifyContent: 'center',
+    width: 28
+  },
+  refinementDivider: {
+    backgroundColor: colors.border,
+    height: 22,
+    marginHorizontal: spacing.xs,
+    width: 1
+  },
+  filterChip: {
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
-    marginBottom: spacing.sm
+    minHeight: 34,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm
   },
-  filterGroup: {
-    borderBottomColor: colors.border,
-    borderBottomWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm
-  },
-  filterGroupLast: {
-    borderBottomWidth: 0
-  },
-  filterLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-    marginBottom: spacing.xs
-  },
-  filterOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs
-  },
-  filterButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    minHeight: 36,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
-  },
-  filterButtonSelected: {
+  filterChipSelected: {
     backgroundColor: colors.selected,
     borderColor: colors.accent
   },
-  filterText: {
+  filterChipText: {
     color: colors.textMuted,
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '900',
     letterSpacing: 0
   },
-  filterTextSelected: {
+  filterChipTextSelected: {
     color: colors.accentStrong
   },
   errorText: {
@@ -582,14 +784,43 @@ const styles = StyleSheet.create({
   resultCount: {
     color: colors.textMuted,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0,
     marginBottom: spacing.md
+  },
+  emptyPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 0
   },
   emptyText: {
     color: colors.textMuted,
     fontSize: 15,
     lineHeight: 22
+  },
+  emptyAction: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.action,
+    borderRadius: radius.sm,
+    marginTop: spacing.sm,
+    minHeight: 38,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md
+  },
+  emptyActionText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
   },
   footer: {
     alignItems: 'center',
@@ -598,5 +829,91 @@ const styles = StyleSheet.create({
   cardRow: {
     gap: spacing.sm,
     marginBottom: spacing.sm
+  },
+  placeRow: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+    padding: spacing.sm
+  },
+  placeImageFrame: {
+    alignItems: 'center',
+    aspectRatio: 1,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: 92
+  },
+  placeImageLabel: {
+    color: colors.accentStrong,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  placeImage: {
+    height: '100%',
+    width: '100%'
+  },
+  placeBody: {
+    flex: 1,
+    gap: 3,
+    justifyContent: 'center',
+    minWidth: 0
+  },
+  placeHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm
+  },
+  placeTitle: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  placeDescription: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  placeCount: {
+    color: colors.accentStrong,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  recentAssetLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17
+  },
+  photoReady: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
+    color: colors.accentStrong,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 4
+  },
+  photoNeeded: {
+    backgroundColor: colors.warningSurface,
+    borderRadius: radius.sm,
+    color: colors.warning,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 4
   }
 });

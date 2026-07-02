@@ -2,14 +2,24 @@ import type { RefObject } from 'react';
 import type { TextInput } from 'react-native';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  buildSearchFilterGroupPlacement,
-  focusSearchInput
+  browseScopeToKind,
+  buildBrowseScopeOptions,
+  focusSearchInput,
+  locationRowsFromAssetCards,
+  parseBrowseScope,
+  searchResultSummaryLabel
 } from './SearchScreenPresentation';
 import { SearchHeader } from './SearchScreen';
 
 vi.mock('expo-router', () => ({
   router: { push: vi.fn() },
   useFocusEffect: vi.fn()
+}));
+
+vi.mock('lucide-react-native', () => ({
+  Search: 'SearchIcon',
+  SlidersHorizontal: 'SlidersIcon',
+  X: 'XIcon'
 }));
 
 vi.mock('react-native-safe-area-context', () => ({
@@ -19,7 +29,9 @@ vi.mock('react-native-safe-area-context', () => ({
 vi.mock('react-native', () => ({
   ActivityIndicator: 'ActivityIndicator',
   FlatList: 'FlatList',
+  Image: 'Image',
   Pressable: 'Pressable',
+  ScrollView: 'ScrollView',
   StyleSheet: {
     create: (styles: unknown) => styles
   },
@@ -52,41 +64,174 @@ describe('SearchScreen presentation helpers', () => {
     expect(focusCount).toBe(1);
   });
 
-  it('keeps sort as the final refinement group in browse mode', () => {
-    expect(buildSearchFilterGroupPlacement('browse')).toEqual([
-      { key: 'status', isLast: false },
-      { key: 'type', isLast: false },
-      { key: 'sort', isLast: true }
+  it('offers browse scopes that collapse search and locations into one surface', () => {
+    expect(buildBrowseScopeOptions()).toEqual([
+      { label: 'All', value: 'all' },
+      { label: 'Places', value: 'places' },
+      { label: 'Containers', value: 'containers' },
+      { label: 'Items', value: 'items' }
+    ]);
+    expect(browseScopeToKind('all')).toBe('all');
+    expect(browseScopeToKind('places')).toBe('location');
+    expect(browseScopeToKind('containers')).toBe('container');
+    expect(browseScopeToKind('items')).toBe('item');
+  });
+
+  it('parses Browse scope route params safely', () => {
+    expect(parseBrowseScope('places')).toBe('places');
+    expect(parseBrowseScope(['containers'])).toBe('containers');
+    expect(parseBrowseScope('unknown')).toBe('all');
+    expect(parseBrowseScope(undefined)).toBe('all');
+  });
+
+  it('enriches API-backed place asset rows with location summary metadata', () => {
+    const rows = locationRowsFromAssetCards([
+      {
+        id: 'kitchen',
+        title: 'Kitchen',
+        kindLabel: 'Location',
+        customTypeLabel: undefined,
+        description: 'Cooking and pantry storage',
+        locationTrailLabel: 'Home / Kitchen',
+        updatedAtLabel: 'Updated today',
+        photoLabel: 'Needs photo',
+        imagePlaceholderLabel: 'Place',
+        photo: undefined
+      },
+      {
+        id: 'garage',
+        title: 'Garage',
+        kindLabel: 'Location',
+        customTypeLabel: undefined,
+        description: 'Tools and seasonal bins',
+        locationTrailLabel: 'Home / Garage',
+        updatedAtLabel: 'Updated today',
+        photoLabel: 'Photo ready',
+        imagePlaceholderLabel: 'Place',
+        photo: { uri: 'https://photos/garage.jpg' }
+      },
+      {
+        id: 'attic',
+        title: 'Attic',
+        kindLabel: 'Location',
+        customTypeLabel: undefined,
+        description: 'Long-term storage',
+        locationTrailLabel: 'Home / Attic',
+        updatedAtLabel: 'Updated today',
+        photoLabel: 'Needs photo',
+        imagePlaceholderLabel: 'Place',
+        photo: undefined
+      }
+    ], [
+      {
+        id: 'kitchen',
+        title: 'Kitchen',
+        description: 'Cooking and pantry storage',
+        containedAssetCountLabel: '12 assets',
+        recentAssetLabel: 'Water bottle, travel mug',
+        photoLabel: 'Needs photo'
+      },
+      {
+        id: 'garage',
+        title: 'Garage',
+        description: 'Tools and seasonal bins',
+        containedAssetCountLabel: '8 assets',
+        recentAssetLabel: 'Drill, socket set',
+        photoLabel: 'Photo ready'
+      }
+    ]);
+
+    expect(rows).toEqual([
+      {
+        id: 'kitchen',
+        title: 'Kitchen',
+        description: 'Cooking and pantry storage',
+        containedAssetCountLabel: '12 assets',
+        recentAssetLabel: 'Water bottle, travel mug',
+        photoLabel: 'Needs photo',
+        photo: undefined
+      },
+      {
+        id: 'garage',
+        title: 'Garage',
+        description: 'Tools and seasonal bins',
+        containedAssetCountLabel: '8 assets',
+        recentAssetLabel: 'Drill, socket set',
+        photoLabel: 'Photo ready',
+        photo: { uri: 'https://photos/garage.jpg' }
+      },
+      {
+        id: 'attic',
+        title: 'Attic',
+        description: 'Long-term storage',
+        containedAssetCountLabel: 'Contents not summarized',
+        recentAssetLabel: 'Home / Attic',
+        photoLabel: 'Needs photo',
+        photo: undefined
+      }
     ]);
   });
 
-  it('hides sort and finishes on type in search mode', () => {
-    expect(buildSearchFilterGroupPlacement('search')).toEqual([
-      { key: 'status', isLast: false },
-      { key: 'type', isLast: true }
-    ]);
+  it('summarizes the active browse state with scope, query, and sort', () => {
+    expect(searchResultSummaryLabel({
+      lifecycleState: 'active',
+      query: 'drill',
+      resultCount: 4,
+      scope: 'containers',
+      sort: 'updated_desc'
+    })).toBe('Showing 4 active containers for "drill" · relevance order');
+    expect(searchResultSummaryLabel({
+      lifecycleState: 'all',
+      query: '',
+      resultCount: 2,
+      scope: 'places',
+      sort: 'id_asc'
+    })).toBe('Showing 2 all places · stable order');
   });
 
-  it('wires the focused search input ref into the rendered header', () => {
+  it('renders the Browse header with a search field, scopes, and compact refinements', () => {
     const inputRef = { current: null } as RefObject<TextInput | null>;
-
     const header = renderHeader({
       query: 'bike pump',
       searchInputFocused: true,
       searchInputRef: inputRef
     });
     const input = findFirstByType(header, 'TextInput');
+    const text = collectText(header);
 
     expect(input?.props?.ref).toBe(inputRef);
     expect(input?.props?.value).toBe('bike pump');
-    expect(input?.props?.style).toEqual(
-      expect.arrayContaining([expect.objectContaining({ borderWidth: 2 })])
-    );
+    expect(text).toEqual(expect.arrayContaining([
+      'Browse',
+      'All',
+      'Places',
+      'Containers',
+      'Items',
+      'Active',
+      'Archived',
+      'Recent'
+    ]));
   });
 
-  it('renders sort in browse mode but not search mode', () => {
-    expect(collectText(renderHeader({ resultsMode: 'browse' }))).toContain('Sort');
-    expect(collectText(renderHeader({ resultsMode: 'search' }))).not.toContain('Sort');
+  it('keeps lifecycle and sort chips available for API-backed Places', () => {
+    const text = collectText(renderHeader({ scope: 'places' }));
+
+    expect(text).toContain('Places');
+    expect(text).toContain('Active');
+    expect(text).toContain('Recent');
+    expect(text).toContain('Stable');
+  });
+
+  it('does not render sort chips while a submitted query is in search mode', () => {
+    const text = collectText(renderHeader({
+      query: 'mug',
+      submittedQuery: 'mug'
+    }));
+
+    expect(text).toContain('Active');
+    expect(text).not.toContain('Recent');
+    expect(text).not.toContain('Stable');
+    expect(text).toContain('Showing 0 active things for "mug" · relevance order');
   });
 });
 
@@ -95,18 +240,19 @@ function renderHeader(
 ): ReturnType<typeof SearchHeader> {
   return SearchHeader({
     isLoading: false,
-    kind: 'all',
     lifecycleState: 'active',
     query: '',
     resultCount: 0,
-    resultsMode: 'browse',
+    scope: 'all',
     searchInputFocused: false,
     searchInputRef: { current: null } as RefObject<TextInput | null>,
     sort: 'updated_desc',
-    onChangeKind: vi.fn(),
+    submittedQuery: '',
     onChangeLifecycleState: vi.fn(),
     onChangeQuery: vi.fn(),
+    onChangeScope: vi.fn(),
     onChangeSort: vi.fn(),
+    onClearQuery: vi.fn(),
     onSearchBlur: vi.fn(),
     onSearchFocus: vi.fn(),
     onSubmit: vi.fn(),
