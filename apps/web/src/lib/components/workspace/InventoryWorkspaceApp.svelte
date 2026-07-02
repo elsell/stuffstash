@@ -2,12 +2,20 @@
   import { onMount } from 'svelte';
   import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import {
-    parseWorkspaceRoute,
-    workspaceRouteHref,
     type AssetRouteAction,
     type SettingsSection,
     type WorkspaceRouteState
   } from '$lib/application/workspaceRoute';
+  import {
+    assetRouteActionIsAvailable,
+    currentWorkspaceRoute,
+    findRouteInventory,
+    findRouteTenant,
+    pushWorkspaceRoute,
+    replaceCanonicalWorkspaceAlias,
+    replaceWorkspaceRoute,
+    shouldCanonicalizeWorkspaceAlias
+  } from '$lib/application/workspaceRouteNavigation';
   import {
     canCreateAsset,
     canEditAsset,
@@ -104,9 +112,9 @@
   let userLabel = $derived(data.context.principal.email ?? data.context.principal.id);
 
   onMount(() => {
-    void applyRoute(parseWorkspaceRoute(new URL(window.location.href)));
+    void applyRoute(currentWorkspaceRoute());
     const onPopState = () => {
-      void applyRoute(parseWorkspaceRoute(new URL(window.location.href)));
+      void applyRoute(currentWorkspaceRoute());
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -485,7 +493,7 @@
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
     applyingRoute = true;
     try {
-      const shouldCanonicalizeAlias = !!route.inventoryId && !route.tenantId;
+      const shouldCanonicalizeAlias = shouldCanonicalizeWorkspaceAlias(route);
       routeUnavailable = '';
       addOpen = route.action === 'add';
       addKind = route.addKind ?? 'item';
@@ -496,9 +504,9 @@
       settingsSection = route.settingsSection;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
-        const tenant = data.context.tenants.find((candidate) => candidate.id === route.tenantId);
-        if (tenant) {
-          await selectTenant(route.tenantId);
+        const tenantId = findRouteTenant(data, route);
+        if (tenantId) {
+          await selectTenant(tenantId);
         } else {
           showUnavailableRoute('That tenant is not available to this account.');
           return;
@@ -506,11 +514,7 @@
       }
 
       if (route.inventoryId && route.inventoryId !== data.context.selectedInventoryId) {
-        const inventory = data.context.inventories.find(
-          (candidate) =>
-            candidate.id === route.inventoryId &&
-            (route.tenantId ? candidate.tenantId === route.tenantId : candidate.tenantId === data.context.selectedTenantId)
-        );
+        const inventory = findRouteInventory(data, route);
         if (inventory) {
           await selectInventory(inventory.tenantId, inventory.id);
         } else {
@@ -551,7 +555,7 @@
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
         }
-        if (route.assetAction && (!canEditAsset(selectedInventory) || (route.assetAction !== 'delete' && loadedAssetDetail?.lifecycleState !== 'active'))) {
+        if (!assetRouteActionIsAvailable(route.assetAction, selectedInventory, loadedAssetDetail)) {
           assetAction = null;
           replaceRoute({
             mode: 'asset',
@@ -601,9 +605,7 @@
   }
 
   function navigateTo(route: Partial<WorkspaceRouteState>): void {
-    const href = workspaceRouteHref(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
-    window.history.pushState({}, '', href);
-    void applyRoute(parseWorkspaceRoute(new URL(window.location.href)));
+    void applyRoute(pushWorkspaceRoute(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null));
   }
 
   function showUnavailableRoute(messageText: string): void {
@@ -677,22 +679,14 @@
     if (typeof window === 'undefined') {
       return;
     }
-    window.history.replaceState(
-      {},
-      '',
-      workspaceRouteHref(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null)
-    );
+    replaceWorkspaceRoute(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
   }
 
   function canonicalizeRouteAlias(route: WorkspaceRouteState, shouldCanonicalizeAlias: boolean): void {
-    if (!shouldCanonicalizeAlias || !data.context.selectedTenantId || !data.context.selectedInventoryId) {
+    if (!shouldCanonicalizeAlias) {
       return;
     }
-    replaceRoute({
-      ...route,
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId
-    });
+    replaceCanonicalWorkspaceAlias(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
   }
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {
