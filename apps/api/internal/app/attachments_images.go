@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -11,7 +12,59 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"golang.org/x/sync/singleflight"
 )
+
+const defaultPrimarySmallThumbnailWarmLimit = 12
+const defaultPrimarySmallThumbnailWarmConcurrency = 4
+const defaultPrimarySmallThumbnailWarmTimeout = 10 * time.Second
+
+type appNoopObserver struct{}
+
+func (appNoopObserver) Record(context.Context, ports.Event) {}
+
+type primaryThumbnailWarmState struct {
+	sem chan struct{}
+}
+
+func newPrimaryThumbnailWarmState(concurrency int) *primaryThumbnailWarmState {
+	return &primaryThumbnailWarmState{
+		sem: make(chan struct{}, normalizePrimaryThumbnailWarmConcurrency(concurrency)),
+	}
+}
+
+func (s *primaryThumbnailWarmState) tryAcquire() bool {
+	if s == nil {
+		return false
+	}
+	select {
+	case s.sem <- struct{}{}:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *primaryThumbnailWarmState) release() {
+	if s == nil {
+		return
+	}
+	<-s.sem
+}
+
+type thumbnailGenerationState struct {
+	group singleflight.Group
+}
+
+func newThumbnailGenerationState() *thumbnailGenerationState {
+	return &thumbnailGenerationState{}
+}
+
+type thumbnailGenerationResult struct {
+	contentType media.ContentType
+	content     []byte
+	source      string
+}
 
 type DownloadAttachmentThumbnailInput struct {
 	Principal    identity.Principal
@@ -52,40 +105,12 @@ func (a App) DownloadAttachmentThumbnail(ctx context.Context, input DownloadAtta
 	if err != nil {
 		return AttachmentThumbnailResult{}, err
 	}
-	cacheKey, ok := thumbnailStorageKey(attachment, variant)
-	if !ok {
-		return AttachmentThumbnailResult{}, ErrInvalidInput
-	}
-	cached, cachedContentType, err := a.cachedThumbnail(ctx, cacheKey)
-	if err == nil {
-		a.recordAttachmentThumbnailServed(ctx, input, attachment, variant, "cache")
-		return AttachmentThumbnailResult{Attachment: attachment, ContentType: cachedContentType, Content: cached}, nil
-	}
-	if !errors.Is(err, ports.ErrBlobNotFound) {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail cache read failed"})
-		return AttachmentThumbnailResult{}, err
-	}
-	content, err := a.blobs.GetBlob(ctx, attachment.StorageKey)
+	thumbnail, err := a.getOrGenerateThumbnail(ctx, attachment, variant)
 	if err != nil {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
 		return AttachmentThumbnailResult{}, err
 	}
-	thumbnail, err := a.imageProcessor.CreateThumbnail(ctx, ports.ImageDerivativeRequest{
-		Attachment:  attachment,
-		Variant:     variant,
-		ContentType: attachment.ContentType,
-		Content:     content,
-	})
-	if err != nil {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail generation failed"})
-		return AttachmentThumbnailResult{}, err
-	}
-	if !thumbnail.ContentType.IsImage() || len(thumbnail.Content) == 0 {
-		return AttachmentThumbnailResult{}, ErrInvalidInput
-	}
-	a.cacheThumbnailBestEffort(ctx, cacheKey, thumbnail)
-	a.recordAttachmentThumbnailServed(ctx, input, attachment, variant, "generated")
-	return AttachmentThumbnailResult{Attachment: attachment, ContentType: thumbnail.ContentType, Content: thumbnail.Content}, nil
+	a.recordAttachmentThumbnailServed(ctx, input, attachment, variant, thumbnail.source)
+	return AttachmentThumbnailResult{Attachment: attachment, ContentType: thumbnail.contentType, Content: thumbnail.content}, nil
 }
 
 func (a App) PrepareAttachmentForModelUse(ctx context.Context, input PrepareAttachmentForModelUseInput) (ports.ModelImage, error) {
@@ -184,6 +209,97 @@ func (a App) recordAttachmentThumbnailServed(ctx context.Context, input Download
 			"source":        source,
 		},
 	})
+}
+
+func (a App) warmPrimarySmallThumbnails(ctx context.Context, attachments []media.Attachment) {
+	if a.blobs == nil || a.imageProcessor == nil || a.thumbnailWarmState == nil || len(attachments) == 0 {
+		return
+	}
+	limit := len(attachments)
+	if limit > a.primaryThumbnailWarmLimit {
+		limit = a.primaryThumbnailWarmLimit
+	}
+	for _, attachment := range attachments[:limit] {
+		if !attachment.ContentType.IsImage() {
+			continue
+		}
+		if _, ok := thumbnailStorageKey(attachment, media.ThumbnailVariantSmall); !ok {
+			continue
+		}
+		if !a.thumbnailWarmState.tryAcquire() {
+			continue
+		}
+		warmCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), a.primaryThumbnailWarmTimeout)
+		go func(attachment media.Attachment) {
+			defer func() {
+				cancel()
+				a.thumbnailWarmState.release()
+			}()
+			a.warmPrimarySmallThumbnail(warmCtx, attachment)
+		}(attachment)
+	}
+}
+
+func (a App) warmPrimarySmallThumbnail(ctx context.Context, attachment media.Attachment) {
+	_, _ = a.getOrGenerateThumbnail(ctx, attachment, media.ThumbnailVariantSmall)
+}
+
+func (a App) getOrGenerateThumbnail(ctx context.Context, attachment media.Attachment, variant media.ThumbnailVariant) (thumbnailGenerationResult, error) {
+	cacheKey, ok := thumbnailStorageKey(attachment, variant)
+	if !ok {
+		return thumbnailGenerationResult{}, ErrInvalidInput
+	}
+	if a.thumbnailGenerationState == nil {
+		return a.generateThumbnail(ctx, attachment, variant, cacheKey)
+	}
+	result, err := a.generateThumbnailSingleflight(ctx, attachment, variant, cacheKey)
+	if err == nil || ctx.Err() != nil {
+		return result, err
+	}
+	return a.generateThumbnailSingleflight(ctx, attachment, variant, cacheKey)
+}
+
+func (a App) generateThumbnailSingleflight(ctx context.Context, attachment media.Attachment, variant media.ThumbnailVariant, cacheKey media.StorageKey) (thumbnailGenerationResult, error) {
+	value, err, _ := a.thumbnailGenerationState.group.Do(cacheKey.String(), func() (any, error) {
+		if cached, cachedContentType, err := a.cachedThumbnail(ctx, cacheKey); err == nil {
+			return thumbnailGenerationResult{contentType: cachedContentType, content: cached, source: "cache"}, nil
+		} else if !errors.Is(err, ports.ErrBlobNotFound) {
+			a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail cache read failed"})
+			return thumbnailGenerationResult{}, err
+		}
+		return a.generateThumbnail(ctx, attachment, variant, cacheKey)
+	})
+	if err != nil {
+		return thumbnailGenerationResult{}, err
+	}
+	result, ok := value.(thumbnailGenerationResult)
+	if !ok {
+		return thumbnailGenerationResult{}, ErrInvalidInput
+	}
+	return result, nil
+}
+
+func (a App) generateThumbnail(ctx context.Context, attachment media.Attachment, variant media.ThumbnailVariant, cacheKey media.StorageKey) (thumbnailGenerationResult, error) {
+	content, err := a.blobs.GetBlob(ctx, attachment.StorageKey)
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
+		return thumbnailGenerationResult{}, err
+	}
+	thumbnail, err := a.imageProcessor.CreateThumbnail(ctx, ports.ImageDerivativeRequest{
+		Attachment:  attachment,
+		Variant:     variant,
+		ContentType: attachment.ContentType,
+		Content:     content,
+	})
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail generation failed"})
+		return thumbnailGenerationResult{}, err
+	}
+	if !thumbnail.ContentType.IsImage() || len(thumbnail.Content) == 0 {
+		return thumbnailGenerationResult{}, ErrInvalidInput
+	}
+	a.cacheThumbnailBestEffort(ctx, cacheKey, thumbnail)
+	return thumbnailGenerationResult{contentType: thumbnail.ContentType, content: thumbnail.Content, source: "generated"}, nil
 }
 
 func (a App) cachedThumbnail(ctx context.Context, cacheKey media.StorageKey) ([]byte, media.ContentType, error) {

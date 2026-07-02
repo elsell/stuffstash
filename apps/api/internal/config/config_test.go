@@ -41,6 +41,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envS3Region, "")
 	t.Setenv(envS3Secure, "")
 	t.Setenv(envMaxAttachmentBytes, "")
+	t.Setenv(envPrimaryThumbnailWarmLimit, "")
+	t.Setenv(envPrimaryThumbnailWarmConcurrent, "")
+	t.Setenv(envPrimaryThumbnailWarmTimeout, "")
 	t.Setenv(envVoiceDevFakeEnabled, "")
 	t.Setenv(envVoiceGoogleEnabled, "")
 	t.Setenv(envVoiceProviderHTTPTimeout, "")
@@ -143,6 +146,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.MaxAttachmentBytes != defaultMaxAttachmentBytes {
 		t.Fatalf("expected max attachment bytes %d, got %d", defaultMaxAttachmentBytes, cfg.MaxAttachmentBytes)
 	}
+	if cfg.PrimaryThumbnailWarmLimit != defaultPrimaryThumbnailWarmLimit || cfg.PrimaryThumbnailWarmConcurrency != defaultPrimaryThumbnailWarmConcurrent || cfg.PrimaryThumbnailWarmTimeout != defaultPrimaryThumbnailWarmTimeout {
+		t.Fatalf("unexpected primary thumbnail warm defaults: %+v", cfg)
+	}
 	if cfg.VoiceDevFakeEnabled {
 		t.Fatalf("expected voice dev fake providers disabled by default")
 	}
@@ -209,6 +215,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envS3Region, "local")
 	t.Setenv(envS3Secure, "false")
 	t.Setenv(envMaxAttachmentBytes, "12345")
+	t.Setenv(envPrimaryThumbnailWarmLimit, "8")
+	t.Setenv(envPrimaryThumbnailWarmConcurrent, "2")
+	t.Setenv(envPrimaryThumbnailWarmTimeout, "3s")
 	t.Setenv(envVoiceDevFakeEnabled, "true")
 	t.Setenv(envVoiceGoogleEnabled, "true")
 	t.Setenv(envVoiceProviderHTTPTimeout, "75s")
@@ -307,6 +316,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.MaxAttachmentBytes != 12345 {
 		t.Fatalf("expected max attachment bytes 12345, got %d", cfg.MaxAttachmentBytes)
+	}
+	if cfg.PrimaryThumbnailWarmLimit != 8 || cfg.PrimaryThumbnailWarmConcurrency != 2 || cfg.PrimaryThumbnailWarmTimeout.String() != "3s" {
+		t.Fatalf("unexpected primary thumbnail warm config: %+v", cfg)
 	}
 	if !cfg.VoiceDevFakeEnabled {
 		t.Fatalf("expected voice dev fake providers enabled")

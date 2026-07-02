@@ -15,109 +15,120 @@ import (
 )
 
 type App struct {
-	observer                  ports.Observer
-	auth                      ports.Authenticator
-	authorizer                ports.Authorizer
-	tenants                   ports.TenantRepository
-	tenantUnitOfWork          ports.TenantUnitOfWork
-	inventories               ports.InventoryRepository
-	inventoryUnitOfWork       ports.InventoryUnitOfWork
-	inventoryAccess           ports.InventoryAccessRepository
-	inventoryAccessUnitOfWork ports.InventoryAccessUnitOfWork
-	customAssetTypes          ports.CustomAssetTypeRepository
-	customAssetTypeUnitOfWork ports.CustomAssetTypeUnitOfWork
-	customFields              ports.CustomFieldDefinitionRepository
-	customFieldUnitOfWork     ports.CustomFieldDefinitionUnitOfWork
-	assets                    ports.AssetRepository
-	assetUnitOfWork           ports.AssetUnitOfWork
-	undoables                 ports.UndoableOperationRepository
-	search                    ports.AssetSearchRepository
-	attachments               ports.AttachmentRepository
-	attachmentUnitOfWork      ports.AttachmentUnitOfWork
-	blobs                     ports.BlobStorage
-	directUploads             ports.DirectAttachmentUploader
-	imageProcessor            ports.ImageProcessor
-	blobDeletionOutbox        ports.BlobDeletionOutbox
-	audit                     ports.AuditRepository
-	outbox                    ports.AuthorizationOutbox
-	providerProfiles          ports.ProviderProfileRepository
-	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
-	voiceProviderConfigs      ports.VoiceProviderConfigurationRepository
-	providerCredentialVault   ports.ProviderCredentialVault
-	providerProfileTester     ports.ProviderProfileTester
-	realtimeSessions          ports.RealtimeSessionRepository
-	actionPlans               ports.ActionPlanRepository
-	ids                       ports.IDGenerator
-	clock                     ports.Clock
-	outboxDrainLimit          int
-	outboxClaimLease          time.Duration
-	blobDeletionClaimLease    time.Duration
-	blobDeletionMaxAttempts   int
-	directUploadTTL           time.Duration
-	invitationTTL             time.Duration
-	defaultPageLimit          int
-	maxPageLimit              int
-	maxAttachmentBytes        int
-	assetService              assetapp.Service
-	customFieldService        customfieldapp.Service
-	providerProfileService    agentmodelapp.Service
-	speechToText              ports.SpeechToTextProvider
-	languageInference         ports.LanguageInferenceProvider
-	textToSpeech              ports.TextToSpeechProvider
-	realtimeVoiceProviders    ports.RealtimeVoiceProviderResolver
+	observer                    ports.Observer
+	auth                        ports.Authenticator
+	authorizer                  ports.Authorizer
+	tenants                     ports.TenantRepository
+	tenantUnitOfWork            ports.TenantUnitOfWork
+	inventories                 ports.InventoryRepository
+	inventoryUnitOfWork         ports.InventoryUnitOfWork
+	inventoryAccess             ports.InventoryAccessRepository
+	inventoryAccessUnitOfWork   ports.InventoryAccessUnitOfWork
+	customAssetTypes            ports.CustomAssetTypeRepository
+	customAssetTypeUnitOfWork   ports.CustomAssetTypeUnitOfWork
+	customFields                ports.CustomFieldDefinitionRepository
+	customFieldUnitOfWork       ports.CustomFieldDefinitionUnitOfWork
+	assets                      ports.AssetRepository
+	assetUnitOfWork             ports.AssetUnitOfWork
+	undoables                   ports.UndoableOperationRepository
+	search                      ports.AssetSearchRepository
+	attachments                 ports.AttachmentRepository
+	attachmentUnitOfWork        ports.AttachmentUnitOfWork
+	blobs                       ports.BlobStorage
+	directUploads               ports.DirectAttachmentUploader
+	imageProcessor              ports.ImageProcessor
+	blobDeletionOutbox          ports.BlobDeletionOutbox
+	audit                       ports.AuditRepository
+	outbox                      ports.AuthorizationOutbox
+	providerProfiles            ports.ProviderProfileRepository
+	providerProfileUnitOfWork   ports.ProviderProfileUnitOfWork
+	voiceProviderConfigs        ports.VoiceProviderConfigurationRepository
+	providerCredentialVault     ports.ProviderCredentialVault
+	providerProfileTester       ports.ProviderProfileTester
+	realtimeSessions            ports.RealtimeSessionRepository
+	actionPlans                 ports.ActionPlanRepository
+	ids                         ports.IDGenerator
+	clock                       ports.Clock
+	outboxDrainLimit            int
+	outboxClaimLease            time.Duration
+	blobDeletionClaimLease      time.Duration
+	blobDeletionMaxAttempts     int
+	directUploadTTL             time.Duration
+	invitationTTL               time.Duration
+	defaultPageLimit            int
+	maxPageLimit                int
+	maxAttachmentBytes          int
+	primaryThumbnailWarmLimit   int
+	primaryThumbnailWarmTimeout time.Duration
+	assetService                assetapp.Service
+	customFieldService          customfieldapp.Service
+	providerProfileService      agentmodelapp.Service
+	speechToText                ports.SpeechToTextProvider
+	languageInference           ports.LanguageInferenceProvider
+	textToSpeech                ports.TextToSpeechProvider
+	realtimeVoiceProviders      ports.RealtimeVoiceProviderResolver
+	thumbnailWarmState          *primaryThumbnailWarmState
+	thumbnailGenerationState    *thumbnailGenerationState
 }
 
 type Dependencies struct {
-	Observer                      ports.Observer
-	Auth                          ports.Authenticator
-	Authorizer                    ports.Authorizer
-	Tenants                       ports.TenantRepository
-	TenantUnitOfWork              ports.TenantUnitOfWork
-	Inventories                   ports.InventoryRepository
-	InventoryUnitOfWork           ports.InventoryUnitOfWork
-	InventoryAccess               ports.InventoryAccessRepository
-	InventoryAccessUnitOfWork     ports.InventoryAccessUnitOfWork
-	CustomAssetTypes              ports.CustomAssetTypeRepository
-	CustomAssetTypeUnitOfWork     ports.CustomAssetTypeUnitOfWork
-	CustomFields                  ports.CustomFieldDefinitionRepository
-	CustomFieldUnitOfWork         ports.CustomFieldDefinitionUnitOfWork
-	Assets                        ports.AssetRepository
-	AssetUnitOfWork               ports.AssetUnitOfWork
-	Undoables                     ports.UndoableOperationRepository
-	Search                        ports.AssetSearchRepository
-	Attachments                   ports.AttachmentRepository
-	AttachmentUnitOfWork          ports.AttachmentUnitOfWork
-	Blobs                         ports.BlobStorage
-	DirectUploads                 ports.DirectAttachmentUploader
-	ImageProcessor                ports.ImageProcessor
-	BlobDeletionOutbox            ports.BlobDeletionOutbox
-	Audit                         ports.AuditRepository
-	Outbox                        ports.AuthorizationOutbox
-	ProviderProfiles              ports.ProviderProfileRepository
-	ProviderProfileUnitOfWork     ports.ProviderProfileUnitOfWork
-	VoiceProviderConfigs          ports.VoiceProviderConfigurationRepository
-	ProviderCredentialVault       ports.ProviderCredentialVault
-	ProviderProfileTester         ports.ProviderProfileTester
-	RealtimeSessions              ports.RealtimeSessionRepository
-	ActionPlans                   ports.ActionPlanRepository
-	IDs                           ports.IDGenerator
-	Clock                         ports.Clock
-	AuthorizationOutboxDrainLimit int
-	AuthorizationOutboxClaimLease time.Duration
-	BlobDeletionOutboxClaimLease  time.Duration
-	BlobDeletionOutboxMaxAttempts int
-	DirectUploadTTL               time.Duration
-	InvitationTTL                 time.Duration
-	DefaultPageLimit              int
-	MaxPageLimit                  int
-	MaxAttachmentBytes            int
-	SpeechToText                  ports.SpeechToTextProvider
-	LanguageInference             ports.LanguageInferenceProvider
-	TextToSpeech                  ports.TextToSpeechProvider
-	RealtimeVoiceProviderResolver ports.RealtimeVoiceProviderResolver
+	Observer                        ports.Observer
+	Auth                            ports.Authenticator
+	Authorizer                      ports.Authorizer
+	Tenants                         ports.TenantRepository
+	TenantUnitOfWork                ports.TenantUnitOfWork
+	Inventories                     ports.InventoryRepository
+	InventoryUnitOfWork             ports.InventoryUnitOfWork
+	InventoryAccess                 ports.InventoryAccessRepository
+	InventoryAccessUnitOfWork       ports.InventoryAccessUnitOfWork
+	CustomAssetTypes                ports.CustomAssetTypeRepository
+	CustomAssetTypeUnitOfWork       ports.CustomAssetTypeUnitOfWork
+	CustomFields                    ports.CustomFieldDefinitionRepository
+	CustomFieldUnitOfWork           ports.CustomFieldDefinitionUnitOfWork
+	Assets                          ports.AssetRepository
+	AssetUnitOfWork                 ports.AssetUnitOfWork
+	Undoables                       ports.UndoableOperationRepository
+	Search                          ports.AssetSearchRepository
+	Attachments                     ports.AttachmentRepository
+	AttachmentUnitOfWork            ports.AttachmentUnitOfWork
+	Blobs                           ports.BlobStorage
+	DirectUploads                   ports.DirectAttachmentUploader
+	ImageProcessor                  ports.ImageProcessor
+	BlobDeletionOutbox              ports.BlobDeletionOutbox
+	Audit                           ports.AuditRepository
+	Outbox                          ports.AuthorizationOutbox
+	ProviderProfiles                ports.ProviderProfileRepository
+	ProviderProfileUnitOfWork       ports.ProviderProfileUnitOfWork
+	VoiceProviderConfigs            ports.VoiceProviderConfigurationRepository
+	ProviderCredentialVault         ports.ProviderCredentialVault
+	ProviderProfileTester           ports.ProviderProfileTester
+	RealtimeSessions                ports.RealtimeSessionRepository
+	ActionPlans                     ports.ActionPlanRepository
+	IDs                             ports.IDGenerator
+	Clock                           ports.Clock
+	AuthorizationOutboxDrainLimit   int
+	AuthorizationOutboxClaimLease   time.Duration
+	BlobDeletionOutboxClaimLease    time.Duration
+	BlobDeletionOutboxMaxAttempts   int
+	DirectUploadTTL                 time.Duration
+	InvitationTTL                   time.Duration
+	DefaultPageLimit                int
+	MaxPageLimit                    int
+	MaxAttachmentBytes              int
+	PrimaryThumbnailWarmLimit       int
+	PrimaryThumbnailWarmConcurrency int
+	PrimaryThumbnailWarmTimeout     time.Duration
+	SpeechToText                    ports.SpeechToTextProvider
+	LanguageInference               ports.LanguageInferenceProvider
+	TextToSpeech                    ports.TextToSpeechProvider
+	RealtimeVoiceProviderResolver   ports.RealtimeVoiceProviderResolver
 }
 
 func New(deps Dependencies) App {
+	observer := deps.Observer
+	if observer == nil {
+		observer = appNoopObserver{}
+	}
 	maxPageLimit := normalizeMaxPageLimit(deps.MaxPageLimit)
 	ids := deps.IDs
 	if ids == nil {
@@ -128,6 +139,7 @@ func New(deps Dependencies) App {
 		clock = ports.SystemClock{}
 	}
 	defaultPageLimit := normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit)
+	primaryThumbnailWarmConcurrency := normalizePrimaryThumbnailWarmConcurrency(deps.PrimaryThumbnailWarmConcurrency)
 	realtimeVoiceProviders := deps.RealtimeVoiceProviderResolver
 	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.LanguageInference != nil && deps.TextToSpeech != nil {
 		realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
@@ -137,53 +149,57 @@ func New(deps Dependencies) App {
 		}}
 	}
 	app := App{
-		observer:                  deps.Observer,
-		auth:                      deps.Auth,
-		authorizer:                deps.Authorizer,
-		tenants:                   deps.Tenants,
-		tenantUnitOfWork:          deps.TenantUnitOfWork,
-		inventories:               deps.Inventories,
-		inventoryUnitOfWork:       deps.InventoryUnitOfWork,
-		inventoryAccess:           deps.InventoryAccess,
-		inventoryAccessUnitOfWork: deps.InventoryAccessUnitOfWork,
-		customAssetTypes:          deps.CustomAssetTypes,
-		customAssetTypeUnitOfWork: deps.CustomAssetTypeUnitOfWork,
-		customFields:              deps.CustomFields,
-		customFieldUnitOfWork:     deps.CustomFieldUnitOfWork,
-		assets:                    deps.Assets,
-		assetUnitOfWork:           deps.AssetUnitOfWork,
-		undoables:                 deps.Undoables,
-		search:                    deps.Search,
-		attachments:               deps.Attachments,
-		attachmentUnitOfWork:      deps.AttachmentUnitOfWork,
-		blobs:                     deps.Blobs,
-		directUploads:             deps.DirectUploads,
-		imageProcessor:            deps.ImageProcessor,
-		blobDeletionOutbox:        deps.BlobDeletionOutbox,
-		audit:                     deps.Audit,
-		outbox:                    deps.Outbox,
-		providerProfiles:          deps.ProviderProfiles,
-		providerProfileUnitOfWork: deps.ProviderProfileUnitOfWork,
-		voiceProviderConfigs:      deps.VoiceProviderConfigs,
-		providerCredentialVault:   deps.ProviderCredentialVault,
-		providerProfileTester:     deps.ProviderProfileTester,
-		realtimeSessions:          deps.RealtimeSessions,
-		actionPlans:               deps.ActionPlans,
-		ids:                       ids,
-		clock:                     clock,
-		outboxDrainLimit:          deps.AuthorizationOutboxDrainLimit,
-		outboxClaimLease:          deps.AuthorizationOutboxClaimLease,
-		blobDeletionClaimLease:    normalizeOutboxClaimLease(deps.BlobDeletionOutboxClaimLease),
-		blobDeletionMaxAttempts:   normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
-		directUploadTTL:           normalizeDirectUploadTTL(deps.DirectUploadTTL),
-		invitationTTL:             normalizeInvitationTTL(deps.InvitationTTL),
-		defaultPageLimit:          defaultPageLimit,
-		maxPageLimit:              maxPageLimit,
-		maxAttachmentBytes:        normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
-		speechToText:              deps.SpeechToText,
-		languageInference:         deps.LanguageInference,
-		textToSpeech:              deps.TextToSpeech,
-		realtimeVoiceProviders:    realtimeVoiceProviders,
+		observer:                    observer,
+		auth:                        deps.Auth,
+		authorizer:                  deps.Authorizer,
+		tenants:                     deps.Tenants,
+		tenantUnitOfWork:            deps.TenantUnitOfWork,
+		inventories:                 deps.Inventories,
+		inventoryUnitOfWork:         deps.InventoryUnitOfWork,
+		inventoryAccess:             deps.InventoryAccess,
+		inventoryAccessUnitOfWork:   deps.InventoryAccessUnitOfWork,
+		customAssetTypes:            deps.CustomAssetTypes,
+		customAssetTypeUnitOfWork:   deps.CustomAssetTypeUnitOfWork,
+		customFields:                deps.CustomFields,
+		customFieldUnitOfWork:       deps.CustomFieldUnitOfWork,
+		assets:                      deps.Assets,
+		assetUnitOfWork:             deps.AssetUnitOfWork,
+		undoables:                   deps.Undoables,
+		search:                      deps.Search,
+		attachments:                 deps.Attachments,
+		attachmentUnitOfWork:        deps.AttachmentUnitOfWork,
+		blobs:                       deps.Blobs,
+		directUploads:               deps.DirectUploads,
+		imageProcessor:              deps.ImageProcessor,
+		blobDeletionOutbox:          deps.BlobDeletionOutbox,
+		audit:                       deps.Audit,
+		outbox:                      deps.Outbox,
+		providerProfiles:            deps.ProviderProfiles,
+		providerProfileUnitOfWork:   deps.ProviderProfileUnitOfWork,
+		voiceProviderConfigs:        deps.VoiceProviderConfigs,
+		providerCredentialVault:     deps.ProviderCredentialVault,
+		providerProfileTester:       deps.ProviderProfileTester,
+		realtimeSessions:            deps.RealtimeSessions,
+		actionPlans:                 deps.ActionPlans,
+		ids:                         ids,
+		clock:                       clock,
+		outboxDrainLimit:            deps.AuthorizationOutboxDrainLimit,
+		outboxClaimLease:            deps.AuthorizationOutboxClaimLease,
+		blobDeletionClaimLease:      normalizeOutboxClaimLease(deps.BlobDeletionOutboxClaimLease),
+		blobDeletionMaxAttempts:     normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
+		directUploadTTL:             normalizeDirectUploadTTL(deps.DirectUploadTTL),
+		invitationTTL:               normalizeInvitationTTL(deps.InvitationTTL),
+		defaultPageLimit:            defaultPageLimit,
+		maxPageLimit:                maxPageLimit,
+		maxAttachmentBytes:          normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
+		primaryThumbnailWarmLimit:   normalizePrimaryThumbnailWarmLimit(deps.PrimaryThumbnailWarmLimit),
+		primaryThumbnailWarmTimeout: normalizePrimaryThumbnailWarmTimeout(deps.PrimaryThumbnailWarmTimeout),
+		speechToText:                deps.SpeechToText,
+		languageInference:           deps.LanguageInference,
+		textToSpeech:                deps.TextToSpeech,
+		realtimeVoiceProviders:      realtimeVoiceProviders,
+		thumbnailWarmState:          newPrimaryThumbnailWarmState(primaryThumbnailWarmConcurrency),
+		thumbnailGenerationState:    newThumbnailGenerationState(),
 	}
 	app.assetService = assetapp.New(assetapp.Dependencies{
 		Observer:         app.observer,
@@ -246,6 +262,27 @@ func normalizeMaxAttachmentBytes(maxBytes int) int {
 		return 25 * 1024 * 1024
 	}
 	return maxBytes
+}
+
+func normalizePrimaryThumbnailWarmLimit(limit int) int {
+	if limit <= 0 {
+		return defaultPrimarySmallThumbnailWarmLimit
+	}
+	return limit
+}
+
+func normalizePrimaryThumbnailWarmConcurrency(concurrency int) int {
+	if concurrency <= 0 {
+		return defaultPrimarySmallThumbnailWarmConcurrency
+	}
+	return concurrency
+}
+
+func normalizePrimaryThumbnailWarmTimeout(timeout time.Duration) time.Duration {
+	if timeout <= 0 {
+		return defaultPrimarySmallThumbnailWarmTimeout
+	}
+	return timeout
 }
 
 func normalizeInvitationTTL(ttl time.Duration) time.Duration {

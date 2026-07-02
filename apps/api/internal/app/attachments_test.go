@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -491,6 +492,7 @@ func (r *recordingAttachmentRepository) FirstImageAttachmentsByAssets(context.Co
 }
 
 type recordingBlobStorage struct {
+	mu         sync.Mutex
 	put        bool
 	deleted    bool
 	content    []byte
@@ -547,6 +549,8 @@ func (s *singleBlobDeletionOutbox) MarkBlobDeletionEventDeadLettered(_ context.C
 }
 
 func (r *recordingBlobStorage) PutBlob(_ context.Context, key media.StorageKey, _ media.ContentType, data []byte) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.put = true
 	r.putKeys = append(r.putKeys, key)
 	if r.putErr != nil {
@@ -560,6 +564,8 @@ func (r *recordingBlobStorage) PutBlob(_ context.Context, key media.StorageKey, 
 }
 
 func (r *recordingBlobStorage) GetBlob(_ context.Context, key media.StorageKey) ([]byte, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.getKeys = append(r.getKeys, key)
 	if r.blobs != nil {
 		if data, ok := r.blobs[key]; ok {
@@ -574,6 +580,8 @@ func (r *recordingBlobStorage) GetBlob(_ context.Context, key media.StorageKey) 
 }
 
 func (r *recordingBlobStorage) DeleteBlob(_ context.Context, key media.StorageKey) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.deleted = true
 	r.deleteKeys = append(r.deleteKeys, key)
 	if err := r.deleteErrs[key]; err != nil {
@@ -586,6 +594,8 @@ func (r *recordingBlobStorage) DeleteBlob(_ context.Context, key media.StorageKe
 }
 
 func (r *recordingBlobStorage) getCount(key media.StorageKey) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	count := 0
 	for _, candidate := range r.getKeys {
 		if candidate == key {
@@ -596,6 +606,8 @@ func (r *recordingBlobStorage) getCount(key media.StorageKey) int {
 }
 
 func (r *recordingBlobStorage) hasBlob(key media.StorageKey) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.blobs == nil {
 		return false
 	}
@@ -604,6 +616,8 @@ func (r *recordingBlobStorage) hasBlob(key media.StorageKey) bool {
 }
 
 func (r *recordingBlobStorage) deletedKey(key media.StorageKey) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	for _, candidate := range r.deleteKeys {
 		if candidate == key {
 			return true

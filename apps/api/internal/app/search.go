@@ -124,6 +124,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 			"inventory_ids": strconv.Itoa(len(inventoryIDs)),
 		},
 	})
+	a.warmPrimarySmallThumbnails(ctx, primaryPhotosForSearchResults(items, primaryPhotos))
 
 	return SearchAssetsResult{
 		Items:         items,
@@ -132,6 +133,20 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		NextCursor:    nextCursor,
 		HasMore:       hasMore,
 	}, nil
+}
+
+func primaryPhotosForSearchResults(items []ports.AssetSearchResult, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment) []media.Attachment {
+	photos := make([]media.Attachment, 0, len(items))
+	for _, item := range items {
+		ref := ports.AttachmentAssetReference{
+			InventoryID: inventory.InventoryID(item.Asset.InventoryID.String()),
+			AssetID:     item.Asset.ID,
+		}
+		if photo, ok := primaryPhotos[ref]; ok {
+			photos = append(photos, photo)
+		}
+	}
+	return photos
 }
 
 func (a App) primaryImageAttachmentsForSearchResults(ctx context.Context, tenantID tenant.ID, items []ports.AssetSearchResult) (map[ports.AttachmentAssetReference]media.Attachment, error) {

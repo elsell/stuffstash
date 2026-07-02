@@ -8,101 +8,107 @@ import (
 )
 
 const (
-	DefaultHTTPRateLimitRequests     = 1200
-	DefaultHTTPRateLimitBurst        = 600
-	envHTTPAddr                      = "STUFF_STASH_HTTP_ADDR"
-	envHTTPReadHeaderTimeout         = "STUFF_STASH_HTTP_READ_HEADER_TIMEOUT"
-	envHTTPReadTimeout               = "STUFF_STASH_HTTP_READ_TIMEOUT"
-	envHTTPWriteTimeout              = "STUFF_STASH_HTTP_WRITE_TIMEOUT"
-	envHTTPIdleTimeout               = "STUFF_STASH_HTTP_IDLE_TIMEOUT"
-	envHTTPMaxJSONBodyBytes          = "STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES"
-	envHTTPRateLimitEnabled          = "STUFF_STASH_HTTP_RATE_LIMIT_ENABLED"
-	envHTTPRateLimitRequests         = "STUFF_STASH_HTTP_RATE_LIMIT_REQUESTS"
-	envHTTPRateLimitWindow           = "STUFF_STASH_HTTP_RATE_LIMIT_WINDOW"
-	envHTTPRateLimitBurst            = "STUFF_STASH_HTTP_RATE_LIMIT_BURST"
-	envCORSAllowedOrigins            = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
-	envAuthMode                      = "STUFF_STASH_AUTH_MODE"
-	envAuthzMode                     = "STUFF_STASH_AUTHZ_MODE"
-	envOIDCIssuer                    = "STUFF_STASH_OIDC_ISSUER"
-	envOIDCClientID                  = "STUFF_STASH_OIDC_CLIENT_ID"
-	envOIDCClientIDs                 = "STUFF_STASH_OIDC_CLIENT_IDS"
-	envRepositoryMode                = "STUFF_STASH_REPOSITORY_MODE"
-	envDatabaseDSN                   = "STUFF_STASH_DATABASE_DSN"
-	envSpiceDBEndpoint               = "STUFF_STASH_SPICEDB_ENDPOINT"
-	envSpiceDBPresharedKey           = "STUFF_STASH_SPICEDB_PRESHARED_KEY"
-	envSpiceDBTLSEnabled             = "STUFF_STASH_SPICEDB_TLS_ENABLED"
-	envSpiceDBCAPath                 = "STUFF_STASH_SPICEDB_CA_PATH"
-	envSpiceDBBootstrapSchema        = "STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA"
-	envSpiceDBSchemaPath             = "STUFF_STASH_SPICEDB_SCHEMA_PATH"
-	envAuthorizationOutboxLimit      = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
-	envAuthorizationOutboxEvery      = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
-	envAuthorizationOutboxLease      = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
-	envBlobDeletionOutboxLimit       = "STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_LIMIT"
-	envBlobDeletionOutboxEvery       = "STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL"
-	envBlobDeletionOutboxLease       = "STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE"
-	envBlobDeletionOutboxMaxAttempts = "STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS"
-	envInvitationTTL                 = "STUFF_STASH_INVITATION_TTL"
-	envDefaultPageLimit              = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
-	envMaxPageLimit                  = "STUFF_STASH_MAX_PAGE_LIMIT"
-	envBlobStorageMode               = "STUFF_STASH_BLOB_STORAGE_MODE"
-	envBlobStoragePath               = "STUFF_STASH_BLOB_STORAGE_PATH"
-	envS3Endpoint                    = "STUFF_STASH_S3_ENDPOINT"
-	envS3AccessKey                   = "STUFF_STASH_S3_ACCESS_KEY"
-	envS3SecretKey                   = "STUFF_STASH_S3_SECRET_KEY"
-	envS3Bucket                      = "STUFF_STASH_S3_BUCKET"
-	envS3Region                      = "STUFF_STASH_S3_REGION"
-	envS3Secure                      = "STUFF_STASH_S3_SECURE"
-	envMaxAttachmentBytes            = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
-	envVoiceDevFakeEnabled           = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
-	envVoiceGoogleEnabled            = "STUFF_STASH_VOICE_GOOGLE_ENABLED"
-	envVoiceProviderHTTPTimeout      = "STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT"
-	envGoogleCloudProject            = "STUFF_STASH_GOOGLE_CLOUD_PROJECT"
-	envGoogleCloudLocation           = "STUFF_STASH_GOOGLE_CLOUD_LOCATION"
-	envGoogleGeminiModel             = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
-	envGoogleTTSLanguageCode         = "STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE"
-	envGoogleTTSVoiceName            = "STUFF_STASH_GOOGLE_TTS_VOICE_NAME"
-	envGoogleCredentialMode          = "STUFF_STASH_GOOGLE_CREDENTIAL_MODE"
-	envGoogleAccessToken             = "STUFF_STASH_GOOGLE_ACCESS_TOKEN"
-	envProviderCredentialKeyID       = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID"
-	envProviderCredentialKey         = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY"
-	defaultHTTPAddr                  = ":8080"
-	defaultHTTPReadHeader            = 5 * time.Second
-	defaultHTTPRead                  = 15 * time.Second
-	defaultHTTPWrite                 = 30 * time.Second
-	defaultHTTPIdle                  = 60 * time.Second
-	defaultHTTPMaxJSONBodyBytes      = 1024 * 1024
-	defaultHTTPRateLimitEnabled      = true
-	defaultHTTPRateLimitRequests     = DefaultHTTPRateLimitRequests
-	defaultHTTPRateLimitWindow       = time.Minute
-	defaultHTTPRateLimitBurst        = DefaultHTTPRateLimitBurst
-	defaultAuthMode                  = "local-dev"
-	defaultAuthzMode                 = "memory"
-	defaultRepositoryMode            = "memory"
-	defaultSpiceDBSchemaPath         = "deploy/spicedb/schema.zed"
-	defaultAuthorizationLimit        = 25
-	defaultAuthorizationEvery        = 10 * time.Second
-	defaultAuthorizationLease        = 30 * time.Second
-	defaultBlobDeletionLimit         = 25
-	defaultBlobDeletionEvery         = 10 * time.Second
-	defaultBlobDeletionLease         = 30 * time.Second
-	defaultBlobDeletionMaxAttempts   = 5
-	defaultInvitationTTL             = 7 * 24 * time.Hour
-	defaultDefaultPageLimit          = 50
-	defaultMaxPageLimit              = 100
-	defaultBlobStorageMode           = "filesystem"
-	defaultBlobStoragePath           = ".stuffstash/blobs"
-	defaultS3Region                  = "garage"
-	defaultS3Secure                  = true
-	defaultMaxAttachmentBytes        = 25 * 1024 * 1024
-	defaultSpiceDBTLSEnabled         = true
-	defaultSpiceDBBootstrapMode      = false
-	defaultVoiceDevFakeEnabled       = false
-	defaultVoiceGoogleEnabled        = false
-	defaultVoiceProviderHTTPTimeout  = 60 * time.Second
-	defaultGoogleCloudLocation       = "us-central1"
-	defaultGoogleGeminiModel         = "gemini-2.5-flash-lite"
-	defaultGoogleTTSLanguageCode     = "en-US"
-	defaultGoogleTTSVoiceName        = "en-US-Standard-C"
+	DefaultHTTPRateLimitRequests          = 1200
+	DefaultHTTPRateLimitBurst             = 600
+	envHTTPAddr                           = "STUFF_STASH_HTTP_ADDR"
+	envHTTPReadHeaderTimeout              = "STUFF_STASH_HTTP_READ_HEADER_TIMEOUT"
+	envHTTPReadTimeout                    = "STUFF_STASH_HTTP_READ_TIMEOUT"
+	envHTTPWriteTimeout                   = "STUFF_STASH_HTTP_WRITE_TIMEOUT"
+	envHTTPIdleTimeout                    = "STUFF_STASH_HTTP_IDLE_TIMEOUT"
+	envHTTPMaxJSONBodyBytes               = "STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES"
+	envHTTPRateLimitEnabled               = "STUFF_STASH_HTTP_RATE_LIMIT_ENABLED"
+	envHTTPRateLimitRequests              = "STUFF_STASH_HTTP_RATE_LIMIT_REQUESTS"
+	envHTTPRateLimitWindow                = "STUFF_STASH_HTTP_RATE_LIMIT_WINDOW"
+	envHTTPRateLimitBurst                 = "STUFF_STASH_HTTP_RATE_LIMIT_BURST"
+	envCORSAllowedOrigins                 = "STUFF_STASH_CORS_ALLOWED_ORIGINS"
+	envAuthMode                           = "STUFF_STASH_AUTH_MODE"
+	envAuthzMode                          = "STUFF_STASH_AUTHZ_MODE"
+	envOIDCIssuer                         = "STUFF_STASH_OIDC_ISSUER"
+	envOIDCClientID                       = "STUFF_STASH_OIDC_CLIENT_ID"
+	envOIDCClientIDs                      = "STUFF_STASH_OIDC_CLIENT_IDS"
+	envRepositoryMode                     = "STUFF_STASH_REPOSITORY_MODE"
+	envDatabaseDSN                        = "STUFF_STASH_DATABASE_DSN"
+	envSpiceDBEndpoint                    = "STUFF_STASH_SPICEDB_ENDPOINT"
+	envSpiceDBPresharedKey                = "STUFF_STASH_SPICEDB_PRESHARED_KEY"
+	envSpiceDBTLSEnabled                  = "STUFF_STASH_SPICEDB_TLS_ENABLED"
+	envSpiceDBCAPath                      = "STUFF_STASH_SPICEDB_CA_PATH"
+	envSpiceDBBootstrapSchema             = "STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA"
+	envSpiceDBSchemaPath                  = "STUFF_STASH_SPICEDB_SCHEMA_PATH"
+	envAuthorizationOutboxLimit           = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT"
+	envAuthorizationOutboxEvery           = "STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL"
+	envAuthorizationOutboxLease           = "STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE"
+	envBlobDeletionOutboxLimit            = "STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_LIMIT"
+	envBlobDeletionOutboxEvery            = "STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL"
+	envBlobDeletionOutboxLease            = "STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE"
+	envBlobDeletionOutboxMaxAttempts      = "STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS"
+	envInvitationTTL                      = "STUFF_STASH_INVITATION_TTL"
+	envDefaultPageLimit                   = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
+	envMaxPageLimit                       = "STUFF_STASH_MAX_PAGE_LIMIT"
+	envBlobStorageMode                    = "STUFF_STASH_BLOB_STORAGE_MODE"
+	envBlobStoragePath                    = "STUFF_STASH_BLOB_STORAGE_PATH"
+	envS3Endpoint                         = "STUFF_STASH_S3_ENDPOINT"
+	envS3AccessKey                        = "STUFF_STASH_S3_ACCESS_KEY"
+	envS3SecretKey                        = "STUFF_STASH_S3_SECRET_KEY"
+	envS3Bucket                           = "STUFF_STASH_S3_BUCKET"
+	envS3Region                           = "STUFF_STASH_S3_REGION"
+	envS3Secure                           = "STUFF_STASH_S3_SECURE"
+	envMaxAttachmentBytes                 = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
+	envPrimaryThumbnailWarmLimit          = "STUFF_STASH_PRIMARY_THUMBNAIL_WARM_LIMIT"
+	envPrimaryThumbnailWarmConcurrent     = "STUFF_STASH_PRIMARY_THUMBNAIL_WARM_CONCURRENCY"
+	envPrimaryThumbnailWarmTimeout        = "STUFF_STASH_PRIMARY_THUMBNAIL_WARM_TIMEOUT"
+	envVoiceDevFakeEnabled                = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
+	envVoiceGoogleEnabled                 = "STUFF_STASH_VOICE_GOOGLE_ENABLED"
+	envVoiceProviderHTTPTimeout           = "STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT"
+	envGoogleCloudProject                 = "STUFF_STASH_GOOGLE_CLOUD_PROJECT"
+	envGoogleCloudLocation                = "STUFF_STASH_GOOGLE_CLOUD_LOCATION"
+	envGoogleGeminiModel                  = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
+	envGoogleTTSLanguageCode              = "STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE"
+	envGoogleTTSVoiceName                 = "STUFF_STASH_GOOGLE_TTS_VOICE_NAME"
+	envGoogleCredentialMode               = "STUFF_STASH_GOOGLE_CREDENTIAL_MODE"
+	envGoogleAccessToken                  = "STUFF_STASH_GOOGLE_ACCESS_TOKEN"
+	envProviderCredentialKeyID            = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID"
+	envProviderCredentialKey              = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY"
+	defaultHTTPAddr                       = ":8080"
+	defaultHTTPReadHeader                 = 5 * time.Second
+	defaultHTTPRead                       = 15 * time.Second
+	defaultHTTPWrite                      = 30 * time.Second
+	defaultHTTPIdle                       = 60 * time.Second
+	defaultHTTPMaxJSONBodyBytes           = 1024 * 1024
+	defaultHTTPRateLimitEnabled           = true
+	defaultHTTPRateLimitRequests          = DefaultHTTPRateLimitRequests
+	defaultHTTPRateLimitWindow            = time.Minute
+	defaultHTTPRateLimitBurst             = DefaultHTTPRateLimitBurst
+	defaultAuthMode                       = "local-dev"
+	defaultAuthzMode                      = "memory"
+	defaultRepositoryMode                 = "memory"
+	defaultSpiceDBSchemaPath              = "deploy/spicedb/schema.zed"
+	defaultAuthorizationLimit             = 25
+	defaultAuthorizationEvery             = 10 * time.Second
+	defaultAuthorizationLease             = 30 * time.Second
+	defaultBlobDeletionLimit              = 25
+	defaultBlobDeletionEvery              = 10 * time.Second
+	defaultBlobDeletionLease              = 30 * time.Second
+	defaultBlobDeletionMaxAttempts        = 5
+	defaultInvitationTTL                  = 7 * 24 * time.Hour
+	defaultDefaultPageLimit               = 50
+	defaultMaxPageLimit                   = 100
+	defaultBlobStorageMode                = "filesystem"
+	defaultBlobStoragePath                = ".stuffstash/blobs"
+	defaultS3Region                       = "garage"
+	defaultS3Secure                       = true
+	defaultMaxAttachmentBytes             = 25 * 1024 * 1024
+	defaultPrimaryThumbnailWarmLimit      = 12
+	defaultPrimaryThumbnailWarmConcurrent = 4
+	defaultPrimaryThumbnailWarmTimeout    = 10 * time.Second
+	defaultSpiceDBTLSEnabled              = true
+	defaultSpiceDBBootstrapMode           = false
+	defaultVoiceDevFakeEnabled            = false
+	defaultVoiceGoogleEnabled             = false
+	defaultVoiceProviderHTTPTimeout       = 60 * time.Second
+	defaultGoogleCloudLocation            = "us-central1"
+	defaultGoogleGeminiModel              = "gemini-2.5-flash-lite"
+	defaultGoogleTTSLanguageCode          = "en-US"
+	defaultGoogleTTSVoiceName             = "en-US-Standard-C"
 )
 
 const (
@@ -156,6 +162,9 @@ type Config struct {
 	S3Region                         string
 	S3Secure                         bool
 	MaxAttachmentBytes               int
+	PrimaryThumbnailWarmLimit        int
+	PrimaryThumbnailWarmConcurrency  int
+	PrimaryThumbnailWarmTimeout      time.Duration
 	VoiceDevFakeEnabled              bool
 	VoiceGoogleEnabled               bool
 	VoiceProviderHTTPTimeout         time.Duration
@@ -215,6 +224,9 @@ func Load() Config {
 		S3Region:                         envOrDefault(envS3Region, defaultS3Region),
 		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
+		PrimaryThumbnailWarmLimit:        intEnvOrDefault(envPrimaryThumbnailWarmLimit, defaultPrimaryThumbnailWarmLimit),
+		PrimaryThumbnailWarmConcurrency:  intEnvOrDefault(envPrimaryThumbnailWarmConcurrent, defaultPrimaryThumbnailWarmConcurrent),
+		PrimaryThumbnailWarmTimeout:      durationEnvOrDefault(envPrimaryThumbnailWarmTimeout, defaultPrimaryThumbnailWarmTimeout),
 		VoiceDevFakeEnabled:              boolEnvOrDefault(envVoiceDevFakeEnabled, defaultVoiceDevFakeEnabled),
 		VoiceGoogleEnabled:               boolEnvOrDefault(envVoiceGoogleEnabled, defaultVoiceGoogleEnabled),
 		VoiceProviderHTTPTimeout:         durationEnvOrDefault(envVoiceProviderHTTPTimeout, defaultVoiceProviderHTTPTimeout),

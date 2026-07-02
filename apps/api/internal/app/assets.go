@@ -5,6 +5,9 @@ import (
 
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type CreateAssetInput = assetapp.CreateAssetInput
@@ -40,5 +43,24 @@ func (a App) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) e
 }
 
 func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsResult, error) {
-	return a.assetService.ListAssets(ctx, input)
+	result, err := a.assetService.ListAssets(ctx, input)
+	if err != nil {
+		return ListAssetsResult{}, err
+	}
+	a.warmPrimarySmallThumbnails(ctx, primaryPhotosForAssets(result.Items, result.PrimaryPhotos))
+	return result, nil
+}
+
+func primaryPhotosForAssets(items []asset.Asset, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment) []media.Attachment {
+	photos := make([]media.Attachment, 0, len(items))
+	for _, item := range items {
+		ref := ports.AttachmentAssetReference{
+			InventoryID: inventory.InventoryID(item.InventoryID.String()),
+			AssetID:     item.ID,
+		}
+		if photo, ok := primaryPhotos[ref]; ok {
+			photos = append(photos, photo)
+		}
+	}
+	return photos
 }

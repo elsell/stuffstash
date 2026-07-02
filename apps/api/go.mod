@@ -10,8 +10,9 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/minio/minio-go/v7 v7.2.0
 	github.com/oklog/ulid/v2 v2.1.1
-	golang.org/x/oauth2 v0.36.0
 	golang.org/x/image v0.37.0
+	golang.org/x/oauth2 v0.36.0
+	golang.org/x/sync v0.20.0
 	google.golang.org/grpc v1.80.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0
@@ -48,7 +49,6 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/net v0.53.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260414002931-afd174a4e478 // indirect
