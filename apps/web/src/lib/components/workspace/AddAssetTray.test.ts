@@ -33,6 +33,7 @@ describe('AddAssetTray', () => {
       }
     });
 
+    await flush();
     input('#asset-title', 'Tape measure');
     input('#quick-parent-title', 'Garage shelf');
     clickLast('Container');
@@ -80,6 +81,7 @@ describe('AddAssetTray', () => {
       }
     });
 
+    await flush();
     input('#asset-title', 'Tape measure');
     input('#quick-parent-title', 'Garage shelf');
     clickLast('Container');
@@ -100,6 +102,37 @@ describe('AddAssetTray', () => {
       parentQuickCreate: undefined
     });
   });
+
+  it('focuses the title field, seeds the requested kind, and closes on Escape', async () => {
+    let closeCount = 0;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        initialKind: 'location',
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {
+          closeCount += 1;
+        },
+        onSave: async () => ({ saved: true })
+      }
+    });
+
+    await flush();
+
+    expect(document.activeElement?.id).toBe('asset-title');
+    expect(button('Location').getAttribute('aria-pressed')).toBe('true');
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    if (!dialog) throw new Error('Missing dialog');
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(closeCount).toBe(1);
+  });
 });
 
 function input(selector: string, value: string): void {
@@ -110,9 +143,13 @@ function input(selector: string, value: string): void {
 }
 
 function click(text: string): void {
+  button(text).click();
+}
+
+function button(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(text));
   if (!button) throw new Error(`Missing button ${text}`);
-  button.click();
+  return button;
 }
 
 function clickLast(text: string): void {

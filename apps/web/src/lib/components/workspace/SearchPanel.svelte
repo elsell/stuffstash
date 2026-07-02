@@ -45,22 +45,24 @@
     <Button.Root disabled={busy || query.trim().length === 0}>Search</Button.Root>
   </form>
   <div class="search-filters" aria-label="Search filters">
-    <div class="lifecycle-switcher" role="group" aria-label="Result lifecycle">
+    <div class="filter-control" role="group" aria-label="Result lifecycle">
       {#each lifecycleOptions as option}
         <Button.Root
-          variant={lifecycleState === option ? 'secondary' : 'outline'}
+          variant="ghost"
           aria-pressed={lifecycleState === option}
+          data-selected={lifecycleState === option}
           onclick={() => { lifecycleState = option; if (query.trim()) onSearch(); }}
         >
           {option === 'active' ? 'Active' : option === 'archived' ? 'Archived' : 'All'}
         </Button.Root>
       {/each}
     </div>
-    <div class="lifecycle-switcher" role="group" aria-label="Search mode">
+    <div class="filter-control" role="group" aria-label="Search mode">
       {#each modeOptions as option}
         <Button.Root
-          variant={searchMode === option ? 'secondary' : 'outline'}
+          variant="ghost"
           aria-pressed={searchMode === option}
+          data-selected={searchMode === option}
           onclick={() => { searchMode = option; if (query.trim()) onSearch(); }}
         >
           {option === 'fuzzy' ? 'Contains' : 'Exact'}

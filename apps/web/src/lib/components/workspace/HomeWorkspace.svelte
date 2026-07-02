@@ -30,21 +30,23 @@
 <section class="workspace-main" aria-labelledby="home-title">
   <div class="section-heading">
     <div>
-      <h1 id="home-title">{lifecycleState === 'active' ? 'Locations' : 'Archived assets'}</h1>
-      <p>{lifecycleState === 'active' ? 'Browse the places where your things live.' : 'Assets removed from active browsing.'}</p>
+      <h1 id="home-title">{lifecycleState === 'active' ? 'Home' : 'Archived assets'}</h1>
+      <p>{lifecycleState === 'active' ? 'Recently added and the places where your things live.' : 'Assets removed from active browsing.'}</p>
     </div>
     <div class="heading-actions">
-      <div class="lifecycle-switcher" role="group" aria-label="Asset lifecycle">
+      <div class="filter-control" role="group" aria-label="Asset lifecycle">
         <Button.Root
-          variant={lifecycleState === 'active' ? 'secondary' : 'outline'}
+          variant="ghost"
           aria-pressed={lifecycleState === 'active'}
+          data-selected={lifecycleState === 'active'}
           onclick={() => onSelectLifecycle('active')}
         >
           Active
         </Button.Root>
         <Button.Root
-          variant={lifecycleState === 'archived' ? 'secondary' : 'outline'}
+          variant="ghost"
           aria-pressed={lifecycleState === 'archived'}
+          data-selected={lifecycleState === 'archived'}
           onclick={() => onSelectLifecycle('archived')}
         >
           Archived
@@ -55,6 +57,32 @@
       {/if}
     </div>
   </div>
+
+  {#if lifecycleState === 'active'}
+    <section class="recent-section" aria-labelledby="recent-title">
+      <div class="section-heading compact">
+        <h2 id="recent-title">Recently added</h2>
+      </div>
+      {#if recentAssets.length === 0}
+        <div class="empty-state">
+          <p>No items or containers yet.</p>
+        </div>
+      {:else}
+        <div class="recent-rail" aria-label="Recently added assets">
+          {#each recentAssets as asset}
+            <Button.Root variant="ghost" class="recent-card" onclick={() => onOpenAsset(asset)}>
+              <AssetThumb {asset} size="lg" />
+              <span>
+                <strong>{asset.title}</strong>
+                <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
+                <small>{asset.containmentTrail}</small>
+              </span>
+            </Button.Root>
+          {/each}
+        </div>
+      {/if}
+    </section>
+  {/if}
 
   {#if lifecycleState === 'archived'}
     {#if archivedAssets.length === 0}
@@ -82,6 +110,9 @@
       <Button.Root onclick={onOpenAdd}>Add first location</Button.Root>
     </div>
   {:else}
+    <div class="section-heading compact">
+      <h2>Locations</h2>
+    </div>
     <div class="location-grid">
       {#each locations as summary}
         <Button.Root
@@ -101,34 +132,4 @@
     </div>
   {/if}
 
-  {#if lifecycleState === 'active'}
-    <section class="recent-section" aria-labelledby="recent-title">
-      <div class="section-heading compact">
-        <h2 id="recent-title">Recently added</h2>
-      </div>
-      {#if recentAssets.length === 0}
-        <div class="empty-state">
-          <p>No items or containers yet.</p>
-        </div>
-      {:else}
-        <div class="asset-list">
-          {#each recentAssets as asset}
-            <Button.Root variant="ghost" class="asset-row" onclick={() => onOpenAsset(asset)}>
-              <AssetThumb {asset} />
-              <span class="asset-row-main">
-                <strong>{asset.title}</strong>
-                {#if asset.description}
-                  <small>{asset.description}</small>
-                {/if}
-              </span>
-              <span class="asset-row-meta">
-                <Badge variant="outline">{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</Badge>
-                <small>{asset.containmentTrail}</small>
-              </span>
-            </Button.Root>
-          {/each}
-        </div>
-      {/if}
-    </section>
-  {/if}
 </section>

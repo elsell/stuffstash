@@ -17,6 +17,7 @@ This spec covers:
 - Inventory home workspace.
 - Location browsing and location-contained asset list behavior.
 - Asset detail view behavior.
+- URL-addressable workspace routes and deep links.
 - Add item/container/location interaction.
 - Photo attachment affordances during creation.
 - Search placement and high-level search expectations.
@@ -75,6 +76,41 @@ The UI must not expose persistence, SpiceDB, OIDC, generated DTOs, storage keys,
 ## Web Shell
 
 The authenticated web app must use a persistent product shell.
+
+## URL And Deep-Link Model
+
+Every durable web workspace destination must be addressable through a stable URL path, not only in component-local state.
+
+The first canonical URL model is:
+
+- `/` for the selected inventory home.
+- `/tenants/{tenantId}/inventories/{inventoryId}` for an inventory home.
+- `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/edit` for the asset edit state when edit is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
+- `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
+
+The web app may accept `/inventories/{inventoryId}` and descendant paths as compatibility aliases for an inventory that is visible in the current tenant context. When a compatibility alias can be resolved, the app should replace the browser URL with the canonical tenant-scoped path.
+
+The route path owns durable navigation state. Query parameters may own transient filters such as:
+
+- `lifecycle=active|archived`.
+- `q={search query}`.
+- `mode=fuzzy|exact`.
+
+Deep links must preserve tenant and inventory boundaries:
+
+- If the requested tenant is visible to the principal, the app should select it before rendering the route state.
+- If the requested inventory is visible in the selected tenant context, the app should select it before rendering the route state.
+- If the requested tenant is not visible to the principal, the app must show a calm unavailable or setup state rather than rendering stale local data.
+- If the requested inventory is not visible in the current tenant context, the app must show a calm unavailable or setup state rather than rendering stale local data.
+- A location deep link must only open an asset whose kind is `location`.
+- An asset deep link must load the selected asset through the repository port and API adapter.
+- Unsupported paths must fall back to the inventory home without crashing.
+
+Navigation controls must update the URL when they change durable workspace state, and browser back/forward controls must restore the corresponding workspace state.
 
 Desktop:
 
@@ -179,7 +215,7 @@ Top-level location browsing:
 
 Recently added:
 
-- Recently added assets may appear below the location browse surface.
+- Recently added assets should appear before location browsing as a compact horizontal rail when active assets exist.
 - Recently added must not dominate the page or compete with search/add.
 - Recently added rows must open the asset detail view.
 
@@ -226,6 +262,23 @@ The first asset detail view must include:
 - Primary actions for `Edit` and `Move` as visible affordances.
 - A secondary actions affordance for future actions.
 
+Desktop asset detail layout:
+
+- The primary photo/gallery must sit on the left or top-left at roughly 320-420px wide when viewport space allows.
+- The asset title, location trail, lifecycle state, kind, custom type, and primary actions must sit beside the photo/gallery.
+- Description and custom fields belong below the hero identity area.
+- Photos must be presented near the hero as asset identity media, with a thumbnail rail when more than one image is available.
+- The first implementation may choose the first active image attachment as the primary photo until explicit primary-photo selection is specified.
+- Non-image attachments such as receipts, manuals, PDFs, and supporting documents must be visually separated from photos and appear lower than the primary photo/gallery.
+
+Mobile asset detail layout:
+
+- The primary photo/gallery must appear first.
+- Asset title and location trail must appear immediately after the photo/gallery so the user can confirm identity without a long scroll.
+- `Edit`, `Move`, and photo upload actions must remain close to the title and identity area.
+- The photo thumbnail rail must appear before non-image documents.
+- The photo area must not consume so much vertical space that the title and location are hidden for common mobile viewport heights.
+
 The detail view is the preferred home for asset-level actions such as edit, move, archive, sharing-related actions, attachment management, and future custom field editing.
 
 Asset detail must support:
@@ -239,6 +292,7 @@ Asset detail must support:
 Asset detail loading and actions must use real API-backed boundaries:
 
 - Opening an asset detail must load the selected asset by ID through the frontend repository port and API adapter rather than relying only on the current list row.
+- Asset detail API responses must include the same safe primary photo summary used by asset list and search responses when the asset has an active image attachment.
 - The API adapter must call the generated client wrapper for `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` and map the DTO into the frontend asset domain model.
 - Editing asset title and description must go through a repository update method backed by the generated client wrapper.
 - Moving an asset must update `parentAssetId` through the same API-backed update path and must use valid parent targets from the current inventory, not free-form IDs.
@@ -299,9 +353,21 @@ Mobile:
 Search behavior:
 
 - Search should resolve to authorized assets, containers, and locations in the selected inventory.
+- Search should provide autocomplete-style suggestions from visible inventory assets while preserving the repository-backed search action as the authoritative result source.
 - Search result rows should open asset or location detail/list surfaces.
 - No-results and denied states must be explicit and calm.
 - Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
+
+## Consistent Controls
+
+The workspace must use consistent controls for repeated interaction patterns:
+
+- Lifecycle and search-mode filters must use a segmented tab/filter control rather than unrelated pressed buttons.
+- Durable navigation must use nav links/buttons with clear current state.
+- Icon-only controls must have accessible names.
+- Creation and edit controls must use the local shadcn-style button, input, select/tabs, label, textarea, and dialog/sheet primitives or product-specific compositions over those primitives.
+- Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
+- Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 
 ## Inventory Settings
 

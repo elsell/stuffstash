@@ -1,6 +1,8 @@
 <script lang="ts">
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
+  import FileText from '@lucide/svelte/icons/file-text';
+  import Image from '@lucide/svelte/icons/image';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
@@ -20,17 +22,29 @@
     UpdateAssetDraft
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
-  import AssetThumb from './AssetThumb.svelte';
+  import KindIcon from './KindIcon.svelte';
+
+  type DetailPhoto = {
+    id: string;
+    url: string;
+    alt: string;
+    fileName: string;
+    sizeBytes?: number;
+    isPrimary: boolean;
+  };
 
   let {
     asset,
     canEdit,
+    editOpen = false,
     parentTargets,
     customFieldDefinitions,
     saving,
     attachments,
     mediaPolicy,
     onBack,
+    onEditOpen,
+    onEditClose,
     onSave,
     onArchive,
     onRestore,
@@ -41,12 +55,15 @@
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
+    editOpen?: boolean;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
+    onEditOpen: () => void;
+    onEditClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -63,9 +80,18 @@
   let customFieldValues = $state<Record<string, string>>({});
   let saveError = $state('');
   let uploadError = $state('');
-  let attachmentInput = $state<HTMLInputElement | null>(null);
+  let photoInput = $state<HTMLInputElement | null>(null);
+  let fileInput = $state<HTMLInputElement | null>(null);
   let selectedAttachment = $state<AssetAttachment | null>(null);
+  let selectedPhotoId = $state<string | null>(null);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
+  let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
+  let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
+  let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
+  let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
+  let heroPhoto = $derived(
+    detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]
+  );
   let displayFields = $derived(
     customFieldDefinitions.filter(
       (definition) =>
@@ -74,7 +100,19 @@
     )
   );
 
-  function openEdit(): void {
+  $effect(() => {
+    if (editOpen && canEdit && asset.lifecycleState === 'active') {
+      openEdit(false);
+    }
+  });
+
+  $effect(() => {
+    if (selectedPhotoId && !detailPhotos.some((photo) => photo.id === selectedPhotoId)) {
+      selectedPhotoId = null;
+    }
+  });
+
+  function openEdit(notify = true): void {
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -82,6 +120,9 @@
       applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
     );
     panel = 'edit';
+    if (notify) {
+      onEditOpen();
+    }
   }
 
   function openMove(): void {
@@ -106,9 +147,17 @@
         parentAssetId,
         customFields: buildCustomFields()
       });
-      panel = 'none';
+      closePanel();
     } catch (caught) {
       saveError = caught instanceof Error ? caught.message : 'Unable to save asset.';
+    }
+  }
+
+  function closePanel(): void {
+    const previousPanel = panel;
+    panel = 'none';
+    if (previousPanel === 'edit') {
+      onEditClose();
     }
   }
 
@@ -148,7 +197,7 @@
     }
   }
 
-  async function uploadAttachment(event: Event): Promise<void> {
+  async function uploadAttachment(event: Event, fallbackMessage = 'Unable to upload attachment.'): Promise<void> {
     uploadError = '';
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
@@ -176,7 +225,7 @@
       });
       input.value = '';
     } catch (caught) {
-      uploadError = caught instanceof Error ? caught.message : 'Unable to upload attachment.';
+      uploadError = caught instanceof Error ? caught.message : fallbackMessage;
       input.value = '';
     }
   }
@@ -239,6 +288,32 @@
     return mediaPolicy.supportedContentTypes.includes(contentType as SelectedAttachment['contentType']);
   }
 
+  function buildDetailPhotos(currentAsset: AssetViewModel, imageAttachments: AssetAttachment[]): DetailPhoto[] {
+    const photos: DetailPhoto[] = imageAttachments
+      .filter((attachment) => attachment.thumbnailUrl)
+      .map((attachment) => ({
+        id: attachment.id,
+        url: attachment.id === currentAsset.photo?.id ? currentAsset.photo.url : (attachment.thumbnailUrl ?? ''),
+        alt: attachment.id === currentAsset.photo?.id ? currentAsset.photo.alt : attachment.fileName,
+        fileName: attachment.fileName,
+        sizeBytes: attachment.sizeBytes,
+        isPrimary: attachment.id === currentAsset.photo?.id
+      }));
+    if (currentAsset.photo && !photos.some((photo) => photo.id === currentAsset.photo?.id)) {
+      photos.unshift({
+        id: currentAsset.photo.id,
+        url: currentAsset.photo.url,
+        alt: currentAsset.photo.alt,
+        fileName: currentAsset.photo.alt,
+        isPrimary: true
+      });
+    }
+    if (currentAsset.photo && photos.length > 0 && !photos.some((photo) => photo.isPrimary)) {
+      photos[0] = { ...photos[0], isPrimary: true };
+    }
+    return photos;
+  }
+
   function createClientAttachmentId(): string {
     return typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
@@ -248,8 +323,70 @@
 
 <section class="workspace-main detail-view" aria-labelledby="asset-title">
   <Button.Root variant="ghost" class="back-button" onclick={onBack}><ArrowLeft /> Back</Button.Root>
-  <div class="asset-detail-grid">
-    <AssetThumb asset={asset} size="lg" />
+  <Input
+    bind:ref={photoInput}
+    aria-label="Choose photo"
+    class="visually-hidden"
+    type="file"
+    accept={imageContentTypes.join(',')}
+    disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
+    onchange={(event) => { void uploadAttachment(event, 'Unable to upload photo.'); }}
+  />
+  <Input
+    bind:ref={fileInput}
+    aria-label="Choose file"
+    class="visually-hidden"
+    type="file"
+    accept={mediaPolicy.supportedContentTypes.join(',')}
+    disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
+    onchange={(event) => { void uploadAttachment(event); }}
+  />
+  <div class="asset-detail-hero">
+    <div class="asset-photo-panel" aria-label="Asset photos">
+      <div class="asset-hero-photo">
+        {#if heroPhoto}
+          <img src={heroPhoto.url} alt={heroPhoto.alt} />
+        {:else}
+          <div class="asset-hero-fallback">
+            <KindIcon kind={asset.kind} />
+          </div>
+        {/if}
+      </div>
+      <div class="photo-panel-actions">
+        <Button.Root
+          variant="outline"
+          disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
+          onclick={() => photoInput?.click()}
+        >
+          <Image /> Add photo
+        </Button.Root>
+      </div>
+      {#if detailPhotos.length > 0}
+        <div class="photo-rail" aria-label="Photos">
+          {#each detailPhotos as photo}
+            <Button.Root
+              variant="ghost"
+              class={photo.id === heroPhoto?.id ? 'active' : ''}
+              aria-label={`Show ${photo.fileName}`}
+              aria-pressed={photo.id === heroPhoto?.id}
+              onclick={() => { selectedPhotoId = photo.id; }}
+            >
+              <img src={photo.url} alt="" />
+              {#if photo.isPrimary}
+                <span>Primary</span>
+              {/if}
+            </Button.Root>
+          {/each}
+        </div>
+      {:else}
+        <div class="empty-state compact-empty">
+          <p>No photos yet.</p>
+        </div>
+      {/if}
+      {#if uploadError}
+        <p class="denied-note" role="alert">{uploadError}</p>
+      {/if}
+    </div>
     <div class="asset-detail-copy">
       <div class="detail-title-row">
         <div>
@@ -264,6 +401,31 @@
         <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
         <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
       </dl>
+      <div class="detail-actions">
+        <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={() => openEdit()}><Pencil /> Edit</Button.Root>
+        <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openMove}><MoveRight /> Move</Button.Root>
+        <Button.Root
+          variant="outline"
+          disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
+          onclick={() => photoInput?.click()}
+        >
+          <Image /> Add photo
+        </Button.Root>
+        {#if asset.lifecycleState === 'active'}
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archive(); }}><Archive /> Archive</Button.Root>
+        {:else}
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void restore(); }}><RotateCcw /> Restore</Button.Root>
+        {/if}
+      </div>
+      {#if !canEdit}
+        <p class="denied-note">Edit actions require asset edit access.</p>
+      {/if}
+    </div>
+  </div>
+  <div class="asset-detail-sections">
+    <section class="detail-section" aria-labelledby="asset-description-title">
+      <h2 id="asset-description-title">Details</h2>
+      <p>{asset.description || 'No description.'}</p>
       {#if displayFields.length > 0}
         <dl class="detail-list custom-detail-list" aria-label="Custom field values">
           {#each displayFields as field}
@@ -274,56 +436,29 @@
           {/each}
         </dl>
       {/if}
-      <div class="detail-actions">
-        <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openEdit}><Pencil /> Edit</Button.Root>
-        <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openMove}><MoveRight /> Move</Button.Root>
-        {#if asset.lifecycleState === 'active'}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archive(); }}><Archive /> Archive</Button.Root>
-        {:else}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void restore(); }}><RotateCcw /> Restore</Button.Root>
-        {/if}
-      </div>
-      {#if !canEdit}
-        <p class="denied-note">Edit actions require asset edit access.</p>
-      {/if}
-      <section class="attachment-section" aria-labelledby="attachments-title">
+    </section>
+    <section class="attachment-section" aria-labelledby="files-title">
         <div class="section-heading compact">
-          <h2 id="attachments-title">Attachments</h2>
+          <h2 id="files-title">Files</h2>
           <div class="attachment-upload">
-            <Input
-              bind:ref={attachmentInput}
-              aria-label="Choose attachment"
-              class="visually-hidden"
-              type="file"
-              accept={mediaPolicy.supportedContentTypes.join(',')}
-              disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
-              onchange={(event) => { void uploadAttachment(event); }}
-            />
             <Button.Root
               variant="outline"
               disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
-              onclick={() => attachmentInput?.click()}
+              onclick={() => fileInput?.click()}
             >
-              <Upload /> Upload
+              <Upload /> Upload file
             </Button.Root>
           </div>
         </div>
-        {#if uploadError}
-          <p class="denied-note" role="alert">{uploadError}</p>
-        {/if}
-        {#if attachments.length === 0}
+        {#if fileAttachments.length === 0}
           <div class="empty-state">
-            <p>No active attachments.</p>
+            <p>No active files.</p>
           </div>
         {:else}
           <div class="asset-list">
-            {#each attachments as attachment}
+            {#each fileAttachments as attachment}
               <div class="attachment-row">
-                {#if attachment.thumbnailUrl}
-                  <img src={attachment.thumbnailUrl} alt={attachment.fileName} />
-                {:else}
-                  <div class="asset-thumb asset-thumb-sm"><Archive aria-hidden="true" /></div>
-                {/if}
+                <div class="asset-thumb asset-thumb-sm"><FileText aria-hidden="true" /></div>
                 <span class="asset-row-main">
                   <strong>{attachment.fileName}</strong>
                   <small>{attachment.contentType} / {formatBytes(attachment.sizeBytes)}</small>
@@ -397,7 +532,7 @@
             </div>
           {/if}
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={() => { panel = 'none'; }}>Cancel</Button.Root>
+            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
             <Button.Root disabled={saving || title.trim().length === 0} onclick={() => { void save(); }}>Save</Button.Root>
           </div>
           {#if saveError}
@@ -465,6 +600,5 @@
         </div>
         <Button.Root variant="destructive" disabled={!canEdit || saving} onclick={() => { panel = 'delete'; }}><Trash2 /> Delete</Button.Root>
       </div>
-    </div>
   </div>
 </section>

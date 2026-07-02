@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { parseWorkspaceRoute, workspaceRouteHref, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
   import {
     canCreateAsset,
     canEditAsset,
@@ -9,6 +11,7 @@
     type AddAssetSubmission,
     type Asset,
     type AssetAttachment,
+    type AssetKind,
     type AssetLifecycleFilter,
     type CustomAssetType,
     type CustomFieldDefinition,
@@ -53,6 +56,8 @@
   let selectedLocationId = $state<string | null>(null);
   let selectedAssetId = $state<string | null>(null);
   let addOpen = $state(false);
+  let addKind = $state<AssetKind>('item');
+  let editOpen = $state(false);
   let busy = $state(false);
   let message = $state('');
   let error = $state('');
@@ -65,6 +70,8 @@
   let loadedAssetDetail = $state<Asset | null>(null);
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let assetDetailRequestId = 0;
+  let applyingRoute = false;
+  let routeUnavailable = $state('');
 
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
@@ -82,14 +89,25 @@
         : assets.find((asset) => asset.id === selectedAssetId) ?? null
       : null
   );
+  let searchSuggestions = $derived(buildSearchSuggestions(assets, searchQuery));
   let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
   let editAssetAllowed = $derived(canEditAsset(selectedInventory));
   let canCreateStarter = $derived(!data.context.selectedTenantId || canCreateInventory(selectedTenant));
   let userLabel = $derived(data.context.principal.email ?? data.context.principal.id);
 
+  onMount(() => {
+    void applyRoute(parseWorkspaceRoute(new URL(window.location.href)));
+    const onPopState = () => {
+      void applyRoute(parseWorkspaceRoute(new URL(window.location.href)));
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  });
+
   async function selectInventory(tenantId: string, inventoryId: string): Promise<void> {
     await run(async () => {
       data = await repository.selectInventory(tenantId, inventoryId);
+      routeUnavailable = '';
       invalidateAssetDetailLoad();
       resetSearchState();
       mode = 'home';
@@ -97,12 +115,16 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      if (!applyingRoute) {
+        replaceRoute({ mode: 'home', tenantId, inventoryId, lifecycleState: data.context.assetLifecycleState });
+      }
     });
   }
 
   async function selectTenant(tenantId: string): Promise<void> {
     await run(async () => {
       data = await repository.selectTenant(tenantId);
+      routeUnavailable = '';
       invalidateAssetDetailLoad();
       resetSearchState();
       mode = data.context.inventories.length > 0 ? 'home' : 'settings';
@@ -110,6 +132,14 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      if (!applyingRoute) {
+        replaceRoute({
+          mode: 'home',
+          tenantId,
+          inventoryId: data.context.selectedInventoryId,
+          lifecycleState: data.context.assetLifecycleState
+        });
+      }
     });
   }
 
@@ -118,8 +148,10 @@
       data = data.context.selectedTenantId
         ? await repository.createInventory(data.context.selectedTenantId, 'Household')
         : await repository.createTenantWithInventory({ tenantName: 'Home', inventoryName: 'Household' });
+      routeUnavailable = '';
       mode = 'home';
       message = 'Created Household.';
+      replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
     });
   }
 
@@ -196,6 +228,7 @@
         message = `Saved ${asset.title}.`;
       }
       addOpen = false;
+      replaceRoute({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id });
       return { saved: true };
     } catch (caught) {
       const failure = caught instanceof Error ? caught.message : 'Action failed.';
@@ -263,10 +296,30 @@
         mode: searchMode
       });
       mode = 'search';
+      if (!applyingRoute) {
+        replaceRoute({
+          mode: 'search',
+          tenantId: data.context.selectedTenantId,
+          inventoryId: data.context.selectedInventoryId,
+          searchQuery: query,
+          searchLifecycleState,
+          searchMode
+        });
+      }
     } catch (caught) {
       searchError = caught instanceof Error ? caught.message : 'Search failed.';
       error = searchError;
       mode = 'search';
+      if (!applyingRoute) {
+        replaceRoute({
+          mode: 'search',
+          tenantId: data.context.selectedTenantId,
+          inventoryId: data.context.selectedInventoryId,
+          searchQuery: query,
+          searchLifecycleState,
+          searchMode
+        });
+      }
     } finally {
       busy = false;
     }
@@ -284,6 +337,9 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      if (!applyingRoute) {
+        replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: selectedInventory.id, lifecycleState });
+      }
     });
   }
 
@@ -392,16 +448,11 @@
   }
 
   function openLocation(asset: Asset): void {
-    invalidateAssetDetailLoad();
-    selectedLocationId = asset.id;
-    selectedAssetId = null;
-    loadedAssetDetail = null;
-    selectedAssetAttachments = [];
-    mode = 'location';
+    navigateTo({ mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id });
   }
 
   function openAsset(asset: Asset): void {
-    void loadAssetDetail(asset.tenantId, asset.inventoryId, asset.id);
+    navigateTo({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id });
   }
 
   function openAssetById(assetId: string): void {
@@ -422,20 +473,228 @@
     searchMode = 'fuzzy';
   }
 
-  async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+  async function applyRoute(route: WorkspaceRouteState): Promise<void> {
+    applyingRoute = true;
+    try {
+      const shouldCanonicalizeAlias = !!route.inventoryId && !route.tenantId;
+      routeUnavailable = '';
+      addOpen = route.action === 'add';
+      addKind = route.addKind ?? 'item';
+      editOpen = route.action === 'edit';
+      searchQuery = route.searchQuery;
+      searchLifecycleState = route.searchLifecycleState;
+      searchMode = route.searchMode;
+
+      if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
+        const tenant = data.context.tenants.find((candidate) => candidate.id === route.tenantId);
+        if (tenant) {
+          await selectTenant(route.tenantId);
+        } else {
+          showUnavailableRoute('That tenant is not available to this account.');
+          return;
+        }
+      }
+
+      if (route.inventoryId && route.inventoryId !== data.context.selectedInventoryId) {
+        const inventory = data.context.inventories.find(
+          (candidate) =>
+            candidate.id === route.inventoryId &&
+            (route.tenantId ? candidate.tenantId === route.tenantId : candidate.tenantId === data.context.selectedTenantId)
+        );
+        if (inventory) {
+          await selectInventory(inventory.tenantId, inventory.id);
+        } else {
+          showUnavailableRoute('That inventory is not available in the current workspace.');
+          return;
+        }
+      }
+
+      if (route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
+        await selectAssetLifecycle(route.lifecycleState);
+      }
+
+      if (route.mode === 'location' && route.locationId) {
+        const location = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        if (location) {
+          invalidateAssetDetailLoad();
+          selectedLocationId = location.id;
+          selectedAssetId = null;
+          loadedAssetDetail = null;
+          selectedAssetAttachments = [];
+          mode = 'location';
+          canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
+        } else {
+          closeDetailToHome();
+        }
+        return;
+      }
+
+      if (route.mode === 'asset' && route.assetId && data.context.selectedInventoryId) {
+        const knownAsset = assets.find((candidate) => candidate.id === route.assetId);
+        let loaded = false;
+        if (knownAsset) {
+          loaded = await loadAssetDetail(knownAsset.tenantId, knownAsset.inventoryId, knownAsset.id);
+        } else if (data.context.selectedTenantId) {
+          loaded = await loadAssetDetail(data.context.selectedTenantId, data.context.selectedInventoryId, route.assetId);
+        }
+        if (!loaded) {
+          showUnavailableRoute('That asset is not available in this inventory.');
+          return;
+        }
+        if (route.action === 'edit' && (!canEditAsset(selectedInventory) || loadedAssetDetail?.lifecycleState !== 'active')) {
+          editOpen = false;
+          replaceRoute({
+            mode: 'asset',
+            tenantId: data.context.selectedTenantId,
+            inventoryId: data.context.selectedInventoryId,
+            assetId: route.assetId
+          });
+          return;
+        }
+        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
+        return;
+      }
+
+      if (route.mode === 'search') {
+        mode = 'search';
+        selectedLocationId = null;
+        selectedAssetId = null;
+        loadedAssetDetail = null;
+        selectedAssetAttachments = [];
+        if (route.searchQuery.trim()) {
+          await search();
+        } else {
+          searchResults = [];
+          searchSubmitted = false;
+          searchError = '';
+        }
+        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
+        return;
+      }
+
+      if (route.mode === 'settings') {
+        mode = route.mode;
+        selectedLocationId = null;
+        selectedAssetId = null;
+        loadedAssetDetail = null;
+        selectedAssetAttachments = [];
+        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
+        return;
+      }
+
+      closeDetailToHome();
+      canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
+    } finally {
+      applyingRoute = false;
+    }
+  }
+
+  function navigateTo(route: Partial<WorkspaceRouteState>): void {
+    const href = workspaceRouteHref(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
+    window.history.pushState({}, '', href);
+    void applyRoute(parseWorkspaceRoute(new URL(window.location.href)));
+  }
+
+  function showUnavailableRoute(messageText: string): void {
+    invalidateAssetDetailLoad();
+    routeUnavailable = messageText;
+    addOpen = false;
+    editOpen = false;
+    mode = 'home';
+    selectedLocationId = null;
+    selectedAssetId = null;
+    loadedAssetDetail = null;
+    selectedAssetAttachments = [];
+    searchResults = [];
+    searchSubmitted = false;
+  }
+
+  function navigateMode(nextMode: WorkspaceMode): void {
+    navigateTo({ mode: nextMode, tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
+  }
+
+  function openAdd(kind: AssetKind = 'item'): void {
+    navigateTo({ action: 'add', addKind: kind, tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
+  }
+
+  function closeAdd(): void {
+    addOpen = false;
+    replaceRoute({
+      mode,
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      lifecycleState: data.context.assetLifecycleState
+    });
+  }
+
+  function openEditRoute(): void {
+    if (selectedAsset) {
+      navigateTo({
+        mode: 'asset',
+        tenantId: selectedAsset.tenantId,
+        inventoryId: selectedAsset.inventoryId,
+        assetId: selectedAsset.id,
+        action: 'edit'
+      });
+    }
+  }
+
+  function closeEditRoute(): void {
+    editOpen = false;
+    if (selectedAsset) {
+      replaceRoute({ mode: 'asset', tenantId: selectedAsset.tenantId, inventoryId: selectedAsset.inventoryId, assetId: selectedAsset.id });
+    }
+  }
+
+  function replaceRoute(route: Partial<WorkspaceRouteState>): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.history.replaceState(
+      {},
+      '',
+      workspaceRouteHref(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null)
+    );
+  }
+
+  function canonicalizeRouteAlias(route: WorkspaceRouteState, shouldCanonicalizeAlias: boolean): void {
+    if (!shouldCanonicalizeAlias || !data.context.selectedTenantId || !data.context.selectedInventoryId) {
+      return;
+    }
+    replaceRoute({
+      ...route,
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId
+    });
+  }
+
+  async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {
     const requestId = ++assetDetailRequestId;
-    await run(async () => {
+    busy = true;
+    error = '';
+    message = '';
+    selectedLocationId = null;
+    selectedAssetId = null;
+    loadedAssetDetail = null;
+    selectedAssetAttachments = [];
+    try {
       const asset = await repository.getAsset(tenantId, inventoryId, assetId);
       const attachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
       if (requestId !== assetDetailRequestId) {
-        return;
+        return false;
       }
       selectedAssetAttachments = attachments;
       replaceWorkspaceAsset(asset);
       loadedAssetDetail = asset;
       selectedAssetId = asset.id;
       mode = 'asset';
-    });
+      return true;
+    } catch (caught) {
+      error = caught instanceof Error ? caught.message : 'Asset could not be loaded.';
+      return false;
+    } finally {
+      busy = false;
+    }
   }
 
   function replaceWorkspaceAsset(asset: Asset): void {
@@ -483,6 +742,14 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    if (!applyingRoute) {
+      replaceRoute({
+        mode: 'home',
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        lifecycleState: data.context.assetLifecycleState
+      });
+    }
   }
 
   function closeDetailToPrevious(): void {
@@ -491,6 +758,23 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    if (!applyingRoute) {
+      replaceRoute(
+        selectedLocationId
+          ? {
+              mode: 'location',
+              tenantId: data.context.selectedTenantId,
+              inventoryId: data.context.selectedInventoryId,
+              locationId: selectedLocationId
+            }
+          : {
+              mode: 'home',
+              tenantId: data.context.selectedTenantId,
+              inventoryId: data.context.selectedInventoryId,
+              lifecycleState: data.context.assetLifecycleState
+            }
+      );
+    }
   }
 
   function invalidateAssetDetailLoad(): void {
@@ -521,6 +805,20 @@
       customAssetTypeLabel: customAssetTypes.find((assetType) => assetType.id === asset.customAssetTypeId)?.displayName
     };
   }
+
+  function buildSearchSuggestions(items: Asset[], query: string): Asset[] {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) {
+      return [];
+    }
+    return items.filter((asset) => {
+      return (
+        asset.title.toLowerCase().includes(normalized) ||
+        asset.description.toLowerCase().includes(normalized) ||
+        asset.customAssetTypeLabel?.toLowerCase().includes(normalized)
+      );
+    });
+  }
 </script>
 
 <div class="product-shell">
@@ -533,7 +831,7 @@
     {userLabel}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
-    onModeChange={(nextMode) => { mode = nextMode; }}
+    onModeChange={navigateMode}
     {onSignOut}
   />
 
@@ -543,16 +841,26 @@
       inventories={data.context.inventories}
       selectedTenantId={data.context.selectedTenantId}
       inventory={selectedInventory}
+      suggestions={searchSuggestions}
       bind:query={searchQuery}
       canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
       onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
       onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
-      onOpenSettings={() => { mode = 'settings'; }}
+      onOpenSettings={() => navigateMode('settings')}
       onSearch={() => { void search(); }}
-      onOpenAdd={() => { addOpen = true; }}
+      onOpenAsset={openAsset}
+      onOpenAdd={openAdd}
     />
 
-    {#if data.context.inventories.length === 0}
+    {#if routeUnavailable}
+      <section class="workspace-main">
+        <div class="empty-state spacious" role="alert">
+          <h1>Workspace unavailable</h1>
+          <p>{routeUnavailable}</p>
+          <Button.Root onclick={() => navigateMode('home')}>Go home</Button.Root>
+        </div>
+      </section>
+    {:else if data.context.inventories.length === 0}
       <section class="workspace-main">
         <div class="empty-state spacious">
           <h1>No inventory yet</h1>
@@ -569,7 +877,7 @@
         location={selectedLocation}
         assets={containedAssets(assets, selectedLocation.id)}
         canEdit={editAssetAllowed}
-        onBack={() => { mode = 'home'; selectedLocationId = null; }}
+        onBack={closeDetailToHome}
         onOpenLocation={openLocation}
         onEditLocation={openAsset}
         onOpenAsset={openAsset}
@@ -583,7 +891,10 @@
         saving={busy}
         attachments={selectedAssetAttachments}
         mediaPolicy={data.context.mediaUploadPolicy}
+        {editOpen}
         onBack={closeDetailToPrevious}
+        onEditOpen={openEditRoute}
+        onEditClose={closeEditRoute}
         onSave={updateAsset}
         onArchive={archiveSelectedAsset}
         onRestore={restoreSelectedAsset}
@@ -624,7 +935,7 @@
         archivedAssets={assets}
         onOpenLocation={openLocation}
         onOpenAsset={openAsset}
-        onOpenAdd={() => { addOpen = true; }}
+        onOpenAdd={() => openAdd('location')}
         onSelectLifecycle={(lifecycleState) => { void selectAssetLifecycle(lifecycleState); }}
       />
     {/if}
@@ -633,18 +944,19 @@
   <MobileNav
     {mode}
     canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
-    onModeChange={(nextMode) => { mode = nextMode; }}
-    onOpenAdd={() => { addOpen = true; }}
+    onModeChange={navigateMode}
+    onOpenAdd={() => openAdd('item')}
   />
 
   <AddAssetTray
     open={addOpen && createAssetAllowed}
+    initialKind={addKind}
     parentTargets={parentTargets(assets)}
     mediaPolicy={data.context.mediaUploadPolicy}
     customAssetTypes={data.context.customAssetTypes}
     customFieldDefinitions={data.context.customFieldDefinitions}
     saving={busy}
-    onClose={() => { addOpen = false; }}
+    onClose={closeAdd}
     onSave={createAsset}
   />
 

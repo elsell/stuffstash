@@ -112,6 +112,8 @@ function mountAssetDetail(
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
+    onEditOpen: () => void;
+    onEditClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -135,6 +137,8 @@ function mountAssetDetail(
         maxBytes: 5 * 1024 * 1024
       },
       onBack: () => {},
+      onEditOpen: () => {},
+      onEditClose: () => {},
       onSave: async () => {},
       onArchive: async () => {},
       onRestore: async () => {},
