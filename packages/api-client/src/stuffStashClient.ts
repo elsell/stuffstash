@@ -247,6 +247,94 @@ export interface UpdateCustomFieldDefinitionInput {
   customAssetTypeIds?: string[];
 }
 
+export type ImportSourceType = 'legacy_homebox' | 'legacy_homebox_csv';
+
+export interface LegacyHomeboxImportRequest {
+  sourceType: ImportSourceType;
+  baseUrl?: string;
+  username?: string;
+  password?: string;
+  includeImages?: boolean;
+  allowInsecureTLS?: boolean;
+  allowPrivateNetwork?: boolean;
+  fileName?: string;
+  contentBase64?: string;
+}
+
+export interface ImportSourceSummary {
+  type: string;
+  name: string;
+  baseUrl?: string;
+  version?: string;
+  imageImport: string;
+}
+
+export interface ImportCounts {
+  fields: number;
+  locations: number;
+  assets: number;
+  attachments: number;
+  warnings: number;
+  errors: number;
+}
+
+export interface ImportField {
+  key: string;
+  displayName: string;
+  type: string;
+}
+
+export interface ImportAssetSample {
+  sourceId: string;
+  kind: string;
+  title: string;
+  description: string;
+  parentSourceId?: string;
+  customFields: Record<string, unknown>;
+}
+
+export interface ImportImageSample {
+  sourceId: string;
+  assetSourceId: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  primary: boolean;
+}
+
+export interface ImportMessage {
+  code: string;
+  severity: string;
+  summary: string;
+  detail?: string;
+  sourceId?: string;
+  sourceName?: string;
+}
+
+export interface ImportPreview {
+  source: ImportSourceSummary;
+  counts: ImportCounts;
+  fields: ImportField[];
+  assetSamples: ImportAssetSample[];
+  imageSamples: ImportImageSample[];
+  messages: ImportMessage[];
+}
+
+export interface ImportApplyCounts {
+  fieldsCreated: number;
+  fieldsExisting: number;
+  locationsCreated: number;
+  assetsCreated: number;
+  assetsSkipped: number;
+  attachmentsCreated: number;
+  attachmentsSkipped: number;
+}
+
+export interface ImportApplyResult {
+  counts: ImportApplyCounts;
+  messages: ImportMessage[];
+}
+
 export interface ProviderProfile {
   id: string;
   tenantId: string;
@@ -370,6 +458,8 @@ type DefinitionResponse = components['schemas']['DefinitionResponse'];
 type ProviderProfileResponse = components['schemas']['ProviderProfileResponse'];
 type TestProviderProfileResponse = components['schemas']['TestProviderProfileResponse'];
 type VoiceProviderConfigurationResponse = components['schemas']['VoiceProviderConfigurationResponse'];
+type ImportPreviewResponse = components['schemas']['ImportPreviewResponse'];
+type ImportApplyResponse = components['schemas']['ImportApplyResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -537,6 +627,36 @@ export class StuffStashClient {
       })
     );
     return mapPage(envelope, mapAssetSearchResult);
+  }
+
+  async previewLegacyHomeboxImport(
+    tenantId: string,
+    inventoryId: string,
+    input: LegacyHomeboxImportRequest
+  ): Promise<ImportPreview> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/preview', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: input
+      })
+    );
+    return mapImportPreview(envelope.data);
+  }
+
+  async applyLegacyHomeboxImport(
+    tenantId: string,
+    inventoryId: string,
+    input: LegacyHomeboxImportRequest
+  ): Promise<ImportApplyResult> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: input
+      })
+    );
+    return mapImportApply(envelope.data);
   }
 
   async listTenantCustomAssetTypes(tenantId: string, limit = 50, cursor?: string): Promise<Page<CustomAssetType>> {
@@ -1522,6 +1642,37 @@ function mapProviderProfileSummary(response: ProviderProfileSummary): ProviderPr
     credentialPurpose: response.credentialPurpose,
     lifecycleState: response.lifecycleState,
     lastTestedAt: response.lastTestedAt
+  };
+}
+
+function mapImportPreview(response: ImportPreviewResponse): ImportPreview {
+  return {
+    source: {
+      type: response.source.type,
+      name: response.source.name,
+      baseUrl: response.source.baseUrl,
+      version: response.source.version,
+      imageImport: response.source.imageImport
+    },
+    counts: response.counts,
+    fields: response.fields ?? [],
+    assetSamples: (response.assetSamples ?? []).map((asset) => ({
+      sourceId: asset.sourceId,
+      kind: asset.kind,
+      title: asset.title,
+      description: asset.description,
+      parentSourceId: asset.parentSourceId,
+      customFields: asset.customFields ?? {}
+    })),
+    imageSamples: response.imageSamples ?? [],
+    messages: response.messages ?? []
+  };
+}
+
+function mapImportApply(response: ImportApplyResponse): ImportApplyResult {
+  return {
+    counts: response.counts,
+    messages: response.messages ?? []
   };
 }
 

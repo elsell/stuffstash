@@ -23,6 +23,7 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import KindIcon from './KindIcon.svelte';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   type DetailPhoto = {
     id: string;
@@ -36,15 +37,15 @@
   let {
     asset,
     canEdit,
-    editOpen = false,
+    action = null,
     parentTargets,
     customFieldDefinitions,
     saving,
     attachments,
     mediaPolicy,
     onBack,
-    onEditOpen,
-    onEditClose,
+    onActionOpen,
+    onActionClose,
     onSave,
     onArchive,
     onRestore,
@@ -55,15 +56,15 @@
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
-    editOpen?: boolean;
+    action?: 'edit' | 'move' | 'delete' | null;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
-    onEditOpen: () => void;
-    onEditClose: () => void;
+    onActionOpen: (action: 'edit' | 'move' | 'delete') => void;
+    onActionClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -84,6 +85,8 @@
   let fileInput = $state<HTMLInputElement | null>(null);
   let selectedAttachment = $state<AssetAttachment | null>(null);
   let selectedPhotoId = $state<string | null>(null);
+  let lastRouteActionKey = $state('');
+  let actionPanelElement = $state<HTMLElement | null>(null);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
@@ -92,6 +95,11 @@
   let heroPhoto = $derived(
     detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]
   );
+  const booleanOptions = [
+    { value: '', label: 'Unset' },
+    { value: 'true', label: 'Yes' },
+    { value: 'false', label: 'No' }
+  ];
   let displayFields = $derived(
     customFieldDefinitions.filter(
       (definition) =>
@@ -101,8 +109,26 @@
   );
 
   $effect(() => {
-    if (editOpen && canEdit && asset.lifecycleState === 'active') {
+    const actionKey = `${asset.id}:${action ?? 'none'}`;
+    if (actionKey === lastRouteActionKey) {
+      return;
+    }
+    const initializingWithoutRouteAction = lastRouteActionKey === '' && !action;
+    lastRouteActionKey = actionKey;
+    if (action === 'edit' && canEdit && asset.lifecycleState === 'active') {
       openEdit(false);
+    } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
+      openMove(false);
+    } else if (action === 'delete' && canEdit) {
+      panel = 'delete';
+    } else if (!action && !initializingWithoutRouteAction) {
+      panel = 'none';
+    }
+  });
+
+  $effect(() => {
+    if ((panel === 'edit' || panel === 'move' || panel === 'delete') && actionPanelElement) {
+      actionPanelElement.focus();
     }
   });
 
@@ -121,11 +147,11 @@
     );
     panel = 'edit';
     if (notify) {
-      onEditOpen();
+      onActionOpen('edit');
     }
   }
 
-  function openMove(): void {
+  function openMove(notify = true): void {
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -133,6 +159,9 @@
       applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
     );
     panel = 'move';
+    if (notify) {
+      onActionOpen('move');
+    }
   }
 
   async function save(): Promise<void> {
@@ -156,8 +185,8 @@
   function closePanel(): void {
     const previousPanel = panel;
     panel = 'none';
-    if (previousPanel === 'edit') {
-      onEditClose();
+    if (previousPanel === 'edit' || previousPanel === 'move' || previousPanel === 'delete') {
+      onActionClose();
     }
   }
 
@@ -352,6 +381,41 @@
           </div>
         {/if}
       </div>
+    </div>
+    <div class="asset-detail-copy">
+      <div class="detail-title-row">
+        <div>
+          <h1 id="asset-title">{asset.title}</h1>
+          <p>{asset.containmentTrail}</p>
+        </div>
+        <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
+      </div>
+      <dl class="detail-list">
+        <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
+        <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
+        <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
+      </dl>
+      <div class="detail-actions">
+        <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={() => openEdit()}><Pencil /> Edit</Button.Root>
+        <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={() => openMove()}><MoveRight /> Move</Button.Root>
+        <Button.Root
+          variant="outline"
+          disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
+          onclick={() => photoInput?.click()}
+        >
+          <Image /> Add photo
+        </Button.Root>
+        {#if asset.lifecycleState === 'active'}
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archive(); }}><Archive /> Archive</Button.Root>
+        {:else}
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void restore(); }}><RotateCcw /> Restore</Button.Root>
+        {/if}
+      </div>
+      {#if !canEdit}
+        <p class="denied-note">Edit actions require asset edit access.</p>
+      {/if}
+    </div>
+    <div class="photo-gallery-section" aria-label="Asset photo gallery">
       <div class="photo-panel-actions">
         <Button.Root
           variant="outline"
@@ -385,40 +449,6 @@
       {/if}
       {#if uploadError}
         <p class="denied-note" role="alert">{uploadError}</p>
-      {/if}
-    </div>
-    <div class="asset-detail-copy">
-      <div class="detail-title-row">
-        <div>
-          <h1 id="asset-title">{asset.title}</h1>
-          <p>{asset.containmentTrail}</p>
-        </div>
-        <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
-      </div>
-      <p>{asset.description || 'No description.'}</p>
-      <dl class="detail-list">
-        <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
-        <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
-        <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
-      </dl>
-      <div class="detail-actions">
-        <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={() => openEdit()}><Pencil /> Edit</Button.Root>
-        <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={openMove}><MoveRight /> Move</Button.Root>
-        <Button.Root
-          variant="outline"
-          disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
-          onclick={() => photoInput?.click()}
-        >
-          <Image /> Add photo
-        </Button.Root>
-        {#if asset.lifecycleState === 'active'}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archive(); }}><Archive /> Archive</Button.Root>
-        {:else}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void restore(); }}><RotateCcw /> Restore</Button.Root>
-        {/if}
-      </div>
-      {#if !canEdit}
-        <p class="denied-note">Edit actions require asset edit access.</p>
       {/if}
     </div>
   </div>
@@ -479,7 +509,13 @@
         {/if}
       </section>
       {#if panel === 'edit'}
-        <div class="detail-action-panel" aria-label="Edit asset">
+        <section
+          bind:this={actionPanelElement}
+          class="detail-action-panel"
+          aria-labelledby="edit-asset-panel-title"
+          tabindex="-1"
+        >
+          <h2 id="edit-asset-panel-title">Edit asset</h2>
           <div class="field-stack">
             <Label for="edit-asset-title">Name</Label>
             <Input id="edit-asset-title" bind:value={title} />
@@ -494,17 +530,12 @@
                 <div class="field-stack">
                   <Label for={`edit-custom-field-${field.key}`}>{field.displayName}</Label>
                   {#if field.type === 'boolean'}
-                    <div class="kind-segment" role="group" aria-label={field.displayName}>
-                      <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
-                        Unset
-                      </Button.Root>
-                      <Button.Root variant={customFieldValues[field.key] === 'true' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, 'true')}>
-                        Yes
-                      </Button.Root>
-                      <Button.Root variant={customFieldValues[field.key] === 'false' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, 'false')}>
-                        No
-                      </Button.Root>
-                    </div>
+                    <SegmentedControl
+                      label={field.displayName}
+                      value={customFieldValues[field.key] ?? ''}
+                      options={booleanOptions}
+                      onSelect={(value) => setCustomFieldValue(field.key, value)}
+                    />
                   {:else if field.type === 'enum'}
                     <div class="parent-picker" role="group" aria-label={field.displayName}>
                       <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>
@@ -538,9 +569,15 @@
           {#if saveError}
             <p class="denied-note" role="alert">{saveError}</p>
           {/if}
-        </div>
+        </section>
       {:else if panel === 'move'}
-        <div class="detail-action-panel" aria-label="Move asset">
+        <section
+          bind:this={actionPanelElement}
+          class="detail-action-panel"
+          aria-labelledby="move-asset-panel-title"
+          tabindex="-1"
+        >
+          <h2 id="move-asset-panel-title">Move asset</h2>
           <div class="field-stack">
             <Label>Parent</Label>
             <div class="parent-picker" role="group" aria-label="Move target">
@@ -563,24 +600,30 @@
             </div>
           </div>
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={() => { panel = 'none'; }}>Cancel</Button.Root>
+            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
             <Button.Root disabled={saving} onclick={() => { void save(); }}>Move</Button.Root>
           </div>
           {#if saveError}
             <p class="denied-note" role="alert">{saveError}</p>
           {/if}
-        </div>
+        </section>
       {:else if panel === 'delete'}
-        <div class="detail-action-panel" aria-label="Delete asset">
+        <section
+          bind:this={actionPanelElement}
+          class="detail-action-panel"
+          aria-labelledby="delete-asset-panel-title"
+          tabindex="-1"
+        >
+          <h2 id="delete-asset-panel-title">Delete asset</h2>
           <p>Delete {asset.title} permanently?</p>
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={() => { panel = 'none'; }}>Cancel</Button.Root>
+            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
             <Button.Root variant="destructive" disabled={saving} onclick={() => { void remove(); }}>Delete</Button.Root>
           </div>
           {#if saveError}
             <p class="denied-note" role="alert">{saveError}</p>
           {/if}
-        </div>
+        </section>
       {:else if panel === 'attachment-delete' && selectedAttachment}
         <div class="detail-action-panel" aria-label="Delete attachment">
           <p>Delete {selectedAttachment.fileName} permanently?</p>
@@ -598,7 +641,7 @@
           <strong>Permanent deletion</strong>
           <p>Remove this asset from the inventory permanently.</p>
         </div>
-        <Button.Root variant="destructive" disabled={!canEdit || saving} onclick={() => { panel = 'delete'; }}><Trash2 /> Delete</Button.Root>
+        <Button.Root variant="destructive" disabled={!canEdit || saving} onclick={() => { panel = 'delete'; onActionOpen('delete'); }}><Trash2 /> Delete</Button.Root>
       </div>
   </div>
 </section>

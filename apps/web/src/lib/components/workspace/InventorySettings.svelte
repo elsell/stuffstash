@@ -3,6 +3,7 @@
   import Shield from '@lucide/svelte/icons/shield';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
+  import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { CustomAssetType, CustomFieldDefinition, Inventory, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
@@ -11,6 +12,7 @@
   import InventoryAccessManager from './InventoryAccessManager.svelte';
   import InventoryAuditPanel from './InventoryAuditPanel.svelte';
   import InventoryCustomizationManager from './InventoryCustomizationManager.svelte';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
@@ -21,6 +23,8 @@
     customizationRepository,
     customAssetTypes,
     customFieldDefinitions,
+    section = 'overview',
+    onSectionChange,
     onCustomizationChange
   }: {
     tenant: Tenant | null;
@@ -31,6 +35,8 @@
     customizationRepository: InventoryCustomizationRepository;
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];
+    section?: SettingsSection;
+    onSectionChange: (section: SettingsSection) => void;
     onCustomizationChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
@@ -38,6 +44,13 @@
   let canConfigureInventory = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canEditAssets = $derived(canEditAsset(inventory));
+  const sectionOptions = [
+    { value: 'overview', label: 'Overview' },
+    { value: 'access', label: 'Access' },
+    { value: 'fields', label: 'Fields' },
+    { value: 'activity', label: 'Activity' },
+    { value: 'administration', label: 'Admin' }
+  ];
 </script>
 
 <section class="workspace-main" aria-labelledby="settings-title">
@@ -57,7 +70,16 @@
       <p>Select or create an inventory before managing settings.</p>
     </div>
   {:else}
-    <div class="settings-grid">
+    <div class="settings-shell">
+      <SegmentedControl
+        label="Settings section"
+        value={section}
+        options={sectionOptions}
+        onSelect={(value) => onSectionChange(value as SettingsSection)}
+      />
+
+      <div class="settings-content">
+      {#if section === 'overview'}
       <section class="settings-panel" aria-labelledby="settings-overview">
         <div class="settings-panel-heading">
           <Boxes aria-hidden="true" />
@@ -74,10 +96,13 @@
         </dl>
       </section>
 
+      {:else if section === 'access'}
       <InventoryAccessManager {tenant} {inventory} repository={accessRepository} />
 
+      {:else if section === 'activity'}
       <InventoryAuditPanel {tenant} {inventory} repository={auditRepository} />
 
+      {:else if section === 'fields'}
       <InventoryCustomizationManager
         {tenant}
         {inventory}
@@ -87,6 +112,7 @@
         onSchemaChange={onCustomizationChange}
       />
 
+      {:else}
       <section class="settings-panel" aria-labelledby="settings-admin">
         <div class="settings-panel-heading">
           <Shield aria-hidden="true" />
@@ -101,6 +127,8 @@
         </div>
         <Button.Root variant="outline" disabled={true}>Tenant administration unavailable</Button.Root>
       </section>
+      {/if}
+      </div>
     </div>
   {/if}
 </section>

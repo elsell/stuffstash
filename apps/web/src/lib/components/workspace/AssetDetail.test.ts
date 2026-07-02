@@ -21,6 +21,87 @@ afterEach(() => {
 });
 
 describe('AssetDetail', () => {
+  it('promotes photos to the hero and keeps documents in the files section', () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        description: 'Pain reliever bottle with child-safe cap.',
+        photo: { id: 'photo-one', url: 'blob:primary-photo', alt: 'Ibuprofen bottle' }
+      },
+      attachments: [
+        attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front-thumb'),
+        attachment('manual-one', 'manual.pdf', 'application/pdf')
+      ]
+    });
+
+    const hero = document.body.querySelector<HTMLImageElement>('.asset-hero-photo img');
+    expect(hero?.src).toBe('blob:primary-photo');
+    expect(hero?.alt).toBe('Ibuprofen bottle');
+    expect(document.body.querySelectorAll('.photo-rail button')).toHaveLength(1);
+    expect(document.body.textContent).toContain('Files');
+    expect(document.body.textContent).toContain('manual.pdf');
+    expect(document.body.textContent).not.toContain('front.jpgimage/jpeg');
+    expect(document.body.querySelector('.asset-detail-copy')?.textContent).not.toContain('Pain reliever bottle');
+    expect(document.body.querySelector('.detail-section')?.textContent).toContain('Pain reliever bottle');
+  });
+
+  it('keeps the photo-first detail reading order', () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        photo: { id: 'photo-one', url: 'blob:primary-photo', alt: 'Ibuprofen bottle' }
+      },
+      attachments: [
+        attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front-thumb'),
+        attachment('manual-one', 'manual.pdf', 'application/pdf')
+      ]
+    });
+
+    const hero = requiredElement('.asset-hero-photo');
+    const identity = requiredElement('.asset-detail-copy');
+    const gallery = requiredElement('.photo-gallery-section');
+    const details = requiredElement('.detail-section');
+    const files = requiredElement('.attachment-section');
+
+    expect(hero.compareDocumentPosition(identity) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(identity.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(gallery.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(details.compareDocumentPosition(files) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(document.body.querySelector<HTMLButtonElement>('button[aria-label="More asset actions"]')).toBeNull();
+  });
+
+  it('seeds route-opened edit panels from the current asset', async () => {
+    mountAssetDetail({
+      action: 'edit',
+      asset: {
+        ...asset(),
+        id: 'asset-two',
+        title: 'Current asset',
+        description: 'Fresh detail state',
+        customFields: { 'expiration-date': '2028-02-02' }
+      },
+      customFieldDefinitions: [
+        {
+          id: 'field-expiration',
+          tenantId: 'tenant-one',
+          inventoryId: 'inventory-one',
+          scope: 'inventory',
+          key: 'expiration-date',
+          displayName: 'Expiration date',
+          type: 'date',
+          enumOptions: [],
+          applicability: 'custom_asset_types',
+          customAssetTypeIds: ['type-medicine'],
+          lifecycleState: 'active'
+        }
+      ]
+    });
+    await flush();
+
+    expect((requiredElement('#edit-asset-title') as HTMLInputElement).value).toBe('Current asset');
+    expect((requiredElement('#edit-custom-field-expiration-date') as HTMLInputElement).value).toBe('2028-02-02');
+  });
+
   it('preserves custom field values when moving an asset', async () => {
     let savedDraft: UpdateAssetDraft | null = null;
     mountAssetDetail({
@@ -64,7 +145,7 @@ describe('AssetDetail', () => {
       }
     });
 
-    chooseAttachment(new File(['manual'], 'manual.pdf', { type: 'application/pdf' }));
+    chooseAttachment(new File(['manual'], 'manual.pdf', { type: 'application/pdf' }), 'Choose file');
     await flush();
 
     expect(uploads[0]).toMatchObject({
@@ -87,7 +168,7 @@ describe('AssetDetail', () => {
       }
     });
 
-    chooseAttachment(new File(['larger'], 'photo.jpg', { type: 'image/jpeg' }));
+    chooseAttachment(new File(['larger'], 'photo.jpg', { type: 'image/jpeg' }), 'Choose photo');
     await flush();
 
     expect(uploadCount).toBe(0);
@@ -105,6 +186,7 @@ describe('AssetDetail', () => {
 function mountAssetDetail(
   props: Partial<{
     asset: AssetViewModel;
+    action: 'edit' | 'move' | 'delete' | null;
     canEdit: boolean;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
@@ -112,8 +194,8 @@ function mountAssetDetail(
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
-    onEditOpen: () => void;
-    onEditClose: () => void;
+    onActionOpen: (action: 'edit' | 'move' | 'delete') => void;
+    onActionClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -137,8 +219,8 @@ function mountAssetDetail(
         maxBytes: 5 * 1024 * 1024
       },
       onBack: () => {},
-      onEditOpen: () => {},
-      onEditClose: () => {},
+      onActionOpen: () => {},
+      onActionClose: () => {},
       onSave: async () => {},
       onArchive: async () => {},
       onRestore: async () => {},
@@ -168,14 +250,35 @@ function asset(): AssetViewModel {
   };
 }
 
-function chooseAttachment(file: File): void {
-  const input = fileInput();
+function attachment(
+  id: string,
+  fileName: string,
+  contentType: AssetAttachment['contentType'],
+  thumbnailUrl?: string
+): AssetAttachment {
+  return {
+    id,
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    assetId: 'asset-one',
+    fileName,
+    contentType,
+    sizeBytes: 12,
+    lifecycleState: 'active',
+    thumbnailUrl
+  };
+}
+
+function chooseAttachment(file: File, label: string): void {
+  const input = fileInput(label);
   Object.defineProperty(input, 'files', { value: [file], configurable: true, writable: true });
   input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-function fileInput(): HTMLInputElement {
-  const input = document.body.querySelector<HTMLInputElement>('input[type="file"]');
+function fileInput(label = 'Choose file'): HTMLInputElement {
+  const input = Array.from(document.body.querySelectorAll<HTMLInputElement>('input[type="file"]')).find(
+    (candidate) => candidate.getAttribute('aria-label') === label
+  );
   if (!input) throw new Error('Missing attachment file input');
   return input;
 }
@@ -195,6 +298,12 @@ function clickLast(text: string): void {
 
 function buttons(text: string): HTMLButtonElement[] {
   return Array.from(document.body.querySelectorAll('button')).filter((candidate) => candidate.textContent?.includes(text));
+}
+
+function requiredElement(selector: string): Element {
+  const element = document.body.querySelector(selector);
+  if (!element) throw new Error(`Missing element ${selector}`);
+  return element;
 }
 
 async function flush(): Promise<void> {

@@ -1,6 +1,8 @@
 import type { AssetKind, AssetLifecycleFilter, SearchLifecycleFilter, SearchMode, WorkspaceMode } from '$lib/domain/inventory';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
+export type AssetRouteAction = 'edit' | 'move' | 'delete' | null;
+export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
 
 export interface WorkspaceRouteState {
   mode: WorkspaceMode;
@@ -9,7 +11,9 @@ export interface WorkspaceRouteState {
   locationId: string | null;
   assetId: string | null;
   action: WorkspaceAction;
+  assetAction: AssetRouteAction;
   addKind: AssetKind | null;
+  settingsSection: SettingsSection;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
@@ -23,7 +27,9 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   locationId: null,
   assetId: null,
   action: null,
+  assetAction: null,
   addKind: null,
+  settingsSection: 'overview',
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
@@ -31,6 +37,8 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
 };
 
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
+const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'delete']);
+const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
@@ -64,28 +72,47 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
   }
 
   const section = segments[inventoryOffset.nextIndex];
-  if (section === 'locations' && segments[inventoryOffset.nextIndex + 1]) {
+  const remaining = segments.length - inventoryOffset.nextIndex;
+  if (section === 'locations' && remaining === 2 && segments[inventoryOffset.nextIndex + 1]) {
     return { ...route, mode: 'location', locationId: segments[inventoryOffset.nextIndex + 1] };
   }
-  if (section === 'assets' && segments[inventoryOffset.nextIndex + 1]) {
+  if (section === 'assets' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
+    const action = parseAssetAction(segments[inventoryOffset.nextIndex + 2]);
+    if (remaining === 3 && !action) {
+      return { ...defaultWorkspaceRoute };
+    }
     return {
       ...route,
       mode: 'asset',
       assetId: segments[inventoryOffset.nextIndex + 1],
-      action: segments[inventoryOffset.nextIndex + 2] === 'edit' ? 'edit' : null
+      action: action === 'edit' ? 'edit' : null,
+      assetAction: action
     };
   }
   if (section === 'search') {
-    return { ...route, mode: 'search' };
+    return remaining === 1 ? { ...route, mode: 'search' } : { ...defaultWorkspaceRoute };
   }
   if (section === 'settings') {
-    return { ...route, mode: 'settings' };
+    return remaining <= 2
+      ? { ...route, mode: 'settings', settingsSection: parseSettingsSection(segments[inventoryOffset.nextIndex + 1]) }
+      : { ...defaultWorkspaceRoute };
   }
-  if (section === 'add' && assetKinds.has(segments[inventoryOffset.nextIndex + 1] as AssetKind)) {
+  if (section === 'import') {
+    return remaining === 1 ? { ...route, mode: 'import' } : { ...defaultWorkspaceRoute };
+  }
+  if (section === 'add' && remaining === 2 && assetKinds.has(segments[inventoryOffset.nextIndex + 1] as AssetKind)) {
     return { ...route, action: 'add', addKind: segments[inventoryOffset.nextIndex + 1] as AssetKind };
   }
 
-  return route;
+  return { ...defaultWorkspaceRoute };
+}
+
+function parseAssetAction(value: string | undefined): AssetRouteAction {
+  return assetActions.has(value as AssetRouteAction) ? (value as AssetRouteAction) : null;
+}
+
+function parseSettingsSection(value: string | undefined): SettingsSection {
+  return settingsSections.has(value as SettingsSection) ? (value as SettingsSection) : 'overview';
 }
 
 function parseInventoryOffset(
@@ -129,8 +156,9 @@ export function workspaceRouteHref(
     path += `/locations/${encodeURIComponent(next.locationId)}`;
   } else if (inventoryId && next.mode === 'asset' && next.assetId) {
     path += `/assets/${encodeURIComponent(next.assetId)}`;
-    if (next.action === 'edit') {
-      path += '/edit';
+    const action = next.assetAction ?? (next.action === 'edit' ? 'edit' : null);
+    if (action) {
+      path += `/${action}`;
     }
   } else if (inventoryId && next.mode === 'search') {
     path += '/search';
@@ -145,6 +173,11 @@ export function workspaceRouteHref(
     }
   } else if (inventoryId && next.mode === 'settings') {
     path += '/settings';
+    if (next.settingsSection !== 'overview') {
+      path += `/${next.settingsSection}`;
+    }
+  } else if (inventoryId && next.mode === 'import') {
+    path += '/import';
   } else if (inventoryId && next.action === 'add' && next.addKind) {
     path += `/add/${next.addKind}`;
   } else if (next.lifecycleState !== 'active') {

@@ -88,8 +88,12 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/edit` for the asset edit state when edit is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/move` for the asset move state when move is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/delete` for the asset delete confirmation state when delete is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings/{section}` for a focused inventory settings section.
+- `/tenants/{tenantId}/inventories/{inventoryId}/import` for import.
 - `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
 
 The web app may accept `/inventories/{inventoryId}` and descendant paths as compatibility aliases for an inventory that is visible in the current tenant context. When a compatibility alias can be resolved, the app should replace the browser URL with the canonical tenant-scoped path.
@@ -108,6 +112,8 @@ Deep links must preserve tenant and inventory boundaries:
 - If the requested inventory is not visible in the current tenant context, the app must show a calm unavailable or setup state rather than rendering stale local data.
 - A location deep link must only open an asset whose kind is `location`.
 - An asset deep link must load the selected asset through the repository port and API adapter.
+- Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
+- Asset action panels that materially change data, such as edit, move, and delete confirmation, are durable route states.
 - Unsupported paths must fall back to the inventory home without crashing.
 
 Navigation controls must update the URL when they change durable workspace state, and browser back/forward controls must restore the corresponding workspace state.
@@ -379,6 +385,31 @@ Inventory settings is the preferred location for inventory-level secondary workf
 - Tenant/inventory administrative details.
 
 These workflows must not be primary home panels in the approved first direction.
+
+Inventory settings must be structured as focused sections rather than one long mixed surface:
+
+- `overview` for inventory and tenant summary.
+- `access` for sharing and access management.
+- `fields` for custom asset types and custom fields.
+- `activity` for audit/history when exposed.
+- `administration` for tenant or inventory administrative actions and denied states.
+
+Settings section navigation must be URL-addressable through `/settings/{section}`. Unknown settings sections must resolve to `overview`.
+
+Settings navigation must use the same segmented/filter control pattern as lifecycle and search-mode controls, with honest button-group semantics, visible selected state, keyboard-reachable buttons, and no fake tab roles unless a full tab interaction model is implemented.
+
+## Reusable Workspace Controls
+
+Repeated segmented controls must be implemented through a reusable workspace control component rather than repeated ad hoc markup. The first reusable control must support:
+
+- A typed list of options.
+- A visible selected state.
+- `role="group"` with a clear accessible label.
+- `aria-pressed` on each option button.
+- Disabled options where needed.
+- Consistent wrapping, spacing, focus, and mobile behavior.
+
+Search suggestions must either implement a complete combobox pattern or use honest ordinary button/list semantics. Partial combobox/listbox/menu ARIA is not allowed.
 
 ## Responsive Behavior
 

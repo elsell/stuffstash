@@ -13,8 +13,11 @@ import {
   type Inventory,
   type InventoryAccessGrant,
   type InventoryAccessInvitation,
+  type ImportApplyResult,
+  type ImportPreview,
   type InventoryAccessRelationship,
   type InvitationStatusFilter,
+  type LegacyHomeboxImportRequest,
   type SearchRequest,
   type SearchResult,
   type SelectedAttachment,
@@ -350,6 +353,22 @@ export class SeededInventoryRepository
       },
       matches: [{ field: 'title', value: asset.title }]
     }));
+  }
+
+  async previewLegacyHomeboxImport(
+    _tenantId: string,
+    _inventoryId: string,
+    _input: LegacyHomeboxImportRequest
+  ): Promise<ImportPreview> {
+    throw new Error('Import requires a connected Stuff Stash API.');
+  }
+
+  async applyLegacyHomeboxImport(
+    _tenantId: string,
+    _inventoryId: string,
+    _input: LegacyHomeboxImportRequest
+  ): Promise<ImportApplyResult> {
+    throw new Error('Import requires a connected Stuff Stash API.');
   }
 
   async listTenantAuditRecords(tenantId: string, cursor?: string, _signal?: AbortSignal): Promise<AuditRecordPage> {

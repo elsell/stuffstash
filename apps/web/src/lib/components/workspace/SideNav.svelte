@@ -1,7 +1,7 @@
 <script lang="ts">
   import Home from '@lucide/svelte/icons/house';
   import Settings from '@lucide/svelte/icons/settings';
-  import MapPin from '@lucide/svelte/icons/map-pin';
+  import Upload from '@lucide/svelte/icons/upload';
   import LogOut from '@lucide/svelte/icons/log-out';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
@@ -53,12 +53,13 @@
     onOpenSettings={() => onModeChange('settings')}
   />
 
-  <nav class="nav-list">
+  <nav class="nav-list" aria-label="Inventory destinations">
+    <p class="nav-eyebrow">Inventory</p>
     <Button.Root variant={mode === 'home' ? 'secondary' : 'ghost'} class="nav-button" onclick={() => onModeChange('home')}>
       <Home /> Home
     </Button.Root>
-    <Button.Root variant={mode === 'location' ? 'secondary' : 'ghost'} class="nav-button" onclick={() => onModeChange('home')}>
-      <MapPin /> Locations
+    <Button.Root variant={mode === 'import' ? 'secondary' : 'ghost'} class="nav-button" onclick={() => onModeChange('import')}>
+      <Upload /> Import
     </Button.Root>
     <Button.Root variant={mode === 'settings' ? 'secondary' : 'ghost'} class="nav-button" onclick={() => onModeChange('settings')}>
       <Settings /> Settings

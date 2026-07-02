@@ -5,6 +5,7 @@
   import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     lifecycleState,
@@ -34,24 +35,15 @@
       <p>{lifecycleState === 'active' ? 'Recently added and the places where your things live.' : 'Assets removed from active browsing.'}</p>
     </div>
     <div class="heading-actions">
-      <div class="filter-control" role="group" aria-label="Asset lifecycle">
-        <Button.Root
-          variant="ghost"
-          aria-pressed={lifecycleState === 'active'}
-          data-selected={lifecycleState === 'active'}
-          onclick={() => onSelectLifecycle('active')}
-        >
-          Active
-        </Button.Root>
-        <Button.Root
-          variant="ghost"
-          aria-pressed={lifecycleState === 'archived'}
-          data-selected={lifecycleState === 'archived'}
-          onclick={() => onSelectLifecycle('archived')}
-        >
-          Archived
-        </Button.Root>
-      </div>
+      <SegmentedControl
+        label="Asset lifecycle"
+        value={lifecycleState}
+        options={[
+          { value: 'active', label: 'Active' },
+          { value: 'archived', label: 'Archived' }
+        ]}
+        onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
+      />
       {#if lifecycleState === 'active'}
         <Button.Root variant="outline" onclick={onOpenAdd}>Add location</Button.Root>
       {/if}

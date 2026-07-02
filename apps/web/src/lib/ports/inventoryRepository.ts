@@ -11,6 +11,9 @@ import type {
   SearchResult,
   SelectedAttachment,
   SelectedPhoto,
+  LegacyHomeboxImportRequest,
+  ImportApplyResult,
+  ImportPreview,
   Tenant,
   UpdateAssetDraft,
   WorkspaceData
@@ -41,6 +44,8 @@ export interface InventoryRepository {
   restoreAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
   deleteAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<void>;
   searchAssets(request: SearchRequest): Promise<SearchResult[]>;
+  previewLegacyHomeboxImport(tenantId: string, inventoryId: string, input: LegacyHomeboxImportRequest): Promise<ImportPreview>;
+  applyLegacyHomeboxImport(tenantId: string, inventoryId: string, input: LegacyHomeboxImportRequest): Promise<ImportApplyResult>;
 }
 
 export interface WorkspaceSeed {

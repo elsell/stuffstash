@@ -1,13 +1,16 @@
 import { StuffStashAPIError, StuffStashClient } from '@stuff-stash/api-client';
 import type { RuntimeConfig } from '$lib/runtimeConfig';
-import type { TokenProvider } from '@stuff-stash/api-client';
+import type { Asset as ApiAsset, AssetPhotoVariant, TokenProvider } from '@stuff-stash/api-client';
 import type {
   AddAssetDraft,
   Asset,
   AssetAttachment,
   AssetLifecycleFilter,
   InventoryAccessRelationship,
+  ImportApplyResult,
+  ImportPreview,
   InvitationStatusFilter,
+  LegacyHomeboxImportRequest,
   SearchRequest,
   SearchResult,
   SelectedAttachment,
@@ -149,7 +152,7 @@ export class StuffStashInventoryRepository
   async createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
     this.observer.record('workspace.asset_create_started', { kind: draft.kind });
     try {
-      const asset = mapAsset(
+      const asset = await this.mapAssetWithPrimaryPhoto(
         await this.client.createAsset(tenantId, inventoryId, {
           kind: draft.kind,
           title: draft.title,
@@ -170,7 +173,7 @@ export class StuffStashInventoryRepository
   async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     this.observer.record('workspace.asset_detail_load_started');
     try {
-      const asset = mapAsset(await this.client.getAsset(tenantId, inventoryId, assetId));
+      const asset = await this.mapAssetWithPrimaryPhoto(await this.client.getAsset(tenantId, inventoryId, assetId), 'medium');
       this.observer.record('workspace.asset_detail_loaded', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -182,7 +185,7 @@ export class StuffStashInventoryRepository
   async updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset> {
     this.observer.record('workspace.asset_update_started');
     try {
-      const asset = mapAsset(
+      const asset = await this.mapAssetWithPrimaryPhoto(
         await this.client.updateAsset(tenantId, inventoryId, assetId, {
           title: draft.title,
           description: draft.description,
@@ -201,7 +204,7 @@ export class StuffStashInventoryRepository
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     this.observer.record('workspace.asset_archive_started');
     try {
-      const asset = mapAsset(await this.client.archiveAsset(tenantId, inventoryId, assetId));
+      const asset = await this.mapAssetWithPrimaryPhoto(await this.client.archiveAsset(tenantId, inventoryId, assetId));
       this.observer.record('workspace.asset_archived', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -213,7 +216,7 @@ export class StuffStashInventoryRepository
   async restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     this.observer.record('workspace.asset_restore_started');
     try {
-      const asset = mapAsset(await this.client.restoreAsset(tenantId, inventoryId, assetId));
+      const asset = await this.mapAssetWithPrimaryPhoto(await this.client.restoreAsset(tenantId, inventoryId, assetId));
       this.observer.record('workspace.asset_restored', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -347,9 +350,55 @@ export class StuffStashInventoryRepository
       });
       const items = page.items.filter((result) => result.inventory.id === request.inventoryId);
       this.observer.record('workspace.search_completed', { resultCount: items.length });
-      return items.map(mapSearchResult);
+      return Promise.all(
+        items.map(async (result) => ({
+          ...mapSearchResult(result),
+          asset: await this.mapAssetWithPrimaryPhoto(result.asset)
+        }))
+      );
     } catch (error) {
       this.observer.record('workspace.search_failed');
+      throw safeError(error);
+    }
+  }
+
+  async previewLegacyHomeboxImport(
+    tenantId: string,
+    inventoryId: string,
+    input: LegacyHomeboxImportRequest
+  ): Promise<ImportPreview> {
+    this.observer.record('workspace.import_preview_started', { sourceType: input.sourceType });
+    try {
+      const preview = await this.client.previewLegacyHomeboxImport(tenantId, inventoryId, input);
+      this.observer.record('workspace.import_preview_completed', {
+        sourceType: input.sourceType,
+        assetCount: preview.counts.assets,
+        warningCount: preview.counts.warnings,
+        errorCount: preview.counts.errors
+      });
+      return preview;
+    } catch (error) {
+      this.observer.record('workspace.import_preview_failed', { sourceType: input.sourceType });
+      throw safeError(error);
+    }
+  }
+
+  async applyLegacyHomeboxImport(
+    tenantId: string,
+    inventoryId: string,
+    input: LegacyHomeboxImportRequest
+  ): Promise<ImportApplyResult> {
+    this.observer.record('workspace.import_apply_started', { sourceType: input.sourceType });
+    try {
+      const result = await this.client.applyLegacyHomeboxImport(tenantId, inventoryId, input);
+      this.observer.record('workspace.import_apply_completed', {
+        sourceType: input.sourceType,
+        assetCount: result.counts.assetsCreated,
+        attachmentCount: result.counts.attachmentsCreated
+      });
+      return result;
+    } catch (error) {
+      this.observer.record('workspace.import_apply_failed', { sourceType: input.sourceType });
       throw safeError(error);
     }
   }
@@ -582,7 +631,11 @@ export class StuffStashInventoryRepository
       ? (await this.client.listInventoryCustomFieldDefinitions(tenantId, selectedInventory.id, 100)).items.map(mapCustomFieldDefinition)
       : [];
     const assets = selectedInventory
-      ? (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, lifecycleState)).items.map(mapAsset)
+      ? await Promise.all(
+          (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, lifecycleState)).items.map((asset) =>
+            this.mapAssetWithPrimaryPhoto(asset)
+          )
+        )
       : [];
     this.observer.record('workspace.loaded', {
       tenantCount: tenants.length,
@@ -609,6 +662,37 @@ export class StuffStashInventoryRepository
   private rememberSelection(): void {
     writeSessionValue('stuffstash.selectedTenantId', this.selectedTenantId);
     writeSessionValue('stuffstash.selectedInventoryId', this.selectedInventoryId);
+  }
+
+  private async mapAssetWithPrimaryPhoto(asset: ApiAsset, variant: AssetPhotoVariant = 'small'): Promise<Asset> {
+    const mapped = mapAsset(asset);
+    if (!asset.primaryPhoto) {
+      return mapped;
+    }
+    try {
+      const thumbnail = await this.client.assetAttachmentThumbnailReference(
+        asset.tenantId,
+        asset.inventoryId,
+        asset.id,
+        asset.primaryPhoto.id,
+        variant
+      );
+      const thumbnailUrl = await this.thumbnailObjectUrl(thumbnail);
+      if (!thumbnailUrl) {
+        return mapped;
+      }
+      return {
+        ...mapped,
+        photo: {
+          id: asset.primaryPhoto.id,
+          url: thumbnailUrl,
+          alt: asset.title
+        }
+      };
+    } catch {
+      this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
+      return mapped;
+    }
   }
 
   private async uploadToDirectTarget(

@@ -1,7 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
-  import { parseWorkspaceRoute, workspaceRouteHref, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
+  import {
+    parseWorkspaceRoute,
+    workspaceRouteHref,
+    type AssetRouteAction,
+    type SettingsSection,
+    type WorkspaceRouteState
+  } from '$lib/application/workspaceRoute';
   import {
     canCreateAsset,
     canEditAsset,
@@ -29,6 +35,7 @@
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
+  import HomeboxImportPanel from './HomeboxImportPanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
   import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
@@ -57,13 +64,14 @@
   let selectedAssetId = $state<string | null>(null);
   let addOpen = $state(false);
   let addKind = $state<AssetKind>('item');
-  let editOpen = $state(false);
+  let assetAction = $state<AssetRouteAction>(null);
   let busy = $state(false);
   let message = $state('');
   let error = $state('');
   let searchQuery = $state('');
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
   let searchMode = $state<SearchMode>('fuzzy');
+  let settingsSection = $state<SettingsSection>('overview');
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
@@ -480,10 +488,11 @@
       routeUnavailable = '';
       addOpen = route.action === 'add';
       addKind = route.addKind ?? 'item';
-      editOpen = route.action === 'edit';
+      assetAction = route.assetAction;
       searchQuery = route.searchQuery;
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
+      settingsSection = route.settingsSection;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
         const tenant = data.context.tenants.find((candidate) => candidate.id === route.tenantId);
@@ -541,8 +550,8 @@
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
         }
-        if (route.action === 'edit' && (!canEditAsset(selectedInventory) || loadedAssetDetail?.lifecycleState !== 'active')) {
-          editOpen = false;
+        if (route.assetAction && (!canEditAsset(selectedInventory) || (route.assetAction !== 'delete' && loadedAssetDetail?.lifecycleState !== 'active'))) {
+          assetAction = null;
           replaceRoute({
             mode: 'asset',
             tenantId: data.context.selectedTenantId,
@@ -572,8 +581,9 @@
         return;
       }
 
-      if (route.mode === 'settings') {
+      if (route.mode === 'settings' || route.mode === 'import') {
         mode = route.mode;
+        settingsSection = route.settingsSection;
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
@@ -599,7 +609,7 @@
     invalidateAssetDetailLoad();
     routeUnavailable = messageText;
     addOpen = false;
-    editOpen = false;
+    assetAction = null;
     mode = 'home';
     selectedLocationId = null;
     selectedAssetId = null;
@@ -610,7 +620,22 @@
   }
 
   function navigateMode(nextMode: WorkspaceMode): void {
-    navigateTo({ mode: nextMode, tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
+    navigateTo({
+      mode: nextMode,
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: nextMode === 'settings' ? settingsSection : 'overview'
+    });
+  }
+
+  function openSettingsSection(section: SettingsSection): void {
+    settingsSection = section;
+    navigateTo({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: section
+    });
   }
 
   function openAdd(kind: AssetKind = 'item'): void {
@@ -627,20 +652,21 @@
     });
   }
 
-  function openEditRoute(): void {
+  function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
     if (selectedAsset) {
       navigateTo({
         mode: 'asset',
         tenantId: selectedAsset.tenantId,
         inventoryId: selectedAsset.inventoryId,
         assetId: selectedAsset.id,
-        action: 'edit'
+        assetAction: action,
+        action: action === 'edit' ? 'edit' : null
       });
     }
   }
 
-  function closeEditRoute(): void {
-    editOpen = false;
+  function closeAssetActionRoute(): void {
+    assetAction = null;
     if (selectedAsset) {
       replaceRoute({ mode: 'asset', tenantId: selectedAsset.tenantId, inventoryId: selectedAsset.inventoryId, assetId: selectedAsset.id });
     }
@@ -729,6 +755,27 @@
       selectedInventory.id,
       data.context.assetLifecycleState
     );
+  }
+
+  async function refreshAfterImport(): Promise<void> {
+    if (!selectedInventory) {
+      return;
+    }
+    data = await repository.selectAssetLifecycle(data.context.selectedTenantId, selectedInventory.id, 'active');
+    invalidateAssetDetailLoad();
+    resetSearchState();
+    mode = 'home';
+    selectedLocationId = null;
+    selectedAssetId = null;
+    loadedAssetDetail = null;
+    selectedAssetAttachments = [];
+    message = 'Import applied.';
+    replaceRoute({
+      mode: 'home',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      lifecycleState: data.context.assetLifecycleState
+    });
   }
 
   async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
@@ -891,10 +938,10 @@
         saving={busy}
         attachments={selectedAssetAttachments}
         mediaPolicy={data.context.mediaUploadPolicy}
-        {editOpen}
+        action={assetAction}
         onBack={closeDetailToPrevious}
-        onEditOpen={openEditRoute}
-        onEditClose={closeEditRoute}
+        onActionOpen={openAssetActionRoute}
+        onActionClose={closeAssetActionRoute}
         onSave={updateAsset}
         onArchive={archiveSelectedAsset}
         onRestore={restoreSelectedAsset}
@@ -915,6 +962,13 @@
         onSearch={() => { void search(); }}
         onOpenAsset={openAssetById}
       />
+    {:else if mode === 'import'}
+      <HomeboxImportPanel
+        tenantId={data.context.selectedTenantId}
+        inventory={selectedInventory}
+        {repository}
+        onImported={refreshAfterImport}
+      />
     {:else if mode === 'settings'}
       <InventorySettings
         tenant={selectedTenant}
@@ -925,6 +979,8 @@
         customizationRepository={repository}
         customAssetTypes={data.context.customAssetTypes}
         customFieldDefinitions={data.context.customFieldDefinitions}
+        section={settingsSection}
+        onSectionChange={openSettingsSection}
         onCustomizationChange={updateCustomizationContext}
       />
     {:else}

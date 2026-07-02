@@ -16,6 +16,7 @@
   } from '$lib/domain/inventory';
   import { hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
@@ -48,6 +49,15 @@
   let fieldApplicability = $state<CustomFieldApplicability>('all_assets');
   let fieldTargets = $state<string[]>([]);
   let enumOptions = $state('');
+  const scopeOptions = [
+    { value: 'inventory', label: 'Inventory', disabled: false },
+    { value: 'tenant', label: 'Tenant', disabled: false }
+  ];
+  const fieldTypeOptions = ['text', 'number', 'boolean', 'date', 'url', 'enum'].map((option) => ({ value: option, label: option }));
+  const applicabilityOptions = [
+    { value: 'all_assets', label: 'All assets' },
+    { value: 'custom_asset_types', label: 'Types only' }
+  ];
 
   let canConfigureInventory = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
@@ -201,14 +211,15 @@
     <div class="customization-grid">
       <div class="customization-column">
         <h3>Asset types</h3>
-        <div class="kind-segment" role="group" aria-label="Custom type scope">
-          <Button.Root variant={typeScope === 'inventory' ? 'secondary' : 'outline'} disabled={!canConfigureInventory} onclick={() => { typeScope = 'inventory'; }}>
-            Inventory
-          </Button.Root>
-          <Button.Root variant={typeScope === 'tenant' ? 'secondary' : 'outline'} disabled={!canConfigureTenant} onclick={() => { typeScope = 'tenant'; }}>
-            Tenant
-          </Button.Root>
-        </div>
+        <SegmentedControl
+          label="Custom type scope"
+          value={typeScope}
+          options={scopeOptions.map((option) => ({
+            ...option,
+            disabled: option.value === 'inventory' ? !canConfigureInventory : !canConfigureTenant
+          }))}
+          onSelect={(value) => { typeScope = value as 'tenant' | 'inventory'; }}
+        />
         <div class="field-stack">
           <Label for="custom-type-key">Key</Label>
           <Input id="custom-type-key" bind:value={typeKey} placeholder="medicine" />
@@ -243,14 +254,15 @@
 
       <div class="customization-column">
         <h3>Field definitions</h3>
-        <div class="kind-segment" role="group" aria-label="Custom field scope">
-          <Button.Root variant={fieldScope === 'inventory' ? 'secondary' : 'outline'} disabled={!canConfigureInventory} onclick={() => selectFieldScope('inventory')}>
-            Inventory
-          </Button.Root>
-          <Button.Root variant={fieldScope === 'tenant' ? 'secondary' : 'outline'} disabled={!canConfigureTenant} onclick={() => selectFieldScope('tenant')}>
-            Tenant
-          </Button.Root>
-        </div>
+        <SegmentedControl
+          label="Custom field scope"
+          value={fieldScope}
+          options={scopeOptions.map((option) => ({
+            ...option,
+            disabled: option.value === 'inventory' ? !canConfigureInventory : !canConfigureTenant
+          }))}
+          onSelect={(value) => selectFieldScope(value as 'tenant' | 'inventory')}
+        />
         <div class="field-stack">
           <Label for="custom-field-key">Key</Label>
           <Input id="custom-field-key" bind:value={fieldKey} placeholder="expiration-date" />
@@ -259,27 +271,24 @@
           <Label for="custom-field-name">Display name</Label>
           <Input id="custom-field-name" bind:value={fieldName} placeholder="Expiration date" />
         </div>
-        <div class="kind-segment" role="group" aria-label="Custom field type">
-          {#each ['text', 'number', 'boolean', 'date', 'url', 'enum'] as option}
-            <Button.Root variant={fieldType === option ? 'secondary' : 'outline'} onclick={() => { fieldType = option as CustomFieldType; }}>
-              {option}
-            </Button.Root>
-          {/each}
-        </div>
+        <SegmentedControl
+          label="Custom field type"
+          value={fieldType}
+          options={fieldTypeOptions}
+          onSelect={(value) => { fieldType = value as CustomFieldType; }}
+        />
         {#if fieldType === 'enum'}
           <div class="field-stack">
             <Label for="custom-field-options">Options</Label>
             <Input id="custom-field-options" bind:value={enumOptions} placeholder="new, open, closed" />
           </div>
         {/if}
-        <div class="kind-segment" role="group" aria-label="Field applicability">
-          <Button.Root variant={fieldApplicability === 'all_assets' ? 'secondary' : 'outline'} onclick={() => { fieldApplicability = 'all_assets'; }}>
-            All assets
-          </Button.Root>
-          <Button.Root variant={fieldApplicability === 'custom_asset_types' ? 'secondary' : 'outline'} onclick={() => { fieldApplicability = 'custom_asset_types'; }}>
-            Types only
-          </Button.Root>
-        </div>
+        <SegmentedControl
+          label="Field applicability"
+          value={fieldApplicability}
+          options={applicabilityOptions}
+          onSelect={(value) => { fieldApplicability = value as CustomFieldApplicability; }}
+        />
         {#if fieldApplicability === 'custom_asset_types'}
           <div class="parent-picker" role="group" aria-label="Field custom type targets">
             {#each targetableAssetTypes as assetType}

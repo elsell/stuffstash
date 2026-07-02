@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, unmount } from 'svelte';
 import InventorySettings from './InventorySettings.svelte';
 import type { Inventory, Tenant } from '$lib/domain/inventory';
@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('InventorySettings', () => {
-  it('uses edit_asset access for asset edit status and disables unsupported future entry points', () => {
+  it('uses edit_asset access for asset edit status and routes between focused settings sections', async () => {
     const tenant: Tenant = {
       id: 'tenant-one',
       name: 'Household',
@@ -33,6 +33,7 @@ describe('InventorySettings', () => {
       }
     };
 
+    const onSectionChange = vi.fn();
     component = mount(InventorySettings, {
       target: document.body,
       props: {
@@ -44,21 +45,41 @@ describe('InventorySettings', () => {
         customizationRepository: fakeCustomizationRepository(),
         customAssetTypes: [],
         customFieldDefinitions: [],
+        section: 'overview',
+        onSectionChange,
         onCustomizationChange: () => {}
       }
     });
 
     expect(document.body.textContent).toContain('Asset editsAllowed');
-    expect(document.body.textContent).toContain('You can view this inventory, but you cannot manage sharing.');
-    expect(
-      Array.from(document.body.querySelectorAll('button')).map((button) => ({
-        text: button.textContent,
-        disabled: button.disabled
-      })).filter((button) => button.text.includes('unavailable'))
-    ).toEqual([
-      { text: 'Tenant administration unavailable', disabled: true }
-    ]);
-    expect(document.body.textContent).toContain('Custom fields');
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent === 'Fields')?.click();
+    expect(onSectionChange).toHaveBeenCalledWith('fields');
+  });
+
+  it('shows administration as a focused settings section', () => {
+    component = mount(InventorySettings, {
+      target: document.body,
+      props: {
+        tenant: { id: 'tenant-one', name: 'Household', access: { relationship: 'owner', permissions: ['view'] } },
+        inventory: {
+          id: 'inventory-one',
+          tenantId: 'tenant-one',
+          name: 'Garage',
+          access: { relationship: 'viewer', permissions: ['view'] }
+        },
+        inventoryCount: 1,
+        accessRepository: fakeAccessRepository(),
+        auditRepository: fakeAuditRepository(),
+        customizationRepository: fakeCustomizationRepository(),
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        section: 'administration',
+        onSectionChange: () => {},
+        onCustomizationChange: () => {}
+      }
+    });
+
+    expect(document.body.textContent).toContain('Tenant administration unavailable');
   });
 
   it('does not treat create-only access as asset edit access', () => {
@@ -83,6 +104,8 @@ describe('InventorySettings', () => {
         customizationRepository: fakeCustomizationRepository(),
         customAssetTypes: [],
         customFieldDefinitions: [],
+        section: 'overview',
+        onSectionChange: () => {},
         onCustomizationChange: () => {}
       }
     });

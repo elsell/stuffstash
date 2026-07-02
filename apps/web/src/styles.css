@@ -216,6 +216,14 @@ small {
   width: 100%;
 }
 
+.nav-eyebrow {
+  margin: 4px 8px 2px;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
 .side-nav-footer {
   display: grid;
   gap: 8px;
@@ -545,10 +553,24 @@ small {
   justify-content: flex-end;
 }
 
-.settings-grid {
+.settings-grid,
+.settings-shell {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
+}
+
+.settings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.settings-shell {
+  align-content: start;
+}
+
+.settings-content {
+  display: grid;
+  gap: 12px;
+  max-width: 980px;
 }
 
 .settings-panel {
@@ -758,6 +780,101 @@ small {
   gap: 3px;
 }
 
+.import-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.import-source-panel {
+  position: sticky;
+  top: 92px;
+}
+
+.import-results {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.import-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(86px, 1fr));
+  gap: 8px;
+}
+
+.import-stat-grid div {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+  align-content: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--secondary);
+}
+
+.import-stat-grid strong {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.import-stat-grid span {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.import-message-list {
+  display: grid;
+  gap: 8px;
+}
+
+.import-message-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.import-message-row span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.import-compact-list {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.import-sample-row {
+  border-radius: var(--radius);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.check-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.check-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
 @media (max-width: 760px) {
   .access-form,
@@ -765,6 +882,8 @@ small {
   .access-row,
   .invitation-row,
   .customization-grid,
+  .import-layout,
+  .import-stat-grid,
   .schema-row,
   .audit-row {
     grid-template-columns: 1fr;
@@ -819,6 +938,116 @@ small {
 .asset-thumb svg {
   width: 42%;
   height: 42%;
+}
+
+.asset-detail-hero {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.asset-photo-panel,
+.photo-gallery-section,
+.asset-detail-sections,
+.detail-section {
+  display: grid;
+  gap: 14px;
+}
+
+.photo-gallery-section {
+  grid-column: 1;
+}
+
+.asset-hero-photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--muted) 70%, white);
+}
+
+.asset-hero-photo img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.asset-hero-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-brand-frame);
+}
+
+.asset-hero-fallback svg {
+  width: 76px;
+  height: 76px;
+}
+
+.photo-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.photo-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.photo-rail button {
+  position: relative;
+  flex: 0 0 auto;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 0;
+}
+
+.photo-rail button.active {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 28%, transparent);
+}
+
+.photo-rail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-rail span {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--background) 90%, transparent);
+  color: var(--foreground);
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 2px 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-empty {
+  min-height: auto;
+  padding: 10px;
 }
 
 .location-hero,
@@ -1111,10 +1340,19 @@ dd {
 
   .section-heading,
   .signin-panel,
+  .asset-detail-hero,
   .location-hero,
   .asset-detail-grid {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .asset-detail-hero {
+    gap: 16px;
+  }
+
+  .asset-hero-photo {
+    max-height: 44vh;
   }
 
   .asset-row {

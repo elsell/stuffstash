@@ -795,6 +795,40 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID imports legacy homebox apply */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID imports legacy homebox preview */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/restore": {
         parameters: {
             query?: never;
@@ -1310,6 +1344,87 @@ export interface components {
             relationship: string;
             tenantId: string;
         };
+        ImportApplyCountsResponse: {
+            /** Format: int64 */
+            assetsCreated: number;
+            /** Format: int64 */
+            assetsSkipped: number;
+            /** Format: int64 */
+            attachmentsCreated: number;
+            /** Format: int64 */
+            attachmentsSkipped: number;
+            /** Format: int64 */
+            fieldsCreated: number;
+            /** Format: int64 */
+            fieldsExisting: number;
+            /** Format: int64 */
+            locationsCreated: number;
+        };
+        ImportApplyResponse: {
+            counts: components["schemas"]["ImportApplyCountsResponse"];
+            messages: components["schemas"]["ImportMessageResponse"][] | null;
+        };
+        ImportAssetSample: {
+            customFields: {
+                [key: string]: unknown;
+            };
+            description: string;
+            kind: string;
+            parentSourceId?: string;
+            sourceId: string;
+            title: string;
+        };
+        ImportCountsResponse: {
+            /** Format: int64 */
+            assets: number;
+            /** Format: int64 */
+            attachments: number;
+            /** Format: int64 */
+            errors: number;
+            /** Format: int64 */
+            fields: number;
+            /** Format: int64 */
+            locations: number;
+            /** Format: int64 */
+            warnings: number;
+        };
+        ImportFieldResponse: {
+            displayName: string;
+            key: string;
+            type: string;
+        };
+        ImportImageSample: {
+            assetSourceId: string;
+            contentType: string;
+            fileName: string;
+            primary: boolean;
+            /** Format: int64 */
+            sizeBytes: number;
+            sourceId: string;
+        };
+        ImportMessageResponse: {
+            code: string;
+            detail?: string;
+            severity: string;
+            sourceId?: string;
+            sourceName?: string;
+            summary: string;
+        };
+        ImportPreviewResponse: {
+            assetSamples: components["schemas"]["ImportAssetSample"][] | null;
+            counts: components["schemas"]["ImportCountsResponse"];
+            fields: components["schemas"]["ImportFieldResponse"][] | null;
+            imageSamples: components["schemas"]["ImportImageSample"][] | null;
+            messages: components["schemas"]["ImportMessageResponse"][] | null;
+            source: components["schemas"]["ImportSourceResponse"];
+        };
+        ImportSourceResponse: {
+            baseUrl?: string;
+            imageImport: string;
+            name: string;
+            type: string;
+            version?: string;
+        };
         InitiateDirectUploadBody: {
             /**
              * Format: uri
@@ -1372,6 +1487,35 @@ export interface components {
             relationship: string;
             status: string;
             tenantId: string;
+        };
+        LegacyHomeboxImportRequest: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/LegacyHomeboxImportRequest.json
+             */
+            readonly $schema?: string;
+            /** @description Allow self-signed or otherwise untrusted Homebox TLS certificates */
+            allowInsecureTLS?: boolean;
+            /** @description Allow Homebox URLs that resolve to private or local network addresses */
+            allowPrivateNetwork?: boolean;
+            /** @description Homebox base URL for live imports */
+            baseUrl?: string;
+            /** @description Base64-encoded Homebox CSV content */
+            contentBase64?: string;
+            /** @description Uploaded CSV file name */
+            fileName?: string;
+            /** @description Import supported image attachments for live imports */
+            includeImages?: boolean;
+            /** @description Homebox password for live imports */
+            password?: string;
+            /**
+             * @description Import source type
+             * @enum {string}
+             */
+            sourceType: "legacy_homebox" | "legacy_homebox_csv";
+            /** @description Homebox username for live imports */
+            username?: string;
         };
         Meta: {
             pagination?: components["schemas"]["PaginationMeta"];
@@ -1516,6 +1660,26 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["GrantResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeImportApplyResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeImportApplyResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ImportApplyResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeImportPreviewResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeImportPreviewResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ImportPreviewResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeInventoryResponse: {
@@ -4803,6 +4967,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-apply": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegacyHomeboxImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeImportApplyResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-preview": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegacyHomeboxImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeImportPreviewResponse"];
                 };
             };
             /** @description Error */

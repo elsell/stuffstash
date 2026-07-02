@@ -4,7 +4,7 @@ export type AssetLifecycleFilter = AssetLifecycleState;
 export type SearchLifecycleFilter = AssetLifecycleFilter | 'all';
 export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
 export type SearchMode = 'fuzzy' | 'exact';
-export type WorkspaceMode = 'home' | 'location' | 'asset' | 'search' | 'settings';
+export type WorkspaceMode = 'home' | 'location' | 'asset' | 'search' | 'import' | 'settings';
 export type Capability = 'editor' | 'viewer';
 export type InventoryAccessRelationship = 'viewer' | 'editor';
 export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
@@ -159,6 +159,90 @@ export interface SearchRequest {
   query: string;
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
+}
+
+export type ImportSourceType = 'legacy_homebox' | 'legacy_homebox_csv';
+
+export interface LegacyHomeboxImportRequest {
+  sourceType: ImportSourceType;
+  baseUrl?: string;
+  username?: string;
+  password?: string;
+  includeImages?: boolean;
+  allowInsecureTLS?: boolean;
+  allowPrivateNetwork?: boolean;
+  fileName?: string;
+  contentBase64?: string;
+}
+
+export interface ImportCounts {
+  fields: number;
+  locations: number;
+  assets: number;
+  attachments: number;
+  warnings: number;
+  errors: number;
+}
+
+export interface ImportMessage {
+  code: string;
+  severity: string;
+  summary: string;
+  detail?: string;
+  sourceId?: string;
+  sourceName?: string;
+}
+
+export interface ImportField {
+  key: string;
+  displayName: string;
+  type: string;
+}
+
+export interface ImportAssetSample {
+  sourceId: string;
+  kind: string;
+  title: string;
+  description: string;
+  parentSourceId?: string;
+  customFields: Record<string, unknown>;
+}
+
+export interface ImportImageSample {
+  sourceId: string;
+  assetSourceId: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  primary: boolean;
+}
+
+export interface ImportPreview {
+  source: {
+    type: string;
+    name: string;
+    baseUrl?: string;
+    version?: string;
+    imageImport: string;
+  };
+  counts: ImportCounts;
+  fields: ImportField[];
+  assetSamples: ImportAssetSample[];
+  imageSamples: ImportImageSample[];
+  messages: ImportMessage[];
+}
+
+export interface ImportApplyResult {
+  counts: {
+    fieldsCreated: number;
+    fieldsExisting: number;
+    locationsCreated: number;
+    assetsCreated: number;
+    assetsSkipped: number;
+    attachmentsCreated: number;
+    attachmentsSkipped: number;
+  };
+  messages: ImportMessage[];
 }
 
 export interface AddAssetDraft {

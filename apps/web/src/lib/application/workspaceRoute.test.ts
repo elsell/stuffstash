@@ -17,7 +17,8 @@ describe('workspace route state', () => {
       tenantId: 'tenant_1',
       inventoryId: 'inv_1',
       assetId: 'asset_1',
-      action: 'edit'
+      action: 'edit',
+      assetAction: 'edit'
     });
 
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact'))).toMatchObject({
@@ -26,6 +27,27 @@ describe('workspace route state', () => {
       searchQuery: 'drill',
       searchLifecycleState: 'all',
       searchMode: 'exact'
+    });
+  });
+
+  it('parses durable asset actions and settings sections', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'))).toMatchObject({
+      mode: 'asset',
+      assetId: 'asset_1',
+      assetAction: 'move'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/delete'))).toMatchObject({
+      mode: 'asset',
+      assetId: 'asset_1',
+      assetAction: 'delete'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields'))).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'fields'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/nope'))).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'overview'
     });
   });
 
@@ -38,6 +60,12 @@ describe('workspace route state', () => {
     );
     expect(workspaceRouteHref({ action: 'add', addKind: 'location' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/location'
+    );
+    expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'
+    );
+    expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/settings/activity'
     );
   });
 
@@ -61,5 +89,25 @@ describe('workspace route state', () => {
       tenantId: null,
       inventoryId: null
     });
+  });
+
+  it('falls back for unsupported trailing route segments', () => {
+    const unsupported = [
+      'https://app.test/tenants/tenant_1/inventories/inv_1/locations/loc_1/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/edit/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/share',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/search/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/import/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/add/location/junk'
+    ];
+
+    for (const href of unsupported) {
+      expect(parseWorkspaceRoute(new URL(href))).toMatchObject({
+        mode: 'home',
+        tenantId: null,
+        inventoryId: null
+      });
+    }
   });
 });

@@ -58,6 +58,42 @@ describe('StuffStashInventoryRepository', () => {
     );
   });
 
+  it('hydrates API primary photos into workspace asset photos', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.loadWorkspace();
+
+    expect(data.assets[0]?.photo).toMatchObject({
+      id: 'attachment-one',
+      url: expect.stringContaining('blob:'),
+      alt: 'Archived Passport'
+    });
+    const thumbnailRequest = requests.find((request) =>
+      request.url.includes('/assets/asset-archived/attachments/attachment-one/thumbnail?variant=small')
+    );
+    expect(thumbnailRequest?.headers.get('Authorization')).toBe('Bearer id-token');
+  });
+
+  it('keeps workspace assets when a primary photo thumbnail cannot be fetched', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'], rejectedThumbnailAssetIds: ['asset-archived'] });
+    const observer = new InMemoryWorkspaceObserver();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
+
+    const data = await repository.loadWorkspace();
+
+    expect(data.assets[0]?.id).toBe('asset-archived');
+    expect(data.assets[0]?.photo).toBeUndefined();
+    expect(observer.events).toContainEqual({
+      eventName: 'workspace.asset_primary_photo_load_failed',
+      attributes: { assetId: 'asset-archived' }
+    });
+  });
+
   it('creates a starter inventory inside the selected tenant and reloads that inventory', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
@@ -94,6 +130,23 @@ describe('StuffStashInventoryRepository', () => {
     });
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
+    ]);
+  });
+
+  it('hydrates API primary photos into asset detail photos', async () => {
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-passport'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const asset = await repository.getAsset('tenant-home', 'inventory-household', 'asset-passport');
+
+    expect(asset.photo).toMatchObject({
+      id: 'attachment-one',
+      url: expect.stringContaining('blob:'),
+      alt: 'Passport'
+    });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=medium'
     ]);
   });
 
@@ -344,7 +397,9 @@ describe('StuffStashInventoryRepository', () => {
   });
 });
 
-function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof fetch; requests: Request[] } {
+function fakeFetch(
+  options: { directUploadUrl?: string; primaryPhotoAssetIds?: string[]; rejectedThumbnailAssetIds?: string[] } = {}
+): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
   return {
     requests,
@@ -383,13 +438,33 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
         return envelope([asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
-        return envelope([asset('asset-archived', 'tenant-home', 'inventory-household', 'Archived Passport', null, 'archived')]);
+        return envelope([
+          asset(
+            'asset-archived',
+            'tenant-home',
+            'inventory-household',
+            'Archived Passport',
+            null,
+            'archived',
+            options.primaryPhotoAssetIds?.includes('asset-archived') ?? false
+          )
+        ]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/assets') {
         return envelope([]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
-        return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', 'asset-closet'));
+        return envelope(
+          asset(
+            'asset-passport',
+            'tenant-home',
+            'inventory-household',
+            'Passport',
+            'asset-closet',
+            'active',
+            options.primaryPhotoAssetIds?.includes('asset-passport') ?? false
+          )
+        );
       }
       if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
         const body = (await request.clone().json()) as { title: string; description?: string; parentAssetId?: string | null };
@@ -433,7 +508,11 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments') {
         return envelope([attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg')]);
       }
-      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail') {
+      const thumbnailAssetID = matchingThumbnailAssetID(path, url.searchParams);
+      if (request.method === 'GET' && thumbnailAssetID) {
+        if (options.rejectedThumbnailAssetIds?.includes(thumbnailAssetID)) {
+          throw new Error('Thumbnail fetch failed.');
+        }
         return new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 });
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/search/assets') {
@@ -525,6 +604,16 @@ function fakeFetch(options: { directUploadUrl?: string } = {}): { fetch: typeof 
   };
 }
 
+function matchingThumbnailAssetID(path: string, searchParams: URLSearchParams): string | null {
+  const matches = path.match(
+    /^\/tenants\/tenant-home\/inventories\/inventory-household\/assets\/(asset-passport|asset-archived)\/attachments\/attachment-one\/thumbnail$/
+  );
+  if (!matches || (searchParams.get('variant') !== 'small' && searchParams.get('variant') !== 'medium')) {
+    return null;
+  }
+  return matches[1] ?? null;
+}
+
 function envelope(data: unknown, status = 200): Response {
   return Response.json({
     data,
@@ -557,7 +646,8 @@ function asset(
   inventoryId: string,
   title: string,
   parentAssetId: string | null = null,
-  lifecycleState = 'active'
+  lifecycleState = 'active',
+  withPrimaryPhoto = false
 ): object {
   return {
     id,
@@ -567,7 +657,20 @@ function asset(
     title,
     description: '',
     parentAssetId,
-    lifecycleState
+    lifecycleState,
+    primaryPhoto: withPrimaryPhoto
+      ? {
+          id: 'attachment-one',
+          fileName: 'photo.jpg',
+          contentType: 'image/jpeg',
+          sizeBytes: 10,
+          thumbnails: {
+            small: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/attachment-one/thumbnail?variant=small`,
+            medium: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/attachment-one/thumbnail?variant=medium`,
+            large: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/attachment-one/thumbnail?variant=large`
+          }
+        }
+      : undefined
   };
 }
 

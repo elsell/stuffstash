@@ -18,6 +18,7 @@
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     open,
@@ -57,6 +58,16 @@
   let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
+  const assetKindOptions = assetKinds.map((option) => ({ value: option, label: assetKindLabel(option) }));
+  const parentKindOptions = [
+    { value: 'location', label: 'Location' },
+    { value: 'container', label: 'Container' }
+  ];
+  const booleanOptions = [
+    { value: '', label: 'Unset' },
+    { value: 'true', label: 'Yes' },
+    { value: 'false', label: 'No' }
+  ];
 
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
@@ -246,18 +257,7 @@
       <Button.Root variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={onClose}><X /></Button.Root>
     </div>
 
-    <div class="filter-control" role="group" aria-label="Asset kind">
-      {#each assetKinds as option}
-        <Button.Root
-          variant="ghost"
-          aria-pressed={kind === option}
-          data-selected={kind === option}
-          onclick={() => { kind = option; }}
-        >
-          {assetKindLabel(option)}
-        </Button.Root>
-      {/each}
-    </div>
+    <SegmentedControl label="Asset kind" value={kind} options={assetKindOptions} onSelect={(value) => { kind = value as AssetKind; }} />
 
     <div class="field-stack">
       <Label for="asset-title">Name</Label>
@@ -289,14 +289,12 @@
     <div class="field-stack">
       <Label for="quick-parent-title">Create a new parent inside that place</Label>
       <Input id="quick-parent-title" bind:value={quickParentTitle} placeholder="Laundry shelf" />
-      <div class="filter-control" role="group" aria-label="New parent kind">
-        <Button.Root variant="ghost" aria-pressed={quickParentKind === 'location'} data-selected={quickParentKind === 'location'} onclick={() => { quickParentKind = 'location'; }}>
-          Location
-        </Button.Root>
-        <Button.Root variant="ghost" aria-pressed={quickParentKind === 'container'} data-selected={quickParentKind === 'container'} onclick={() => { quickParentKind = 'container'; }}>
-          Container
-        </Button.Root>
-      </div>
+      <SegmentedControl
+        label="New parent kind"
+        value={quickParentKind}
+        options={parentKindOptions}
+        onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
+      />
     </div>
 
     <div class="field-stack">
@@ -329,17 +327,12 @@
           <div class="field-stack">
             <Label for={`custom-field-${field.key}`}>{field.displayName}</Label>
             {#if field.type === 'boolean'}
-              <div class="filter-control" role="group" aria-label={field.displayName}>
-                <Button.Root variant="ghost" aria-pressed={(customFieldValues[field.key] ?? '') === ''} data-selected={(customFieldValues[field.key] ?? '') === ''} onclick={() => setCustomFieldValue(field.key, '')}>
-                  Unset
-                </Button.Root>
-                <Button.Root variant="ghost" aria-pressed={customFieldValues[field.key] === 'true'} data-selected={customFieldValues[field.key] === 'true'} onclick={() => setCustomFieldValue(field.key, 'true')}>
-                  Yes
-                </Button.Root>
-                <Button.Root variant="ghost" aria-pressed={customFieldValues[field.key] === 'false'} data-selected={customFieldValues[field.key] === 'false'} onclick={() => setCustomFieldValue(field.key, 'false')}>
-                  No
-                </Button.Root>
-              </div>
+              <SegmentedControl
+                label={field.displayName}
+                value={customFieldValues[field.key] ?? ''}
+                options={booleanOptions}
+                onSelect={(value) => setCustomFieldValue(field.key, value)}
+              />
             {:else if field.type === 'enum'}
               <div class="parent-picker" role="group" aria-label={field.displayName}>
                 <Button.Root variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'} onclick={() => setCustomFieldValue(field.key, '')}>

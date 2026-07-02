@@ -4,6 +4,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import type { SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     query = $bindable(''),
@@ -29,6 +30,14 @@
 
   const lifecycleOptions: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
   const modeOptions: SearchMode[] = ['fuzzy', 'exact'];
+  const lifecycleControlOptions = lifecycleOptions.map((option) => ({
+    value: option,
+    label: option === 'active' ? 'Active' : option === 'archived' ? 'Archived' : 'All'
+  }));
+  const modeControlOptions = modeOptions.map((option) => ({
+    value: option,
+    label: option === 'fuzzy' ? 'Contains' : 'Exact'
+  }));
 </script>
 
 <section class="workspace-main" aria-labelledby="search-title">
@@ -45,30 +54,18 @@
     <Button.Root disabled={busy || query.trim().length === 0}>Search</Button.Root>
   </form>
   <div class="search-filters" aria-label="Search filters">
-    <div class="filter-control" role="group" aria-label="Result lifecycle">
-      {#each lifecycleOptions as option}
-        <Button.Root
-          variant="ghost"
-          aria-pressed={lifecycleState === option}
-          data-selected={lifecycleState === option}
-          onclick={() => { lifecycleState = option; if (query.trim()) onSearch(); }}
-        >
-          {option === 'active' ? 'Active' : option === 'archived' ? 'Archived' : 'All'}
-        </Button.Root>
-      {/each}
-    </div>
-    <div class="filter-control" role="group" aria-label="Search mode">
-      {#each modeOptions as option}
-        <Button.Root
-          variant="ghost"
-          aria-pressed={searchMode === option}
-          data-selected={searchMode === option}
-          onclick={() => { searchMode = option; if (query.trim()) onSearch(); }}
-        >
-          {option === 'fuzzy' ? 'Contains' : 'Exact'}
-        </Button.Root>
-      {/each}
-    </div>
+    <SegmentedControl
+      label="Result lifecycle"
+      value={lifecycleState}
+      options={lifecycleControlOptions}
+      onSelect={(value) => { lifecycleState = value as SearchLifecycleFilter; if (query.trim()) onSearch(); }}
+    />
+    <SegmentedControl
+      label="Search mode"
+      value={searchMode}
+      options={modeControlOptions}
+      onSelect={(value) => { searchMode = value as SearchMode; if (query.trim()) onSearch(); }}
+    />
   </div>
 
   {#if error}
