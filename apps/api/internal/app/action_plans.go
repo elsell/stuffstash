@@ -208,12 +208,18 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		if err != nil {
 			return ActionPlanExecutionResult{}, err
 		}
-		executed, found, err := a.actionPlans.ExecuteCreateAssetActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
+		executed, found, err := a.actionPlans.ExecuteCreateAssetsActionPlan(ctx, input.TenantID, input.InventoryID, strings.TrimSpace(input.PlanID), ports.ActionPlanStateTransition{
 			PrincipalID: input.Principal.ID,
 			From:        actionplan.StateApproved,
 			To:          actionplan.StateExecuted,
 			At:          a.clock.Now(),
-		}, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation)
+		}, []ports.ActionPlanCreateAssetOperation{{
+			Item:                  prepared.Asset,
+			AuditRecord:           prepared.AuditRecord,
+			PromotedParent:        prepared.PromotedParent,
+			ParentPromotionRecord: prepared.ParentPromotionRecord,
+			UndoableOperation:     prepared.UndoableOperation,
+		}})
 		if err != nil {
 			if errors.Is(err, ports.ErrConflict) {
 				return ActionPlanExecutionResult{}, ErrConflict

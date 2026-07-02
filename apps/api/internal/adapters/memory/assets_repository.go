@@ -18,6 +18,35 @@ func (s *Store) CreateAsset(_ context.Context, item asset.Asset, auditRecord aud
 	return s.createAssetLocked(item, auditRecord, undoableOperation)
 }
 
+func (s *Store) CreateAssetWithParentPromotion(_ context.Context, promotedParent asset.Asset, parentAuditRecord audit.Record, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.createAssetWithParentPromotionLocked(promotedParent, parentAuditRecord, item, auditRecord, undoableOperation)
+}
+
+func (s *Store) createAssetWithParentPromotionLocked(promotedParent asset.Asset, parentAuditRecord audit.Record, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	existingParent, ok := s.assets[promotedParent.ID]
+	if !ok || existingParent.TenantID != promotedParent.TenantID || existingParent.InventoryID != promotedParent.InventoryID || existingParent.Kind != asset.KindItem || promotedParent.Kind != asset.KindContainer || promotedParent.LifecycleState != asset.LifecycleStateActive {
+		return ports.ErrForbidden
+	}
+	s.assets[promotedParent.ID] = promotedParent
+	if err := s.createAssetLocked(item, auditRecord, undoableOperation); err != nil {
+		s.assets[promotedParent.ID] = existingParent
+		return err
+	}
+	if _, exists := s.auditRecords[parentAuditRecord.ID]; exists {
+		s.assets[promotedParent.ID] = existingParent
+		delete(s.assets, item.ID)
+		if undoableOperation != nil {
+			delete(s.undoables, undoableOperation.ID)
+		}
+		delete(s.auditRecords, auditRecord.ID)
+		return ports.ErrConflict
+	}
+	s.auditRecords[parentAuditRecord.ID] = parentAuditRecord
+	return nil
+}
+
 func (s *Store) createAssetLocked(item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	containingInventory, ok := s.inventories[inventory.InventoryID(item.InventoryID.String())]
 	if !ok || containingInventory.TenantID.String() != item.TenantID.String() {

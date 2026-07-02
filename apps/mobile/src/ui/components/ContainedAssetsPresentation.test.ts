@@ -3,7 +3,8 @@ import {
   canUseContainedAssetAction,
   containedAssetActions,
   containedAssetsEmptyState,
-  containedAssetRows
+  containedAssetRows,
+  containedAssetsSectionHeading
 } from './ContainedAssetsPresentation';
 
 describe('ContainedAssetsPresentation', () => {
@@ -13,7 +14,7 @@ describe('ContainedAssetsPresentation', () => {
       canAddContainedAssets: true
     })).toEqual([
       { kind: 'add_here', label: 'Add item here', isPrimary: true },
-      { kind: 'move_here', label: 'Move things here', isPrimary: false }
+      { kind: 'move_here', label: 'Move items here', isPrimary: false }
     ]);
   });
 
@@ -33,13 +34,23 @@ describe('ContainedAssetsPresentation', () => {
       canAddContainedAssets: true
     })).toEqual({
       title: 'Nothing inside yet',
-      message: 'Add something here or move existing things into this place.'
+      message: 'Add an item here or move items into this space.'
     });
     expect(containedAssetsEmptyState({
       canAddContainedAssets: false
     })).toEqual({
       title: 'Nothing inside yet',
       message: 'This space is empty.'
+    });
+  });
+
+  it('anchors the contained section to the current asset', () => {
+    expect(containedAssetsSectionHeading({
+      title: 'Garage cabinet',
+      containedAssetsLabel: '4 things inside'
+    })).toEqual({
+      title: 'Inside Garage cabinet',
+      summary: '4 things inside'
     });
   });
 
@@ -60,7 +71,7 @@ describe('ContainedAssetsPresentation', () => {
     })).toBe(false);
   });
 
-  it('uses compact contained rows that omit redundant parent path metadata', () => {
+  it('maps the application-sorted contained rows without adding parent path metadata', () => {
     expect(containedAssetRows([{
       id: 'asset-battery-bin',
       title: 'Battery bin',

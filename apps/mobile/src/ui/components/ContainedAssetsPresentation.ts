@@ -14,6 +14,11 @@ export type ContainedAssetsEmptyState = {
   readonly message: string;
 };
 
+export type ContainedAssetsSectionHeading = {
+  readonly title: string;
+  readonly summary: string;
+};
+
 export type ContainedAssetRowViewModel = {
   readonly id: string;
   readonly title: string;
@@ -31,7 +36,7 @@ export function containedAssetActions(
   }
   return [
     { kind: 'add_here', label: 'Add item here', isPrimary: true },
-    { kind: 'move_here', label: 'Move things here', isPrimary: false }
+    { kind: 'move_here', label: 'Move items here', isPrimary: false }
   ];
 }
 
@@ -41,8 +46,17 @@ export function containedAssetsEmptyState(
   return {
     title: 'Nothing inside yet',
     message: asset.canAddContainedAssets
-      ? 'Add something here or move existing things into this place.'
+      ? 'Add an item here or move items into this space.'
       : 'This space is empty.'
+  };
+}
+
+export function containedAssetsSectionHeading(
+  asset: Pick<AssetDetailViewModel, 'title' | 'containedAssetsLabel'>
+): ContainedAssetsSectionHeading {
+  return {
+    title: `Inside ${asset.title}`,
+    summary: asset.containedAssetsLabel
   };
 }
 

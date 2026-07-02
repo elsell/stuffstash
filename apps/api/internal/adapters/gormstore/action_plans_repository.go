@@ -106,6 +106,11 @@ func (s Store) ExecuteCreateAndUpdateAssetsActionPlan(ctx context.Context, tenan
 			return nil
 		}
 		for _, create := range creates {
+			if create.PromotedParent != nil && create.ParentPromotionRecord != nil {
+				if err := promoteAssetParentInTx(tx, *create.PromotedParent, *create.ParentPromotionRecord); err != nil {
+					return err
+				}
+			}
 			if err := createAssetInTx(tx, create.Item, create.AuditRecord, actionPlanUndoableOperationPtr(create.UndoableOperation)); err != nil {
 				return err
 			}

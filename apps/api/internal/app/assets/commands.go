@@ -25,9 +25,11 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 }
 
 type PreparedCreateAsset struct {
-	Asset             asset.Asset
-	AuditRecord       audit.Record
-	UndoableOperation ports.UndoableOperation
+	Asset                 asset.Asset
+	AuditRecord           audit.Record
+	PromotedParent        *asset.Asset
+	ParentPromotionRecord *audit.Record
+	UndoableOperation     ports.UndoableOperation
 }
 
 func (s Service) PrepareCreateAsset(ctx context.Context, input CreateAssetInput) (PreparedCreateAsset, error) {
@@ -70,6 +72,8 @@ func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput,
 	now := s.now().UTC()
 
 	parentAssetID := asset.ID("")
+	var promotedParent *asset.Asset
+	var parentPromotionRecord *audit.Record
 	if strings.TrimSpace(input.ParentAssetID) != "" {
 		parsedParentID, ok := asset.NewID(input.ParentAssetID)
 		if !ok {
@@ -87,8 +91,36 @@ func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput,
 			if !found {
 				return PreparedCreateAsset{}, apperrors.ErrNotFound
 			}
-			if !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
+			if parent.LifecycleState != asset.LifecycleStateActive {
 				return PreparedCreateAsset{}, apperrors.ErrInvalidInput
+			}
+			if !parent.Kind.CanContainChildren() {
+				if parent.Kind != asset.KindItem {
+					return PreparedCreateAsset{}, apperrors.ErrInvalidInput
+				}
+				converted := parent
+				converted.Kind = asset.KindContainer
+				converted.UpdatedAt = now
+				parentPromotionRecordValue, err := s.newAuditRecord(auditRecordInput{
+					PrincipalID: input.Principal.ID,
+					TenantID:    input.TenantID,
+					InventoryID: input.InventoryID,
+					Source:      input.Source,
+					RequestID:   input.RequestID,
+					Action:      audit.ActionAssetUpdated,
+					TargetType:  audit.TargetAsset,
+					TargetID:    converted.ID.String(),
+					Metadata: map[string]string{
+						"asset_kind":    converted.Kind.String(),
+						"previous_kind": parent.Kind.String(),
+						"new_kind":      converted.Kind.String(),
+					},
+				})
+				if err != nil {
+					return PreparedCreateAsset{}, err
+				}
+				promotedParent = &converted
+				parentPromotionRecord = &parentPromotionRecordValue
 			}
 		}
 		parentAssetID = parsedParentID
@@ -136,12 +168,27 @@ func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput,
 		auditRecord.Metadata["custom_asset_type_id"] = item.CustomAssetTypeID.String()
 	}
 
-	return PreparedCreateAsset{Asset: item, AuditRecord: auditRecord, UndoableOperation: undoableOperation}, nil
+	return PreparedCreateAsset{
+		Asset:                 item,
+		AuditRecord:           auditRecord,
+		PromotedParent:        promotedParent,
+		ParentPromotionRecord: parentPromotionRecord,
+		UndoableOperation:     undoableOperation,
+	}, nil
 }
 
 func (s Service) persistPreparedCreateAsset(ctx context.Context, prepared PreparedCreateAsset) error {
 	if s.assetUnitOfWork == nil {
 		return apperrors.ErrInvalidInput
+	}
+	if prepared.PromotedParent != nil && prepared.ParentPromotionRecord != nil {
+		if err := s.assetUnitOfWork.CreateAssetWithParentPromotion(ctx, *prepared.PromotedParent, *prepared.ParentPromotionRecord, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation); err != nil {
+			if errors.Is(err, ports.ErrForbidden) {
+				return apperrors.ErrInvalidInput
+			}
+			return err
+		}
+		return nil
 	}
 	if err := s.assetUnitOfWork.CreateAsset(ctx, prepared.Asset, prepared.AuditRecord, &prepared.UndoableOperation); err != nil {
 		if errors.Is(err, ports.ErrForbidden) {

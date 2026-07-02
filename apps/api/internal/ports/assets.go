@@ -19,6 +19,7 @@ type AssetRepository interface {
 
 type AssetUnitOfWork interface {
 	CreateAsset(ctx context.Context, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
+	CreateAssetWithParentPromotion(ctx context.Context, promotedParent asset.Asset, parentAuditRecord audit.Record, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record, undoableOperation *UndoableOperation) error
 	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error

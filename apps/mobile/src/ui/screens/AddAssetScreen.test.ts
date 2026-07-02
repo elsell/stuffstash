@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assertSelectableParent,
   resolveParentAssetId,
   resolveSelectedParent
 } from './AddAssetResolution';
@@ -17,7 +18,19 @@ const garage: ParentLookupResult = {
   subtitle: 'No parent',
   pathLabel: 'Garage',
   selectionHint: 'Location',
-  willPromoteToContainer: false
+  willPromoteToContainer: false,
+  canSelectAsParent: true
+};
+
+const babyItem: ParentLookupResult = {
+  id: 'asset-baby',
+  title: 'Baby',
+  kind: 'item',
+  subtitle: 'Test / Baby room',
+  pathLabel: 'Baby room / Baby',
+  selectionHint: 'Will become a container for this item',
+  willPromoteToContainer: true,
+  canSelectAsParent: true
 };
 
 describe('AddAssetScreen parent resolution', () => {
@@ -53,6 +66,16 @@ describe('AddAssetScreen parent resolution', () => {
     expect(() => resolveParentAssetId([garage], 'Basement shelf', undefined)).toThrow(
       'Create this parent or clear the Put in field.'
     );
+  });
+
+  it('allows item parents so the API can promote them while saving', () => {
+    expect(resolveParentAssetId([babyItem], 'Baby', undefined)).toBe('asset-baby');
+    expect(resolveParentAssetId([babyItem], '', 'asset-baby')).toBe('asset-baby');
+    expect(() => assertSelectableParent(babyItem)).not.toThrow();
+  });
+
+  it('does not invent a trusted parent when stale state only has an id', () => {
+    expect(resolveSelectedParent([], 'asset-baby', 'Baby', undefined)).toBeUndefined();
   });
 
 });

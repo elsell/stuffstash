@@ -33,11 +33,22 @@ func (f *fakeActionPlanRepository) ExecuteCreateAndUpdateAssetsActionPlan(ctx co
 	for id, item := range assetRepository.items {
 		assetsSnapshot[id] = item
 	}
+	undoablesSnapshot := map[string]ports.UndoableOperation{}
+	for id, operation := range assetRepository.undoables {
+		undoablesSnapshot[id] = operation
+	}
 	auditSnapshot := append([]audit.Record{}, assetRepository.auditRecords...)
 	for _, create := range creates {
 		operation := create.UndoableOperation
-		if err := f.assetUnitOfWork.CreateAsset(ctx, create.Item, create.AuditRecord, &operation); err != nil {
+		var err error
+		if create.PromotedParent != nil && create.ParentPromotionRecord != nil {
+			err = f.assetUnitOfWork.CreateAssetWithParentPromotion(ctx, *create.PromotedParent, *create.ParentPromotionRecord, create.Item, create.AuditRecord, &operation)
+		} else {
+			err = f.assetUnitOfWork.CreateAsset(ctx, create.Item, create.AuditRecord, &operation)
+		}
+		if err != nil {
 			assetRepository.items = assetsSnapshot
+			assetRepository.undoables = undoablesSnapshot
 			assetRepository.auditRecords = auditSnapshot
 			return ports.ActionPlanRecord{}, true, err
 		}
@@ -46,16 +57,19 @@ func (f *fakeActionPlanRepository) ExecuteCreateAndUpdateAssetsActionPlan(ctx co
 		current, found, err := assetRepository.AssetByID(ctx, tenantID, inventoryID, update.ExpectedCurrent.ID)
 		if err != nil {
 			assetRepository.items = assetsSnapshot
+			assetRepository.undoables = undoablesSnapshot
 			assetRepository.auditRecords = auditSnapshot
 			return ports.ActionPlanRecord{}, true, err
 		}
 		if !found || !testAssetsEquivalentForStaleCheck(current, update.ExpectedCurrent) {
 			assetRepository.items = assetsSnapshot
+			assetRepository.undoables = undoablesSnapshot
 			assetRepository.auditRecords = auditSnapshot
 			return ports.ActionPlanRecord{}, true, ports.ErrConflict
 		}
 		if err := f.assetUnitOfWork.UpdateAsset(ctx, update.Item, update.AuditRecords, update.UndoableOperation); err != nil {
 			assetRepository.items = assetsSnapshot
+			assetRepository.undoables = undoablesSnapshot
 			assetRepository.auditRecords = auditSnapshot
 			return ports.ActionPlanRecord{}, true, err
 		}

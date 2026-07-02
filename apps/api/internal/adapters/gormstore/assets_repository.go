@@ -22,6 +22,40 @@ func (s Store) CreateAsset(ctx context.Context, item asset.Asset, auditRecord au
 	})
 }
 
+func (s Store) CreateAssetWithParentPromotion(ctx context.Context, promotedParent asset.Asset, parentAuditRecord audit.Record, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := promoteAssetParentInTx(tx, promotedParent, parentAuditRecord); err != nil {
+			return err
+		}
+		return createAssetInTx(tx, item, auditRecord, undoableOperation)
+	})
+}
+
+func promoteAssetParentInTx(tx *gorm.DB, promotedParent asset.Asset, parentAuditRecord audit.Record) error {
+	if promotedParent.Kind != asset.KindContainer || promotedParent.LifecycleState != asset.LifecycleStateActive {
+		return ports.ErrForbidden
+	}
+	result := tx.Model(&assetModel{}).
+		Where("id = ? AND tenant_id = ? AND inventory_id = ? AND kind = ? AND lifecycle_state = ?",
+			promotedParent.ID.String(),
+			promotedParent.TenantID.String(),
+			promotedParent.InventoryID.String(),
+			asset.KindItem.String(),
+			asset.LifecycleStateActive.String(),
+		).
+		Updates(map[string]any{
+			"kind":       promotedParent.Kind.String(),
+			"updated_at": promotedParent.UpdatedAt,
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return ports.ErrForbidden
+	}
+	return createAuditRecord(tx, parentAuditRecord)
+}
+
 func createAssetInTx(tx *gorm.DB, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	var containingInventory inventoryModel
 	err := tx.Where(&inventoryModel{

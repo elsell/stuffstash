@@ -39,6 +39,7 @@ import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../compo
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
 import { colors, radius, spacing } from '../theme/tokens';
 import {
+  assertSelectableParent,
   ParentSelection,
   resolveParentAssetId,
   resolveSelectedParent
@@ -222,6 +223,16 @@ export function AddAssetScreen({
     setSaveState({ status: 'saving' });
 
     try {
+      const selectedParent = resolveSelectedParent(
+        parentMatches,
+        parentAssetId,
+        parentQuery,
+        lastParent
+      );
+      if (parentAssetId && !selectedParent) {
+        throw new Error('Choose this parent again before saving.');
+      }
+      assertSelectableParent(selectedParent);
       const resolvedParentAssetId = resolveParentAssetId(
         parentMatches,
         parentQuery,
@@ -906,18 +917,24 @@ function ParentPicker({
           />
           {matches.filter((parent) => parent.id !== createdParentId).map((parent) => (
             <ParentOption
+              disabled={parent.canSelectAsParent === false}
               isSelected={parentAssetId === parent.id}
               key={parent.id}
               label={parent.title}
-              meta={`${parent.selectionHint} · ${parent.subtitle}`}
-              onPress={() => onSelectParent(parent)}
+              meta={parent.disabledReason ?? `${parent.selectionHint} · ${parent.subtitle}`}
+              onPress={() => {
+                if (parent.canSelectAsParent === false) {
+                  return;
+                }
+                onSelectParent(parent);
+              }}
             />
           ))}
         </View>
       ) : null}
       {selectedParent?.willPromoteToContainer ? (
         <Text style={styles.parentPromotionText}>
-          Stuff Stash will treat {selectedParent.title} as a container for this item.
+          Stuff Stash will turn {selectedParent.title} into a container for this item.
         </Text>
       ) : null}
     </View>
@@ -951,6 +968,7 @@ function KeyboardDismissBar({
 }
 
 function ParentOption({
+  disabled = false,
   identityKind,
   isSelected,
   label,
@@ -958,6 +976,7 @@ function ParentOption({
   meta,
   onPress
 }: {
+  readonly disabled?: boolean;
   readonly identityKind?: 'inventory';
   readonly isSelected: boolean;
   readonly label: string;
@@ -968,9 +987,14 @@ function ParentOption({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected: isSelected }}
+      accessibilityState={{ disabled, selected: isSelected }}
+      disabled={disabled}
       onPress={onPress}
-      style={[styles.parentOption, isSelected ? styles.parentOptionSelected : null]}
+      style={[
+        styles.parentOption,
+        isSelected ? styles.parentOptionSelected : null,
+        disabled ? styles.parentOptionDisabled : null
+      ]}
     >
       <View style={styles.parentCheck}>
         {leading === 'created' ? (
@@ -1191,6 +1215,9 @@ const styles = StyleSheet.create({
   },
   parentOptionSelected: {
     borderColor: colors.action
+  },
+  parentOptionDisabled: {
+    opacity: 0.58
   },
   createParentButton: {
     alignItems: 'center',

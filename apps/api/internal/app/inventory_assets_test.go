@@ -92,7 +92,7 @@ func TestCreateAndListAssets(t *testing.T) {
 	}
 }
 
-func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
+func TestCreateAssetPromotesItemParentToContainer(t *testing.T) {
 	itemParent := assetItem("asset-parent", "tenant-one", "inventory-one", asset.KindItem, "")
 	assets := &fakeAssetRepository{
 		items: map[asset.ID]asset.Asset{itemParent.ID: itemParent},
@@ -116,7 +116,7 @@ func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
 		IDs:             &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
 
-	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	child, err := application.CreateAsset(context.Background(), CreateAssetInput{
 		Principal:     identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:      tenant.ID("tenant-one"),
 		InventoryID:   inventory.InventoryID("inventory-one"),
@@ -124,11 +124,43 @@ func TestCreateAssetRejectsItemParentAndCustomFields(t *testing.T) {
 		Title:         "Bit set",
 		ParentAssetID: itemParent.ID.String(),
 	})
-	if !errors.Is(err, ErrInvalidInput) {
-		t.Fatalf("expected invalid input for item parent, got %v", err)
+	if err != nil {
+		t.Fatalf("create asset under item parent: %v", err)
 	}
+	if child.ParentAssetID != itemParent.ID {
+		t.Fatalf("expected child parent %q, got %q", itemParent.ID, child.ParentAssetID)
+	}
+	promotedParent := assets.items[itemParent.ID]
+	if promotedParent.Kind != asset.KindContainer {
+		t.Fatalf("expected parent promotion to container, got %+v", promotedParent)
+	}
+	if len(assets.auditRecords) != 2 || assets.auditRecords[0].Action != audit.ActionAssetUpdated || assets.auditRecords[1].Action != audit.ActionAssetCreated {
+		t.Fatalf("expected parent promotion and child creation audit records, got %+v", assets.auditRecords)
+	}
+}
 
-	_, err = application.CreateAsset(context.Background(), CreateAssetInput{
+func TestCreateAssetRejectsCustomFields(t *testing.T) {
+	assets := &fakeAssetRepository{}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &fakeAuthorizer{},
+		Tenants: &fakeTenantRepository{
+			exists: true,
+		},
+		Inventories: &fakeInventoryRepository{
+			items: []inventory.Inventory{
+				inventoryItem("inventory-one", "tenant-one", "Tools"),
+			},
+		},
+		Assets:          assets,
+		AssetUnitOfWork: assets,
+		Undoables:       assets,
+		Audit:           &fakeAuditRepository{},
+		Outbox:          &fakeOutbox{},
+		IDs:             &fakeIDGenerator{ids: []string{"asset-one"}},
+	})
+
+	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
 		Principal:    identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:     tenant.ID("tenant-one"),
 		InventoryID:  inventory.InventoryID("inventory-one"),

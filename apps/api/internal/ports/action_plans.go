@@ -20,9 +20,11 @@ type ActionPlanCommandRecord struct {
 }
 
 type ActionPlanCreateAssetOperation struct {
-	Item              asset.Asset
-	AuditRecord       audit.Record
-	UndoableOperation UndoableOperation
+	Item                  asset.Asset
+	AuditRecord           audit.Record
+	PromotedParent        *asset.Asset
+	ParentPromotionRecord *audit.Record
+	UndoableOperation     UndoableOperation
 }
 
 type ActionPlanUpdateAssetOperation struct {

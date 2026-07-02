@@ -42,14 +42,19 @@ func (a App) executeApprovedCreateActionPlanCommands(ctx context.Context, input 
 			if err != nil {
 				return ActionPlanExecutionResult{}, err
 			}
+			if prepared.PromotedParent != nil {
+				pendingParentKinds[prepared.PromotedParent.ID] = prepared.PromotedParent.Kind
+			}
 			createdByCommand[command.ID] = prepared.Asset
 			pendingParentKinds[prepared.Asset.ID] = prepared.Asset.Kind
 			pendingParentIDs[prepared.Asset.ID] = prepared.Asset.ParentAssetID
 			commandResults = append(commandResults, actionPlanCommandAssetResult(command, prepared.Asset, "create"))
 			preparedCreates = append(preparedCreates, ports.ActionPlanCreateAssetOperation{
-				Item:              prepared.Asset,
-				AuditRecord:       prepared.AuditRecord,
-				UndoableOperation: prepared.UndoableOperation,
+				Item:                  prepared.Asset,
+				AuditRecord:           prepared.AuditRecord,
+				PromotedParent:        prepared.PromotedParent,
+				ParentPromotionRecord: prepared.ParentPromotionRecord,
+				UndoableOperation:     prepared.UndoableOperation,
 			})
 		case actionplan.CommandKindMoveAsset:
 			moveInput, err := actionPlanMoveAssetInput(input, command)

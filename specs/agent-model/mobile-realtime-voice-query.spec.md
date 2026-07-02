@@ -31,11 +31,12 @@ This spec includes:
 - Structured final response.
 - Text-to-speech streaming back to mobile.
 - First mobile display behavior for debug/progress events.
+- Reviewable action-plan proposal, approval, cancellation, and approved execution for supported write requests.
 
 This spec does not include:
 
-- Write actions.
-- Approval UI.
+- Unreviewed or model-direct write actions.
+- Production-polished approval UI beyond the safe review controls described here.
 - External MCP write tools.
 - Long-term transcript retention.
 - Raw audio retention.
@@ -73,13 +74,15 @@ For clear write requests, the loop should follow an explicit state sequence:
 
 The loop must not continue calling the language model after a valid action plan has been proposed. If a constrained planner output is invalid, the loop may retry with safe structured repair context, but it must not let a later final answer override a previously valid plan.
 
+Approved voice create-asset action plans must execute through the same application create command semantics as REST and mobile Add. If a reviewed create command places the new asset inside an existing item, execution must promote that parent item into a container in the same authoritative unit of work, with audit history for the parent promotion and child creation. Voice adapters and websocket handlers must not perform client-side or transport-layer kind mutation.
+
 The API may complete obvious unsafe or under-specified transcripts locally after transcription and before language inference. This includes provider credential requests, broad destructive database or inventory wipe requests, and vague deictic move destinations such as "over there" or "to the side" when no concrete place is named. These local completions must return structured safe final or clarification responses and must not call the language provider.
 
 The internal agent loop may use the project-owned tool catalog specified by `specs/agent-model/mcp-agent-tools.spec.md`, but it must call tools in-process through application services and ports. It must not call the public MCP transport for this first mobile loop.
 
-## First User Workflow
+## User Workflows
 
-The first supported mobile workflow is a read-only question about the selected tenant and inventory.
+The first supported mobile workflow was a read-only question about the selected tenant and inventory, and that remains the direct-completion path.
 
 Examples:
 
@@ -88,9 +91,9 @@ Examples:
 - "What is in the garage?"
 - "Do I have any batteries?"
 
-The workflow must not create, update, move, archive, restore, delete, import, export, share, or configure anything.
+Read-only workflows must not create, update, move, archive, restore, delete, import, export, share, or configure anything.
 
-If the user asks for a state-changing action during this first slice, the system must answer safely that changes are not available through voice yet. The response may explain the closest available non-voice action if that is safe and useful.
+Supported state-changing workflows must use action-plan review. If the user asks for a supported create, move, archive, or restore action, the system must gather enough safe inventory context, propose a reviewable action plan, pause for explicit approval or cancellation, and execute only the approved plan through application services. Unsupported, unsafe, or under-specified state-changing requests must produce a safe clarification or refusal rather than executing a change.
 
 ## Mobile Interaction
 

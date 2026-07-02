@@ -8,6 +8,8 @@ export type ParentSelection = {
   readonly pathLabel: string;
   readonly selectionHint: string;
   readonly willPromoteToContainer: boolean;
+  readonly canSelectAsParent?: boolean;
+  readonly disabledReason?: string;
 };
 
 export function resolveParentAssetId(
@@ -16,17 +18,20 @@ export function resolveParentAssetId(
   parentAssetId: string | undefined
 ): string | undefined {
   const normalizedQuery = normalizeParentName(parentQuery);
-  if (normalizedQuery.length === 0) {
+  if (parentAssetId) {
+    const selectedMatch = parentMatches.find((parent) => parent.id === parentAssetId);
+    assertSelectableParent(selectedMatch);
     return parentAssetId;
   }
-  if (parentAssetId) {
-    return parentAssetId;
+  if (normalizedQuery.length === 0) {
+    return undefined;
   }
 
   const exactParent = parentMatches.find(
     (parent) => normalizeParentName(parent.title) === normalizedQuery
   );
   if (exactParent) {
+    assertSelectableParent(exactParent);
     return exactParent.id;
   }
 
@@ -45,17 +50,14 @@ export function resolveSelectedParent(
 
   return (
     parentMatches.find((parent) => parent.id === parentAssetId) ??
-    (lastParent?.id === parentAssetId ? lastParent : undefined) ??
-    {
-      id: parentAssetId,
-      title: parentQuery,
-      kind: 'container',
-      subtitle: 'Selected parent',
-      pathLabel: parentQuery,
-      selectionHint: 'Container',
-      willPromoteToContainer: false
-    }
+    (lastParent?.id === parentAssetId ? lastParent : undefined)
   );
+}
+
+export function assertSelectableParent(parent: ParentSelection | ParentLookupResult | undefined): void {
+  if (parent?.canSelectAsParent === false) {
+    throw new Error(parent.disabledReason ?? 'Choose a place or container for Put in.');
+  }
 }
 
 function normalizeParentName(value: string): string {

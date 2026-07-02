@@ -40,7 +40,13 @@ func (f *fakeActionPlanRepository) ExecuteCreateAssetsActionPlan(ctx context.Con
 	auditSnapshot := append([]audit.Record{}, assetRepository.auditRecords...)
 	for _, create := range creates {
 		operation := create.UndoableOperation
-		if err := f.assetUnitOfWork.CreateAsset(ctx, create.Item, create.AuditRecord, &operation); err != nil {
+		var err error
+		if create.PromotedParent != nil && create.ParentPromotionRecord != nil {
+			err = f.assetUnitOfWork.CreateAssetWithParentPromotion(ctx, *create.PromotedParent, *create.ParentPromotionRecord, create.Item, create.AuditRecord, &operation)
+		} else {
+			err = f.assetUnitOfWork.CreateAsset(ctx, create.Item, create.AuditRecord, &operation)
+		}
+		if err != nil {
 			assetRepository.items = itemsSnapshot
 			assetRepository.undoables = undoablesSnapshot
 			assetRepository.auditRecords = auditSnapshot

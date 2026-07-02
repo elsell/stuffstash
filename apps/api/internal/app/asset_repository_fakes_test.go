@@ -48,6 +48,26 @@ func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset, a
 	return nil
 }
 
+func (f *fakeAssetRepository) CreateAssetWithParentPromotion(_ context.Context, promotedParent asset.Asset, parentAuditRecord audit.Record, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	if f.items == nil {
+		f.items = map[asset.ID]asset.Asset{}
+	}
+	if f.undoables == nil {
+		f.undoables = map[string]ports.UndoableOperation{}
+	}
+	existingParent, ok := f.items[promotedParent.ID]
+	if !ok || existingParent.TenantID != promotedParent.TenantID || existingParent.InventoryID != promotedParent.InventoryID || existingParent.Kind != asset.KindItem || promotedParent.Kind != asset.KindContainer || promotedParent.LifecycleState != asset.LifecycleStateActive {
+		return ports.ErrForbidden
+	}
+	f.items[promotedParent.ID] = promotedParent
+	if err := f.CreateAsset(context.Background(), item, auditRecord, undoableOperation); err != nil {
+		f.items[promotedParent.ID] = existingParent
+		return err
+	}
+	f.auditRecords = append([]audit.Record{parentAuditRecord}, f.auditRecords...)
+	return nil
+}
+
 func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	if f.items == nil {
 		f.items = map[asset.ID]asset.Asset{}

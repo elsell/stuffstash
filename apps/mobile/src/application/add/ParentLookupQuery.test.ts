@@ -99,7 +99,8 @@ describe('ParentLookupQuery', () => {
         title: 'Cordless drill',
         kind: 'item',
         selectionHint: 'Will become a container for this item',
-        willPromoteToContainer: true
+        willPromoteToContainer: true,
+        canSelectAsParent: true
       }
     ]);
     expect(repository.searchedQuery).toBeUndefined();
@@ -115,7 +116,8 @@ describe('ParentLookupQuery', () => {
         title: 'Cordless drill',
         kind: 'item',
         selectionHint: 'Will become a container for this item',
-        willPromoteToContainer: true
+        willPromoteToContainer: true,
+        canSelectAsParent: true
       }
     ]);
     expect(repository.searchedQuery).toBe('drill');

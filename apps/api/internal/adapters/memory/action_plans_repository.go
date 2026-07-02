@@ -123,7 +123,13 @@ func (s *Store) executeCreateAndUpdateAssetsActionPlan(tenantID tenant.ID, inven
 	undoableSnapshot := cloneUndoableMap(s.undoables)
 	for _, create := range creates {
 		operation := create.UndoableOperation
-		if err := s.createAssetLocked(create.Item, create.AuditRecord, &operation); err != nil {
+		var err error
+		if create.PromotedParent != nil && create.ParentPromotionRecord != nil {
+			err = s.createAssetWithParentPromotionLocked(*create.PromotedParent, *create.ParentPromotionRecord, create.Item, create.AuditRecord, &operation)
+		} else {
+			err = s.createAssetLocked(create.Item, create.AuditRecord, &operation)
+		}
+		if err != nil {
 			s.assets = assetsSnapshot
 			s.auditRecords = auditSnapshot
 			s.undoables = undoableSnapshot

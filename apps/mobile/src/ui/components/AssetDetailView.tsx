@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
-import { Camera, ChevronRight, MoreHorizontal, MoveRight, Pencil } from 'lucide-react-native';
+import { Camera, ChevronRight, MoreHorizontal, MoveRight, Pencil, Plus } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import {
   assetPhotoStatusLabel
@@ -18,9 +18,18 @@ import {
   containedAssetActions,
   containedAssetRows,
   containedAssetsEmptyState,
+  containedAssetsSectionHeading,
   type ContainedAssetAction,
   type ContainedAssetRowViewModel
 } from './ContainedAssetsPresentation';
+import {
+  assetDetailBadges,
+  assetDetailLocationContext,
+  assetDetailMetadataRows,
+  assetDetailSectionsPresentation,
+  visibleAssetDescription,
+  type AssetDetailBadge
+} from './AssetDetailPresentation';
 import { colors, radius, spacing } from '../theme/tokens';
 
 export type AssetPhotoUploadProgressViewModel = {
@@ -70,6 +79,13 @@ export function AssetDetailView({
   workspaceStatusMessage,
   refreshControl
 }: AssetDetailViewProps) {
+  const sections = assetDetailSectionsPresentation({
+    canContainAssets: asset.canContainAssets,
+    hasPhotoStatus: Boolean(photoStatusMessage),
+    hasWorkspaceStatus: Boolean(workspaceStatusMessage),
+    photoUploadCount: photoUploads.length
+  });
+
   return (
     <ScrollView contentContainerStyle={styles.content} refreshControl={refreshControl}>
       {onBack ? (
@@ -86,99 +102,208 @@ export function AssetDetailView({
           onPhotoPress={onPhotoPress}
         />
 
-        <View style={styles.panel}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerText}>
-              <View style={styles.badgeRow}>
-                <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
-                {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
-              </View>
-              <Text style={styles.title}>{asset.title}</Text>
-            </View>
-            {onMoreActions ? (
-              <Pressable
-                accessibilityLabel="More asset actions"
-                accessibilityRole="button"
-                disabled={isActionPending}
-                onPress={onMoreActions}
-                style={[styles.iconButton, isActionPending ? styles.disabledAction : null]}
-              >
-                <MoreHorizontal color={colors.text} size={22} />
-              </Pressable>
-            ) : null}
-          </View>
-
-          {asset.description.trim().length > 0 ? (
-            <Text style={styles.description}>{asset.description}</Text>
-          ) : null}
-
-          {workspaceStatusMessage ? (
-            <View
-              accessible
-              accessibilityLiveRegion="polite"
-              accessibilityRole="alert"
-              style={[
-                styles.workspaceStatusPanel,
-                workspaceStatusKind === 'working' ? styles.workspaceStatusWorkingPanel : null
-              ]}
-            >
-              <Text style={styles.workspaceStatusText}>{workspaceStatusMessage}</Text>
-            </View>
-          ) : null}
-
-          {photoStatusMessage ? (
-            <View style={styles.photoStatusPanel}>
-              <Text style={styles.photoStatusText}>{photoStatusMessage}</Text>
-              {canRetryPhotos && onRetryPhotos ? (
-                <Pressable accessibilityRole="button" onPress={onRetryPhotos} style={styles.retryButton}>
-                  <Text style={styles.retryButtonText}>Retry</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ) : null}
-
-          {photoUploads.length > 0 ? <PhotoUploadProgressList uploads={photoUploads} /> : null}
-
-          <View style={styles.metadataList}>
-            <MetadataRow label="Location" value={asset.locationTrailLabel} />
-            <MetadataRow label="Status" value={asset.lifecycleLabel} />
-            <MetadataRow label="Updated" value={asset.updatedAtLabel} />
-          </View>
-
-          <View style={styles.primaryActions}>
-            <WorkspaceAction
-              disabled={isActionPending || !asset.canEdit || !onEdit}
-              icon={<Pencil color={colors.onAction} size={18} />}
-              label="Edit"
-              primary
-              onPress={onEdit}
-            />
-            <WorkspaceAction
-              disabled={isActionPending || !asset.canMove || !onMove}
-              icon={<MoveRight color={colors.text} size={18} />}
-              label="Move"
-              onPress={onMove}
-            />
-            <WorkspaceAction
-              disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
-              icon={<Camera color={colors.text} size={18} />}
-              label="Photos"
-              onPress={onAddPhotos}
-            />
-          </View>
-        </View>
-
-        {asset.canContainAssets ? (
-          <ContainedAssetsSection
-            asset={asset}
-            isActionPending={isActionPending}
-            onAddHere={onAddHere}
-            onChildPress={onChildPress}
-            onMoveThingsHere={onMoveThingsHere}
-          />
-        ) : null}
+        {sections.map((section) => {
+          switch (section.role) {
+            case 'identity':
+              return (
+                <IdentitySection
+                  key={section.role}
+                  asset={asset}
+                  isActionPending={isActionPending}
+                  onMoreActions={onMoreActions}
+                />
+              );
+            case 'status':
+              return (
+                <StatusAndProgressSection
+                  key={section.role}
+                  canRetryPhotos={canRetryPhotos}
+                  onRetryPhotos={onRetryPhotos}
+                  photoStatusMessage={photoStatusMessage}
+                  photoUploads={photoUploads}
+                  workspaceStatusKind={workspaceStatusKind}
+                  workspaceStatusMessage={workspaceStatusMessage}
+                />
+              );
+            case 'metadata':
+              return <MetadataSection key={section.role} asset={asset} />;
+            case 'contained_assets':
+              return (
+                <ContainedAssetsSection
+                  key={section.role}
+                  asset={asset}
+                  isActionPending={isActionPending}
+                  onAddHere={onAddHere}
+                  onChildPress={onChildPress}
+                  onMoveThingsHere={onMoveThingsHere}
+                />
+              );
+            case 'maintenance_actions':
+              return (
+                <MaintenanceActionsSection
+                  key={section.role}
+                  asset={asset}
+                  isActionPending={isActionPending}
+                  onAddPhotos={onAddPhotos}
+                  onEdit={onEdit}
+                  onMove={onMove}
+                />
+              );
+          }
+        })}
       </View>
     </ScrollView>
+  );
+}
+
+function IdentitySection({
+  asset,
+  isActionPending,
+  onMoreActions
+}: {
+  readonly asset: AssetDetailViewModel;
+  readonly isActionPending: boolean;
+  readonly onMoreActions?: () => void;
+}) {
+  const description = visibleAssetDescription(asset);
+  return (
+    <View style={styles.identitySection}>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <View style={styles.badgeRow}>
+            {assetDetailBadges(asset).map((badge) => (
+              <AssetDetailBadgeView key={`${badge.kind}-${badge.label}`} badge={badge} />
+            ))}
+          </View>
+          <Text style={styles.title}>{asset.title}</Text>
+        </View>
+        {onMoreActions ? (
+          <Pressable
+            accessibilityLabel="More asset actions"
+            accessibilityRole="button"
+            disabled={isActionPending}
+            onPress={onMoreActions}
+            style={[styles.iconButton, isActionPending ? styles.disabledAction : null]}
+          >
+            <MoreHorizontal color={colors.text} size={22} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      {description ? <Text style={styles.description}>{description}</Text> : null}
+    </View>
+  );
+}
+
+function AssetDetailBadgeView({ badge }: { readonly badge: AssetDetailBadge }) {
+  return (
+    <Text style={badge.kind === 'kind' ? styles.kindBadge : styles.typeBadge}>{badge.label}</Text>
+  );
+}
+
+function StatusAndProgressSection({
+  canRetryPhotos,
+  onRetryPhotos,
+  photoStatusMessage,
+  photoUploads,
+  workspaceStatusKind,
+  workspaceStatusMessage
+}: {
+  readonly canRetryPhotos: boolean;
+  readonly onRetryPhotos?: () => void;
+  readonly photoStatusMessage?: string;
+  readonly photoUploads: readonly AssetPhotoUploadProgressViewModel[];
+  readonly workspaceStatusKind: 'success' | 'working';
+  readonly workspaceStatusMessage?: string;
+}) {
+  if (!workspaceStatusMessage && !photoStatusMessage && photoUploads.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.statusSection}>
+      {workspaceStatusMessage ? (
+        <View
+          accessible
+          accessibilityLiveRegion="polite"
+          accessibilityRole="alert"
+          style={[
+            styles.workspaceStatusPanel,
+            workspaceStatusKind === 'working' ? styles.workspaceStatusWorkingPanel : null
+          ]}
+        >
+          <Text style={styles.workspaceStatusText}>{workspaceStatusMessage}</Text>
+        </View>
+      ) : null}
+
+      {photoStatusMessage ? (
+        <View style={styles.photoStatusPanel}>
+          <Text style={styles.photoStatusText}>{photoStatusMessage}</Text>
+          {canRetryPhotos && onRetryPhotos ? (
+            <Pressable accessibilityRole="button" onPress={onRetryPhotos} style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+
+      {photoUploads.length > 0 ? <PhotoUploadProgressList uploads={photoUploads} /> : null}
+    </View>
+  );
+}
+
+function MetadataSection({ asset }: { readonly asset: AssetDetailViewModel }) {
+  const location = assetDetailLocationContext(asset);
+  return (
+    <View style={styles.metadataSection}>
+      <View style={styles.locationContext}>
+        <Text style={styles.metadataLabel}>{location.label}</Text>
+        <Text style={styles.locationValue}>{location.value}</Text>
+      </View>
+      {assetDetailMetadataRows(asset).map((row) => (
+        <MetadataRow key={row.label} label={row.label} value={row.value} />
+      ))}
+    </View>
+  );
+}
+
+function MaintenanceActionsSection({
+  asset,
+  isActionPending,
+  onAddPhotos,
+  onEdit,
+  onMove
+}: {
+  readonly asset: AssetDetailViewModel;
+  readonly isActionPending: boolean;
+  readonly onAddPhotos?: () => void;
+  readonly onEdit?: () => void;
+  readonly onMove?: () => void;
+}) {
+  return (
+    <View style={styles.maintenanceActions}>
+      <ActionControl
+        disabled={isActionPending || !asset.canEdit || !onEdit}
+        icon={<Pencil color={colors.text} size={17} />}
+        label="Edit"
+        onPress={onEdit}
+        variant="utility"
+      />
+      <ActionControl
+        disabled={isActionPending || !asset.canMove || !onMove}
+        icon={<MoveRight color={colors.text} size={17} />}
+        label="Move"
+        onPress={onMove}
+        variant="utility"
+      />
+      <ActionControl
+        disabled={isActionPending || !asset.canAddPhotos || !onAddPhotos}
+        icon={<Camera color={colors.text} size={17} />}
+        label="Add photos"
+        onPress={onAddPhotos}
+        variant="utility"
+      />
+    </View>
   );
 }
 
@@ -226,21 +351,31 @@ function PhotoWorkspace({
             </Text>
           </View>
         )) : (
-          <View style={styles.photoHero}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={onAddPhotos}
+            style={[styles.photoHero, styles.emptyPhotoHero, disabled ? styles.disabledAction : null]}
+          >
+            <Camera color={colors.action} size={26} />
             <Text style={styles.photoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
-            <Text style={styles.photoStatus}>{asset.photoLabel}</Text>
-          </View>
+            <Text style={styles.addPhotoText}>Add photos</Text>
+            <Text style={styles.photoEmptyStatus}>{asset.photoLabel}</Text>
+          </Pressable>
         )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled }}
-          disabled={disabled}
-          onPress={onAddPhotos}
-          style={[styles.addPhotoTile, disabled ? styles.disabledAction : null]}
-        >
-          <Camera color={colors.action} size={26} />
-          <Text style={styles.addPhotoText}>Add photos</Text>
-        </Pressable>
+        {photos ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={onAddPhotos}
+            style={[styles.addPhotoTile, disabled ? styles.disabledAction : null]}
+          >
+            <Camera color={colors.action} size={26} />
+            <Text style={styles.addPhotoText}>Add photos</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -297,18 +432,20 @@ function labelUploadPill(status: AssetPhotoUploadProgressViewModel['status']): s
   }
 }
 
-function WorkspaceAction({
+type ActionControlVariant = 'primary' | 'secondary' | 'utility';
+
+function ActionControl({
   disabled,
   icon,
   label,
   onPress,
-  primary = false
+  variant
 }: {
   readonly disabled: boolean;
   readonly icon: ReactElement;
   readonly label: string;
   readonly onPress?: () => void;
-  readonly primary?: boolean;
+  readonly variant: ActionControlVariant;
 }) {
   return (
     <Pressable
@@ -317,13 +454,20 @@ function WorkspaceAction({
       disabled={disabled}
       onPress={onPress}
       style={[
-        styles.workspaceAction,
-        primary ? styles.primaryAction : styles.secondaryAction,
+        styles.actionControl,
+        variant === 'primary' ? styles.primaryActionControl : null,
+        variant === 'secondary' ? styles.secondaryActionControl : null,
+        variant === 'utility' ? styles.utilityActionControl : null,
         disabled ? styles.disabledAction : null
       ]}
     >
       {icon}
-      <Text style={primary ? styles.primaryActionText : styles.secondaryActionText}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        style={variant === 'primary' ? styles.primaryActionText : styles.secondaryActionText}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -343,14 +487,15 @@ function ContainedAssetsSection({
 }) {
   const actions = containedAssetActions(asset);
   const emptyState = containedAssetsEmptyState(asset);
+  const heading = containedAssetsSectionHeading(asset);
   const childRows = containedAssetRows(asset.containedAssets);
 
   return (
-    <View style={styles.section}>
+    <View style={styles.containedSection}>
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={styles.sectionEyebrow}>Inside</Text>
-          <Text style={styles.sectionTitle}>{asset.containedAssetsLabel}</Text>
+          <Text style={styles.sectionTitle}>{heading.title}</Text>
+          <Text style={styles.sectionSummary}>{heading.summary}</Text>
         </View>
       </View>
       {actions.length > 0 ? (
@@ -433,21 +578,15 @@ function ContainedAssetActionButton({
 }) {
   const canUseAction = canUseContainedAssetAction({ isActionPending, onPress });
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !canUseAction }}
+    <ActionControl
       disabled={!canUseAction}
+      icon={action.kind === 'add_here'
+        ? <Plus color={action.isPrimary ? colors.onAction : colors.text} size={18} />
+        : <MoveRight color={colors.text} size={18} />}
+      label={action.label}
       onPress={onPress}
-      style={[
-        styles.containedAction,
-        action.isPrimary ? styles.containedPrimaryAction : styles.containedSecondaryAction,
-        !canUseAction ? styles.disabledAction : null
-      ]}
-    >
-      <Text style={action.isPrimary ? styles.containedPrimaryActionText : styles.containedSecondaryActionText}>
-        {action.label}
-      </Text>
-    </Pressable>
+      variant={action.isPrimary ? 'primary' : 'secondary'}
+    />
   );
 }
 
@@ -496,10 +635,21 @@ const styles = StyleSheet.create({
     minWidth: 300,
     overflow: 'hidden'
   },
+  emptyPhotoHero: {
+    gap: spacing.xs,
+    minWidth: 260,
+    padding: spacing.lg
+  },
   photoPlaceholder: {
     color: colors.accentStrong,
-    fontSize: 34,
-    fontWeight: '900',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: 0
+  },
+  photoEmptyStatus: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
     letterSpacing: 0
   },
   photoStatus: {
@@ -566,12 +716,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     textAlign: 'center'
   },
-  panel: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing.md
+  identitySection: {
+    gap: spacing.sm,
+    paddingTop: spacing.xs
   },
   headerRow: {
     alignItems: 'flex-start',
@@ -630,28 +777,35 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 15,
     lineHeight: 22,
-    marginTop: spacing.sm
+    maxWidth: 620
   },
-  primaryActions: {
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
+  maintenanceActions: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    paddingTop: spacing.md
+    gap: spacing.xs
   },
-  workspaceAction: {
+  actionControl: {
     alignItems: 'center',
-    borderRadius: radius.md,
-    flex: 1,
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'center',
     minHeight: 46,
     paddingHorizontal: spacing.sm
   },
-  primaryAction: {
-    backgroundColor: colors.action
+  primaryActionControl: {
+    backgroundColor: colors.action,
+    borderRadius: radius.md,
+    minHeight: 48
+  },
+  secondaryActionControl: {
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    minHeight: 48
+  },
+  utilityActionControl: {
+    borderRadius: radius.sm,
+    flex: 1,
+    minHeight: 42
   },
   primaryActionText: {
     color: colors.onAction,
@@ -659,21 +813,16 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   },
-  secondaryAction: {
-    borderColor: colors.border,
-    borderWidth: 1
-  },
   secondaryActionText: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '900',
+    fontSize: 13,
+    fontWeight: '800',
     letterSpacing: 0
   },
   photoStatusPanel: {
     backgroundColor: colors.brandDustyBlueSoft,
     borderRadius: radius.md,
     gap: spacing.sm,
-    marginTop: spacing.md,
     padding: spacing.md
   },
   workspaceStatusPanel: {
@@ -681,7 +830,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
-    marginTop: spacing.md,
     padding: spacing.md
   },
   workspaceStatusWorkingPanel: {
@@ -721,7 +869,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     gap: spacing.sm,
-    marginTop: spacing.md,
     padding: spacing.md
   },
   uploadPanelTitle: {
@@ -767,15 +914,32 @@ const styles = StyleSheet.create({
   uploadFailedPillText: {
     color: colors.warning
   },
-  metadataList: {
+  statusSection: {
+    gap: spacing.sm
+  },
+  metadataSection: {
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
     borderTopColor: colors.border,
     borderTopWidth: 1,
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    paddingTop: spacing.md
+    paddingVertical: spacing.xs
+  },
+  locationContext: {
+    gap: 2,
+    paddingVertical: spacing.sm
+  },
+  locationValue: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 22,
+    textAlign: 'left'
   },
   metadataRow: {
-    gap: 2
+    alignItems: 'flex-start',
+    gap: 2,
+    paddingVertical: spacing.sm
   },
   metadataLabel: {
     color: colors.textMuted,
@@ -789,28 +953,31 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0,
-    lineHeight: 21
+    lineHeight: 21,
+    textAlign: 'left'
   },
-  section: {
-    gap: spacing.md
+  containedSection: {
+    gap: spacing.sm,
+    paddingTop: spacing.xs
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between'
   },
-  sectionEyebrow: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textTransform: 'uppercase'
-  },
   sectionTitle: {
     color: colors.text,
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: '900',
     letterSpacing: 0,
-    lineHeight: 28
+    lineHeight: 26
+  },
+  sectionSummary: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 18,
+    marginTop: 2
   },
   childList: {
     gap: spacing.sm
@@ -819,8 +986,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderBottomWidth: 1,
     flexDirection: 'row',
     gap: spacing.sm,
     minHeight: 86,
@@ -871,45 +1037,14 @@ const styles = StyleSheet.create({
     lineHeight: 18
   },
   containedActionBar: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'stretch',
     gap: spacing.sm
   },
-  containedAction: {
-    alignItems: 'center',
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  containedPrimaryAction: {
-    backgroundColor: colors.action
-  },
-  containedPrimaryActionText: {
-    color: colors.onAction,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  containedSecondaryAction: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1
-  },
-  containedSecondaryActionText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
   emptyContainer: {
-    backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderTopWidth: 1,
     gap: spacing.sm,
-    padding: spacing.md
+    paddingVertical: spacing.md
   },
   emptyContainerTitle: {
     color: colors.text,

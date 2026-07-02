@@ -10,6 +10,8 @@ export type ParentLookupResult = {
   readonly pathLabel: string;
   readonly selectionHint: string;
   readonly willPromoteToContainer: boolean;
+  readonly canSelectAsParent?: boolean;
+  readonly disabledReason?: string;
 };
 
 export class ParentLookupQuery {
@@ -53,7 +55,9 @@ function toParentLookupResult(asset: AssetSummary): ParentLookupResult {
     selectionHint: willPromoteToContainer
       ? 'Will become a container for this item'
       : parentKindLabel(asset.kind),
-    willPromoteToContainer
+    willPromoteToContainer,
+    canSelectAsParent: true,
+    disabledReason: undefined
   };
 }
 

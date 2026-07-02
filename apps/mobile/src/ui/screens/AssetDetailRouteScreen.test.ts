@@ -284,7 +284,7 @@ describe('asset detail move helpers', () => {
       kind: 'item',
       subtitle: 'Bedroom closet',
       pathLabel: 'Bedroom closet / Suitcase',
-      selectionHint: 'Will become a container for this item',
+      selectionHint: 'Item',
       willPromoteToContainer: true
     } as const;
 
@@ -304,7 +304,7 @@ describe('asset detail move helpers', () => {
       kind: 'item',
       subtitle: 'Bedroom closet',
       pathLabel: 'Bedroom closet / Suitcase',
-      selectionHint: 'Will become a container for this item',
+      selectionHint: 'Item',
       willPromoteToContainer: true
     })).toEqual({
       title: 'Suitcase',

@@ -71,6 +71,63 @@ func TestStoreRejectsInvalidAssetParents(t *testing.T) {
 	}
 }
 
+func TestStoreCreatesAssetWithParentPromotion(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Nursery")
+
+	parent := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	if err := createAsset(t, ctx, store, parent); err != nil {
+		t.Fatalf("save item parent: %v", err)
+	}
+	promotedParent := parent
+	promotedParent.Kind = asset.KindContainer
+	promotedParent.UpdatedAt = parent.UpdatedAt.Add(time.Second)
+	child := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), asset.KindItem, parent.ID.String())
+	if err := store.CreateAssetWithParentPromotion(
+		ctx,
+		promotedParent,
+		auditRecord(t, "audit-parent-promotion", tenantID, inventoryID, audit.ActionAssetUpdated),
+		child,
+		auditRecord(t, "audit-child-create", tenantID, inventoryID, audit.ActionAssetCreated),
+		nil,
+	); err != nil {
+		t.Fatalf("create asset with parent promotion: %v", err)
+	}
+	gotParent, found, err := store.AssetByID(ctx, tenantID, inventoryID, parent.ID)
+	if err != nil || !found {
+		t.Fatalf("read promoted parent found=%t err=%v", found, err)
+	}
+	if gotParent.Kind != asset.KindContainer {
+		t.Fatalf("expected promoted container parent, got %+v", gotParent)
+	}
+	gotChild, found, err := store.AssetByID(ctx, tenantID, inventoryID, child.ID)
+	if err != nil || !found {
+		t.Fatalf("read child found=%t err=%v", found, err)
+	}
+	if gotChild.ParentAssetID != parent.ID {
+		t.Fatalf("expected child under promoted parent, got %+v", gotChild)
+	}
+
+	secondChild := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID.String(), inventoryID.String(), asset.KindItem, parent.ID.String())
+	if err := store.CreateAssetWithParentPromotion(
+		ctx,
+		promotedParent,
+		auditRecord(t, "audit-duplicate-parent-promotion", tenantID, inventoryID, audit.ActionAssetUpdated),
+		secondChild,
+		auditRecord(t, "audit-second-child-create", tenantID, inventoryID, audit.ActionAssetCreated),
+		nil,
+	); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected duplicate promotion to be rejected, got %v", err)
+	}
+	if _, found, err := store.AssetByID(ctx, tenantID, inventoryID, secondChild.ID); err != nil || found {
+		t.Fatalf("expected duplicate promotion child rollback found=%t err=%v", found, err)
+	}
+}
+
 func TestStoreRejectsRootAssetsOutsideInventoryTenant(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

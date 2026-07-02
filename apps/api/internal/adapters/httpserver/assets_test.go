@@ -76,6 +76,71 @@ func TestAssetEndpointsRejectCrossInventoryAndInvalidCustomFields(t *testing.T) 
 	assertSafeError(t, customFields, "invalid_request", "Invalid request.")
 }
 
+func TestCreateAssetPromotesItemParent(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Nursery", owner: "owner"},
+		},
+		ids: []string{
+			"baby", "op-baby", "audit-baby",
+			"milk", "audit-baby-promotion", "op-milk", "audit-milk",
+		},
+	}))
+
+	parentResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Baby",
+	})
+	if parentResponse.Code != http.StatusCreated {
+		t.Fatalf("expected parent create status %d, got %d with body %s", http.StatusCreated, parentResponse.Code, parentResponse.Body.String())
+	}
+	parent := decodeAsset(t, parentResponse)
+
+	childResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":          "item",
+		"title":         "Milk",
+		"parentAssetId": parent.Data.ID,
+	})
+	if childResponse.Code != http.StatusCreated {
+		t.Fatalf("expected child create status %d, got %d with body %s", http.StatusCreated, childResponse.Code, childResponse.Body.String())
+	}
+	child := decodeAsset(t, childResponse)
+	if child.Data.ParentAssetID != parent.Data.ID {
+		t.Fatalf("expected child under promoted parent %q, got %+v", parent.Data.ID, child.Data)
+	}
+
+	listResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=10", "Bearer dev:owner", nil)
+	if listResponse.Code != http.StatusOK {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusOK, listResponse.Code, listResponse.Body.String())
+	}
+	foundPromotedParent := false
+	for _, item := range decodeAssetList(t, listResponse).Data {
+		if item.ID == parent.Data.ID && item.Kind != "container" {
+			t.Fatalf("expected parent to be promoted to container, got %+v", item)
+		}
+		if item.ID == parent.Data.ID {
+			foundPromotedParent = true
+		}
+	}
+	if !foundPromotedParent {
+		t.Fatalf("expected promoted parent in asset list")
+	}
+
+	auditResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=10", "Bearer dev:owner", nil)
+	if auditResponse.Code != http.StatusOK {
+		t.Fatalf("expected audit status %d, got %d with body %s", http.StatusOK, auditResponse.Code, auditResponse.Body.String())
+	}
+	auditRecords := decodeAuditRecordList(t, auditResponse).Data
+	if !auditRecordsContainAction(auditRecords, "asset.updated") || !auditRecordsContainAction(auditRecords, "asset.created") {
+		t.Fatalf("expected promotion update and child creation audit records, got %+v", auditRecords)
+	}
+}
+
 func TestUnrelatedUserCannotCreateOrListAssets(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
