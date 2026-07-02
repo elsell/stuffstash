@@ -104,7 +104,7 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 		return media.Attachment{}, ErrAttachmentContentTypeUnsupported
 	}
 	if len(input.Content) == 0 {
-		return media.Attachment{}, ErrInvalidInput
+		return media.Attachment{}, ErrAttachmentContentEmpty
 	}
 	if len(input.Content) > a.maxAttachmentBytes {
 		return media.Attachment{}, ErrAttachmentTooLarge

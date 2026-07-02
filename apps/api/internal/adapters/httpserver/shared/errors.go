@@ -56,6 +56,8 @@ func ToHumaError(err error) error {
 		return huma.Error400BadRequest("Unsupported attachment file type.")
 	case errors.Is(err, app.ErrAttachmentContentMismatch):
 		return huma.Error400BadRequest("Attachment content does not match its file type.")
+	case errors.Is(err, app.ErrAttachmentContentEmpty):
+		return huma.Error400BadRequest("Attachment content is empty.")
 	case errors.Is(err, app.ErrAttachmentTooLarge):
 		return huma.Error400BadRequest("Attachment is too large.")
 	case errors.Is(err, app.ErrValidation), errors.Is(err, app.ErrInvalidInput):

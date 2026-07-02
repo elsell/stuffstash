@@ -930,4 +930,58 @@ describe('StuffStashClient', () => {
       message: 'Authentication required.'
     });
   });
+
+  it('preserves safe validation details when API errors are generic', async () => {
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async () =>
+        Response.json(
+          {
+            error: {
+              code: 'invalid_request',
+              message: 'validation failed',
+              details: [{ message: 'contentType must be one of image/jpeg, image/png, image/webp, application/pdf' }]
+            }
+          },
+          { status: 400 }
+        )
+    });
+
+    await expect(
+      client.createAssetAttachment('tenant-one', 'inventory-one', 'asset-one', {
+        fileName: 'photo.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'ZmFrZQ=='
+      })
+    ).rejects.toMatchObject({
+      status: 400,
+      code: 'invalid_request',
+      message: 'contentType must be one of image/jpeg, image/png, image/webp, application/pdf'
+    });
+  });
+
+  it('keeps non-validation API error details out of the thrown message', async () => {
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async () =>
+        Response.json(
+          {
+            error: {
+              code: 'internal_error',
+              message: 'Internal server error.',
+              details: [{ message: 'database detail that must not be promoted' }]
+            }
+          },
+          { status: 500 }
+        )
+    });
+
+    await expect(client.me()).rejects.toMatchObject({
+      status: 500,
+      code: 'internal_error',
+      message: 'Internal server error.'
+    });
+  });
 });

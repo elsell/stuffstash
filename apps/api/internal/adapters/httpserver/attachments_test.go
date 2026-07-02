@@ -550,7 +550,7 @@ func TestAttachmentUploadRejectsUnsafeInput(t *testing.T) {
 		{
 			name:        "invalid base64",
 			body:        map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": "not base64"},
-			wantMessage: "Invalid request.",
+			wantMessage: "Attachment content could not be read.",
 		},
 		{
 			name: "unsupported content type",
@@ -559,7 +559,7 @@ func TestAttachmentUploadRejectsUnsafeInput(t *testing.T) {
 		{
 			name:        "empty content",
 			body:        map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": ""},
-			wantMessage: "Invalid request.",
+			wantMessage: "Attachment content is empty.",
 		},
 		{
 			name:        "content type mismatch",

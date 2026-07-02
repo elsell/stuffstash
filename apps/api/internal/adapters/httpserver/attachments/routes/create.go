@@ -24,7 +24,7 @@ func RegisterCreate(api huma.API, application app.App) {
 
 		content, err := base64.StdEncoding.DecodeString(input.Body.ContentBase64)
 		if err != nil {
-			return nil, shared.ToHumaError(app.ErrInvalidInput)
+			return nil, huma.Error400BadRequest("Attachment content could not be read.")
 		}
 		attachment, err := application.CreateAttachment(ctx, app.CreateAttachmentInput{
 			Principal:   principal,

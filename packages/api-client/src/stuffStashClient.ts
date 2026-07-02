@@ -1205,7 +1205,7 @@ export class StuffStashClient {
       throw new StuffStashAPIError(
         response.status,
         error?.error?.code ?? 'request_failed',
-        error?.error?.message ?? 'Request failed.'
+        readableAPIErrorMessage(response.status, error)
       );
     }
     if (data === undefined) {
@@ -1220,11 +1220,26 @@ export class StuffStashClient {
       throw new StuffStashAPIError(
         response.status,
         error?.error?.code ?? 'request_failed',
-        error?.error?.message ?? 'Request failed.'
+        readableAPIErrorMessage(response.status, error)
       );
     }
   }
 
+}
+
+function readableAPIErrorMessage(status: number, error: ErrorEnvelope | undefined): string {
+  const message = error?.error?.message?.trim() || 'Request failed.';
+  const detail = error?.error?.details?.find((item) => item?.message?.trim())?.message?.trim();
+  const safeValidationStatus = status === 400 || status === 422;
+  if (
+    detail
+    && safeValidationStatus
+    && error?.error?.code === 'invalid_request'
+    && (message === 'Invalid request.' || message === 'validation failed')
+  ) {
+    return detail;
+  }
+  return message;
 }
 
 function mapAttachment(response: AttachmentResponse): Attachment {
