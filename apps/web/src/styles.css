@@ -679,29 +679,6 @@ small {
   font-weight: 700;
 }
 
-.relationship-field {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-}
-
-.relationship-field legend {
-  width: 100%;
-  margin-bottom: 6px;
-  color: var(--foreground);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.status-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
 .access-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1232,6 +1209,12 @@ dd {
 .field-stack {
   display: grid;
   gap: 6px;
+}
+
+.field-label {
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 650;
 }
 
 .selection-field {

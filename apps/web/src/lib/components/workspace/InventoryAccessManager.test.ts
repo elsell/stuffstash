@@ -113,7 +113,7 @@ describe('InventoryAccessManager', () => {
 
     clickButton('Load more grants');
     await flush();
-    clickButton('revoked');
+    clickButton('Revoked');
     await flush();
     clickButton('Load more invitations');
     await flush();
@@ -183,16 +183,26 @@ describe('InventoryAccessManager', () => {
     });
     await flush();
 
-    const grantField = Array.from(document.querySelectorAll('fieldset')).find((field) =>
-      field.textContent?.includes('Grant relationship')
-    );
-    const invitationField = Array.from(document.querySelectorAll('fieldset')).find((field) =>
-      field.textContent?.includes('Invitation relationship')
-    );
+    const grantField = segmentedGroup('Grant relationship');
+    const invitationField = segmentedGroup('Invitation relationship');
 
     expect(grantField?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
     expect(grantField?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Viewer');
     expect(invitationField?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
+  });
+
+  it('uses the shared segmented control for invitation status filters', async () => {
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    const statusFilter = segmentedGroup('Invitation status');
+    expect(statusFilter?.querySelectorAll('button[aria-pressed]')).toHaveLength(6);
+    expect(statusFilter?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('All');
   });
 });
 
@@ -220,6 +230,10 @@ function clickIconButton(label: string): void {
     throw new Error(`Missing icon button ${label}`);
   }
   button.click();
+}
+
+function segmentedGroup(label: string): HTMLElement | null {
+  return document.body.querySelector<HTMLElement>(`[role="group"][aria-label="${label}"]`);
 }
 
 async function flush(): Promise<void> {

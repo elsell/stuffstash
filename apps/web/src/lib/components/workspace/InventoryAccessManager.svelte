@@ -16,6 +16,7 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
@@ -29,6 +30,14 @@
 
   const relationships: InventoryAccessRelationship[] = ['viewer', 'editor'];
   const invitationStatuses: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
+  const relationshipOptions = relationships.map((relationship) => ({
+    value: relationship,
+    label: relationship === 'viewer' ? 'Viewer' : 'Editor'
+  }));
+  const invitationStatusOptions = invitationStatuses.map((status) => ({
+    value: status,
+    label: status[0]?.toUpperCase() + status.slice(1)
+  }));
 
   let grants = $state<InventoryAccessGrant[]>([]);
   let invitations = $state<InventoryAccessInvitation[]>([]);
@@ -347,19 +356,15 @@
         <Label for="grant-principal">Principal ID</Label>
         <Input id="grant-principal" bind:value={principalId} placeholder="principal-id" />
       </div>
-      <fieldset class="relationship-field">
-        <legend>Grant relationship</legend>
-        {#each relationships as relationship}
-          <Button.Root
-            type="button"
-            variant={grantRelationship === relationship ? 'secondary' : 'outline'}
-            aria-pressed={grantRelationship === relationship}
-            onclick={() => { grantRelationship = relationship; }}
-          >
-            {relationship === 'viewer' ? 'Viewer' : 'Editor'}
-          </Button.Root>
-        {/each}
-      </fieldset>
+      <div class="field-stack">
+        <span class="field-label">Grant relationship</span>
+        <SegmentedControl
+          label="Grant relationship"
+          value={grantRelationship}
+          options={relationshipOptions}
+          onSelect={(value) => { grantRelationship = value as InventoryAccessRelationship; }}
+        />
+      </div>
       <Button.Root type="submit" disabled={busy || principalId.trim().length === 0}>Grant access</Button.Root>
     </form>
 
@@ -368,19 +373,15 @@
         <Label for="invite-email">Invitee email</Label>
         <Input id="invite-email" type="email" bind:value={invitationEmail} placeholder="person@example.com" />
       </div>
-      <fieldset class="relationship-field">
-        <legend>Invitation relationship</legend>
-        {#each relationships as relationship}
-          <Button.Root
-            type="button"
-            variant={invitationRelationship === relationship ? 'secondary' : 'outline'}
-            aria-pressed={invitationRelationship === relationship}
-            onclick={() => { invitationRelationship = relationship; }}
-          >
-            {relationship === 'viewer' ? 'Viewer' : 'Editor'}
-          </Button.Root>
-        {/each}
-      </fieldset>
+      <div class="field-stack">
+        <span class="field-label">Invitation relationship</span>
+        <SegmentedControl
+          label="Invitation relationship"
+          value={invitationRelationship}
+          options={relationshipOptions}
+          onSelect={(value) => { invitationRelationship = value as InventoryAccessRelationship; }}
+        />
+      </div>
       <Button.Root type="submit" disabled={busy || invitationEmail.trim().length === 0}>Create invite</Button.Root>
     </form>
 
@@ -410,18 +411,12 @@
       <div class="access-list" aria-label="Invitations">
         <div class="access-list-header">
           <h3>Invitations</h3>
-          <div class="status-filter" role="group" aria-label="Invitation status">
-            {#each invitationStatuses as status}
-              <Button.Root
-                variant={invitationStatus === status ? 'secondary' : 'outline'}
-                size="xs"
-                aria-pressed={invitationStatus === status}
-                onclick={() => updateInvitationStatus(status)}
-              >
-                {status}
-              </Button.Root>
-            {/each}
-          </div>
+          <SegmentedControl
+            label="Invitation status"
+            value={invitationStatus}
+            options={invitationStatusOptions}
+            onSelect={(value) => updateInvitationStatus(value as InvitationStatusFilter)}
+          />
         </div>
         {#if busy && !loaded}
           <p class="muted-note">Loading invitations...</p>

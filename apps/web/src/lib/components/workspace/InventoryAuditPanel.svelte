@@ -10,6 +10,7 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
@@ -29,6 +30,10 @@
   let error = $state('');
   let requestId = 0;
   let controller: AbortController | null = null;
+  const scopeOptions = [
+    { value: 'inventory', label: 'Inventory' },
+    { value: 'tenant', label: 'Tenant' }
+  ];
 
   let canReadInventoryAudit = $derived(hasAccessPermission(inventory?.access, 'view'));
   let canReadTenantAudit = $derived(hasAccessPermission(tenant?.access, 'configure'));
@@ -127,24 +132,15 @@
     </div>
   </div>
 
-  <div class="status-filter" role="group" aria-label="Audit scope">
-    <Button.Root
-      variant={scope === 'inventory' ? 'secondary' : 'outline'}
-      aria-pressed={scope === 'inventory'}
-      disabled={!inventory}
-      onclick={() => selectScope('inventory')}
-    >
-      Inventory
-    </Button.Root>
-    <Button.Root
-      variant={scope === 'tenant' ? 'secondary' : 'outline'}
-      aria-pressed={scope === 'tenant'}
-      disabled={!tenant}
-      onclick={() => selectScope('tenant')}
-    >
-      Tenant
-    </Button.Root>
-  </div>
+  <SegmentedControl
+    label="Audit scope"
+    value={scope}
+    options={scopeOptions.map((option) => ({
+      ...option,
+      disabled: option.value === 'inventory' ? !inventory : !tenant
+    }))}
+    onSelect={(value) => selectScope(value as AuditScope)}
+  />
 
   {#if !tenant || (scope === 'inventory' && !inventory)}
     <p class="denied-note">Select an inventory before viewing audit history.</p>

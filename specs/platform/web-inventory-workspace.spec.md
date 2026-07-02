@@ -378,6 +378,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
 - The add surface parent picker must support filtering valid parent targets and must expose each picker group with honest grouped-control semantics rather than unlabeled piles of buttons.
 - Asset detail edit and move panels must use the same grouped-control and searchable parent-target patterns as the add surface.
+- Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 
 ## Inventory Settings

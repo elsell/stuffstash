@@ -47,6 +47,34 @@ describe('InventoryAuditPanel', () => {
     expect(calls).toEqual(['inventory:tenant-one:inventory-one:', 'tenant:tenant-one:']);
   });
 
+  it('uses the shared segmented control for audit scope', async () => {
+    const { repository } = fakeAuditRepository();
+
+    component = mount(InventoryAuditPanel, {
+      target: document.body,
+      props: { tenant: tenant(['view', 'configure']), inventory: inventory(['view']), repository }
+    });
+    await flush();
+
+    const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
+    expect(scopeFilter?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
+    expect(scopeFilter?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Inventory');
+  });
+
+  it('disables unavailable audit scopes through the shared segmented control', async () => {
+    const { repository } = fakeAuditRepository();
+
+    component = mount(InventoryAuditPanel, {
+      target: document.body,
+      props: { tenant: tenant(['view', 'configure']), inventory: null, repository }
+    });
+    await flush();
+
+    const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
+    expect(buttonIn(scopeFilter, 'Inventory')?.disabled).toBe(true);
+    expect(buttonIn(scopeFilter, 'Tenant')?.disabled).toBe(false);
+  });
+
   it('shows an authorization-aware denied state for tenant audit', async () => {
     const { repository } = fakeAuditRepository();
 
@@ -135,6 +163,10 @@ function clickButton(text: string): void {
     throw new Error(`Missing button ${text}`);
   }
   button.click();
+}
+
+function buttonIn(root: HTMLElement | null, text: string): HTMLButtonElement | null {
+  return Array.from(root?.querySelectorAll<HTMLButtonElement>('button') ?? []).find((button) => button.textContent === text) ?? null;
 }
 
 async function flush(): Promise<void> {
