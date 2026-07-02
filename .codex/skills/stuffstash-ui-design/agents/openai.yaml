@@ -1,0 +1,4 @@
+interface:
+  display_name: "StuffStash UI Design"
+  short_description: "Design production-grade StuffStash web UI"
+  default_prompt: "Use $stuffstash-ui-design to design a production-grade StuffStash web workflow with a real SvelteKit candidate."

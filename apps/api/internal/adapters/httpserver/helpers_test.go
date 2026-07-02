@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
+	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -57,6 +58,7 @@ func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authoriz
 		Outbox:                    store,
 		RealtimeSessions:          store,
 		ActionPlans:               store,
+		ImportSources:             homebox.NewLegacyImporter(nil),
 		IDs:                       &fakeIDGenerator{ids: ids},
 	})
 }
@@ -111,6 +113,7 @@ func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blob
 		Outbox:                    store,
 		RealtimeSessions:          store,
 		ActionPlans:               store,
+		ImportSources:             homebox.NewLegacyImporter(nil),
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 		InvitationTTL:             state.invitationTTL,
 	})
@@ -147,6 +150,7 @@ func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, sto
 		Outbox:                    store,
 		RealtimeSessions:          store,
 		ActionPlans:               store,
+		ImportSources:             homebox.NewLegacyImporter(nil),
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
 }

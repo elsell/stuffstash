@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ExpoVoiceAudioPlayerCore, ExpoVoiceAudioRecorderCore } from './ExpoVoiceAudioCore';
+import { ExpoVoiceAudioPlayerCore, ExpoVoiceAudioRecorderCore, normalizeDbfsLevel } from './ExpoVoiceAudioCore';
 
 describe('ExpoVoiceAudioRecorder', () => {
   it('records through Expo Audio and returns a base64 mp4 chunk', async () => {
@@ -63,6 +63,26 @@ describe('ExpoVoiceAudioRecorder', () => {
     ]);
     expect(fileSystem.reads).toEqual([]);
     expect(fileSystem.deleted).toEqual(['file:///recording.m4a']);
+  });
+
+  it('reports normalized native metering while recording', async () => {
+    const recorder = new FakeRecorder('file:///recording.m4a');
+    const voiceRecorder = new ExpoVoiceAudioRecorderCore(new FakeAudio(recorder), new FakeFileSystem({}));
+
+    expect(voiceRecorder.recordingLevel()).toBe(0);
+
+    await voiceRecorder.start();
+    recorder.metering = -30;
+
+    expect(voiceRecorder.recordingLevel()).toBeCloseTo(0.5);
+  });
+
+  it('normalizes dBFS metering to a bounded UI level', () => {
+    expect(normalizeDbfsLevel(undefined)).toBe(0);
+    expect(normalizeDbfsLevel(-90)).toBe(0);
+    expect(normalizeDbfsLevel(-30)).toBeCloseTo(0.5);
+    expect(normalizeDbfsLevel(0)).toBe(1);
+    expect(normalizeDbfsLevel(12)).toBe(1);
   });
 });
 
@@ -136,6 +156,7 @@ describe('ExpoVoiceAudioPlayer', () => {
 class FakeRecorder {
   prepared = false;
   recording = false;
+  metering: number | undefined;
 
   constructor(readonly uri: string | null) {}
 
@@ -149,6 +170,10 @@ class FakeRecorder {
 
   async stop(): Promise<void> {
     this.recording = false;
+  }
+
+  getStatus(): { readonly metering?: number } {
+    return { metering: this.metering };
   }
 }
 

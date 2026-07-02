@@ -113,6 +113,8 @@ The expanded session surface must:
 - Support tap-to-start and tap-to-stop recording for the first slice.
 - Keep the primary mic control reachable with one thumb.
 - Keep the primary mic/progress control in a bottom action area so compact detents do not strand the main action in sparse scroll content.
+- While recording, present the primary control as a single send/finish action that also displays live audio activity. The activity signal must be driven by native recorder metering when the runtime exposes it; the UI must not use arbitrary or decorative bouncing that is unrelated to microphone input.
+- After the user sends audio and before the session reaches review, completion, cancellation, or failure, keep a visible working indicator in both the sheet and collapsed accessory. The primary control must not return to a generic ready/start microphone while Stuff Stash is transcribing, checking inventory, applying an approved plan, preparing a response, or playing speech.
 - When a proposed action plan is awaiting review, the bottom action area must replace the mic/new-session action with explicit approve and cancel controls so a compact detent keeps the decision reachable and the user cannot accidentally reset the pending review by starting another voice session.
 - Reserve the scroll body for transcript, response, progress details, diagnostics, and future approval artifacts.
 - Avoid using a standalone full-screen Voice route for normal user interaction. An internal modal route may be used as the native sheet implementation detail when the router requires a route to present a platform-native sheet.

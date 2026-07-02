@@ -59,6 +59,29 @@ func (s Service) GetAsset(ctx context.Context, input GetAssetInput) (asset.Asset
 	return item, nil
 }
 
+func (s Service) GetAssetDetail(ctx context.Context, input GetAssetInput) (GetAssetResult, error) {
+	item, err := s.GetAsset(ctx, input)
+	if err != nil {
+		return GetAssetResult{}, err
+	}
+	primaryPhotos, err := s.primaryImageAttachments(ctx, input.TenantID, []asset.Asset{item})
+	if err != nil {
+		return GetAssetResult{}, err
+	}
+	var primaryPhoto *media.Attachment
+	ref := ports.AttachmentAssetReference{
+		InventoryID: inventory.InventoryID(item.InventoryID.String()),
+		AssetID:     item.ID,
+	}
+	if photo, ok := primaryPhotos[ref]; ok {
+		primaryPhoto = &photo
+	}
+	return GetAssetResult{
+		Item:         item,
+		PrimaryPhoto: primaryPhoto,
+	}, nil
+}
+
 func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsResult, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return ListAssetsResult{}, err

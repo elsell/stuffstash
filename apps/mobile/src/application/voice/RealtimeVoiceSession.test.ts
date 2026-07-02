@@ -79,6 +79,27 @@ describe('RealtimeVoiceSessionController', () => {
     expect(player.stops).toBe(2);
   });
 
+  it('includes bounded recorder level while listening', async () => {
+    const recorder = new FakeRecorder();
+    recorder.level = 1.4;
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      new FakeTransport([]),
+      new FakePlayer()
+    );
+
+    const listening = await controller.start();
+
+    expect(listening.recordingLevel).toBe(1);
+
+    recorder.level = Number.NaN;
+    expect(controller.recordingLevel()).toBe(0);
+
+    recorder.level = -0.4;
+    expect(controller.recordingLevel()).toBe(0);
+  });
+
   it('notifies the mobile state layer as realtime session events arrive', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
@@ -983,6 +1004,7 @@ describe('RealtimeVoiceSessionController', () => {
 class FakeRecorder implements VoiceAudioRecorder {
   started = false;
   cancelled = false;
+  level = 0;
 
   async start(): Promise<void> {
     this.started = true;
@@ -1000,6 +1022,10 @@ class FakeRecorder implements VoiceAudioRecorder {
   async cancel(): Promise<void> {
     this.cancelled = true;
     this.started = false;
+  }
+
+  recordingLevel(): number {
+    return this.level;
   }
 }
 

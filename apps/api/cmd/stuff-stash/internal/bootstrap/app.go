@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
+	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
@@ -58,6 +59,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		ProviderProfileTester:           voice.NewProviderProfileTester(googleProviderProfileFactory(cfg)),
 		RealtimeSessions:                repositories.realtimeSessions,
 		ActionPlans:                     repositories.actionPlans,
+		ImportSources:                   homebox.NewLegacyImporter(nil),
 		IDs:                             idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit:   cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease:   cfg.AuthorizationOutboxClaimLease,

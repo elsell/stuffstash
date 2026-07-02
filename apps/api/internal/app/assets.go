@@ -16,6 +16,7 @@ type GetAssetInput = assetapp.GetAssetInput
 type AssetParentUpdate = assetapp.AssetParentUpdate
 type UpdateAssetInput = assetapp.UpdateAssetInput
 type UpdateAssetLifecycleInput = assetapp.UpdateAssetLifecycleInput
+type GetAssetResult = assetapp.GetAssetResult
 type ListAssetsResult = assetapp.ListAssetsResult
 
 func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
@@ -36,6 +37,17 @@ func (a App) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) 
 
 func (a App) GetAsset(ctx context.Context, input GetAssetInput) (asset.Asset, error) {
 	return a.assetService.GetAsset(ctx, input)
+}
+
+func (a App) GetAssetDetail(ctx context.Context, input GetAssetInput) (GetAssetResult, error) {
+	result, err := a.assetService.GetAssetDetail(ctx, input)
+	if err != nil {
+		return GetAssetResult{}, err
+	}
+	if result.PrimaryPhoto != nil {
+		a.warmPrimarySmallThumbnails(ctx, []media.Attachment{*result.PrimaryPhoto})
+	}
+	return result, nil
 }
 
 func (a App) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) error {

@@ -47,6 +47,7 @@ type App struct {
 	providerProfileTester       ports.ProviderProfileTester
 	realtimeSessions            ports.RealtimeSessionRepository
 	actionPlans                 ports.ActionPlanRepository
+	importSources               ports.ImportSourceReader
 	ids                         ports.IDGenerator
 	clock                       ports.Clock
 	outboxDrainLimit            int
@@ -104,6 +105,7 @@ type Dependencies struct {
 	ProviderProfileTester           ports.ProviderProfileTester
 	RealtimeSessions                ports.RealtimeSessionRepository
 	ActionPlans                     ports.ActionPlanRepository
+	ImportSources                   ports.ImportSourceReader
 	IDs                             ports.IDGenerator
 	Clock                           ports.Clock
 	AuthorizationOutboxDrainLimit   int
@@ -181,6 +183,7 @@ func New(deps Dependencies) App {
 		providerProfileTester:       deps.ProviderProfileTester,
 		realtimeSessions:            deps.RealtimeSessions,
 		actionPlans:                 deps.ActionPlans,
+		importSources:               deps.ImportSources,
 		ids:                         ids,
 		clock:                       clock,
 		outboxDrainLimit:            deps.AuthorizationOutboxDrainLimit,

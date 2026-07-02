@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { VoiceProviderReadinessError } from '../../application/providerProfiles/ProviderProfileVoiceReadinessCheck';
-import { buildFailedVoiceRealtimeState } from './VoiceInteractionStateContext';
+import { applyRecordingLevelToRealtime, buildFailedVoiceRealtimeState } from './VoiceInteractionStateContext';
 
 describe('buildFailedVoiceRealtimeState', () => {
   it('keeps provider-readiness failures typed and safely summarized', () => {
@@ -35,5 +35,28 @@ describe('buildFailedVoiceRealtimeState', () => {
     });
 
     expect(state.errorMessage).toBe('Voice provider profiles are not ready: text_to_speech.');
+  });
+
+  it('applies live recorder levels only to active listening state', () => {
+    expect(applyRecordingLevelToRealtime({
+      status: 'listening',
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Listening',
+      debugEvents: []
+    }, 0.42)).toMatchObject({
+      status: 'listening',
+      recordingLevel: 0.42
+    });
+
+    expect(applyRecordingLevelToRealtime({
+      status: 'processing',
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Sending audio',
+      debugEvents: []
+    }, 0.8)).not.toHaveProperty('recordingLevel');
+
+    expect(applyRecordingLevelToRealtime(null, 0.8)).toBeNull();
   });
 });

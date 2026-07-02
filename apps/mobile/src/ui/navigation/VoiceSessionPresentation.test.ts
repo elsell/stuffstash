@@ -15,7 +15,7 @@ describe('VoiceSessionPresentation', () => {
 
   it('stops recording from the collapsed listening bubble', () => {
     expect(buildVoiceAccessoryPresentation({ pathname: '/locations/location-1', stage: 'listening', status: 'ready' })).toMatchObject({
-      accessibilityLabel: 'Stop listening',
+      accessibilityLabel: 'Send voice request',
       primaryAction: 'stop',
       subtitle: 'Location context'
     });
@@ -24,6 +24,17 @@ describe('VoiceSessionPresentation', () => {
   it('expands the session surface for in-progress and completed sessions', () => {
     expect(buildVoiceAccessoryPresentation({ pathname: '/assets/asset-1', stage: 'processing', status: 'ready' }).primaryAction).toBe('expand');
     expect(buildVoiceAccessoryPresentation({ pathname: '/assets/asset-1', stage: 'completed', status: 'ready' }).primaryAction).toBe('expand');
+  });
+
+  it('keeps post-send collapsed states in the working tone', () => {
+    expect(buildVoiceAccessoryPresentation({ pathname: '/', stage: 'processing', status: 'ready' })).toMatchObject({
+      title: 'Checking inventory',
+      tone: 'attention'
+    });
+    expect(buildVoiceAccessoryPresentation({ pathname: '/', stage: 'speaking', status: 'ready' })).toMatchObject({
+      title: 'Speaking',
+      tone: 'attention'
+    });
   });
 
   it('summarizes active realtime progress in the collapsed accessory', () => {
@@ -41,7 +52,8 @@ describe('VoiceSessionPresentation', () => {
       status: 'ready'
     })).toMatchObject({
       title: 'Checking inventory',
-      subtitle: 'Current inventory'
+      subtitle: 'Current inventory',
+      tone: 'attention'
     });
   });
 
@@ -576,8 +588,9 @@ describe('VoiceSessionPresentation', () => {
       kind: 'session_controls',
       canCancel: true,
       mic: {
-        accessibilityLabel: 'Stop listening',
+        accessibilityLabel: 'Send voice request',
         disabled: false,
+        icon: 'send',
         selected: true
       }
     });
@@ -593,8 +606,9 @@ describe('VoiceSessionPresentation', () => {
       kind: 'session_controls',
       canCancel: true,
       mic: {
-        accessibilityLabel: 'Start another voice interaction',
+        accessibilityLabel: 'Voice request in progress',
         disabled: true,
+        icon: 'busy',
         selected: false
       }
     });
@@ -650,7 +664,78 @@ describe('VoiceSessionPresentation', () => {
       mic: {
         accessibilityLabel: 'Start another voice interaction',
         disabled: false,
+        icon: 'mic',
         selected: false
+      }
+    });
+  });
+
+  it('marks the active sheet chrome as listening or busy without requiring diagnostics', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: null,
+      stage: 'listening',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      activity: {
+        kind: 'listening',
+        label: 'Listening',
+        level: 0
+      },
+      isBusy: true
+    });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Searching visible inventory',
+        debugEvents: []
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      activity: {
+        kind: 'busy',
+        label: 'Searching visible inventory'
+      },
+      bottomAction: {
+        kind: 'session_controls',
+        mic: {
+          accessibilityLabel: 'Voice request in progress',
+          disabled: true,
+          icon: 'busy'
+        }
+      },
+      isBusy: true
+    });
+  });
+
+  it('normalizes recorder metering into the listening send control', () => {
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'listening',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Listening',
+        recordingLevel: 0.72,
+        debugEvents: []
+      },
+      stage: 'listening',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      activity: {
+        kind: 'listening',
+        level: 0.72
       }
     });
   });

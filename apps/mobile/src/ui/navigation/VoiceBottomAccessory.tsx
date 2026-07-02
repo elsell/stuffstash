@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { router, usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { Mic, Pause } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Mic, SendHorizontal } from 'lucide-react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../theme/tokens';
+import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
 import { useVoiceInteractionState } from './VoiceInteractionStateContext';
 import { buildVoiceAccessoryPresentation } from './VoiceSessionPresentation';
 
@@ -97,8 +98,16 @@ export function VoiceBottomAccessory() {
           pressed && styles.buttonPressed
         ]}
       >
-        {state.stage === 'listening' ? (
-          <Pause color={colors.onAction} size={isInline ? 21 : 22} strokeWidth={2.5} />
+        {state.stage === 'processing' || state.stage === 'speaking' ? (
+          <ActivityIndicator color={colors.onAction} size="small" />
+        ) : state.stage === 'listening' ? (
+          <View style={styles.sendButtonContent}>
+            <VoiceLevelMeter
+              level={state.status === 'ready' ? state.realtime?.recordingLevel ?? 0 : 0}
+              size="compact"
+            />
+            <SendHorizontal color={colors.onAction} size={isInline ? 18 : 19} strokeWidth={2.6} />
+          </View>
         ) : (
           <Mic color={colors.onAction} size={isInline ? 22 : 23} strokeWidth={2.5} />
         )}
@@ -178,6 +187,11 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     height: 54,
     width: 54
+  },
+  sendButtonContent: {
+    alignItems: 'center',
+    gap: 2,
+    justifyContent: 'center'
   },
   statusDot: {
     borderRadius: 5,

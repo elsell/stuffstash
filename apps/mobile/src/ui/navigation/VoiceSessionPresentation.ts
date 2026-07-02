@@ -52,7 +52,7 @@ export function buildVoiceAccessoryPresentation({
 
   if (stage === 'listening') {
     return {
-      accessibilityLabel: 'Stop listening',
+      accessibilityLabel: 'Send voice request',
       primaryAction: 'stop',
       subtitle: context,
       title: 'Listening',
@@ -76,7 +76,7 @@ export function buildVoiceAccessoryPresentation({
       primaryAction: 'expand',
       subtitle: context,
       title: 'Speaking',
-      tone: 'active'
+      tone: 'attention'
     };
   }
 
@@ -168,6 +168,7 @@ function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | unde
 }
 
 export type VoiceSessionPresentation = {
+  readonly activity: VoiceSessionActivityPresentation;
   readonly actionPlan?: {
     readonly planId: string;
     readonly status: 'proposed' | 'approved' | 'cancelled' | 'executed' | 'failed';
@@ -189,6 +190,11 @@ export type VoiceSessionPresentation = {
   readonly transcript?: string;
 };
 
+export type VoiceSessionActivityPresentation =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'listening'; readonly label: string; readonly level: number }
+  | { readonly kind: 'busy'; readonly label: string };
+
 export type VoiceSessionActionPlanCommand = {
   readonly id?: string;
   readonly title: string;
@@ -206,6 +212,7 @@ export type VoiceSessionBottomAction =
       readonly mic: {
         readonly accessibilityLabel: string;
         readonly disabled: boolean;
+        readonly icon: 'mic' | 'send' | 'busy';
         readonly selected: boolean;
       };
     }
@@ -253,6 +260,7 @@ export function buildVoiceSessionPresentation({
           risks: realtime.actionPlan.risks
         }
       : undefined,
+    activity: activityForState(stage, progressLabel, realtime?.recordingLevel),
     bottomAction,
     canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || (stage === 'review' && realtime?.actionPlan?.status !== 'proposed'),
     contextLabel: `${inventoryName} · ${tenantName}`,
@@ -267,6 +275,27 @@ export function buildVoiceSessionPresentation({
     title,
     transcript: realtime?.transcript ?? activePartialTranscript
   };
+}
+
+function activityForState(
+  stage: VoiceInteractionStage,
+  progressLabel: string,
+  recordingLevel: number | undefined
+): VoiceSessionActivityPresentation {
+  if (stage === 'listening') {
+    return { kind: 'listening', label: 'Listening', level: boundedLevel(recordingLevel) };
+  }
+  if (stage === 'processing' || stage === 'speaking') {
+    return { kind: 'busy', label: progressLabel };
+  }
+  return { kind: 'idle' };
+}
+
+function boundedLevel(value: number | undefined): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, value));
 }
 
 function summarizeActionPlanCommands(commands: readonly VoiceActionPlanCommand[]): string {
@@ -396,11 +425,14 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
       canCancel: stage === 'listening' || isWorking,
       mic: {
         accessibilityLabel: stage === 'listening'
-          ? 'Stop listening'
+          ? 'Send voice request'
           : stage === 'ready' && !realtime
             ? 'Start voice interaction'
-            : 'Start another voice interaction',
+            : isWorking
+              ? 'Voice request in progress'
+              : 'Start another voice interaction',
         disabled: isWorking,
+        icon: stage === 'listening' ? 'send' : isWorking ? 'busy' : 'mic',
         selected: stage === 'listening'
       }
     };

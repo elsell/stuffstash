@@ -16,6 +16,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
+	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -711,6 +712,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
 		ProviderProfileTester:     httpTestProviderProfileTester{},
 		RealtimeSessions:          store,
+		ImportSources:             homebox.NewLegacyImporter(nil),
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
 }

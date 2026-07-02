@@ -9,6 +9,7 @@ export type NativeAudioRecorder = {
   prepareToRecordAsync(): Promise<void>;
   record(): void;
   stop(): Promise<void>;
+  getStatus?(): { readonly metering?: number };
 };
 
 export type NativeAudioPlayer = {
@@ -124,6 +125,27 @@ export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
       }
     }
   }
+
+  recordingLevel(): number {
+    const recorder = this.recorder;
+    if (recorder === null || !recorder.getStatus) {
+      return 0;
+    }
+
+    try {
+      return normalizeDbfsLevel(recorder.getStatus().metering);
+    } catch {
+      return 0;
+    }
+  }
+}
+
+export function normalizeDbfsLevel(metering: number | undefined): number {
+  if (typeof metering !== 'number' || !Number.isFinite(metering)) {
+    return 0;
+  }
+  const clampedDbfs = Math.max(-60, Math.min(0, metering));
+  return Math.max(0, Math.min(1, (clampedDbfs + 60) / 60));
 }
 
 export class ExpoVoiceAudioPlayerCore implements VoiceAudioPlayer {

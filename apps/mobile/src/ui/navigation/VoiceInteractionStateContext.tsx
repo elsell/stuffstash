@@ -84,6 +84,21 @@ export function VoiceInteractionStateProvider({
     };
   }, [previewQuery]);
 
+  useEffect(() => {
+    if (stage !== 'listening') {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const recordingLevel = realtimeController.recordingLevel();
+      setRealtime((current) => applyRecordingLevelToRealtime(current, recordingLevel));
+    }, 100);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [realtimeController, stage]);
+
   const value = useMemo<VoiceInteractionStateContextValue>(() => {
     const state: VoiceInteractionState =
       previewState.status === 'ready'
@@ -232,6 +247,15 @@ export function useVoiceInteractionState(): VoiceInteractionStateContextValue {
   }
 
   return value;
+}
+
+export function applyRecordingLevelToRealtime(
+  current: VoiceRealtimeState | null,
+  recordingLevel: number
+): VoiceRealtimeState | null {
+  return current?.status === 'listening'
+    ? { ...current, recordingLevel }
+    : current;
 }
 
 function readableError(error: unknown, fallback: string): string {

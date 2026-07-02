@@ -80,3 +80,8 @@ type ListAssetsResult struct {
 	NextCursor    *string
 	HasMore       bool
 }
+
+type GetAssetResult struct {
+	Item         asset.Asset
+	PrimaryPhoto *media.Attachment
+}

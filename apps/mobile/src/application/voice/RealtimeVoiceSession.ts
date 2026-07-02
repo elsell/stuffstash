@@ -14,6 +14,7 @@ export interface VoiceAudioRecorder {
   start(): Promise<void>;
   stop(): Promise<RecordedVoiceAudio>;
   cancel(): Promise<void>;
+  recordingLevel(): number;
 }
 
 export interface VoiceAudioPlayer {
@@ -177,6 +178,7 @@ export type VoiceRealtimeState = {
   readonly failureCode?: VoiceRealtimeFailureCode;
   readonly errorMessage?: string;
   readonly photoAttachmentStatus?: VoicePhotoAttachmentStatus;
+  readonly recordingLevel?: number;
 };
 
 export type VoicePhotoAttachmentStatus = {
@@ -239,8 +241,13 @@ export class RealtimeVoiceSessionController {
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
       progressLabel: 'Listening',
+      recordingLevel: this.recordingLevel(),
       debugEvents: []
     };
+  }
+
+  recordingLevel(): number {
+    return boundedRecordingLevel(this.recorder.recordingLevel());
   }
 
   async stop(onState?: VoiceRealtimeStateHandler): Promise<readonly VoiceRealtimeState[]> {
@@ -602,6 +609,13 @@ export class RealtimeVoiceSessionController {
       canRetry: hasRetryablePhotos(remaining)
     };
   }
+}
+
+function boundedRecordingLevel(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, value));
 }
 
 type VoiceActionPlanPhotoRetry = {

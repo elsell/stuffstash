@@ -20,7 +20,7 @@ func RegisterDetail(api huma.API, application app.App) {
 		if err != nil {
 			return nil, err
 		}
-		item, err := application.GetAsset(ctx, app.GetAssetInput{
+		result, err := application.GetAssetDetail(ctx, app.GetAssetInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
 			RequestID:   input.RequestID,
@@ -32,7 +32,7 @@ func RegisterDetail(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 		return &dto.GetAssetOutput{Body: shared.SuccessEnvelope[dto.AssetResponse]{
-			Data: mapper.AssetToResponse(item, nil),
+			Data: mapper.AssetToResponse(result.Item, result.PrimaryPhoto),
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("assets"), shared.SecuredOperation)

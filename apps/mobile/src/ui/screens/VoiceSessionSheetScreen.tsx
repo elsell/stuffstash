@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
-import { Check, ChevronDown, ChevronUp, MessageCircle, Mic, Pause, RotateCcw, X } from 'lucide-react-native';
+import { Check, ChevronDown, ChevronUp, MessageCircle, Mic, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
   Pressable,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme/tokens';
+import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
 import { useAppServices } from '../navigation/AppServicesContext';
@@ -433,12 +434,21 @@ function VoiceSessionSheet({
                     onPress={onSessionMic}
                     style={[
                       styles.sessionMicButton,
-                      bottomAction.mic.selected && styles.activeSessionMicButton,
+                      bottomAction.mic.icon === 'send' && styles.sendSessionMicButton,
+                      bottomAction.mic.icon === 'busy' && styles.busySessionMicButton,
                       bottomAction.mic.disabled && styles.disabledSessionMicButton
                     ]}
                   >
-                    {bottomAction.mic.selected ? (
-                      <Pause color={colors.onAction} size={32} strokeWidth={2.5} />
+                    {bottomAction.mic.icon === 'send' ? (
+                      <View style={styles.sendButtonContent}>
+                        <VoiceLevelMeter
+                          level={session.activity.kind === 'listening' ? session.activity.level : 0}
+                          size="regular"
+                        />
+                        <SendHorizontal color={colors.onAction} size={27} strokeWidth={2.6} />
+                      </View>
+                    ) : bottomAction.mic.icon === 'busy' ? (
+                      <ActivityIndicator color={colors.warning} size="small" />
                     ) : (
                       <Mic color={colors.onAction} size={34} strokeWidth={2.5} />
                     )}
@@ -487,9 +497,6 @@ function hintForStage(stage: VoiceInteractionState['stage']): string {
 }
 
 const styles = StyleSheet.create({
-  activeSessionMicButton: {
-    backgroundColor: colors.success
-  },
   centerState: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -716,7 +723,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md
   },
   disabledSessionMicButton: {
-    opacity: 0.58
+    opacity: 1
   },
   emptySessionContent: {
     flexGrow: 1
@@ -863,6 +870,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 12,
     width: 62
+  },
+  busySessionMicButton: {
+    backgroundColor: colors.warningSurface,
+    borderColor: colors.brandAmber,
+    borderWidth: 1,
+    shadowOpacity: 0.08
+  },
+  sendSessionMicButton: {
+    backgroundColor: colors.action
+  },
+  sendButtonContent: {
+    alignItems: 'center',
+    gap: 2,
+    justifyContent: 'center'
   },
   sessionSection: {
     borderColor: colors.border,

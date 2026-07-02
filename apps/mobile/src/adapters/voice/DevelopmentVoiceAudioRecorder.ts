@@ -23,4 +23,8 @@ export class DevelopmentVoiceAudioRecorder implements VoiceAudioRecorder {
   async cancel(): Promise<void> {
     this.recording = false;
   }
+
+  recordingLevel(): number {
+    return 0;
+  }
 }

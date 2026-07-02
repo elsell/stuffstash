@@ -55,4 +55,19 @@ func TestAssetListIncludesSafePrimaryPhotoSummary(t *testing.T) {
 	if strings.Contains(primaryPhoto.Thumbnails.Small, "storage") || !strings.Contains(primaryPhoto.Thumbnails.Small, "/attachments/"+attachment.Data.ID+"/thumbnail?variant=small") {
 		t.Fatalf("expected safe thumbnail API path, got %q", primaryPhoto.Thumbnails.Small)
 	}
+
+	assetDetail := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID, "Bearer dev:owner", nil)
+	if assetDetail.Code != http.StatusOK {
+		t.Fatalf("expected asset detail status %d, got %d with body %s", http.StatusOK, assetDetail.Code, assetDetail.Body.String())
+	}
+	assetDetailBody := decodeAsset(t, assetDetail)
+	if assetDetailBody.Data.PrimaryPhoto == nil {
+		t.Fatalf("expected asset detail primary photo, got %+v", assetDetailBody.Data)
+	}
+	if assetDetailBody.Data.PrimaryPhoto.ID != attachment.Data.ID {
+		t.Fatalf("expected detail primary photo %q, got %+v", attachment.Data.ID, assetDetailBody.Data.PrimaryPhoto)
+	}
+	if strings.Contains(assetDetailBody.Data.PrimaryPhoto.Thumbnails.Small, "storage") || !strings.Contains(assetDetailBody.Data.PrimaryPhoto.Thumbnails.Small, "/attachments/"+attachment.Data.ID+"/thumbnail?variant=small") {
+		t.Fatalf("expected safe detail thumbnail API path, got %q", assetDetailBody.Data.PrimaryPhoto.Thumbnails.Small)
+	}
 }

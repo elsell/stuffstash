@@ -15,7 +15,10 @@ import {
 const nativeAudio: ExpoVoiceAudioNative = {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
-  createRecorder: () => new AudioModule.AudioRecorder(RecordingPresets.HIGH_QUALITY),
+  createRecorder: () => new AudioModule.AudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true
+  }),
   createAudioPlayer: (uri: string) => createAudioPlayer({ uri }) as AudioPlayer
 };
 
@@ -36,6 +39,10 @@ export class ExpoVoiceAudioRecorder implements VoiceAudioRecorder {
 
   cancel() {
     return this.core.cancel();
+  }
+
+  recordingLevel() {
+    return this.core.recordingLevel();
   }
 }
 

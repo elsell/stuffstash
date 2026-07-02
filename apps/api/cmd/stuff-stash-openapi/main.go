@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/adapters/observability"
@@ -47,6 +48,7 @@ func run() error {
 		BlobDeletionOutbox:        store,
 		Audit:                     store,
 		Outbox:                    store,
+		ImportSources:             homebox.NewLegacyImporter(nil),
 	})
 	server := httpserver.NewServer(":0", application)
 	request := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)
