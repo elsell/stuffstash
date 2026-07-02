@@ -124,7 +124,7 @@ func TestAttachmentThumbnailAndModelImageUseImageProcessorPort(t *testing.T) {
 	content := pngAttachmentBytes()
 	attachment := attachmentFixture(t, media.ContentTypePNG, content)
 	repository := &recordingAttachmentRepository{attachment: attachment, found: true}
-	blobStore := &recordingBlobStorage{content: content}
+	blobStore := &recordingBlobStorage{blobs: map[media.StorageKey][]byte{attachment.StorageKey: content}}
 	processor := &recordingImageProcessor{thumbnailContent: []byte("thumb"), modelContent: []byte("model")}
 	application := New(Dependencies{
 		Observer:             noopObserver{},
@@ -477,9 +477,15 @@ func (r *recordingAttachmentRepository) ListAttachmentsByAsset(context.Context, 
 }
 
 type recordingBlobStorage struct {
-	put     bool
-	deleted bool
-	content []byte
+	put        bool
+	deleted    bool
+	content    []byte
+	blobs      map[media.StorageKey][]byte
+	putKeys    []media.StorageKey
+	getKeys    []media.StorageKey
+	deleteKeys []media.StorageKey
+	putErr     error
+	deleteErrs map[media.StorageKey]error
 }
 
 type failingBlobStorage struct{}
@@ -498,6 +504,7 @@ func (failingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
 
 type singleBlobDeletionOutbox struct {
 	event        ports.BlobDeletionEvent
+	processed    bool
 	deadLettered bool
 	failed       bool
 }
@@ -509,6 +516,7 @@ func (s *singleBlobDeletionOutbox) ClaimPendingBlobDeletionEvents(_ context.Cont
 }
 
 func (s *singleBlobDeletionOutbox) MarkBlobDeletionEventProcessed(context.Context, string, string) error {
+	s.processed = true
 	return nil
 }
 
@@ -524,21 +532,70 @@ func (s *singleBlobDeletionOutbox) MarkBlobDeletionEventDeadLettered(_ context.C
 	return nil
 }
 
-func (r *recordingBlobStorage) PutBlob(context.Context, media.StorageKey, media.ContentType, []byte) error {
+func (r *recordingBlobStorage) PutBlob(_ context.Context, key media.StorageKey, _ media.ContentType, data []byte) error {
 	r.put = true
+	r.putKeys = append(r.putKeys, key)
+	if r.putErr != nil {
+		return r.putErr
+	}
+	if r.blobs == nil {
+		r.blobs = map[media.StorageKey][]byte{}
+	}
+	r.blobs[key] = append([]byte(nil), data...)
 	return nil
 }
 
-func (r *recordingBlobStorage) GetBlob(context.Context, media.StorageKey) ([]byte, error) {
+func (r *recordingBlobStorage) GetBlob(_ context.Context, key media.StorageKey) ([]byte, error) {
+	r.getKeys = append(r.getKeys, key)
+	if r.blobs != nil {
+		if data, ok := r.blobs[key]; ok {
+			return append([]byte(nil), data...), nil
+		}
+		return nil, ports.ErrBlobNotFound
+	}
 	if r.content != nil {
 		return append([]byte(nil), r.content...), nil
 	}
 	return nil, ports.ErrBlobNotFound
 }
 
-func (r *recordingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
+func (r *recordingBlobStorage) DeleteBlob(_ context.Context, key media.StorageKey) error {
 	r.deleted = true
+	r.deleteKeys = append(r.deleteKeys, key)
+	if err := r.deleteErrs[key]; err != nil {
+		return err
+	}
+	if r.blobs != nil {
+		delete(r.blobs, key)
+	}
 	return nil
+}
+
+func (r *recordingBlobStorage) getCount(key media.StorageKey) int {
+	count := 0
+	for _, candidate := range r.getKeys {
+		if candidate == key {
+			count++
+		}
+	}
+	return count
+}
+
+func (r *recordingBlobStorage) hasBlob(key media.StorageKey) bool {
+	if r.blobs == nil {
+		return false
+	}
+	_, ok := r.blobs[key]
+	return ok
+}
+
+func (r *recordingBlobStorage) deletedKey(key media.StorageKey) bool {
+	for _, candidate := range r.deleteKeys {
+		if candidate == key {
+			return true
+		}
+	}
+	return false
 }
 
 type attachmentIDGenerator struct {
@@ -578,6 +635,7 @@ func (f *fakeDirectAttachmentUploader) CompleteDirectAttachmentUpload(context.Co
 
 type recordingImageProcessor struct {
 	thumbnailCalled  bool
+	thumbnailCalls   int
 	modelCalled      bool
 	thumbnailContent []byte
 	modelContent     []byte
@@ -585,6 +643,7 @@ type recordingImageProcessor struct {
 
 func (r *recordingImageProcessor) CreateThumbnail(_ context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
 	r.thumbnailCalled = true
+	r.thumbnailCalls++
 	return ports.ImageDerivative{ContentType: request.ContentType, Content: append([]byte(nil), r.thumbnailContent...)}, nil
 }
 

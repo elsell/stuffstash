@@ -249,11 +249,11 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 		t.Fatalf("expected asset status %d, got %d with body %s", http.StatusCreated, assetResponse.Code, assetResponse.Body.String())
 	}
 	createdAsset := decodeAsset(t, assetResponse)
-	content := realPNGAttachmentContent(t)
+	content := realJPEGAttachmentContent(t)
 
 	createAttachment := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", map[string]any{
-		"fileName":      "workbench.png",
-		"contentType":   "image/png",
+		"fileName":      "workbench.jpg",
+		"contentType":   "image/jpeg",
 		"contentBase64": base64.StdEncoding.EncodeToString(content),
 	})
 	if createAttachment.Code != http.StatusCreated {
@@ -273,12 +273,12 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 	if thumbnail.Code != http.StatusOK {
 		t.Fatalf("expected thumbnail status %d, got %d with body %s", http.StatusOK, thumbnail.Code, thumbnail.Body.String())
 	}
-	if thumbnail.Header().Get("Content-Type") != "image/png" {
-		t.Fatalf("expected image/png thumbnail content type, got %q", thumbnail.Header().Get("Content-Type"))
+	if thumbnail.Header().Get("Content-Type") != "image/jpeg" {
+		t.Fatalf("expected image/jpeg thumbnail content type, got %q", thumbnail.Header().Get("Content-Type"))
 	}
-	thumbnailImage, err := png.Decode(bytes.NewReader(thumbnail.Body.Bytes()))
+	thumbnailImage, _, err := image.Decode(bytes.NewReader(thumbnail.Body.Bytes()))
 	if err != nil {
-		t.Fatalf("expected decodable thumbnail png: %v", err)
+		t.Fatalf("expected decodable thumbnail image: %v", err)
 	}
 	if thumbnailImage.Bounds().Dx() > 256 || thumbnailImage.Bounds().Dy() > 256 {
 		t.Fatalf("expected bounded thumbnail dimensions, got %dx%d", thumbnailImage.Bounds().Dx(), thumbnailImage.Bounds().Dy())
@@ -290,12 +290,12 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 	if mediumThumbnail.Code != http.StatusOK {
 		t.Fatalf("expected medium thumbnail status %d, got %d with body %s", http.StatusOK, mediumThumbnail.Code, mediumThumbnail.Body.String())
 	}
-	mediumThumbnailImage, err := png.Decode(bytes.NewReader(mediumThumbnail.Body.Bytes()))
+	mediumThumbnailImage, _, err := image.Decode(bytes.NewReader(mediumThumbnail.Body.Bytes()))
 	if err != nil {
-		t.Fatalf("expected decodable medium thumbnail png: %v", err)
+		t.Fatalf("expected decodable medium thumbnail image: %v", err)
 	}
-	if mediumThumbnailImage.Bounds().Dx() != 512 || mediumThumbnailImage.Bounds().Dy() != 128 {
-		t.Fatalf("expected medium thumbnail to preserve smaller source dimensions, got %dx%d", mediumThumbnailImage.Bounds().Dx(), mediumThumbnailImage.Bounds().Dy())
+	if mediumThumbnailImage.Bounds().Dx() != 768 || mediumThumbnailImage.Bounds().Dy() != 512 {
+		t.Fatalf("expected medium thumbnail to preserve aspect ratio at medium bounds, got %dx%d", mediumThumbnailImage.Bounds().Dx(), mediumThumbnailImage.Bounds().Dy())
 	}
 
 	grantViewer := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]any{

@@ -11,6 +11,7 @@ import (
 	"hash/crc32"
 	"image"
 	"image/color"
+	"image/jpeg"
 	"image/png"
 	"testing"
 	"time"
@@ -137,16 +138,16 @@ func TestS3DirectUploadTokenSurvivesReconstructionAndRejectsTampering(t *testing
 
 func TestStandardImageProcessorPreparesBoundedImageData(t *testing.T) {
 	processor := StandardImageProcessor{}
-	content := testPNG(t, 512, 128)
+	content := testJPEG(t, 1200, 800, 95)
 
 	thumbnail, err := processor.CreateThumbnail(context.Background(), ports.ImageDerivativeRequest{
-		ContentType: media.ContentTypePNG,
+		ContentType: media.ContentTypeJPEG,
 		Content:     content,
 	})
 	if err != nil {
 		t.Fatalf("create thumbnail: %v", err)
 	}
-	if thumbnail.ContentType != media.ContentTypePNG || len(thumbnail.Content) == 0 || len(thumbnail.Content) >= len(content) {
+	if thumbnail.ContentType != media.ContentTypeJPEG || len(thumbnail.Content) == 0 || len(thumbnail.Content) >= len(content) {
 		t.Fatalf("unexpected thumbnail: %+v", thumbnail)
 	}
 	content[0] = 0
@@ -155,7 +156,7 @@ func TestStandardImageProcessorPreparesBoundedImageData(t *testing.T) {
 	}
 
 	modelImage, err := processor.PrepareImageForModelUse(context.Background(), ports.ModelImageRequest{
-		ContentType: media.ContentTypePNG,
+		ContentType: thumbnail.ContentType,
 		Content:     thumbnail.Content,
 	})
 	if err != nil {
@@ -193,7 +194,7 @@ func TestStandardImageProcessorSupportsThumbnailVariants(t *testing.T) {
 			if err != nil {
 				t.Fatalf("create thumbnail: %v", err)
 			}
-			decoded, err := png.Decode(bytes.NewReader(thumbnail.Content))
+			decoded, _, err := image.Decode(bytes.NewReader(thumbnail.Content))
 			if err != nil {
 				t.Fatalf("decode thumbnail: %v", err)
 			}
@@ -234,7 +235,7 @@ func TestStandardImageProcessorHandlesWebP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create webp thumbnail: %v", err)
 	}
-	if thumbnail.ContentType != media.ContentTypePNG || len(thumbnail.Content) == 0 {
+	if thumbnail.ContentType != media.ContentTypeJPEG || len(thumbnail.Content) == 0 {
 		t.Fatalf("unexpected webp thumbnail: %+v", thumbnail)
 	}
 
@@ -325,6 +326,27 @@ func testPNG(t *testing.T, width int, height int) []byte {
 	buffer := bytes.Buffer{}
 	if err := png.Encode(&buffer, img); err != nil {
 		t.Fatalf("encode test png: %v", err)
+	}
+	return buffer.Bytes()
+}
+
+func testJPEG(t *testing.T, width int, height int, quality int) []byte {
+	t.Helper()
+
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for y := range height {
+		for x := range width {
+			img.Set(x, y, color.RGBA{
+				R: uint8((x*17 + y*3) % 255),
+				G: uint8((x*5 + y*19) % 255),
+				B: uint8((x*y + x + y) % 255),
+				A: 255,
+			})
+		}
+	}
+	buffer := bytes.Buffer{}
+	if err := jpeg.Encode(&buffer, img, &jpeg.Options{Quality: quality}); err != nil {
+		t.Fatalf("encode test jpeg: %v", err)
 	}
 	return buffer.Bytes()
 }

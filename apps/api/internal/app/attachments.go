@@ -481,7 +481,7 @@ func (a App) DrainBlobDeletionOutbox(ctx context.Context, limit int) error {
 		})
 	}
 	for _, event := range events {
-		if err := a.blobs.DeleteBlob(ctx, event.StorageKey); err != nil && !errors.Is(err, ports.ErrBlobNotFound) {
+		if err := a.deleteBlobAndThumbnailDerivatives(ctx, event.StorageKey); err != nil {
 			a.observer.Record(ctx, ports.Event{
 				Name:    ports.EventBlobDeletionOutboxFailed,
 				Message: "blob deletion outbox event failed",
@@ -521,6 +521,17 @@ func (a App) DrainBlobDeletionOutbox(ctx context.Context, limit int) error {
 		})
 	}
 	return nil
+}
+
+func (a App) deleteBlobAndThumbnailDerivatives(ctx context.Context, storageKey media.StorageKey) error {
+	keys := append([]media.StorageKey{storageKey}, thumbnailStorageKeysForBlob(storageKey)...)
+	var deletionErrors []error
+	for _, key := range keys {
+		if err := a.blobs.DeleteBlob(ctx, key); err != nil && !errors.Is(err, ports.ErrBlobNotFound) {
+			deletionErrors = append(deletionErrors, err)
+		}
+	}
+	return errors.Join(deletionErrors...)
 }
 
 func encodeAttachmentCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, id media.ID) *string {

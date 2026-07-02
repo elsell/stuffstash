@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -40,16 +41,34 @@ type AttachmentThumbnailResult struct {
 }
 
 func (a App) DownloadAttachmentThumbnail(ctx context.Context, input DownloadAttachmentThumbnailInput) (AttachmentThumbnailResult, error) {
-	attachment, content, err := a.readAttachmentBlobForImageWork(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
-	if err != nil {
-		return AttachmentThumbnailResult{}, err
-	}
 	if a.imageProcessor == nil {
 		return AttachmentThumbnailResult{}, ErrInvalidInput
 	}
 	variant, ok := media.NewThumbnailVariant(input.Variant)
 	if !ok {
 		return AttachmentThumbnailResult{}, ErrInvalidInput
+	}
+	attachment, err := a.authorizeImageAttachmentRead(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
+	if err != nil {
+		return AttachmentThumbnailResult{}, err
+	}
+	cacheKey, ok := thumbnailStorageKey(attachment, variant)
+	if !ok {
+		return AttachmentThumbnailResult{}, ErrInvalidInput
+	}
+	cached, cachedContentType, err := a.cachedThumbnail(ctx, cacheKey)
+	if err == nil {
+		a.recordAttachmentThumbnailServed(ctx, input, attachment, variant, "cache")
+		return AttachmentThumbnailResult{Attachment: attachment, ContentType: cachedContentType, Content: cached}, nil
+	}
+	if !errors.Is(err, ports.ErrBlobNotFound) {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail cache read failed"})
+		return AttachmentThumbnailResult{}, err
+	}
+	content, err := a.blobs.GetBlob(ctx, attachment.StorageKey)
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
+		return AttachmentThumbnailResult{}, err
 	}
 	thumbnail, err := a.imageProcessor.CreateThumbnail(ctx, ports.ImageDerivativeRequest{
 		Attachment:  attachment,
@@ -64,18 +83,8 @@ func (a App) DownloadAttachmentThumbnail(ctx context.Context, input DownloadAtta
 	if !thumbnail.ContentType.IsImage() || len(thumbnail.Content) == 0 {
 		return AttachmentThumbnailResult{}, ErrInvalidInput
 	}
-	a.observer.Record(ctx, ports.Event{
-		Name:    ports.EventAttachmentThumbnailGenerated,
-		Message: "attachment thumbnail generated",
-		Fields: map[string]string{
-			"tenant_id":     input.TenantID.String(),
-			"inventory_id":  input.InventoryID.String(),
-			"asset_id":      input.AssetID.String(),
-			"attachment_id": attachment.ID.String(),
-			"variant":       variant.String(),
-			"principal_id":  input.Principal.ID.String(),
-		},
-	})
+	a.cacheThumbnailBestEffort(ctx, cacheKey, thumbnail)
+	a.recordAttachmentThumbnailServed(ctx, input, attachment, variant, "generated")
 	return AttachmentThumbnailResult{Attachment: attachment, ContentType: thumbnail.ContentType, Content: thumbnail.Content}, nil
 }
 
@@ -114,21 +123,34 @@ func (a App) PrepareAttachmentForModelUse(ctx context.Context, input PrepareAtta
 }
 
 func (a App) readAttachmentBlobForImageWork(ctx context.Context, principal identity.Principal, source audit.Source, requestID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, []byte, error) {
-	if err := a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionView); err != nil {
-		return media.Attachment{}, nil, err
-	}
-	if err := a.ensureActiveAssetForAttachment(ctx, tenantID, inventoryID, assetID); err != nil {
-		return media.Attachment{}, nil, err
-	}
-	attachment, found, err := a.attachments.AttachmentByID(ctx, tenantID, inventoryID, assetID, attachmentID)
+	attachment, err := a.authorizeImageAttachmentRead(ctx, principal, source, requestID, tenantID, inventoryID, assetID, attachmentID)
 	if err != nil {
 		return media.Attachment{}, nil, err
 	}
+	content, err := a.blobs.GetBlob(ctx, attachment.StorageKey)
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
+		return media.Attachment{}, nil, err
+	}
+	return attachment, content, nil
+}
+
+func (a App) authorizeImageAttachmentRead(ctx context.Context, principal identity.Principal, source audit.Source, requestID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, error) {
+	if err := a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionView); err != nil {
+		return media.Attachment{}, err
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, tenantID, inventoryID, assetID); err != nil {
+		return media.Attachment{}, err
+	}
+	attachment, found, err := a.attachments.AttachmentByID(ctx, tenantID, inventoryID, assetID, attachmentID)
+	if err != nil {
+		return media.Attachment{}, err
+	}
 	if !found {
-		return media.Attachment{}, nil, ErrNotFound
+		return media.Attachment{}, ErrNotFound
 	}
 	if !attachment.ContentType.IsImage() {
-		return media.Attachment{}, nil, ErrInvalidInput
+		return media.Attachment{}, ErrInvalidInput
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
 		PrincipalID: principal.ID,
@@ -143,12 +165,89 @@ func (a App) readAttachmentBlobForImageWork(ctx context.Context, principal ident
 			"asset_id": assetID.String(),
 		},
 	}); err != nil {
-		return media.Attachment{}, nil, err
+		return media.Attachment{}, err
 	}
-	content, err := a.blobs.GetBlob(ctx, attachment.StorageKey)
+	return attachment, nil
+}
+
+func (a App) recordAttachmentThumbnailServed(ctx context.Context, input DownloadAttachmentThumbnailInput, attachment media.Attachment, variant media.ThumbnailVariant, source string) {
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventAttachmentThumbnailGenerated,
+		Message: "attachment thumbnail generated",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"asset_id":      input.AssetID.String(),
+			"attachment_id": attachment.ID.String(),
+			"variant":       variant.String(),
+			"principal_id":  input.Principal.ID.String(),
+			"source":        source,
+		},
+	})
+}
+
+func (a App) cachedThumbnail(ctx context.Context, cacheKey media.StorageKey) ([]byte, media.ContentType, error) {
+	metadataKey, ok := thumbnailMetadataStorageKey(cacheKey)
+	if !ok {
+		return nil, "", ErrInvalidInput
+	}
+	metadata, err := a.blobs.GetBlob(ctx, metadataKey)
 	if err != nil {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
-		return media.Attachment{}, nil, err
+		return nil, "", err
 	}
-	return attachment, content, nil
+	contentType, ok := media.NewContentType(string(metadata))
+	if !ok || !contentType.IsImage() {
+		return nil, "", ports.ErrBlobNotFound
+	}
+	content, err := a.blobs.GetBlob(ctx, cacheKey)
+	if err != nil {
+		return nil, "", err
+	}
+	return content, contentType, nil
+}
+
+func (a App) cacheThumbnailBestEffort(ctx context.Context, cacheKey media.StorageKey, thumbnail ports.ImageDerivative) {
+	if err := a.blobs.PutBlob(ctx, cacheKey, thumbnail.ContentType, thumbnail.Content); err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail cache write failed"})
+		return
+	}
+	metadataKey, ok := thumbnailMetadataStorageKey(cacheKey)
+	if !ok {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail cache metadata key invalid"})
+		return
+	}
+	if err := a.blobs.PutBlob(ctx, metadataKey, media.ContentType("text/plain"), []byte(thumbnail.ContentType.String())); err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail cache metadata write failed"})
+	}
+}
+
+func thumbnailStorageKey(attachment media.Attachment, variant media.ThumbnailVariant) (media.StorageKey, bool) {
+	return thumbnailStorageKeyForBlob(attachment.StorageKey, variant)
+}
+
+func thumbnailStorageKeyForBlob(storageKey media.StorageKey, variant media.ThumbnailVariant) (media.StorageKey, bool) {
+	return media.NewStorageKey(storageKey.String() + ".thumb/" + variant.String())
+}
+
+func thumbnailMetadataStorageKey(cacheKey media.StorageKey) (media.StorageKey, bool) {
+	return media.NewStorageKey(cacheKey.String() + ".meta")
+}
+
+func thumbnailStorageKeysForBlob(storageKey media.StorageKey) []media.StorageKey {
+	variants := []media.ThumbnailVariant{
+		media.ThumbnailVariantSmall,
+		media.ThumbnailVariantMedium,
+		media.ThumbnailVariantLarge,
+	}
+	keys := make([]media.StorageKey, 0, len(variants))
+	for _, variant := range variants {
+		key, ok := thumbnailStorageKeyForBlob(storageKey, variant)
+		if ok {
+			keys = append(keys, key)
+			if metadataKey, ok := thumbnailMetadataStorageKey(key); ok {
+				keys = append(keys, metadataKey)
+			}
+		}
+	}
+	return keys
 }

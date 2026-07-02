@@ -132,11 +132,15 @@ Thumbnails and image processing:
 - `medium` is optimized for asset detail hero presentation.
 - `large` is optimized for focused full-screen mobile preview without requiring the original attachment bytes.
 - Thumbnail variants must preserve aspect ratio and use a quality-oriented resize algorithm rather than nearest-neighbor scaling.
+- Generated thumbnails should prefer compact, broadly supported image encodings suitable for photos, such as bounded-quality JPEG, so camera-photo derivatives remain small enough for mobile card and list browsing.
 - Image processors must inspect image dimensions before full decode and reject excessive dimensions or pixel counts before resizing, so small-byte images with hostile dimensions cannot force unbounded memory or CPU work.
 - Thumbnail generation must be authorized with `inventory.view` and scoped to the requested tenant, inventory, asset, and attachment.
 - Thumbnail generation is supported only for image attachments.
 - The application must not contain image codec, resize, crop, EXIF, or color-management implementation details.
 - Image processing adapters must enforce bounded input and output sizes and must not leak implementation paths, command lines, or provider internals in user-facing errors.
+- Thumbnail derivatives must be cached behind the blob storage port with deterministic keys per attachment and variant so dense mobile surfaces such as Home and Browse do not repeatedly read, decode, and resize original camera images.
+- Cached thumbnail derivatives are rebuildable artifacts, not attachment metadata. They must not be returned as storage-provider URLs and must remain authorized through the thumbnail endpoint on every request.
+- Hard-deleting an attachment must clean up the original blob and the known thumbnail derivative keys so derivative caching does not create unbounded orphaned storage.
 - Thumbnail responses must return bytes and the derivative content type; they must not expose derivative storage keys.
 
 Model image readiness:

@@ -20,6 +20,7 @@ const (
 	thumbnailSmallMaxDimension  = 256
 	thumbnailMediumMaxDimension = 768
 	thumbnailLargeMaxDimension  = 1600
+	thumbnailJPEGQuality        = 78
 	maxImageInputDimension      = 12000
 	maxImageInputPixels         = 50000000
 )
@@ -39,11 +40,11 @@ func (StandardImageProcessor) CreateThumbnail(_ context.Context, request ports.I
 	}
 	thumbnail := resizeImage(source, thumbnailMaxDimension(request.Variant))
 	output := bytes.Buffer{}
-	if err := png.Encode(&output, thumbnail); err != nil {
+	if err := jpeg.Encode(&output, thumbnail, &jpeg.Options{Quality: thumbnailJPEGQuality}); err != nil {
 		return ports.ImageDerivative{}, err
 	}
 	return ports.ImageDerivative{
-		ContentType: media.ContentTypePNG,
+		ContentType: media.ContentTypeJPEG,
 		Content:     output.Bytes(),
 	}, nil
 }
