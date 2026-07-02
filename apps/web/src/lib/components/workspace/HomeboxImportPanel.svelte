@@ -137,6 +137,16 @@
     return message.severity === 'error' ? 'destructive' : message.severity === 'warning' ? 'secondary' : 'outline';
   }
 
+  function toggleImportOption(option: 'images' | 'insecure-tls' | 'private-network'): void {
+    if (option === 'images') {
+      includeImages = !includeImages;
+    } else if (option === 'insecure-tls') {
+      allowInsecureTLS = !allowInsecureTLS;
+    } else {
+      allowPrivateNetwork = !allowPrivateNetwork;
+    }
+  }
+
   async function fileToBase64(file: File): Promise<string> {
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
@@ -203,18 +213,44 @@
             <Label for="homebox-password">Password</Label>
             <Input id="homebox-password" bind:value={password} type="password" autocomplete="current-password" />
           </div>
-          <Label class="check-row">
-            <Input type="checkbox" checked={includeImages} onchange={(event) => { includeImages = event.currentTarget.checked; }} />
-            <span><Image aria-hidden="true" /> Images</span>
-          </Label>
-          <Label class="check-row">
-            <Input type="checkbox" checked={allowInsecureTLS} onchange={(event) => { allowInsecureTLS = event.currentTarget.checked; }} />
-            <span>Self-signed certificate</span>
-          </Label>
-          <Label class="check-row">
-            <Input type="checkbox" checked={allowPrivateNetwork} onchange={(event) => { allowPrivateNetwork = event.currentTarget.checked; }} />
-            <span>Private network address</span>
-          </Label>
+          <div class="import-option-list" aria-label="Live Homebox import options">
+            <Button.Root
+              type="button"
+              variant={includeImages ? 'secondary' : 'outline'}
+              class="switch-row"
+              role="switch"
+              aria-checked={includeImages}
+              data-checked={includeImages}
+              onclick={() => toggleImportOption('images')}
+            >
+              <span><Image aria-hidden="true" /> Images</span>
+              <strong>{includeImages ? 'On' : 'Off'}</strong>
+            </Button.Root>
+            <Button.Root
+              type="button"
+              variant={allowInsecureTLS ? 'secondary' : 'outline'}
+              class="switch-row"
+              role="switch"
+              aria-checked={allowInsecureTLS}
+              data-checked={allowInsecureTLS}
+              onclick={() => toggleImportOption('insecure-tls')}
+            >
+              <span>Self-signed certificate</span>
+              <strong>{allowInsecureTLS ? 'On' : 'Off'}</strong>
+            </Button.Root>
+            <Button.Root
+              type="button"
+              variant={allowPrivateNetwork ? 'secondary' : 'outline'}
+              class="switch-row"
+              role="switch"
+              aria-checked={allowPrivateNetwork}
+              data-checked={allowPrivateNetwork}
+              onclick={() => toggleImportOption('private-network')}
+            >
+              <span>Private network address</span>
+              <strong>{allowPrivateNetwork ? 'On' : 'Off'}</strong>
+            </Button.Root>
+          </div>
         {:else}
           <div class="field-stack">
             <Label for="homebox-csv">CSV file</Label>

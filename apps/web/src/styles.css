@@ -894,26 +894,38 @@ small {
   border-radius: var(--radius);
 }
 
-.check-row {
-  display: flex;
-  align-items: center;
+.import-option-list {
+  display: grid;
   gap: 8px;
-  min-height: 36px;
-  color: var(--foreground);
-  font-size: 0.9rem;
-  font-weight: 650;
 }
 
-.check-row input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
+.switch-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: stretch;
+  width: 100%;
+  height: auto;
+  min-height: 42px;
+  padding: 8px 10px;
+  text-align: left;
 }
 
-.check-row span {
+.switch-row span {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 6px;
+}
+
+.switch-row strong {
+  min-width: 34px;
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+.switch-row[data-checked="true"] strong {
+  color: var(--primary);
 }
 
 @media (max-width: 760px) {
