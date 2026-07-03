@@ -314,8 +314,8 @@ describe('workspace route state', () => {
     for (const href of unsupported) {
       expect(parseWorkspaceRoute(new URL(href))).toMatchObject({
         mode: 'home',
-        tenantId: null,
-        inventoryId: null
+        tenantId: 'tenant_1',
+        inventoryId: 'inv_1'
       });
     }
   });

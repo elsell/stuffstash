@@ -121,7 +121,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
   if (section === 'locations' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
     const action = parseLocationAction(segments[inventoryOffset.nextIndex + 2]);
     if (remaining === 3 && !action) {
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     return {
       ...route,
@@ -141,7 +141,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
   ) {
     const attachmentAction = parseAttachmentAction(segments[inventoryOffset.nextIndex + 4]);
     if (!attachmentAction) {
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     return {
       ...route,
@@ -154,7 +154,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
   if (section === 'assets' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
     const action = parseAssetAction(segments[inventoryOffset.nextIndex + 2]);
     if (remaining === 3 && !action) {
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     return {
       ...route,
@@ -165,11 +165,11 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     };
   }
   if (section === 'search') {
-    return remaining === 1 ? { ...route, mode: 'search', lifecycleState: 'active' } : { ...defaultWorkspaceRoute };
+    return remaining === 1 ? { ...route, mode: 'search', lifecycleState: 'active' } : route;
   }
   if (section === 'settings') {
     if (remaining > 5) {
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     const settingsSection = parseSettingsSection(segments[inventoryOffset.nextIndex + 1]);
     if (settingsSection === 'access' && remaining === 5) {
@@ -186,7 +186,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
           accessInvitationId: resourceId
         };
       }
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     if (settingsSection === 'fields' && remaining === 5) {
       const resource = segments[inventoryOffset.nextIndex + 2];
@@ -210,10 +210,10 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
           customFieldDefinitionId: resourceId
         };
       }
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     if (remaining > 2) {
-      return { ...defaultWorkspaceRoute };
+      return route;
     }
     return {
       ...route,
@@ -229,9 +229,9 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     }
     if (remaining === 2) {
       const importSourceType = parseImportSourceType(segments[inventoryOffset.nextIndex + 1]);
-      return importSourceType ? { ...route, mode: 'import', importSourceType } : { ...defaultWorkspaceRoute };
+      return importSourceType ? { ...route, mode: 'import', importSourceType } : route;
     }
-    return { ...defaultWorkspaceRoute };
+    return route;
   }
   if (section === 'add' && remaining === 2 && assetKinds.has(segments[inventoryOffset.nextIndex + 1] as AssetKind)) {
     return {
@@ -242,7 +242,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     };
   }
 
-  return { ...defaultWorkspaceRoute };
+  return route;
 }
 
 function parseAssetAction(value: string | undefined): AssetRouteAction {

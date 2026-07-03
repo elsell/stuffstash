@@ -185,6 +185,17 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('normalizes unsupported inventory descendant paths to the inventory home', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home/share?lifecycle=archived');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(window.location.search).toBe('?lifecycle=archived');
+      expect(document.body.textContent).toContain('Archived Passport');
+      expect(document.body.textContent).not.toContain('PassportBlue folder');
+    });
+  });
+
   it('disables home add-location controls for inventories without create access', async () => {
     const viewerSeed = structuredClone(seed);
     viewerSeed.inventories[0].access = { relationship: 'viewer', permissions: ['view'] };

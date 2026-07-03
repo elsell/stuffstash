@@ -133,7 +133,7 @@ Deep links must preserve tenant and inventory boundaries:
 - Asset action panels that materially change data, such as edit, move, archive confirmation, restore confirmation, and delete confirmation, are durable route states.
 - Settings access actions that materially change invitations, such as expire, cancel, and delete, must use durable confirmation route states instead of immediate row-button mutations.
 - Settings actions that materially change reusable schema, such as archiving custom asset types or custom field definitions, must use durable confirmation route states instead of immediate icon-button mutations.
-- Unsupported paths must fall back to the inventory home without crashing.
+- Unsupported paths under a valid inventory route must fall back to the inventory home without crashing and normalize the browser URL to that inventory home.
 
 Navigation controls must update the URL when they change durable workspace state, and browser back/forward controls must restore the corresponding workspace state.
 

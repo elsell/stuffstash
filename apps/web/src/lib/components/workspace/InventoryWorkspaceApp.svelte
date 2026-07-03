@@ -665,6 +665,7 @@
       }
 
       closeDetailToHome();
+      normalizeInventoryHomeRoute(route);
       canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
     } finally {
       applyingRoute = false;
@@ -966,6 +967,30 @@
         tenantId: data.context.selectedTenantId,
         inventoryId: data.context.selectedInventoryId,
         settingsSection: 'overview'
+      });
+    }
+  }
+
+  function normalizeInventoryHomeRoute(route: WorkspaceRouteState): void {
+    if (route.mode !== 'home' || route.action || route.addKind || !route.inventoryId || typeof window === 'undefined') {
+      return;
+    }
+    const canonicalHref = workspaceRouteHref(
+      {
+        mode: 'home',
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        lifecycleState: route.lifecycleState
+      },
+      data.context.selectedTenantId || null,
+      data.context.selectedInventoryId || null
+    );
+    if (`${window.location.pathname}${window.location.search}` !== canonicalHref) {
+      replaceRoute({
+        mode: 'home',
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        lifecycleState: route.lifecycleState
       });
     }
   }
