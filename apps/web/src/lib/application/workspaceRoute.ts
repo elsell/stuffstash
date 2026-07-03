@@ -27,6 +27,7 @@ export interface WorkspaceRouteState {
   attachmentId: string | null;
   attachmentAction: AttachmentRouteAction;
   addKind: AssetKind | null;
+  addParentAssetId: string | null;
   settingsSection: SettingsSection;
   invitationStatus: InvitationStatusFilter;
   accessInvitationAction: AccessInvitationRouteAction;
@@ -53,6 +54,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   attachmentId: null,
   attachmentAction: null,
   addKind: null,
+  addParentAssetId: null,
   settingsSection: 'overview',
   invitationStatus: 'all',
   accessInvitationAction: null,
@@ -232,7 +234,12 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     return { ...defaultWorkspaceRoute };
   }
   if (section === 'add' && remaining === 2 && assetKinds.has(segments[inventoryOffset.nextIndex + 1] as AssetKind)) {
-    return { ...route, action: 'add', addKind: segments[inventoryOffset.nextIndex + 1] as AssetKind };
+    return {
+      ...route,
+      action: 'add',
+      addKind: segments[inventoryOffset.nextIndex + 1] as AssetKind,
+      addParentAssetId: url.searchParams.get('parent') || null
+    };
   }
 
   return { ...defaultWorkspaceRoute };
@@ -361,6 +368,9 @@ export function workspaceRouteHref(
     }
   } else if (inventoryId && next.action === 'add' && next.addKind) {
     path += `/add/${next.addKind}`;
+    if (next.addParentAssetId) {
+      search.set('parent', next.addParentAssetId);
+    }
   } else if (next.lifecycleState !== 'active') {
     search.set('lifecycle', next.lifecycleState);
   }

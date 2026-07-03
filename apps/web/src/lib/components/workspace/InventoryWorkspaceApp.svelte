@@ -75,6 +75,7 @@
   let selectedAssetId = $state<string | null>(null);
   let addOpen = $state(false);
   let addKind = $state<AssetKind>('item');
+  let addParentAssetId = $state<string | null>(null);
   let assetAction = $state<AssetRouteAction>(null);
   let attachmentId = $state<string | null>(null);
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
@@ -486,6 +487,7 @@
       routeUnavailable = '';
       addOpen = route.action === 'add';
       addKind = route.addKind ?? 'item';
+      addParentAssetId = null;
       assetAction = route.assetAction;
       attachmentId = route.attachmentId;
       attachmentAction = route.attachmentAction;
@@ -524,6 +526,17 @@
 
       if (route.mode !== 'search' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
+      }
+      addParentAssetId = validAddParentId(route.addParentAssetId);
+      if (route.action === 'add' && route.addParentAssetId && !addParentAssetId) {
+        route = { ...route, addParentAssetId: null };
+        replaceRoute({
+          action: 'add',
+          addKind: route.addKind,
+          addParentAssetId: null,
+          tenantId: data.context.selectedTenantId,
+          inventoryId: data.context.selectedInventoryId
+        });
       }
 
       if (route.mode === 'locations') {
@@ -806,8 +819,14 @@
     });
   }
 
-  function openAdd(kind: AssetKind = 'item'): void {
-    navigateTo({ action: 'add', addKind: kind, tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
+  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null): void {
+    navigateTo({
+      action: 'add',
+      addKind: kind,
+      addParentAssetId: parentAssetId,
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId
+    });
   }
 
   function closeAdd(): void {
@@ -831,6 +850,13 @@
       data.context.selectedTenantId || null,
       data.context.selectedInventoryId || null
     );
+  }
+
+  function validAddParentId(parentAssetId: string | null): string | null {
+    if (!parentAssetId) {
+      return null;
+    }
+    return parentTargets(assets).some((target) => target.id === parentAssetId) ? parentAssetId : null;
   }
 
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
@@ -1142,10 +1168,12 @@
         location={selectedLocation}
         assets={containedAssets(assets, selectedLocation.id)}
         canEdit={editAssetAllowed}
+        canCreateAsset={createAssetAllowed}
         onBack={closeLocationToLocations}
         onOpenLocation={openLocation}
         onEditLocation={openLocationEdit}
         onOpenAsset={openAsset}
+        onOpenAdd={openAdd}
       />
     {:else if mode === 'asset' && selectedAsset}
       <AssetDetail
@@ -1255,6 +1283,7 @@
   <AddAssetTray
     open={addOpen && createAssetAllowed}
     initialKind={addKind}
+    initialParentAssetId={addParentAssetId}
     closeHref={addCloseHref()}
     parentTargets={parentTargets(assets)}
     mediaPolicy={data.context.mediaUploadPolicy}

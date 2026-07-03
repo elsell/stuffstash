@@ -535,6 +535,73 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('passes add parent routes into the tray destination picker', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item?parent=location-garage');
+
+    await waitFor(() => {
+      const dialog = document.body.querySelector('[role="dialog"]');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+      expect(window.location.search).toBe('?parent=location-garage');
+      expect(dialog?.textContent).toContain('Add item');
+      expect(dialog?.textContent).toContain('Garage');
+      expect(document.body.querySelector('.parent-current-card')?.textContent).toContain('Garage');
+      expect(document.body.querySelector('.parent-current-card')?.getAttribute('data-selected')).toBe('target');
+    });
+  });
+
+  it('validates add parent routes after switching to the routed inventory', async () => {
+    const multiInventorySeed = structuredClone(seed);
+    multiInventorySeed.inventories.push({
+      id: 'inventory-yard',
+      tenantId: 'tenant-home',
+      name: 'Yard',
+      access: { relationship: 'owner', permissions: ['view', 'create_asset', 'edit_asset'] }
+    });
+    multiInventorySeed.assets.push({
+      id: 'location-shed',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-yard',
+      kind: 'location',
+      title: 'Shed',
+      description: '',
+      parentAssetId: null,
+      lifecycleState: 'active'
+    });
+
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-yard/add/item?parent=location-shed',
+      new SeededInventoryRepository(multiInventorySeed)
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-yard/add/item');
+      expect(window.location.search).toBe('?parent=location-shed');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Shed');
+      expect(document.body.querySelector('.parent-current-card')?.getAttribute('data-selected')).toBe('target');
+    });
+  });
+
+  it('normalizes invalid add parent routes before showing the tray', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item?parent=missing-location');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+      expect(window.location.search).toBe('');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Inventory root');
+      expect(document.body.querySelector('.parent-current-card')?.getAttribute('data-selected')).toBe('root');
+    });
+  });
+
+  it('normalizes invalid add parent routes when canonicalizing inventory aliases', async () => {
+    await mountWorkspace('/inventories/inventory-household/add/item?parent=missing-location');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+      expect(window.location.search).toBe('');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Inventory root');
+    });
+  });
+
   it('applies browser popstate route changes', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
 

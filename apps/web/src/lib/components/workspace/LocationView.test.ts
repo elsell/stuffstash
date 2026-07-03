@@ -139,6 +139,7 @@ describe('LocationView', () => {
         location,
         assets: [],
         canEdit: true,
+        canCreateAsset: true,
         onBack: () => {},
         onOpenLocation: () => {},
         onEditLocation: (asset) => {
@@ -151,6 +152,36 @@ describe('LocationView', () => {
     clickLink('Edit location');
 
     expect(editedLocationId).toBe('garage');
+  });
+
+  it('exposes a route-backed add-item action preselected to the current location', () => {
+    let addKind = '';
+    let addParentId = '';
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [],
+        canEdit: true,
+        canCreateAsset: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: () => {},
+        onOpenAdd: (kind, parentId) => {
+          addKind = kind;
+          addParentId = parentId;
+        }
+      }
+    });
+
+    expect(link('Add item here').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/add/item?parent=garage'
+    );
+    clickLink('Add item here');
+
+    expect(addKind).toBe('item');
+    expect(addParentId).toBe('garage');
   });
 
   it('hides location editing when edit access is missing', () => {
@@ -170,6 +201,29 @@ describe('LocationView', () => {
     });
 
     expect(document.body.textContent).not.toContain('Edit location');
+  });
+
+  it('uses a denied empty-state note when location creation access is missing', () => {
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [],
+        canEdit: false,
+        canCreateAsset: false,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: () => {},
+        onOpenAdd: () => {
+          throw new Error('Add should not be available.');
+        }
+      }
+    });
+
+    expect(document.body.textContent).toContain('This location is empty.');
+    expect(document.body.textContent).toContain('Adding items is unavailable for this inventory.');
+    expect(document.body.textContent).not.toContain('Add item here');
   });
 });
 

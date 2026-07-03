@@ -25,6 +25,7 @@
   let {
     open,
     initialKind = 'item',
+    initialParentAssetId = null,
     closeHref,
     parentTargets,
     mediaPolicy,
@@ -36,6 +37,7 @@
   }: {
     open: boolean;
     initialKind?: AssetKind;
+    initialParentAssetId?: string | null;
     closeHref: string;
     parentTargets: AssetViewModel[];
     mediaPolicy: MediaUploadPolicy;
@@ -60,6 +62,7 @@
   let photoError = $state('');
   let fileInputKey = $state(0);
   let lastInitialKind = $state<AssetKind>('item');
+  let lastInitialParentAssetId = $state<string | null>(null);
   let wasOpen = $state(false);
   let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
@@ -87,7 +90,7 @@
   $effect(() => {
     if (open && !wasOpen) {
       returnFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      resetDraft(initialKind);
+      resetDraft(initialKind, validInitialParentId(initialParentAssetId));
       wasOpen = true;
       void tick().then(() => titleInput?.focus());
     } else if (!open && wasOpen) {
@@ -100,6 +103,10 @@
     } else if (open && initialKind !== lastInitialKind) {
       kind = initialKind;
       lastInitialKind = initialKind;
+    } else if (open && initialParentAssetId !== lastInitialParentAssetId) {
+      parentAssetId = validInitialParentId(initialParentAssetId) ?? '';
+      parentSearch = parentAssetId ? parentTargets.find((target) => target.id === parentAssetId)?.title ?? '' : '';
+      lastInitialParentAssetId = initialParentAssetId;
     }
   });
 
@@ -147,13 +154,13 @@
     lastInitialKind = kind;
   }
 
-  function resetDraft(nextKind: AssetKind): void {
+  function resetDraft(nextKind: AssetKind, nextParentAssetId: string | null = null): void {
     revokePhotoPreviews(selectedPhotos);
     kind = nextKind;
     title = '';
     description = '';
-    parentAssetId = '';
-    parentSearch = '';
+    parentAssetId = nextParentAssetId ?? '';
+    parentSearch = nextParentAssetId ? parentTargets.find((target) => target.id === nextParentAssetId)?.title ?? '' : '';
     quickParentEnabled = false;
     quickParentTitle = '';
     quickParentKind = 'location';
@@ -163,6 +170,7 @@
     photoError = '';
     fileInputKey += 1;
     lastInitialKind = nextKind;
+    lastInitialParentAssetId = initialParentAssetId;
   }
 
   function handleDialogKeydown(event: KeyboardEvent): void {
@@ -259,6 +267,10 @@
   function selectParentTarget(id: string | null): void {
     parentAssetId = id ?? '';
     parentSearch = id ? parentTargets.find((target) => target.id === id)?.title ?? parentSearch : '';
+  }
+
+  function validInitialParentId(id: string | null | undefined): string | null {
+    return id && parentTargets.some((target) => target.id === id) ? id : null;
   }
 
   function toggleQuickParent(): void {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+  import Plus from '@lucide/svelte/icons/plus';
   import Pencil from '@lucide/svelte/icons/pencil';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
@@ -12,18 +13,22 @@
     location,
     assets,
     canEdit,
+    canCreateAsset = false,
     onBack,
     onOpenLocation,
     onEditLocation,
-    onOpenAsset
+    onOpenAsset,
+    onOpenAdd = () => {}
   }: {
     location: Asset;
     assets: AssetViewModel[];
     canEdit: boolean;
+    canCreateAsset?: boolean;
     onBack: () => void;
     onOpenLocation: (asset: Asset) => void;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
+    onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
   } = $props();
 
   function backHref(): string {
@@ -33,6 +38,14 @@
   function editLocationHref(): string {
     return workspaceRouteHref(
       { mode: 'asset', locationId: location.id, assetId: location.id, action: 'edit', assetAction: 'edit' },
+      location.tenantId,
+      location.inventoryId
+    );
+  }
+
+  function addItemHereHref(): string {
+    return workspaceRouteHref(
+      { action: 'add', addKind: 'item', addParentAssetId: location.id },
       location.tenantId,
       location.inventoryId
     );
@@ -59,6 +72,14 @@
     }
     event.preventDefault();
     onEditLocation(location);
+  }
+
+  function openAddItemHere(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onOpenAdd('item', location.id);
   }
 
   function openRow(event: MouseEvent, asset: Asset): void {
@@ -90,12 +111,20 @@
     {#if canEdit}
       <Button.Root href={editLocationHref()} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
     {/if}
+    {#if canCreateAsset && assets.length > 0}
+      <Button.Root href={addItemHereHref()} onclick={openAddItemHere}><Plus /> Add item here</Button.Root>
+    {/if}
   </div>
 
   {#if assets.length === 0}
     <div class="empty-state spacious">
       <h2>No stuff here yet</h2>
-      <p>Add an item or move existing stuff into this location.</p>
+      <p>{canCreateAsset ? 'Add an item or move existing stuff into this location.' : 'This location is empty.'}</p>
+      {#if canCreateAsset}
+        <Button.Root href={addItemHereHref()} onclick={openAddItemHere}>Add item here</Button.Root>
+      {:else}
+        <p class="denied-note" role="note">Adding items is unavailable for this inventory.</p>
+      {/if}
     </div>
   {:else}
     <div class="asset-list">

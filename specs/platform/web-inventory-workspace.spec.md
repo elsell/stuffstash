@@ -115,6 +115,7 @@ The route path owns durable navigation state. Query parameters may own transient
 - `lifecycle=active|archived`.
 - `q={search query}`.
 - `mode=fuzzy|exact`.
+- `parent={assetId}` for add item, container, or location routes that should open with an existing location or container selected as the parent destination.
 - `invitationStatus=all|pending|accepted|revoked|cancelled|expired` for the access settings invitation filter.
 - `auditScope=inventory|tenant` for the activity settings audit scope filter.
 
@@ -359,6 +360,8 @@ The add surface:
 - The tray must show a compact live summary of the selected kind, parent destination, and photo count so users can confirm what will be created without rescanning the whole form.
 - Must collect name/title.
 - Must collect a valid parent target when required.
+- Add routes may include a `parent` query parameter to preselect an existing valid location or container parent. Location view add actions must use this route-backed preselection rather than component-local-only state.
+- If an add route includes an invalid `parent` query parameter, the app must normalize the URL to the same add route without the invalid parent rather than silently saving to a different destination than the URL implies.
 - Parent target selection must use a picker/search over valid location/container targets, not a free text field that implies invalid foreign keys can be saved.
 - Parent target selection must be search-first when many locations or containers are available: it must always show the current destination and inventory root option, but it must not render an unfiltered stack of every possible parent by default.
 - The parent picker must support quick creation when the user realizes the parent location/container does not exist yet.

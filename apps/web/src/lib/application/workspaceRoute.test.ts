@@ -153,6 +153,11 @@ describe('workspace route state', () => {
       mode: 'import',
       importSourceType: 'legacy_homebox_csv'
     });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/add/item?parent=location_1'))).toMatchObject({
+      action: 'add',
+      addKind: 'item',
+      addParentAssetId: 'location_1'
+    });
   });
 
   it('parses attachment delete confirmation routes under the parent asset', () => {
@@ -178,6 +183,9 @@ describe('workspace route state', () => {
     );
     expect(workspaceRouteHref({ action: 'add', addKind: 'location' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/location'
+    );
+    expect(workspaceRouteHref({ action: 'add', addKind: 'item', addParentAssetId: 'location 1' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/add/item?parent=location+1'
     );
     expect(workspaceRouteHref({ mode: 'locations' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/locations');
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(

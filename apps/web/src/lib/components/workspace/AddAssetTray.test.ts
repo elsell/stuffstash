@@ -95,6 +95,45 @@ describe('AddAssetTray', () => {
     expect(document.querySelector('#quick-parent-title')).not.toBeNull();
   });
 
+  it('seeds the parent destination from a route-backed parent id', async () => {
+    let savedDraft: AddAssetSubmission | null = null;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household/locations/garage',
+        initialKind: 'item',
+        initialParentAssetId: 'garage',
+        parentTargets: [parentTarget('garage', 'Garage', 'Home')],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async (draft) => {
+          savedDraft = draft;
+          return { saved: true };
+        }
+      }
+    });
+
+    await flush();
+
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('Garage');
+    expect(document.body.querySelector('.parent-current-card')?.textContent).toContain('Garage');
+    expect(document.body.querySelector('.parent-current-card')?.getAttribute('data-selected')).toBe('target');
+
+    input('#asset-title', 'Tape measure');
+    await flush();
+    click('Save');
+    await flush();
+
+    expect(savedDraft).toMatchObject({
+      title: 'Tape measure',
+      parentAssetId: 'garage'
+    });
+  });
+
   it('exposes close hrefs for visible tray dismissal controls and preserves modified clicks', async () => {
     let closeCount = 0;
     component = mount(AddAssetTray, {
