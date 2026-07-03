@@ -60,9 +60,62 @@ describe('WorkspaceContextSwitcher', () => {
     await tick();
 
     expect(document.body.textContent).toContain('Inventories');
-    expect(pressedButtonContaining('Garage').getAttribute('aria-pressed')).toBe('true');
+    expect(currentLinkContaining('Garage').getAttribute('aria-current')).toBe('page');
     expect(document.body.textContent).toContain('Owner');
     expect(document.body.textContent).not.toContain('Loft');
+  });
+
+  it('exposes canonical inventory home hrefs from the inventory picker', async () => {
+    const selected: Array<[string, string]> = [];
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps({
+        tenants: [tenant, secondTenant],
+        inventories: [inventory, secondInventory],
+        onSelectInventory: (tenantId, inventoryId) => {
+          selected.push([tenantId, inventoryId]);
+        }
+      })
+    });
+
+    buttonContaining('Garage').click();
+    await tick();
+
+    expect(linkContaining('Garage').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one');
+    linkContaining('Garage').click();
+
+    expect(selected).toEqual([[tenant.id, inventory.id]]);
+  });
+
+  it('preserves modified clicks on inventory option links', async () => {
+    const selected: Array<[string, string]> = [];
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps({
+        tenants: [tenant, secondTenant],
+        inventories: [inventory, secondInventory],
+        onSelectInventory: (tenantId, inventoryId) => {
+          selected.push([tenantId, inventoryId]);
+        }
+      })
+    });
+
+    buttonContaining('Garage').click();
+    await tick();
+
+    const target = linkContaining('Garage');
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
+    let componentPreventedModifiedClick = true;
+    const browserNavigationPreventer = (clickEvent: MouseEvent) => clickEvent.preventDefault();
+    target.addEventListener('click', (clickEvent) => {
+      componentPreventedModifiedClick = clickEvent.defaultPrevented;
+    });
+    target.addEventListener('click', browserNavigationPreventer);
+    target.dispatchEvent(event);
+    target.removeEventListener('click', browserNavigationPreventer);
+
+    expect(selected).toEqual([]);
+    expect(componentPreventedModifiedClick).toBe(false);
   });
 
   it('keeps the popover open and replaces inventories after switching tenants', async () => {
@@ -86,7 +139,7 @@ describe('WorkspaceContextSwitcher', () => {
     expect(document.body.textContent).toContain('Inventories');
     expect(document.body.textContent).toContain('Loft');
     expect(document.body.textContent).not.toContain('GarageHousehold');
-    expect(pressedButtonContaining('Loft').getAttribute('aria-pressed')).toBe('true');
+    expect(currentLinkContaining('Loft').getAttribute('aria-current')).toBe('page');
   });
 
   it('focuses the replacement inventory list after an async tenant switch', async () => {
@@ -134,7 +187,7 @@ describe('WorkspaceContextSwitcher', () => {
     await tick();
     expect(document.body.textContent).toContain('Inventories');
 
-    pressedButtonContaining('Garage').dispatchEvent(
+    currentLinkContaining('Garage').dispatchEvent(
       new FocusEvent('focusout', { bubbles: true, relatedTarget: outsideButton })
     );
     outsideButton.focus();
@@ -160,7 +213,7 @@ describe('WorkspaceContextSwitcher', () => {
     await tick();
 
     expect(document.body.textContent).toContain('Inventories');
-    expect(pressedButtonContaining('Garage').getAttribute('aria-pressed')).toBe('true');
+    expect(currentLinkContaining('Garage').getAttribute('aria-current')).toBe('page');
     expect(document.activeElement?.textContent).toContain('Garage');
     expect(document.body.textContent).not.toContain('Loft');
 
@@ -197,12 +250,22 @@ function buttonContaining(text: string): HTMLButtonElement {
   return button;
 }
 
-function pressedButtonContaining(text: string): HTMLButtonElement {
-  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')).find((candidate) =>
+function linkContaining(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
     candidate.textContent?.includes(text)
   );
-  if (!button) {
-    throw new Error(`Missing pressed button containing ${text}`);
+  if (!link) {
+    throw new Error(`Missing link containing ${text}`);
   }
-  return button;
+  return link;
+}
+
+function currentLinkContaining(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!link) {
+    throw new Error(`Missing current link containing ${text}`);
+  }
+  return link;
 }

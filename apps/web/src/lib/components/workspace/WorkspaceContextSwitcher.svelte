@@ -3,6 +3,7 @@
   import Building2 from '@lucide/svelte/icons/building-2';
   import Check from '@lucide/svelte/icons/check';
   import Package from '@lucide/svelte/icons/package';
+  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
 
@@ -72,7 +73,7 @@
 
   async function focusPanel(): Promise<void> {
     await tick();
-    const selectedOption = panelElement?.querySelector<HTMLElement>('button[aria-pressed="true"]');
+    const selectedOption = panelElement?.querySelector<HTMLElement>('[aria-current="page"], [aria-pressed="true"]');
     const firstFocusable = panelElement
       ?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     (selectedOption ?? firstFocusable ?? panelElement)?.focus();
@@ -87,9 +88,21 @@
     onSelectTenant(tenantId);
   }
 
-  function chooseInventory(inventory: Inventory): void {
+  function chooseInventory(event: MouseEvent, inventory: Inventory): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
     closeContext();
     onSelectInventory(inventory.tenantId, inventory.id);
+  }
+
+  function inventoryHref(inventory: Inventory): string {
+    return workspaceRouteHref(
+      { mode: 'home', tenantId: inventory.tenantId, inventoryId: inventory.id },
+      selectedTenantId || null,
+      selectedInventoryId || null
+    );
   }
 
   function inventoryCountLabel(tenantId: string): string {
@@ -150,6 +163,10 @@
       }
       closeContext(false);
     }, 0);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
   }
 </script>
 
@@ -218,10 +235,11 @@
         <div class="context-option-list" aria-label="Inventories">
           {#each selectedTenantInventories as inventory}
             <Button.Root
+              href={inventoryHref(inventory)}
               variant={inventory.id === selectedInventoryId ? 'secondary' : 'ghost'}
               class="context-option"
-              aria-pressed={inventory.id === selectedInventoryId}
-              onclick={() => chooseInventory(inventory)}
+              aria-current={inventory.id === selectedInventoryId ? 'page' : undefined}
+              onclick={(event) => chooseInventory(event, inventory)}
             >
               <span class="context-option-check" aria-hidden="true">{#if inventory.id === selectedInventoryId}<Check />{/if}</span>
               <span class="context-option-copy">

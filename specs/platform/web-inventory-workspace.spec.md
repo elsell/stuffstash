@@ -162,6 +162,7 @@ Desktop:
 - The switcher must not include a tenant/inventory search field in the approved first direction.
 - The switcher must not include a separate duplicated current tenant card, persistent inventory list, or duplicate inventory settings link.
 - Inventory choices must expose selected state accessibly and show relationship metadata when available.
+- Inventory choices must expose canonical inventory home `href` values while preserving ordinary in-app switching behavior.
 - Tenant choices must expose selected state accessibly and show the number of inventories in that tenant.
 
 Mobile:
