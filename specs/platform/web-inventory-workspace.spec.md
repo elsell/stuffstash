@@ -418,6 +418,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
 - Import options for images, insecure TLS, and private-network access must use the shared binary-option composition with visible on/off state, clear option copy, and honest switch or checkbox semantics.
 - Import source choices that correspond to distinct import workflows must expose canonical `href` values while preserving ordinary in-app source switching behavior.
+- Route-backed controls rendered as disabled links must remove their `href`, expose `aria-disabled`, leave the tab order, and visually match native disabled buttons through the shared button primitive.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 
 ## Inventory Settings
