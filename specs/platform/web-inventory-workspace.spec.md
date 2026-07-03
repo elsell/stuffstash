@@ -274,6 +274,7 @@ Selecting an asset must open an asset detail view.
 The first asset detail view must include:
 
 - Back navigation to the previous location list when opened from a location.
+- Back navigation must expose a canonical `href` matching the ordinary in-app back destination.
 - A prominent asset photo area with a kind icon fallback.
 - Asset title.
 - Asset kind.

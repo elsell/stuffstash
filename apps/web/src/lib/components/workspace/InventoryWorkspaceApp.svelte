@@ -7,7 +7,8 @@
   import {
     type AssetRouteAction,
     type SettingsSection,
-    type WorkspaceRouteState
+    type WorkspaceRouteState,
+    workspaceRouteHref
   } from '$lib/application/workspaceRoute';
   import {
     assetRouteActionIsAvailable,
@@ -416,8 +417,18 @@
     navigateTo({ mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id });
   }
 
-  function openAsset(asset: Asset): void {
-    navigateTo({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id });
+  async function openAsset(asset: Asset): Promise<void> {
+    const returnLocationId = mode === 'location' ? selectedLocationId : null;
+    await applyRoute(
+      pushWorkspaceRoute(
+        { mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id },
+        data.context.selectedTenantId || null,
+        data.context.selectedInventoryId || null
+      )
+    );
+    if (returnLocationId && selectedAssetId === asset.id) {
+      selectedLocationId = returnLocationId;
+    }
   }
 
   function openLocationEdit(asset: Asset): void {
@@ -789,6 +800,26 @@
     }
   }
 
+  function assetDetailBackHref(): string {
+    return workspaceRouteHref(
+      selectedLocationId
+        ? {
+            mode: 'location',
+            tenantId: data.context.selectedTenantId,
+            inventoryId: data.context.selectedInventoryId,
+            locationId: selectedLocationId
+          }
+        : {
+            mode: 'home',
+            tenantId: data.context.selectedTenantId,
+            inventoryId: data.context.selectedInventoryId,
+            lifecycleState: data.context.assetLifecycleState
+          },
+      data.context.selectedTenantId || null,
+      data.context.selectedInventoryId || null
+    );
+  }
+
   function invalidateAssetDetailLoad(): void {
     assetDetailRequestId += 1;
   }
@@ -891,6 +922,7 @@
         attachments={selectedAssetAttachments}
         mediaPolicy={data.context.mediaUploadPolicy}
         action={assetAction}
+        backHref={assetDetailBackHref()}
         onBack={closeDetailToPrevious}
         onActionOpen={openAssetActionRoute}
         onActionClose={closeAssetActionRoute}

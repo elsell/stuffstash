@@ -45,6 +45,7 @@
     saving,
     attachments,
     mediaPolicy,
+    backHref,
     onBack,
     onActionOpen,
     onActionClose,
@@ -64,6 +65,7 @@
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
+    backHref: string;
     onBack: () => void;
     onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete') => void;
     onActionClose: () => void;
@@ -433,10 +435,18 @@
       ? crypto.randomUUID()
       : `attachment-${Date.now()}`;
   }
+
+  function openBack(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onBack();
+  }
 </script>
 
 <section class="workspace-main detail-view" aria-labelledby="asset-title">
-  <Button.Root variant="ghost" class="back-button" onclick={onBack}><ArrowLeft /> Back</Button.Root>
+  <Button.Root href={backHref} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> Back</Button.Root>
   <Input
     bind:ref={photoInput}
     aria-label="Choose photo"

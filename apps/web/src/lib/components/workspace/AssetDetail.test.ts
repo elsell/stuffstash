@@ -307,10 +307,31 @@ describe('AssetDetail', () => {
   it('exposes canonical hrefs for durable asset actions', () => {
     mountAssetDetail();
 
+    expect(link('Back').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one');
     expect(link('Edit').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/edit');
     expect(link('Move').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/move');
     expect(link('Archive').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/archive');
     expect(link('Delete').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/delete');
+  });
+
+  it('preserves modified clicks on the asset detail back link', () => {
+    let backOpened = false;
+    mountAssetDetail({
+      onBack: () => {
+        backOpened = true;
+      }
+    });
+
+    let componentPreventedModifiedClick = false;
+    const target = link('Back');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(backOpened).toBe(false);
+    expect(componentPreventedModifiedClick).toBe(false);
   });
 
   it('uses the location edit route for location asset edit actions', () => {
@@ -412,6 +433,7 @@ function mountAssetDetail(
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
+    backHref: string;
     onBack: () => void;
     onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete') => void;
     onActionClose: () => void;
@@ -437,6 +459,7 @@ function mountAssetDetail(
         supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
         maxBytes: 5 * 1024 * 1024
       },
+      backHref: '/tenants/tenant-one/inventories/inventory-one',
       onBack: () => {},
       onActionOpen: () => {},
       onActionClose: () => {},

@@ -203,6 +203,46 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps ordinary asset detail back clicks aligned with the exposed previous-location href', async () => {
+    const locationSeed = structuredClone(seed);
+    locationSeed.assets.push({
+      id: 'asset-wrench',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'item',
+      title: 'Garage wrench',
+      description: 'Hanging by the bench',
+      parentAssetId: 'location-garage',
+      lifecycleState: 'active'
+    });
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage',
+      new SeededInventoryRepository(locationSeed)
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Garage wrench');
+    });
+
+    controlContaining('Garage wrench').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-wrench');
+      expect(document.body.textContent).toContain('Hanging by the bench');
+    });
+
+    expect(controlContaining('Back').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
+    );
+    controlContaining('Back').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Main storage area');
+    });
+  });
+
   it('keeps normal location asset edit clicks on the canonical location edit route', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/location-garage');
 
