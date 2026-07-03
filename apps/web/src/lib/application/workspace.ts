@@ -1,4 +1,4 @@
-import type { Asset, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
+import type { Asset, AssetViewModel, CustomAssetType, LocationSummary } from '$lib/domain/inventory';
 
 export function topLevelLocations(assets: Asset[]): LocationSummary[] {
   return assets
@@ -39,6 +39,42 @@ export function moveParentTargets(assets: Asset[], movingAssetId: string): Asset
   const excluded = descendantIds(sameInventoryAssets, movingAssetId);
   excluded.add(movingAssetId);
   return parentTargets(sameInventoryAssets).filter((asset) => !excluded.has(asset.id));
+}
+
+export function labelAssets(items: Asset[], customAssetTypes: CustomAssetType[]): Asset[] {
+  return items.map((asset) => labelAsset(asset, customAssetTypes));
+}
+
+export function labelAsset(asset: Asset, customAssetTypes: CustomAssetType[]): Asset {
+  if (asset.customAssetTypeLabel || !asset.customAssetTypeId) {
+    return asset;
+  }
+  return {
+    ...asset,
+    customAssetTypeLabel: customAssetTypes.find((assetType) => assetType.id === asset.customAssetTypeId)?.displayName
+  };
+}
+
+export function detailAssetList(assets: Asset[], loadedAssetDetail: Asset | null, customAssetTypes: CustomAssetType[]): Asset[] {
+  if (!loadedAssetDetail || assets.some((asset) => asset.id === loadedAssetDetail.id)) {
+    return assets;
+  }
+  return [labelAsset(loadedAssetDetail, customAssetTypes), ...assets];
+}
+
+export function selectedAssetForDetail(
+  selectedAssetId: string | null,
+  assets: Asset[],
+  loadedAssetDetail: Asset | null,
+  customAssetTypes: CustomAssetType[]
+): Asset | null {
+  if (!selectedAssetId) {
+    return null;
+  }
+  if (loadedAssetDetail?.id === selectedAssetId) {
+    return labelAsset(loadedAssetDetail, customAssetTypes);
+  }
+  return assets.find((asset) => asset.id === selectedAssetId) ?? null;
 }
 
 export function withTrail(asset: Asset, assets: Asset[]): AssetViewModel {

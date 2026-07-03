@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   containedAssets,
+  detailAssetList,
+  labelAsset,
+  labelAssets,
   moveParentTargets,
   parentTargets,
   recentlyAddedAssets,
+  selectedAssetForDetail,
   topLevelLocations,
   withTrail
 } from './workspace';
-import type { Asset } from '$lib/domain/inventory';
+import type { Asset, CustomAssetType } from '$lib/domain/inventory';
 
 const assets: Asset[] = [
   {
@@ -86,6 +90,19 @@ const crossInventoryAssets: Asset[] = [
   }
 ];
 
+const customAssetTypes: CustomAssetType[] = [
+  {
+    id: 'type-medicine',
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    scope: 'inventory',
+    key: 'medicine',
+    displayName: 'Medicine',
+    description: '',
+    lifecycleState: 'active'
+  }
+];
+
 describe('workspace domain helpers', () => {
   it('derives top-level active locations and contained asset counts', () => {
     expect(topLevelLocations(assets)).toEqual([{ location: assets[0], assetCount: 2 }]);
@@ -119,5 +136,49 @@ describe('workspace domain helpers', () => {
     expect(moveParentTargets(assets, 'toolbox').map((asset) => asset.id)).toEqual(['garage', 'basement', 'basement-toolbox']);
     expect(moveParentTargets(assets, 'drill').map((asset) => asset.id)).toEqual(['garage', 'toolbox', 'basement', 'basement-toolbox']);
     expect(moveParentTargets(crossInventoryAssets, 'other-room').map((asset) => asset.id)).toEqual([]);
+  });
+
+  it('labels assets with matching custom asset type display names', () => {
+    const medicineAsset: Asset = { ...assets[2]!, customAssetTypeId: 'type-medicine' };
+    const alreadyLabeled: Asset = { ...medicineAsset, customAssetTypeLabel: 'Existing label' };
+
+    expect(labelAsset(medicineAsset, customAssetTypes).customAssetTypeLabel).toBe('Medicine');
+    expect(labelAsset(alreadyLabeled, customAssetTypes).customAssetTypeLabel).toBe('Existing label');
+    expect(labelAssets([medicineAsset], customAssetTypes)[0]?.customAssetTypeLabel).toBe('Medicine');
+  });
+
+  it('builds the detail asset list from loaded detail without duplicating known assets', () => {
+    const labeledAssets = labelAssets(assets, customAssetTypes);
+    const remoteDetail: Asset = {
+      ...assets[2]!,
+      title: 'Cordless drill with loaded detail',
+      customAssetTypeId: 'type-medicine'
+    };
+    const missingFromList: Asset = { ...remoteDetail, id: 'asset-from-deep-link' };
+
+    expect(detailAssetList(labeledAssets, remoteDetail, customAssetTypes).map((asset) => asset.id)).toEqual(
+      labeledAssets.map((asset) => asset.id)
+    );
+    expect(detailAssetList(labeledAssets, missingFromList, customAssetTypes)[0]).toMatchObject({
+      id: 'asset-from-deep-link',
+      customAssetTypeLabel: 'Medicine'
+    });
+  });
+
+  it('selects loaded detail before falling back to the current asset list', () => {
+    const labeledAssets = labelAssets(assets, customAssetTypes);
+    const loadedDetail: Asset = {
+      ...assets[2]!,
+      title: 'Loaded drill',
+      customAssetTypeId: 'type-medicine'
+    };
+
+    expect(selectedAssetForDetail('drill', labeledAssets, loadedDetail, customAssetTypes)).toMatchObject({
+      id: 'drill',
+      title: 'Loaded drill',
+      customAssetTypeLabel: 'Medicine'
+    });
+    expect(selectedAssetForDetail('toolbox', labeledAssets, loadedDetail, customAssetTypes)?.id).toBe('toolbox');
+    expect(selectedAssetForDetail(null, labeledAssets, loadedDetail, customAssetTypes)).toBeNull();
   });
 });

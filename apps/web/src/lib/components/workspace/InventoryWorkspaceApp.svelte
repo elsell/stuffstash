@@ -1,6 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { containedAssets, moveParentTargets, parentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import {
+    containedAssets,
+    detailAssetList,
+    labelAssets,
+    moveParentTargets,
+    parentTargets,
+    recentlyAddedAssets,
+    selectedAssetForDetail,
+    topLevelLocations,
+    withTrail
+  } from '$lib/application/workspace';
   import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
@@ -104,18 +114,8 @@
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
   let assets = $derived(labelAssets(data.assets, data.context.customAssetTypes));
   let selectedLocation = $derived(assets.find((asset) => asset.id === selectedLocationId) ?? null);
-  let detailAssets = $derived(
-    loadedAssetDetail && !assets.some((asset) => asset.id === loadedAssetDetail?.id)
-      ? [labelAsset(loadedAssetDetail, data.context.customAssetTypes), ...assets]
-      : assets
-  );
-  let selectedAsset = $derived(
-    selectedAssetId
-      ? loadedAssetDetail?.id === selectedAssetId
-        ? labelAsset(loadedAssetDetail, data.context.customAssetTypes)
-        : assets.find((asset) => asset.id === selectedAssetId) ?? null
-      : null
-  );
+  let detailAssets = $derived(detailAssetList(assets, loadedAssetDetail, data.context.customAssetTypes));
+  let selectedAsset = $derived(selectedAssetForDetail(selectedAssetId, assets, loadedAssetDetail, data.context.customAssetTypes));
   let searchSuggestions = $derived(buildSearchSuggestions(assets, searchQuery));
   let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
   let editAssetAllowed = $derived(canEditAsset(selectedInventory));
@@ -1139,20 +1139,6 @@
         customAssetTypes: assetTypes,
         customFieldDefinitions: fieldDefinitions
       }
-    };
-  }
-
-  function labelAssets(items: Asset[], customAssetTypes: CustomAssetType[]): Asset[] {
-    return items.map((asset) => labelAsset(asset, customAssetTypes));
-  }
-
-  function labelAsset(asset: Asset, customAssetTypes: CustomAssetType[]): Asset {
-    if (asset.customAssetTypeLabel || !asset.customAssetTypeId) {
-      return asset;
-    }
-    return {
-      ...asset,
-      customAssetTypeLabel: customAssetTypes.find((assetType) => assetType.id === asset.customAssetTypeId)?.displayName
     };
   }
 
