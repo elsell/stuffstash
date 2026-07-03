@@ -30,7 +30,35 @@ afterEach(() => {
 });
 
 describe('AddAssetTray', () => {
-  it('submits a quick-created parent with the asset draft', async () => {
+  it('keeps quick parent creation hidden until the user opts in', async () => {
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async () => ({ saved: true })
+      }
+    });
+
+    await flush();
+
+    expect(document.body.textContent).toContain('Create missing parent');
+    expect(switchControl('Create a parent first')?.getAttribute('aria-checked')).toBe('false');
+    expect(document.querySelector('#quick-parent-title')).toBeNull();
+
+    switchControl('Create a parent first')?.click();
+    await flush();
+
+    expect(switchControl('Create a parent first')?.getAttribute('aria-checked')).toBe('true');
+    expect(document.querySelector('#quick-parent-title')).not.toBeNull();
+  });
+
+  it('submits an opted-in quick-created parent with the asset draft', async () => {
     let savedDraft: AddAssetSubmission | null = null;
     component = mount(AddAssetTray, {
       target: document.body,
@@ -51,6 +79,8 @@ describe('AddAssetTray', () => {
 
     await flush();
     input('#asset-title', 'Tape measure');
+    switchControl('Create a parent first')?.click();
+    await flush();
     input('#quick-parent-title', 'Garage shelf');
     clickLast('Container');
     await flush();
@@ -63,6 +93,78 @@ describe('AddAssetTray', () => {
         kind: 'container',
         title: 'Garage shelf'
       }
+    });
+  });
+
+  it('requires a parent name when quick parent creation is enabled', async () => {
+    let saved = false;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async () => {
+          saved = true;
+          return { saved: true };
+        }
+      }
+    });
+
+    await flush();
+    input('#asset-title', 'Tape measure');
+    switchControl('Create a parent first')?.click();
+    await flush();
+
+    const parentInput = document.querySelector<HTMLInputElement>('#quick-parent-title');
+    expect(parentInput?.getAttribute('aria-invalid')).toBe('true');
+    expect(parentInput?.getAttribute('aria-describedby')).toBe('quick-parent-error');
+    expect(document.body.textContent).toContain('Enter a parent name or turn this option off.');
+    expect(button('Save').disabled).toBe(true);
+
+    button('Save').click();
+    await flush();
+
+    expect(saved).toBe(false);
+  });
+
+  it('clears quick parent draft data when the option is turned off', async () => {
+    let savedDraft: AddAssetSubmission | null = null;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async (draft) => {
+          savedDraft = draft;
+          return { saved: true };
+        }
+      }
+    });
+
+    await flush();
+    input('#asset-title', 'Tape measure');
+    switchControl('Create a parent first')?.click();
+    await flush();
+    input('#quick-parent-title', 'Garage shelf');
+    switchControl('Create a parent first')?.click();
+    await flush();
+    click('Save');
+    await flush();
+
+    expect(document.querySelector('#quick-parent-title')).toBeNull();
+    expect(savedDraft).toMatchObject({
+      title: 'Tape measure',
+      parentQuickCreate: undefined
     });
   });
 
@@ -99,6 +201,8 @@ describe('AddAssetTray', () => {
 
     await flush();
     input('#asset-title', 'Tape measure');
+    switchControl('Create a parent first')?.click();
+    await flush();
     input('#quick-parent-title', 'Garage shelf');
     clickLast('Container');
     await flush();
@@ -292,6 +396,12 @@ function button(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(text));
   if (!button) throw new Error(`Missing button ${text}`);
   return button;
+}
+
+function switchControl(label: string): HTMLButtonElement | null {
+  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button[role="switch"]')).find((button) =>
+    button.textContent?.includes(label)
+  ) ?? null;
 }
 
 function clickLast(text: string): void {

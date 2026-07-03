@@ -336,6 +336,7 @@ The add surface:
 - Must collect a valid parent target when required.
 - Parent target selection must use a picker/search over valid location/container targets, not a free text field that implies invalid foreign keys can be saved.
 - The parent picker must support quick creation when the user realizes the parent location/container does not exist yet.
+- Quick parent creation in add flows must be an explicit opt-in section, not always-visible secondary fields that compete with the common add path.
 - Quick creation must be explicit and must preserve authorization, validation, and audit expectations when implemented against the real API.
 
 Photos:

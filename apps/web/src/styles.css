@@ -1365,6 +1365,17 @@ dd {
   font-size: 0.82rem;
 }
 
+.quick-parent-section {
+  gap: 10px;
+}
+
+.quick-parent-fields {
+  display: grid;
+  gap: 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+
 .option-grid {
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
 }

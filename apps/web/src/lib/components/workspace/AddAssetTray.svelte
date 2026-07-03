@@ -18,6 +18,7 @@
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import BinaryOption from './BinaryOption.svelte';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -48,6 +49,7 @@
   let description = $state('');
   let parentAssetId = $state('');
   let parentSearch = $state('');
+  let quickParentEnabled = $state(false);
   let quickParentTitle = $state('');
   let quickParentKind = $state<'location' | 'container'>('location');
   let customAssetTypeId = $state('');
@@ -74,6 +76,7 @@
 
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
+  let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
 
   $effect(() => {
     if (open && !wasOpen) {
@@ -107,7 +110,7 @@
       title: title.trim(),
       description: description.trim(),
       parentAssetId: parentAssetId || null,
-      parentQuickCreate: quickParentTitle.trim()
+      parentQuickCreate: quickParentEnabled && quickParentTitle.trim()
         ? { kind: quickParentKind, title: quickParentTitle.trim() }
         : undefined,
       customAssetTypeId: customAssetTypeId || undefined,
@@ -117,6 +120,7 @@
     if (!result.saved) {
       if (result.createdParentId) {
         parentAssetId = result.createdParentId;
+        quickParentEnabled = false;
         quickParentTitle = '';
         quickParentKind = 'location';
       }
@@ -126,6 +130,7 @@
     description = '';
     parentAssetId = '';
     parentSearch = '';
+    quickParentEnabled = false;
     quickParentTitle = '';
     quickParentKind = 'location';
     customAssetTypeId = '';
@@ -143,6 +148,7 @@
     description = '';
     parentAssetId = '';
     parentSearch = '';
+    quickParentEnabled = false;
     quickParentTitle = '';
     quickParentKind = 'location';
     customAssetTypeId = '';
@@ -233,6 +239,14 @@
     parentSearch = id ? parentTargets.find((target) => target.id === id)?.title ?? parentSearch : '';
   }
 
+  function toggleQuickParent(): void {
+    quickParentEnabled = !quickParentEnabled;
+    if (!quickParentEnabled) {
+      quickParentTitle = '';
+      quickParentKind = 'location';
+    }
+  }
+
   function setCustomAssetType(nextId: string): void {
     customAssetTypeId = nextId;
     customFieldValues = {};
@@ -311,16 +325,38 @@
       onSelect={selectParentTarget}
     />
 
-    <div class="field-stack">
-      <Label for="quick-parent-title">Create a new parent inside that place</Label>
-      <Input id="quick-parent-title" bind:value={quickParentTitle} placeholder="Laundry shelf" />
-      <SegmentedControl
-        label="New parent kind"
-        value={quickParentKind}
-        options={parentKindOptions}
-        onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
+    <fieldset class="selection-field quick-parent-section">
+      <legend>Create missing parent</legend>
+      <BinaryOption
+        label="Create a parent first"
+        description="Use this when the shelf, box, or location does not exist yet."
+        checked={quickParentEnabled}
+        onToggle={toggleQuickParent}
       />
-    </div>
+      {#if quickParentEnabled}
+        <div class="quick-parent-fields">
+          <div class="field-stack">
+            <Label for="quick-parent-title">Parent name</Label>
+            <Input
+              id="quick-parent-title"
+              bind:value={quickParentTitle}
+              placeholder="Laundry shelf"
+              aria-invalid={quickParentMissingName}
+              aria-describedby={quickParentMissingName ? 'quick-parent-error' : undefined}
+            />
+            {#if quickParentMissingName}
+              <p id="quick-parent-error" class="denied-note" role="alert">Enter a parent name or turn this option off.</p>
+            {/if}
+          </div>
+          <SegmentedControl
+            label="New parent kind"
+            value={quickParentKind}
+            options={parentKindOptions}
+            onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
+          />
+        </div>
+      {/if}
+    </fieldset>
 
     <div class="field-stack">
       <Label for="asset-description">Description</Label>
@@ -431,7 +467,7 @@
 
     <div class="tray-actions">
       <Button.Root variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError} onclick={() => { void save(); }}>Save</Button.Root>
+      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>Save</Button.Root>
     </div>
   </div>
 {/if}
