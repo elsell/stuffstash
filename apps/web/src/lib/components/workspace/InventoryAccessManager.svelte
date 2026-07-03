@@ -2,10 +2,12 @@
   import Link2 from '@lucide/svelte/icons/link-2';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import UserPlus from '@lucide/svelte/icons/user-plus';
+  import { tick } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import { workspaceRouteHref, type AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import {
     hasAccessPermission,
     type Inventory,
@@ -23,17 +25,25 @@
     inventory,
     repository,
     invitationStatus = $bindable<InvitationStatusFilter>('all'),
+    accessInvitationAction = null,
+    accessInvitationId = null,
     invitationStatusHref,
     onInvitationStatusChange = (status: InvitationStatusFilter) => {
       invitationStatus = status;
-    }
+    },
+    onInvitationActionOpen = () => {},
+    onInvitationActionClose = () => {}
   }: {
     tenant: Tenant | null;
     inventory: Inventory | null;
     repository: InventoryAccessRepository;
     invitationStatus?: InvitationStatusFilter;
+    accessInvitationAction?: AccessInvitationRouteAction;
+    accessInvitationId?: string | null;
     invitationStatusHref?: (status: InvitationStatusFilter) => string;
     onInvitationStatusChange?: (status: InvitationStatusFilter) => void;
+    onInvitationActionOpen?: (action: AccessInvitationRouteAction, invitationId: string) => void;
+    onInvitationActionClose?: () => void;
   } = $props();
 
   const relationships: InventoryAccessRelationship[] = ['viewer', 'editor'];
@@ -62,11 +72,20 @@
   let message = $state('');
   let error = $state('');
   let requestId = 0;
+  let invitationConfirmationElement = $state<HTMLElement | null>(null);
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
   let contextKey = $derived(tenant && inventory && canShare ? `${tenant.id}:${inventory.id}` : '');
+  let routeInvitation = $derived(
+    accessInvitationAction && accessInvitationId ? invitations.find((invitation) => invitation.id === accessInvitationId) ?? null : null
+  );
+  let hasInvitationActionRoute = $derived(
+    accessInvitationAction === 'expire' || accessInvitationAction === 'cancel' || accessInvitationAction === 'delete'
+  );
+  let invitationActionRouteKey = $derived(accessInvitationAction ? `${accessInvitationAction}:${accessInvitationId ?? ''}` : '');
   let lastLoadedContextKey = '';
   let lastLoadedInvitationStatus = $state<InvitationStatusFilter | null>(null);
+  let lastInvitationActionRouteKey = '';
 
   $effect(() => {
     const nextContextKey = contextKey;
@@ -107,6 +126,19 @@
       lastLoadedInvitationStatus = nextInvitationStatus;
       void loadInvitations(nextContextKey, nextInvitationStatus);
     }
+  });
+
+  $effect(() => {
+    const routeKey = invitationActionRouteKey;
+    if (!routeKey) {
+      lastInvitationActionRouteKey = '';
+      return;
+    }
+    if (routeKey === lastInvitationActionRouteKey) {
+      return;
+    }
+    lastInvitationActionRouteKey = routeKey;
+    void tick().then(() => invitationConfirmationElement?.focus());
   });
 
   async function loadAccess(expectedContext = contextKey, status = invitationStatus): Promise<void> {
@@ -274,8 +306,9 @@
       if (!sameContext(context.requestId, context.key)) {
         return;
       }
-      invitations = replaceInvitation(updated);
+      invitations = reconcileInvitationForCurrentFilter(updated);
       message = 'Invitation expiration updated.';
+      onInvitationActionClose();
     });
   }
 
@@ -289,8 +322,9 @@
       if (!sameContext(context.requestId, context.key)) {
         return;
       }
-      invitations = replaceInvitation({ ...invitation, status: 'cancelled' });
+      invitations = reconcileInvitationForCurrentFilter({ ...invitation, status: 'cancelled' });
       message = 'Invitation cancelled.';
+      onInvitationActionClose();
     });
   }
 
@@ -306,6 +340,7 @@
       }
       invitations = invitations.filter((candidate) => candidate.id !== invitation.id);
       message = 'Invitation deleted.';
+      onInvitationActionClose();
     });
   }
 
@@ -331,6 +366,109 @@
     onInvitationStatusChange(status);
   }
 
+  function accessHref(): string {
+    return workspaceRouteHref(
+      { mode: 'settings', settingsSection: 'access', invitationStatus },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function invitationActionHref(invitation: InventoryAccessInvitation, action: Exclude<AccessInvitationRouteAction, null>): string {
+    return workspaceRouteHref(
+      {
+        mode: 'settings',
+        settingsSection: 'access',
+        invitationStatus,
+        accessInvitationAction: action,
+        accessInvitationId: invitation.id
+      },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function openInvitationAction(
+    event: MouseEvent,
+    action: Exclude<AccessInvitationRouteAction, null>,
+    invitation: InventoryAccessInvitation
+  ): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onInvitationActionOpen(action, invitation.id);
+  }
+
+  function closeInvitationAction(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onInvitationActionClose();
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+  }
+
+  function invitationActionTitle(action: AccessInvitationRouteAction): string {
+    if (action === 'expire') {
+      return 'Expire invitation';
+    }
+    if (action === 'cancel') {
+      return 'Cancel invitation';
+    }
+    if (action === 'delete') {
+      return 'Delete invitation';
+    }
+    return 'Invitation action';
+  }
+
+  function invitationActionDescription(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): string {
+    if (action === 'expire') {
+      return `Set the invitation for ${invitation.email} to expire immediately.`;
+    }
+    if (action === 'cancel') {
+      return `Cancel the pending invitation for ${invitation.email}.`;
+    }
+    if (action === 'delete') {
+      return `Permanently remove the invitation record for ${invitation.email}.`;
+    }
+    return 'This invitation action is unavailable.';
+  }
+
+  function invitationActionDisabled(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): boolean {
+    return busy || !invitationActionIsAvailable(action, invitation);
+  }
+
+  function invitationActionButtonLabel(action: AccessInvitationRouteAction): string {
+    if (action === 'expire') {
+      return 'Expire';
+    }
+    if (action === 'cancel') {
+      return 'Cancel invitation';
+    }
+    if (action === 'delete') {
+      return 'Delete';
+    }
+    return 'Continue';
+  }
+
+  async function confirmInvitationAction(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): Promise<void> {
+    if (action === 'expire') {
+      await expireInvitation(invitation);
+    } else if (action === 'cancel') {
+      await cancelInvitation(invitation);
+    } else if (action === 'delete') {
+      await deleteInvitation(invitation);
+    }
+  }
+
+  function invitationActionIsAvailable(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): boolean {
+    return action === 'delete' || ((action === 'expire' || action === 'cancel') && invitation.status === 'pending' && !invitation.isExpired);
+  }
+
   function snapshotContext(expectedContext: string): { key: string; requestId: number; tenantId: string; inventoryId: string } | null {
     if (!tenant || !inventory || !canShare || !expectedContext) {
       return null;
@@ -342,8 +480,24 @@
     return requestId === expectedRequestId && contextKey === expectedContext;
   }
 
-  function replaceInvitation(invitation: InventoryAccessInvitation): InventoryAccessInvitation[] {
+  function reconcileInvitationForCurrentFilter(invitation: InventoryAccessInvitation): InventoryAccessInvitation[] {
+    if (!invitationMatchesStatus(invitation, invitationStatus)) {
+      return invitations.filter((candidate) => candidate.id !== invitation.id);
+    }
     return invitations.map((candidate) => (candidate.id === invitation.id ? invitation : candidate));
+  }
+
+  function invitationMatchesStatus(invitation: InventoryAccessInvitation, status: InvitationStatusFilter): boolean {
+    if (status === 'all') {
+      return true;
+    }
+    if (status === 'expired') {
+      return invitation.status === 'expired' || invitation.isExpired;
+    }
+    if (status === 'pending') {
+      return invitation.status === 'pending' && !invitation.isExpired;
+    }
+    return invitation.status === status;
   }
 
   function sameGrant(left: InventoryAccessGrant, right: InventoryAccessGrant): boolean {
@@ -378,6 +532,45 @@
     {/if}
     {#if inviteLinkToken}
       <p class="token-line one-time-token" role="status"><Link2 aria-hidden="true" /> {inviteLinkToken}</p>
+    {/if}
+
+    {#if hasInvitationActionRoute}
+      <section
+        bind:this={invitationConfirmationElement}
+        class="settings-panel archive-confirmation"
+        aria-labelledby="access-invitation-action-title"
+        tabindex="-1"
+      >
+        {#if routeInvitation && invitationActionIsAvailable(accessInvitationAction, routeInvitation)}
+          <div class="settings-panel-heading">
+            <Trash2 aria-hidden="true" />
+            <div>
+              <h3 id="access-invitation-action-title">{invitationActionTitle(accessInvitationAction)}</h3>
+              <p>{routeInvitation.email}</p>
+            </div>
+          </div>
+          <p class="muted-note">{invitationActionDescription(accessInvitationAction, routeInvitation)}</p>
+          <div class="heading-actions">
+            <Button.Root href={accessHref()} variant="outline" onclick={closeInvitationAction}>Cancel</Button.Root>
+            <Button.Root
+              variant={accessInvitationAction === 'delete' ? 'destructive' : 'secondary'}
+              disabled={invitationActionDisabled(accessInvitationAction, routeInvitation)}
+              onclick={() => { void confirmInvitationAction(accessInvitationAction, routeInvitation); }}
+            >
+              {invitationActionButtonLabel(accessInvitationAction)}
+            </Button.Root>
+          </div>
+        {:else}
+          <div class="settings-panel-heading">
+            <Trash2 aria-hidden="true" />
+            <div>
+              <h3 id="access-invitation-action-title">Invitation unavailable</h3>
+              <p>This invitation is not available in the current access list.</p>
+            </div>
+          </div>
+          <Button.Root href={accessHref()} variant="outline" onclick={closeInvitationAction}>Back to invitations</Button.Root>
+        {/if}
+      </section>
     {/if}
 
     <form class="access-form" onsubmit={(event) => { event.preventDefault(); void addGrant(); }}>
@@ -462,9 +655,28 @@
                 {invitation.status}
               </Badge>
               <div class="access-actions">
-                <Button.Root variant="outline" size="sm" disabled={busy || invitation.status !== 'pending'} onclick={() => { void expireInvitation(invitation); }}>Expire</Button.Root>
-                <Button.Root variant="outline" size="sm" disabled={busy || invitation.status !== 'pending'} onclick={() => { void cancelInvitation(invitation); }}>Cancel</Button.Root>
-                <Button.Root variant="ghost" size="icon-sm" disabled={busy} aria-label={`Delete invitation for ${invitation.email}`} onclick={() => { void deleteInvitation(invitation); }}><Trash2 /></Button.Root>
+                <Button.Root
+                  href={invitationActionHref(invitation, 'expire')}
+                  variant="outline"
+                  size="sm"
+                  disabled={busy || invitation.status !== 'pending'}
+                  onclick={(event) => openInvitationAction(event, 'expire', invitation)}
+                >Expire</Button.Root>
+                <Button.Root
+                  href={invitationActionHref(invitation, 'cancel')}
+                  variant="outline"
+                  size="sm"
+                  disabled={busy || invitation.status !== 'pending'}
+                  onclick={(event) => openInvitationAction(event, 'cancel', invitation)}
+                >Cancel</Button.Root>
+                <Button.Root
+                  href={invitationActionHref(invitation, 'delete')}
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={busy}
+                  aria-label={`Delete invitation for ${invitation.email}`}
+                  onclick={(event) => openInvitationAction(event, 'delete', invitation)}
+                ><Trash2 /></Button.Root>
               </div>
             </div>
           {/each}

@@ -78,7 +78,7 @@ describe('InventoryAccessManager', () => {
     expect(document.body.querySelector('[aria-label="Invitations"]')?.textContent).not.toContain('raw-token');
   });
 
-  it('revokes grants and expires, cancels, and deletes invitations', async () => {
+  it('revokes grants through the access repository port', async () => {
     const { repository, calls } = fakeAccessRepository();
 
     component = mount(InventoryAccessManager, {
@@ -89,21 +89,173 @@ describe('InventoryAccessManager', () => {
 
     clickButton('Revoke');
     await flush();
-    clickButton('Expire');
-    await flush();
-    clickButton('Cancel');
-    await flush();
-    clickIconButton('Delete invitation for friend@example.test');
-    await flush();
 
     expect(calls).toContain('revoke:tenant-one:inventory-one:principal-two:viewer');
-    expect(calls).toContain('expire:tenant-one:inventory-one:invite-one:1970-01-01T00:00:00.000Z');
-    expect(calls).toContain('cancel:tenant-one:inventory-one:invite-one');
-    expect(calls).toContain('delete-invitation:tenant-one:inventory-one:invite-one');
+  });
+
+  it('exposes route-backed invitation action links and opens them in-app', async () => {
+    const { repository, calls } = fakeAccessRepository();
+    const opened: string[] = [];
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository,
+        invitationStatus: 'pending',
+        onInvitationActionOpen: (action, invitationId) => {
+          opened.push(`${action}:${invitationId}`);
+        }
+      }
+    });
+    await flush();
+
+    expect(link('Expire').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/expire?invitationStatus=pending'
+    );
+    expect(link('Cancel').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/cancel?invitationStatus=pending'
+    );
+    expect(iconLink('Delete invitation for friend@example.test').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending'
+    );
+
+    link('Expire').click();
+    await flush();
+
+    const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
+    link('Cancel').dispatchEvent(modifiedClick);
+    await flush();
+
+    expect(opened).toEqual(['expire:invite-one']);
+    expect(modifiedClick.defaultPrevented).toBe(false);
+    expect(calls).not.toContain('expire:tenant-one:inventory-one:invite-one:1970-01-01T00:00:00.000Z');
+    expect(calls).not.toContain('cancel:tenant-one:inventory-one:invite-one');
+  });
+
+  it('confirms invitation actions from route state', async () => {
+    const closed: string[] = [];
+
+    let fake = fakeAccessRepository();
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository: fake.repository,
+        accessInvitationAction: 'expire',
+        accessInvitationId: 'invite-one',
+        onInvitationActionClose: () => {
+          closed.push('expire');
+        }
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Expire invitation');
+    expect(document.activeElement?.textContent).toContain('Expire invitation');
+    clickButton('Expire');
+    await flush();
+    expect(fake.calls).toContain('expire:tenant-one:inventory-one:invite-one:1970-01-01T00:00:00.000Z');
+
+    await unmount(component);
+    fake = fakeAccessRepository();
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository: fake.repository,
+        invitationStatus: 'pending',
+        accessInvitationAction: 'cancel',
+        accessInvitationId: 'invite-one',
+        onInvitationActionClose: () => {
+          closed.push('cancel');
+        }
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Cancel invitation');
+    expect(link('Cancel').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+    );
+    clickButton('Cancel invitation');
+    await flush();
+    expect(fake.calls).toContain('cancel:tenant-one:inventory-one:invite-one');
+    expect(document.body.textContent).not.toContain('friend@example.test');
+
+    await unmount(component);
+    fake = fakeAccessRepository();
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository: fake.repository,
+        accessInvitationAction: 'delete',
+        accessInvitationId: 'invite-one',
+        onInvitationActionClose: () => {
+          closed.push('delete');
+        }
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Delete invitation');
+    clickButton('Delete');
+    await flush();
+    expect(fake.calls).toContain('delete-invitation:tenant-one:inventory-one:invite-one');
+    expect(closed).toEqual(['expire', 'cancel', 'delete']);
+  });
+
+  it('shows an unavailable invitation action route when the target is not loaded', async () => {
+    const { repository } = fakeAccessRepository();
+    let closed = 0;
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository,
+        accessInvitationAction: 'delete',
+        accessInvitationId: 'missing-invite',
+        onInvitationActionClose: () => {
+          closed += 1;
+        }
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Invitation unavailable');
+    link('Back to invitations').click();
+    await flush();
+    expect(closed).toBe(1);
+  });
+
+  it('shows non-pending expire and cancel action routes as unavailable', async () => {
+    const { repository } = fakeAccessRepository({ invitationStatus: 'accepted' });
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository,
+        accessInvitationAction: 'cancel',
+        accessInvitationId: 'invite-one'
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Invitation unavailable');
+    expect(document.body.textContent).not.toContain('Cancel invitation');
   });
 
   it('supports invitation status filtering and paged load-more actions', async () => {
-    const { repository, calls } = fakeAccessRepository({ hasMore: true });
+    const { repository, calls } = fakeAccessRepository({ hasMore: true, invitationStatus: 'revoked' });
 
     component = mount(InventoryAccessManager, {
       target: document.body,
@@ -266,12 +418,12 @@ function link(text: string): HTMLAnchorElement {
   return target;
 }
 
-function clickIconButton(label: string): void {
-  const button = document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
-  if (!button) {
-    throw new Error(`Missing icon button ${label}`);
+function iconLink(label: string): HTMLAnchorElement {
+  const target = document.body.querySelector<HTMLAnchorElement>(`a[aria-label="${label}"]`);
+  if (!target) {
+    throw new Error(`Missing icon link ${label}`);
   }
-  button.click();
+  return target;
 }
 
 function segmentedGroup(label: string): HTMLElement | null {
@@ -302,12 +454,15 @@ function inventory(tenantId: string, id: string, permissions: string[]): Invento
   };
 }
 
-function fakeAccessRepository(options: { hasMore?: boolean } = {}): { repository: InventoryAccessRepository; calls: string[] } {
+function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: InventoryAccessInvitation['status'] } = {}): {
+  repository: InventoryAccessRepository;
+  calls: string[];
+} {
   const calls: string[] = [];
   let grants: InventoryAccessGrant[] = [
     { tenantId: 'tenant-one', inventoryId: 'inventory-one', principalId: 'principal-two', relationship: 'viewer' }
   ];
-  let invitations: InventoryAccessInvitation[] = [invitation('invite-one', 'friend@example.test')];
+  let invitations: InventoryAccessInvitation[] = [invitation('invite-one', 'friend@example.test', 'viewer', options.invitationStatus)];
   return {
     calls,
     repository: {
@@ -326,7 +481,15 @@ function fakeAccessRepository(options: { hasMore?: boolean } = {}): { repository
       },
       listInventoryAccessInvitations: async (tenantId, inventoryId, status, cursor) => {
         calls.push(`list-invitations:${tenantId}:${inventoryId}:${status}:${cursor ?? ''}`);
-        return page(invitations, options.hasMore && !cursor ? 'next-invitations' : null);
+        return page(
+          invitations.filter(
+            (candidate) =>
+              candidate.tenantId === tenantId &&
+              candidate.inventoryId === inventoryId &&
+              invitationMatchesStatus(candidate, status)
+          ),
+          options.hasMore && !cursor ? 'next-invitations' : null
+        );
       },
       createInventoryAccessInvitation: async (tenantId, inventoryId, email, relationship) => {
         calls.push(`invite:${tenantId}:${inventoryId}:${email}:${relationship}`);
@@ -351,7 +514,8 @@ function fakeAccessRepository(options: { hasMore?: boolean } = {}): { repository
 function invitation(
   id: string,
   email: string,
-  relationship: InventoryAccessRelationship = 'viewer'
+  relationship: InventoryAccessRelationship = 'viewer',
+  status: InventoryAccessInvitation['status'] = 'pending'
 ): InventoryAccessInvitation {
   return {
     id,
@@ -359,11 +523,24 @@ function invitation(
     inventoryId: 'inventory-one',
     email,
     relationship,
-    status: 'pending',
+    status,
     isExpired: false,
     expiresAt: '2026-06-30T00:00:00Z',
     inviterPrincipalId: 'principal-one'
   };
+}
+
+function invitationMatchesStatus(invitation: InventoryAccessInvitation, status: InvitationStatusFilter): boolean {
+  if (status === 'all') {
+    return true;
+  }
+  if (status === 'expired') {
+    return invitation.status === 'expired' || invitation.isExpired;
+  }
+  if (status === 'pending') {
+    return invitation.status === 'pending' && !invitation.isExpired;
+  }
+  return invitation.status === status;
 }
 
 function page<T>(items: T[], nextCursor: string | null = null): InventoryAccessPage<T> {

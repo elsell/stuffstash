@@ -8,7 +8,12 @@
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import { workspaceRouteHref, type CustomizationRouteAction, type SettingsSection } from '$lib/application/workspaceRoute';
+  import {
+    workspaceRouteHref,
+    type AccessInvitationRouteAction,
+    type CustomizationRouteAction,
+    type SettingsSection
+  } from '$lib/application/workspaceRoute';
   import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
@@ -29,12 +34,16 @@
     customFieldDefinitions,
     section = 'overview',
     invitationStatus = 'all',
+    accessInvitationAction = null,
+    accessInvitationId = null,
     auditScope = 'inventory',
     customizationAction = null,
     customAssetTypeId = null,
     customFieldDefinitionId = null,
     onSectionChange,
     onInvitationStatusChange,
+    onAccessInvitationActionOpen = () => {},
+    onAccessInvitationActionClose = () => {},
     onAuditScopeChange,
     onCustomizationArchiveOpen = () => {},
     onCustomizationArchiveClose = () => {},
@@ -50,12 +59,16 @@
     customFieldDefinitions: CustomFieldDefinition[];
     section?: SettingsSection;
     invitationStatus?: InvitationStatusFilter;
+    accessInvitationAction?: AccessInvitationRouteAction;
+    accessInvitationId?: string | null;
     auditScope?: AuditScope;
     customizationAction?: CustomizationRouteAction;
     customAssetTypeId?: string | null;
     customFieldDefinitionId?: string | null;
     onSectionChange: (section: SettingsSection) => void;
     onInvitationStatusChange: (status: InvitationStatusFilter) => void;
+    onAccessInvitationActionOpen?: (action: AccessInvitationRouteAction, invitationId: string) => void;
+    onAccessInvitationActionClose?: () => void;
     onAuditScopeChange: (scope: AuditScope) => void;
     onCustomizationArchiveOpen?: (action: CustomizationRouteAction, id: string) => void;
     onCustomizationArchiveClose?: () => void;
@@ -193,8 +206,12 @@
         {inventory}
         repository={accessRepository}
         {invitationStatus}
+        {accessInvitationAction}
+        {accessInvitationId}
         invitationStatusHref={invitationStatusHref}
         onInvitationStatusChange={onInvitationStatusChange}
+        onInvitationActionOpen={onAccessInvitationActionOpen}
+        onInvitationActionClose={onAccessInvitationActionClose}
       />
 
       {:else if section === 'activity'}

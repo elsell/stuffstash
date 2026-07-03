@@ -312,6 +312,73 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links access invitation action confirmations', async () => {
+    const accessSeed = structuredClone(seed);
+    accessSeed.inventories[0].access.permissions.push('share');
+    const repository = new SeededInventoryRepository(accessSeed);
+    const cancelTarget = await repository.createInventoryAccessInvitation(
+      'tenant-home',
+      'inventory-household',
+      'friend@example.test',
+      'viewer'
+    );
+    await new Promise((resolve) => window.setTimeout(resolve, 2));
+    const deleteTarget = await repository.createInventoryAccessInvitation(
+      'tenant-home',
+      'inventory-household',
+      'delete-me@example.test',
+      'viewer'
+    );
+
+    await mountWorkspace(
+      `/tenants/tenant-home/inventories/inventory-household/settings/access/invitations/${cancelTarget.invitation.id}/cancel?invitationStatus=pending`,
+      repository
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe(
+        `/tenants/tenant-home/inventories/inventory-household/settings/access/invitations/${cancelTarget.invitation.id}/cancel`
+      );
+      expect(window.location.search).toBe('?invitationStatus=pending');
+      expect(document.body.textContent).toContain('Cancel invitation');
+      expect(document.body.textContent).toContain('friend@example.test');
+      expect(controlContaining('Cancel').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending'
+      );
+    });
+
+    controlContaining('Cancel invitation').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.search).toBe('?invitationStatus=pending');
+      expect(document.body.textContent).not.toContain('Cancel invitation');
+      expect(document.body.textContent).not.toContain('friend@example.test');
+      expect(document.body.textContent).toContain('delete-me@example.test');
+    });
+
+    window.history.pushState(
+      {},
+      '',
+      `/tenants/tenant-home/inventories/inventory-household/settings/access/invitations/${deleteTarget.invitation.id}/delete?invitationStatus=pending`
+    );
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Delete invitation');
+      expect(document.body.textContent).toContain('delete-me@example.test');
+    });
+
+    buttonContaining('Delete').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.search).toBe('?invitationStatus=pending');
+      expect(document.body.textContent).not.toContain('Delete invitation');
+      expect(document.body.textContent).not.toContain('delete-me@example.test');
+    });
+  });
+
   it('does not resurrect invitation status query state from non-access settings routes', async () => {
     const accessSeed = structuredClone(seed);
     accessSeed.inventories[0].access.permissions.push('share');

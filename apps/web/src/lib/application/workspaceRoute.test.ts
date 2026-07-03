@@ -96,6 +96,29 @@ describe('workspace route state', () => {
       settingsSection: 'access',
       invitationStatus: 'revoked'
     });
+    expect(
+      parseWorkspaceRoute(
+        new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/access/invitations/invite_1/cancel')
+      )
+    ).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'access',
+      accessInvitationAction: 'cancel',
+      accessInvitationId: 'invite_1'
+    });
+    expect(
+      parseWorkspaceRoute(
+        new URL(
+          'https://app.test/tenants/tenant_1/inventories/inv_1/settings/access/invitations/invite_1/delete?invitationStatus=pending'
+        )
+      )
+    ).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'access',
+      invitationStatus: 'pending',
+      accessInvitationAction: 'delete',
+      accessInvitationId: 'invite_1'
+    });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/activity?auditScope=tenant'))).toMatchObject({
       mode: 'settings',
       settingsSection: 'activity',
@@ -172,6 +195,26 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'access', invitationStatus: 'all' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/access'
     );
+    expect(
+      workspaceRouteHref(
+        { mode: 'settings', settingsSection: 'access', accessInvitationAction: 'expire', accessInvitationId: 'invite 1' },
+        'tenant_1',
+        'inv_1'
+      )
+    ).toBe('/tenants/tenant_1/inventories/inv_1/settings/access/invitations/invite%201/expire');
+    expect(
+      workspaceRouteHref(
+        {
+          mode: 'settings',
+          settingsSection: 'access',
+          invitationStatus: 'pending',
+          accessInvitationAction: 'delete',
+          accessInvitationId: 'invite 1'
+        },
+        'tenant_1',
+        'inv_1'
+      )
+    ).toBe('/tenants/tenant_1/inventories/inv_1/settings/access/invitations/invite%201/delete?invitationStatus=pending');
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: 'tenant' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/activity?auditScope=tenant'
     );
@@ -250,6 +293,8 @@ describe('workspace route state', () => {
       'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/archive',
       'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/delete/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/search/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/settings/access/invitations/invite_1/archive',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/settings/access/grants/grant_1/delete',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/asset-types/type_1/edit',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/nope/type_1/archive',

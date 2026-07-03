@@ -99,6 +99,9 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/{section}` for a focused inventory settings section.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings/access/invitations/{invitationId}/expire` for an invitation expire confirmation when expire is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings/access/invitations/{invitationId}/cancel` for an invitation cancel confirmation when cancel is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings/access/invitations/{invitationId}/delete` for an invitation delete confirmation when delete is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/fields/asset-types/{customAssetTypeId}/archive` for a custom asset type archive confirmation when archive is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/fields/field-definitions/{customFieldDefinitionId}/archive` for a custom field definition archive confirmation when archive is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/import` for import.
@@ -127,6 +130,7 @@ Deep links must preserve tenant and inventory boundaries:
 - An asset deep link must load the selected asset through the repository port and API adapter.
 - Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
 - Asset action panels that materially change data, such as edit, move, archive confirmation, restore confirmation, and delete confirmation, are durable route states.
+- Settings access actions that materially change invitations, such as expire, cancel, and delete, must use durable confirmation route states instead of immediate row-button mutations.
 - Settings actions that materially change reusable schema, such as archiving custom asset types or custom field definitions, must use durable confirmation route states instead of immediate icon-button mutations.
 - Unsupported paths must fall back to the inventory home without crashing.
 

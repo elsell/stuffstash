@@ -86,6 +86,8 @@
   let searchMode = $state<SearchMode>('fuzzy');
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
+  let accessInvitationAction = $state<WorkspaceRouteState['accessInvitationAction']>(null);
+  let accessInvitationId = $state<string | null>(null);
   let auditScope = $state<WorkspaceRouteState['auditScope']>('inventory');
   let customizationAction = $state<WorkspaceRouteState['customizationAction']>(null);
   let customAssetTypeId = $state<string | null>(null);
@@ -492,6 +494,8 @@
       searchMode = route.searchMode;
       settingsSection = route.settingsSection;
       invitationStatus = route.invitationStatus;
+      accessInvitationAction = route.accessInvitationAction;
+      accessInvitationId = route.accessInvitationId;
       auditScope = route.auditScope;
       customizationAction = route.customizationAction;
       customAssetTypeId = route.customAssetTypeId;
@@ -715,12 +719,42 @@
 
   function openInvitationStatusFilter(nextInvitationStatus: WorkspaceRouteState['invitationStatus']): void {
     invitationStatus = nextInvitationStatus;
+    accessInvitationAction = null;
+    accessInvitationId = null;
     navigateTo({
       mode: 'settings',
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
       settingsSection: 'access',
-      invitationStatus: nextInvitationStatus
+      invitationStatus: nextInvitationStatus,
+      accessInvitationAction: null,
+      accessInvitationId: null
+    });
+  }
+
+  function openAccessInvitationAction(action: WorkspaceRouteState['accessInvitationAction'], invitationId: string): void {
+    accessInvitationAction = action;
+    accessInvitationId = invitationId;
+    navigateTo({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'access',
+      invitationStatus,
+      accessInvitationAction: action,
+      accessInvitationId: invitationId
+    });
+  }
+
+  function closeAccessInvitationAction(): void {
+    accessInvitationAction = null;
+    accessInvitationId = null;
+    replaceRoute({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'access',
+      invitationStatus
     });
   }
 
@@ -1175,12 +1209,16 @@
         customFieldDefinitions={data.context.customFieldDefinitions}
         section={settingsSection}
         {invitationStatus}
+        {accessInvitationAction}
+        {accessInvitationId}
         {auditScope}
         {customizationAction}
         {customAssetTypeId}
         {customFieldDefinitionId}
         onSectionChange={openSettingsSection}
         onInvitationStatusChange={openInvitationStatusFilter}
+        onAccessInvitationActionOpen={openAccessInvitationAction}
+        onAccessInvitationActionClose={closeAccessInvitationAction}
         onAuditScopeChange={openAuditScopeFilter}
         onCustomizationArchiveOpen={openCustomizationArchive}
         onCustomizationArchiveClose={closeCustomizationArchive}

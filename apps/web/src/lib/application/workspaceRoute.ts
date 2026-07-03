@@ -12,6 +12,7 @@ import type {
 export type WorkspaceAction = 'add' | 'edit' | null;
 export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
 export type AttachmentRouteAction = 'delete' | null;
+export type AccessInvitationRouteAction = 'expire' | 'cancel' | 'delete' | null;
 export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
 export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
 
@@ -28,6 +29,8 @@ export interface WorkspaceRouteState {
   addKind: AssetKind | null;
   settingsSection: SettingsSection;
   invitationStatus: InvitationStatusFilter;
+  accessInvitationAction: AccessInvitationRouteAction;
+  accessInvitationId: string | null;
   auditScope: AuditScope;
   customizationAction: CustomizationRouteAction;
   customAssetTypeId: string | null;
@@ -52,6 +55,8 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   addKind: null,
   settingsSection: 'overview',
   invitationStatus: 'all',
+  accessInvitationAction: null,
+  accessInvitationId: null,
   auditScope: 'inventory',
   customizationAction: null,
   customAssetTypeId: null,
@@ -66,6 +71,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
 const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete']);
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
+const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 'cancel', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
@@ -164,6 +170,22 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
       return { ...defaultWorkspaceRoute };
     }
     const settingsSection = parseSettingsSection(segments[inventoryOffset.nextIndex + 1]);
+    if (settingsSection === 'access' && remaining === 5) {
+      const resource = segments[inventoryOffset.nextIndex + 2];
+      const resourceId = segments[inventoryOffset.nextIndex + 3];
+      const action = parseAccessInvitationAction(segments[inventoryOffset.nextIndex + 4]);
+      if (resource === 'invitations' && resourceId && action) {
+        return {
+          ...route,
+          mode: 'settings',
+          settingsSection,
+          invitationStatus: parseInvitationStatus(url.searchParams.get('invitationStatus')),
+          accessInvitationAction: action,
+          accessInvitationId: resourceId
+        };
+      }
+      return { ...defaultWorkspaceRoute };
+    }
     if (settingsSection === 'fields' && remaining === 5) {
       const resource = segments[inventoryOffset.nextIndex + 2];
       const resourceId = segments[inventoryOffset.nextIndex + 3];
@@ -222,6 +244,10 @@ function parseAssetAction(value: string | undefined): AssetRouteAction {
 
 function parseAttachmentAction(value: string | undefined): AttachmentRouteAction {
   return attachmentActions.has(value as AttachmentRouteAction) ? (value as AttachmentRouteAction) : null;
+}
+
+function parseAccessInvitationAction(value: string | undefined): AccessInvitationRouteAction {
+  return accessInvitationActions.has(value as AccessInvitationRouteAction) ? (value as AccessInvitationRouteAction) : null;
 }
 
 function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit'> | null {
@@ -308,6 +334,9 @@ export function workspaceRouteHref(
     path += '/settings';
     if (next.settingsSection !== 'overview') {
       path += `/${next.settingsSection}`;
+    }
+    if (next.settingsSection === 'access' && next.accessInvitationAction && next.accessInvitationId) {
+      path += `/invitations/${encodeURIComponent(next.accessInvitationId)}/${next.accessInvitationAction}`;
     }
     if (next.settingsSection === 'fields' && next.customizationAction === 'archive_asset_type' && next.customAssetTypeId) {
       path += `/asset-types/${encodeURIComponent(next.customAssetTypeId)}/archive`;
