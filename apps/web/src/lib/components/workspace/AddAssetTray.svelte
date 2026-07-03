@@ -25,6 +25,7 @@
   let {
     open,
     initialKind = 'item',
+    closeHref,
     parentTargets,
     mediaPolicy,
     customAssetTypes,
@@ -35,6 +36,7 @@
   }: {
     open: boolean;
     initialKind?: AssetKind;
+    closeHref: string;
     parentTargets: AssetViewModel[];
     mediaPolicy: MediaUploadPolicy;
     customAssetTypes: CustomAssetType[];
@@ -193,6 +195,18 @@
     }
   }
 
+  function closeFromLink(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onClose();
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
+  }
+
   function captureFiles(files: FileList | undefined): void {
     if (!files) {
       return;
@@ -325,7 +339,7 @@
   >
     <div class="section-heading compact">
       <h2 id="add-title">Add stuff</h2>
-      <Button.Root variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={onClose}><X /></Button.Root>
+      <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
     </div>
 
     <div class="add-summary" aria-live="polite">
@@ -521,7 +535,7 @@
     {/if}
 
     <div class="tray-actions">
-      <Button.Root variant="outline" onclick={onClose}>Cancel</Button.Root>
+      <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
       <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>Save</Button.Root>
     </div>
   </div>

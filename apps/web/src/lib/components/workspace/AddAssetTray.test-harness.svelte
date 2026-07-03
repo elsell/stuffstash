@@ -9,6 +9,7 @@
 
 <AddAssetTray
   {open}
+  closeHref="/tenants/tenant-home/inventories/inventory-household"
   parentTargets={[]}
   mediaPolicy={{ supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 }}
   customAssetTypes={[]}

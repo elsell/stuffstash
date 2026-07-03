@@ -35,6 +35,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
         customAssetTypes: [],
@@ -61,12 +62,53 @@ describe('AddAssetTray', () => {
     expect(document.querySelector('#quick-parent-title')).not.toBeNull();
   });
 
+  it('exposes close hrefs for visible tray dismissal controls and preserves modified clicks', async () => {
+    let closeCount = 0;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {
+          closeCount += 1;
+        },
+        onSave: async () => ({ saved: true })
+      }
+    });
+
+    await flush();
+
+    expect(linkWithLabel('Close add tray').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household');
+    expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household');
+
+    link('Cancel').click();
+    expect(closeCount).toBe(1);
+
+    closeCount = 0;
+    let componentPreventedModifiedClick = false;
+    const target = linkWithLabel('Close add tray');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(closeCount).toBe(0);
+    expect(componentPreventedModifiedClick).toBe(false);
+  });
+
   it('submits an opted-in quick-created parent with the asset draft', async () => {
     let savedDraft: AddAssetSubmission | null = null;
     component = mount(AddAssetTray, {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
         customAssetTypes: [],
@@ -105,6 +147,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
         customAssetTypes: [],
@@ -141,6 +184,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
         customAssetTypes: [],
@@ -177,6 +221,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [
           {
             id: 'parent-created',
@@ -232,6 +277,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         initialKind: 'location',
         parentTargets: [],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
@@ -262,6 +308,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [
           parentTarget('garage', 'Garage shelf', 'Garage'),
           parentTarget('closet', 'Hall closet', 'Hall'),
@@ -305,6 +352,7 @@ describe('AddAssetTray', () => {
       target: document.body,
       props: {
         open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
         parentTargets: [],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 2048 },
         customAssetTypes: [],
@@ -350,7 +398,7 @@ describe('AddAssetTray', () => {
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) throw new Error('Missing dialog');
-    const closeButton = document.body.querySelector<HTMLButtonElement>('button[aria-label="Close add tray"]');
+    const closeButton = document.body.querySelector<HTMLElement>('button[aria-label="Close add tray"], a[aria-label="Close add tray"]');
     const saveButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
       (candidate) => candidate.textContent === 'Save'
     );
@@ -364,7 +412,7 @@ describe('AddAssetTray', () => {
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
     expect(document.activeElement).toBe(saveButton);
 
-    button('Cancel').click();
+    link('Cancel').click();
     await flush();
     expect(document.activeElement).toBe(opener);
   });
@@ -405,6 +453,20 @@ function button(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(text));
   if (!button) throw new Error(`Missing button ${text}`);
   return button;
+}
+
+function link(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!link) throw new Error(`Missing link ${text}`);
+  return link;
+}
+
+function linkWithLabel(label: string): HTMLAnchorElement {
+  const link = document.body.querySelector<HTMLAnchorElement>(`a[aria-label="${label}"]`);
+  if (!link) throw new Error(`Missing link label ${label}`);
+  return link;
 }
 
 function switchControl(label: string): HTMLButtonElement | null {

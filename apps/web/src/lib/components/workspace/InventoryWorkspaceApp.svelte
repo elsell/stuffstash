@@ -665,6 +665,19 @@
     });
   }
 
+  function addCloseHref(): string {
+    return workspaceRouteHref(
+      {
+        mode,
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        lifecycleState: data.context.assetLifecycleState
+      },
+      data.context.selectedTenantId || null,
+      data.context.selectedInventoryId || null
+    );
+  }
+
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
     if (selectedAsset) {
       const isLocationEdit = selectedAsset.kind === 'location' && action === 'edit';
@@ -1033,6 +1046,7 @@
   <AddAssetTray
     open={addOpen && createAssetAllowed}
     initialKind={addKind}
+    closeHref={addCloseHref()}
     parentTargets={parentTargets(assets)}
     mediaPolicy={data.context.mediaUploadPolicy}
     customAssetTypes={data.context.customAssetTypes}

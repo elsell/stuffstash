@@ -210,6 +210,24 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps add tray cancel clicks aligned with the exposed home href', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add stuff');
+    });
+
+    expect(controlContaining('Cancel').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household');
+    controlContaining('Cancel').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.body.textContent).toContain('Recently added');
+    });
+  });
+
   it('applies browser popstate route changes', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
 

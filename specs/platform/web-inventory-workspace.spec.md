@@ -195,6 +195,7 @@ Add:
 - The Add action should use a compact menu pattern similar to GitHub's create button.
 - The user must be able to choose `Item`, `Container`, or `Location`.
 - The add dialog/tray must still allow changing the selected kind after opening.
+- Visible add-tray dismissal controls must expose canonical `href` values back to the workspace route that ordinary in-app close restores.
 - Add must be disabled or replaced by an explicit denied state for inventories where the user lacks edit permission.
 
 ## Mobile Navigation
