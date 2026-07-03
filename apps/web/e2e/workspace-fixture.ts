@@ -6,14 +6,32 @@ const workspaceStates = new WeakMap<Page, WorkspaceApiState>();
 
 type WorkspaceApiState = {
   signedUploadPutCount: number;
+  assetOverrides: Record<string, AssetOverride>;
+  lastAssetPatch: AssetPatch | null;
+};
+
+type AssetOverride = {
+  title?: string;
+  parentAssetId?: string | null;
+};
+
+export type AssetPatch = {
+  assetId: string;
+  title?: string;
+  description?: string;
+  parentAssetId?: string | null;
 };
 
 export function resetWorkspaceApiState(page: Page): void {
-  workspaceStates.set(page, { signedUploadPutCount: 0 });
+  workspaceStates.set(page, freshWorkspaceApiState());
 }
 
 export function signedUploadPuts(page: Page): number {
   return workspaceState(page).signedUploadPutCount;
+}
+
+export function lastAssetPatch(page: Page): AssetPatch | null {
+  return workspaceState(page).lastAssetPatch;
 }
 
 export async function installAuthenticatedWorkspace(page: Page): Promise<void> {
@@ -61,10 +79,18 @@ async function routeRuntimeConfig(route: Route): Promise<void> {
 function workspaceState(page: Page): WorkspaceApiState {
   let state = workspaceStates.get(page);
   if (!state) {
-    state = { signedUploadPutCount: 0 };
+    state = freshWorkspaceApiState();
     workspaceStates.set(page, state);
   }
   return state;
+}
+
+function freshWorkspaceApiState(): WorkspaceApiState {
+  return {
+    signedUploadPutCount: 0,
+    assetOverrides: {},
+    lastAssetPatch: null
+  };
 }
 
 async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<void> {
@@ -104,7 +130,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
-    await fulfill(route, activeAssets());
+    await fulfill(route, activeAssets(state));
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
@@ -126,14 +152,27 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
         type: 'asset',
         tenantId: 'tenant-home',
         inventory: { id: 'inventory-household', name: 'Household' },
-        asset: asset('asset-tomato', 'tenant-home', 'inventory-household', 'Tomato fertilizer', 'location-garage', 'active', true),
-        matches: [{ field: 'title', value: 'Tomato fertilizer' }]
+        asset: tomatoAsset(state),
+        matches: [{ field: 'title', value: tomatoTitle(state) }]
       }
     ]);
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato') {
-    await fulfill(route, asset('asset-tomato', 'tenant-home', 'inventory-household', 'Tomato fertilizer', 'location-garage', 'active', true));
+    await fulfill(route, tomatoAsset(state));
+    return;
+  }
+  if (method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato') {
+    const body = (await request.postDataJSON()) as Omit<AssetPatch, 'assetId'>;
+    state.lastAssetPatch = { assetId: 'asset-tomato', ...body };
+    state.assetOverrides['asset-tomato'] = {
+      ...state.assetOverrides['asset-tomato'],
+      title: body.title ?? state.assetOverrides['asset-tomato']?.title,
+      parentAssetId: Object.prototype.hasOwnProperty.call(body, 'parentAssetId')
+        ? body.parentAssetId ?? null
+        : state.assetOverrides['asset-tomato']?.parentAssetId
+    };
+    await fulfill(route, tomatoAsset(state));
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-cordless-drill') {
@@ -208,12 +247,29 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   });
 }
 
-function activeAssets(): object[] {
+function activeAssets(state: WorkspaceApiState): object[] {
   return [
     asset('location-garage', 'tenant-home', 'inventory-household', 'Garage', null, 'active', false, 'location'),
-    asset('asset-tomato', 'tenant-home', 'inventory-household', 'Tomato fertilizer', 'location-garage', 'active', true),
+    tomatoAsset(state),
     asset('asset-bin', 'tenant-home', 'inventory-household', 'Green storage bin', 'location-garage', 'active', false, 'container')
   ];
+}
+
+function tomatoAsset(state: WorkspaceApiState): object {
+  const override = state.assetOverrides['asset-tomato'];
+  return asset(
+    'asset-tomato',
+    'tenant-home',
+    'inventory-household',
+    tomatoTitle(state),
+    override?.parentAssetId === undefined ? 'location-garage' : override.parentAssetId,
+    'active',
+    true
+  );
+}
+
+function tomatoTitle(state: WorkspaceApiState): string {
+  return state.assetOverrides['asset-tomato']?.title ?? 'Tomato fertilizer';
 }
 
 async function fulfill(route: Route, data: unknown, status = 200): Promise<void> {

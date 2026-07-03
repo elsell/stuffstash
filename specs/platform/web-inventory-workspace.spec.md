@@ -635,6 +635,8 @@ Before this direction is promoted into `apps/web`:
   - add item with selected photo preview,
   - location card to location list,
   - asset row to asset detail,
+  - asset edit and move action deep links,
+  - unavailable asset action deep-link normalization,
   - back navigation from asset detail to location list,
   - viewer denied edit/add state when applicable.
 - Run accessibility checks for dialogs, context switchers, nav, and list/detail flows.

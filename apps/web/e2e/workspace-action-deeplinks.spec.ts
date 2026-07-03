@@ -1,0 +1,58 @@
+import { expect, test } from '@playwright/test';
+import { installAuthenticatedWorkspace, lastAssetPatch, resetWorkspaceApiState } from './workspace-fixture';
+
+test.beforeEach(async ({ page }) => {
+  resetWorkspaceApiState(page);
+  await installAuthenticatedWorkspace(page);
+});
+
+test('asset edit action can be opened, saved, and closed from a direct URL', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Action deep-link coverage runs on desktop.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/edit');
+
+  const editPanel = page.locator('.detail-action-panel').filter({ has: page.getByRole('heading', { name: 'Edit asset' }) });
+  await expect(editPanel).toBeVisible();
+  await expect(editPanel.getByLabel('Name')).toHaveValue('Tomato fertilizer');
+
+  await editPanel.getByLabel('Name').fill('Tomato fertilizer granules');
+  await page.getByRole('button', { name: 'Save' }).click();
+
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
+  await expect(page.getByRole('heading', { name: 'Tomato fertilizer granules' })).toBeVisible();
+  expect(lastAssetPatch(page)).toMatchObject({ assetId: 'asset-tomato', title: 'Tomato fertilizer granules' });
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Tomato fertilizer granules' })).toBeVisible();
+});
+
+test('asset move action direct URL opens the shared searchable parent picker', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Action deep-link coverage runs on desktop.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/move');
+
+  await expect(page.getByRole('heading', { name: 'Move asset' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Move target current destination' })).toBeVisible();
+  await expect(page.getByText('Search to choose a location or container.')).toBeVisible();
+
+  await page.getByLabel('Find parent').fill('Garage');
+  await page.getByRole('group', { name: 'Move target current destination' }).getByRole('button', { name: 'Inventory root' }).click();
+  await page.getByRole('button', { name: 'Move' }).click();
+
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
+  expect(lastAssetPatch(page)).toMatchObject({ assetId: 'asset-tomato', parentAssetId: null });
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Tomato fertilizer' })).toBeVisible();
+  await expect(page.getByText('inventory root')).toBeVisible();
+});
+
+test('unavailable action deep links normalize back to asset detail', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Action deep-link coverage runs on desktop.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/restore');
+
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
+  await expect(page.getByRole('heading', { name: 'Tomato fertilizer' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Restore asset' })).toHaveCount(0);
+});
