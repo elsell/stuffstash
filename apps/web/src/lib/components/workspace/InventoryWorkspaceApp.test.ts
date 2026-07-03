@@ -553,6 +553,22 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('shows an explicit denied state for add deep links without create access', async () => {
+    const viewerSeed = structuredClone(seed);
+    viewerSeed.inventories[0].access = { relationship: 'viewer', permissions: ['view'] };
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/add/item',
+      new SeededInventoryRepository(viewerSeed)
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+      expect(document.body.textContent).toContain('Workspace unavailable');
+      expect(document.body.textContent).toContain('You do not have permission to add assets in this inventory.');
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    });
+  });
+
   it('passes add parent routes into the tray destination picker', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item?parent=location-garage');
 

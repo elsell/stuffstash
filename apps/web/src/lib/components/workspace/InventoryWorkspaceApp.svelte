@@ -526,6 +526,10 @@
       if (route.mode !== 'search' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
+      if (route.action === 'add' && !createAssetAllowed) {
+        showUnavailableRoute('You do not have permission to add assets in this inventory.');
+        return;
+      }
       addParentAssetId = validAddParentId(route.addParentAssetId);
       if (route.action === 'add' && route.addParentAssetId && !addParentAssetId) {
         route = { ...route, addParentAssetId: null };

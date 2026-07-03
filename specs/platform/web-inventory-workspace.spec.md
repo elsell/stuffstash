@@ -208,7 +208,8 @@ Add:
 - The user must be able to choose `Item`, `Container`, or `Location`.
 - The add dialog/tray must still allow changing the selected kind after opening.
 - Visible add-tray dismissal controls must expose canonical `href` values back to the workspace route that ordinary in-app close restores.
-- Add must be disabled or replaced by an explicit denied state for inventories where the user lacks edit permission.
+- Add must be disabled or replaced by an explicit denied state for inventories where the user lacks create-asset permission.
+- Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
 
 ## Mobile Navigation
 
