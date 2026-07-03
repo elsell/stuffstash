@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import AddAssetTray from './AddAssetTray.svelte';
 import AddAssetTrayHarness from './AddAssetTray.test-harness.svelte';
-import type { AddAssetSubmission } from '$lib/domain/inventory';
+import type { AddAssetSubmission, CustomAssetType, CustomFieldDefinition, CustomFieldType } from '$lib/domain/inventory';
 
 let component: ReturnType<typeof mount> | null = null;
 let objectUrlIndex = 0;
@@ -209,6 +209,51 @@ describe('AddAssetTray', () => {
       parentQuickCreate: {
         kind: 'container',
         title: 'Garage shelf'
+      }
+    });
+  });
+
+  it('submits selected custom type and typed custom field values with the asset draft', async () => {
+    let savedDraft: AddAssetSubmission | null = null;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [customAssetType('tool', 'Tool')],
+        customFieldDefinitions: [
+          customFieldDefinition('quantity', 'Quantity', 'number'),
+          customFieldDefinition('fragile', 'Fragile', 'boolean'),
+          customFieldDefinition('condition', 'Condition', 'enum', ['new', 'open'], 'tool')
+        ],
+        saving: false,
+        onClose: () => {},
+        onSave: async (draft) => {
+          savedDraft = draft;
+          return { saved: true };
+        }
+      }
+    });
+
+    await flush();
+    input('#asset-title', 'Socket wrench');
+    click('Tool');
+    await flush();
+    input('#custom-field-quantity', '3');
+    click('Yes');
+    click('open');
+    click('Save');
+    await flush();
+
+    expect(savedDraft).toMatchObject({
+      title: 'Socket wrench',
+      customAssetTypeId: 'tool',
+      customFields: {
+        quantity: 3,
+        fragile: true,
+        condition: 'open'
       }
     });
   });
@@ -503,6 +548,41 @@ function parentTarget(id: string, title: string, containmentTrail: string) {
     parentAssetId: null,
     lifecycleState: 'active' as const,
     containmentTrail
+  };
+}
+
+function customAssetType(id: string, displayName: string): CustomAssetType {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    scope: 'inventory',
+    key: id,
+    displayName,
+    description: '',
+    lifecycleState: 'active'
+  };
+}
+
+function customFieldDefinition(
+  key: string,
+  displayName: string,
+  type: CustomFieldType,
+  enumOptions: string[] = [],
+  customAssetTypeId: string | null = null
+): CustomFieldDefinition {
+  return {
+    id: `field-${key}`,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    scope: 'inventory',
+    key,
+    displayName,
+    type,
+    enumOptions,
+    applicability: customAssetTypeId ? 'custom_asset_types' : 'all_assets',
+    customAssetTypeIds: customAssetTypeId ? [customAssetTypeId] : [],
+    lifecycleState: 'active'
   };
 }
 

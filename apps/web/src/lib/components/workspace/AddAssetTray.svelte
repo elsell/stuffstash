@@ -16,6 +16,7 @@
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import AddAssetCustomFieldsSection from './AddAssetCustomFieldsSection.svelte';
   import AddAssetPhotosSection from './AddAssetPhotosSection.svelte';
   import BinaryOption from './BinaryOption.svelte';
   import { formatBytes } from './formatBytes';
@@ -72,12 +73,6 @@
     { value: 'location', label: 'Location' },
     { value: 'container', label: 'Container' }
   ];
-  const booleanOptions = [
-    { value: '', label: 'Unset' },
-    { value: 'true', label: 'Yes' },
-    { value: 'false', label: 'No' }
-  ];
-
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
   let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
@@ -333,13 +328,6 @@
     return values;
   }
 
-  function inputType(field: CustomFieldDefinition): string {
-    if (field.type === 'number') return 'number';
-    if (field.type === 'date') return 'date';
-    if (field.type === 'url') return 'url';
-    return 'text';
-  }
-
   function revokePhotoPreviews(photos: SelectedPhoto[]): void {
     for (const photo of photos) {
       URL.revokeObjectURL(photo.previewUrl);
@@ -438,75 +426,14 @@
       <Textarea id="asset-description" bind:value={description} placeholder="Optional notes" />
     </div>
 
-    {#if activeCustomAssetTypes.length > 0}
-      <div class="field-stack">
-        <fieldset class="selection-field">
-          <legend>Custom type</legend>
-          <div class="parent-picker option-grid" role="group" aria-label="Custom asset type">
-            <Button.Root
-              variant={customAssetTypeId === '' ? 'secondary' : 'outline'}
-              aria-pressed={customAssetTypeId === ''}
-              onclick={() => setCustomAssetType('')}
-            >
-              Base asset
-            </Button.Root>
-            {#each activeCustomAssetTypes as assetType}
-              <Button.Root
-                variant={customAssetTypeId === assetType.id ? 'secondary' : 'outline'}
-                aria-pressed={customAssetTypeId === assetType.id}
-                onclick={() => setCustomAssetType(assetType.id)}
-              >
-                {assetType.displayName}
-              </Button.Root>
-            {/each}
-          </div>
-        </fieldset>
-      </div>
-    {/if}
-
-    {#if applicableFields.length > 0}
-      <div class="custom-field-grid" aria-label="Custom fields">
-        {#each applicableFields as field}
-          <div class="field-stack">
-            <Label for={`custom-field-${field.key}`}>{field.displayName}</Label>
-            {#if field.type === 'boolean'}
-              <SegmentedControl
-                label={field.displayName}
-                value={customFieldValues[field.key] ?? ''}
-                options={booleanOptions}
-                onSelect={(value) => setCustomFieldValue(field.key, value)}
-              />
-            {:else if field.type === 'enum'}
-              <div class="parent-picker option-grid" role="group" aria-label={field.displayName}>
-                <Button.Root
-                  variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'}
-                  aria-pressed={(customFieldValues[field.key] ?? '') === ''}
-                  onclick={() => setCustomFieldValue(field.key, '')}
-                >
-                  Unset
-                </Button.Root>
-                {#each field.enumOptions as option}
-                  <Button.Root
-                    variant={customFieldValues[field.key] === option ? 'secondary' : 'outline'}
-                    aria-pressed={customFieldValues[field.key] === option}
-                    onclick={() => setCustomFieldValue(field.key, option)}
-                  >
-                    {option}
-                  </Button.Root>
-                {/each}
-              </div>
-            {:else}
-              <Input
-                id={`custom-field-${field.key}`}
-                type={inputType(field)}
-                value={customFieldValues[field.key] ?? ''}
-                oninput={(event) => setCustomFieldValue(field.key, event.currentTarget.value)}
-              />
-            {/if}
-          </div>
-        {/each}
-      </div>
-    {/if}
+    <AddAssetCustomFieldsSection
+      {activeCustomAssetTypes}
+      {applicableFields}
+      {customAssetTypeId}
+      {customFieldValues}
+      onCustomAssetTypeSelect={setCustomAssetType}
+      onCustomFieldValueChange={setCustomFieldValue}
+    />
 
     <AddAssetPhotosSection
       photos={selectedPhotos}
