@@ -81,6 +81,9 @@ describe('TopHeader', () => {
     await flush();
     expect(document.body.querySelector<HTMLImageElement>('#global-search-suggestions img')?.src).toBe('blob:tape-photo');
     expect(document.body.querySelector<HTMLImageElement>('#global-search-suggestions img')?.alt).toBe('Tape measure');
+    expect(controlWithLabel('Open Tape measure').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/tape'
+    );
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
 
@@ -97,7 +100,7 @@ describe('TopHeader', () => {
     await flush();
     expect(document.activeElement?.id).toBe('global-search-suggestion-0');
 
-    (document.activeElement as HTMLButtonElement | null)?.click();
+    (document.activeElement as HTMLElement | null)?.click();
     await flush();
 
     expect(selectedAssets.map((selected) => selected.id)).toEqual(['tape']);
@@ -122,6 +125,25 @@ describe('TopHeader', () => {
 
     expect(document.body.querySelector('#global-search-suggestions img')).toBeNull();
     expect(document.body.querySelectorAll('#global-search-suggestions .asset-thumb svg')).toHaveLength(2);
+  });
+
+  it('preserves modified clicks on global suggestion links', async () => {
+    const { selectedAssets } = mountHeader();
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+
+    let componentPreventedModifiedClick = false;
+    const target = controlWithLabel('Open Tape measure');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(selectedAssets).toEqual([]);
+    expect(componentPreventedModifiedClick).toBe(false);
   });
 
   it('keeps suggestions open when keyboard focus moves into the suggestion list', async () => {
@@ -238,4 +260,12 @@ function linkContaining(text: string): HTMLAnchorElement {
     throw new Error(`Missing link containing ${text}`);
   }
   return link;
+}
+
+function controlWithLabel(label: string): HTMLElement {
+  const control = document.body.querySelector<HTMLElement>(`button[aria-label="${label}"], a[aria-label="${label}"]`);
+  if (!control) {
+    throw new Error(`Missing control labelled ${label}`);
+  }
+  return control;
 }

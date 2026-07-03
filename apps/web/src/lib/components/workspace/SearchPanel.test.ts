@@ -83,8 +83,11 @@ describe('SearchPanel', () => {
     expect(document.body.querySelector('#search-page-suggestions')).not.toBeNull();
     expect(document.body.querySelector<HTMLImageElement>('#search-page-suggestions img')?.src).toBe('blob:tape-photo');
     expect(document.body.querySelector<HTMLImageElement>('#search-page-suggestions img')?.alt).toBe('Tape measure');
+    expect(controlWithLabel('Open Tape measure').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/tape'
+    );
 
-    buttonWithLabel('Open Tape measure').click();
+    controlWithLabel('Open Tape measure').click();
     await flush();
 
     expect(openedAssetIds).toEqual(['tape']);
@@ -129,7 +132,7 @@ describe('SearchPanel', () => {
     await flush();
     expect(document.activeElement?.id).toBe('search-page-suggestion-0');
 
-    (document.activeElement as HTMLButtonElement | null)?.click();
+    (document.activeElement as HTMLElement | null)?.click();
     await flush();
 
     expect(openedAssetIds).toEqual(['tape']);
@@ -183,11 +186,38 @@ describe('SearchPanel', () => {
 
     expect(document.body.querySelector<HTMLImageElement>('.asset-list img')?.src).toBe('blob:passport-photo');
     expect(document.body.querySelector<HTMLImageElement>('.asset-list img')?.alt).toBe('Passport');
+    expect(linkWithText('Passport').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/passport'
+    );
 
-    buttonWithText('Passport').click();
+    linkWithText('Passport').click();
     await flush();
 
     expect(openedAssetIds).toEqual(['passport']);
+  });
+
+  it('preserves modified clicks on search result links', () => {
+    const resultAsset = asset('passport', 'Passport');
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: resultAsset,
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'title', value: 'Passport' }]
+      }
+    ];
+    const { openedAssetIds } = mountSearchPanel({ query: '', results, suggestions: [], submitted: true });
+
+    let componentPreventedModifiedClick = false;
+    const target = linkWithText('Passport');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(openedAssetIds).toEqual([]);
+    expect(componentPreventedModifiedClick).toBe(false);
   });
 
   it('uses the kind fallback for search results without their own photo', () => {
@@ -218,22 +248,22 @@ function searchInput(): HTMLInputElement {
   return input;
 }
 
-function buttonWithLabel(label: string): HTMLButtonElement {
-  const button = document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
-  if (!button) {
-    throw new Error(`Missing button labelled ${label}`);
+function controlWithLabel(label: string): HTMLElement {
+  const control = document.body.querySelector<HTMLElement>(`button[aria-label="${label}"], a[aria-label="${label}"]`);
+  if (!control) {
+    throw new Error(`Missing control labelled ${label}`);
   }
-  return button;
+  return control;
 }
 
-function buttonWithText(text: string): HTMLButtonElement {
-  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+function linkWithText(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
     candidate.textContent?.includes(text)
   );
-  if (!button) {
-    throw new Error(`Missing button containing ${text}`);
+  if (!link) {
+    throw new Error(`Missing link containing ${text}`);
   }
-  return button;
+  return link;
 }
 
 async function flush(): Promise<void> {

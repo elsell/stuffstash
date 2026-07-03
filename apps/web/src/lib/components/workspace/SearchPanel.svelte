@@ -3,6 +3,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
+  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
@@ -56,21 +57,41 @@
     }
   });
 
-  function openSuggestion(asset: Asset): void {
+  function assetHref(asset: Asset): string {
+    return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
+  }
+
+  function openSuggestion(event: MouseEvent, asset: Asset): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
     query = asset.title;
     closeSuggestions();
     onOpenAsset(asset.id);
+  }
+
+  function openAsset(event: MouseEvent, asset: Asset): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onOpenAsset(asset.id);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   function suggestionId(index: number): string {
     return `search-page-suggestion-${index}`;
   }
 
-  function suggestionElement(index: number): HTMLButtonElement | null {
+  function suggestionElement(index: number): HTMLElement | null {
     if (typeof document === 'undefined') {
       return null;
     }
-    return document.getElementById(suggestionId(index)) as HTMLButtonElement | null;
+    return document.getElementById(suggestionId(index));
   }
 
   async function focusSuggestion(index: number): Promise<void> {
@@ -178,6 +199,7 @@
           <li>
             <Button.Root
               id={suggestionId(index)}
+              href={assetHref(suggestion)}
               variant="ghost"
               class="suggestion-row"
               data-active={activeSuggestionIndex === index}
@@ -185,7 +207,7 @@
               onfocus={() => { activeSuggestionIndex = index; }}
               onkeydown={(event) => handleSuggestionKeydown(event, index)}
               onpointerenter={() => { activeSuggestionIndex = index; }}
-              onclick={() => openSuggestion(suggestion)}
+              onclick={(event) => openSuggestion(event, suggestion)}
             >
               <AssetThumb asset={suggestion} size="sm" />
               <span>
@@ -235,7 +257,7 @@
   {:else}
     <div class="asset-list">
       {#each results as result}
-        <Button.Root variant="ghost" class="asset-row" onclick={() => onOpenAsset(result.asset.id)}>
+        <Button.Root href={assetHref(result.asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, result.asset)}>
           <AssetThumb asset={result.asset} />
           <span class="asset-row-main">
             <strong>{result.asset.title}</strong>
