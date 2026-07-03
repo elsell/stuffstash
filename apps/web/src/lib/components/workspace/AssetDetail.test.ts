@@ -345,6 +345,60 @@ describe('AssetDetail', () => {
     expect(link('Edit').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations/asset-one/edit');
   });
 
+  it('exposes canonical hrefs for asset action cancel controls', async () => {
+    let actionClosed = false;
+    mountAssetDetail({
+      action: 'edit',
+      onActionClose: () => {
+        actionClosed = true;
+      }
+    });
+    await flush();
+
+    expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one');
+    link('Cancel').click();
+    await flush();
+
+    expect(actionClosed).toBe(true);
+    expect(document.body.textContent).not.toContain('Edit asset');
+  });
+
+  it('preserves modified clicks on asset action cancel links', async () => {
+    let actionClosed = false;
+    mountAssetDetail({
+      action: 'move',
+      onActionClose: () => {
+        actionClosed = true;
+      }
+    });
+    await flush();
+
+    let componentPreventedModifiedClick = false;
+    const target = link('Cancel');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(actionClosed).toBe(false);
+    expect(componentPreventedModifiedClick).toBe(false);
+    expect(document.body.textContent).toContain('Move asset');
+  });
+
+  it('uses the focused location route for location action cancel links', async () => {
+    mountAssetDetail({
+      action: 'edit',
+      asset: {
+        ...asset(),
+        kind: 'location'
+      }
+    });
+    await flush();
+
+    expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations/asset-one');
+  });
+
   it('uses pressed states for enum custom fields in the edit panel', async () => {
     mountAssetDetail({
       asset: {

@@ -683,15 +683,23 @@
   function closeAssetActionRoute(): void {
     assetAction = null;
     if (selectedAsset) {
+      const closingAsset = selectedAsset;
+      if (closingAsset.kind === 'location') {
+        mode = 'location';
+        selectedLocationId = closingAsset.id;
+        selectedAssetId = null;
+        loadedAssetDetail = null;
+        selectedAssetAttachments = [];
+      }
       replaceRoute(
-        selectedAsset.kind === 'location'
+        closingAsset.kind === 'location'
           ? {
               mode: 'location',
-              tenantId: selectedAsset.tenantId,
-              inventoryId: selectedAsset.inventoryId,
-              locationId: selectedAsset.id
+              tenantId: closingAsset.tenantId,
+              inventoryId: closingAsset.inventoryId,
+              locationId: closingAsset.id
             }
-          : { mode: 'asset', tenantId: selectedAsset.tenantId, inventoryId: selectedAsset.inventoryId, assetId: selectedAsset.id }
+          : { mode: 'asset', tenantId: closingAsset.tenantId, inventoryId: closingAsset.inventoryId, assetId: closingAsset.id }
       );
     }
   }

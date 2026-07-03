@@ -277,6 +277,7 @@ The first asset detail view must include:
 
 - Back navigation to the previous location list when opened from a location.
 - Back navigation must expose a canonical `href` matching the ordinary in-app back destination.
+- Asset action panel cancellation must expose a canonical `href` back to the asset detail or focused location route that the ordinary in-app close action restores.
 - A prominent asset photo area with a kind icon fallback.
 - Asset title.
 - Asset kind.

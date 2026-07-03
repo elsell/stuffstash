@@ -263,6 +263,17 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Edit asset');
       expect(document.body.querySelector<HTMLInputElement>('#edit-asset-title')?.value).toBe('Garage');
     });
+
+    expect(controlContaining('Cancel').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
+    );
+    controlContaining('Cancel').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Main storage area');
+      expect(document.body.textContent).not.toContain('Edit asset');
+    });
   });
 
   it('keeps ordinary location back clicks aligned with the exposed locations href', async () => {

@@ -221,6 +221,26 @@
     return workspaceRouteHref(route, asset.tenantId, asset.inventoryId);
   }
 
+  function detailHref(): string {
+    return workspaceRouteHref(
+      asset.kind === 'location'
+        ? {
+            mode: 'location',
+            tenantId: asset.tenantId,
+            inventoryId: asset.inventoryId,
+            locationId: asset.id
+          }
+        : {
+            mode: 'asset',
+            tenantId: asset.tenantId,
+            inventoryId: asset.inventoryId,
+            assetId: asset.id
+          },
+      asset.tenantId,
+      asset.inventoryId
+    );
+  }
+
   function actionIsAvailable(nextAction: Exclude<AssetRouteAction, null>): boolean {
     if (!canEdit || saving) {
       return false;
@@ -268,6 +288,14 @@
     ) {
       onActionClose();
     }
+  }
+
+  function closeAction(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    closePanel();
   }
 
   async function archive(): Promise<void> {
@@ -678,7 +706,7 @@
             </div>
           {/if}
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root disabled={saving || title.trim().length === 0} onclick={() => { void save(); }}>Save</Button.Root>
           </div>
           {#if saveError}
@@ -703,7 +731,7 @@
             onSelect={selectMoveParent}
           />
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root disabled={saving} onclick={() => { void save(); }}>Move</Button.Root>
           </div>
           {#if saveError}
@@ -720,7 +748,7 @@
           <h2 id="archive-asset-panel-title">Archive asset</h2>
           <p>Move {asset.title} out of active browsing?</p>
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root variant="outline" disabled={saving} onclick={() => { void archive(); }}>Archive</Button.Root>
           </div>
           {#if saveError}
@@ -737,7 +765,7 @@
           <h2 id="restore-asset-panel-title">Restore asset</h2>
           <p>Return {asset.title} to active browsing?</p>
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root disabled={saving} onclick={() => { void restore(); }}>Restore</Button.Root>
           </div>
           {#if saveError}
@@ -754,7 +782,7 @@
           <h2 id="delete-asset-panel-title">Delete asset</h2>
           <p>Delete {asset.title} permanently?</p>
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root variant="destructive" disabled={saving} onclick={() => { void remove(); }}>Delete</Button.Root>
           </div>
           {#if saveError}
