@@ -336,9 +336,11 @@ The add surface:
 - Must open as a modal, tray, or sheet appropriate to viewport.
 - Must let the user choose or change `Item`, `Container`, or `Location`.
 - The kind selector must be compact. It must not use large stacked cards.
+- The tray must show a compact live summary of the selected kind, parent destination, and photo count so users can confirm what will be created without rescanning the whole form.
 - Must collect name/title.
 - Must collect a valid parent target when required.
 - Parent target selection must use a picker/search over valid location/container targets, not a free text field that implies invalid foreign keys can be saved.
+- Parent target selection must be search-first when many locations or containers are available: it must always show the current destination and inventory root option, but it must not render an unfiltered stack of every possible parent by default.
 - The parent picker must support quick creation when the user realizes the parent location/container does not exist yet.
 - Quick parent creation in add flows must be an explicit opt-in section, not always-visible secondary fields that compete with the common add path.
 - Quick creation must be explicit and must preserve authorization, validation, and audit expectations when implemented against the real API.
@@ -348,6 +350,7 @@ Photos:
 - Photos are first-class and low-friction in the add flow.
 - Photos must be optional. A user must be able to save an asset without adding a photo.
 - The add surface should expose camera and upload actions.
+- Photo actions must be grouped as one attachment section with accessible group labeling, supported media guidance, and selected-photo count/status.
 - The first approved web direction supports JPEG, PNG, and WebP image affordances consistent with the media spec.
 - Selected photos should show thumbnails and allow removal before save.
 - Invalid or oversized selected photos must block save until removed or corrected.
@@ -392,6 +395,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Creation and edit controls must use the local shadcn-style button, input, select/tabs, label, textarea, and dialog/sheet primitives or product-specific compositions over those primitives.
 - Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
 - The add surface parent picker must support filtering valid parent targets and must expose each picker group with honest grouped-control semantics rather than unlabeled piles of buttons.
+- Parent target pickers must avoid unfiltered all-parent stacks by default; search results, current selection, and empty states must be visually distinct.
 - Asset detail edit and move panels must use the same grouped-control and searchable parent-target patterns as the add surface.
 - Add and move parent-target selection must be implemented through a shared workspace picker component so filtering, selected-state language, empty states, and grouped-control semantics do not drift between creation and asset-detail actions.
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.

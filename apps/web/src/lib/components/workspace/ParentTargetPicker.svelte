@@ -43,6 +43,7 @@
   );
   let visibleTargets = $derived(matchingTargets.slice(0, visibleLimit));
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
+  let hasSearch = $derived(normalizedSearch.length > 0);
 </script>
 
 <fieldset class="selection-field parent-selection">
@@ -54,7 +55,7 @@
   <p class="selection-summary">
     {selectedTarget ? `Selected ${selectedTarget.title}` : `Selected ${rootSummaryLabel}`}
   </p>
-  <div class="parent-picker option-grid" role="group" aria-label={groupLabel}>
+  <div class="parent-picker parent-current" role="group" aria-label={`${groupLabel} current destination`}>
     <Button.Root
       type="button"
       variant={selectedId === null ? 'secondary' : 'outline'}
@@ -63,22 +64,42 @@
     >
       {rootLabel}
     </Button.Root>
-    {#each visibleTargets as target}
+    {#if selectedTarget}
       <Button.Root
         type="button"
-        variant={selectedId === target.id ? 'secondary' : 'outline'}
+        variant="secondary"
         class="parent-target-button"
-        aria-pressed={selectedId === target.id}
-        onclick={() => onSelect(target.id)}
+        aria-pressed="true"
+        onclick={() => onSelect(selectedTarget.id)}
       >
-        <span>{target.title}</span>
-        <small>{target.containmentTrail}</small>
+        <span>{selectedTarget.title}</span>
+        <small>{selectedTarget.containmentTrail}</small>
       </Button.Root>
-    {/each}
+    {/if}
   </div>
-  {#if normalizedSearch && visibleTargets.length === 0}
-    <p class="muted-note">No matching locations or containers.</p>
-  {:else if matchingTargets.length > visibleTargets.length}
-    <p class="muted-note">Showing the first {visibleTargets.length} of {matchingTargets.length} matches.</p>
+  {#if hasSearch}
+    <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
+      {#each visibleTargets as target}
+        <Button.Root
+          type="button"
+          variant={selectedId === target.id ? 'secondary' : 'outline'}
+          class="parent-target-button"
+          aria-pressed={selectedId === target.id}
+          onclick={() => onSelect(target.id)}
+        >
+          <span>{target.title}</span>
+          <small>{target.containmentTrail}</small>
+        </Button.Root>
+      {/each}
+    </div>
+    {#if visibleTargets.length === 0}
+      <p class="muted-note">No matching locations or containers.</p>
+    {:else if matchingTargets.length > visibleTargets.length}
+      <p class="muted-note">Showing the first {visibleTargets.length} of {matchingTargets.length} matches.</p>
+    {/if}
+  {:else if targets.length > 0}
+    <p class="muted-note">Search {targets.length} available locations and containers.</p>
+  {:else}
+    <p class="muted-note">No locations or containers yet.</p>
   {/if}
 </fieldset>

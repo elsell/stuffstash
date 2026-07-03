@@ -35,12 +35,15 @@ describe('ParentTargetPicker', () => {
       }
     });
 
-    expect(document.body.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Move target');
+    expect(document.body.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Move target current destination');
     expect(button('Inventory root').getAttribute('aria-pressed')).toBe('true');
+    expect(document.body.textContent).toContain('Search 3 available locations and containers.');
+    expect(document.body.textContent).not.toContain('Hall closet');
 
     setInputValue(requiredInput('#parent-target-search'), 'closet');
     await flush();
 
+    expect(group('Move target search results')).toBeTruthy();
     expect(document.body.textContent).toContain('Hall closet');
     expect(document.body.textContent).toContain('Closet bin');
     expect(document.body.textContent).not.toContain('Garage shelf');
@@ -67,6 +70,13 @@ describe('ParentTargetPicker', () => {
     });
 
     expect(document.body.textContent).toContain('Selected Target 1');
+    expect(button('Target 1').getAttribute('aria-pressed')).toBe('true');
+    expect(document.body.textContent).toContain('Search 2 available locations and containers.');
+    expect(document.body.textContent).not.toContain('Target 2');
+
+    setInputValue(requiredInput('#parent-target-search'), 'target');
+    await flush();
+
     expect(document.body.textContent).toContain('Showing the first 1 of 2 matches.');
 
     setInputValue(requiredInput('#parent-target-search'), 'missing');
@@ -104,6 +114,16 @@ function button(text: string): HTMLButtonElement {
   );
   if (!target) {
     throw new Error(`Missing button ${text}`);
+  }
+  return target;
+}
+
+function group(label: string): HTMLElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLElement>('[role="group"]')).find(
+    (candidate) => candidate.getAttribute('aria-label') === label
+  );
+  if (!target) {
+    throw new Error(`Missing group ${label}`);
   }
   return target;
 }

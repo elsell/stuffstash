@@ -62,6 +62,7 @@
   let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
   let fileInput = $state<HTMLInputElement | null>(null);
+  let cameraInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
   const assetKindOptions = assetKinds.map((option) => ({ value: option, label: assetKindLabel(option) }));
   const parentKindOptions = [
@@ -77,6 +78,9 @@
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
   let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
+  let selectedParent = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
+  let parentSummary = $derived(destinationSummary());
+  let photoSummary = $derived(photoCountLabel());
 
   $effect(() => {
     if (open && !wasOpen) {
@@ -223,6 +227,10 @@
     fileInput?.click();
   }
 
+  function openCameraPicker(): void {
+    cameraInput?.click();
+  }
+
   function removePhoto(id: string): void {
     const removed = selectedPhotos.find((photo) => photo.id === id);
     if (removed) {
@@ -254,6 +262,21 @@
 
   function setCustomFieldValue(key: string, value: string): void {
     customFieldValues = { ...customFieldValues, [key]: value };
+  }
+
+  function destinationSummary(): string {
+    if (quickParentEnabled) {
+      const parentKindLabel = assetKindLabel(quickParentKind);
+      return quickParentTitle.trim() ? `New ${parentKindLabel}: ${quickParentTitle.trim()}` : `New ${parentKindLabel}`;
+    }
+    return selectedParent?.title ?? 'Inventory root';
+  }
+
+  function photoCountLabel(): string {
+    if (selectedPhotos.length === 0) {
+      return 'No photos';
+    }
+    return `${selectedPhotos.length} ${selectedPhotos.length === 1 ? 'photo' : 'photos'}`;
   }
 
   function buildCustomFields(): Record<string, unknown> {
@@ -305,6 +328,21 @@
       <Button.Root variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={onClose}><X /></Button.Root>
     </div>
 
+    <div class="add-summary" aria-live="polite">
+      <div>
+        <small>Type</small>
+        <strong>{assetKindLabel(kind)}</strong>
+      </div>
+      <div>
+        <small>Parent</small>
+        <strong>{parentSummary}</strong>
+      </div>
+      <div>
+        <small>Photos</small>
+        <strong>{photoSummary}</strong>
+      </div>
+    </div>
+
     <fieldset class="selection-field">
       <legend>Asset kind</legend>
       <SegmentedControl label="Asset kind" value={kind} options={assetKindOptions} onSelect={(value) => { kind = value as AssetKind; }} />
@@ -312,7 +350,7 @@
 
     <div class="field-stack">
       <Label for="asset-title">Name</Label>
-      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder="Tomato fertilizer" />
+      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder="Tomato fertilizer" required aria-required="true" />
     </div>
 
     <ParentTargetPicker
@@ -341,6 +379,8 @@
               id="quick-parent-title"
               bind:value={quickParentTitle}
               placeholder="Laundry shelf"
+              required={quickParentEnabled}
+              aria-required={quickParentEnabled}
               aria-invalid={quickParentMissingName}
               aria-describedby={quickParentMissingName ? 'quick-parent-error' : undefined}
             />
@@ -433,9 +473,14 @@
       </div>
     {/if}
 
-    <div class="photo-actions">
-      <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Upload /> Upload</Button.Root>
-      <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Camera /> Camera</Button.Root>
+    <fieldset class="selection-field attachment-section" aria-describedby="photo-help">
+      <legend>Photos</legend>
+      <p id="photo-help" class="selection-summary">Optional JPEG, PNG, or WebP up to {formatBytes(mediaPolicy.maxBytes)}.</p>
+      <div class="photo-actions" role="group" aria-label="Photo actions">
+        <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Upload /> Upload</Button.Root>
+        <Button.Root type="button" variant="outline" class="photo-label" onclick={openCameraPicker}><Camera /> Camera</Button.Root>
+        <span class="photo-status" aria-live="polite">{photoSummary}</span>
+      </div>
       {#key fileInputKey}
         <Input
           id="asset-photos"
@@ -447,8 +492,18 @@
           multiple
           onchange={(event) => captureFiles(event.currentTarget.files ?? undefined)}
         />
+        <Input
+          id="asset-camera"
+          bind:ref={cameraInput}
+          class="visually-hidden"
+          type="file"
+          tabindex={-1}
+          accept="image/jpeg,image/png,image/webp"
+          capture="environment"
+          onchange={(event) => captureFiles(event.currentTarget.files ?? undefined)}
+        />
       {/key}
-    </div>
+    </fieldset>
 
     {#if selectedPhotos.length > 0}
       <div class="photo-preview-list">

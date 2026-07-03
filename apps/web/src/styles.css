@@ -1565,6 +1565,43 @@ dd {
   box-shadow: var(--shadow-panel);
 }
 
+.add-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.add-summary div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  align-content: center;
+  min-height: 54px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--secondary) 74%, white);
+}
+
+.add-summary small,
+.add-summary strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-summary small {
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.add-summary strong {
+  color: var(--foreground);
+  font-size: 0.88rem;
+}
+
 .kind-segment,
 .photo-preview-list {
   display: flex;
@@ -1609,6 +1646,14 @@ dd {
   gap: 10px;
 }
 
+.add-tray .attachment-section {
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--secondary) 45%, white);
+}
+
 .quick-parent-fields {
   display: grid;
   gap: 10px;
@@ -1627,6 +1672,14 @@ dd {
   justify-items: start;
   gap: 2px;
   white-space: normal;
+}
+
+.parent-current {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.parent-picker-results {
+  padding-top: 2px;
 }
 
 .parent-target-button small {
@@ -1649,6 +1702,13 @@ dd {
   font-size: 0.9rem;
   font-weight: 650;
   cursor: pointer;
+}
+
+.photo-status {
+  margin-left: auto;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+  font-weight: 650;
 }
 
 .photo-preview {
@@ -1882,6 +1942,10 @@ dd {
     width: 100%;
     max-height: 88vh;
     border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .add-summary {
+    grid-template-columns: 1fr;
   }
 
   .auth-banner {

@@ -47,6 +47,9 @@ describe('AddAssetTray', () => {
 
     await flush();
 
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('Item');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('Inventory root');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('No photos');
     expect(document.body.textContent).toContain('Create missing parent');
     expect(switchControl('Create a parent first')?.getAttribute('aria-checked')).toBe('false');
     expect(document.querySelector('#quick-parent-title')).toBeNull();
@@ -279,6 +282,9 @@ describe('AddAssetTray', () => {
     const fieldsets = Array.from(document.body.querySelectorAll('fieldset')).map((field) => field.textContent ?? '');
     expect(fieldsets.some((text) => text.includes('Place in existing parent'))).toBe(true);
     expect(fieldsets.some((text) => text.includes('Asset kind'))).toBe(true);
+    expect(document.body.textContent).toContain('Search 4 available locations and containers.');
+    expect(document.body.textContent).not.toContain('Garage shelf');
+    expect(document.body.textContent).not.toContain('Hall closet');
 
     input('#parent-search', 'closet');
     await flush();
@@ -310,9 +316,12 @@ describe('AddAssetTray', () => {
     });
 
     await flush();
+    expect(document.querySelector<HTMLInputElement>('#asset-camera')?.getAttribute('capture')).toBe('environment');
     uploadPhoto('first.jpg', 'image/jpeg', 1200);
     await flush();
     expect(document.body.textContent).toContain('first.jpg');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('1 photo');
+    expect(document.body.querySelector('[aria-label="Photo actions"]')?.textContent).toContain('1 photo');
 
     uploadPhoto('second.jpg', 'image/jpeg', 1200);
     await flush();

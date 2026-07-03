@@ -200,7 +200,7 @@ describe('AssetDetail', () => {
     expect(savedDraft).toMatchObject({ parentAssetId: 'hall-closet' });
   });
 
-  it('opens route-linked move panels with an unfiltered parent picker', async () => {
+  it('opens route-linked move panels with a search-first parent picker', async () => {
     mountAssetDetail({
       action: 'move',
       asset: {
@@ -216,10 +216,18 @@ describe('AssetDetail', () => {
     await flush();
 
     expect((requiredElement('#move-parent-search') as HTMLInputElement).value).toBe('');
-    expect(document.body.textContent).toContain('Selected Garage shelf');
-    expect(document.body.textContent).toContain('Garage shelf');
+    const pickerText = parentPickerText();
+    expect(pickerText).toContain('Selected Garage shelf');
+    expect(pickerText).toContain('Garage shelf');
+    expect(pickerText).toContain('Search 3 available locations and containers.');
+    expect(pickerText).not.toContain('Pantry bin');
+    expect(pickerText).not.toContain('Hall closet');
+
+    setInputValue(requiredElement('#move-parent-search') as HTMLInputElement, 'closet');
+    await flush();
+
     expect(document.body.textContent).toContain('Hall closet');
-    expect(document.body.textContent).toContain('Pantry bin');
+    expect(parentPickerText()).not.toContain('Pantry bin');
   });
 
   it('opens route-linked archive and restore confirmation panels', async () => {
@@ -546,6 +554,16 @@ function requiredElement(selector: string): Element {
   const element = document.body.querySelector(selector);
   if (!element) throw new Error(`Missing element ${selector}`);
   return element;
+}
+
+function parentPickerText(): string {
+  const fieldset = Array.from(document.body.querySelectorAll('fieldset')).find((candidate) =>
+    candidate.textContent?.includes('Parent')
+  );
+  if (!fieldset) {
+    throw new Error('Missing parent picker fieldset');
+  }
+  return fieldset.textContent ?? '';
 }
 
 async function flush(): Promise<void> {
