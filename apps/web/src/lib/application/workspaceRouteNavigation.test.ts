@@ -118,6 +118,10 @@ describe('workspace route navigation helpers', () => {
   it('keeps asset action route availability explicit', () => {
     expect(assetRouteActionIsAvailable('edit', workspaceData.context.inventories[0], asset('active'))).toBe(true);
     expect(assetRouteActionIsAvailable('move', workspaceData.context.inventories[0], asset('archived'))).toBe(false);
+    expect(assetRouteActionIsAvailable('archive', workspaceData.context.inventories[0], asset('active'))).toBe(true);
+    expect(assetRouteActionIsAvailable('archive', workspaceData.context.inventories[0], asset('archived'))).toBe(false);
+    expect(assetRouteActionIsAvailable('restore', workspaceData.context.inventories[0], asset('archived'))).toBe(true);
+    expect(assetRouteActionIsAvailable('restore', workspaceData.context.inventories[0], asset('active'))).toBe(false);
     expect(assetRouteActionIsAvailable('delete', workspaceData.context.inventories[0], asset('archived'))).toBe(true);
     expect(assetRouteActionIsAvailable('edit', workspaceData.context.inventories[1], asset('active'))).toBe(false);
   });

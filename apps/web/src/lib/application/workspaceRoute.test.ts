@@ -53,6 +53,16 @@ describe('workspace route state', () => {
       assetId: 'asset_1',
       assetAction: 'delete'
     });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/archive'))).toMatchObject({
+      mode: 'asset',
+      assetId: 'asset_1',
+      assetAction: 'archive'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/restore'))).toMatchObject({
+      mode: 'asset',
+      assetId: 'asset_1',
+      assetAction: 'restore'
+    });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields'))).toMatchObject({
       mode: 'settings',
       settingsSection: 'fields'
@@ -75,6 +85,9 @@ describe('workspace route state', () => {
     );
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'
+    );
+    expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'archive' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/assets/asset_1/archive'
     );
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/activity'

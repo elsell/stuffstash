@@ -222,6 +222,80 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Pantry bin');
   });
 
+  it('opens route-linked archive and restore confirmation panels', async () => {
+    const calls: string[] = [];
+    mountAssetDetail({
+      action: 'archive',
+      onArchive: async () => {
+        calls.push('archive');
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Archive asset');
+    expect(document.body.textContent).toContain('Move Ibuprofen out of active browsing?');
+    clickLast('Archive');
+    await flush();
+    expect(calls).toEqual(['archive']);
+
+    unmount(component!);
+    component = null;
+    document.body.innerHTML = '';
+
+    mountAssetDetail({
+      action: 'restore',
+      asset: {
+        ...asset(),
+        lifecycleState: 'archived'
+      },
+      onRestore: async () => {
+        calls.push('restore');
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Restore asset');
+    expect(document.body.textContent).toContain('Return Ibuprofen to active browsing?');
+    clickLast('Restore');
+    await flush();
+    expect(calls).toEqual(['archive', 'restore']);
+  });
+
+  it('routes archive and restore buttons through durable action state', async () => {
+    const actions: string[] = [];
+    mountAssetDetail({
+      onActionOpen: (action) => {
+        actions.push(action);
+      }
+    });
+
+    clickFirst('Archive');
+    await flush();
+
+    expect(actions).toEqual(['archive']);
+    expect(document.body.textContent).toContain('Archive asset');
+
+    unmount(component!);
+    component = null;
+    document.body.innerHTML = '';
+
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        lifecycleState: 'archived'
+      },
+      onActionOpen: (action) => {
+        actions.push(action);
+      }
+    });
+
+    clickFirst('Restore');
+    await flush();
+
+    expect(actions).toEqual(['archive', 'restore']);
+    expect(document.body.textContent).toContain('Restore asset');
+  });
+
   it('uses pressed states for enum custom fields in the edit panel', async () => {
     mountAssetDetail({
       asset: {
@@ -303,7 +377,7 @@ describe('AssetDetail', () => {
 function mountAssetDetail(
   props: Partial<{
     asset: AssetViewModel;
-    action: 'edit' | 'move' | 'delete' | null;
+    action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
     canEdit: boolean;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
@@ -311,7 +385,7 @@ function mountAssetDetail(
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'delete') => void;
+    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete') => void;
     onActionClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;

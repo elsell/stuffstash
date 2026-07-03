@@ -91,6 +91,8 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/edit` for the asset edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/move` for the asset move state when move is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive` for active asset archive confirmation when archive is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore` for archived asset restore confirmation when restore is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/delete` for the asset delete confirmation state when delete is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
@@ -116,7 +118,7 @@ Deep links must preserve tenant and inventory boundaries:
 - A location edit deep link must normalize to the same API-backed asset detail edit workflow used for editing the underlying location asset.
 - An asset deep link must load the selected asset through the repository port and API adapter.
 - Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
-- Asset action panels that materially change data, such as edit, move, and delete confirmation, are durable route states.
+- Asset action panels that materially change data, such as edit, move, archive confirmation, restore confirmation, and delete confirmation, are durable route states.
 - Unsupported paths must fall back to the inventory home without crashing.
 
 Navigation controls must update the URL when they change durable workspace state, and browser back/forward controls must restore the corresponding workspace state.

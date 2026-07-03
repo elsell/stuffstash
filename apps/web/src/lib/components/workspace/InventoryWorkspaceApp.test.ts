@@ -179,6 +179,35 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links asset archive and restore confirmations', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Passport');
+    });
+
+    buttonContaining('Archive').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home/archive');
+      expect(document.body.textContent).toContain('Archive asset');
+    });
+
+    if (component) {
+      unmount(component);
+      component = null;
+    }
+    document.body.innerHTML = '';
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-archived/restore');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-archived/restore');
+      expect(document.body.textContent).toContain('Restore asset');
+      expect(document.body.textContent).toContain('Archived Passport');
+    });
+  });
+
   it('closes the add tray after a saved asset with a photo upload warning', async () => {
     const repository = await mountWorkspace(
       '/tenants/tenant-home/inventories/inventory-household/add/item',

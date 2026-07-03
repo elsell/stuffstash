@@ -1,7 +1,7 @@
 import type { AssetKind, AssetLifecycleFilter, SearchLifecycleFilter, SearchMode, WorkspaceMode } from '$lib/domain/inventory';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
-export type AssetRouteAction = 'edit' | 'move' | 'delete' | null;
+export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
 export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
 
 export interface WorkspaceRouteState {
@@ -37,7 +37,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
 };
 
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
-const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'delete']);
+const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);

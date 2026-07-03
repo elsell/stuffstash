@@ -13,6 +13,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import type { AssetRouteAction } from '$lib/application/workspaceRoute';
   import type {
     AssetAttachment,
     AssetViewModel,
@@ -57,14 +58,14 @@
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
-    action?: 'edit' | 'move' | 'delete' | null;
+    action?: AssetRouteAction;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'delete') => void;
+    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete') => void;
     onActionClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
@@ -75,7 +76,7 @@
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
   } = $props();
 
-  let panel = $state<'none' | 'edit' | 'move' | 'delete' | 'attachment-delete'>('none');
+  let panel = $state<'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'attachment-delete'>('none');
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
@@ -121,6 +122,10 @@
       openEdit(false);
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
       openMove(false);
+    } else if (action === 'archive' && canEdit && asset.lifecycleState === 'active') {
+      panel = 'archive';
+    } else if (action === 'restore' && canEdit && asset.lifecycleState === 'archived') {
+      panel = 'restore';
     } else if (action === 'delete' && canEdit) {
       panel = 'delete';
     } else if (!action && !initializingWithoutRouteAction) {
@@ -129,7 +134,7 @@
   });
 
   $effect(() => {
-    if ((panel === 'edit' || panel === 'move' || panel === 'delete') && actionPanelElement) {
+    if ((panel === 'edit' || panel === 'move' || panel === 'archive' || panel === 'restore' || panel === 'delete') && actionPanelElement) {
       actionPanelElement.focus();
     }
   });
@@ -167,6 +172,16 @@
     }
   }
 
+  function openArchive(): void {
+    panel = 'archive';
+    onActionOpen('archive');
+  }
+
+  function openRestore(): void {
+    panel = 'restore';
+    onActionOpen('restore');
+  }
+
   async function save(): Promise<void> {
     if (!title.trim()) {
       return;
@@ -188,7 +203,13 @@
   function closePanel(): void {
     const previousPanel = panel;
     panel = 'none';
-    if (previousPanel === 'edit' || previousPanel === 'move' || previousPanel === 'delete') {
+    if (
+      previousPanel === 'edit' ||
+      previousPanel === 'move' ||
+      previousPanel === 'archive' ||
+      previousPanel === 'restore' ||
+      previousPanel === 'delete'
+    ) {
       onActionClose();
     }
   }
@@ -416,9 +437,9 @@
           <Image /> Add photo
         </Button.Root>
         {#if asset.lifecycleState === 'active'}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archive(); }}><Archive /> Archive</Button.Root>
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={openArchive}><Archive /> Archive</Button.Root>
         {:else}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void restore(); }}><RotateCcw /> Restore</Button.Root>
+          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={openRestore}><RotateCcw /> Restore</Button.Root>
         {/if}
       </div>
       {#if !canEdit}
@@ -605,6 +626,40 @@
           <div class="tray-actions">
             <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
             <Button.Root disabled={saving} onclick={() => { void save(); }}>Move</Button.Root>
+          </div>
+          {#if saveError}
+            <p class="denied-note" role="alert">{saveError}</p>
+          {/if}
+        </section>
+      {:else if panel === 'archive'}
+        <section
+          bind:this={actionPanelElement}
+          class="detail-action-panel"
+          aria-labelledby="archive-asset-panel-title"
+          tabindex="-1"
+        >
+          <h2 id="archive-asset-panel-title">Archive asset</h2>
+          <p>Move {asset.title} out of active browsing?</p>
+          <div class="tray-actions">
+            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root variant="outline" disabled={saving} onclick={() => { void archive(); }}>Archive</Button.Root>
+          </div>
+          {#if saveError}
+            <p class="denied-note" role="alert">{saveError}</p>
+          {/if}
+        </section>
+      {:else if panel === 'restore'}
+        <section
+          bind:this={actionPanelElement}
+          class="detail-action-panel"
+          aria-labelledby="restore-asset-panel-title"
+          tabindex="-1"
+        >
+          <h2 id="restore-asset-panel-title">Restore asset</h2>
+          <p>Return {asset.title} to active browsing?</p>
+          <div class="tray-actions">
+            <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
+            <Button.Root disabled={saving} onclick={() => { void restore(); }}>Restore</Button.Root>
           </div>
           {#if saveError}
             <p class="denied-note" role="alert">{saveError}</p>

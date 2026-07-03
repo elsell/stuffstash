@@ -96,5 +96,11 @@ export function assetRouteActionIsAvailable(
   if (!canEditAsset(inventory)) {
     return false;
   }
-  return action === 'delete' || asset?.lifecycleState === 'active';
+  if (action === 'delete') {
+    return true;
+  }
+  if (action === 'restore') {
+    return asset?.lifecycleState === 'archived';
+  }
+  return asset?.lifecycleState === 'active';
 }
