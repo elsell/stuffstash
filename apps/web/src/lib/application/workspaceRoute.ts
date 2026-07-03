@@ -104,7 +104,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     };
   }
   if (section === 'search') {
-    return remaining === 1 ? { ...route, mode: 'search' } : { ...defaultWorkspaceRoute };
+    return remaining === 1 ? { ...route, mode: 'search', lifecycleState: 'active' } : { ...defaultWorkspaceRoute };
   }
   if (section === 'settings') {
     return remaining <= 2

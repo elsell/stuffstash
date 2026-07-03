@@ -157,6 +157,45 @@ describe('HomeWorkspace', () => {
     expect(link('Old drill').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/assets/old-drill');
   });
 
+  it('exposes lifecycle filter hrefs and preserves modified clicks', () => {
+    let selectedLifecycle = '';
+    component = mount(HomeWorkspace, {
+      target: document.body,
+      props: {
+        lifecycleState: 'active',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        locations: [],
+        recentAssets: [],
+        archivedAssets: [],
+        onOpenLocation: () => {},
+        onOpenAsset: () => {},
+        onOpenAdd: () => {},
+        onSelectLifecycle: (lifecycle) => {
+          selectedLifecycle = lifecycle;
+        }
+      }
+    });
+
+    expect(link('Active').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household');
+    expect(link('Archived').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household?lifecycle=archived');
+
+    link('Archived').click();
+    expect(selectedLifecycle).toBe('archived');
+
+    selectedLifecycle = '';
+    let componentPreventedModifiedClick = true;
+    const target = link('Archived');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(selectedLifecycle).toBe('');
+    expect(componentPreventedModifiedClick).toBe(false);
+  });
+
   it('uses selected context for add-location links when the inventory is empty', () => {
     component = mount(HomeWorkspace, {
       target: document.body,

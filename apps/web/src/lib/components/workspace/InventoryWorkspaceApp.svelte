@@ -272,9 +272,6 @@
       searchSubmitted = result.submitted;
       searchError = result.error;
       error = result.error;
-      if (!result.query) {
-        return;
-      }
       mode = 'search';
       if (!applyingRoute) {
         replaceRoute({
@@ -285,6 +282,9 @@
           searchLifecycleState,
           searchMode
         });
+      }
+      if (!result.query) {
+        return;
       }
     } finally {
       busy = false;
@@ -494,7 +494,7 @@
         }
       }
 
-      if (route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
+      if (route.mode !== 'search' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
 
@@ -961,6 +961,8 @@
       />
     {:else if mode === 'search'}
       <SearchPanel
+        tenantId={data.context.selectedTenantId}
+        inventoryId={data.context.selectedInventoryId}
         bind:query={searchQuery}
         bind:lifecycleState={searchLifecycleState}
         bind:searchMode={searchMode}

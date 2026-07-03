@@ -45,6 +45,19 @@
     return workspaceRouteHref({ action: 'add', addKind: 'location' }, routeTenantId, routeInventoryId);
   }
 
+  function lifecycleHref(nextLifecycleState: AssetLifecycleFilter): string {
+    return workspaceRouteHref(
+      {
+        mode: 'home',
+        tenantId: routeTenantId,
+        inventoryId: routeInventoryId,
+        lifecycleState: nextLifecycleState
+      },
+      routeTenantId,
+      routeInventoryId
+    );
+  }
+
   function assetHref(asset: Asset): string {
     return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
   }
@@ -104,8 +117,8 @@
           label="Asset lifecycle"
           value={lifecycleState}
           options={[
-            { value: 'active', label: 'Active' },
-            { value: 'archived', label: 'Archived' }
+            { value: 'active', label: 'Active', href: lifecycleHref('active') },
+            { value: 'archived', label: 'Archived', href: lifecycleHref('archived') }
           ]}
           onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
         />

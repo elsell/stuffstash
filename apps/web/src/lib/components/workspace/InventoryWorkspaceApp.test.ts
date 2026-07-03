@@ -2,7 +2,7 @@ import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
-import type { Asset, AssetAttachment, SelectedPhoto } from '$lib/domain/inventory';
+import type { Asset, AssetAttachment, AssetLifecycleFilter, SelectedPhoto, WorkspaceData } from '$lib/domain/inventory';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
 
@@ -63,6 +63,16 @@ class PhotoUploadFailingRepository extends SeededInventoryRepository {
     _photo: SelectedPhoto
   ): Promise<AssetAttachment> {
     throw new Error('Upload failed.');
+  }
+}
+
+class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
+  async selectAssetLifecycle(
+    _tenantId: string,
+    _inventoryId: string,
+    _lifecycleState: AssetLifecycleFilter
+  ): Promise<WorkspaceData> {
+    throw new Error('Search routes must not mutate the home lifecycle.');
   }
 }
 
@@ -166,6 +176,37 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Archived Passport');
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-archived');
+    });
+  });
+
+  it('keeps search lifecycle route state independent from the home lifecycle', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/search?q=Passport&lifecycle=archived',
+      new LifecycleSelectionFailingRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+      expect(window.location.search).toBe('?q=Passport&lifecycle=archived');
+      expect(document.body.textContent).toContain('Search');
+      expect(document.body.textContent).toContain('Archived Passport');
+    });
+  });
+
+  it('updates the search filter URL when no query has been submitted', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+      expect(document.body.textContent).toContain('Search this inventory');
+    });
+
+    controlContaining('Exact').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+      expect(window.location.search).toBe('?mode=exact');
+      expect(document.body.textContent).toContain('Search this inventory');
     });
   });
 

@@ -396,6 +396,7 @@ Search behavior:
 The workspace must use consistent controls for repeated interaction patterns:
 
 - Lifecycle and search-mode filters must use a segmented tab/filter control rather than unrelated pressed buttons.
+- Segmented filters that correspond to durable route query state, such as lifecycle and search mode, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
 - Durable navigation must use nav links/buttons with clear current state.
 - Transient menus such as the desktop Add menu must expose durable item `href`s, move focus into the menu when opened, close on Escape or focus leaving the menu, and restore focus to their trigger when dismissed.
 - Desktop side navigation must group primary inventory destinations separately from utility workflows, expose the current destination with `aria-current="page"`, and avoid presenting secondary workflows as an undifferentiated stack.

@@ -10,6 +10,8 @@
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
+    tenantId,
+    inventoryId,
     query = $bindable(''),
     lifecycleState = $bindable<SearchLifecycleFilter>('active'),
     searchMode = $bindable<SearchMode>('fuzzy'),
@@ -21,6 +23,8 @@
     onSearch,
     onOpenAsset
   }: {
+    tenantId: string;
+    inventoryId: string;
     query: string;
     lifecycleState: SearchLifecycleFilter;
     searchMode: SearchMode;
@@ -35,14 +39,20 @@
 
   const lifecycleOptions: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
   const modeOptions: SearchMode[] = ['fuzzy', 'exact'];
-  const lifecycleControlOptions = lifecycleOptions.map((option) => ({
-    value: option,
-    label: option === 'active' ? 'Active' : option === 'archived' ? 'Archived' : 'All'
-  }));
-  const modeControlOptions = modeOptions.map((option) => ({
-    value: option,
-    label: option === 'fuzzy' ? 'Contains' : 'Exact'
-  }));
+  let lifecycleControlOptions = $derived(
+    lifecycleOptions.map((option) => ({
+      value: option,
+      label: option === 'active' ? 'Active' : option === 'archived' ? 'Archived' : 'All',
+      href: searchFilterHref(option, searchMode)
+    }))
+  );
+  let modeControlOptions = $derived(
+    modeOptions.map((option) => ({
+      value: option,
+      label: option === 'fuzzy' ? 'Contains' : 'Exact',
+      href: searchFilterHref(lifecycleState, option)
+    }))
+  );
   let searchFocused = $state(false);
   let activeSuggestionIndex = $state(-1);
   let searchRegion = $state<HTMLElement | null>(null);
@@ -59,6 +69,21 @@
 
   function assetHref(asset: Asset): string {
     return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
+  }
+
+  function searchFilterHref(nextLifecycleState: SearchLifecycleFilter, nextSearchMode: SearchMode): string {
+    return workspaceRouteHref(
+      {
+        mode: 'search',
+        tenantId,
+        inventoryId,
+        searchQuery: query,
+        searchLifecycleState: nextLifecycleState,
+        searchMode: nextSearchMode
+      },
+      tenantId,
+      inventoryId
+    );
   }
 
   function openSuggestion(event: MouseEvent, asset: Asset): void {
@@ -225,13 +250,13 @@
       label="Result lifecycle"
       value={lifecycleState}
       options={lifecycleControlOptions}
-      onSelect={(value) => { lifecycleState = value as SearchLifecycleFilter; if (query.trim()) onSearch(); }}
+      onSelect={(value) => { lifecycleState = value as SearchLifecycleFilter; onSearch(); }}
     />
     <SegmentedControl
       label="Search mode"
       value={searchMode}
       options={modeControlOptions}
-      onSelect={(value) => { searchMode = value as SearchMode; if (query.trim()) onSearch(); }}
+      onSelect={(value) => { searchMode = value as SearchMode; onSearch(); }}
     />
   </div>
 

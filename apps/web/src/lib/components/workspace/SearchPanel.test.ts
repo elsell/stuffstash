@@ -7,6 +7,8 @@ import SearchPanel from './SearchPanel.svelte';
 let component: ReturnType<typeof mount> | null = null;
 
 interface SearchPanelProps {
+  tenantId: string;
+  inventoryId: string;
   query: string;
   lifecycleState: 'active' | 'archived' | 'all';
   searchMode: 'fuzzy' | 'exact';
@@ -40,6 +42,8 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
   component = mount(SearchPanel, {
     target: document.body,
     props: {
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
       query: 'ta',
       lifecycleState: 'active',
       searchMode: 'fuzzy',
@@ -170,6 +174,39 @@ describe('SearchPanel', () => {
 
     expect(searches).toEqual(['search']);
     expect(document.body.querySelector('#search-page-suggestions')).toBeNull();
+  });
+
+  it('exposes route-backed search filter hrefs and preserves modified clicks', async () => {
+    const { searches } = mountSearchPanel({
+      query: 'garage shelf',
+      lifecycleState: 'active',
+      searchMode: 'fuzzy',
+      suggestions: []
+    });
+
+    expect(linkWithText('Archived').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+    );
+    expect(linkWithText('Exact').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&mode=exact'
+    );
+
+    linkWithText('Exact').click();
+    await flush();
+
+    expect(searches).toEqual(['search']);
+
+    searches.length = 0;
+    let componentPreventedModifiedClick = true;
+    const target = linkWithText('Archived');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(searches).toEqual([]);
+    expect(componentPreventedModifiedClick).toBe(false);
   });
 
   it('keeps the result list behavior independent from autocomplete suggestions', async () => {

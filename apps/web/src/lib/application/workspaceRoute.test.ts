@@ -29,6 +29,7 @@ describe('workspace route state', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact'))).toMatchObject({
       mode: 'search',
       tenantId: 'tenant_1',
+      lifecycleState: 'active',
       searchQuery: 'drill',
       searchLifecycleState: 'all',
       searchMode: 'exact'
