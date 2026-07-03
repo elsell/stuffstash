@@ -25,8 +25,8 @@ describe('ParentTargetPicker', () => {
         search: '',
         selectedId: null,
         targets: [
-          parentTarget('garage-shelf', 'Garage shelf', 'Garage'),
-          parentTarget('hall-closet', 'Hall closet', 'Hall'),
+          parentTarget('garage-shelf', 'Garage shelf', 'Garage', 'container'),
+          parentTarget('hall-closet', 'Hall closet', 'Hall', 'location'),
           parentTarget('closet-bin', 'Closet bin', 'Hall / Hall closet')
         ],
         onSelect: (id) => {
@@ -37,15 +37,19 @@ describe('ParentTargetPicker', () => {
 
     expect(document.body.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Move target current destination');
     expect(button('Inventory root').getAttribute('aria-pressed')).toBe('true');
-    expect(document.body.textContent).toContain('Search 3 available locations and containers.');
+    expect(document.body.textContent).toContain('3 possible destinations');
+    expect(document.body.textContent).toContain('Search to choose a location or container.');
     expect(document.body.textContent).not.toContain('Hall closet');
 
     setInputValue(requiredInput('#parent-target-search'), 'closet');
     await flush();
 
     expect(group('Move target search results')).toBeTruthy();
+    expect(document.body.textContent).toContain('2 matches');
     expect(document.body.textContent).toContain('Hall closet');
+    expect(resultButton('Hall closet').textContent).toContain('Location');
     expect(document.body.textContent).toContain('Closet bin');
+    expect(resultButton('Closet bin').textContent).toContain('Container');
     expect(document.body.textContent).not.toContain('Garage shelf');
 
     button('Hall closet').click();
@@ -69,9 +73,11 @@ describe('ParentTargetPicker', () => {
       }
     });
 
-    expect(document.body.textContent).toContain('Selected Target 1');
-    expect(button('Target 1').getAttribute('aria-pressed')).toBe('true');
-    expect(document.body.textContent).toContain('Search 2 available locations and containers.');
+    expect(document.body.textContent).toContain('Current destination');
+    expect(document.body.textContent).toContain('Container');
+    expect(document.body.textContent).toContain('Root');
+    expect(button('Clear parent').getAttribute('aria-label')).toBe('Clear parent selection');
+    expect(document.body.textContent).toContain('2 possible destinations');
     expect(document.body.textContent).not.toContain('Target 2');
 
     setInputValue(requiredInput('#parent-target-search'), 'target');
@@ -84,20 +90,59 @@ describe('ParentTargetPicker', () => {
 
     expect(document.body.textContent).toContain('No matching locations or containers.');
   });
+
+  it('clears selected parent back to the root destination', async () => {
+    const selectedIds: Array<string | null> = [];
+    component = mount(ParentTargetPicker, {
+      target: document.body,
+      props: {
+        legend: 'Parent',
+        searchId: 'parent-target-search',
+        groupLabel: 'Parent target',
+        search: '',
+        selectedId: 'target-1',
+        targets: [parentTarget('target-1', 'Target 1', 'Root')],
+        onSelect: (id) => {
+          selectedIds.push(id);
+        }
+      }
+    });
+
+    button('Clear parent').click();
+    await flush();
+
+    expect(selectedIds).toEqual([null]);
+  });
 });
 
-function parentTarget(id: string, title: string, containmentTrail: string): AssetViewModel {
+function parentTarget(
+  id: string,
+  title: string,
+  containmentTrail: string,
+  kind: AssetViewModel['kind'] = 'container'
+): AssetViewModel {
   return {
     id,
     tenantId: 'tenant-home',
     inventoryId: 'inventory-household',
-    kind: 'container',
+    kind,
     title,
     description: '',
     parentAssetId: null,
     lifecycleState: 'active',
     containmentTrail
   };
+}
+
+function resultButton(text: string): HTMLButtonElement {
+  const groupElement = group('Move target search results');
+  const target = Array.from(groupElement.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!target) {
+    throw new Error(`Missing result button ${text}`);
+  }
+  return target;
 }
 
 function requiredInput(selector: string): HTMLInputElement {

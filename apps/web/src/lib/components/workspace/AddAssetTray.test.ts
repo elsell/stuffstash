@@ -329,7 +329,8 @@ describe('AddAssetTray', () => {
     const fieldsets = Array.from(document.body.querySelectorAll('fieldset')).map((field) => field.textContent ?? '');
     expect(fieldsets.some((text) => text.includes('Place in existing parent'))).toBe(true);
     expect(fieldsets.some((text) => text.includes('Asset kind'))).toBe(true);
-    expect(document.body.textContent).toContain('Search 4 available locations and containers.');
+    expect(document.body.textContent).toContain('4 possible destinations');
+    expect(document.body.textContent).toContain('Search to choose a location or container.');
     expect(document.body.textContent).not.toContain('Garage shelf');
     expect(document.body.textContent).not.toContain('Hall closet');
 

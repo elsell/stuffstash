@@ -1669,30 +1669,107 @@ dd {
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
 }
 
+.parent-picker.option-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
 .parent-target-button {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   height: auto;
-  min-height: 46px;
+  min-height: 56px;
+  align-items: center;
   justify-items: start;
-  gap: 2px;
+  gap: 8px;
+  padding-block: 8px;
+  text-align: left;
   white-space: normal;
+}
+
+.parent-target-button > svg,
+.parent-kind-mark svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-brand-contained);
+}
+
+.parent-target-button span,
+.parent-current-card span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.parent-target-button strong,
+.parent-target-button small,
+.parent-current-card strong,
+.parent-current-card small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .parent-current {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.parent-current-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.parent-current-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 58px;
+  margin-top: 5px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.parent-current-card[data-selected="target"] {
+  border-color: color-mix(in oklab, var(--color-brand-contained) 30%, var(--border));
+  background: color-mix(in oklab, var(--color-brand-contained) 8%, var(--card));
+}
+
+.parent-kind-mark {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--secondary);
+}
+
+.parent-kind-mark span {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-brand-contained);
+  border-radius: 4px;
+}
+
 .parent-picker-results {
   padding-top: 2px;
 }
 
-.parent-target-button small {
+.parent-target-button small,
+.parent-current-card small {
   max-width: 100%;
-  overflow: hidden;
   color: var(--muted-foreground);
   font-size: 0.72rem;
   font-weight: 500;
-  text-overflow: ellipsis;
+}
+
+.parent-current-card strong {
+  font-size: 0.9rem;
 }
 
 .photo-label {
