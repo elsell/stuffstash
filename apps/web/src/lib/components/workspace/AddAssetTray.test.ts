@@ -30,6 +30,39 @@ afterEach(() => {
 });
 
 describe('AddAssetTray', () => {
+  it('reflects the selected kind in the heading, name field, and save action', async () => {
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        initialKind: 'location',
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
+        parentTargets: [],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async () => ({ saved: true })
+      }
+    });
+
+    await flush();
+
+    expect(document.body.textContent).toContain('Add location');
+    expect(labelFor('asset-title')?.textContent).toBe('Location name');
+    expect(inputElement('#asset-title').getAttribute('placeholder')).toBe('Garage shelf');
+    expect(button('Save location')).toBeTruthy();
+
+    button('Container').click();
+    await flush();
+
+    expect(document.body.textContent).toContain('Add container');
+    expect(labelFor('asset-title')?.textContent).toBe('Container name');
+    expect(inputElement('#asset-title').getAttribute('placeholder')).toBe('Clear storage bin');
+    expect(button('Save container')).toBeTruthy();
+  });
+
   it('keeps quick parent creation hidden until the user opts in', async () => {
     component = mount(AddAssetTray, {
       target: document.body,
@@ -400,8 +433,8 @@ describe('AddAssetTray', () => {
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) throw new Error('Missing dialog');
     const closeButton = document.body.querySelector<HTMLElement>('button[aria-label="Close add tray"], a[aria-label="Close add tray"]');
-    const saveButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
-      (candidate) => candidate.textContent === 'Save'
+    const saveButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+      candidate.textContent?.startsWith('Save')
     );
     if (!closeButton || !saveButton) throw new Error('Missing focus controls');
 
@@ -438,6 +471,16 @@ function input(selector: string, value: string): void {
   if (!element) throw new Error(`Missing input ${selector}`);
   element.value = value;
   element.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function inputElement(selector: string): HTMLInputElement {
+  const element = document.querySelector<HTMLInputElement>(selector);
+  if (!element) throw new Error(`Missing input ${selector}`);
+  return element;
+}
+
+function labelFor(id: string): HTMLLabelElement | null {
+  return document.body.querySelector<HTMLLabelElement>(`label[for="${id}"]`);
 }
 
 function click(text: string): void {

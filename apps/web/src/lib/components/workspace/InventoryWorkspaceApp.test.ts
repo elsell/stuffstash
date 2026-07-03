@@ -490,7 +490,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
-      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add stuff');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add item');
     });
 
     expect(controlContaining('Cancel').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household');
@@ -500,6 +500,19 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
       expect(document.body.textContent).toContain('Recently added');
+    });
+  });
+
+  it('passes add kind routes into contextual add tray copy', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/location');
+
+    await waitFor(() => {
+      const dialog = document.body.querySelector('[role="dialog"]');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
+      expect(dialog?.textContent).toContain('Add location');
+      expect(document.body.querySelector<HTMLLabelElement>('label[for="asset-title"]')?.textContent).toBe('Location name');
+      expect(document.body.querySelector<HTMLInputElement>('#asset-title')?.getAttribute('placeholder')).toBe('Garage shelf');
+      expect(buttonContaining('Save location')).toBeTruthy();
     });
   });
 
@@ -754,7 +767,7 @@ describe('InventoryWorkspaceApp route application', () => {
     );
 
     await waitFor(() => {
-      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add stuff');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add item');
     });
 
     const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
@@ -801,7 +814,7 @@ async function waitForSaveButton(): Promise<HTMLButtonElement> {
   let button: HTMLButtonElement | undefined;
   await waitFor(() => {
     button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
-      (candidate) => candidate.textContent?.trim() === 'Save'
+      (candidate) => candidate.textContent?.trim().startsWith('Save')
     );
     expect(button).toBeTruthy();
     expect(button?.disabled).toBe(false);

@@ -293,6 +293,32 @@
     return `${selectedPhotos.length} ${selectedPhotos.length === 1 ? 'photo' : 'photos'}`;
   }
 
+  function selectedKindLabel(): string {
+    return assetKindLabel(kind).toLowerCase();
+  }
+
+  function addHeading(): string {
+    return `Add ${selectedKindLabel()}`;
+  }
+
+  function nameLabel(): string {
+    return `${assetKindLabel(kind)} name`;
+  }
+
+  function namePlaceholder(): string {
+    if (kind === 'location') {
+      return 'Garage shelf';
+    }
+    if (kind === 'container') {
+      return 'Clear storage bin';
+    }
+    return 'Tomato fertilizer';
+  }
+
+  function saveLabel(): string {
+    return `Save ${selectedKindLabel()}`;
+  }
+
   function buildCustomFields(): Record<string, unknown> {
     const values: Record<string, unknown> = {};
     for (const field of applicableFields) {
@@ -338,7 +364,7 @@
     onkeydown={handleDialogKeydown}
   >
     <div class="section-heading compact">
-      <h2 id="add-title">Add stuff</h2>
+      <h2 id="add-title">{addHeading()}</h2>
       <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
     </div>
 
@@ -363,8 +389,8 @@
     </fieldset>
 
     <div class="field-stack">
-      <Label for="asset-title">Name</Label>
-      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder="Tomato fertilizer" required aria-required="true" />
+      <Label for="asset-title">{nameLabel()}</Label>
+      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder={namePlaceholder()} required aria-required="true" />
     </div>
 
     <ParentTargetPicker
@@ -536,7 +562,7 @@
 
     <div class="tray-actions">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>Save</Button.Root>
+      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{saveLabel()}</Button.Root>
     </div>
   </div>
 {/if}

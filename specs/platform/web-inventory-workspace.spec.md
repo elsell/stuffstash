@@ -353,6 +353,7 @@ The add surface:
 
 - Must open as a modal, tray, or sheet appropriate to viewport.
 - Must let the user choose or change `Item`, `Container`, or `Location`.
+- Must reflect the selected kind in the tray heading, title/name prompt, placeholder, and primary save action so add-location and add-container routes do not read like item-only forms.
 - The kind selector must be compact. It must not use large stacked cards.
 - The tray must show a compact live summary of the selected kind, parent destination, and photo count so users can confirm what will be created without rescanning the whole form.
 - Must collect name/title.
