@@ -3,6 +3,11 @@ import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
   it('parses a tenant inventory location deep link', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'))).toMatchObject({
+      mode: 'locations',
+      tenantId: 'tenant_1',
+      inventoryId: 'inv_1'
+    });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations/loc_1'))).toMatchObject({
       mode: 'location',
       tenantId: 'tenant_1',
@@ -83,6 +88,7 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ action: 'add', addKind: 'location' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/location'
     );
+    expect(workspaceRouteHref({ mode: 'locations' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/locations');
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'
     );

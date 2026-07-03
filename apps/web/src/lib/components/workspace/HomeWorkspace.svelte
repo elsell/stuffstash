@@ -12,6 +12,7 @@
     locations,
     recentAssets,
     archivedAssets,
+    browseMode = 'home',
     onOpenLocation,
     onOpenAsset,
     onOpenAdd,
@@ -21,6 +22,7 @@
     locations: LocationSummary[];
     recentAssets: AssetViewModel[];
     archivedAssets: Asset[];
+    browseMode?: 'home' | 'locations';
     onOpenLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd: () => void;
@@ -31,26 +33,34 @@
 <section class="workspace-main" aria-labelledby="home-title">
   <div class="section-heading">
     <div>
-      <h1 id="home-title">{lifecycleState === 'active' ? 'Home' : 'Archived assets'}</h1>
-      <p>{lifecycleState === 'active' ? 'Recently added and the places where your things live.' : 'Assets removed from active browsing.'}</p>
+      <h1 id="home-title">{lifecycleState === 'active' ? (browseMode === 'locations' ? 'Locations' : 'Home') : 'Archived assets'}</h1>
+      <p>
+        {lifecycleState === 'active'
+          ? browseMode === 'locations'
+            ? 'The places where your things live.'
+            : 'Recently added and the places where your things live.'
+          : 'Assets removed from active browsing.'}
+      </p>
     </div>
     <div class="heading-actions">
-      <SegmentedControl
-        label="Asset lifecycle"
-        value={lifecycleState}
-        options={[
-          { value: 'active', label: 'Active' },
-          { value: 'archived', label: 'Archived' }
-        ]}
-        onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
-      />
+      {#if browseMode === 'home'}
+        <SegmentedControl
+          label="Asset lifecycle"
+          value={lifecycleState}
+          options={[
+            { value: 'active', label: 'Active' },
+            { value: 'archived', label: 'Archived' }
+          ]}
+          onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
+        />
+      {/if}
       {#if lifecycleState === 'active'}
         <Button.Root variant="outline" onclick={onOpenAdd}>Add location</Button.Root>
       {/if}
     </div>
   </div>
 
-  {#if lifecycleState === 'active'}
+  {#if lifecycleState === 'active' && browseMode === 'home'}
     <section class="recent-section" aria-labelledby="recent-title">
       <div class="section-heading compact">
         <h2 id="recent-title">Recently added</h2>
@@ -102,9 +112,11 @@
       <Button.Root onclick={onOpenAdd}>Add first location</Button.Root>
     </div>
   {:else}
-    <div class="section-heading compact">
-      <h2>Locations</h2>
-    </div>
+    {#if browseMode === 'home'}
+      <div class="section-heading compact">
+        <h2>Locations</h2>
+      </div>
+    {/if}
     <div class="location-grid">
       {#each locations as summary}
         <Button.Root

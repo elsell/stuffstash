@@ -73,6 +73,9 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
   const section = segments[inventoryOffset.nextIndex];
   const remaining = segments.length - inventoryOffset.nextIndex;
+  if (section === 'locations' && remaining === 1) {
+    return { ...route, mode: 'locations' };
+  }
   if (section === 'locations' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
     const action = parseLocationAction(segments[inventoryOffset.nextIndex + 2]);
     if (remaining === 3 && !action) {
@@ -167,7 +170,9 @@ export function workspaceRouteHref(
     path = `/inventories/${encodeURIComponent(inventoryId)}`;
   }
 
-  if (inventoryId && next.mode === 'location' && next.locationId) {
+  if (inventoryId && next.mode === 'locations') {
+    path += '/locations';
+  } else if (inventoryId && next.mode === 'location' && next.locationId) {
     path += `/locations/${encodeURIComponent(next.locationId)}`;
     if ((next.assetAction ?? next.action) === 'edit') {
       path += '/edit';

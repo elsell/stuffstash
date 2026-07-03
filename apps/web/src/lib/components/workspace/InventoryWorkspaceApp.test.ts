@@ -148,6 +148,19 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('opens top-level locations through a durable locations route', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+      expect(document.body.textContent).toContain('Locations');
+      expect(document.body.textContent).toContain('The places where your things live.');
+      expect(document.body.textContent).toContain('Garage');
+      expect(document.body.textContent).not.toContain('Recently added');
+      expect(buttonMaybeContaining('Archived')).toBeUndefined();
+    });
+  });
+
   it('deep-links location edit from the focused location view', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
 
@@ -279,6 +292,12 @@ function buttonContaining(text: string): HTMLButtonElement {
     throw new Error(`Missing button containing ${text}`);
   }
   return button;
+}
+
+function buttonMaybeContaining(text: string): HTMLButtonElement | undefined {
+  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
 }
 
 function buttonWithLabel(label: string): HTMLButtonElement {

@@ -487,6 +487,17 @@
         await selectAssetLifecycle(route.lifecycleState);
       }
 
+      if (route.mode === 'locations') {
+        invalidateAssetDetailLoad();
+        selectedLocationId = null;
+        selectedAssetId = null;
+        loadedAssetDetail = null;
+        selectedAssetAttachments = [];
+        mode = 'locations';
+        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
+        return;
+      }
+
       if (route.mode === 'location' && route.locationId) {
         const location = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
         if (location) {
@@ -913,6 +924,7 @@
     {:else}
       <HomeWorkspace
         lifecycleState={data.context.assetLifecycleState}
+        browseMode={mode === 'locations' ? 'locations' : 'home'}
         locations={topLevelLocations(assets)}
         recentAssets={recentlyAddedAssets(assets)}
         archivedAssets={assets}

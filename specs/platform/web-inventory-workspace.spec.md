@@ -86,6 +86,7 @@ The first canonical URL model is:
 
 - `/` for the selected inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}` for an inventory home.
+- `/tenants/{tenantId}/inventories/{inventoryId}/locations` for top-level location browsing.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/edit` for the location edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
@@ -138,6 +139,7 @@ Mobile:
 - Mobile must use bottom navigation for primary reachable actions.
 - The bottom navigation must include Search and a central Add action.
 - The central Add action must open the same add tray behavior as desktop.
+- The Places or Locations bottom-navigation destination must route to the top-level locations browse route, not merely duplicate Home.
 
 ## Tenant And Inventory Context
 
@@ -221,6 +223,7 @@ Sharing and activity belong in inventory settings, asset detail, or future focus
 Top-level location browsing:
 
 - Locations should be the main browse surface.
+- A top-level locations browse route must exist for navigation surfaces that need to prioritize places separately from the home workspace.
 - Location cards or tiles should use photos when available.
 - Location cards must open a focused location view.
 - The UI must support long location names, missing photos, and empty inventories.

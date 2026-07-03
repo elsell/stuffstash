@@ -44,4 +44,48 @@ describe('HomeWorkspace', () => {
     const row = Array.from(document.body.querySelectorAll('button')).find((button) => button.textContent?.includes('Tape measure'));
     expect(row?.textContent?.match(/Garage/g)).toHaveLength(1);
   });
+
+  it('renders a locations-focused browse view without the recent rail', () => {
+    const location: AssetViewModel = {
+      id: 'garage',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'location',
+      title: 'Garage',
+      description: '',
+      parentAssetId: null,
+      lifecycleState: 'active',
+      containmentTrail: 'Garage'
+    };
+
+    component = mount(HomeWorkspace, {
+      target: document.body,
+      props: {
+        lifecycleState: 'active',
+        browseMode: 'locations',
+        locations: [{ location, assetCount: 4 }],
+        recentAssets: [
+          {
+            ...location,
+            id: 'recent-item',
+            kind: 'item',
+            title: 'Tape measure',
+            parentAssetId: 'garage'
+          }
+        ],
+        archivedAssets: [],
+        onOpenLocation: () => {},
+        onOpenAsset: () => {},
+        onOpenAdd: () => {},
+        onSelectLifecycle: () => {}
+      }
+    });
+
+    expect(document.body.textContent).toContain('Locations');
+    expect(document.body.textContent).toContain('The places where your things live.');
+    expect(document.body.textContent).toContain('Garage');
+    expect(document.body.textContent).not.toContain('Recently added');
+    expect(document.body.textContent).not.toContain('Tape measure');
+    expect(document.body.querySelector('[aria-label="Asset lifecycle"]')).toBeNull();
+  });
 });

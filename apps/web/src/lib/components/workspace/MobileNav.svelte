@@ -21,9 +21,29 @@
 </script>
 
 <nav class="mobile-nav" aria-label="Mobile navigation">
-  <Button.Root variant={mode === 'home' ? 'secondary' : 'ghost'} size="sm" onclick={() => onModeChange('home')}><Home /> Home</Button.Root>
-  <Button.Root variant={mode === 'search' ? 'secondary' : 'ghost'} size="sm" onclick={() => onModeChange('search')}><Search /> Search</Button.Root>
+  <Button.Root
+    variant={mode === 'home' ? 'secondary' : 'ghost'}
+    size="sm"
+    aria-current={mode === 'home' ? 'page' : undefined}
+    onclick={() => onModeChange('home')}
+  ><Home /> Home</Button.Root>
+  <Button.Root
+    variant={mode === 'search' ? 'secondary' : 'ghost'}
+    size="sm"
+    aria-current={mode === 'search' ? 'page' : undefined}
+    onclick={() => onModeChange('search')}
+  ><Search /> Search</Button.Root>
   <Button.Root class="mobile-add" disabled={!canCreateAsset} aria-label="Add asset" onclick={onOpenAdd}><Plus /></Button.Root>
-  <Button.Root variant="ghost" size="sm" onclick={() => onModeChange('home')}><MapPin /> Places</Button.Root>
-  <Button.Root variant={mode === 'settings' ? 'secondary' : 'ghost'} size="sm" onclick={() => onModeChange('settings')}><Settings /> Settings</Button.Root>
+  <Button.Root
+    variant={mode === 'locations' || mode === 'location' ? 'secondary' : 'ghost'}
+    size="sm"
+    aria-current={mode === 'locations' || mode === 'location' ? 'page' : undefined}
+    onclick={() => onModeChange('locations')}
+  ><MapPin /> Places</Button.Root>
+  <Button.Root
+    variant={mode === 'settings' ? 'secondary' : 'ghost'}
+    size="sm"
+    aria-current={mode === 'settings' ? 'page' : undefined}
+    onclick={() => onModeChange('settings')}
+  ><Settings /> Settings</Button.Root>
 </nav>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import Home from '@lucide/svelte/icons/house';
+  import MapPin from '@lucide/svelte/icons/map-pin';
   import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
   import LogOut from '@lucide/svelte/icons/log-out';
@@ -42,7 +43,8 @@
   };
 
   const primaryDestinations: NavDestination[] = [
-    { mode: 'home', label: 'Home', description: 'Browse assets and locations', icon: Home }
+    { mode: 'home', label: 'Home', description: 'Recent assets and places', icon: Home },
+    { mode: 'locations', label: 'Locations', description: 'Browse rooms, shelves, and places', icon: MapPin }
   ];
 
   const utilityDestinations: NavDestination[] = [
@@ -52,6 +54,10 @@
 
   function openDestination(destination: NavDestination): void {
     onModeChange(destination.mode);
+  }
+
+  function destinationIsCurrent(destination: NavDestination): boolean {
+    return mode === destination.mode || (destination.mode === 'locations' && mode === 'location');
   }
 </script>
 
@@ -81,9 +87,9 @@
         {#each primaryDestinations as destination}
           {@const Icon = destination.icon}
           <Button.Root
-            variant={mode === destination.mode ? 'secondary' : 'ghost'}
+            variant={destinationIsCurrent(destination) ? 'secondary' : 'ghost'}
             class="nav-button"
-            aria-current={mode === destination.mode ? 'page' : undefined}
+            aria-current={destinationIsCurrent(destination) ? 'page' : undefined}
             onclick={() => openDestination(destination)}
           >
             <Icon aria-hidden="true" />
@@ -102,9 +108,9 @@
         {#each utilityDestinations as destination}
           {@const Icon = destination.icon}
           <Button.Root
-            variant={mode === destination.mode ? 'secondary' : 'ghost'}
+            variant={destinationIsCurrent(destination) ? 'secondary' : 'ghost'}
             class="nav-button"
-            aria-current={mode === destination.mode ? 'page' : undefined}
+            aria-current={destinationIsCurrent(destination) ? 'page' : undefined}
             onclick={() => openDestination(destination)}
           >
             <Icon aria-hidden="true" />

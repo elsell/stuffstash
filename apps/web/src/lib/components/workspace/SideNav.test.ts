@@ -34,6 +34,7 @@ describe('SideNav', () => {
     });
 
     expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Home');
+    expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Locations');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Import');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Settings');
 
@@ -53,7 +54,18 @@ describe('SideNav', () => {
     const currentDestinations = document.body.querySelectorAll<HTMLButtonElement>('button[aria-current="page"]');
     expect(currentDestinations).toHaveLength(1);
     expect(currentDestinations[0]?.textContent).toContain('Home');
-    expect(currentDestinations[0]?.textContent).toContain('Browse assets and locations');
+    expect(currentDestinations[0]?.textContent).toContain('Recent assets and places');
+  });
+
+  it('marks focused location routes under the locations destination', () => {
+    component = mount(SideNav, {
+      target: document.body,
+      props: sideNavProps({ mode: 'location' })
+    });
+
+    const currentDestinations = document.body.querySelectorAll<HTMLButtonElement>('button[aria-current="page"]');
+    expect(currentDestinations).toHaveLength(1);
+    expect(currentDestinations[0]?.textContent).toContain('Locations');
   });
 
   it('routes destination clicks through the workspace mode callback', () => {
@@ -68,8 +80,10 @@ describe('SideNav', () => {
       })
     });
 
-    buttonContaining('Import').click();
+    buttonContaining('Locations').click();
+    expect(selectedMode).toBe('locations');
 
+    buttonContaining('Import').click();
     expect(selectedMode).toBe('import');
   });
 });
