@@ -1,7 +1,5 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
-  import Camera from '@lucide/svelte/icons/camera';
-  import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
@@ -18,6 +16,7 @@
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import AddAssetPhotosSection from './AddAssetPhotosSection.svelte';
   import BinaryOption from './BinaryOption.svelte';
   import { formatBytes } from './formatBytes';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
@@ -67,8 +66,6 @@
   let wasOpen = $state(false);
   let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
-  let fileInput = $state<HTMLInputElement | null>(null);
-  let cameraInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
   const assetKindOptions = assetKinds.map((option) => ({ value: option, label: assetKindLabel(option) }));
   const parentKindOptions = [
@@ -244,14 +241,6 @@
     selectedPhotos = nextPhotos;
     photoError = rejected.join(' ');
     fileInputKey += 1;
-  }
-
-  function openPhotoPicker(): void {
-    fileInput?.click();
-  }
-
-  function openCameraPicker(): void {
-    cameraInput?.click();
   }
 
   function removePhoto(id: string): void {
@@ -519,52 +508,15 @@
       </div>
     {/if}
 
-    <fieldset class="selection-field attachment-section" aria-describedby="photo-help">
-      <legend>Photos</legend>
-      <p id="photo-help" class="selection-summary">Optional JPEG, PNG, or WebP up to {formatBytes(mediaPolicy.maxBytes)}.</p>
-      <div class="photo-actions" role="group" aria-label="Photo actions">
-        <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Upload /> Upload</Button.Root>
-        <Button.Root type="button" variant="outline" class="photo-label" onclick={openCameraPicker}><Camera /> Camera</Button.Root>
-        <span class="photo-status" aria-live="polite">{photoSummary}</span>
-      </div>
-      {#key fileInputKey}
-        <Input
-          id="asset-photos"
-          bind:ref={fileInput}
-          class="visually-hidden"
-          type="file"
-          tabindex={-1}
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onchange={(event) => captureFiles(event.currentTarget.files ?? undefined)}
-        />
-        <Input
-          id="asset-camera"
-          bind:ref={cameraInput}
-          class="visually-hidden"
-          type="file"
-          tabindex={-1}
-          accept="image/jpeg,image/png,image/webp"
-          capture="environment"
-          onchange={(event) => captureFiles(event.currentTarget.files ?? undefined)}
-        />
-      {/key}
-    </fieldset>
-
-    {#if selectedPhotos.length > 0}
-      <div class="photo-preview-list">
-        {#each selectedPhotos as photo}
-          <div class="photo-preview">
-            <img src={photo.previewUrl} alt={photo.name} />
-            <span>{photo.name}</span>
-            <Button.Root variant="ghost" size="icon-xs" aria-label={`Remove ${photo.name}`} onclick={() => removePhoto(photo.id)}><X /></Button.Root>
-          </div>
-        {/each}
-      </div>
-    {/if}
-    {#if photoError}
-      <p class="denied-note" role="alert">{photoError}</p>
-    {/if}
+    <AddAssetPhotosSection
+      photos={selectedPhotos}
+      summary={photoSummary}
+      {mediaPolicy}
+      inputKey={fileInputKey}
+      error={photoError}
+      onFiles={captureFiles}
+      onRemove={removePhoto}
+    />
 
     <div class="tray-actions">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
