@@ -409,6 +409,8 @@ Settings section navigation must be URL-addressable through `/settings/{section}
 
 Settings navigation must use the same segmented/filter control pattern as lifecycle and search-mode controls, with honest button-group semantics, visible selected state, keyboard-reachable buttons, and no fake tab roles unless a full tab interaction model is implemented.
 
+On desktop, settings section navigation may render as a compact vertical section rail with short descriptions when that improves scanability. It must still use the shared segmented-control composition and pressed-button semantics rather than fake tab or menu roles. On mobile, the same sections may wrap into a compact horizontal control above the active section.
+
 ## Reusable Workspace Controls
 
 Repeated segmented controls must be implemented through a reusable workspace control component rather than repeated ad hoc markup. The first reusable control must support:

@@ -52,7 +52,12 @@ describe('InventorySettings', () => {
     });
 
     expect(document.body.textContent).toContain('Asset editsAllowed');
-    Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent === 'Fields')?.click();
+    const settingsNav = document.body.querySelector<HTMLElement>('.filter-control[data-layout="section-rail"]');
+    expect(settingsNav?.getAttribute('role')).toBe('group');
+    expect(settingsNav?.getAttribute('aria-label')).toBe('Settings section');
+    expect(document.body.textContent).toContain('Custom asset types and fields');
+
+    buttonStartingWith('Fields').click();
     expect(onSectionChange).toHaveBeenCalledWith('fields');
   });
 
@@ -147,4 +152,14 @@ function fakeCustomizationRepository(): InventoryCustomizationRepository {
 
 function failRepositoryCall(): never {
   throw new Error('Unexpected repository call.');
+}
+
+function buttonStartingWith(text: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.trim().startsWith(text)
+  );
+  if (!button) {
+    throw new Error(`Missing button starting with ${text}`);
+  }
+  return button;
 }

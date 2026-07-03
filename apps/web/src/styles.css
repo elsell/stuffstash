@@ -486,6 +486,37 @@ small {
   box-shadow: 0 1px 2px rgb(16 24 40 / 0.08);
 }
 
+.filter-control[data-layout="section-rail"] {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 4px;
+}
+
+.filter-control[data-layout="section-rail"] [data-slot="button"] {
+  display: grid;
+  justify-content: start;
+  width: 100%;
+  height: auto;
+  min-height: 54px;
+  gap: 2px;
+  text-align: left;
+}
+
+.filter-control[data-layout="section-rail"] span,
+.filter-control[data-layout="section-rail"] small {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.filter-control[data-layout="section-rail"] small {
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+  font-weight: 450;
+  line-height: 1.25;
+}
+
 .location-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -632,6 +663,8 @@ small {
 
 .settings-shell {
   align-content: start;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  align-items: start;
 }
 
 .settings-content {
@@ -1442,6 +1475,21 @@ dd {
   .workspace-main {
     width: 100%;
     padding: 18px 14px calc(156px + env(safe-area-inset-bottom));
+  }
+
+  .settings-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-control[data-layout="section-rail"] {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .filter-control[data-layout="section-rail"] [data-slot="button"] {
+    width: auto;
+    min-width: min(180px, 100%);
+    flex: 1 1 160px;
   }
 
   .section-heading,

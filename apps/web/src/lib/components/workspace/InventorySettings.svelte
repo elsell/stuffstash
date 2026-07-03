@@ -45,11 +45,11 @@
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canEditAssets = $derived(canEditAsset(inventory));
   const sectionOptions = [
-    { value: 'overview', label: 'Overview' },
-    { value: 'access', label: 'Access' },
-    { value: 'fields', label: 'Fields' },
-    { value: 'activity', label: 'Activity' },
-    { value: 'administration', label: 'Admin' }
+    { value: 'overview', label: 'Overview', description: 'Inventory context and access summary' },
+    { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations' },
+    { value: 'fields', label: 'Fields', description: 'Custom asset types and fields' },
+    { value: 'activity', label: 'Activity', description: 'Audit history for this workspace' },
+    { value: 'administration', label: 'Admin', description: 'Tenant and inventory administration' }
   ];
 </script>
 
@@ -75,6 +75,7 @@
         label="Settings section"
         value={section}
         options={sectionOptions}
+        layout="section-rail"
         onSelect={(value) => onSectionChange(value as SettingsSection)}
       />
 

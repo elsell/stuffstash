@@ -4,6 +4,7 @@
   export interface SegmentedOption {
     value: string;
     label: string;
+    description?: string;
     disabled?: boolean;
   }
 
@@ -11,16 +12,18 @@
     label,
     value,
     options,
+    layout = 'inline',
     onSelect
   }: {
     label: string;
     value: string;
     options: SegmentedOption[];
+    layout?: 'inline' | 'section-rail';
     onSelect: (value: string) => void;
   } = $props();
 </script>
 
-<div class="filter-control" role="group" aria-label={label}>
+<div class="filter-control" data-layout={layout} role="group" aria-label={label}>
   {#each options as option}
     <Button.Root
       type="button"
@@ -30,7 +33,12 @@
       data-selected={value === option.value}
       onclick={() => onSelect(option.value)}
     >
-      {option.label}
+      {#if option.description}
+        <span>{option.label}</span>
+        <small>{option.description}</small>
+      {:else}
+        {option.label}
+      {/if}
     </Button.Root>
   {/each}
 </div>
