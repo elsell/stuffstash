@@ -18,6 +18,7 @@
   } from '$lib/domain/inventory';
   import { hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+  import BinaryOption from './BinaryOption.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -214,42 +215,25 @@
             <Input id="homebox-password" bind:value={password} type="password" autocomplete="current-password" />
           </div>
           <div class="import-option-list" aria-label="Live Homebox import options">
-            <Button.Root
-              type="button"
-              variant={includeImages ? 'secondary' : 'outline'}
-              class="switch-row"
-              role="switch"
-              aria-checked={includeImages}
-              data-checked={includeImages}
-              onclick={() => toggleImportOption('images')}
-            >
-              <span><Image aria-hidden="true" /> Images</span>
-              <strong>{includeImages ? 'On' : 'Off'}</strong>
-            </Button.Root>
-            <Button.Root
-              type="button"
-              variant={allowInsecureTLS ? 'secondary' : 'outline'}
-              class="switch-row"
-              role="switch"
-              aria-checked={allowInsecureTLS}
-              data-checked={allowInsecureTLS}
-              onclick={() => toggleImportOption('insecure-tls')}
-            >
-              <span>Self-signed certificate</span>
-              <strong>{allowInsecureTLS ? 'On' : 'Off'}</strong>
-            </Button.Root>
-            <Button.Root
-              type="button"
-              variant={allowPrivateNetwork ? 'secondary' : 'outline'}
-              class="switch-row"
-              role="switch"
-              aria-checked={allowPrivateNetwork}
-              data-checked={allowPrivateNetwork}
-              onclick={() => toggleImportOption('private-network')}
-            >
-              <span>Private network address</span>
-              <strong>{allowPrivateNetwork ? 'On' : 'Off'}</strong>
-            </Button.Root>
+            <BinaryOption
+              label="Images"
+              description="Import Homebox image attachments when available."
+              checked={includeImages}
+              icon={Image}
+              onToggle={() => toggleImportOption('images')}
+            />
+            <BinaryOption
+              label="Self-signed certificate"
+              description="Allow a Homebox server with an untrusted TLS certificate."
+              checked={allowInsecureTLS}
+              onToggle={() => toggleImportOption('insecure-tls')}
+            />
+            <BinaryOption
+              label="Private network address"
+              description="Allow connections to private LAN addresses."
+              checked={allowPrivateNetwork}
+              onToggle={() => toggleImportOption('private-network')}
+            />
           </div>
         {:else}
           <div class="field-stack">

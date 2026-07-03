@@ -28,8 +28,11 @@ describe('HomeboxImportPanel', () => {
     await flush();
 
     expect(switchControl('Images')?.getAttribute('aria-checked')).toBe('true');
+    expect(switchControl('Images')?.textContent).toContain('Import Homebox image attachments when available.');
     expect(switchControl('Self-signed certificate')?.getAttribute('aria-checked')).toBe('false');
+    expect(switchControl('Self-signed certificate')?.textContent).toContain('untrusted TLS certificate');
     expect(switchControl('Private network address')?.getAttribute('aria-checked')).toBe('false');
+    expect(switchControl('Private network address')?.textContent).toContain('private LAN addresses');
 
     switchControl('Images')?.click();
     switchControl('Self-signed certificate')?.click();
