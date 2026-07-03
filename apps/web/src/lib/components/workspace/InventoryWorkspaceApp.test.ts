@@ -120,6 +120,44 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Workspace unavailable');
       expect(document.body.textContent).toContain('That inventory is not available in the current workspace.');
     });
+
+    expect(controlContaining('Go home').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household');
+    controlContaining('Go home').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).not.toContain('Workspace unavailable');
+    });
+  });
+
+  it('keeps unavailable recovery clicks aligned with filtered home hrefs', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household?lifecycle=archived');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(window.location.search).toBe('?lifecycle=archived');
+      expect(document.body.textContent).toContain('Archived Passport');
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/not-visible?lifecycle=archived');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Workspace unavailable');
+    });
+
+    expect(controlContaining('Go home').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household?lifecycle=archived'
+    );
+    controlContaining('Go home').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(window.location.search).toBe('?lifecycle=archived');
+      expect(document.body.textContent).toContain('Archived Passport');
+      expect(document.body.textContent).not.toContain('PassportBlue folder');
+    });
   });
 
   it('normalizes unavailable asset action routes back to asset detail', async () => {

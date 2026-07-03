@@ -115,6 +115,7 @@ Deep links must preserve tenant and inventory boundaries:
 - If the requested inventory is visible in the selected tenant context, the app should select it before rendering the route state.
 - If the requested tenant is not visible to the principal, the app must show a calm unavailable or setup state rather than rendering stale local data.
 - If the requested inventory is not visible in the current tenant context, the app must show a calm unavailable or setup state rather than rendering stale local data.
+- Unavailable-route recovery controls that return to the selected inventory home must expose a canonical `href` while preserving ordinary in-app navigation.
 - A location deep link must only open an asset whose kind is `location`.
 - A location edit deep link must normalize to the same API-backed asset detail edit workflow used for editing the underlying location asset.
 - An asset deep link must load the selected asset through the repository port and API adapter.

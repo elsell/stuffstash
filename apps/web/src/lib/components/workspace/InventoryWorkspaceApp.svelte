@@ -597,6 +597,27 @@
     void applyRoute(pushWorkspaceRoute(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null));
   }
 
+  function homeRoute(): Partial<WorkspaceRouteState> {
+    return {
+      mode: 'home',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      lifecycleState: data.context.assetLifecycleState
+    };
+  }
+
+  function homeHref(): string {
+    return workspaceRouteHref(homeRoute(), data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
+  }
+
+  function openHome(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    navigateTo(homeRoute());
+  }
+
   function showUnavailableRoute(messageText: string): void {
     invalidateAssetDetailLoad();
     routeUnavailable = messageText;
@@ -849,6 +870,10 @@
     };
   }
 
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
+  }
+
 </script>
 
 <div class="product-shell">
@@ -887,7 +912,7 @@
         <div class="empty-state spacious" role="alert">
           <h1>Workspace unavailable</h1>
           <p>{routeUnavailable}</p>
-          <Button.Root onclick={() => navigateMode('home')}>Go home</Button.Root>
+          <Button.Root href={homeHref()} onclick={openHome}>Go home</Button.Root>
         </div>
       </section>
     {:else if data.context.inventories.length === 0}
