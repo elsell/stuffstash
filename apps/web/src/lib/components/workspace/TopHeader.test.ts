@@ -48,7 +48,6 @@ function mountHeader(props: Partial<ComponentProps<typeof TopHeader>> = {}) {
       canCreateAsset: true,
       onSelectTenant: () => {},
       onSelectInventory: () => {},
-      onOpenSettings: () => {},
       onSearch: () => {},
       onOpenAsset: (selected) => {
         selectedAssets.push(selected);

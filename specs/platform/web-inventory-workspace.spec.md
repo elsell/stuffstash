@@ -151,20 +151,23 @@ The product shell must show the current inventory and tenant context without mak
 Desktop:
 
 - The side navigation must include a compact context switcher near the top.
-- The switcher trigger should show the current inventory name and tenant name.
-- Opening the switcher should first show the current tenant as a compact header row and the inventories inside that tenant.
-- The tenant header row must include a right-aligned `Switch Tenant` action.
+- The switcher must occupy a single sidebar row when closed.
+- The switcher trigger row must show both the current inventory name and tenant name.
+- Opening the switcher should show a popover with the inventories inside the current tenant.
+- The popover must include a right-aligned `Switch Tenant` action.
 - `Switch Tenant` must show a tenant list.
-- Selecting a tenant must keep the switcher open and replace the inventory list with that tenant's inventories.
+- Selecting a tenant must keep the popover open and replace the tenant list with that tenant's inventories.
 - The switcher must not show one combined dropdown containing all inventories from all tenants.
 - The switcher must not include a tenant/inventory search field in the approved first direction.
-- The switcher must not include a separate duplicated "current tenant" card above the tenant header.
-- Inventory settings may be reachable from the switcher.
+- The switcher must not include a separate duplicated current tenant card, persistent inventory list, or duplicate inventory settings link.
+- Inventory choices must expose selected state accessibly and show relationship metadata when available.
+- Tenant choices must expose selected state accessibly and show the number of inventories in that tenant.
 
 Mobile:
 
 - The compact header context control should open a bottom sheet or equivalent mobile-appropriate context switcher.
 - The mobile context switcher should follow the same tenant-first behavior as desktop.
+- The mobile context trigger should remain a single row; the sheet may use section labels, selected check affordance, identity labels, metadata, and optional role pill.
 - The mobile context switcher must not require a search field for the approved first direction.
 
 ## Desktop Header

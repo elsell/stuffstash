@@ -19,7 +19,6 @@
     canCreateAsset,
     onSelectTenant,
     onSelectInventory,
-    onOpenSettings,
     onSearch,
     onOpenAsset,
     onOpenAdd
@@ -33,7 +32,6 @@
     canCreateAsset: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
-    onOpenSettings: () => void;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd: (kind: AssetKind) => void;
@@ -175,7 +173,6 @@
       {selectedInventoryId}
       {onSelectTenant}
       {onSelectInventory}
-      {onOpenSettings}
     />
   </div>
   <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>

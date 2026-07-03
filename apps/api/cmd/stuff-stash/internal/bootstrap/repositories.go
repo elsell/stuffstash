@@ -92,13 +92,14 @@ func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachm
 		return store, blobstore.NewLocalDirectAttachmentUploader(store), nil
 	case "s3":
 		store, err := blobstore.NewS3Store(blobstore.S3Config{
-			Endpoint:  cfg.S3Endpoint,
-			AccessKey: cfg.S3AccessKey,
-			SecretKey: cfg.S3SecretKey,
-			Bucket:    cfg.S3Bucket,
-			Region:    cfg.S3Region,
-			Secure:    cfg.S3Secure,
-			MaxBytes:  int64(cfg.MaxAttachmentBytes),
+			Endpoint:       cfg.S3Endpoint,
+			PublicEndpoint: cfg.S3PublicEndpoint,
+			AccessKey:      cfg.S3AccessKey,
+			SecretKey:      cfg.S3SecretKey,
+			Bucket:         cfg.S3Bucket,
+			Region:         cfg.S3Region,
+			Secure:         cfg.S3Secure,
+			MaxBytes:       int64(cfg.MaxAttachmentBytes),
 		})
 		if err != nil {
 			return nil, nil, err

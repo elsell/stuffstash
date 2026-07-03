@@ -717,9 +717,14 @@ export class StuffStashInventoryRepository
     } else {
       init.body = file;
     }
-    const response = await this.uploadFetch(upload.url, init);
+    let response: Response;
+    try {
+      response = await this.uploadFetch(upload.url, init);
+    } catch {
+      throw new DirectUploadTargetUnavailableError();
+    }
     if (!response.ok) {
-      throw new Error('Upload failed.');
+      throw new DirectUploadTargetUnavailableError();
     }
   }
 

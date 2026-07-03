@@ -1,5 +1,5 @@
 {
-  "apiBaseUrl": "http://localhost:18080",
+  "apiBaseUrl": "http://localhost:8080",
   "oidcIssuer": "http://localhost:5556/dex",
   "oidcClientId": "stuff-stash-web-local",
   "oidcRedirectUri": "http://localhost:5173/callback",

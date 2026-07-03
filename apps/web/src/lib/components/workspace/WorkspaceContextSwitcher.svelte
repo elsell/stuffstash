@@ -1,7 +1,9 @@
 <script lang="ts">
-  import Settings from '@lucide/svelte/icons/settings';
+  import { tick } from 'svelte';
+  import Building2 from '@lucide/svelte/icons/building-2';
+  import Check from '@lucide/svelte/icons/check';
+  import Package from '@lucide/svelte/icons/package';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
 
   let {
@@ -11,8 +13,7 @@
     selectedInventoryId,
     mobile = false,
     onSelectTenant,
-    onSelectInventory,
-    onOpenSettings
+    onSelectInventory
   }: {
     tenants: Tenant[];
     inventories: Inventory[];
@@ -21,56 +22,104 @@
     mobile?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
-    onOpenSettings: () => void;
   } = $props();
 
   let open = $state(false);
   let showingTenants = $state(false);
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId) ?? null);
   let selectedInventory = $derived(inventories.find((inventory) => inventory.id === selectedInventoryId) ?? null);
+  let selectedTenantInventories = $derived(inventories.filter((inventory) => inventory.tenantId === selectedTenantId));
 
-  let sheetElement: HTMLDivElement | null = $state(null);
+  let rootElement: HTMLDivElement | null = $state(null);
+  let triggerElement: HTMLButtonElement | null = $state(null);
+  let panelElement: HTMLDivElement | null = $state(null);
+  let lastFocusedTenantId = $state(initialSelectedTenantId());
+  let restoreFocusElement: HTMLElement | null = null;
+
+  $effect(() => {
+    if (selectedTenantId === lastFocusedTenantId) {
+      return;
+    }
+    lastFocusedTenantId = selectedTenantId;
+    showingTenants = false;
+    if (open) {
+      void focusPanel();
+    }
+  });
+
+  function toggleContext(): void {
+    if (open) {
+      closeContext();
+      return;
+    }
+    restoreFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : triggerElement;
+    open = true;
+    showingTenants = false;
+    void focusPanel();
+  }
+
+  function closeContext(restoreFocus = true): void {
+    const focusTarget = restoreFocusElement ?? triggerElement;
+    open = false;
+    showingTenants = false;
+    restoreFocusElement = null;
+    if (restoreFocus) {
+      void tick().then(() => {
+        focusTarget?.focus();
+      });
+    }
+  }
+
+  async function focusPanel(): Promise<void> {
+    await tick();
+    const selectedOption = panelElement?.querySelector<HTMLElement>('button[aria-pressed="true"]');
+    const firstFocusable = panelElement
+      ?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    (selectedOption ?? firstFocusable ?? panelElement)?.focus();
+  }
+
+  function initialSelectedTenantId(): string {
+    return selectedTenantId;
+  }
 
   function chooseTenant(tenantId: string): void {
     showingTenants = false;
     onSelectTenant(tenantId);
-    if (!mobile) {
-      open = false;
-    }
   }
 
   function chooseInventory(inventory: Inventory): void {
-    open = false;
+    closeContext();
     onSelectInventory(inventory.tenantId, inventory.id);
   }
 
-  function settings(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
-      return;
+  function inventoryCountLabel(tenantId: string): string {
+    const count = inventories.filter((inventory) => inventory.tenantId === tenantId).length;
+    return `${count} ${count === 1 ? 'inventory' : 'inventories'}`;
+  }
+
+  function relationshipLabel(relationship: string | undefined): string {
+    if (!relationship) {
+      return 'Member';
     }
-    event.preventDefault();
-    open = false;
-    onOpenSettings();
+    return relationship
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((part) => part[0]?.toUpperCase() + part.slice(1))
+      .join(' ');
   }
 
-  function settingsHref(): string {
-    return workspaceRouteHref({ mode: 'settings' }, selectedTenantId || null, selectedInventoryId || null);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-  }
-
-  function handleSheetKeydown(event: KeyboardEvent): void {
+  function handlePanelKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      open = false;
+      event.preventDefault();
+      closeContext();
       return;
     }
-    if (event.key !== 'Tab' || !sheetElement) {
+
+    if (!mobile || event.key !== 'Tab' || !panelElement) {
       return;
     }
     const focusable = Array.from(
-      sheetElement.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      panelElement.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
     ).filter((element) => !element.hasAttribute('disabled'));
     const first = focusable[0];
     const last = focusable.at(-1);
@@ -85,108 +134,107 @@
       first.focus();
     }
   }
+
+  function handleContextFocusout(event: FocusEvent): void {
+    if (mobile || !open) {
+      return;
+    }
+    const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+    if (nextTarget && rootElement?.contains(nextTarget)) {
+      return;
+    }
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (activeElement && rootElement?.contains(activeElement)) {
+        return;
+      }
+      closeContext(false);
+    }, 0);
+  }
 </script>
 
-<div class:mobile-context={mobile} class:context-switcher={!mobile}>
-  {#if mobile}
-    <Button.Root variant="ghost" class="mobile-context-trigger" aria-expanded={open} onclick={() => { open = !open; }}>
-      <span>
-        <strong>{selectedInventory?.name ?? 'No inventory'}</strong>
-        <small>{selectedTenant?.name ?? 'No tenant'}</small>
-      </span>
-    </Button.Root>
-  {:else}
-    <p class="eyebrow">Inventory</p>
-    <strong>{selectedInventory?.name ?? 'No inventory'}</strong>
-    <div class="tenant-row">
-      <span>{selectedTenant?.name ?? 'No tenant'}</span>
-      {#if tenants.length > 1}
-        <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
-          {showingTenants ? 'Inventories' : 'Switch tenant'}
-        </Button.Root>
-      {/if}
-    </div>
-  {/if}
+<div bind:this={rootElement} class:mobile-context={mobile} class:context-switcher={!mobile} onfocusout={handleContextFocusout}>
+  <Button.Root
+    bind:ref={triggerElement}
+    variant="ghost"
+    class={mobile ? 'context-trigger mobile-context-trigger' : 'context-trigger'}
+    aria-haspopup="dialog"
+    aria-expanded={open}
+    onclick={toggleContext}
+  >
+    <span class="identity-icon" data-kind="inventory" aria-hidden="true"><Package /></span>
+    <span class="identity-copy">
+      <strong>{selectedInventory?.name ?? 'No inventory'}</strong>
+      <small>{selectedTenant?.name ?? 'No tenant'}</small>
+    </span>
+  </Button.Root>
 
-  {#if !mobile || open}
+  {#if open}
     {#if mobile}
-      <Button.Root variant="ghost" class="sheet-backdrop" tabindex={-1} aria-hidden="true" onclick={() => { open = false; }}></Button.Root>
-      <div
-        bind:this={sheetElement}
-        class="mobile-context-menu"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Inventory context"
-        tabindex={-1}
-        onkeydown={handleSheetKeydown}
-      >
-        <div class="tenant-row">
+      <Button.Root variant="ghost" class="sheet-backdrop" tabindex={-1} aria-hidden="true" onclick={() => closeContext()}></Button.Root>
+    {/if}
+    <div
+      bind:this={panelElement}
+      class:context-popover={!mobile}
+      class:mobile-context-menu={mobile}
+      role="dialog"
+      aria-modal={mobile ? 'true' : undefined}
+      aria-label="Inventory context"
+      tabindex={-1}
+      onkeydown={handlePanelKeydown}
+    >
+      <div class="context-header">
+        <span class="identity-label">
+          <span class="identity-icon" data-kind="tenant" aria-hidden="true"><Building2 /></span>
           <span>{selectedTenant?.name ?? 'No tenant'}</span>
-          {#if tenants.length > 1}
-            <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
-              {showingTenants ? 'Inventories' : 'Switch tenant'}
-            </Button.Root>
-          {/if}
-        </div>
-        <div class="context-caption">{selectedInventory?.name ?? 'No inventory selected'}</div>
-        {#if showingTenants}
-          <div class="inventory-menu" aria-label="Tenants">
-            {#each tenants as tenant}
-              <Button.Root
-                variant={tenant.id === selectedTenantId ? 'secondary' : 'ghost'}
-                class="nav-button"
-                onclick={() => chooseTenant(tenant.id)}
-              >
-                {tenant.name}
-              </Button.Root>
-            {/each}
-          </div>
-        {:else if inventories.length > 0}
-          <div class="inventory-menu" aria-label="Inventories">
-            {#each inventories as inventory}
-              <Button.Root
-                variant={inventory.id === selectedInventoryId ? 'secondary' : 'ghost'}
-                class="nav-button"
-                onclick={() => chooseInventory(inventory)}
-              >
-                {inventory.name}
-              </Button.Root>
-            {/each}
-          </div>
-        {:else}
-          <p class="muted small-copy">No inventories in this tenant.</p>
+        </span>
+        {#if tenants.length > 1}
+          <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
+            {showingTenants ? 'Back' : 'Switch tenant'}
+          </Button.Root>
         {/if}
-        <Button.Root href={settingsHref()} variant="outline" class="nav-button" onclick={settings}><Settings /> Inventory settings</Button.Root>
       </div>
-    {:else}
+
       {#if showingTenants}
-        <div class="inventory-menu" aria-label="Tenants">
+        <p class="context-section-label">Tenants</p>
+        <div class="context-option-list" aria-label="Tenants">
           {#each tenants as tenant}
             <Button.Root
               variant={tenant.id === selectedTenantId ? 'secondary' : 'ghost'}
-              class="nav-button"
+              class="context-option"
+              aria-pressed={tenant.id === selectedTenantId}
               onclick={() => chooseTenant(tenant.id)}
             >
-              {tenant.name}
+              <span class="context-option-check" aria-hidden="true">{#if tenant.id === selectedTenantId}<Check />{/if}</span>
+              <span class="context-option-copy">
+                <strong>{tenant.name}</strong>
+                <small>{inventoryCountLabel(tenant.id)}</small>
+              </span>
             </Button.Root>
           {/each}
         </div>
-      {:else if inventories.length > 0}
-        <div class="inventory-menu" aria-label="Inventories">
-          {#each inventories as inventory}
+      {:else if selectedTenantInventories.length > 0}
+        <p class="context-section-label">Inventories</p>
+        <div class="context-option-list" aria-label="Inventories">
+          {#each selectedTenantInventories as inventory}
             <Button.Root
               variant={inventory.id === selectedInventoryId ? 'secondary' : 'ghost'}
-              class="nav-button"
+              class="context-option"
+              aria-pressed={inventory.id === selectedInventoryId}
               onclick={() => chooseInventory(inventory)}
             >
-              {inventory.name}
+              <span class="context-option-check" aria-hidden="true">{#if inventory.id === selectedInventoryId}<Check />{/if}</span>
+              <span class="context-option-copy">
+                <strong>{inventory.name}</strong>
+                <small>{selectedTenant?.name ?? 'Inventory'}</small>
+              </span>
+              <span class="context-option-pill">{relationshipLabel(inventory.access.relationship)}</span>
             </Button.Root>
           {/each}
         </div>
       {:else}
         <p class="muted small-copy">No inventories in this tenant.</p>
       {/if}
-      <Button.Root href={settingsHref()} variant="outline" class="nav-button" onclick={settings}><Settings /> Inventory settings</Button.Root>
-    {/if}
+    </div>
   {/if}
 </div>

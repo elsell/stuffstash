@@ -198,6 +198,7 @@ Blob storage mode:
 S3-compatible adapter configuration:
 
 - `STUFF_STASH_S3_ENDPOINT`: endpoint host and port, without scheme.
+- `STUFF_STASH_S3_PUBLIC_ENDPOINT`: browser-reachable endpoint host and port, without scheme, used for presigned direct-upload targets when it differs from the API's internal S3 endpoint. Defaults to `STUFF_STASH_S3_ENDPOINT`.
 - `STUFF_STASH_S3_ACCESS_KEY`: access key ID.
 - `STUFF_STASH_S3_SECRET_KEY`: secret key.
 - `STUFF_STASH_S3_BUCKET`: bucket name.
@@ -206,6 +207,7 @@ S3-compatible adapter configuration:
 
 The adapter must not create buckets at API startup. Buckets and credentials are deployment concerns.
 Local plain-HTTP Garage verification must set `STUFF_STASH_S3_SECURE=false`.
+When a browser client cannot use an advertised direct-upload target because the target is not browser-fetchable or the local object-storage topology rejects the upload, the web client may fall back to the authorized JSON attachment upload route. The fallback must still use the API authorization boundary and must not bypass attachment size, type, tenancy, audit, or storage validation.
 
 ## Security
 

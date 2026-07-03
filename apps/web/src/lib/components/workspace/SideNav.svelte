@@ -96,7 +96,6 @@
     {selectedInventoryId}
     {onSelectTenant}
     {onSelectInventory}
-    onOpenSettings={() => onModeChange('settings')}
   />
 
   <nav class="side-nav-groups" aria-label="Inventory destinations">

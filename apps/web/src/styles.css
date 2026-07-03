@@ -173,12 +173,176 @@ small {
 }
 
 .context-switcher {
+  position: relative;
+  min-width: 0;
+}
+
+.context-trigger {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
-  padding: 12px;
+  justify-content: stretch;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  min-height: 58px;
+  min-width: 0;
+  padding: 9px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
+  text-align: left;
+}
+
+.context-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-panel);
+}
+
+.identity-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.identity-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.4;
+}
+
+.identity-icon[data-kind="tenant"] {
+  background: var(--color-brand-frame);
+  color: var(--primary-foreground);
+}
+
+.identity-icon[data-kind="inventory"] {
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--color-brand-contained);
+}
+
+.identity-copy,
+.context-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.identity-copy strong,
+.identity-copy small,
+.context-option-copy strong,
+.context-option-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-copy small,
+.context-option-copy small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 520;
+}
+
+.context-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.identity-label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground);
+  font-size: 0.88rem;
+  font-weight: 760;
+}
+
+.identity-label span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-label .identity-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.identity-label .identity-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.context-section-label {
+  margin-top: 2px;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.context-option-list {
+  display: grid;
+  gap: 4px;
+}
+
+.context-option {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 8px;
+  justify-content: stretch;
+  width: 100%;
+  height: auto;
+  min-height: 56px;
+  padding: 8px;
+  text-align: left;
+  white-space: normal;
+}
+
+.context-option-check {
+  display: inline-flex;
+  width: 20px;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
+.context-option-check svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 3;
+}
+
+.context-option-pill {
+  align-self: center;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--muted);
+  color: var(--color-brand-contained);
+  font-size: 0.72rem;
+  font-weight: 780;
 }
 
 .eyebrow {
@@ -299,13 +463,9 @@ small {
 
 .mobile-context-trigger {
   width: 100%;
-  justify-content: flex-start;
-  min-width: 0;
 }
 
-.mobile-context-trigger span {
-  display: grid;
-  min-width: 0;
+.mobile-context-trigger .identity-copy {
   text-align: left;
 }
 

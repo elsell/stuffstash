@@ -13,6 +13,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"image/png"
+	"strings"
 	"testing"
 	"time"
 
@@ -75,12 +76,13 @@ func TestLocalDirectAttachmentUploaderPrunesExpiredPendingUploads(t *testing.T) 
 
 func TestS3DirectAttachmentUploaderCreatesBoundedPostPolicy(t *testing.T) {
 	store, err := NewS3Store(S3Config{
-		Endpoint:  "127.0.0.1:3900",
-		AccessKey: "access",
-		SecretKey: "secret",
-		Bucket:    "stuffstash",
-		Region:    "garage",
-		MaxBytes:  32,
+		Endpoint:       "garage:3900",
+		PublicEndpoint: "localhost:3900",
+		AccessKey:      "access",
+		SecretKey:      "secret",
+		Bucket:         "stuffstash",
+		Region:         "garage",
+		MaxBytes:       32,
 	})
 	if err != nil {
 		t.Fatalf("create s3 store: %v", err)
@@ -94,6 +96,9 @@ func TestS3DirectAttachmentUploaderCreatesBoundedPostPolicy(t *testing.T) {
 	}
 	if upload.Method != "POST" || upload.URL == "" {
 		t.Fatalf("expected presigned POST target, got %+v", upload)
+	}
+	if !strings.Contains(upload.URL, "localhost:3900") {
+		t.Fatalf("expected browser-reachable public upload URL, got %q", upload.URL)
 	}
 	if upload.UploadID == request.UploadID {
 		t.Fatalf("expected opaque signed upload token, got raw upload id")

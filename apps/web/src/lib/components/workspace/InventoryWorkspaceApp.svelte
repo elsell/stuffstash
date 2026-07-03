@@ -842,7 +842,6 @@
       canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
       onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
       onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
-      onOpenSettings={() => navigateMode('settings')}
       onSearch={() => { void search(); }}
       onOpenAsset={openAsset}
       onOpenAdd={openAdd}

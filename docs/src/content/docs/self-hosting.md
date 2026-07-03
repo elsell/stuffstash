@@ -30,22 +30,24 @@ evaluate the full stack on one machine.
 
 **Best for:** evaluation and local self-hosting experiments.
 
-**You need:** Docker with Compose, an available API port, and an available web
-dev port.
+**You need:** Docker with Compose, Node.js with Corepack, an available API port,
+and an available web port.
 
 Start the local stack:
 
 ```sh
-make compose-up-oidc
+docker compose -f compose.yaml -f compose.oidc.yaml up --build
 ```
 
-This starts the API, Postgres, SpiceDB, Dex, and the migration job.
+This starts the API, Postgres, SpiceDB, Garage, Dex, and the migration job.
+Garage is the local S3-compatible media store.
 
 Start the web app in another terminal:
 
 ```sh
-make web-install
-make web-dev
+corepack enable
+corepack pnpm install --frozen-lockfile
+corepack pnpm --dir apps/web dev --host 0.0.0.0
 ```
 
 Open `http://localhost:5173` and sign in:
@@ -56,6 +58,15 @@ Password: password
 ```
 
 Then follow [First Inventory](../first-inventory/).
+
+The default web config points at `http://localhost:8080`. If you change the API
+host port, update `apps/web/static/config.json` before starting the web app.
+
+To stop the stack:
+
+```sh
+docker compose -f compose.yaml -f compose.oidc.yaml down
+```
 
 ## Deployment Shape: Split Containers
 
@@ -72,7 +83,7 @@ Run these pieces:
 | Postgres | Primary metadata store |
 | SpiceDB | Relationship-based authorization |
 | OIDC provider | SSO sign-in |
-| Blob storage | Local filesystem or S3-compatible media storage |
+| Blob storage | Garage or another S3-compatible media store |
 
 The API reads configuration from environment variables. The web app reads
 `config.json` at runtime, so the same web image can point at different API and
@@ -80,8 +91,8 @@ OIDC endpoints.
 
 Before using this as a production deployment, choose reviewed image references
 pinned by immutable digest, configure public URLs and CORS, mount or generate
-the web `config.json`, enable the right OIDC and SpiceDB settings, and decide
-where media blobs live.
+the web `config.json`, enable the right OIDC and SpiceDB settings, and configure
+durable Garage or S3-compatible media storage.
 
 See the [Configuration Reference](../configuration/) for the full runtime
 settings list.
@@ -113,7 +124,10 @@ This is the short list most deployments need first. The full list is in the
 | `STUFF_STASH_SPICEDB_ENDPOINT` | SpiceDB gRPC endpoint |
 | `STUFF_STASH_REPOSITORY_MODE` | Use `postgres` for durable persistence |
 | `STUFF_STASH_DATABASE_DSN` | Postgres connection string |
-| `STUFF_STASH_BLOB_STORAGE_MODE` | `filesystem` or `s3` |
+| `STUFF_STASH_BLOB_STORAGE_MODE` | Use `s3` for Garage-backed media storage |
+| `STUFF_STASH_S3_ENDPOINT` | API-reachable Garage or S3 endpoint |
+| `STUFF_STASH_S3_PUBLIC_ENDPOINT` | Browser-reachable Garage or S3 endpoint for direct uploads |
+| `STUFF_STASH_S3_BUCKET` | Garage or S3 bucket name |
 
 ## Verify The Stack
 

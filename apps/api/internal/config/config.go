@@ -47,6 +47,7 @@ const (
 	envBlobStorageMode                    = "STUFF_STASH_BLOB_STORAGE_MODE"
 	envBlobStoragePath                    = "STUFF_STASH_BLOB_STORAGE_PATH"
 	envS3Endpoint                         = "STUFF_STASH_S3_ENDPOINT"
+	envS3PublicEndpoint                   = "STUFF_STASH_S3_PUBLIC_ENDPOINT"
 	envS3AccessKey                        = "STUFF_STASH_S3_ACCESS_KEY"
 	envS3SecretKey                        = "STUFF_STASH_S3_SECRET_KEY"
 	envS3Bucket                           = "STUFF_STASH_S3_BUCKET"
@@ -156,6 +157,7 @@ type Config struct {
 	BlobStorageMode                  string
 	BlobStoragePath                  string
 	S3Endpoint                       string
+	S3PublicEndpoint                 string
 	S3AccessKey                      string
 	S3SecretKey                      string
 	S3Bucket                         string
@@ -218,6 +220,7 @@ func Load() Config {
 		BlobStorageMode:                  envOrDefault(envBlobStorageMode, defaultBlobStorageMode),
 		BlobStoragePath:                  envOrDefault(envBlobStoragePath, defaultBlobStoragePath),
 		S3Endpoint:                       os.Getenv(envS3Endpoint),
+		S3PublicEndpoint:                 os.Getenv(envS3PublicEndpoint),
 		S3AccessKey:                      os.Getenv(envS3AccessKey),
 		S3SecretKey:                      os.Getenv(envS3SecretKey),
 		S3Bucket:                         os.Getenv(envS3Bucket),

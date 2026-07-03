@@ -2,15 +2,13 @@
   import { onMount } from 'svelte';
   import { getStoredSession, signOut, startSignIn, type AuthSession } from '$lib/auth';
   import { loadRuntimeConfig, type RuntimeConfig } from '$lib/runtimeConfig';
+  import AuthSignInScreen from '$lib/components/auth/AuthSignInScreen.svelte';
   import InventoryWorkspaceApp from '$lib/components/workspace/InventoryWorkspaceApp.svelte';
   import * as Alert from '$lib/components/ui/alert/index.js';
-  import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
   import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
   import type { WorkspaceData } from '$lib/domain/inventory';
   import { StuffStashInventoryRepository } from '$lib/adapters/api/stuffStashInventoryRepository';
-  import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
-  import { workspaceSeed } from '$lib/adapters/memory/workspaceSeed';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
@@ -31,16 +29,9 @@
         const observer = new InMemoryWorkspaceObserver();
         repository = new StuffStashInventoryRepository(config, () => getStoredSession()?.idToken ?? null, observer);
         workspaceData = await repository.loadWorkspace();
-      } else {
-        repository = new SeededInventoryRepository(workspaceSeed);
-        workspaceData = await repository.loadWorkspace();
       }
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Unable to load Stuff Stash.';
-      if (!session) {
-        repository = new SeededInventoryRepository(workspaceSeed);
-        workspaceData = await repository.loadWorkspace();
-      }
     } finally {
       loading = false;
     }
@@ -55,10 +46,9 @@
   function signOutAndReset(): void {
     signOut();
     session = null;
-    repository = new SeededInventoryRepository(workspaceSeed);
-    void repository.loadWorkspace().then((data) => {
-      workspaceData = data;
-    });
+    repository = null;
+    workspaceData = null;
+    error = '';
   }
 </script>
 
@@ -74,13 +64,9 @@
       </Card.Content>
     </Card.Root>
   </main>
+{:else if !session}
+  <AuthSignInScreen {error} canSignIn={Boolean(config)} onSignIn={signIn} />
 {:else if repository && workspaceData}
-  {#if !session}
-    <div class="auth-banner">
-      <span>Local demo data is showing.</span>
-      <Button.Root size="sm" onclick={() => { void signIn(); }}>Sign in</Button.Root>
-    </div>
-  {/if}
   <InventoryWorkspaceApp {repository} initialData={workspaceData} onSignOut={signOutAndReset} />
 {:else if error}
   <main class="loading-shell">

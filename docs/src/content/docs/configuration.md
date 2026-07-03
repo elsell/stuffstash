@@ -99,6 +99,7 @@ the parent directory for file-backed database paths.
 | `STUFF_STASH_BLOB_STORAGE_PATH` | `.stuffstash/blobs` | Local filesystem blob path. |
 | `STUFF_STASH_MAX_ATTACHMENT_BYTES` | `26214400` | Maximum attachment size in bytes. |
 | `STUFF_STASH_S3_ENDPOINT` | empty | S3-compatible endpoint host and port, without scheme. |
+| `STUFF_STASH_S3_PUBLIC_ENDPOINT` | empty | Browser-reachable S3-compatible endpoint for direct uploads. Defaults to `STUFF_STASH_S3_ENDPOINT` when empty. |
 | `STUFF_STASH_S3_ACCESS_KEY` | empty | S3 access key. |
 | `STUFF_STASH_S3_SECRET_KEY` | empty | S3 secret key. |
 | `STUFF_STASH_S3_BUCKET` | empty | S3 bucket name. |
@@ -204,6 +205,8 @@ settings unless they map to a `STUFF_STASH_*` variable above.
 | `POSTGRES_PORT` | `5432` | Host port mapped to Postgres. |
 | `SPICEDB_GRPC_PORT` | `50051` | Host port mapped to SpiceDB. |
 | `DEX_HTTP_PORT` | `5556` | Host port mapped to Dex in the OIDC Compose override. |
+| `GARAGE_IMAGE` | pinned digest | Garage image override. Must stay digest-pinned. |
+| `GARAGE_S3_PORT` | `3900` | Host port mapped to the Garage S3 API. |
 | `GO_BUILDER_IMAGE` | pinned digest | API builder image override. Must stay digest-pinned. |
 | `RUNTIME_IMAGE` | pinned digest | API runtime image override. Must stay digest-pinned. |
 | `NODE_BUILDER_IMAGE` | pinned digest | Web builder image override. Must stay digest-pinned. |

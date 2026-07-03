@@ -24,6 +24,8 @@ It does not define Kubernetes production deployment, external Google OIDC rollou
 - Local authorization replay must use project-owned authorization/outbox ports. It must not read database tables directly from bootstrap code, must not bypass authorization adapters, and must not run when a production authorization adapter such as SpiceDB is selected.
 - Local authorization replay must apply durable tenant-owner, inventory-owner, viewer, editor, and revoke intent in deterministic creation order and ignore dead-lettered authorization intent. Replayed grants and revokes must remain idempotent.
 - Local development must also support Dex as a deterministic OIDC issuer so the API can be verified with real OIDC discovery and token verification.
+- The Docker Compose self-host/evaluation topology must include Garage as the default blob storage service so media behavior is production-shaped by default.
+- The Compose self-host/evaluation topology must be runnable with plain `docker compose` commands. Make targets may remain contributor conveniences, but public self-host documentation must not require GNU Make.
 - Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
 - Local Compose must provide enough SpiceDB configuration for the API to connect to SpiceDB when `STUFF_STASH_AUTHZ_MODE=spicedb`.
 - Local SpiceDB uses `serve-testing`; it must not require a preshared key.
@@ -41,6 +43,7 @@ The base Compose topology includes:
 - `app`: Stuff Stash API.
 - `postgres`: local Postgres database.
 - `spicedb`: local SpiceDB service.
+- `garage`: local Garage S3-compatible blob storage service.
 
 The OIDC Compose override adds:
 
@@ -52,6 +55,9 @@ The OIDC Compose override adds:
 - Local defaults may be provided in Compose for developer ergonomics.
 - Secrets used in local Compose must be clearly local-only.
 - Production secrets must never be committed.
+- Local Garage access keys, secret keys, bucket names, RPC secrets, and admin tokens in Compose are local-only fixtures.
+- Compose must configure the API for `STUFF_STASH_BLOB_STORAGE_MODE=s3` with Garage by default.
+- Compose must expose a Garage S3 API port for browser direct-upload attempts and local verification. The browser-reachable S3 endpoint must be configurable because `localhost` is correct only when the browser runs on the same host as Docker.
 - Dex static users and static client secrets are local-only verification fixtures.
 - Dex must be selected through the same `STUFF_STASH_AUTH_MODE=oidc`, `STUFF_STASH_OIDC_ISSUER`, and `STUFF_STASH_OIDC_CLIENT_ID` configuration used by any other OIDC issuer.
 - Local Dex may configure `STUFF_STASH_OIDC_CLIENT_IDS` when the API must accept ID tokens issued to more than one local client, such as the API verification fixture and browser public client.

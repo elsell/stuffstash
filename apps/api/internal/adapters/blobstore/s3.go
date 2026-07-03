@@ -14,17 +14,19 @@ import (
 )
 
 type S3Config struct {
-	Endpoint  string
-	AccessKey string
-	SecretKey string
-	Bucket    string
-	Region    string
-	Secure    bool
-	MaxBytes  int64
+	Endpoint       string
+	PublicEndpoint string
+	AccessKey      string
+	SecretKey      string
+	Bucket         string
+	Region         string
+	Secure         bool
+	MaxBytes       int64
 }
 
 type S3Store struct {
 	client                 *minio.Client
+	presignClient          *minio.Client
 	bucket                 string
 	maxBytes               int64
 	directUploadSigningKey []byte
@@ -39,15 +41,23 @@ func NewS3Store(config S3Config) (S3Store, error) {
 	if endpoint == "" || accessKey == "" || secretKey == "" || bucket == "" {
 		return S3Store{}, errors.New("s3 endpoint, access key, secret key, and bucket are required")
 	}
-	client, err := minio.New(endpoint, &minio.Options{
+	options := &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: config.Secure,
 		Region: region,
-	})
+	}
+	client, err := minio.New(endpoint, options)
 	if err != nil {
 		return S3Store{}, err
 	}
-	return S3Store{client: client, bucket: bucket, maxBytes: config.MaxBytes, directUploadSigningKey: []byte(secretKey)}, nil
+	presignClient := client
+	if publicEndpoint := strings.TrimSpace(config.PublicEndpoint); publicEndpoint != "" && publicEndpoint != endpoint {
+		presignClient, err = minio.New(publicEndpoint, options)
+		if err != nil {
+			return S3Store{}, err
+		}
+	}
+	return S3Store{client: client, presignClient: presignClient, bucket: bucket, maxBytes: config.MaxBytes, directUploadSigningKey: []byte(secretKey)}, nil
 }
 
 func (s S3Store) PutBlob(ctx context.Context, key media.StorageKey, contentType media.ContentType, data []byte) error {

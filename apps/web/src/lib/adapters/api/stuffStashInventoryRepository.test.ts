@@ -329,6 +329,57 @@ describe('StuffStashInventoryRepository', () => {
     });
   });
 
+  it('falls back to the JSON attachment upload route when a browser direct upload target rejects the upload', async () => {
+    const { fetch, requests } = fakeFetch({ directUploadRejected: true });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
+
+    await expect(
+      repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-passport', {
+        id: 'photo-one',
+        name: 'photo.jpg',
+        sizeBytes: file.size,
+        contentType: 'image/jpeg',
+        previewUrl: 'blob:photo-one',
+        file
+      })
+    ).resolves.toMatchObject({ id: 'attachment-one', fileName: 'photo.jpg' });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
+      'PUT https://uploads.local/object-one',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small'
+    ]);
+    expect(await requests[2]?.json()).toEqual({
+      fileName: 'photo.jpg',
+      contentType: 'image/jpeg',
+      contentBase64: 'ZmFrZSBpbWFnZQ=='
+    });
+  });
+
+  it('falls back to the JSON attachment upload route when browser direct upload fetch fails', async () => {
+    const { fetch, requests } = fakeFetch({ directUploadThrows: true });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
+
+    await expect(
+      repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-passport', {
+        id: 'photo-one',
+        name: 'photo.jpg',
+        sizeBytes: file.size,
+        contentType: 'image/jpeg',
+        previewUrl: 'blob:photo-one',
+        file
+      })
+    ).resolves.toMatchObject({ id: 'attachment-one', fileName: 'photo.jpg' });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
+      'PUT https://uploads.local/object-one',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small'
+    ]);
+  });
+
   it('lists attachments with authenticated thumbnail object URLs', async () => {
     const { fetch } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
@@ -449,9 +500,11 @@ describe('StuffStashInventoryRepository', () => {
 });
 
 function fakeFetch(
-  options: {
-    directUploadUrl?: string;
-    primaryPhotoAssetIds?: string[];
+	  options: {
+	    directUploadUrl?: string;
+	    directUploadRejected?: boolean;
+	    directUploadThrows?: boolean;
+	    primaryPhotoAssetIds?: string[];
     rejectedThumbnailAssetIds?: string[];
     includeUnphotographedContainerAndLocation?: boolean;
   } = {}
@@ -559,9 +612,12 @@ function fakeFetch(
           201
         );
       }
-      if (request.method === 'PUT' && request.url === 'https://uploads.local/object-one') {
-        return new Response(null, { status: 204 });
-      }
+	      if (request.method === 'PUT' && request.url === 'https://uploads.local/object-one') {
+	        if (options.directUploadThrows) {
+	          throw new TypeError('Failed to fetch');
+	        }
+	        return new Response(null, { status: options.directUploadRejected ? 403 : 204 });
+	      }
       if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads/upload-one/complete') {
         return envelope(attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg'), 201);
       }

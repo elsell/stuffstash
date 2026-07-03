@@ -134,7 +134,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.BlobStoragePath != defaultBlobStoragePath {
 		t.Fatalf("expected blob storage path %q, got %q", defaultBlobStoragePath, cfg.BlobStoragePath)
 	}
-	if cfg.S3Endpoint != "" || cfg.S3AccessKey != "" || cfg.S3SecretKey != "" || cfg.S3Bucket != "" {
+	if cfg.S3Endpoint != "" || cfg.S3PublicEndpoint != "" || cfg.S3AccessKey != "" || cfg.S3SecretKey != "" || cfg.S3Bucket != "" {
 		t.Fatalf("expected empty S3 connection fields, got %+v", cfg)
 	}
 	if cfg.S3Region != defaultS3Region {
@@ -208,7 +208,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envMaxPageLimit, "27")
 	t.Setenv(envBlobStorageMode, "s3")
 	t.Setenv(envBlobStoragePath, "/data/blobs")
-	t.Setenv(envS3Endpoint, "localhost:3900")
+	t.Setenv(envS3Endpoint, "garage:3900")
+	t.Setenv(envS3PublicEndpoint, "localhost:3900")
 	t.Setenv(envS3AccessKey, "access")
 	t.Setenv(envS3SecretKey, "secret")
 	t.Setenv(envS3Bucket, "stuffstash")
@@ -308,7 +309,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	if cfg.BlobStoragePath != "/data/blobs" {
 		t.Fatalf("expected custom blob storage path, got %q", cfg.BlobStoragePath)
 	}
-	if cfg.S3Endpoint != "localhost:3900" || cfg.S3AccessKey != "access" || cfg.S3SecretKey != "secret" || cfg.S3Bucket != "stuffstash" {
+	if cfg.S3Endpoint != "garage:3900" || cfg.S3PublicEndpoint != "localhost:3900" || cfg.S3AccessKey != "access" || cfg.S3SecretKey != "secret" || cfg.S3Bucket != "stuffstash" {
 		t.Fatalf("unexpected S3 config: %+v", cfg)
 	}
 	if cfg.S3Region != "local" || cfg.S3Secure {

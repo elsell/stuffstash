@@ -29,7 +29,7 @@ func NewS3DirectAttachmentUploader(store S3Store) *S3DirectAttachmentUploader {
 }
 
 func (u *S3DirectAttachmentUploader) CreateDirectAttachmentUpload(ctx context.Context, request ports.DirectAttachmentUploadRequest) (ports.DirectAttachmentUpload, error) {
-	if u == nil || u.store.client == nil || len(u.store.directUploadSigningKey) == 0 || strings.TrimSpace(request.UploadID) == "" || request.ExpiresAt.IsZero() || !request.ExpiresAt.After(time.Now().UTC()) {
+	if u == nil || u.store.presignClient == nil || len(u.store.directUploadSigningKey) == 0 || strings.TrimSpace(request.UploadID) == "" || request.ExpiresAt.IsZero() || !request.ExpiresAt.After(time.Now().UTC()) {
 		return ports.DirectAttachmentUpload{}, ports.ErrDirectUploadInvalid
 	}
 
@@ -46,7 +46,7 @@ func (u *S3DirectAttachmentUploader) CreateDirectAttachmentUpload(ctx context.Co
 		}
 	}
 
-	uploadURL, formFields, err := u.store.client.PresignedPostPolicy(ctx, policy)
+	uploadURL, formFields, err := u.store.presignClient.PresignedPostPolicy(ctx, policy)
 	if err != nil {
 		return ports.DirectAttachmentUpload{}, err
 	}

@@ -33,6 +33,8 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - The API must allow explicitly configured browser origins for local web development.
 - CORS must be deny-by-default and configured through environment-backed settings.
 - The web app must use runtime configuration for API base URL, OIDC issuer, OIDC client ID, and redirect URI.
+- The web app must not show seeded demo inventory data to unauthenticated users in the app shell.
+- Unauthenticated users must see an auth-first sign-in screen that starts the configured OIDC flow and makes configuration or callback errors clear without exposing mock workspace data.
 - There is no backend-for-frontend layer in this slice.
 - The web app must use the public REST API contract directly through a frontend adapter boundary.
 - Generated OpenAPI types or client code must be used for the API adapter boundary as soon as the web package exists.
