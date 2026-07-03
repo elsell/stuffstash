@@ -262,6 +262,7 @@ The asset list must:
 - Show a short description.
 - Show the local containment trail within the location.
 - Open the asset detail view when an asset row is selected.
+- Expose canonical `href` values for the location back destination, current location edit destination, nested location rows, and contained asset rows.
 
 The location view must not become a dashboard. It should answer: "What is in this place?"
 

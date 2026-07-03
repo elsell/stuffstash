@@ -760,6 +760,10 @@
     }
   }
 
+  function closeLocationToLocations(): void {
+    navigateMode('locations');
+  }
+
   function closeDetailToPrevious(): void {
     invalidateAssetDetailLoad();
     mode = selectedLocationId ? 'location' : 'home';
@@ -872,7 +876,7 @@
         location={selectedLocation}
         assets={containedAssets(assets, selectedLocation.id)}
         canEdit={editAssetAllowed}
-        onBack={closeDetailToHome}
+        onBack={closeLocationToLocations}
         onOpenLocation={openLocation}
         onEditLocation={openLocationEdit}
         onOpenAsset={openAsset}

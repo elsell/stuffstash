@@ -174,12 +174,32 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Main storage area');
     });
 
-    buttonContaining('Edit location').click();
+    expect(controlContaining('Edit location').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage/edit'
+    );
+    controlContaining('Edit location').click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage/edit');
       expect(document.body.textContent).toContain('Edit asset');
       expect(document.body.querySelector<HTMLInputElement>('#edit-asset-title')?.value).toBe('Garage');
+    });
+  });
+
+  it('keeps ordinary location back clicks aligned with the exposed locations href', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Main storage area');
+    });
+
+    expect(controlContaining('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+    controlContaining('Back').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+      expect(document.body.textContent).toContain('The places where your things live.');
     });
   });
 

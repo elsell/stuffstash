@@ -69,11 +69,66 @@ describe('LocationView', () => {
       }
     });
 
-    click('Shelf');
-    click('Tape measure');
+    clickLink('Shelf');
+    clickLink('Tape measure');
 
     expect(openedLocationId).toBe('garage-shelf');
     expect(openedAssetId).toBe('tape');
+  });
+
+  it('exposes canonical hrefs for back, edit, nested location, and asset rows', () => {
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [nestedLocation, item],
+        canEdit: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: () => {}
+      }
+    });
+
+    expect(link('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+    expect(link('Edit location').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/garage/edit'
+    );
+    expect(link('Shelf').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/garage-shelf'
+    );
+    expect(link('Tape measure').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/tape'
+    );
+  });
+
+  it('does not intercept modified location-view link clicks', () => {
+    let openedAssetId = '';
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [item],
+        canEdit: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: (asset) => {
+          openedAssetId = asset.id;
+        }
+      }
+    });
+
+    let componentPreventedModifiedClick = false;
+    const target = link('Tape measure');
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(openedAssetId).toBe('');
+    expect(componentPreventedModifiedClick).toBe(false);
   });
 
   it('opens the current location for editing', () => {
@@ -93,7 +148,7 @@ describe('LocationView', () => {
       }
     });
 
-    click('Edit location');
+    clickLink('Edit location');
 
     expect(editedLocationId).toBe('garage');
   });
@@ -118,8 +173,14 @@ describe('LocationView', () => {
   });
 });
 
-function click(text: string): void {
-  const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(text));
-  if (!button) throw new Error(`Missing button ${text}`);
-  button.click();
+function clickLink(text: string): void {
+  link(text).click();
+}
+
+function link(text: string): HTMLAnchorElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!target) throw new Error(`Missing link ${text}`);
+  return target;
 }
