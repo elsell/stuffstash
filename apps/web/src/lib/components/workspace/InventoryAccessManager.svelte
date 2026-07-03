@@ -16,16 +16,24 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
-  import SegmentedControl from './SegmentedControl.svelte';
+  import SegmentedControl, { type SegmentedOption } from './SegmentedControl.svelte';
 
   let {
     tenant,
     inventory,
-    repository
+    repository,
+    invitationStatus = $bindable<InvitationStatusFilter>('all'),
+    invitationStatusHref,
+    onInvitationStatusChange = (status: InvitationStatusFilter) => {
+      invitationStatus = status;
+    }
   }: {
     tenant: Tenant | null;
     inventory: Inventory | null;
     repository: InventoryAccessRepository;
+    invitationStatus?: InvitationStatusFilter;
+    invitationStatusHref?: (status: InvitationStatusFilter) => string;
+    onInvitationStatusChange?: (status: InvitationStatusFilter) => void;
   } = $props();
 
   const relationships: InventoryAccessRelationship[] = ['viewer', 'editor'];
@@ -34,10 +42,11 @@
     value: relationship,
     label: relationship === 'viewer' ? 'Viewer' : 'Editor'
   }));
-  const invitationStatusOptions = invitationStatuses.map((status) => ({
+  let invitationStatusOptions = $derived<SegmentedOption[]>(invitationStatuses.map((status) => ({
     value: status,
-    label: status[0]?.toUpperCase() + status.slice(1)
-  }));
+    label: status[0]?.toUpperCase() + status.slice(1),
+    href: invitationStatusHref?.(status)
+  })));
 
   let grants = $state<InventoryAccessGrant[]>([]);
   let invitations = $state<InventoryAccessInvitation[]>([]);
@@ -47,7 +56,6 @@
   let grantRelationship = $state<InventoryAccessRelationship>('viewer');
   let invitationEmail = $state('');
   let invitationRelationship = $state<InventoryAccessRelationship>('viewer');
-  let invitationStatus = $state<InvitationStatusFilter>('all');
   let inviteLinkToken = $state('');
   let busy = $state(false);
   let loaded = $state(false);
@@ -57,22 +65,48 @@
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
   let contextKey = $derived(tenant && inventory && canShare ? `${tenant.id}:${inventory.id}` : '');
+  let lastLoadedContextKey = '';
+  let lastLoadedInvitationStatus = $state<InvitationStatusFilter | null>(null);
 
   $effect(() => {
-    requestId += 1;
-    grants = [];
-    invitations = [];
-    grantNextCursor = null;
-    invitationNextCursor = null;
-    inviteLinkToken = '';
-    invitationStatus = 'all';
-    loaded = false;
-    error = '';
-    message = '';
-    if (!contextKey) {
+    const nextContextKey = contextKey;
+    const nextInvitationStatus = invitationStatus;
+    if (!nextContextKey) {
+      requestId += 1;
+      grants = [];
+      invitations = [];
+      grantNextCursor = null;
+      invitationNextCursor = null;
+      inviteLinkToken = '';
+      loaded = false;
+      error = '';
+      message = '';
+      lastLoadedContextKey = '';
+      lastLoadedInvitationStatus = null;
       return;
     }
-    void loadAccess(contextKey, 'all');
+    if (nextContextKey !== lastLoadedContextKey) {
+      requestId += 1;
+      grants = [];
+      invitations = [];
+      grantNextCursor = null;
+      invitationNextCursor = null;
+      inviteLinkToken = '';
+      loaded = false;
+      error = '';
+      message = '';
+      lastLoadedContextKey = nextContextKey;
+      lastLoadedInvitationStatus = nextInvitationStatus;
+      void loadAccess(nextContextKey, nextInvitationStatus);
+      return;
+    }
+    if (nextInvitationStatus !== lastLoadedInvitationStatus) {
+      requestId += 1;
+      invitations = [];
+      invitationNextCursor = null;
+      lastLoadedInvitationStatus = nextInvitationStatus;
+      void loadInvitations(nextContextKey, nextInvitationStatus);
+    }
   });
 
   async function loadAccess(expectedContext = contextKey, status = invitationStatus): Promise<void> {
@@ -294,12 +328,7 @@
 
   function updateInvitationStatus(status: InvitationStatusFilter): void {
     invitationStatus = status;
-    if (contextKey) {
-      requestId += 1;
-      invitations = [];
-      invitationNextCursor = null;
-      void loadInvitations(contextKey, status);
-    }
+    onInvitationStatusChange(status);
   }
 
   function snapshotContext(expectedContext: string): { key: string; requestId: number; tenantId: string; inventoryId: string } | null {

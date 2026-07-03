@@ -85,6 +85,7 @@
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
   let searchMode = $state<SearchMode>('fuzzy');
   let settingsSection = $state<SettingsSection>('overview');
+  let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
@@ -485,6 +486,7 @@
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
       settingsSection = route.settingsSection;
+      invitationStatus = route.invitationStatus;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
         const tenantId = findRouteTenant(data, route);
@@ -694,7 +696,19 @@
       mode: 'settings',
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
-      settingsSection: section
+      settingsSection: section,
+      invitationStatus: section === 'access' ? invitationStatus : 'all'
+    });
+  }
+
+  function openInvitationStatusFilter(nextInvitationStatus: WorkspaceRouteState['invitationStatus']): void {
+    invitationStatus = nextInvitationStatus;
+    navigateTo({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'access',
+      invitationStatus: nextInvitationStatus
     });
   }
 
@@ -1098,7 +1112,9 @@
         customAssetTypes={data.context.customAssetTypes}
         customFieldDefinitions={data.context.customFieldDefinitions}
         section={settingsSection}
+        {invitationStatus}
         onSectionChange={openSettingsSection}
+        onInvitationStatusChange={openInvitationStatusFilter}
         onCustomizationChange={updateCustomizationContext}
       />
     {:else}

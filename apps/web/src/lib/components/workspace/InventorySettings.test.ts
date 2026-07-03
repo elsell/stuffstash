@@ -46,7 +46,9 @@ describe('InventorySettings', () => {
         customAssetTypes: [],
         customFieldDefinitions: [],
         section: 'overview',
+        invitationStatus: 'all',
         onSectionChange,
+        onInvitationStatusChange: () => {},
         onCustomizationChange: () => {}
       }
     });
@@ -84,6 +86,7 @@ describe('InventorySettings', () => {
         customFieldDefinitions: [],
         section: 'administration',
         onSectionChange: () => {},
+        onInvitationStatusChange: () => {},
         onCustomizationChange: () => {}
       }
     });
@@ -115,12 +118,58 @@ describe('InventorySettings', () => {
         customFieldDefinitions: [],
         section: 'overview',
         onSectionChange: () => {},
+        onInvitationStatusChange: () => {},
         onCustomizationChange: () => {}
       }
     });
 
     expect(document.body.textContent).toContain('Asset editsView only');
     expect(linkStartingWith('Activity').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity');
+  });
+
+  it('passes route-backed access invitation status links through settings', async () => {
+    const tenant: Tenant = {
+      id: 'tenant-one',
+      name: 'Household',
+      access: { relationship: 'owner', permissions: ['view'] }
+    };
+    const inventory: Inventory = {
+      id: 'inventory-one',
+      tenantId: 'tenant-one',
+      name: 'Garage',
+      access: { relationship: 'owner', permissions: ['view', 'share'] }
+    };
+    let selectedStatus = '';
+
+    component = mount(InventorySettings, {
+      target: document.body,
+      props: {
+        tenant,
+        inventory,
+        inventoryCount: 1,
+        accessRepository: fakeAccessRepository(),
+        auditRepository: fakeAuditRepository(),
+        customizationRepository: fakeCustomizationRepository(),
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        section: 'access',
+        invitationStatus: 'revoked',
+        onSectionChange: () => {},
+        onInvitationStatusChange: (status) => {
+          selectedStatus = status;
+        },
+        onCustomizationChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(linkStartingWith('Revoked').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=revoked'
+    );
+    expect(linkStartingWith('Revoked').getAttribute('aria-current')).toBe('page');
+
+    linkStartingWith('Pending').click();
+    expect(selectedStatus).toBe('pending');
   });
 });
 
@@ -167,4 +216,8 @@ function linkStartingWith(text: string): HTMLAnchorElement {
     throw new Error(`Missing link starting with ${text}`);
   }
   return link;
+}
+
+async function flush(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
 }

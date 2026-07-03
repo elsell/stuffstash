@@ -1,4 +1,11 @@
-import type { AssetKind, AssetLifecycleFilter, SearchLifecycleFilter, SearchMode, WorkspaceMode } from '$lib/domain/inventory';
+import type {
+  AssetKind,
+  AssetLifecycleFilter,
+  InvitationStatusFilter,
+  SearchLifecycleFilter,
+  SearchMode,
+  WorkspaceMode
+} from '$lib/domain/inventory';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
 export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
@@ -17,6 +24,7 @@ export interface WorkspaceRouteState {
   attachmentAction: AttachmentRouteAction;
   addKind: AssetKind | null;
   settingsSection: SettingsSection;
+  invitationStatus: InvitationStatusFilter;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
@@ -35,6 +43,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   attachmentAction: null,
   addKind: null,
   settingsSection: 'overview',
+  invitationStatus: 'all',
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
@@ -45,6 +54,7 @@ const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
 const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete']);
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
+const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
@@ -132,9 +142,16 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     return remaining === 1 ? { ...route, mode: 'search', lifecycleState: 'active' } : { ...defaultWorkspaceRoute };
   }
   if (section === 'settings') {
-    return remaining <= 2
-      ? { ...route, mode: 'settings', settingsSection: parseSettingsSection(segments[inventoryOffset.nextIndex + 1]) }
-      : { ...defaultWorkspaceRoute };
+    if (remaining > 2) {
+      return { ...defaultWorkspaceRoute };
+    }
+    const settingsSection = parseSettingsSection(segments[inventoryOffset.nextIndex + 1]);
+    return {
+      ...route,
+      mode: 'settings',
+      settingsSection,
+      invitationStatus: settingsSection === 'access' ? parseInvitationStatus(url.searchParams.get('invitationStatus')) : 'all'
+    };
   }
   if (section === 'import') {
     return remaining === 1 ? { ...route, mode: 'import' } : { ...defaultWorkspaceRoute };
@@ -238,6 +255,9 @@ export function workspaceRouteHref(
     if (next.settingsSection !== 'overview') {
       path += `/${next.settingsSection}`;
     }
+    if (next.settingsSection === 'access' && next.invitationStatus !== 'all') {
+      search.set('invitationStatus', next.invitationStatus);
+    }
   } else if (inventoryId && next.mode === 'import') {
     path += '/import';
   } else if (inventoryId && next.action === 'add' && next.addKind) {
@@ -260,4 +280,8 @@ function parseSearchLifecycle(value: string | null): SearchLifecycleFilter {
 
 function parseSearchMode(value: string | null): SearchMode {
   return searchModes.has(value as SearchMode) ? (value as SearchMode) : 'fuzzy';
+}
+
+function parseInvitationStatus(value: string | null): InvitationStatusFilter {
+  return invitationStatuses.has(value as InvitationStatusFilter) ? (value as InvitationStatusFilter) : 'all';
 }

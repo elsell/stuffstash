@@ -2,7 +2,16 @@ import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
-import type { Asset, AssetAttachment, AssetLifecycleFilter, SelectedPhoto, WorkspaceData } from '$lib/domain/inventory';
+import type {
+  Asset,
+  AssetAttachment,
+  AssetLifecycleFilter,
+  InventoryAccessInvitation,
+  InvitationStatusFilter,
+  SelectedPhoto,
+  WorkspaceData
+} from '$lib/domain/inventory';
+import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
 
@@ -73,6 +82,20 @@ class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
     _lifecycleState: AssetLifecycleFilter
   ): Promise<WorkspaceData> {
     throw new Error('Search routes must not mutate the home lifecycle.');
+  }
+}
+
+class InvitationStatusRecordingRepository extends SeededInventoryRepository {
+  invitationStatuses: InvitationStatusFilter[] = [];
+
+  async listInventoryAccessInvitations(
+    tenantId: string,
+    inventoryId: string,
+    status: InvitationStatusFilter,
+    cursor?: string
+  ): Promise<InventoryAccessPage<InventoryAccessInvitation>> {
+    this.invitationStatuses.push(status);
+    return super.listInventoryAccessInvitations(tenantId, inventoryId, status, cursor);
   }
 }
 
@@ -207,6 +230,54 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
       expect(window.location.search).toBe('?mode=exact');
       expect(document.body.textContent).toContain('Search this inventory');
+    });
+  });
+
+  it('deep-links and updates the access invitation status filter', async () => {
+    const accessSeed = structuredClone(seed);
+    accessSeed.inventories[0].access.permissions.push('share');
+    const repository = new InvitationStatusRecordingRepository(accessSeed);
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=revoked', repository);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.search).toBe('?invitationStatus=revoked');
+      expect(document.body.textContent).toContain('Sharing');
+      expect(controlContaining('Revoked').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=revoked'
+      );
+      expect(repository.invitationStatuses).toContain('revoked');
+    });
+
+    controlContaining('Pending').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.search).toBe('?invitationStatus=pending');
+      expect(repository.invitationStatuses).toContain('pending');
+    });
+  });
+
+  it('does not resurrect invitation status query state from non-access settings routes', async () => {
+    const accessSeed = structuredClone(seed);
+    accessSeed.inventories[0].access.permissions.push('share');
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/fields?invitationStatus=revoked', new SeededInventoryRepository(accessSeed));
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+      expect(settingsLink('Access').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/access'
+      );
+    });
+
+    settingsLink('Access').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.search).toBe('');
+      expect(document.body.textContent).toContain('Sharing');
     });
   });
 
@@ -553,6 +624,16 @@ function controlContaining(text: string): HTMLElement {
     throw new Error(`Missing control containing ${text}`);
   }
   return control;
+}
+
+function settingsLink(label: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('.settings-section-link')).find((candidate) =>
+    candidate.textContent?.trim().startsWith(label)
+  );
+  if (!link) {
+    throw new Error(`Missing settings link ${label}`);
+  }
+  return link;
 }
 
 function buttonMaybeContaining(text: string): HTMLButtonElement | undefined {

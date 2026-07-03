@@ -9,7 +9,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { workspaceRouteHref, type SettingsSection } from '$lib/application/workspaceRoute';
-  import type { CustomAssetType, CustomFieldDefinition, Inventory, Tenant } from '$lib/domain/inventory';
+  import type { CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
@@ -28,7 +28,9 @@
     customAssetTypes,
     customFieldDefinitions,
     section = 'overview',
+    invitationStatus = 'all',
     onSectionChange,
+    onInvitationStatusChange,
     onCustomizationChange
   }: {
     tenant: Tenant | null;
@@ -40,7 +42,9 @@
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];
     section?: SettingsSection;
+    invitationStatus?: InvitationStatusFilter;
     onSectionChange: (section: SettingsSection) => void;
+    onInvitationStatusChange: (status: InvitationStatusFilter) => void;
     onCustomizationChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
@@ -69,6 +73,14 @@
   function sectionHref(nextSection: SettingsSection): string {
     return workspaceRouteHref(
       { mode: 'settings', settingsSection: nextSection },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function invitationStatusHref(status: InvitationStatusFilter): string {
+    return workspaceRouteHref(
+      { mode: 'settings', settingsSection: 'access', invitationStatus: status },
       tenant?.id ?? inventory?.tenantId ?? null,
       inventory?.id ?? null
     );
@@ -149,7 +161,14 @@
       </section>
 
       {:else if section === 'access'}
-      <InventoryAccessManager {tenant} {inventory} repository={accessRepository} />
+      <InventoryAccessManager
+        {tenant}
+        {inventory}
+        repository={accessRepository}
+        {invitationStatus}
+        invitationStatusHref={invitationStatusHref}
+        onInvitationStatusChange={onInvitationStatusChange}
+      />
 
       {:else if section === 'activity'}
       <InventoryAuditPanel {tenant} {inventory} repository={auditRepository} />

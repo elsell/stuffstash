@@ -204,6 +204,40 @@ describe('InventoryAccessManager', () => {
     expect(statusFilter?.querySelectorAll('button[aria-pressed]')).toHaveLength(6);
     expect(statusFilter?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('All');
   });
+
+  it('exposes route-backed invitation status filter links when hrefs are provided', async () => {
+    const { repository, calls } = fakeAccessRepository();
+    let selectedStatus: InvitationStatusFilter | null = null;
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository,
+        invitationStatus: 'pending',
+        invitationStatusHref: (status) =>
+          status === 'all'
+            ? '/tenants/tenant-one/inventories/inventory-one/settings/access'
+            : `/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=${status}`,
+        onInvitationStatusChange: (status) => {
+          selectedStatus = status;
+        }
+      }
+    });
+    await flush();
+
+    const statusFilter = segmentedGroup('Invitation status');
+    expect(statusFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(6);
+    expect(link('Pending').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending');
+    expect(link('Pending').getAttribute('aria-current')).toBe('page');
+
+    link('Revoked').click();
+    await flush();
+
+    expect(selectedStatus).toBe('revoked');
+    expect(calls).toContain('list-invitations:tenant-one:inventory-one:revoked:');
+  });
 });
 
 async function setInput(selector: string, value: string): Promise<void> {
@@ -222,6 +256,14 @@ function clickButton(text: string): void {
     throw new Error(`Missing button ${text}`);
   }
   button.click();
+}
+
+function link(text: string): HTMLAnchorElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) => candidate.textContent === text);
+  if (!target) {
+    throw new Error(`Missing link ${text}`);
+  }
+  return target;
 }
 
 function clickIconButton(label: string): void {
