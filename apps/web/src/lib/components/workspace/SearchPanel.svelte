@@ -34,7 +34,7 @@
     error: string;
     busy: boolean;
     onSearch: () => void;
-    onOpenAsset: (assetId: string) => void;
+    onOpenAsset: (asset: Asset) => void;
   } = $props();
 
   const lifecycleOptions: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
@@ -68,6 +68,13 @@
   });
 
   function assetHref(asset: Asset): string {
+    if (asset.kind === 'location') {
+      return workspaceRouteHref(
+        { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
+        asset.tenantId,
+        asset.inventoryId
+      );
+    }
     return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
   }
 
@@ -93,7 +100,7 @@
     event.preventDefault();
     query = asset.title;
     closeSuggestions();
-    onOpenAsset(asset.id);
+    onOpenAsset(asset);
   }
 
   function openAsset(event: MouseEvent, asset: Asset): void {
@@ -101,7 +108,7 @@
       return;
     }
     event.preventDefault();
-    onOpenAsset(asset.id);
+    onOpenAsset(asset);
   }
 
   function shouldHandleInApp(event: MouseEvent): boolean {

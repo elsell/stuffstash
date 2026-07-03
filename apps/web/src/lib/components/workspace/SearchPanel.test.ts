@@ -18,7 +18,7 @@ interface SearchPanelProps {
   error: string;
   busy: boolean;
   onSearch: () => void;
-  onOpenAsset: (assetId: string) => void;
+  onOpenAsset: (asset: Asset) => void;
 }
 
 function asset(id: string, title: string, kind: Asset['kind'] = 'item', photoUrl?: string): Asset {
@@ -55,8 +55,8 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
       onSearch: () => {
         searches.push('search');
       },
-      onOpenAsset: (assetId) => {
-        openedAssetIds.push(assetId);
+      onOpenAsset: (selected) => {
+        openedAssetIds.push(selected.id);
       },
       ...props
     }
@@ -231,6 +231,39 @@ describe('SearchPanel', () => {
     await flush();
 
     expect(openedAssetIds).toEqual(['passport']);
+  });
+
+  it('routes location suggestions and results to the focused location surface', async () => {
+    const locationAsset = asset('garage', 'Garage', 'location');
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: locationAsset,
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'title', value: 'Garage' }]
+      }
+    ];
+    const { openedAssetIds } = mountSearchPanel({
+      query: 'ga',
+      suggestions: [locationAsset],
+      results,
+      submitted: true
+    });
+
+    searchInput().focus();
+    await flush();
+
+    expect(controlWithLabel('Open Garage').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/garage'
+    );
+    expect(linkWithText('Garage').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/garage'
+    );
+
+    controlWithLabel('Open Garage').click();
+    await flush();
+
+    expect(openedAssetIds).toEqual(['garage']);
   });
 
   it('preserves modified clicks on search result links', () => {

@@ -256,6 +256,24 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('opens location search results as focused location routes', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search?q=Garage');
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Garage');
+      expect(controlContaining('Garage').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
+      );
+    });
+
+    controlContaining('Garage').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Main storage area');
+    });
+  });
+
   it('updates the search filter URL when no query has been submitted', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search');
 

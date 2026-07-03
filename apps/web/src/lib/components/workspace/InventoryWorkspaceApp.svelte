@@ -462,13 +462,12 @@
     });
   }
 
-  function openAssetById(assetId: string): void {
-    const asset =
-      assets.find((candidate) => candidate.id === assetId) ??
-      searchResults.find((result) => result.asset.id === assetId)?.asset;
-    if (asset) {
-      openAsset(asset);
+  function openSearchAsset(asset: Asset): void {
+    if (asset.kind === 'location') {
+      openLocation(asset);
+      return;
     }
+    void openAsset(asset);
   }
 
   function resetSearchState(): void {
@@ -1139,7 +1138,7 @@
       onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
       onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
       onSearch={() => { void search(); }}
-      onOpenAsset={openAsset}
+      onOpenAsset={openSearchAsset}
       onOpenAdd={openAdd}
     />
 
@@ -1214,7 +1213,7 @@
         error={searchError}
         {busy}
         onSearch={() => { void search(); }}
-        onOpenAsset={openAssetById}
+        onOpenAsset={openSearchAsset}
       />
     {:else if mode === 'import'}
       <HomeboxImportPanel

@@ -20,12 +20,12 @@ const inventory: Inventory = {
   access: { relationship: 'owner', permissions: [] }
 };
 
-function asset(id: string, title: string, photoUrl?: string): Asset {
+function asset(id: string, title: string, photoUrl?: string, kind: Asset['kind'] = 'item'): Asset {
   return {
     id,
     tenantId: tenant.id,
     inventoryId: inventory.id,
-    kind: 'item',
+    kind,
     title,
     description: '',
     parentAssetId: null,
@@ -125,6 +125,25 @@ describe('TopHeader', () => {
 
     expect(document.body.querySelector('#global-search-suggestions img')).toBeNull();
     expect(document.body.querySelectorAll('#global-search-suggestions .asset-thumb svg')).toHaveLength(2);
+  });
+
+  it('routes global location suggestions to the focused location surface', async () => {
+    const { selectedAssets } = mountHeader({
+      suggestions: [asset('garage', 'Garage', undefined, 'location')]
+    });
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+
+    expect(controlWithLabel('Open Garage').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/garage'
+    );
+
+    controlWithLabel('Open Garage').click();
+    await flush();
+
+    expect(selectedAssets.map((selected) => selected.id)).toEqual(['garage']);
   });
 
   it('preserves modified clicks on global suggestion links', async () => {

@@ -77,6 +77,13 @@
   }
 
   function assetHref(asset: Asset): string {
+    if (asset.kind === 'location') {
+      return workspaceRouteHref(
+        { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
+        asset.tenantId,
+        asset.inventoryId
+      );
+    }
     return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
   }
 

@@ -404,8 +404,8 @@ Search behavior:
 - Search should resolve to authorized assets, containers, and locations in the selected inventory.
 - Search should provide autocomplete-style suggestions from visible inventory assets while preserving the repository-backed search action as the authoritative result source.
 - Search suggestions and search results must show an asset image thumbnail when the asset has its own primary photo, and must show the same explicit kind fallback used elsewhere when it does not.
-- Search result rows should open asset or location detail/list surfaces.
-- Search suggestions and result rows must expose canonical asset `href` values while preserving ordinary in-app navigation behavior.
+- Search result rows should open asset or location detail/list surfaces. Location-kind results and suggestions must route to the focused location URL rather than generic asset detail.
+- Search suggestions and result rows must expose canonical destination `href` values while preserving ordinary in-app navigation behavior.
 - No-results and denied states must be explicit and calm.
 - Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
 
