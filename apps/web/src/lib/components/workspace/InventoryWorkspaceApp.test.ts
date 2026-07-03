@@ -405,6 +405,73 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links attachment delete confirmations under the selected asset', async () => {
+    const repository = new SeededInventoryRepository(structuredClone(seed));
+    const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+
+    await mountWorkspace(
+      `/tenants/tenant-home/inventories/inventory-household/assets/asset-home/attachments/${attachment.id}/delete`,
+      repository
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe(
+        `/tenants/tenant-home/inventories/inventory-household/assets/asset-home/attachments/${attachment.id}/delete`
+      );
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.textContent).toContain('Delete attachment');
+      expect(document.body.textContent).toContain('Delete manual.pdf permanently?');
+    });
+
+    expect(controlContaining('Cancel').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home'
+    );
+    controlContaining('Cancel').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+      expect(document.body.textContent).not.toContain('Delete attachment');
+    });
+  });
+
+  it('keeps location attachment delete cancel aligned with the exposed location href', async () => {
+    const repository = new SeededInventoryRepository(structuredClone(seed));
+    const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'location-garage', {
+      id: 'garage-manual',
+      name: 'garage-photo.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'garage-photo.pdf', { type: 'application/pdf' })
+    });
+
+    await mountWorkspace(
+      `/tenants/tenant-home/inventories/inventory-household/assets/location-garage/attachments/${attachment.id}/delete`,
+      repository
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Delete attachment');
+      expect(document.body.textContent).toContain('Delete garage-photo.pdf permanently?');
+    });
+
+    expect(controlContaining('Cancel').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
+    );
+    controlContaining('Cancel').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Main storage area');
+      expect(document.body.textContent).not.toContain('Delete attachment');
+    });
+  });
+
   it('closes the add tray after a saved asset with a photo upload warning', async () => {
     const repository = await mountWorkspace(
       '/tenants/tenant-home/inventories/inventory-household/add/item',

@@ -79,6 +79,20 @@ describe('workspace route state', () => {
     });
   });
 
+  it('parses attachment delete confirmation routes under the parent asset', () => {
+    expect(
+      parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/delete'))
+    ).toMatchObject({
+      mode: 'asset',
+      tenantId: 'tenant_1',
+      inventoryId: 'inv_1',
+      assetId: 'asset_1',
+      attachmentId: 'file_1',
+      attachmentAction: 'delete',
+      assetAction: null
+    });
+  });
+
   it('formats stable workspace hrefs', () => {
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset 1', action: 'edit' }, 'tenant 1', 'inv 1')).toBe(
       '/tenants/tenant%201/inventories/inv%201/assets/asset%201/edit'
@@ -99,6 +113,13 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/activity'
     );
+    expect(
+      workspaceRouteHref(
+        { mode: 'asset', assetId: 'asset_1', attachmentId: 'file_1', attachmentAction: 'delete' },
+        'tenant_1',
+        'inv_1'
+      )
+    ).toBe('/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/delete');
     expect(
       workspaceRouteHref(
         { mode: 'asset', locationId: 'location_1', assetId: 'location_1', action: 'edit', assetAction: 'edit' },
@@ -135,6 +156,8 @@ describe('workspace route state', () => {
       'https://app.test/tenants/tenant_1/inventories/inv_1/locations/loc_1/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/edit/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/share',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/archive',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/delete/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/search/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/import/junk',

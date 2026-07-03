@@ -345,6 +345,49 @@ describe('AssetDetail', () => {
     expect(link('Edit').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations/asset-one/edit');
   });
 
+  it('exposes canonical hrefs for attachment delete confirmations', async () => {
+    let openedAttachmentId = '';
+    let closed = false;
+    mountAssetDetail({
+      attachments: [attachment('manual-one', 'manual.pdf', 'application/pdf')],
+      onAttachmentDeleteOpen: (attachmentId) => {
+        openedAttachmentId = attachmentId;
+      },
+      onAttachmentDeleteClose: () => {
+        closed = true;
+      }
+    });
+
+    const deleteLink = link('Delete');
+    expect(deleteLink.getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/manual-one/delete'
+    );
+    deleteLink.click();
+    await flush();
+
+    expect(openedAttachmentId).toBe('manual-one');
+    expect(document.body.textContent).toContain('Delete attachment');
+    expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one');
+
+    link('Cancel').click();
+    await flush();
+
+    expect(closed).toBe(true);
+    expect(document.body.textContent).not.toContain('Delete attachment');
+  });
+
+  it('opens attachment delete confirmation from route state', async () => {
+    mountAssetDetail({
+      attachmentId: 'manual-one',
+      attachmentAction: 'delete',
+      attachments: [attachment('manual-one', 'manual.pdf', 'application/pdf')]
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Delete attachment');
+    expect(document.body.textContent).toContain('Delete manual.pdf permanently?');
+  });
+
   it('exposes canonical hrefs for asset action cancel controls', async () => {
     let actionClosed = false;
     mountAssetDetail({
@@ -481,6 +524,8 @@ function mountAssetDetail(
   props: Partial<{
     asset: AssetViewModel;
     action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
+    attachmentId: string | null;
+    attachmentAction: 'delete' | null;
     canEdit: boolean;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
@@ -497,6 +542,8 @@ function mountAssetDetail(
     onDelete: () => Promise<void>;
     onUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
+    onAttachmentDeleteOpen: (attachmentId: string) => void;
+    onAttachmentDeleteClose: () => void;
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
   }> = {}
 ): void {
@@ -523,6 +570,8 @@ function mountAssetDetail(
       onDelete: async () => {},
       onUploadAttachment: async () => {},
       onArchiveAttachment: async () => {},
+      onAttachmentDeleteOpen: () => {},
+      onAttachmentDeleteClose: () => {},
       onDeleteAttachment: async () => {},
       ...props
     }

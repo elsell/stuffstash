@@ -13,7 +13,12 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import { workspaceRouteHref, type AssetRouteAction, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
+  import {
+    workspaceRouteHref,
+    type AssetRouteAction,
+    type AttachmentRouteAction,
+    type WorkspaceRouteState
+  } from '$lib/application/workspaceRoute';
   import type {
     AssetAttachment,
     AssetViewModel,
@@ -40,6 +45,8 @@
     asset,
     canEdit,
     action = null,
+    attachmentId = null,
+    attachmentAction = null,
     parentTargets,
     customFieldDefinitions,
     saving,
@@ -55,11 +62,15 @@
     onDelete,
     onUploadAttachment,
     onArchiveAttachment,
+    onAttachmentDeleteOpen,
+    onAttachmentDeleteClose,
     onDeleteAttachment
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
     action?: AssetRouteAction;
+    attachmentId?: string | null;
+    attachmentAction?: AttachmentRouteAction;
     parentTargets: AssetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
@@ -75,6 +86,8 @@
     onDelete: () => Promise<void>;
     onUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
+    onAttachmentDeleteOpen: (attachmentId: string) => void;
+    onAttachmentDeleteClose: () => void;
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
   } = $props();
 
@@ -114,13 +127,18 @@
   );
 
   $effect(() => {
-    const actionKey = `${asset.id}:${action ?? 'none'}`;
+    const attachmentKey = attachmentAction === 'delete' ? attachments.map((attachment) => attachment.id).join(',') : 'none';
+    const actionKey = `${asset.id}:${action ?? 'none'}:${attachmentAction ?? 'none'}:${attachmentId ?? 'none'}:${attachmentKey}`;
     if (actionKey === lastRouteActionKey) {
       return;
     }
-    const initializingWithoutRouteAction = lastRouteActionKey === '' && !action;
+    const initializingWithoutRouteAction = lastRouteActionKey === '' && !action && !attachmentAction;
     lastRouteActionKey = actionKey;
-    if (action === 'edit' && canEdit && asset.lifecycleState === 'active') {
+    if (attachmentAction === 'delete' && canEdit) {
+      const routeAttachment = attachments.find((attachment) => attachment.id === attachmentId) ?? null;
+      selectedAttachment = routeAttachment;
+      panel = routeAttachment ? 'attachment-delete' : 'none';
+    } else if (action === 'edit' && canEdit && asset.lifecycleState === 'active') {
       openEdit(false);
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
       openMove(false);
@@ -130,13 +148,22 @@
       panel = 'restore';
     } else if (action === 'delete' && canEdit) {
       panel = 'delete';
-    } else if (!action && !initializingWithoutRouteAction) {
+    } else if (!action && !attachmentAction && !initializingWithoutRouteAction) {
       panel = 'none';
+      selectedAttachment = null;
     }
   });
 
   $effect(() => {
-    if ((panel === 'edit' || panel === 'move' || panel === 'archive' || panel === 'restore' || panel === 'delete') && actionPanelElement) {
+    if (
+      (panel === 'edit' ||
+        panel === 'move' ||
+        panel === 'archive' ||
+        panel === 'restore' ||
+        panel === 'delete' ||
+        panel === 'attachment-delete') &&
+      actionPanelElement
+    ) {
       actionPanelElement.focus();
     }
   });
@@ -241,6 +268,21 @@
     );
   }
 
+  function attachmentDeleteHref(attachment: AssetAttachment): string {
+    return workspaceRouteHref(
+      {
+        mode: 'asset',
+        tenantId: asset.tenantId,
+        inventoryId: asset.inventoryId,
+        assetId: asset.id,
+        attachmentId: attachment.id,
+        attachmentAction: 'delete'
+      },
+      asset.tenantId,
+      asset.inventoryId
+    );
+  }
+
   function actionIsAvailable(nextAction: Exclude<AssetRouteAction, null>): boolean {
     if (!canEdit || saving) {
       return false;
@@ -279,6 +321,7 @@
   function closePanel(): void {
     const previousPanel = panel;
     panel = 'none';
+    selectedAttachment = null;
     if (
       previousPanel === 'edit' ||
       previousPanel === 'move' ||
@@ -287,6 +330,8 @@
       previousPanel === 'delete'
     ) {
       onActionClose();
+    } else if (previousPanel === 'attachment-delete') {
+      onAttachmentDeleteClose();
     }
   }
 
@@ -376,9 +421,23 @@
       await onDeleteAttachment(selectedAttachment);
       selectedAttachment = null;
       panel = 'none';
+      onAttachmentDeleteClose();
     } catch (caught) {
       saveError = caught instanceof Error ? caught.message : 'Unable to delete attachment.';
     }
+  }
+
+  function openAttachmentDelete(event: MouseEvent, attachment: AssetAttachment): void {
+    if (!canEdit || saving) {
+      return;
+    }
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    selectedAttachment = attachment;
+    panel = 'attachment-delete';
+    onAttachmentDeleteOpen(attachment.id);
   }
 
   function formatBytes(sizeBytes: number): string {
@@ -634,9 +693,10 @@
                 <div class="attachment-actions">
                   <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archiveAttachment(attachment); }}>Archive</Button.Root>
                   <Button.Root
+                    href={attachmentDeleteHref(attachment)}
                     variant="destructive"
                     disabled={!canEdit || saving}
-                    onclick={() => { selectedAttachment = attachment; panel = 'attachment-delete'; }}
+                    onclick={(event) => openAttachmentDelete(event, attachment)}
                   >
                     <Trash2 /> Delete
                   </Button.Root>
@@ -790,16 +850,22 @@
           {/if}
         </section>
       {:else if panel === 'attachment-delete' && selectedAttachment}
-        <div class="detail-action-panel" aria-label="Delete attachment">
+        <section
+          bind:this={actionPanelElement}
+          class="detail-action-panel"
+          aria-labelledby="delete-attachment-panel-title"
+          tabindex="-1"
+        >
+          <h2 id="delete-attachment-panel-title">Delete attachment</h2>
           <p>Delete {selectedAttachment.fileName} permanently?</p>
           <div class="tray-actions">
-            <Button.Root variant="outline" onclick={() => { panel = 'none'; selectedAttachment = null; }}>Cancel</Button.Root>
+            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root variant="destructive" disabled={saving} onclick={() => { void removeAttachment(); }}>Delete</Button.Root>
           </div>
           {#if saveError}
             <p class="denied-note" role="alert">{saveError}</p>
           {/if}
-        </div>
+        </section>
       {/if}
       <div class="danger-zone" aria-label="Danger area">
         <div>

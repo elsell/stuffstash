@@ -76,6 +76,8 @@
   let addOpen = $state(false);
   let addKind = $state<AssetKind>('item');
   let assetAction = $state<AssetRouteAction>(null);
+  let attachmentId = $state<string | null>(null);
+  let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
   let busy = $state(false);
   let message = $state('');
   let error = $state('');
@@ -134,6 +136,8 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      attachmentId = null;
+      attachmentAction = null;
       if (!applyingRoute) {
         replaceRoute({ mode: 'home', tenantId, inventoryId, lifecycleState: data.context.assetLifecycleState });
       }
@@ -151,6 +155,8 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      attachmentId = null;
+      attachmentAction = null;
       if (!applyingRoute) {
         replaceRoute({
           mode: 'home',
@@ -206,12 +212,16 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        attachmentId = null;
+        attachmentAction = null;
       }
       if (result.selectedAsset) {
         selectedLocationId = null;
         selectedAssetId = result.selectedAsset.id;
         loadedAssetDetail = result.selectedAsset;
         selectedAssetAttachments = [];
+        attachmentId = null;
+        attachmentAction = null;
       }
       if (result.route) {
         replaceRoute(result.route);
@@ -469,6 +479,8 @@
       addOpen = route.action === 'add';
       addKind = route.addKind ?? 'item';
       assetAction = route.assetAction;
+      attachmentId = route.attachmentId;
+      attachmentAction = route.attachmentAction;
       searchQuery = route.searchQuery;
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
@@ -504,6 +516,8 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        attachmentId = null;
+        attachmentAction = null;
         mode = 'locations';
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
@@ -517,6 +531,8 @@
           selectedAssetId = null;
           loadedAssetDetail = null;
           selectedAssetAttachments = [];
+          attachmentId = null;
+          attachmentAction = null;
           mode = 'location';
           canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         } else {
@@ -537,6 +553,8 @@
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
         }
+        attachmentId = route.attachmentId;
+        attachmentAction = route.attachmentAction;
         if (route.locationId) {
           if (loadedAssetDetail?.kind !== 'location') {
             showUnavailableRoute('That location is not available in this inventory.');
@@ -546,6 +564,8 @@
         }
         if (!assetRouteActionIsAvailable(route.assetAction, selectedInventory, loadedAssetDetail)) {
           assetAction = null;
+          attachmentId = null;
+          attachmentAction = null;
           replaceRoute({
             mode: 'asset',
             tenantId: data.context.selectedTenantId,
@@ -553,6 +573,31 @@
             assetId: route.assetId
           });
           return;
+        }
+        if (route.attachmentAction === 'delete') {
+          if (!canEditAsset(selectedInventory)) {
+            attachmentId = null;
+            attachmentAction = null;
+            replaceRoute({
+              mode: 'asset',
+              tenantId: data.context.selectedTenantId,
+              inventoryId: data.context.selectedInventoryId,
+              assetId: route.assetId
+            });
+            return;
+          }
+          const routedAttachment = selectedAssetAttachments.find((attachment) => attachment.id === route.attachmentId);
+          if (!routedAttachment || routedAttachment.assetId !== route.assetId) {
+            attachmentId = null;
+            attachmentAction = null;
+            replaceRoute({
+              mode: 'asset',
+              tenantId: data.context.selectedTenantId,
+              inventoryId: data.context.selectedInventoryId,
+              assetId: route.assetId
+            });
+            return;
+          }
         }
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
@@ -623,6 +668,8 @@
     routeUnavailable = messageText;
     addOpen = false;
     assetAction = null;
+    attachmentId = null;
+    attachmentAction = null;
     mode = 'home';
     selectedLocationId = null;
     selectedAssetId = null;
@@ -693,6 +740,19 @@
     }
   }
 
+  function openAttachmentDeleteRoute(nextAttachmentId: string): void {
+    if (selectedAsset) {
+      navigateTo({
+        mode: 'asset',
+        tenantId: selectedAsset.tenantId,
+        inventoryId: selectedAsset.inventoryId,
+        assetId: selectedAsset.id,
+        attachmentId: nextAttachmentId,
+        attachmentAction: 'delete'
+      });
+    }
+  }
+
   function closeAssetActionRoute(): void {
     assetAction = null;
     if (selectedAsset) {
@@ -713,6 +773,23 @@
               locationId: closingAsset.id
             }
           : { mode: 'asset', tenantId: closingAsset.tenantId, inventoryId: closingAsset.inventoryId, assetId: closingAsset.id }
+      );
+    }
+  }
+
+  function closeAttachmentDeleteRoute(): void {
+    attachmentId = null;
+    attachmentAction = null;
+    if (selectedAsset) {
+      replaceRoute(
+        selectedAsset.kind === 'location'
+          ? {
+              mode: 'location',
+              tenantId: selectedAsset.tenantId,
+              inventoryId: selectedAsset.inventoryId,
+              locationId: selectedAsset.id
+            }
+          : { mode: 'asset', tenantId: selectedAsset.tenantId, inventoryId: selectedAsset.inventoryId, assetId: selectedAsset.id }
       );
     }
   }
@@ -740,6 +817,8 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    attachmentId = null;
+    attachmentAction = null;
     try {
       const result = await loadWorkspaceAssetDetail(repository, tenantId, inventoryId, assetId);
       if (requestId !== assetDetailRequestId) {
@@ -783,6 +862,8 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    attachmentId = null;
+    attachmentAction = null;
     message = 'Import applied.';
     replaceRoute({
       mode: 'home',
@@ -968,6 +1049,8 @@
         attachments={selectedAssetAttachments}
         mediaPolicy={data.context.mediaUploadPolicy}
         action={assetAction}
+        {attachmentId}
+        {attachmentAction}
         backHref={assetDetailBackHref()}
         onBack={closeDetailToPrevious}
         onActionOpen={openAssetActionRoute}
@@ -978,6 +1061,8 @@
         onDelete={deleteSelectedAsset}
         onUploadAttachment={uploadSelectedAttachment}
         onArchiveAttachment={archiveSelectedAttachment}
+        onAttachmentDeleteOpen={openAttachmentDeleteRoute}
+        onAttachmentDeleteClose={closeAttachmentDeleteRoute}
         onDeleteAttachment={deleteSelectedAttachment}
       />
     {:else if mode === 'search'}

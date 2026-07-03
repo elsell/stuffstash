@@ -2,6 +2,7 @@ import type { AssetKind, AssetLifecycleFilter, SearchLifecycleFilter, SearchMode
 
 export type WorkspaceAction = 'add' | 'edit' | null;
 export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
+export type AttachmentRouteAction = 'delete' | null;
 export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
 
 export interface WorkspaceRouteState {
@@ -12,6 +13,8 @@ export interface WorkspaceRouteState {
   assetId: string | null;
   action: WorkspaceAction;
   assetAction: AssetRouteAction;
+  attachmentId: string | null;
+  attachmentAction: AttachmentRouteAction;
   addKind: AssetKind | null;
   settingsSection: SettingsSection;
   lifecycleState: AssetLifecycleFilter;
@@ -28,6 +31,8 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   assetId: null,
   action: null,
   assetAction: null,
+  attachmentId: null,
+  attachmentAction: null,
   addKind: null,
   settingsSection: 'overview',
   lifecycleState: 'active',
@@ -38,6 +43,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
 
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
 const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete']);
+const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
@@ -90,6 +96,25 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
       assetAction: action
     };
   }
+  if (
+    section === 'assets' &&
+    remaining === 5 &&
+    segments[inventoryOffset.nextIndex + 1] &&
+    segments[inventoryOffset.nextIndex + 2] === 'attachments' &&
+    segments[inventoryOffset.nextIndex + 3]
+  ) {
+    const attachmentAction = parseAttachmentAction(segments[inventoryOffset.nextIndex + 4]);
+    if (!attachmentAction) {
+      return { ...defaultWorkspaceRoute };
+    }
+    return {
+      ...route,
+      mode: 'asset',
+      assetId: segments[inventoryOffset.nextIndex + 1],
+      attachmentId: segments[inventoryOffset.nextIndex + 3],
+      attachmentAction
+    };
+  }
   if (section === 'assets' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
     const action = parseAssetAction(segments[inventoryOffset.nextIndex + 2]);
     if (remaining === 3 && !action) {
@@ -123,6 +148,10 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
 function parseAssetAction(value: string | undefined): AssetRouteAction {
   return assetActions.has(value as AssetRouteAction) ? (value as AssetRouteAction) : null;
+}
+
+function parseAttachmentAction(value: string | undefined): AttachmentRouteAction {
+  return attachmentActions.has(value as AttachmentRouteAction) ? (value as AttachmentRouteAction) : null;
 }
 
 function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit'> | null {
@@ -184,6 +213,11 @@ export function workspaceRouteHref(
       path += `/locations/${encodeURIComponent(next.assetId)}/edit`;
     } else {
       path += `/assets/${encodeURIComponent(next.assetId)}`;
+    }
+    if (next.attachmentId && next.attachmentAction) {
+      path += `/attachments/${encodeURIComponent(next.attachmentId)}/${next.attachmentAction}`;
+      const query = search.toString();
+      return query ? `${path}?${query}` : path;
     }
     if (action && !isLocationEdit) {
       path += `/${action}`;
