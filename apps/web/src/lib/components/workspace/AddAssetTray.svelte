@@ -18,6 +18,7 @@
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import ParentTargetPicker from './ParentTargetPicker.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -73,21 +74,6 @@
 
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
-  let parentSearchQuery = $derived(parentSearch.trim().toLowerCase());
-  let matchingParentTargets = $derived(
-    parentTargets
-      .filter((target) => {
-        if (!parentSearchQuery) {
-          return true;
-        }
-        return (
-          target.title.toLowerCase().includes(parentSearchQuery) ||
-          target.containmentTrail.toLowerCase().includes(parentSearchQuery)
-        );
-      })
-  );
-  let visibleParentTargets = $derived(matchingParentTargets.slice(0, 8));
-  let selectedParentTarget = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
 
   $effect(() => {
     if (open && !wasOpen) {
@@ -242,8 +228,8 @@
     }
   }
 
-  function selectParentTarget(id: string): void {
-    parentAssetId = id;
+  function selectParentTarget(id: string | null): void {
+    parentAssetId = id ?? '';
     parentSearch = id ? parentTargets.find((target) => target.id === id)?.title ?? parentSearch : '';
   }
 
@@ -315,41 +301,15 @@
       <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder="Tomato fertilizer" />
     </div>
 
-    <fieldset class="selection-field parent-selection">
-      <legend>Place in existing parent</legend>
-      <div class="field-stack">
-        <Label for="parent-search">Find parent</Label>
-        <Input id="parent-search" bind:value={parentSearch} placeholder="Search locations or containers" />
-      </div>
-      <p class="selection-summary">
-        {selectedParentTarget ? `Selected ${selectedParentTarget.title}` : 'Selected inventory root'}
-      </p>
-      <div class="parent-picker option-grid" role="group" aria-label="Parent target">
-        <Button.Root
-          variant={parentAssetId === '' ? 'secondary' : 'outline'}
-          aria-pressed={parentAssetId === ''}
-          onclick={() => selectParentTarget('')}
-        >
-          Inventory root
-        </Button.Root>
-        {#each visibleParentTargets as target}
-          <Button.Root
-            variant={parentAssetId === target.id ? 'secondary' : 'outline'}
-            class="parent-target-button"
-            aria-pressed={parentAssetId === target.id}
-            onclick={() => selectParentTarget(target.id)}
-          >
-            <span>{target.title}</span>
-            <small>{target.containmentTrail}</small>
-          </Button.Root>
-        {/each}
-      </div>
-      {#if parentSearchQuery && visibleParentTargets.length === 0}
-        <p class="muted-note">No matching locations or containers.</p>
-      {:else if matchingParentTargets.length > visibleParentTargets.length}
-        <p class="muted-note">Showing the first {visibleParentTargets.length} of {matchingParentTargets.length} matches.</p>
-      {/if}
-    </fieldset>
+    <ParentTargetPicker
+      legend="Place in existing parent"
+      searchId="parent-search"
+      groupLabel="Parent target"
+      bind:search={parentSearch}
+      selectedId={parentAssetId || null}
+      targets={parentTargets}
+      onSelect={selectParentTarget}
+    />
 
     <div class="field-stack">
       <Label for="quick-parent-title">Create a new parent inside that place</Label>

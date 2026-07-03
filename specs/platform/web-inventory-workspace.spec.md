@@ -381,6 +381,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
 - The add surface parent picker must support filtering valid parent targets and must expose each picker group with honest grouped-control semantics rather than unlabeled piles of buttons.
 - Asset detail edit and move panels must use the same grouped-control and searchable parent-target patterns as the add surface.
+- Add and move parent-target selection must be implemented through a shared workspace picker component so filtering, selected-state language, empty states, and grouped-control semantics do not drift between creation and asset-detail actions.
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
 - Import options for images, insecure TLS, and private-network access must use explicit binary controls with visible on/off state and honest switch or checkbox semantics.

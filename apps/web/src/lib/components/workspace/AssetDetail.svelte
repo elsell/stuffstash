@@ -23,6 +23,7 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import KindIcon from './KindIcon.svelte';
+  import ParentTargetPicker from './ParentTargetPicker.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   type DetailPhoto = {
@@ -90,17 +91,6 @@
   let actionPanelElement = $state<HTMLElement | null>(null);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
-  let moveParentQuery = $derived(moveParentSearch.trim().toLowerCase());
-  let matchingMoveParentTargets = $derived(
-    parentTargets.filter((target) => {
-      if (!moveParentQuery) {
-        return true;
-      }
-      return target.title.toLowerCase().includes(moveParentQuery) || target.containmentTrail.toLowerCase().includes(moveParentQuery);
-    })
-  );
-  let visibleMoveParentTargets = $derived(matchingMoveParentTargets.slice(0, 8));
-  let selectedMoveParentTarget = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
@@ -603,41 +593,15 @@
           tabindex="-1"
         >
           <h2 id="move-asset-panel-title">Move asset</h2>
-          <fieldset class="selection-field">
-            <legend>Parent</legend>
-            <div class="field-stack">
-              <Label for="move-parent-search">Find parent</Label>
-              <Input id="move-parent-search" bind:value={moveParentSearch} placeholder="Search locations or containers" />
-            </div>
-            <p class="selection-summary">
-              {selectedMoveParentTarget ? `Selected ${selectedMoveParentTarget.title}` : 'Selected inventory root'}
-            </p>
-            <div class="parent-picker option-grid" role="group" aria-label="Move target">
-              <Button.Root
-                variant={parentAssetId === null ? 'secondary' : 'outline'}
-                aria-pressed={parentAssetId === null}
-                onclick={() => selectMoveParent(null)}
-              >
-                Inventory root
-              </Button.Root>
-              {#each visibleMoveParentTargets as target}
-                <Button.Root
-                  variant={parentAssetId === target.id ? 'secondary' : 'outline'}
-                  class="parent-target-button"
-                  aria-pressed={parentAssetId === target.id}
-                  onclick={() => selectMoveParent(target.id)}
-                >
-                  <span>{target.title}</span>
-                  <small>{target.containmentTrail}</small>
-                </Button.Root>
-              {/each}
-            </div>
-            {#if moveParentQuery && visibleMoveParentTargets.length === 0}
-              <p class="muted-note">No matching locations or containers.</p>
-            {:else if matchingMoveParentTargets.length > visibleMoveParentTargets.length}
-              <p class="muted-note">Showing the first {visibleMoveParentTargets.length} of {matchingMoveParentTargets.length} matches.</p>
-            {/if}
-          </fieldset>
+          <ParentTargetPicker
+            legend="Parent"
+            searchId="move-parent-search"
+            groupLabel="Move target"
+            bind:search={moveParentSearch}
+            selectedId={parentAssetId}
+            targets={parentTargets}
+            onSelect={selectMoveParent}
+          />
           <div class="tray-actions">
             <Button.Root variant="outline" onclick={closePanel}>Cancel</Button.Root>
             <Button.Root disabled={saving} onclick={() => { void save(); }}>Move</Button.Root>
