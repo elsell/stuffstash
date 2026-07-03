@@ -47,8 +47,10 @@ describe('InventorySettings', () => {
         customFieldDefinitions: [],
         section: 'overview',
         invitationStatus: 'all',
+        auditScope: 'inventory',
         onSectionChange,
         onInvitationStatusChange: () => {},
+        onAuditScopeChange: () => {},
         onCustomizationChange: () => {}
       }
     });
@@ -87,6 +89,7 @@ describe('InventorySettings', () => {
         section: 'administration',
         onSectionChange: () => {},
         onInvitationStatusChange: () => {},
+        onAuditScopeChange: () => {},
         onCustomizationChange: () => {}
       }
     });
@@ -119,6 +122,7 @@ describe('InventorySettings', () => {
         section: 'overview',
         onSectionChange: () => {},
         onInvitationStatusChange: () => {},
+        onAuditScopeChange: () => {},
         onCustomizationChange: () => {}
       }
     });
@@ -154,10 +158,12 @@ describe('InventorySettings', () => {
         customFieldDefinitions: [],
         section: 'access',
         invitationStatus: 'revoked',
+        auditScope: 'inventory',
         onSectionChange: () => {},
         onInvitationStatusChange: (status) => {
           selectedStatus = status;
         },
+        onAuditScopeChange: () => {},
         onCustomizationChange: () => {}
       }
     });
@@ -170,6 +176,56 @@ describe('InventorySettings', () => {
 
     linkStartingWith('Pending').click();
     expect(selectedStatus).toBe('pending');
+  });
+
+  it('passes route-backed activity audit scope links through settings', async () => {
+    const tenant: Tenant = {
+      id: 'tenant-one',
+      name: 'Household',
+      access: { relationship: 'owner', permissions: ['view', 'configure'] }
+    };
+    const inventory: Inventory = {
+      id: 'inventory-one',
+      tenantId: 'tenant-one',
+      name: 'Garage',
+      access: { relationship: 'owner', permissions: ['view'] }
+    };
+    let selectedScope = '';
+
+    component = mount(InventorySettings, {
+      target: document.body,
+      props: {
+        tenant,
+        inventory,
+        inventoryCount: 1,
+        accessRepository: fakeAccessRepository(),
+        auditRepository: fakeAuditRepository(),
+        customizationRepository: fakeCustomizationRepository(),
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        section: 'activity',
+        invitationStatus: 'all',
+        auditScope: 'tenant',
+        onSectionChange: () => {},
+        onInvitationStatusChange: () => {},
+        onAuditScopeChange: (scope) => {
+          selectedScope = scope;
+        },
+        onCustomizationChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(exactLink('Tenant').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
+    );
+    expect(exactLink('Tenant').getAttribute('aria-current')).toBe('page');
+    expect(linkStartingWith('Activity').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
+    );
+
+    exactLink('Inventory').click();
+    expect(selectedScope).toBe('inventory');
   });
 });
 
@@ -214,6 +270,14 @@ function linkStartingWith(text: string): HTMLAnchorElement {
   );
   if (!link) {
     throw new Error(`Missing link starting with ${text}`);
+  }
+  return link;
+}
+
+function exactLink(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) => candidate.textContent === text);
+  if (!link) {
+    throw new Error(`Missing link ${text}`);
   }
   return link;
 }

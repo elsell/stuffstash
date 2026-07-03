@@ -78,15 +78,27 @@ describe('workspace route state', () => {
       settingsSection: 'access',
       invitationStatus: 'revoked'
     });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/activity?auditScope=tenant'))).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'activity',
+      auditScope: 'tenant'
+    });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/nope'))).toMatchObject({
       mode: 'settings',
       settingsSection: 'overview',
-      invitationStatus: 'all'
+      invitationStatus: 'all',
+      auditScope: 'inventory'
     });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields?invitationStatus=revoked'))).toMatchObject({
       mode: 'settings',
       settingsSection: 'fields',
-      invitationStatus: 'all'
+      invitationStatus: 'all',
+      auditScope: 'inventory'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/access?auditScope=tenant'))).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'access',
+      auditScope: 'inventory'
     });
   });
 
@@ -129,6 +141,12 @@ describe('workspace route state', () => {
     );
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'access', invitationStatus: 'all' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/access'
+    );
+    expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: 'tenant' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/settings/activity?auditScope=tenant'
+    );
+    expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: 'inventory' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/settings/activity'
     );
     expect(
       workspaceRouteHref(

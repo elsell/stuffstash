@@ -110,6 +110,7 @@ The route path owns durable navigation state. Query parameters may own transient
 - `q={search query}`.
 - `mode=fuzzy|exact`.
 - `invitationStatus=all|pending|accepted|revoked|cancelled|expired` for the access settings invitation filter.
+- `auditScope=inventory|tenant` for the activity settings audit scope filter.
 
 Deep links must preserve tenant and inventory boundaries:
 
@@ -412,7 +413,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Asset detail edit and move panels must use the same grouped-control and searchable parent-target patterns as the add surface.
 - Add and move parent-target selection must be implemented through a shared workspace picker component so filtering, selected-state language, empty states, and grouped-control semantics do not drift between creation and asset-detail actions.
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.
-- Settings status filters that correspond to durable settings subsection state, such as access invitation status, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
+- Settings status and scope filters that correspond to durable settings subsection state, such as access invitation status and activity audit scope, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
 - Import options for images, insecure TLS, and private-network access must use the shared binary-option composition with visible on/off state, clear option copy, and honest switch or checkbox semantics.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.

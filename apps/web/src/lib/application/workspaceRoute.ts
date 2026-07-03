@@ -1,6 +1,7 @@
 import type {
   AssetKind,
   AssetLifecycleFilter,
+  AuditScope,
   InvitationStatusFilter,
   SearchLifecycleFilter,
   SearchMode,
@@ -25,6 +26,7 @@ export interface WorkspaceRouteState {
   addKind: AssetKind | null;
   settingsSection: SettingsSection;
   invitationStatus: InvitationStatusFilter;
+  auditScope: AuditScope;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
@@ -44,6 +46,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   addKind: null,
   settingsSection: 'overview',
   invitationStatus: 'all',
+  auditScope: 'inventory',
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
@@ -55,6 +58,7 @@ const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'rest
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
+const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
@@ -150,7 +154,8 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
       ...route,
       mode: 'settings',
       settingsSection,
-      invitationStatus: settingsSection === 'access' ? parseInvitationStatus(url.searchParams.get('invitationStatus')) : 'all'
+      invitationStatus: settingsSection === 'access' ? parseInvitationStatus(url.searchParams.get('invitationStatus')) : 'all',
+      auditScope: settingsSection === 'activity' ? parseAuditScope(url.searchParams.get('auditScope')) : 'inventory'
     };
   }
   if (section === 'import') {
@@ -258,6 +263,9 @@ export function workspaceRouteHref(
     if (next.settingsSection === 'access' && next.invitationStatus !== 'all') {
       search.set('invitationStatus', next.invitationStatus);
     }
+    if (next.settingsSection === 'activity' && next.auditScope !== 'inventory') {
+      search.set('auditScope', next.auditScope);
+    }
   } else if (inventoryId && next.mode === 'import') {
     path += '/import';
   } else if (inventoryId && next.action === 'add' && next.addKind) {
@@ -284,4 +292,8 @@ function parseSearchMode(value: string | null): SearchMode {
 
 function parseInvitationStatus(value: string | null): InvitationStatusFilter {
   return invitationStatuses.has(value as InvitationStatusFilter) ? (value as InvitationStatusFilter) : 'all';
+}
+
+function parseAuditScope(value: string | null): AuditScope {
+  return auditScopes.has(value as AuditScope) ? (value as AuditScope) : 'inventory';
 }

@@ -6,12 +6,14 @@ import type {
   Asset,
   AssetAttachment,
   AssetLifecycleFilter,
+  AuditScope,
   InventoryAccessInvitation,
   InvitationStatusFilter,
   SelectedPhoto,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
+import type { AuditRecordPage } from '$lib/ports/inventoryAuditRepository';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
 
@@ -96,6 +98,25 @@ class InvitationStatusRecordingRepository extends SeededInventoryRepository {
   ): Promise<InventoryAccessPage<InventoryAccessInvitation>> {
     this.invitationStatuses.push(status);
     return super.listInventoryAccessInvitations(tenantId, inventoryId, status, cursor);
+  }
+}
+
+class AuditScopeRecordingRepository extends SeededInventoryRepository {
+  auditScopes: AuditScope[] = [];
+
+  async listTenantAuditRecords(tenantId: string, cursor?: string, signal?: AbortSignal): Promise<AuditRecordPage> {
+    this.auditScopes.push('tenant');
+    return super.listTenantAuditRecords(tenantId, cursor, signal);
+  }
+
+  async listInventoryAuditRecords(
+    tenantId: string,
+    inventoryId: string,
+    cursor?: string,
+    signal?: AbortSignal
+  ): Promise<AuditRecordPage> {
+    this.auditScopes.push('inventory');
+    return super.listInventoryAuditRecords(tenantId, inventoryId, cursor, signal);
   }
 }
 
@@ -278,6 +299,32 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
       expect(window.location.search).toBe('');
       expect(document.body.textContent).toContain('Sharing');
+    });
+  });
+
+  it('deep-links and updates the activity audit scope filter', async () => {
+    const auditSeed = structuredClone(seed);
+    auditSeed.tenants[0].access.permissions.push('configure');
+    const repository = new AuditScopeRecordingRepository(auditSeed);
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant', repository);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.search).toBe('?auditScope=tenant');
+      expect(document.body.textContent).toContain('Activity');
+      expect(auditScopeControl('Tenant').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant'
+      );
+      expect(repository.auditScopes).toContain('tenant');
+    });
+
+    auditScopeControl('Inventory').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.search).toBe('');
+      expect(repository.auditScopes).toContain('inventory');
     });
   });
 
@@ -634,6 +681,15 @@ function settingsLink(label: string): HTMLAnchorElement {
     throw new Error(`Missing settings link ${label}`);
   }
   return link;
+}
+
+function auditScopeControl(label: string): HTMLElement {
+  const group = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
+  const control = Array.from(group?.querySelectorAll<HTMLElement>('button, a') ?? []).find((candidate) => candidate.textContent === label);
+  if (!control) {
+    throw new Error(`Missing audit scope control ${label}`);
+  }
+  return control;
 }
 
 function buttonMaybeContaining(text: string): HTMLButtonElement | undefined {

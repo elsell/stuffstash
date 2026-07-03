@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import InventoryAuditPanel from './InventoryAuditPanel.svelte';
-import type { AuditRecord, Inventory, Tenant } from '$lib/domain/inventory';
+import type { AuditRecord, AuditScope, Inventory, Tenant } from '$lib/domain/inventory';
 import type { AuditRecordPage, InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -59,6 +59,40 @@ describe('InventoryAuditPanel', () => {
     const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
     expect(scopeFilter?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
     expect(scopeFilter?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Inventory');
+  });
+
+  it('exposes route-backed audit scope filter links when hrefs are provided', async () => {
+    const { repository, calls } = fakeAuditRepository();
+    let selectedScope: AuditScope | null = null;
+
+    component = mount(InventoryAuditPanel, {
+      target: document.body,
+      props: {
+        tenant: tenant(['view', 'configure']),
+        inventory: inventory(['view']),
+        repository,
+        scope: 'tenant',
+        scopeHref: (scope) =>
+          scope === 'inventory'
+            ? '/tenants/tenant-one/inventories/inventory-one/settings/activity'
+            : '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
+        onScopeChange: (scope) => {
+          selectedScope = scope;
+        }
+      }
+    });
+    await flush();
+
+    const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
+    expect(scopeFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(2);
+    expect(link('Tenant').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant');
+    expect(link('Tenant').getAttribute('aria-current')).toBe('page');
+
+    link('Inventory').click();
+    await flush();
+
+    expect(selectedScope).toBe('inventory');
+    expect(calls).toContain('inventory:tenant-one:inventory-one:');
   });
 
   it('disables unavailable audit scopes through the shared segmented control', async () => {
@@ -167,6 +201,14 @@ function clickButton(text: string): void {
 
 function buttonIn(root: HTMLElement | null, text: string): HTMLButtonElement | null {
   return Array.from(root?.querySelectorAll<HTMLButtonElement>('button') ?? []).find((button) => button.textContent === text) ?? null;
+}
+
+function link(text: string): HTMLAnchorElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) => candidate.textContent === text);
+  if (!target) {
+    throw new Error(`Missing link ${text}`);
+  }
+  return target;
 }
 
 async function flush(): Promise<void> {

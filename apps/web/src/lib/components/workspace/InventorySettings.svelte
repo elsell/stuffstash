@@ -9,7 +9,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { workspaceRouteHref, type SettingsSection } from '$lib/application/workspaceRoute';
-  import type { CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
+  import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
@@ -29,8 +29,10 @@
     customFieldDefinitions,
     section = 'overview',
     invitationStatus = 'all',
+    auditScope = 'inventory',
     onSectionChange,
     onInvitationStatusChange,
+    onAuditScopeChange,
     onCustomizationChange
   }: {
     tenant: Tenant | null;
@@ -43,8 +45,10 @@
     customFieldDefinitions: CustomFieldDefinition[];
     section?: SettingsSection;
     invitationStatus?: InvitationStatusFilter;
+    auditScope?: AuditScope;
     onSectionChange: (section: SettingsSection) => void;
     onInvitationStatusChange: (status: InvitationStatusFilter) => void;
+    onAuditScopeChange: (scope: AuditScope) => void;
     onCustomizationChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
@@ -72,7 +76,12 @@
 
   function sectionHref(nextSection: SettingsSection): string {
     return workspaceRouteHref(
-      { mode: 'settings', settingsSection: nextSection },
+      {
+        mode: 'settings',
+        settingsSection: nextSection,
+        invitationStatus: nextSection === 'access' ? invitationStatus : 'all',
+        auditScope: nextSection === 'activity' ? auditScope : 'inventory'
+      },
       tenant?.id ?? inventory?.tenantId ?? null,
       inventory?.id ?? null
     );
@@ -81,6 +90,14 @@
   function invitationStatusHref(status: InvitationStatusFilter): string {
     return workspaceRouteHref(
       { mode: 'settings', settingsSection: 'access', invitationStatus: status },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function auditScopeHref(scope: AuditScope): string {
+    return workspaceRouteHref(
+      { mode: 'settings', settingsSection: 'activity', auditScope: scope },
       tenant?.id ?? inventory?.tenantId ?? null,
       inventory?.id ?? null
     );
@@ -171,7 +188,14 @@
       />
 
       {:else if section === 'activity'}
-      <InventoryAuditPanel {tenant} {inventory} repository={auditRepository} />
+      <InventoryAuditPanel
+        {tenant}
+        {inventory}
+        repository={auditRepository}
+        scope={auditScope}
+        scopeHref={auditScopeHref}
+        onScopeChange={onAuditScopeChange}
+      />
 
       {:else if section === 'fields'}
       <InventoryCustomizationManager

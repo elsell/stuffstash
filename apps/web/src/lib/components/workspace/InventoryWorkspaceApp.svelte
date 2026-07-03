@@ -86,6 +86,7 @@
   let searchMode = $state<SearchMode>('fuzzy');
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
+  let auditScope = $state<WorkspaceRouteState['auditScope']>('inventory');
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
@@ -487,6 +488,7 @@
       searchMode = route.searchMode;
       settingsSection = route.settingsSection;
       invitationStatus = route.invitationStatus;
+      auditScope = route.auditScope;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
         const tenantId = findRouteTenant(data, route);
@@ -697,7 +699,8 @@
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
       settingsSection: section,
-      invitationStatus: section === 'access' ? invitationStatus : 'all'
+      invitationStatus: section === 'access' ? invitationStatus : 'all',
+      auditScope: section === 'activity' ? auditScope : 'inventory'
     });
   }
 
@@ -709,6 +712,17 @@
       inventoryId: data.context.selectedInventoryId,
       settingsSection: 'access',
       invitationStatus: nextInvitationStatus
+    });
+  }
+
+  function openAuditScopeFilter(nextAuditScope: WorkspaceRouteState['auditScope']): void {
+    auditScope = nextAuditScope;
+    navigateTo({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'activity',
+      auditScope: nextAuditScope
     });
   }
 
@@ -1113,8 +1127,10 @@
         customFieldDefinitions={data.context.customFieldDefinitions}
         section={settingsSection}
         {invitationStatus}
+        {auditScope}
         onSectionChange={openSettingsSection}
         onInvitationStatusChange={openInvitationStatusFilter}
+        onAuditScopeChange={openAuditScopeFilter}
         onCustomizationChange={updateCustomizationContext}
       />
     {:else}
