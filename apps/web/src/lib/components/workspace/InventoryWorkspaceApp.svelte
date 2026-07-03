@@ -938,6 +938,8 @@
       />
     {:else}
       <HomeWorkspace
+        tenantId={data.context.selectedTenantId}
+        inventoryId={data.context.selectedInventoryId}
         lifecycleState={data.context.assetLifecycleState}
         browseMode={mode === 'locations' ? 'locations' : 'home'}
         locations={topLevelLocations(assets)}

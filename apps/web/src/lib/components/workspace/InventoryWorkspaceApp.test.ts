@@ -165,9 +165,9 @@ describe('InventoryWorkspaceApp route application', () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
 
     await waitFor(() => {
-      expect(buttonWithLabel('Open location Garage')).toBeTruthy();
+      expect(controlWithLabel('Open location Garage')).toBeTruthy();
     });
-    buttonWithLabel('Open location Garage').click();
+    controlWithLabel('Open location Garage').click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
@@ -352,4 +352,12 @@ function buttonWithLabel(label: string): HTMLButtonElement {
     throw new Error(`Missing button labelled ${label}`);
   }
   return button;
+}
+
+function controlWithLabel(label: string): HTMLElement {
+  const control = document.body.querySelector<HTMLElement>(`button[aria-label="${label}"], a[aria-label="${label}"]`);
+  if (!control) {
+    throw new Error(`Missing control labelled ${label}`);
+  }
+  return control;
 }

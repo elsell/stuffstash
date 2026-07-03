@@ -239,6 +239,7 @@ Recently added:
 - Recently added assets should appear before location browsing as a compact horizontal rail when active assets exist.
 - Recently added must not dominate the page or compete with search/add.
 - Recently added rows must open the asset detail view.
+- Recently added rows, archived asset rows, location tiles, and add-location actions must expose canonical `href` values while preserving ordinary in-app navigation behavior.
 
 ## Location View
 

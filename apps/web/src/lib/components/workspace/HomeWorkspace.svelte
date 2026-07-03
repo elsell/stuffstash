@@ -2,12 +2,15 @@
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
+  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
+    tenantId,
+    inventoryId,
     lifecycleState,
     locations,
     recentAssets,
@@ -18,6 +21,8 @@
     onOpenAdd,
     onSelectLifecycle
   }: {
+    tenantId: string;
+    inventoryId: string;
     lifecycleState: AssetLifecycleFilter;
     locations: LocationSummary[];
     recentAssets: AssetViewModel[];
@@ -28,6 +33,57 @@
     onOpenAdd: () => void;
     onSelectLifecycle: (lifecycleState: AssetLifecycleFilter) => void;
   } = $props();
+
+  let routeTenantId = $derived(
+    tenantId || locations[0]?.location.tenantId || recentAssets[0]?.tenantId || archivedAssets[0]?.tenantId || null
+  );
+  let routeInventoryId = $derived(
+    inventoryId || locations[0]?.location.inventoryId || recentAssets[0]?.inventoryId || archivedAssets[0]?.inventoryId || null
+  );
+
+  function addLocationHref(): string {
+    return workspaceRouteHref({ action: 'add', addKind: 'location' }, routeTenantId, routeInventoryId);
+  }
+
+  function assetHref(asset: Asset): string {
+    return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
+  }
+
+  function locationHref(asset: Asset): string {
+    return workspaceRouteHref(
+      { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
+      asset.tenantId,
+      asset.inventoryId
+    );
+  }
+
+  function openAdd(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onOpenAdd();
+  }
+
+  function openAsset(event: MouseEvent, asset: Asset): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onOpenAsset(asset);
+  }
+
+  function openLocation(event: MouseEvent, asset: Asset): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onOpenLocation(asset);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+  }
 </script>
 
 <section class="workspace-main" aria-labelledby="home-title">
@@ -55,7 +111,7 @@
         />
       {/if}
       {#if lifecycleState === 'active'}
-        <Button.Root variant="outline" onclick={onOpenAdd}>Add location</Button.Root>
+        <Button.Root href={addLocationHref()} variant="outline" onclick={openAdd}>Add location</Button.Root>
       {/if}
     </div>
   </div>
@@ -72,7 +128,7 @@
       {:else}
         <div class="recent-rail" aria-label="Recently added assets">
           {#each recentAssets as asset}
-            <Button.Root variant="ghost" class="recent-card" onclick={() => onOpenAsset(asset)}>
+            <Button.Root href={assetHref(asset)} variant="ghost" class="recent-card" onclick={(event) => openAsset(event, asset)}>
               <AssetThumb {asset} size="lg" />
               <span>
                 <strong>{asset.title}</strong>
@@ -94,7 +150,7 @@
     {:else}
       <div class="asset-list">
         {#each archivedAssets as asset}
-          <Button.Root variant="ghost" class="asset-row" onclick={() => onOpenAsset(asset)}>
+          <Button.Root href={assetHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, asset)}>
             <AssetThumb {asset} />
             <span class="asset-row-main">
               <strong>{asset.title}</strong>
@@ -109,7 +165,7 @@
     <div class="empty-state spacious">
       <h2>No locations yet</h2>
       <p>Add a location before adding things into it.</p>
-      <Button.Root onclick={onOpenAdd}>Add first location</Button.Root>
+      <Button.Root href={addLocationHref()} onclick={openAdd}>Add first location</Button.Root>
     </div>
   {:else}
     {#if browseMode === 'home'}
@@ -120,10 +176,11 @@
     <div class="location-grid">
       {#each locations as summary}
         <Button.Root
+          href={locationHref(summary.location)}
           variant="ghost"
           class="location-tile"
           aria-label={`Open location ${summary.location.title}`}
-          onclick={() => onOpenLocation(summary.location)}
+          onclick={(event) => openLocation(event, summary.location)}
         >
           <AssetThumb asset={summary.location} size="lg" />
           <span>
