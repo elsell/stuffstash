@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import Shapes from '@lucide/svelte/icons/shapes';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -6,6 +7,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import { workspaceRouteHref, type CustomizationRouteAction } from '$lib/application/workspaceRoute';
   import type {
     CustomAssetType,
     CustomFieldApplicability,
@@ -24,6 +26,11 @@
     repository,
     initialAssetTypes,
     initialFieldDefinitions,
+    archiveAction = null,
+    archiveAssetTypeId = null,
+    archiveFieldDefinitionId = null,
+    onArchiveActionOpen = () => {},
+    onArchiveActionClose = () => {},
     onSchemaChange
   }: {
     tenant: Tenant | null;
@@ -31,6 +38,11 @@
     repository: InventoryCustomizationRepository;
     initialAssetTypes: CustomAssetType[];
     initialFieldDefinitions: CustomFieldDefinition[];
+    archiveAction?: CustomizationRouteAction;
+    archiveAssetTypeId?: string | null;
+    archiveFieldDefinitionId?: string | null;
+    onArchiveActionOpen?: (action: CustomizationRouteAction, id: string) => void;
+    onArchiveActionClose?: () => void;
     onSchemaChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
@@ -49,6 +61,8 @@
   let fieldApplicability = $state<CustomFieldApplicability>('all_assets');
   let fieldTargets = $state<string[]>([]);
   let enumOptions = $state('');
+  let archiveConfirmationElement = $state<HTMLElement | null>(null);
+  let lastArchiveRouteKey = $state('');
   const scopeOptions = [
     { value: 'inventory', label: 'Inventory', disabled: false },
     { value: 'tenant', label: 'Tenant', disabled: false }
@@ -66,10 +80,41 @@
   let activeFieldDefinitions = $derived(fieldDefinitions.filter((definition) => definition.lifecycleState === 'active'));
   let targetableAssetTypes = $derived(activeAssetTypes.filter((assetType) => fieldScope === 'tenant' ? assetType.scope === 'tenant' : true));
   let selectedTargetCount = $derived(fieldTargets.filter((id) => targetableAssetTypes.some((assetType) => assetType.id === id)).length);
+  let routeArchiveAssetType = $derived(
+    archiveAction === 'archive_asset_type'
+      ? activeAssetTypes.find((assetType) => assetType.id === archiveAssetTypeId) ?? null
+      : null
+  );
+  let routeArchiveFieldDefinition = $derived(
+    archiveAction === 'archive_field_definition'
+      ? activeFieldDefinitions.find((definition) => definition.id === archiveFieldDefinitionId) ?? null
+      : null
+  );
+  let hasArchiveRoute = $derived(archiveAction === 'archive_asset_type' || archiveAction === 'archive_field_definition');
+  let archiveRouteKey = $derived(
+    archiveAction === 'archive_asset_type'
+      ? `${archiveAction}:${archiveAssetTypeId ?? ''}`
+      : archiveAction === 'archive_field_definition'
+        ? `${archiveAction}:${archiveFieldDefinitionId ?? ''}`
+        : ''
+  );
 
   $effect(() => {
     assetTypes = initialAssetTypes;
     fieldDefinitions = initialFieldDefinitions;
+  });
+
+  $effect(() => {
+    const routeKey = archiveRouteKey;
+    if (!routeKey) {
+      lastArchiveRouteKey = '';
+      return;
+    }
+    if (routeKey === lastArchiveRouteKey) {
+      return;
+    }
+    lastArchiveRouteKey = routeKey;
+    void tick().then(() => archiveConfirmationElement?.focus());
   });
 
   async function createAssetType(): Promise<void> {
@@ -145,6 +190,7 @@
       assetTypes = nextAssetTypes;
       fieldTargets = nextFieldTargets;
       onSchemaChange(nextAssetTypes, fieldDefinitions);
+      onArchiveActionClose();
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Unable to archive custom asset type.';
     } finally {
@@ -161,6 +207,7 @@
       const nextFieldDefinitions = fieldDefinitions.map((candidate) => candidate.id === archived.id ? archived : candidate);
       fieldDefinitions = nextFieldDefinitions;
       onSchemaChange(assetTypes, nextFieldDefinitions);
+      onArchiveActionClose();
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Unable to archive custom field.';
     } finally {
@@ -193,6 +240,60 @@
   function splitOptions(value: string): string[] {
     return value.split(',').map((option) => option.trim()).filter(Boolean);
   }
+
+  function fieldsHref(): string {
+    return workspaceRouteHref(
+      { mode: 'settings', settingsSection: 'fields' },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function archiveAssetTypeHref(assetType: CustomAssetType): string {
+    return workspaceRouteHref(
+      {
+        mode: 'settings',
+        settingsSection: 'fields',
+        customizationAction: 'archive_asset_type',
+        customAssetTypeId: assetType.id
+      },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function archiveFieldDefinitionHref(definition: CustomFieldDefinition): string {
+    return workspaceRouteHref(
+      {
+        mode: 'settings',
+        settingsSection: 'fields',
+        customizationAction: 'archive_field_definition',
+        customFieldDefinitionId: definition.id
+      },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function openArchiveAction(event: MouseEvent, action: Exclude<CustomizationRouteAction, null>, id: string): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onArchiveActionOpen(action, id);
+  }
+
+  function closeArchiveAction(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onArchiveActionClose();
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
+  }
 </script>
 
 <section class="settings-panel wide" aria-labelledby="settings-customization">
@@ -209,6 +310,60 @@
   {:else if !canManage}
     <p class="denied-note">Custom fields require tenant or inventory configuration access.</p>
   {:else}
+    {#if hasArchiveRoute}
+      <section
+        bind:this={archiveConfirmationElement}
+        class="settings-panel archive-confirmation"
+        aria-labelledby="customization-archive-title"
+        tabindex="-1"
+      >
+        {#if routeArchiveAssetType}
+          <div class="settings-panel-heading">
+            <Trash2 aria-hidden="true" />
+            <div>
+              <h3 id="customization-archive-title">Archive asset type</h3>
+              <p>{routeArchiveAssetType.displayName}</p>
+            </div>
+          </div>
+          <p class="muted-note">Existing assets keep their data. This type will stop appearing in new asset forms.</p>
+          <div class="heading-actions">
+            <Button.Root href={fieldsHref()} variant="outline" onclick={closeArchiveAction}>Cancel</Button.Root>
+            <Button.Root variant="destructive" disabled={busy || !canScope(routeArchiveAssetType.scope)} onclick={() => { void archiveAssetType(routeArchiveAssetType); }}>
+              Archive
+            </Button.Root>
+          </div>
+        {:else if routeArchiveFieldDefinition}
+          <div class="settings-panel-heading">
+            <Trash2 aria-hidden="true" />
+            <div>
+              <h3 id="customization-archive-title">Archive field definition</h3>
+              <p>{routeArchiveFieldDefinition.displayName}</p>
+            </div>
+          </div>
+          <p class="muted-note">Existing assets keep their field values. This field will stop appearing in edit forms.</p>
+          <div class="heading-actions">
+            <Button.Root href={fieldsHref()} variant="outline" onclick={closeArchiveAction}>Cancel</Button.Root>
+            <Button.Root
+              variant="destructive"
+              disabled={busy || !canScope(routeArchiveFieldDefinition.scope)}
+              onclick={() => { void archiveFieldDefinition(routeArchiveFieldDefinition); }}
+            >
+              Archive
+            </Button.Root>
+          </div>
+        {:else}
+          <div class="settings-panel-heading">
+            <Trash2 aria-hidden="true" />
+            <div>
+              <h3 id="customization-archive-title">Archive target unavailable</h3>
+              <p>This schema item is not available in the current fields list.</p>
+            </div>
+          </div>
+          <Button.Root href={fieldsHref()} variant="outline" onclick={closeArchiveAction}>Back to fields</Button.Root>
+        {/if}
+      </section>
+    {/if}
+
     <div class="customization-grid">
       <div class="customization-column">
         <h3>Asset types</h3>
@@ -244,7 +399,14 @@
               </div>
               <div class="audit-meta">
                 <Badge variant="outline">{assetType.scope}</Badge>
-                <Button.Root variant="ghost" size="icon-xs" aria-label={`Archive ${assetType.displayName}`} disabled={busy || !canScope(assetType.scope)} onclick={() => { void archiveAssetType(assetType); }}>
+                <Button.Root
+                  href={archiveAssetTypeHref(assetType)}
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Archive ${assetType.displayName}`}
+                  disabled={busy || !canScope(assetType.scope)}
+                  onclick={(event) => openArchiveAction(event, 'archive_asset_type', assetType.id)}
+                >
                   <Trash2 />
                 </Button.Root>
               </div>
@@ -326,7 +488,14 @@
               </div>
               <div class="audit-meta">
                 <Badge variant="outline">{definition.scope}</Badge>
-                <Button.Root variant="ghost" size="icon-xs" aria-label={`Archive ${definition.displayName}`} disabled={busy || !canScope(definition.scope)} onclick={() => { void archiveFieldDefinition(definition); }}>
+                <Button.Root
+                  href={archiveFieldDefinitionHref(definition)}
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Archive ${definition.displayName}`}
+                  disabled={busy || !canScope(definition.scope)}
+                  onclick={(event) => openArchiveAction(event, 'archive_field_definition', definition.id)}
+                >
                   <Trash2 />
                 </Button.Root>
               </div>

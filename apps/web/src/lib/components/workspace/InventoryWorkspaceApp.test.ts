@@ -360,6 +360,64 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links custom schema archive confirmations from settings fields', async () => {
+    const schemaSeed = structuredClone(seed);
+    schemaSeed.inventories[0].access.permissions.push('configure');
+    schemaSeed.customAssetTypes.push({
+      id: 'type-medicine',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      scope: 'inventory',
+      key: 'medicine',
+      displayName: 'Medicine',
+      description: 'Medication',
+      lifecycleState: 'active'
+    });
+    const repository = new SeededInventoryRepository(schemaSeed);
+
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/settings/fields/asset-types/type-medicine/archive',
+      repository
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/fields/asset-types/type-medicine/archive'
+      );
+      expect(document.body.textContent).toContain('Archive asset type');
+      expect(document.body.textContent).toContain('Medicine');
+      expect(controlContaining('Cancel').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/fields'
+      );
+    });
+
+    controlContaining('Cancel').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+      expect(document.body.textContent).not.toContain('Archive asset type');
+    });
+
+    window.history.pushState(
+      {},
+      '',
+      '/tenants/tenant-home/inventories/inventory-household/settings/fields/asset-types/type-medicine/archive'
+    );
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Archive asset type');
+    });
+
+    buttonContaining('Archive').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+      expect(document.body.textContent).not.toContain('Archive asset type');
+      expect(document.body.textContent).not.toContain('Medicine');
+    });
+  });
+
   it('keeps add tray cancel clicks aligned with the exposed home href', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item');
 

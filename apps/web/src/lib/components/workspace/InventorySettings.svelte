@@ -8,7 +8,7 @@
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import { workspaceRouteHref, type SettingsSection } from '$lib/application/workspaceRoute';
+  import { workspaceRouteHref, type CustomizationRouteAction, type SettingsSection } from '$lib/application/workspaceRoute';
   import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
@@ -30,9 +30,14 @@
     section = 'overview',
     invitationStatus = 'all',
     auditScope = 'inventory',
+    customizationAction = null,
+    customAssetTypeId = null,
+    customFieldDefinitionId = null,
     onSectionChange,
     onInvitationStatusChange,
     onAuditScopeChange,
+    onCustomizationArchiveOpen = () => {},
+    onCustomizationArchiveClose = () => {},
     onCustomizationChange
   }: {
     tenant: Tenant | null;
@@ -46,9 +51,14 @@
     section?: SettingsSection;
     invitationStatus?: InvitationStatusFilter;
     auditScope?: AuditScope;
+    customizationAction?: CustomizationRouteAction;
+    customAssetTypeId?: string | null;
+    customFieldDefinitionId?: string | null;
     onSectionChange: (section: SettingsSection) => void;
     onInvitationStatusChange: (status: InvitationStatusFilter) => void;
     onAuditScopeChange: (scope: AuditScope) => void;
+    onCustomizationArchiveOpen?: (action: CustomizationRouteAction, id: string) => void;
+    onCustomizationArchiveClose?: () => void;
     onCustomizationChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
@@ -204,6 +214,11 @@
         repository={customizationRepository}
         initialAssetTypes={customAssetTypes}
         initialFieldDefinitions={customFieldDefinitions}
+        archiveAction={customizationAction}
+        archiveAssetTypeId={customAssetTypeId}
+        archiveFieldDefinitionId={customFieldDefinitionId}
+        onArchiveActionOpen={onCustomizationArchiveOpen}
+        onArchiveActionClose={onCustomizationArchiveClose}
         onSchemaChange={onCustomizationChange}
       />
 

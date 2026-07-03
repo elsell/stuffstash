@@ -87,6 +87,9 @@
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let auditScope = $state<WorkspaceRouteState['auditScope']>('inventory');
+  let customizationAction = $state<WorkspaceRouteState['customizationAction']>(null);
+  let customAssetTypeId = $state<string | null>(null);
+  let customFieldDefinitionId = $state<string | null>(null);
   let importSourceType = $state<WorkspaceRouteState['importSourceType']>('legacy_homebox');
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
@@ -490,6 +493,9 @@
       settingsSection = route.settingsSection;
       invitationStatus = route.invitationStatus;
       auditScope = route.auditScope;
+      customizationAction = route.customizationAction;
+      customAssetTypeId = route.customAssetTypeId;
+      customFieldDefinitionId = route.customFieldDefinitionId;
       importSourceType = route.importSourceType;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
@@ -726,6 +732,33 @@
       inventoryId: data.context.selectedInventoryId,
       settingsSection: 'activity',
       auditScope: nextAuditScope
+    });
+  }
+
+  function openCustomizationArchive(action: WorkspaceRouteState['customizationAction'], id: string): void {
+    customizationAction = action;
+    customAssetTypeId = action === 'archive_asset_type' ? id : null;
+    customFieldDefinitionId = action === 'archive_field_definition' ? id : null;
+    navigateTo({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'fields',
+      customizationAction: action,
+      customAssetTypeId: action === 'archive_asset_type' ? id : null,
+      customFieldDefinitionId: action === 'archive_field_definition' ? id : null
+    });
+  }
+
+  function closeCustomizationArchive(): void {
+    customizationAction = null;
+    customAssetTypeId = null;
+    customFieldDefinitionId = null;
+    replaceRoute({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'fields'
     });
   }
 
@@ -1143,9 +1176,14 @@
         section={settingsSection}
         {invitationStatus}
         {auditScope}
+        {customizationAction}
+        {customAssetTypeId}
+        {customFieldDefinitionId}
         onSectionChange={openSettingsSection}
         onInvitationStatusChange={openInvitationStatusFilter}
         onAuditScopeChange={openAuditScopeFilter}
+        onCustomizationArchiveOpen={openCustomizationArchive}
+        onCustomizationArchiveClose={closeCustomizationArchive}
         onCustomizationChange={updateCustomizationContext}
       />
     {:else}

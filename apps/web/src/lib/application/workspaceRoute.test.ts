@@ -73,6 +73,24 @@ describe('workspace route state', () => {
       mode: 'settings',
       settingsSection: 'fields'
     });
+    expect(
+      parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/asset-types/type_1/archive'))
+    ).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'fields',
+      customizationAction: 'archive_asset_type',
+      customAssetTypeId: 'type_1'
+    });
+    expect(
+      parseWorkspaceRoute(
+        new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/field-definitions/field_1/archive')
+      )
+    ).toMatchObject({
+      mode: 'settings',
+      settingsSection: 'fields',
+      customizationAction: 'archive_field_definition',
+      customFieldDefinitionId: 'field_1'
+    });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/settings/access?invitationStatus=revoked'))).toMatchObject({
       mode: 'settings',
       settingsSection: 'access',
@@ -160,6 +178,25 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: 'inventory' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/activity'
     );
+    expect(
+      workspaceRouteHref(
+        { mode: 'settings', settingsSection: 'fields', customizationAction: 'archive_asset_type', customAssetTypeId: 'type 1' },
+        'tenant_1',
+        'inv_1'
+      )
+    ).toBe('/tenants/tenant_1/inventories/inv_1/settings/fields/asset-types/type%201/archive');
+    expect(
+      workspaceRouteHref(
+        {
+          mode: 'settings',
+          settingsSection: 'fields',
+          customizationAction: 'archive_field_definition',
+          customFieldDefinitionId: 'field 1'
+        },
+        'tenant_1',
+        'inv_1'
+      )
+    ).toBe('/tenants/tenant_1/inventories/inv_1/settings/fields/field-definitions/field%201/archive');
     expect(workspaceRouteHref({ mode: 'import' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/import');
     expect(workspaceRouteHref({ mode: 'import', importSourceType: 'legacy_homebox' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/import/legacy-homebox'
@@ -214,6 +251,8 @@ describe('workspace route state', () => {
       'https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/attachments/file_1/delete/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/search/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/asset-types/type_1/edit',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/nope/type_1/archive',
       'https://app.test/tenants/tenant_1/inventories/inv_1/import/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/add/location/junk'

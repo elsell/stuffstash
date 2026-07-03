@@ -12,6 +12,7 @@ import type {
 export type WorkspaceAction = 'add' | 'edit' | null;
 export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
 export type AttachmentRouteAction = 'delete' | null;
+export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
 export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
 
 export interface WorkspaceRouteState {
@@ -28,6 +29,9 @@ export interface WorkspaceRouteState {
   settingsSection: SettingsSection;
   invitationStatus: InvitationStatusFilter;
   auditScope: AuditScope;
+  customizationAction: CustomizationRouteAction;
+  customAssetTypeId: string | null;
+  customFieldDefinitionId: string | null;
   importSourceType: ImportSourceType;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
@@ -49,6 +53,9 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   settingsSection: 'overview',
   invitationStatus: 'all',
   auditScope: 'inventory',
+  customizationAction: null,
+  customAssetTypeId: null,
+  customFieldDefinitionId: null,
   importSourceType: 'legacy_homebox',
   lifecycleState: 'active',
   searchQuery: '',
@@ -153,10 +160,37 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     return remaining === 1 ? { ...route, mode: 'search', lifecycleState: 'active' } : { ...defaultWorkspaceRoute };
   }
   if (section === 'settings') {
-    if (remaining > 2) {
+    if (remaining > 5) {
       return { ...defaultWorkspaceRoute };
     }
     const settingsSection = parseSettingsSection(segments[inventoryOffset.nextIndex + 1]);
+    if (settingsSection === 'fields' && remaining === 5) {
+      const resource = segments[inventoryOffset.nextIndex + 2];
+      const resourceId = segments[inventoryOffset.nextIndex + 3];
+      const action = segments[inventoryOffset.nextIndex + 4];
+      if (resource === 'asset-types' && resourceId && action === 'archive') {
+        return {
+          ...route,
+          mode: 'settings',
+          settingsSection,
+          customizationAction: 'archive_asset_type',
+          customAssetTypeId: resourceId
+        };
+      }
+      if (resource === 'field-definitions' && resourceId && action === 'archive') {
+        return {
+          ...route,
+          mode: 'settings',
+          settingsSection,
+          customizationAction: 'archive_field_definition',
+          customFieldDefinitionId: resourceId
+        };
+      }
+      return { ...defaultWorkspaceRoute };
+    }
+    if (remaining > 2) {
+      return { ...defaultWorkspaceRoute };
+    }
     return {
       ...route,
       mode: 'settings',
@@ -274,6 +308,16 @@ export function workspaceRouteHref(
     path += '/settings';
     if (next.settingsSection !== 'overview') {
       path += `/${next.settingsSection}`;
+    }
+    if (next.settingsSection === 'fields' && next.customizationAction === 'archive_asset_type' && next.customAssetTypeId) {
+      path += `/asset-types/${encodeURIComponent(next.customAssetTypeId)}/archive`;
+    }
+    if (
+      next.settingsSection === 'fields' &&
+      next.customizationAction === 'archive_field_definition' &&
+      next.customFieldDefinitionId
+    ) {
+      path += `/field-definitions/${encodeURIComponent(next.customFieldDefinitionId)}/archive`;
     }
     if (next.settingsSection === 'access' && next.invitationStatus !== 'all') {
       search.set('invitationStatus', next.invitationStatus);

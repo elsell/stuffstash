@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import InventoryCustomizationManager from './InventoryCustomizationManager.svelte';
-import type { CustomAssetType, Inventory, Tenant } from '$lib/domain/inventory';
+import type { CustomAssetType, CustomFieldDefinition, Inventory, Tenant } from '$lib/domain/inventory';
 import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -9,6 +9,7 @@ let component: ReturnType<typeof mount> | null = null;
 afterEach(() => {
   if (component) {
     unmount(component);
+    document.body.innerHTML = '';
     component = null;
   }
   document.body.innerHTML = '';
@@ -128,7 +129,180 @@ describe('InventoryCustomizationManager', () => {
     expect(document.body.textContent).toContain('No eligible custom asset types for this scope.');
     expect(group('Field custom type targets')).toBeNull();
   });
+
+  it('uses route-backed archive confirmations for custom schema actions', async () => {
+    const medicine = customAssetType();
+    const expiration = customFieldDefinition();
+    const calls: string[] = [];
+    const openedActions: string[] = [];
+    let closed = 0;
+    const repository: InventoryCustomizationRepository = {
+      ...fakeCustomizationRepository(),
+      archiveCustomAssetType: async (_tenantId, _inventoryId, id, scope) => {
+        calls.push(`archive-type:${id}:${scope}`);
+        return { ...medicine, lifecycleState: 'archived' };
+      }
+    };
+
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository,
+        initialAssetTypes: [medicine],
+        initialFieldDefinitions: [expiration],
+        onArchiveActionOpen: (action, id) => {
+          openedActions.push(`${action}:${id}`);
+        },
+        onArchiveActionClose: () => {
+          closed += 1;
+        },
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(controlWithLabel('Archive Medicine').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/fields/asset-types/type-medicine/archive'
+    );
+    expect(controlWithLabel('Archive Expiration date').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/fields/field-definitions/field-expiration/archive'
+    );
+
+    controlWithLabel('Archive Medicine').click();
+    await flush();
+
+    expect(openedActions).toEqual(['archive_asset_type:type-medicine']);
+    expect(calls).toEqual([]);
+
+    unmount(component);
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository,
+        initialAssetTypes: [medicine],
+        initialFieldDefinitions: [expiration],
+        archiveAction: 'archive_asset_type',
+        archiveAssetTypeId: medicine.id,
+        onArchiveActionClose: () => {
+          closed += 1;
+        },
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Archive asset type');
+    expect(document.activeElement?.textContent).toContain('Archive asset type');
+    expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
+
+    clickExactButton('Archive');
+    await flush();
+
+    expect(calls).toEqual(['archive-type:type-medicine:inventory']);
+    expect(closed).toBe(1);
+  });
+
+  it('renders and applies route-backed custom field archive confirmations', async () => {
+    const medicine = customAssetType();
+    const expiration = customFieldDefinition();
+    const calls: string[] = [];
+    let closed = 0;
+    const repository: InventoryCustomizationRepository = {
+      ...fakeCustomizationRepository(),
+      archiveCustomFieldDefinition: async (_tenantId, _inventoryId, id, scope) => {
+        calls.push(`archive-field:${id}:${scope}`);
+        return { ...expiration, lifecycleState: 'archived' };
+      }
+    };
+
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository,
+        initialAssetTypes: [medicine],
+        initialFieldDefinitions: [expiration],
+        archiveAction: 'archive_field_definition',
+        archiveFieldDefinitionId: expiration.id,
+        onArchiveActionClose: () => {
+          closed += 1;
+        },
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Archive field definition');
+    expect(document.activeElement?.textContent).toContain('Archive field definition');
+    expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
+
+    link('Cancel').click();
+    await flush();
+
+    expect(closed).toBe(1);
+    expect(calls).toEqual([]);
+
+    unmount(component);
+    document.body.innerHTML = '';
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository,
+        initialAssetTypes: [medicine],
+        initialFieldDefinitions: [expiration],
+        archiveAction: 'archive_field_definition',
+        archiveFieldDefinitionId: expiration.id,
+        onArchiveActionClose: () => {
+          closed += 1;
+        },
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    clickExactButton('Archive');
+    await flush();
+
+    expect(calls).toEqual(['archive-field:field-expiration:inventory']);
+    expect(closed).toBe(2);
+  });
 });
+
+function customAssetType(): CustomAssetType {
+  return {
+    id: 'type-medicine',
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    scope: 'inventory',
+    key: 'medicine',
+    displayName: 'Medicine',
+    description: 'Medication',
+    lifecycleState: 'active'
+  };
+}
+
+function customFieldDefinition(): CustomFieldDefinition {
+  return {
+    id: 'field-expiration',
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    scope: 'inventory',
+    key: 'expiration-date',
+    displayName: 'Expiration date',
+    type: 'date',
+    enumOptions: [],
+    applicability: 'custom_asset_types',
+    customAssetTypeIds: ['type-medicine'],
+    lifecycleState: 'active'
+  };
+}
 
 function tenant(): Tenant {
   return { id: 'tenant-one', name: 'Home', access: { relationship: 'owner', permissions: ['view', 'configure'] } };
@@ -158,6 +332,24 @@ function click(text: string): void {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(text));
   if (!button) throw new Error(`Missing button ${text}`);
   button.click();
+}
+
+function clickExactButton(text: string): void {
+  const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent === text);
+  if (!button) throw new Error(`Missing button ${text}`);
+  button.click();
+}
+
+function link(text: string): HTMLAnchorElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) => candidate.textContent === text);
+  if (!target) throw new Error(`Missing link ${text}`);
+  return target;
+}
+
+function controlWithLabel(label: string): HTMLElement {
+  const control = document.body.querySelector<HTMLElement>(`button[aria-label="${label}"], a[aria-label="${label}"]`);
+  if (!control) throw new Error(`Missing control labelled ${label}`);
+  return control;
 }
 
 function group(label: string): HTMLElement | null {

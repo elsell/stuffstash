@@ -99,6 +99,8 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/{section}` for a focused inventory settings section.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings/fields/asset-types/{customAssetTypeId}/archive` for a custom asset type archive confirmation when archive is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/settings/fields/field-definitions/{customFieldDefinitionId}/archive` for a custom field definition archive confirmation when archive is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/import` for import.
 - `/tenants/{tenantId}/inventories/{inventoryId}/import/{source}` for a focused import source, initially `legacy-homebox` or `legacy-homebox-csv`.
 - `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
@@ -125,6 +127,7 @@ Deep links must preserve tenant and inventory boundaries:
 - An asset deep link must load the selected asset through the repository port and API adapter.
 - Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
 - Asset action panels that materially change data, such as edit, move, archive confirmation, restore confirmation, and delete confirmation, are durable route states.
+- Settings actions that materially change reusable schema, such as archiving custom asset types or custom field definitions, must use durable confirmation route states instead of immediate icon-button mutations.
 - Unsupported paths must fall back to the inventory home without crashing.
 
 Navigation controls must update the URL when they change durable workspace state, and browser back/forward controls must restore the corresponding workspace state.
