@@ -43,7 +43,8 @@ test('add tray exposes named modal controls and closes from the keyboard', async
   await expect(dialog.getByRole('button', { name: 'Item', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(dialog.getByRole('button', { name: 'Container', exact: true })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByLabel('Item name')).toBeVisible();
-  await expect(page.getByRole('group', { name: 'Parent target' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Parent target current destination' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Parent target suggested destinations' })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Photo actions' })).toBeVisible();
 
   await page.keyboard.press('Escape');

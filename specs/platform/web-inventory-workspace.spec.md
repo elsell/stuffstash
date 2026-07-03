@@ -423,9 +423,13 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Creation and edit controls must use the local shadcn-style button, input, select/tabs, label, textarea, and dialog/sheet primitives or product-specific compositions over those primitives.
 - Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
 - The add surface parent picker must support filtering valid parent targets and must expose each picker group with honest grouped-control semantics rather than unlabeled piles of buttons.
-- Parent target pickers must avoid unfiltered all-parent stacks by default; search results, current selection, and empty states must be visually distinct.
+- Parent target pickers must avoid unfiltered all-parent stacks by default; suggested destinations, search results, current selection, and empty states must be visually distinct.
 - Parent target pickers must show the selected destination as a compact summary with target kind and containment trail, expose a clear action when a non-root target is selected, and show result counts without rendering every possible parent before search.
+- Parent target pickers must offer a bounded set of suggested destinations before search, excluding the already-selected destination because it is shown in the current destination summary.
+- Parent target pickers must prefer locations before containers when choosing unfiltered suggestions and ordered search results.
 - Parent target search results must present target kind, title, and containment trail in each selectable row so locations and containers are distinguishable while scanning.
+- Parent target search results must group locations and containers with named grouped-control semantics for assistive technology users.
+- Parent target pickers must keep suggested destinations and search results bounded by the component's visible limit.
 - Asset detail edit and move panels must use the same grouped-control and searchable parent-target patterns as the add surface.
 - Add and move parent-target selection must be implemented through a shared workspace picker component so filtering, selected-state language, empty states, and grouped-control semantics do not drift between creation and asset-detail actions.
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.

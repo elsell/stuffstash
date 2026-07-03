@@ -221,9 +221,10 @@ describe('AssetDetail', () => {
     expect(pickerText).toContain('Garage shelf');
     expect(pickerText).toContain('Container / Garage');
     expect(pickerText).toContain('3 possible destinations');
-    expect(pickerText).toContain('Search to choose a location or container.');
-    expect(pickerText).not.toContain('Pantry bin');
-    expect(pickerText).not.toContain('Hall closet');
+    expect(pickerText).toContain('Suggested destinations');
+    expect(pickerText).toContain('Showing 2 suggested destinations.');
+    expect(pickerText).toContain('Pantry bin');
+    expect(pickerText).toContain('Hall closet');
 
     setInputValue(requiredElement('#move-parent-search') as HTMLInputElement, 'closet');
     await flush();

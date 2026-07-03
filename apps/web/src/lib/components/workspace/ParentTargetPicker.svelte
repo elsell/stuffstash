@@ -44,14 +44,54 @@
       return target.title.toLowerCase().includes(normalizedSearch) || target.containmentTrail.toLowerCase().includes(normalizedSearch);
     })
   );
-  let visibleTargets = $derived(matchingTargets.slice(0, visibleLimit));
+  let sortedMatchingTargets = $derived([...matchingTargets].sort(compareTargets));
+  let visibleTargets = $derived(sortedMatchingTargets.slice(0, visibleLimit));
+  let suggestedTargets = $derived(suggestionTargets(targets, selectedId, visibleLimit));
+  let locationResults = $derived(visibleTargets.filter((target) => target.kind === 'location'));
+  let containerResults = $derived(visibleTargets.filter((target) => target.kind === 'container'));
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
   let hasSearch = $derived(normalizedSearch.length > 0);
   let resultCountLabel = $derived(`${matchingTargets.length} ${matchingTargets.length === 1 ? 'match' : 'matches'}`);
   let destinationCountLabel = $derived(`${targets.length} possible ${targets.length === 1 ? 'destination' : 'destinations'}`);
+  let suggestedCountLabel = $derived(
+    `Showing ${suggestedTargets.length} suggested ${suggestedTargets.length === 1 ? 'destination' : 'destinations'}.`
+  );
 
   function clearSelection(): void {
     onSelect(null);
+  }
+
+  function suggestionTargets(items: AssetViewModel[], currentId: string | null, limit: number): AssetViewModel[] {
+    const sorted = [...items].sort(compareTargets);
+    const chosen: AssetViewModel[] = [];
+    for (const target of sorted) {
+      if (chosen.length >= limit) {
+        break;
+      }
+      if (target.id === currentId || chosen.some((candidate) => candidate.id === target.id)) {
+        continue;
+      }
+      chosen.push(target);
+    }
+    return chosen;
+  }
+
+  function compareTargets(left: AssetViewModel, right: AssetViewModel): number {
+    const kindRank = kindSortRank(left.kind) - kindSortRank(right.kind);
+    if (kindRank !== 0) {
+      return kindRank;
+    }
+    return left.title.localeCompare(right.title);
+  }
+
+  function kindSortRank(kind: AssetViewModel['kind']): number {
+    if (kind === 'location') {
+      return 0;
+    }
+    if (kind === 'container') {
+      return 1;
+    }
+    return 2;
   }
 </script>
 
@@ -103,7 +143,59 @@
   {#if hasSearch}
     <p class="selection-summary">{resultCountLabel}</p>
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
-      {#each visibleTargets as target}
+      {#if locationResults.length > 0}
+        <div class="parent-result-group" role="group" aria-label="Locations" aria-labelledby={`${searchId}-location-results-label`}>
+          <p id={`${searchId}-location-results-label`} class="parent-result-heading">Locations</p>
+          {#each locationResults as target}
+            <Button.Root
+              type="button"
+              variant={selectedId === target.id ? 'secondary' : 'outline'}
+              class="parent-target-button"
+              aria-pressed={selectedId === target.id}
+              onclick={() => onSelect(target.id)}
+            >
+              <KindIcon kind={target.kind} />
+              <span>
+                <strong>{target.title}</strong>
+                <small>{assetKindLabel(target.kind)} / {target.containmentTrail}</small>
+              </span>
+            </Button.Root>
+          {/each}
+        </div>
+      {/if}
+      {#if containerResults.length > 0}
+        <div class="parent-result-group" role="group" aria-label="Containers" aria-labelledby={`${searchId}-container-results-label`}>
+          <p id={`${searchId}-container-results-label`} class="parent-result-heading">Containers</p>
+          {#each containerResults as target}
+            <Button.Root
+              type="button"
+              variant={selectedId === target.id ? 'secondary' : 'outline'}
+              class="parent-target-button"
+              aria-pressed={selectedId === target.id}
+              onclick={() => onSelect(target.id)}
+            >
+              <KindIcon kind={target.kind} />
+              <span>
+                <strong>{target.title}</strong>
+                <small>{assetKindLabel(target.kind)} / {target.containmentTrail}</small>
+              </span>
+            </Button.Root>
+          {/each}
+        </div>
+      {/if}
+    </div>
+    {#if visibleTargets.length === 0}
+      <p class="muted-note">No matching locations or containers.</p>
+    {:else if matchingTargets.length > visibleTargets.length}
+      <p class="muted-note">Showing the first {visibleTargets.length} of {matchingTargets.length} matches.</p>
+    {/if}
+  {:else if targets.length > 0}
+    <div class="parent-suggestion-header">
+      <p class="selection-summary">Suggested destinations</p>
+      <p class="muted-note">{destinationCountLabel}. {suggestedCountLabel}</p>
+    </div>
+    <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} suggested destinations`}>
+      {#each suggestedTargets as target}
         <Button.Root
           type="button"
           variant={selectedId === target.id ? 'secondary' : 'outline'}
@@ -119,13 +211,6 @@
         </Button.Root>
       {/each}
     </div>
-    {#if visibleTargets.length === 0}
-      <p class="muted-note">No matching locations or containers.</p>
-    {:else if matchingTargets.length > visibleTargets.length}
-      <p class="muted-note">Showing the first {visibleTargets.length} of {matchingTargets.length} matches.</p>
-    {/if}
-  {:else if targets.length > 0}
-    <p class="muted-note">{destinationCountLabel}. Search to choose a location or container.</p>
   {:else}
     <p class="muted-note">No locations or containers yet.</p>
   {/if}

@@ -402,9 +402,10 @@ describe('AddAssetTray', () => {
     expect(fieldsets.some((text) => text.includes('Place in existing parent'))).toBe(true);
     expect(fieldsets.some((text) => text.includes('Asset kind'))).toBe(true);
     expect(document.body.textContent).toContain('4 possible destinations');
-    expect(document.body.textContent).toContain('Search to choose a location or container.');
-    expect(document.body.textContent).not.toContain('Garage shelf');
-    expect(document.body.textContent).not.toContain('Hall closet');
+    expect(document.body.textContent).toContain('Suggested destinations');
+    expect(document.body.textContent).toContain('Showing 4 suggested destinations.');
+    expect(document.body.textContent).toContain('Garage shelf');
+    expect(document.body.textContent).toContain('Hall closet');
 
     input('#parent-search', 'closet');
     await flush();

@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('ParentTargetPicker', () => {
-  it('filters valid parent targets and exposes grouped selected state', async () => {
+  it('offers bounded suggestions before search and grouped results after search', async () => {
     const selectedIds: Array<string | null> = [];
     component = mount(ParentTargetPicker, {
       target: document.body,
@@ -27,8 +27,12 @@ describe('ParentTargetPicker', () => {
         targets: [
           parentTarget('garage-shelf', 'Garage shelf', 'Garage', 'container'),
           parentTarget('hall-closet', 'Hall closet', 'Hall', 'location'),
-          parentTarget('closet-bin', 'Closet bin', 'Hall / Hall closet')
+          parentTarget('closet-bin', 'Closet bin', 'Hall / Hall closet'),
+          parentTarget('attic', 'Attic', 'Upstairs', 'location'),
+          parentTarget('pantry-bin', 'Pantry bin', 'Kitchen'),
+          parentTarget('toolbox', 'Toolbox', 'Garage')
         ],
+        visibleLimit: 4,
         onSelect: (id) => {
           selectedIds.push(id);
         }
@@ -37,15 +41,23 @@ describe('ParentTargetPicker', () => {
 
     expect(document.body.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Move target current destination');
     expect(button('Inventory root').getAttribute('aria-pressed')).toBe('true');
-    expect(document.body.textContent).toContain('3 possible destinations');
-    expect(document.body.textContent).toContain('Search to choose a location or container.');
-    expect(document.body.textContent).not.toContain('Hall closet');
+    expect(document.body.textContent).toContain('6 possible destinations');
+    expect(group('Move target suggested destinations')).toBeTruthy();
+    expect(document.body.textContent).toContain('Suggested destinations');
+    expect(destinationButtons('Move target suggested destinations')).toHaveLength(4);
+    expect(document.body.textContent).toContain('Attic');
+    expect(document.body.textContent).toContain('Hall closet');
+    expect(document.body.textContent).toContain('Garage shelf');
+    expect(document.body.textContent).not.toContain('Pantry bin');
 
     setInputValue(requiredInput('#parent-target-search'), 'closet');
     await flush();
 
     expect(group('Move target search results')).toBeTruthy();
     expect(document.body.textContent).toContain('2 matches');
+    expect(group('Locations')).toBeTruthy();
+    expect(group('Containers')).toBeTruthy();
+    expect(destinationButtons('Move target search results')).toHaveLength(2);
     expect(document.body.textContent).toContain('Hall closet');
     expect(resultButton('Hall closet').textContent).toContain('Location');
     expect(document.body.textContent).toContain('Closet bin');
@@ -67,7 +79,11 @@ describe('ParentTargetPicker', () => {
         groupLabel: 'Parent target',
         search: '',
         selectedId: 'target-1',
-        targets: [parentTarget('target-1', 'Target 1', 'Root'), parentTarget('target-2', 'Target 2', 'Root')],
+        targets: [
+          parentTarget('target-1', 'Target 1', 'Root'),
+          parentTarget('target-2', 'Target 2', 'Root'),
+          parentTarget('target-3', 'Target 3', 'Root')
+        ],
         visibleLimit: 1,
         onSelect: () => {}
       }
@@ -77,13 +93,17 @@ describe('ParentTargetPicker', () => {
     expect(document.body.textContent).toContain('Container');
     expect(document.body.textContent).toContain('Root');
     expect(button('Clear parent').getAttribute('aria-label')).toBe('Clear parent selection');
-    expect(document.body.textContent).toContain('2 possible destinations');
-    expect(document.body.textContent).not.toContain('Target 2');
+    expect(document.body.textContent).toContain('3 possible destinations');
+    expect(document.body.textContent).toContain('Showing 1 suggested destination.');
+    expect(destinationButtons('Parent target suggested destinations')).toHaveLength(1);
+    expect(group('Parent target suggested destinations').textContent).not.toContain('Target 1');
+    expect(group('Parent target suggested destinations').textContent).toContain('Target 2');
+    expect(document.body.textContent).not.toContain('Target 3');
 
     setInputValue(requiredInput('#parent-target-search'), 'target');
     await flush();
 
-    expect(document.body.textContent).toContain('Showing the first 1 of 2 matches.');
+    expect(document.body.textContent).toContain('Showing the first 1 of 3 matches.');
 
     setInputValue(requiredInput('#parent-target-search'), 'missing');
     await flush();
@@ -143,6 +163,10 @@ function resultButton(text: string): HTMLButtonElement {
     throw new Error(`Missing result button ${text}`);
   }
   return target;
+}
+
+function destinationButtons(groupLabel: string): HTMLButtonElement[] {
+  return Array.from(group(groupLabel).querySelectorAll<HTMLButtonElement>('button.parent-target-button'));
 }
 
 function requiredInput(selector: string): HTMLInputElement {
