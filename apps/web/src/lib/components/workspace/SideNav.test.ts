@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, unmount } from 'svelte';
 import SideNav from './SideNav.svelte';
+import type { SettingsSection } from '$lib/application/workspaceRoute';
 import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -11,6 +12,7 @@ type SideNavProps = {
   selectedTenantId: string;
   selectedInventoryId: string;
   mode: WorkspaceMode;
+  settingsSection: SettingsSection;
   userLabel: string;
   onSelectTenant: (tenantId: string) => void;
   onSelectInventory: (tenantId: string, inventoryId: string) => void;
@@ -38,11 +40,12 @@ describe('SideNav', () => {
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Import');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Settings');
 
-    const currentDestinations = document.body.querySelectorAll<HTMLButtonElement>('button[aria-current="page"]');
+    const currentDestinations = document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]');
     expect(currentDestinations).toHaveLength(1);
     const current = currentDestinations[0];
     expect(current?.textContent).toContain('Settings');
     expect(current?.textContent).toContain('Access, fields, and audit');
+    expect(current?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings');
   });
 
   it('marks home as the current primary destination', () => {
@@ -51,10 +54,11 @@ describe('SideNav', () => {
       props: sideNavProps({ mode: 'home' })
     });
 
-    const currentDestinations = document.body.querySelectorAll<HTMLButtonElement>('button[aria-current="page"]');
+    const currentDestinations = document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]');
     expect(currentDestinations).toHaveLength(1);
     expect(currentDestinations[0]?.textContent).toContain('Home');
     expect(currentDestinations[0]?.textContent).toContain('Recent assets and places');
+    expect(currentDestinations[0]?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one');
   });
 
   it('marks focused location routes under the locations destination', () => {
@@ -63,9 +67,10 @@ describe('SideNav', () => {
       props: sideNavProps({ mode: 'location' })
     });
 
-    const currentDestinations = document.body.querySelectorAll<HTMLButtonElement>('button[aria-current="page"]');
+    const currentDestinations = document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]');
     expect(currentDestinations).toHaveLength(1);
     expect(currentDestinations[0]?.textContent).toContain('Locations');
+    expect(currentDestinations[0]?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations');
   });
 
   it('routes destination clicks through the workspace mode callback', () => {
@@ -80,12 +85,13 @@ describe('SideNav', () => {
       })
     });
 
-    buttonContaining('Locations').click();
+    linkContaining('Locations').click();
     expect(selectedMode).toBe('locations');
 
-    buttonContaining('Import').click();
+    linkContaining('Import').click();
     expect(selectedMode).toBe('import');
   });
+
 });
 
 function sideNavProps(overrides: Partial<SideNavProps> = {}): SideNavProps {
@@ -102,6 +108,7 @@ function sideNavProps(overrides: Partial<SideNavProps> = {}): SideNavProps {
     selectedTenantId: 'tenant-one',
     selectedInventoryId: 'inventory-one',
     mode: 'home',
+    settingsSection: 'overview',
     userLabel: 'owner@example.com',
     onSelectTenant: () => {},
     onSelectInventory: () => {},
@@ -111,12 +118,12 @@ function sideNavProps(overrides: Partial<SideNavProps> = {}): SideNavProps {
   };
 }
 
-function buttonContaining(text: string): HTMLButtonElement {
-  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+function linkContaining(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
     candidate.textContent?.includes(text)
   );
-  if (!button) {
-    throw new Error(`Missing button containing ${text}`);
+  if (!link) {
+    throw new Error(`Missing link containing ${text}`);
   }
-  return button;
+  return link;
 }

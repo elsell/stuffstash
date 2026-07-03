@@ -1,7 +1,8 @@
 import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
+import type { ComponentProps } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Asset, Inventory, Tenant } from '$lib/domain/inventory';
+import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
 import TopHeader from './TopHeader.svelte';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -32,7 +33,7 @@ function asset(id: string, title: string): Asset {
   };
 }
 
-function mountHeader(props: Partial<Parameters<typeof TopHeader>[0]> = {}) {
+function mountHeader(props: Partial<ComponentProps<typeof TopHeader>> = {}) {
   const selectedAssets: Asset[] = [];
 
   component = mount(TopHeader, {
@@ -145,6 +146,28 @@ describe('TopHeader', () => {
     expect(document.body.querySelector('#global-search-suggestions')).toBeNull();
     expect(input?.getAttribute('aria-expanded')).toBeNull();
   });
+
+  it('exposes durable add action links from the create menu', async () => {
+    const addedKinds: AssetKind[] = [];
+    mountHeader({
+      onOpenAdd: (kind) => {
+        addedKinds.push(kind);
+      }
+    });
+
+    buttonContaining('Add').click();
+    await flush();
+
+    expect(linkContaining('Item').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+    expect(linkContaining('Container').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/container');
+    expect(linkContaining('Location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
+
+    linkContaining('Location').click();
+    await flush();
+
+    expect(addedKinds).toEqual(['location']);
+    expect(document.body.querySelector('#header-add-menu')).toBeNull();
+  });
 });
 
 async function flush(): Promise<void> {
@@ -152,4 +175,24 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+function buttonContaining(text: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!button) {
+    throw new Error(`Missing button containing ${text}`);
+  }
+  return button;
+}
+
+function linkContaining(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!link) {
+    throw new Error(`Missing link containing ${text}`);
+  }
+  return link;
 }

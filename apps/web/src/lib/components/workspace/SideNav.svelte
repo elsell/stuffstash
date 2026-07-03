@@ -6,6 +6,7 @@
   import LogOut from '@lucide/svelte/icons/log-out';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
+  import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
 
@@ -15,6 +16,7 @@
     selectedTenantId,
     selectedInventoryId,
     mode,
+    settingsSection,
     userLabel,
     onSelectTenant,
     onSelectInventory,
@@ -26,6 +28,7 @@
     selectedTenantId: string;
     selectedInventoryId: string;
     mode: WorkspaceMode;
+    settingsSection: SettingsSection;
     userLabel: string;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
@@ -52,12 +55,28 @@
     { mode: 'settings', label: 'Settings', description: 'Access, fields, and audit', icon: Settings }
   ];
 
-  function openDestination(destination: NavDestination): void {
+  function openDestination(event: MouseEvent, destination: NavDestination): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
     onModeChange(destination.mode);
   }
 
   function destinationIsCurrent(destination: NavDestination): boolean {
     return mode === destination.mode || (destination.mode === 'locations' && mode === 'location');
+  }
+
+  function destinationHref(destination: NavDestination): string {
+    const route: Partial<WorkspaceRouteState> = { mode: destination.mode };
+    if (destination.mode === 'settings') {
+      route.settingsSection = settingsSection;
+    }
+    return workspaceRouteHref(route, selectedTenantId || null, selectedInventoryId || null);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 </script>
 
@@ -87,10 +106,11 @@
         {#each primaryDestinations as destination}
           {@const Icon = destination.icon}
           <Button.Root
+            href={destinationHref(destination)}
             variant={destinationIsCurrent(destination) ? 'secondary' : 'ghost'}
             class="nav-button"
             aria-current={destinationIsCurrent(destination) ? 'page' : undefined}
-            onclick={() => openDestination(destination)}
+            onclick={(event) => openDestination(event, destination)}
           >
             <Icon aria-hidden="true" />
             <span>
@@ -108,10 +128,11 @@
         {#each utilityDestinations as destination}
           {@const Icon = destination.icon}
           <Button.Root
+            href={destinationHref(destination)}
             variant={destinationIsCurrent(destination) ? 'secondary' : 'ghost'}
             class="nav-button"
             aria-current={destinationIsCurrent(destination) ? 'page' : undefined}
-            onclick={() => openDestination(destination)}
+            onclick={(event) => openDestination(event, destination)}
           >
             <Icon aria-hidden="true" />
             <span>

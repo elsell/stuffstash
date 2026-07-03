@@ -4,6 +4,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
+  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
@@ -56,9 +57,21 @@
     }
   });
 
-  function chooseAddKind(kind: AssetKind): void {
+  function chooseAddKind(event: MouseEvent, kind: AssetKind): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
     addMenuOpen = false;
     onOpenAdd(kind);
+  }
+
+  function addKindHref(kind: AssetKind): string {
+    return workspaceRouteHref({ action: 'add', addKind: kind }, selectedTenantId || null, selectedInventoryId || null);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   function openSuggestion(asset: Asset): void {
@@ -216,7 +229,7 @@
     {#if addMenuOpen}
       <div id="header-add-menu" class="add-menu" aria-label="Add asset kind">
         {#each addKinds as kind}
-          <Button.Root variant="ghost" class="add-menu-item" onclick={() => chooseAddKind(kind)}>
+          <Button.Root href={addKindHref(kind)} variant="ghost" class="add-menu-item" onclick={(event) => chooseAddKind(event, kind)}>
             {assetKindLabel(kind)}
           </Button.Root>
         {/each}

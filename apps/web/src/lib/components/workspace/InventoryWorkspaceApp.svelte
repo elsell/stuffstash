@@ -812,6 +812,7 @@
     selectedTenantId={data.context.selectedTenantId}
     selectedInventoryId={data.context.selectedInventoryId}
     {mode}
+    {settingsSection}
     {userLabel}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
@@ -938,6 +939,9 @@
 
   <MobileNav
     {mode}
+    selectedTenantId={data.context.selectedTenantId}
+    selectedInventoryId={data.context.selectedInventoryId}
+    {settingsSection}
     canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
     onModeChange={navigateMode}
     onOpenAdd={() => openAdd('item')}

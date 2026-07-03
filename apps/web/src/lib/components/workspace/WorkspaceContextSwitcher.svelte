@@ -1,6 +1,7 @@
 <script lang="ts">
   import Settings from '@lucide/svelte/icons/settings';
   import * as Button from '$lib/components/ui/button/index.js';
+  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
 
   let {
@@ -43,9 +44,21 @@
     onSelectInventory(inventory.tenantId, inventory.id);
   }
 
-  function settings(): void {
+  function settings(event: MouseEvent): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
     open = false;
     onOpenSettings();
+  }
+
+  function settingsHref(): string {
+    return workspaceRouteHref({ mode: 'settings' }, selectedTenantId || null, selectedInventoryId || null);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   function handleSheetKeydown(event: KeyboardEvent): void {
@@ -143,7 +156,7 @@
         {:else}
           <p class="muted small-copy">No inventories in this tenant.</p>
         {/if}
-        <Button.Root variant="outline" class="nav-button" onclick={settings}><Settings /> Inventory settings</Button.Root>
+        <Button.Root href={settingsHref()} variant="outline" class="nav-button" onclick={settings}><Settings /> Inventory settings</Button.Root>
       </div>
     {:else}
       {#if showingTenants}
@@ -173,7 +186,7 @@
       {:else}
         <p class="muted small-copy">No inventories in this tenant.</p>
       {/if}
-      <Button.Root variant="outline" class="nav-button" onclick={settings}><Settings /> Inventory settings</Button.Root>
+      <Button.Root href={settingsHref()} variant="outline" class="nav-button" onclick={settings}><Settings /> Inventory settings</Button.Root>
     {/if}
   {/if}
 </div>
