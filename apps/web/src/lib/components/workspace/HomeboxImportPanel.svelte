@@ -8,6 +8,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type {
     ImportApplyResult,
     ImportMessage,
@@ -25,15 +26,20 @@
     tenantId,
     inventory,
     repository,
+    sourceType = $bindable<ImportSourceType>('legacy_homebox'),
+    onSourceChange = (nextSourceType: ImportSourceType) => {
+      sourceType = nextSourceType;
+    },
     onImported
   }: {
     tenantId: string;
     inventory: Inventory | null;
     repository: InventoryRepository;
+    sourceType?: ImportSourceType;
+    onSourceChange?: (sourceType: ImportSourceType) => void;
     onImported: () => Promise<void>;
   } = $props();
 
-  let sourceType = $state<ImportSourceType>('legacy_homebox');
   let baseUrl = $state('');
   let username = $state('');
   let password = $state('');
@@ -46,10 +52,17 @@
   let result = $state<ImportApplyResult | null>(null);
   let busy = $state(false);
   let error = $state('');
+  let previousSourceType = $state(sourceType);
   const sourceOptions = [
     { value: 'legacy_homebox', label: 'Connect' },
     { value: 'legacy_homebox_csv', label: 'CSV' }
   ];
+  let linkedSourceOptions = $derived(
+    sourceOptions.map((option) => ({
+      ...option,
+      href: sourceHref(option.value as ImportSourceType)
+    }))
+  );
 
   let canImport = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let ready = $derived(
@@ -60,6 +73,14 @@
   let blockingErrors = $derived(preview?.messages.filter((message) => message.severity === 'error') ?? []);
   let warnings = $derived(preview?.messages.filter((message) => message.severity === 'warning') ?? []);
   let canApply = $derived(!!preview && blockingErrors.length === 0 && !busy && canImport);
+
+  $effect(() => {
+    if (sourceType === previousSourceType) {
+      return;
+    }
+    previousSourceType = sourceType;
+    clearImportState();
+  });
 
   async function runPreview(): Promise<void> {
     if (!inventory || !ready || !canImport) {
@@ -108,8 +129,21 @@
     contentBase64 = await fileToBase64(file);
   }
 
+  function sourceHref(nextSourceType: ImportSourceType): string {
+    return workspaceRouteHref(
+      { mode: 'import', tenantId, inventoryId: inventory?.id ?? null, importSourceType: nextSourceType },
+      tenantId,
+      inventory?.id ?? null
+    );
+  }
+
   function selectSource(nextSourceType: ImportSourceType): void {
     sourceType = nextSourceType;
+    clearImportState();
+    onSourceChange(nextSourceType);
+  }
+
+  function clearImportState(): void {
     preview = null;
     result = null;
     error = '';
@@ -197,7 +231,7 @@
         <SegmentedControl
           label="Import source"
           value={sourceType}
-          options={sourceOptions}
+          options={linkedSourceOptions}
           onSelect={(value) => selectSource(value as ImportSourceType)}
         />
 

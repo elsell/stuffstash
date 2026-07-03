@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import HomeboxImportPanel from './HomeboxImportPanel.svelte';
+import HomeboxImportPanelHarness from './HomeboxImportPanel.test-harness.svelte';
 import type { ImportPreview, Inventory, LegacyHomeboxImportRequest } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 
@@ -15,6 +16,68 @@ afterEach(() => {
 });
 
 describe('HomeboxImportPanel', () => {
+  it('exposes import source choices as durable workspace links', async () => {
+    let selectedSource: string | null = null;
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        sourceType: 'legacy_homebox_csv',
+        onSourceChange: (sourceType) => {
+          selectedSource = sourceType;
+        },
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    expect(sourceControl('CSV').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/import/legacy-homebox-csv'
+    );
+    expect(sourceControl('CSV').getAttribute('aria-current')).toBe('page');
+    expect(sourceControl('Connect').getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/import/legacy-homebox'
+    );
+    expect(document.body.textContent).toContain('Homebox CSV export');
+
+    sourceControl('Connect').click();
+    await flush();
+
+    expect(selectedSource).toBe('legacy_homebox');
+    expect(document.body.textContent).toContain('Live Homebox API');
+  });
+
+  it('clears preview state when a parent-driven route changes the import source', async () => {
+    component = mount(HomeboxImportPanelHarness, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(document.body.textContent).toContain('Field definitions');
+
+    click('Switch source externally');
+    await flush();
+
+    expect(document.body.textContent).toContain('CSV file');
+    expect(document.body.textContent).toContain('Preview an import');
+    expect(document.body.textContent).not.toContain('Field definitions');
+  });
+
   it('uses explicit switch controls for live import options', async () => {
     component = mount(HomeboxImportPanel, {
       target: document.body,
@@ -138,6 +201,17 @@ function switchControl(label: string): HTMLButtonElement | null {
   return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button[role="switch"]')).find((button) =>
     button.textContent?.includes(label)
   ) ?? null;
+}
+
+function sourceControl(label: string): HTMLElement {
+  const group = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Import source"]');
+  const control = Array.from(group?.querySelectorAll<HTMLElement>('button, a') ?? []).find((candidate) =>
+    candidate.textContent?.trim().includes(label)
+  );
+  if (!control) {
+    throw new Error(`Missing import source control ${label}`);
+  }
+  return control;
 }
 
 function input(selector: string, value: string): void {

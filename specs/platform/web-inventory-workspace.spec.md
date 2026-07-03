@@ -100,6 +100,7 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/{section}` for a focused inventory settings section.
 - `/tenants/{tenantId}/inventories/{inventoryId}/import` for import.
+- `/tenants/{tenantId}/inventories/{inventoryId}/import/{source}` for a focused import source, initially `legacy-homebox` or `legacy-homebox-csv`.
 - `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
 
 The web app may accept `/inventories/{inventoryId}` and descendant paths as compatibility aliases for an inventory that is visible in the current tenant context. When a compatibility alias can be resolved, the app should replace the browser URL with the canonical tenant-scoped path.
@@ -416,6 +417,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Settings status and scope filters that correspond to durable settings subsection state, such as access invitation status and activity audit scope, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
 - Import options for images, insecure TLS, and private-network access must use the shared binary-option composition with visible on/off state, clear option copy, and honest switch or checkbox semantics.
+- Import source choices that correspond to distinct import workflows must expose canonical `href` values while preserving ordinary in-app source switching behavior.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 
 ## Inventory Settings

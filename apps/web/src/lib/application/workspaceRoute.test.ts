@@ -100,6 +100,18 @@ describe('workspace route state', () => {
       settingsSection: 'access',
       auditScope: 'inventory'
     });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import'))).toMatchObject({
+      mode: 'import',
+      importSourceType: 'legacy_homebox'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox'))).toMatchObject({
+      mode: 'import',
+      importSourceType: 'legacy_homebox'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox-csv'))).toMatchObject({
+      mode: 'import',
+      importSourceType: 'legacy_homebox_csv'
+    });
   });
 
   it('parses attachment delete confirmation routes under the parent asset', () => {
@@ -147,6 +159,13 @@ describe('workspace route state', () => {
     );
     expect(workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: 'inventory' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/settings/activity'
+    );
+    expect(workspaceRouteHref({ mode: 'import' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/import');
+    expect(workspaceRouteHref({ mode: 'import', importSourceType: 'legacy_homebox' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/import/legacy-homebox'
+    );
+    expect(workspaceRouteHref({ mode: 'import', importSourceType: 'legacy_homebox_csv' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/import/legacy-homebox-csv'
     );
     expect(
       workspaceRouteHref(
@@ -196,6 +215,7 @@ describe('workspace route state', () => {
       'https://app.test/tenants/tenant_1/inventories/inv_1/search/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/import/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox/junk',
       'https://app.test/tenants/tenant_1/inventories/inv_1/add/location/junk'
     ];
 

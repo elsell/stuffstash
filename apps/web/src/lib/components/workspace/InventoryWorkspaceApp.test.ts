@@ -254,6 +254,38 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links and updates the import source route', async () => {
+    const importSeed = structuredClone(seed);
+    importSeed.inventories[0].access.permissions.push('configure');
+
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv',
+      new SeededInventoryRepository(importSeed)
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv'
+      );
+      expect(document.body.textContent).toContain('CSV file');
+      expect(importSourceControl('CSV').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv'
+      );
+      expect(importSourceControl('CSV').getAttribute('aria-current')).toBe('page');
+      expect(importSourceControl('Connect').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox'
+      );
+    });
+
+    importSourceControl('Connect').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+      expect(document.body.textContent).toContain('Homebox URL');
+      expect(importSourceControl('Connect').getAttribute('aria-current')).toBe('page');
+    });
+  });
+
   it('deep-links and updates the access invitation status filter', async () => {
     const accessSeed = structuredClone(seed);
     accessSeed.inventories[0].access.permissions.push('share');
@@ -688,6 +720,15 @@ function auditScopeControl(label: string): HTMLElement {
   const control = Array.from(group?.querySelectorAll<HTMLElement>('button, a') ?? []).find((candidate) => candidate.textContent === label);
   if (!control) {
     throw new Error(`Missing audit scope control ${label}`);
+  }
+  return control;
+}
+
+function importSourceControl(label: string): HTMLElement {
+  const group = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Import source"]');
+  const control = Array.from(group?.querySelectorAll<HTMLElement>('button, a') ?? []).find((candidate) => candidate.textContent === label);
+  if (!control) {
+    throw new Error(`Missing import source control ${label}`);
   }
   return control;
 }

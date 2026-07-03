@@ -2,6 +2,7 @@ import type {
   AssetKind,
   AssetLifecycleFilter,
   AuditScope,
+  ImportSourceType,
   InvitationStatusFilter,
   SearchLifecycleFilter,
   SearchMode,
@@ -27,6 +28,7 @@ export interface WorkspaceRouteState {
   settingsSection: SettingsSection;
   invitationStatus: InvitationStatusFilter;
   auditScope: AuditScope;
+  importSourceType: ImportSourceType;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
@@ -47,6 +49,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   settingsSection: 'overview',
   invitationStatus: 'all',
   auditScope: 'inventory',
+  importSourceType: 'legacy_homebox',
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
@@ -59,6 +62,10 @@ const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
+const importSourceSlugs: Record<ImportSourceType, string> = {
+  legacy_homebox: 'legacy-homebox',
+  legacy_homebox_csv: 'legacy-homebox-csv'
+};
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
@@ -159,7 +166,14 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     };
   }
   if (section === 'import') {
-    return remaining === 1 ? { ...route, mode: 'import' } : { ...defaultWorkspaceRoute };
+    if (remaining === 1) {
+      return { ...route, mode: 'import' };
+    }
+    if (remaining === 2) {
+      const importSourceType = parseImportSourceType(segments[inventoryOffset.nextIndex + 1]);
+      return importSourceType ? { ...route, mode: 'import', importSourceType } : { ...defaultWorkspaceRoute };
+    }
+    return { ...defaultWorkspaceRoute };
   }
   if (section === 'add' && remaining === 2 && assetKinds.has(segments[inventoryOffset.nextIndex + 1] as AssetKind)) {
     return { ...route, action: 'add', addKind: segments[inventoryOffset.nextIndex + 1] as AssetKind };
@@ -210,6 +224,7 @@ export function workspaceRouteHref(
   selectedInventoryId: string | null
 ): string {
   const next = { ...defaultWorkspaceRoute, ...state };
+  const hasExplicitImportSource = Object.prototype.hasOwnProperty.call(state, 'importSourceType');
   const tenantId = next.tenantId ?? selectedTenantId;
   const inventoryId = next.inventoryId ?? selectedInventoryId;
   const search = new URLSearchParams();
@@ -268,6 +283,9 @@ export function workspaceRouteHref(
     }
   } else if (inventoryId && next.mode === 'import') {
     path += '/import';
+    if (hasExplicitImportSource) {
+      path += `/${importSourceSlugs[next.importSourceType]}`;
+    }
   } else if (inventoryId && next.action === 'add' && next.addKind) {
     path += `/add/${next.addKind}`;
   } else if (next.lifecycleState !== 'active') {
@@ -296,4 +314,9 @@ function parseInvitationStatus(value: string | null): InvitationStatusFilter {
 
 function parseAuditScope(value: string | null): AuditScope {
   return auditScopes.has(value as AuditScope) ? (value as AuditScope) : 'inventory';
+}
+
+function parseImportSourceType(value: string | undefined): ImportSourceType | null {
+  const match = Object.entries(importSourceSlugs).find(([, slug]) => slug === value);
+  return (match?.[0] as ImportSourceType | undefined) ?? null;
 }

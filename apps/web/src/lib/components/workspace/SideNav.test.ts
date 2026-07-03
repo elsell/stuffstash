@@ -39,6 +39,7 @@ describe('SideNav', () => {
     expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Locations');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Import');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Settings');
+    expect(linkContaining('Import').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/import');
 
     const currentDestinations = document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]');
     expect(currentDestinations).toHaveLength(1);

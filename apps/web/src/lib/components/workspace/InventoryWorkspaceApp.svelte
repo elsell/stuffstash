@@ -87,6 +87,7 @@
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let auditScope = $state<WorkspaceRouteState['auditScope']>('inventory');
+  let importSourceType = $state<WorkspaceRouteState['importSourceType']>('legacy_homebox');
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
@@ -489,6 +490,7 @@
       settingsSection = route.settingsSection;
       invitationStatus = route.invitationStatus;
       auditScope = route.auditScope;
+      importSourceType = route.importSourceType;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
         const tenantId = findRouteTenant(data, route);
@@ -688,7 +690,8 @@
       mode: nextMode,
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
-      settingsSection: nextMode === 'settings' ? settingsSection : 'overview'
+      settingsSection: nextMode === 'settings' ? settingsSection : 'overview',
+      importSourceType: 'legacy_homebox'
     });
   }
 
@@ -723,6 +726,16 @@
       inventoryId: data.context.selectedInventoryId,
       settingsSection: 'activity',
       auditScope: nextAuditScope
+    });
+  }
+
+  function openImportSource(nextImportSourceType: WorkspaceRouteState['importSourceType']): void {
+    importSourceType = nextImportSourceType;
+    navigateTo({
+      mode: 'import',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      importSourceType: nextImportSourceType
     });
   }
 
@@ -1113,6 +1126,8 @@
         tenantId={data.context.selectedTenantId}
         inventory={selectedInventory}
         {repository}
+        sourceType={importSourceType}
+        onSourceChange={openImportSource}
         onImported={refreshAfterImport}
       />
     {:else if mode === 'settings'}
