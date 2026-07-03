@@ -296,6 +296,26 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Restore asset');
   });
 
+  it('exposes canonical hrefs for durable asset actions', () => {
+    mountAssetDetail();
+
+    expect(link('Edit').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/edit');
+    expect(link('Move').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/move');
+    expect(link('Archive').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/archive');
+    expect(link('Delete').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/assets/asset-one/delete');
+  });
+
+  it('uses the location edit route for location asset edit actions', () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        kind: 'location'
+      }
+    });
+
+    expect(link('Edit').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations/asset-one/edit');
+  });
+
   it('uses pressed states for enum custom fields in the edit panel', async () => {
     mountAssetDetail({
       asset: {
@@ -492,20 +512,34 @@ function fileInput(label = 'Choose file'): HTMLInputElement {
 }
 
 function clickFirst(text: string): void {
-  const button = buttons(text)[0];
-  if (!button) throw new Error(`Missing button ${text}`);
-  button.click();
+  const control = controls(text)[0];
+  if (!control) throw new Error(`Missing control ${text}`);
+  control.click();
 }
 
 function clickLast(text: string): void {
-  const matching = buttons(text);
-  const button = matching[matching.length - 1];
-  if (!button) throw new Error(`Missing button ${text}`);
-  button.click();
+  const matching = controls(text);
+  const control = matching[matching.length - 1];
+  if (!control) throw new Error(`Missing control ${text}`);
+  control.click();
 }
 
 function buttons(text: string): HTMLButtonElement[] {
   return Array.from(document.body.querySelectorAll('button')).filter((candidate) => candidate.textContent?.includes(text));
+}
+
+function controls(text: string): HTMLElement[] {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('button, a')).filter((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+}
+
+function link(text: string): HTMLAnchorElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!target) throw new Error(`Missing link ${text}`);
+  return target;
 }
 
 function requiredElement(selector: string): Element {

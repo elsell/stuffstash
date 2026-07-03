@@ -125,6 +125,7 @@ Deep links must preserve tenant and inventory boundaries:
 Navigation controls must update the URL when they change durable workspace state, and browser back/forward controls must restore the corresponding workspace state.
 
 Durable navigation items and durable action menu choices must expose canonical `href` values for their route states even when the app intercepts ordinary same-window clicks for client-side navigation.
+Asset detail controls that open durable action panels must expose canonical `href` values for their action routes.
 
 Desktop:
 

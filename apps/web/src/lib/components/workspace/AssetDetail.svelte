@@ -13,7 +13,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import type { AssetRouteAction } from '$lib/application/workspaceRoute';
+  import { workspaceRouteHref, type AssetRouteAction, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
   import type {
     AssetAttachment,
     AssetViewModel,
@@ -180,6 +180,60 @@
   function openRestore(): void {
     panel = 'restore';
     onActionOpen('restore');
+  }
+
+  function openAction(event: MouseEvent, nextAction: Exclude<AssetRouteAction, null>): void {
+    if (!actionIsAvailable(nextAction)) {
+      return;
+    }
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (nextAction === 'edit') {
+      openEdit();
+    } else if (nextAction === 'move') {
+      openMove();
+    } else if (nextAction === 'archive') {
+      openArchive();
+    } else if (nextAction === 'restore') {
+      openRestore();
+    } else {
+      panel = 'delete';
+      onActionOpen('delete');
+    }
+  }
+
+  function actionHref(nextAction: Exclude<AssetRouteAction, null>): string {
+    const route: Partial<WorkspaceRouteState> = {
+      mode: 'asset',
+      tenantId: asset.tenantId,
+      inventoryId: asset.inventoryId,
+      assetId: asset.id,
+      assetAction: nextAction,
+      action: nextAction === 'edit' ? 'edit' : null
+    };
+    if (nextAction === 'edit' && asset.kind === 'location') {
+      route.locationId = asset.id;
+    }
+    return workspaceRouteHref(route, asset.tenantId, asset.inventoryId);
+  }
+
+  function actionIsAvailable(nextAction: Exclude<AssetRouteAction, null>): boolean {
+    if (!canEdit || saving) {
+      return false;
+    }
+    if (nextAction === 'delete') {
+      return true;
+    }
+    if (nextAction === 'restore') {
+      return asset.lifecycleState === 'archived';
+    }
+    return asset.lifecycleState === 'active';
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   async function save(): Promise<void> {
@@ -427,8 +481,13 @@
         <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
       </dl>
       <div class="detail-actions">
-        <Button.Root disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={() => openEdit()}><Pencil /> Edit</Button.Root>
-        <Button.Root variant="outline" disabled={!canEdit || asset.lifecycleState !== 'active'} onclick={() => openMove()}><MoveRight /> Move</Button.Root>
+        <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
+        <Button.Root
+          href={actionHref('move')}
+          variant="outline"
+          disabled={!actionIsAvailable('move')}
+          onclick={(event) => openAction(event, 'move')}
+        ><MoveRight /> Move</Button.Root>
         <Button.Root
           variant="outline"
           disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
@@ -437,9 +496,19 @@
           <Image /> Add photo
         </Button.Root>
         {#if asset.lifecycleState === 'active'}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={openArchive}><Archive /> Archive</Button.Root>
+          <Button.Root
+            href={actionHref('archive')}
+            variant="outline"
+            disabled={!actionIsAvailable('archive')}
+            onclick={(event) => openAction(event, 'archive')}
+          ><Archive /> Archive</Button.Root>
         {:else}
-          <Button.Root variant="outline" disabled={!canEdit || saving} onclick={openRestore}><RotateCcw /> Restore</Button.Root>
+          <Button.Root
+            href={actionHref('restore')}
+            variant="outline"
+            disabled={!actionIsAvailable('restore')}
+            onclick={(event) => openAction(event, 'restore')}
+          ><RotateCcw /> Restore</Button.Root>
         {/if}
       </div>
       {#if !canEdit}
@@ -699,7 +768,12 @@
           <strong>Permanent deletion</strong>
           <p>Remove this asset from the inventory permanently.</p>
         </div>
-        <Button.Root variant="destructive" disabled={!canEdit || saving} onclick={() => { panel = 'delete'; onActionOpen('delete'); }}><Trash2 /> Delete</Button.Root>
+        <Button.Root
+          href={actionHref('delete')}
+          variant="destructive"
+          disabled={!actionIsAvailable('delete')}
+          onclick={(event) => openAction(event, 'delete')}
+        ><Trash2 /> Delete</Button.Root>
       </div>
   </div>
 </section>

@@ -183,6 +183,22 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps normal location asset edit clicks on the canonical location edit route', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/location-garage');
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Garage');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/location-garage');
+    });
+
+    controlContaining('Edit').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage/edit');
+      expect(document.body.textContent).toContain('Edit asset');
+    });
+  });
+
   it('rejects location edit routes for non-location assets', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/asset-home/edit');
 
@@ -199,7 +215,7 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Passport');
     });
 
-    buttonContaining('Archive').click();
+    controlContaining('Archive').click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home/archive');
@@ -292,6 +308,16 @@ function buttonContaining(text: string): HTMLButtonElement {
     throw new Error(`Missing button containing ${text}`);
   }
   return button;
+}
+
+function controlContaining(text: string): HTMLElement {
+  const control = Array.from(document.body.querySelectorAll<HTMLElement>('button, a')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!control) {
+    throw new Error(`Missing control containing ${text}`);
+  }
+  return control;
 }
 
 function buttonMaybeContaining(text: string): HTMLButtonElement | undefined {

@@ -635,10 +635,12 @@
 
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
     if (selectedAsset) {
+      const isLocationEdit = selectedAsset.kind === 'location' && action === 'edit';
       navigateTo({
         mode: 'asset',
         tenantId: selectedAsset.tenantId,
         inventoryId: selectedAsset.inventoryId,
+        locationId: isLocationEdit ? selectedAsset.id : null,
         assetId: selectedAsset.id,
         assetAction: action,
         action: action === 'edit' ? 'edit' : null
@@ -649,7 +651,16 @@
   function closeAssetActionRoute(): void {
     assetAction = null;
     if (selectedAsset) {
-      replaceRoute({ mode: 'asset', tenantId: selectedAsset.tenantId, inventoryId: selectedAsset.inventoryId, assetId: selectedAsset.id });
+      replaceRoute(
+        selectedAsset.kind === 'location'
+          ? {
+              mode: 'location',
+              tenantId: selectedAsset.tenantId,
+              inventoryId: selectedAsset.inventoryId,
+              locationId: selectedAsset.id
+            }
+          : { mode: 'asset', tenantId: selectedAsset.tenantId, inventoryId: selectedAsset.inventoryId, assetId: selectedAsset.id }
+      );
     }
   }
 
