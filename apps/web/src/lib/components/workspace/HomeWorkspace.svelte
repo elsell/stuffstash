@@ -16,6 +16,7 @@
     recentAssets,
     archivedAssets,
     browseMode = 'home',
+    canCreateAsset = true,
     onOpenLocation,
     onOpenAsset,
     onOpenAdd,
@@ -28,6 +29,7 @@
     recentAssets: AssetViewModel[];
     archivedAssets: Asset[];
     browseMode?: 'home' | 'locations';
+    canCreateAsset?: boolean;
     onOpenLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd: () => void;
@@ -40,6 +42,7 @@
   let routeInventoryId = $derived(
     inventoryId || locations[0]?.location.inventoryId || recentAssets[0]?.inventoryId || archivedAssets[0]?.inventoryId || null
   );
+  const addDeniedNoteId = 'home-add-location-denied';
 
   function addLocationHref(): string {
     return workspaceRouteHref({ action: 'add', addKind: 'location' }, routeTenantId, routeInventoryId);
@@ -71,6 +74,9 @@
   }
 
   function openAdd(event: MouseEvent): void {
+    if (!canCreateAsset) {
+      return;
+    }
     if (!shouldHandleInApp(event)) {
       return;
     }
@@ -124,7 +130,16 @@
         />
       {/if}
       {#if lifecycleState === 'active'}
-        <Button.Root href={addLocationHref()} variant="outline" onclick={openAdd}>Add location</Button.Root>
+        <Button.Root
+          href={addLocationHref()}
+          variant="outline"
+          disabled={!canCreateAsset}
+          aria-describedby={!canCreateAsset ? addDeniedNoteId : undefined}
+          onclick={openAdd}
+        >Add location</Button.Root>
+        {#if !canCreateAsset && locations.length > 0}
+          <p id={addDeniedNoteId} class="denied-note" role="note">Creating locations is unavailable for this inventory.</p>
+        {/if}
       {/if}
     </div>
   </div>
@@ -178,7 +193,15 @@
     <div class="empty-state spacious">
       <h2>No locations yet</h2>
       <p>Add a location before adding things into it.</p>
-      <Button.Root href={addLocationHref()} onclick={openAdd}>Add first location</Button.Root>
+      <Button.Root
+        href={addLocationHref()}
+        disabled={!canCreateAsset}
+        aria-describedby={!canCreateAsset ? addDeniedNoteId : undefined}
+        onclick={openAdd}
+      >Add first location</Button.Root>
+      {#if !canCreateAsset}
+        <p id={addDeniedNoteId} class="denied-note" role="note">Creating locations is unavailable for this inventory.</p>
+      {/if}
     </div>
   {:else}
     {#if browseMode === 'home'}

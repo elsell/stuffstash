@@ -185,6 +185,25 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('disables home add-location controls for inventories without create access', async () => {
+    const viewerSeed = structuredClone(seed);
+    viewerSeed.inventories[0].access = { relationship: 'viewer', permissions: ['view'] };
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household',
+      new SeededInventoryRepository(viewerSeed)
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Garage');
+      expect(document.body.textContent).toContain('Creating locations is unavailable for this inventory.');
+    });
+
+    const addLocation = controlContaining('Add location');
+    expect(addLocation.hasAttribute('href')).toBe(false);
+    expect(addLocation.getAttribute('aria-disabled')).toBe('true');
+    expect(addLocation.getAttribute('aria-describedby')).toBe('home-add-location-denied');
+  });
+
   it('keeps unavailable recovery clicks aligned with filtered home hrefs', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household?lifecycle=archived');
 

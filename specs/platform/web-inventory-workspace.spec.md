@@ -254,6 +254,7 @@ Recently added:
 - Recently added must not dominate the page or compete with search/add.
 - Recently added rows must open the asset detail view.
 - Recently added rows, archived asset rows, location tiles, and add-location actions must expose canonical `href` values while preserving ordinary in-app navigation behavior.
+- Home add-location controls, including empty-inventory calls to action, must respect the selected inventory's create permission. When creation is unavailable they must render as explicit disabled or denied states instead of live deep links.
 
 ## Location View
 

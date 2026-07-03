@@ -216,6 +216,42 @@ describe('HomeWorkspace', () => {
     expect(link('Add first location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
   });
 
+  it('disables home add-location controls when creation is unavailable', () => {
+    let openedAdd = false;
+    component = mount(HomeWorkspace, {
+      target: document.body,
+      props: {
+        lifecycleState: 'active',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        locations: [],
+        recentAssets: [],
+        archivedAssets: [],
+        canCreateAsset: false,
+        onOpenLocation: () => {},
+        onOpenAsset: () => {},
+        onOpenAdd: () => {
+          openedAdd = true;
+        },
+        onSelectLifecycle: () => {}
+      }
+    });
+
+    const headerAdd = disabledLink('Add location');
+    const emptyAdd = disabledLink('Add first location');
+    expect(headerAdd.hasAttribute('href')).toBe(false);
+    expect(headerAdd.getAttribute('aria-disabled')).toBe('true');
+    expect(headerAdd.getAttribute('aria-describedby')).toBe('home-add-location-denied');
+    expect(emptyAdd.hasAttribute('href')).toBe(false);
+    expect(emptyAdd.getAttribute('aria-disabled')).toBe('true');
+    expect(emptyAdd.getAttribute('aria-describedby')).toBe('home-add-location-denied');
+    expect(document.body.textContent).toContain('Creating locations is unavailable for this inventory.');
+
+    headerAdd.click();
+    emptyAdd.click();
+    expect(openedAdd).toBe(false);
+  });
+
   it('preserves modified clicks on linked home rows', () => {
     let openedAssetId = '';
     const asset: AssetViewModel = {
@@ -267,6 +303,16 @@ function link(text: string): HTMLAnchorElement {
   );
   if (!target) {
     throw new Error(`Missing link ${text}`);
+  }
+  return target;
+}
+
+function disabledLink(text: string): HTMLAnchorElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!target) {
+    throw new Error(`Missing disabled link ${text}`);
   }
   return target;
 }

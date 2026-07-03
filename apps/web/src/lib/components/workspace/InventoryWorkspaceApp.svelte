@@ -1233,6 +1233,7 @@
         locations={topLevelLocations(assets)}
         recentAssets={recentlyAddedAssets(assets)}
         archivedAssets={assets}
+        canCreateAsset={createAssetAllowed}
         onOpenLocation={openLocation}
         onOpenAsset={openAsset}
         onOpenAdd={() => openAdd('location')}
