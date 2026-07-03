@@ -48,12 +48,10 @@
   import AssetDetail from './AssetDetail.svelte';
   import HomeboxImportPanel from './HomeboxImportPanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
+  import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
-  import MobileNav from './MobileNav.svelte';
   import SearchPanel from './SearchPanel.svelte';
-  import SideNav from './SideNav.svelte';
-  import TopHeader from './TopHeader.svelte';
   import * as Alert from '$lib/components/ui/alert/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
 
@@ -1165,38 +1163,27 @@
 
 </script>
 
-<div class="product-shell">
-  <SideNav
+<InventoryWorkspaceChrome
     tenants={data.context.tenants}
     inventories={data.context.inventories}
     selectedTenantId={data.context.selectedTenantId}
     selectedInventoryId={data.context.selectedInventoryId}
+    selectedInventory={selectedInventory}
     {mode}
     {settingsSection}
     {userLabel}
+    searchSuggestions={searchSuggestions}
+    bind:searchQuery
+    canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
     onModeChange={navigateMode}
+    onSearch={() => { void search(); }}
+    onOpenSearchAsset={openSearchAsset}
+    onOpenAdd={openAdd}
     {onSignOut}
-  />
-
-  <div class="workspace-column">
-    <TopHeader
-      tenants={data.context.tenants}
-      inventories={data.context.inventories}
-      selectedTenantId={data.context.selectedTenantId}
-      inventory={selectedInventory}
-      suggestions={searchSuggestions}
-      bind:query={searchQuery}
-      canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
-      onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
-      onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
-      onSearch={() => { void search(); }}
-      onOpenAsset={openSearchAsset}
-      onOpenAdd={openAdd}
-    />
-
-    {#if routeUnavailable}
+  >
+  {#if routeUnavailable}
       <section class="workspace-main">
         <div class="empty-state spacious" role="alert">
           <h1>Workspace unavailable</h1>
@@ -1321,17 +1308,6 @@
         onSelectLifecycle={(lifecycleState) => { void selectAssetLifecycle(lifecycleState); }}
       />
     {/if}
-  </div>
-
-  <MobileNav
-    {mode}
-    selectedTenantId={data.context.selectedTenantId}
-    selectedInventoryId={data.context.selectedInventoryId}
-    {settingsSection}
-    canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
-    onModeChange={navigateMode}
-    onOpenAdd={() => openAdd('item')}
-  />
 
   <AddAssetTray
     open={addOpen && createAssetAllowed}
@@ -1357,4 +1333,4 @@
       <Alert.Description>{error}</Alert.Description>
     </Alert.Root>
   {/if}
-</div>
+</InventoryWorkspaceChrome>
