@@ -458,7 +458,7 @@ Inventory settings must be structured as focused sections rather than one long m
 - The settings section navigator must remain compact and scannable on desktop, and collapse into a horizontally scrollable section strip or equivalent compact mobile pattern on narrow screens.
 - The settings content area should restate the active section with a concise heading and context so the user can confirm where they are after deep linking.
 
-Settings section navigation must be URL-addressable through `/settings/{section}`. Unknown settings sections must resolve to `overview`.
+Settings section navigation must be URL-addressable through `/settings/{section}`. Unknown settings sections must resolve to `overview` and normalize to the canonical `/settings` overview URL rather than leaving an unsupported section slug in the browser.
 
 Settings section navigation must use route-backed links with `aria-current` for the active section rather than pressed-button filter semantics. On desktop, it may render as a compact vertical section rail with short descriptions when that improves scanability. On mobile, the same sections may collapse into a compact horizontal strip above the active section.
 

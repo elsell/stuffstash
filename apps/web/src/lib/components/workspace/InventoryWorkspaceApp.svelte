@@ -659,6 +659,7 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        normalizeSettingsOverviewRoute(route);
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
       }
@@ -943,6 +944,30 @@
       return;
     }
     replaceCanonicalWorkspaceAlias(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
+  }
+
+  function normalizeSettingsOverviewRoute(route: WorkspaceRouteState): void {
+    if (route.mode !== 'settings' || route.settingsSection !== 'overview' || typeof window === 'undefined') {
+      return;
+    }
+    const canonicalHref = workspaceRouteHref(
+      {
+        mode: 'settings',
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        settingsSection: 'overview'
+      },
+      data.context.selectedTenantId || null,
+      data.context.selectedInventoryId || null
+    );
+    if (`${window.location.pathname}${window.location.search}` !== canonicalHref) {
+      replaceRoute({
+        mode: 'settings',
+        tenantId: data.context.selectedTenantId,
+        inventoryId: data.context.selectedInventoryId,
+        settingsSection: 'overview'
+      });
+    }
   }
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {

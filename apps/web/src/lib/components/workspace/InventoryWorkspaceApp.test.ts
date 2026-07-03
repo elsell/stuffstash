@@ -438,6 +438,17 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('normalizes unknown settings section slugs to the overview route', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/nope?invitationStatus=revoked');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings');
+      expect(window.location.search).toBe('');
+      expect(document.body.textContent).toContain('Overview');
+      expect(document.body.querySelector('.settings-section-context')?.textContent).toContain('Inventory context and access summary');
+    });
+  });
+
   it('deep-links and updates the activity audit scope filter', async () => {
     const auditSeed = structuredClone(seed);
     auditSeed.tenants[0].access.permissions.push('configure');
