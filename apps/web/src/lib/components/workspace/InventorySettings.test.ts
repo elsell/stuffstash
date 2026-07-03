@@ -52,12 +52,16 @@ describe('InventorySettings', () => {
     });
 
     expect(document.body.textContent).toContain('Asset editsAllowed');
-    const settingsNav = document.body.querySelector<HTMLElement>('.filter-control[data-layout="section-rail"]');
-    expect(settingsNav?.getAttribute('role')).toBe('group');
-    expect(settingsNav?.getAttribute('aria-label')).toBe('Settings section');
+    const settingsNav = document.body.querySelector<HTMLElement>('.settings-section-nav');
+    expect(settingsNav?.tagName).toBe('NAV');
+    expect(settingsNav?.getAttribute('aria-label')).toBe('Settings sections');
+    expect(linkStartingWith('Overview').getAttribute('aria-current')).toBe('page');
+    expect(linkStartingWith('Fields').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
     expect(document.body.textContent).toContain('Custom asset types and fields');
+    expect(document.body.querySelector('.settings-section-context')?.textContent).toContain('Overview');
+    expect(document.body.querySelector('.settings-section-context')?.textContent).toContain('Inventory context and access summary');
 
-    buttonStartingWith('Fields').click();
+    linkStartingWith('Fields').click();
     expect(onSectionChange).toHaveBeenCalledWith('fields');
   });
 
@@ -116,6 +120,7 @@ describe('InventorySettings', () => {
     });
 
     expect(document.body.textContent).toContain('Asset editsView only');
+    expect(linkStartingWith('Activity').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity');
   });
 });
 
@@ -154,12 +159,12 @@ function failRepositoryCall(): never {
   throw new Error('Unexpected repository call.');
 }
 
-function buttonStartingWith(text: string): HTMLButtonElement {
-  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+function linkStartingWith(text: string): HTMLAnchorElement {
+  const link = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) =>
     candidate.textContent?.trim().startsWith(text)
   );
-  if (!button) {
-    throw new Error(`Missing button starting with ${text}`);
+  if (!link) {
+    throw new Error(`Missing link starting with ${text}`);
   }
-  return button;
+  return link;
 }

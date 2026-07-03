@@ -1,9 +1,14 @@
 <script lang="ts">
+  import Activity from '@lucide/svelte/icons/activity';
   import Boxes from '@lucide/svelte/icons/boxes';
+  import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import Shield from '@lucide/svelte/icons/shield';
+  import UserRoundCog from '@lucide/svelte/icons/user-round-cog';
+  import Users from '@lucide/svelte/icons/users';
+  import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import type { SettingsSection } from '$lib/application/workspaceRoute';
+  import { workspaceRouteHref, type SettingsSection } from '$lib/application/workspaceRoute';
   import type { CustomAssetType, CustomFieldDefinition, Inventory, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
@@ -12,7 +17,6 @@
   import InventoryAccessManager from './InventoryAccessManager.svelte';
   import InventoryAuditPanel from './InventoryAuditPanel.svelte';
   import InventoryCustomizationManager from './InventoryCustomizationManager.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
@@ -44,13 +48,43 @@
   let canConfigureInventory = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canEditAssets = $derived(canEditAsset(inventory));
-  const sectionOptions = [
-    { value: 'overview', label: 'Overview', description: 'Inventory context and access summary' },
-    { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations' },
-    { value: 'fields', label: 'Fields', description: 'Custom asset types and fields' },
-    { value: 'activity', label: 'Activity', description: 'Audit history for this workspace' },
-    { value: 'administration', label: 'Admin', description: 'Tenant and inventory administration' }
+
+  type SectionOption = {
+    value: SettingsSection;
+    label: string;
+    description: string;
+    icon: Component;
+  };
+
+  const sectionOptions: SectionOption[] = [
+    { value: 'overview', label: 'Overview', description: 'Inventory context and access summary', icon: Boxes },
+    { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations', icon: Users },
+    { value: 'fields', label: 'Fields', description: 'Custom asset types and fields', icon: SlidersHorizontal },
+    { value: 'activity', label: 'Activity', description: 'Audit history for this workspace', icon: Activity },
+    { value: 'administration', label: 'Admin', description: 'Tenant and inventory administration', icon: UserRoundCog }
   ];
+
+  let activeSection = $derived(sectionOptions.find((option) => option.value === section) ?? sectionOptions[0]);
+
+  function sectionHref(nextSection: SettingsSection): string {
+    return workspaceRouteHref(
+      { mode: 'settings', settingsSection: nextSection },
+      tenant?.id ?? inventory?.tenantId ?? null,
+      inventory?.id ?? null
+    );
+  }
+
+  function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
+    if (!shouldHandleInApp(event)) {
+      return;
+    }
+    event.preventDefault();
+    onSectionChange(nextSection);
+  }
+
+  function shouldHandleInApp(event: MouseEvent): boolean {
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+  }
 </script>
 
 <section class="workspace-main" aria-labelledby="settings-title">
@@ -71,15 +105,32 @@
     </div>
   {:else}
     <div class="settings-shell">
-      <SegmentedControl
-        label="Settings section"
-        value={section}
-        options={sectionOptions}
-        layout="section-rail"
-        onSelect={(value) => onSectionChange(value as SettingsSection)}
-      />
+      <nav class="settings-section-nav" aria-label="Settings sections">
+        {#each sectionOptions as option}
+          {@const Icon = option.icon}
+          <Button.Root
+            href={sectionHref(option.value)}
+            variant={section === option.value ? 'secondary' : 'ghost'}
+            class="settings-section-link"
+            aria-current={section === option.value ? 'page' : undefined}
+            onclick={(event) => selectSection(event, option.value)}
+          >
+            <Icon aria-hidden="true" />
+            <span>
+              <strong>{option.label}</strong>
+              <small>{option.description}</small>
+            </span>
+          </Button.Root>
+        {/each}
+      </nav>
 
       <div class="settings-content">
+        <div class="settings-section-context" aria-live="polite">
+          <span class="settings-section-kicker">Settings</span>
+          <h2>{activeSection.label}</h2>
+          <p>{activeSection.description}</p>
+        </div>
+
       {#if section === 'overview'}
       <section class="settings-panel" aria-labelledby="settings-overview">
         <div class="settings-panel-heading">
