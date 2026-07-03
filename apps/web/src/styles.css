@@ -1824,6 +1824,7 @@ dd {
   right: 18px;
   bottom: 18px;
   z-index: 80;
+  pointer-events: none;
   max-width: min(420px, calc(100vw - 36px));
   margin: 0;
   box-shadow: var(--shadow-panel);

@@ -435,6 +435,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Import source choices that correspond to distinct import workflows must expose canonical `href` values while preserving ordinary in-app source switching behavior.
 - Route-backed controls rendered as disabled links must remove their `href`, expose `aria-disabled`, leave the tab order, and visually match native disabled buttons through the shared button primitive.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
+- Passive saved/status feedback must not intercept pointer interaction with dialogs, sheets, or workspace controls.
 
 ## Inventory Settings
 
@@ -623,6 +624,7 @@ Before this direction is promoted into `apps/web`:
 - Run Svelte type checking.
 - Run web tests.
 - Run the shadcn foundation check after generic primitive changes.
+- Browser-level smoke tests must exercise the authenticated workspace shell through runtime config, stored session state, and API-boundary responses rather than relying on removed unauthenticated demo data.
 - Run browser-level smoke tests for:
   - desktop shell load,
   - mobile shell load,
