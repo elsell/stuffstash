@@ -20,7 +20,7 @@ const inventory: Inventory = {
   access: { relationship: 'owner', permissions: [] }
 };
 
-function asset(id: string, title: string): Asset {
+function asset(id: string, title: string, photoUrl?: string): Asset {
   return {
     id,
     tenantId: tenant.id,
@@ -29,7 +29,8 @@ function asset(id: string, title: string): Asset {
     title,
     description: '',
     parentAssetId: null,
-    lifecycleState: 'active'
+    lifecycleState: 'active',
+    ...(photoUrl ? { photo: { id: `${id}-photo`, assetId: id, url: photoUrl, alt: title } } : {})
   };
 }
 
@@ -71,11 +72,15 @@ afterEach(() => {
 
 describe('TopHeader', () => {
   it('opens search suggestions from the keyboard', async () => {
-    const { selectedAssets } = mountHeader();
+    const { selectedAssets } = mountHeader({
+      suggestions: [asset('tape', 'Tape measure', 'blob:tape-photo'), asset('tags', 'Gift tags')]
+    });
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
 
     input?.focus();
     await flush();
+    expect(document.body.querySelector<HTMLImageElement>('#global-search-suggestions img')?.src).toBe('blob:tape-photo');
+    expect(document.body.querySelector<HTMLImageElement>('#global-search-suggestions img')?.alt).toBe('Tape measure');
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
 
@@ -97,6 +102,26 @@ describe('TopHeader', () => {
 
     expect(selectedAssets.map((selected) => selected.id)).toEqual(['tape']);
     expect(input?.value).toBe('Tape measure');
+  });
+
+  it('uses kind fallbacks for global suggestions without their own photo', async () => {
+    mountHeader({
+      suggestions: [
+        {
+          ...asset('box', 'Holiday box'),
+          kind: 'container',
+          photo: { id: 'wrong-photo', assetId: 'different-asset', url: 'blob:wrong-photo', alt: 'Wrong photo' }
+        },
+        asset('tags', 'Gift tags')
+      ]
+    });
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+
+    expect(document.body.querySelector('#global-search-suggestions img')).toBeNull();
+    expect(document.body.querySelectorAll('#global-search-suggestions .asset-thumb svg')).toHaveLength(2);
   });
 
   it('keeps suggestions open when keyboard focus moves into the suggestion list', async () => {
@@ -157,6 +182,9 @@ describe('TopHeader', () => {
     buttonContaining('Add').click();
     await flush();
 
+    expect(document.activeElement?.textContent).toContain('Item');
+    expect(document.body.querySelector('#header-add-menu')?.getAttribute('role')).toBeNull();
+    expect(buttonContaining('Add').getAttribute('aria-haspopup')).toBeNull();
     expect(linkContaining('Item').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
     expect(linkContaining('Container').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/container');
     expect(linkContaining('Location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
@@ -166,6 +194,22 @@ describe('TopHeader', () => {
 
     expect(addedKinds).toEqual(['location']);
     expect(document.body.querySelector('#header-add-menu')).toBeNull();
+  });
+
+  it('closes the add menu with Escape and restores focus to the trigger', async () => {
+    mountHeader();
+
+    const trigger = buttonContaining('Add');
+    trigger.focus();
+    trigger.click();
+    await flush();
+
+    expect(document.body.querySelector('#header-add-menu')).not.toBeNull();
+    linkContaining('Item').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flush();
+
+    expect(document.body.querySelector('#header-add-menu')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
   });
 });
 

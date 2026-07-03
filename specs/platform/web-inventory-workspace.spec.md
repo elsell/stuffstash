@@ -380,6 +380,7 @@ Search behavior:
 
 - Search should resolve to authorized assets, containers, and locations in the selected inventory.
 - Search should provide autocomplete-style suggestions from visible inventory assets while preserving the repository-backed search action as the authoritative result source.
+- Search suggestions and search results must show an asset image thumbnail when the asset has its own primary photo, and must show the same explicit kind fallback used elsewhere when it does not.
 - Search result rows should open asset or location detail/list surfaces.
 - No-results and denied states must be explicit and calm.
 - Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
@@ -390,6 +391,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 
 - Lifecycle and search-mode filters must use a segmented tab/filter control rather than unrelated pressed buttons.
 - Durable navigation must use nav links/buttons with clear current state.
+- Transient menus such as the desktop Add menu must expose durable item `href`s, move focus into the menu when opened, close on Escape or focus leaving the menu, and restore focus to their trigger when dismissed.
 - Desktop side navigation must group primary inventory destinations separately from utility workflows, expose the current destination with `aria-current="page"`, and avoid presenting secondary workflows as an undifferentiated stack.
 - Icon-only controls must have accessible names.
 - Creation and edit controls must use the local shadcn-style button, input, select/tabs, label, textarea, and dialog/sheet primitives or product-specific compositions over those primitives.

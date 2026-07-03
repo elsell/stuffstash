@@ -7,6 +7,7 @@
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
+  import AssetThumb from './AssetThumb.svelte';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
 
   let {
@@ -43,6 +44,9 @@
   let addMenuOpen = $state(false);
   let searchInput = $state<HTMLInputElement | null>(null);
   let searchRegion = $state<HTMLElement | null>(null);
+  let addMenuRegion = $state<HTMLElement | null>(null);
+  let addTrigger = $state<HTMLButtonElement | null>(null);
+  let addMenuElement = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
   const addKinds: AssetKind[] = ['item', 'container', 'location'];
 
@@ -60,7 +64,7 @@
       return;
     }
     event.preventDefault();
-    addMenuOpen = false;
+    closeAddMenu(false);
     onOpenAdd(kind);
   }
 
@@ -148,6 +152,47 @@
     activeSuggestionIndex = -1;
   }
 
+  function toggleAddMenu(): void {
+    if (addMenuOpen) {
+      closeAddMenu();
+      return;
+    }
+    addMenuOpen = true;
+    void tick().then(() => firstAddMenuItem()?.focus());
+  }
+
+  function closeAddMenu(restoreFocus = true): void {
+    addMenuOpen = false;
+    if (restoreFocus) {
+      void tick().then(() => addTrigger?.focus());
+    }
+  }
+
+  function firstAddMenuItem(): HTMLElement | null {
+    return addMenuElement?.querySelector<HTMLElement>('a[href], button:not([disabled])') ?? null;
+  }
+
+  function handleAddMenuKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeAddMenu();
+    }
+  }
+
+  function handleAddMenuFocusout(event: FocusEvent): void {
+    const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+    if (nextTarget && addMenuRegion?.contains(nextTarget)) {
+      return;
+    }
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (activeElement && addMenuRegion?.contains(activeElement)) {
+        return;
+      }
+      closeAddMenu(false);
+    }, 0);
+  }
+
   function handleSearchFocusout(event: FocusEvent): void {
     const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
     if (nextTarget && searchRegion?.contains(nextTarget)) {
@@ -203,6 +248,7 @@
               onpointerenter={() => { activeSuggestionIndex = index; }}
               onclick={() => { openSuggestion(suggestion); }}
             >
+              <AssetThumb asset={suggestion} size="sm" />
               <span>
                 <strong>{suggestion.title}</strong>
                 <small>{assetKindLabel(suggestion.kind)}</small>
@@ -213,20 +259,22 @@
       </ul>
     {/if}
   </div>
-  <div class="header-add-wrap">
+  <div bind:this={addMenuRegion} class="header-add-wrap" onfocusout={handleAddMenuFocusout}>
     <Button.Root
+      bind:ref={addTrigger}
       class="header-add"
       disabled={!canCreateAsset || !inventory}
       aria-expanded={addMenuOpen}
       aria-controls="header-add-menu"
-      onclick={() => { addMenuOpen = !addMenuOpen; }}
+      onclick={toggleAddMenu}
+      onkeydown={handleAddMenuKeydown}
     >
       <Plus /> Add
     </Button.Root>
     {#if addMenuOpen}
-      <div id="header-add-menu" class="add-menu" aria-label="Add asset kind">
+      <div bind:this={addMenuElement} id="header-add-menu" class="add-menu" aria-label="Add asset kind">
         {#each addKinds as kind}
-          <Button.Root href={addKindHref(kind)} variant="ghost" class="add-menu-item" onclick={(event) => chooseAddKind(event, kind)}>
+          <Button.Root href={addKindHref(kind)} variant="ghost" class="add-menu-item" onkeydown={handleAddMenuKeydown} onclick={(event) => chooseAddKind(event, kind)}>
             {assetKindLabel(kind)}
           </Button.Root>
         {/each}

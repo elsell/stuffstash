@@ -187,6 +187,7 @@
               onpointerenter={() => { activeSuggestionIndex = index; }}
               onclick={() => openSuggestion(suggestion)}
             >
+              <AssetThumb asset={suggestion} size="sm" />
               <span>
                 <strong>{suggestion.title}</strong>
                 <small>{suggestion.customAssetTypeLabel ?? assetKindLabel(suggestion.kind)}</small>

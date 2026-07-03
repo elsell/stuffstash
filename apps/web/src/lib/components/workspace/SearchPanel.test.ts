@@ -19,7 +19,7 @@ interface SearchPanelProps {
   onOpenAsset: (assetId: string) => void;
 }
 
-function asset(id: string, title: string, kind: Asset['kind'] = 'item'): Asset {
+function asset(id: string, title: string, kind: Asset['kind'] = 'item', photoUrl?: string): Asset {
   return {
     id,
     tenantId: 'tenant-home',
@@ -28,7 +28,8 @@ function asset(id: string, title: string, kind: Asset['kind'] = 'item'): Asset {
     title,
     description: '',
     parentAssetId: null,
-    lifecycleState: 'active'
+    lifecycleState: 'active',
+    ...(photoUrl ? { photo: { id: `${id}-photo`, assetId: id, url: photoUrl, alt: title } } : {})
   };
 }
 
@@ -71,13 +72,17 @@ afterEach(() => {
 
 describe('SearchPanel', () => {
   it('opens autocomplete suggestions directly from the search page field', async () => {
-    const { openedAssetIds } = mountSearchPanel();
+    const { openedAssetIds } = mountSearchPanel({
+      suggestions: [asset('tape', 'Tape measure', 'item', 'blob:tape-photo')]
+    });
     const input = searchInput();
 
     input.focus();
     await flush();
 
     expect(document.body.querySelector('#search-page-suggestions')).not.toBeNull();
+    expect(document.body.querySelector<HTMLImageElement>('#search-page-suggestions img')?.src).toBe('blob:tape-photo');
+    expect(document.body.querySelector<HTMLImageElement>('#search-page-suggestions img')?.alt).toBe('Tape measure');
 
     buttonWithLabel('Open Tape measure').click();
     await flush();
@@ -85,6 +90,24 @@ describe('SearchPanel', () => {
     expect(openedAssetIds).toEqual(['tape']);
     expect(input.value).toBe('Tape measure');
     expect(document.body.querySelector('#search-page-suggestions')).toBeNull();
+  });
+
+  it('uses kind fallbacks for search suggestions without their own photo', async () => {
+    const mismatchedPhotoAsset = {
+      ...asset('box', 'Holiday box', 'container'),
+      photo: { id: 'wrong-photo', assetId: 'different-asset', url: 'blob:wrong-photo', alt: 'Wrong photo' }
+    };
+    mountSearchPanel({
+      suggestions: [mismatchedPhotoAsset, asset('garage', 'Garage shelf', 'location')],
+      query: 'g'
+    });
+    const input = searchInput();
+
+    input.focus();
+    await flush();
+
+    expect(document.body.querySelector('#search-page-suggestions img')).toBeNull();
+    expect(document.body.querySelectorAll('#search-page-suggestions .asset-thumb svg')).toHaveLength(2);
   });
 
   it('supports keyboard traversal for autocomplete suggestions', async () => {
@@ -147,7 +170,7 @@ describe('SearchPanel', () => {
   });
 
   it('keeps the result list behavior independent from autocomplete suggestions', async () => {
-    const resultAsset = asset('passport', 'Passport');
+    const resultAsset = asset('passport', 'Passport', 'item', 'blob:passport-photo');
     const results: SearchResult[] = [
       {
         type: 'asset',
@@ -158,10 +181,32 @@ describe('SearchPanel', () => {
     ];
     const { openedAssetIds } = mountSearchPanel({ query: '', results, suggestions: [], submitted: true });
 
+    expect(document.body.querySelector<HTMLImageElement>('.asset-list img')?.src).toBe('blob:passport-photo');
+    expect(document.body.querySelector<HTMLImageElement>('.asset-list img')?.alt).toBe('Passport');
+
     buttonWithText('Passport').click();
     await flush();
 
     expect(openedAssetIds).toEqual(['passport']);
+  });
+
+  it('uses the kind fallback for search results without their own photo', () => {
+    const resultAsset = {
+      ...asset('garage-bin', 'Garage bin', 'container'),
+      photo: { id: 'wrong-photo', assetId: 'different-asset', url: 'blob:wrong-photo', alt: 'Wrong photo' }
+    };
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: resultAsset,
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'title', value: 'Garage bin' }]
+      }
+    ];
+    mountSearchPanel({ query: '', results, suggestions: [], submitted: true });
+
+    expect(document.body.querySelector('.asset-list img')).toBeNull();
+    expect(document.body.querySelectorAll('.asset-list .asset-thumb svg')).toHaveLength(1);
   });
 });
 
