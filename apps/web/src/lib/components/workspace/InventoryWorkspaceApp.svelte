@@ -44,15 +44,14 @@
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
-  import AddAssetTray from './AddAssetTray.svelte';
   import AssetDetail from './AssetDetail.svelte';
   import HomeboxImportPanel from './HomeboxImportPanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
+  import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
   import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
   import SearchPanel from './SearchPanel.svelte';
-  import * as Alert from '$lib/components/ui/alert/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
 
   let {
@@ -1309,28 +1308,21 @@
       />
     {/if}
 
-  <AddAssetTray
-    open={addOpen && createAssetAllowed}
-    initialKind={addKind}
-    initialParentAssetId={addParentAssetId}
-    closeHref={addCloseHref()}
-    parentTargets={parentTargets(assets)}
-    mediaPolicy={data.context.mediaUploadPolicy}
-    customAssetTypes={data.context.customAssetTypes}
-    customFieldDefinitions={data.context.customFieldDefinitions}
-    saving={busy}
-    onClose={closeAdd}
-    onSave={createAsset}
-  />
-
-  {#if message}
-    <Alert.Root class="toast" variant="default">
-      <Alert.Description>{message}</Alert.Description>
-    </Alert.Root>
-  {/if}
-  {#if error}
-    <Alert.Root class="toast" variant="destructive">
-      <Alert.Description>{error}</Alert.Description>
-    </Alert.Root>
-  {/if}
 </InventoryWorkspaceChrome>
+
+<InventoryWorkspaceOverlays
+  {addOpen}
+  {createAssetAllowed}
+  {addKind}
+  {addParentAssetId}
+  addCloseHref={addCloseHref()}
+  parentTargets={parentTargets(assets)}
+  mediaPolicy={data.context.mediaUploadPolicy}
+  customAssetTypes={data.context.customAssetTypes}
+  customFieldDefinitions={data.context.customFieldDefinitions}
+  saving={busy}
+  {message}
+  {error}
+  onAddClose={closeAdd}
+  onAddSave={createAsset}
+/>

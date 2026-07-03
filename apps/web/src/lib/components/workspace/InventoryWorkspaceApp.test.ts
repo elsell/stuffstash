@@ -562,6 +562,37 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps global add and feedback overlays outside the product shell', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item');
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add item');
+    });
+
+    const productShell = document.body.querySelector<HTMLElement>('.product-shell');
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    expect(productShell).toBeTruthy();
+    expect(dialog).toBeTruthy();
+    expect(productShell?.contains(dialog)).toBe(false);
+
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Camera bag');
+    await tick();
+
+    const saveButton = await waitForSaveButton();
+    saveButton.click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.body.textContent).toContain('Saved Camera bag.');
+    });
+
+    const toast = document.body.querySelector<HTMLElement>('.toast');
+    expect(toast).toBeTruthy();
+    expect(productShell?.contains(toast)).toBe(false);
+  });
+
   it('passes add kind routes into contextual add tray copy', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/location');
 
