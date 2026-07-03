@@ -1,13 +1,11 @@
 <script lang="ts">
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
-  import FileText from '@lucide/svelte/icons/file-text';
   import Image from '@lucide/svelte/icons/image';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import Trash2 from '@lucide/svelte/icons/trash-2';
-  import Upload from '@lucide/svelte/icons/upload';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
@@ -28,18 +26,11 @@
     UpdateAssetDraft
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
-  import KindIcon from './KindIcon.svelte';
+  import AssetDetailHero, { type DetailPhoto } from './AssetDetailHero.svelte';
+  import AssetFilesSection from './AssetFilesSection.svelte';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
-
-  type DetailPhoto = {
-    id: string;
-    url: string;
-    alt: string;
-    fileName: string;
-    sizeBytes?: number;
-    isPrimary: boolean;
-  };
+  import { formatBytes } from './formatBytes';
 
   let {
     asset,
@@ -110,14 +101,9 @@
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
-  let heroPhoto = $derived(
-    detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]
-  );
-  const booleanOptions = [
-    { value: '', label: 'Unset' },
-    { value: 'true', label: 'Yes' },
-    { value: 'false', label: 'No' }
-  ];
+  let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
+  let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
+  const booleanOptions = [{ value: '', label: 'Unset' }, { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }];
   let displayFields = $derived(
     customFieldDefinitions.filter(
       (definition) =>
@@ -440,16 +426,6 @@
     onAttachmentDeleteOpen(attachment.id);
   }
 
-  function formatBytes(sizeBytes: number): string {
-    if (sizeBytes < 1024) {
-      return `${sizeBytes} B`;
-    }
-    if (sizeBytes < 1024 * 1024) {
-      return `${Math.round(sizeBytes / 1024)} KB`;
-    }
-    return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
-  }
-
   function setCustomFieldValue(key: string, value: string): void {
     customFieldValues = { ...customFieldValues, [key]: value };
   }
@@ -518,9 +494,7 @@
   }
 
   function createClientAttachmentId(): string {
-    return typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID()
-      : `attachment-${Date.now()}`;
+    return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `attachment-${Date.now()}`;
   }
 
   function openBack(event: MouseEvent): void {
@@ -552,103 +526,64 @@
     disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
     onchange={(event) => { void uploadAttachment(event); }}
   />
-  <div class="asset-detail-hero">
-    <div class="asset-photo-panel" aria-label="Asset photos">
-      <div class="asset-hero-photo">
-        {#if heroPhoto}
-          <img src={heroPhoto.url} alt={heroPhoto.alt} />
-        {:else}
-          <div class="asset-hero-fallback">
-            <KindIcon kind={asset.kind} />
+  <AssetDetailHero
+      kind={asset.kind}
+      {heroPhoto}
+      photos={detailPhotos}
+      {canAddPhoto}
+      {uploadError}
+      onChoosePhoto={() => photoInput?.click()}
+      onSelectPhoto={(photoId) => { selectedPhotoId = photoId; }}
+    >
+      <div class="asset-detail-copy">
+        <div class="detail-title-row">
+          <div>
+            <h1 id="asset-title">{asset.title}</h1>
+            <p>{asset.containmentTrail}</p>
           </div>
-        {/if}
-      </div>
-    </div>
-    <div class="asset-detail-copy">
-      <div class="detail-title-row">
-        <div>
-          <h1 id="asset-title">{asset.title}</h1>
-          <p>{asset.containmentTrail}</p>
+          <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
         </div>
-        <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
-      </div>
-      <dl class="detail-list">
-        <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
-        <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
-        <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
-      </dl>
-      <div class="detail-actions">
-        <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
-        <Button.Root
-          href={actionHref('move')}
-          variant="outline"
-          disabled={!actionIsAvailable('move')}
-          onclick={(event) => openAction(event, 'move')}
-        ><MoveRight /> Move</Button.Root>
-        <Button.Root
-          variant="outline"
-          disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
-          onclick={() => photoInput?.click()}
-        >
-          <Image /> Add photo
-        </Button.Root>
-        {#if asset.lifecycleState === 'active'}
+        <dl class="detail-list">
+          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
+          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
+          <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
+        </dl>
+        <div class="detail-actions">
+          <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
           <Button.Root
-            href={actionHref('archive')}
+            href={actionHref('move')}
             variant="outline"
-            disabled={!actionIsAvailable('archive')}
-            onclick={(event) => openAction(event, 'archive')}
-          ><Archive /> Archive</Button.Root>
-        {:else}
+            disabled={!actionIsAvailable('move')}
+            onclick={(event) => openAction(event, 'move')}
+          ><MoveRight /> Move</Button.Root>
           <Button.Root
-            href={actionHref('restore')}
             variant="outline"
-            disabled={!actionIsAvailable('restore')}
-            onclick={(event) => openAction(event, 'restore')}
-          ><RotateCcw /> Restore</Button.Root>
-        {/if}
-      </div>
-      {#if !canEdit}
-        <p class="denied-note">Edit actions require asset edit access.</p>
-      {/if}
-    </div>
-    <div class="photo-gallery-section" aria-label="Asset photo gallery">
-      <div class="photo-panel-actions">
-        <Button.Root
-          variant="outline"
-          disabled={!canEdit || asset.lifecycleState !== 'active' || saving || imageContentTypes.length === 0}
-          onclick={() => photoInput?.click()}
-        >
-          <Image /> Add photo
-        </Button.Root>
-      </div>
-      {#if detailPhotos.length > 0}
-        <div class="photo-rail" aria-label="Photos">
-          {#each detailPhotos as photo}
+            disabled={!canAddPhoto}
+            onclick={() => photoInput?.click()}
+          >
+            <Image /> Add photo
+          </Button.Root>
+          {#if asset.lifecycleState === 'active'}
             <Button.Root
-              variant="ghost"
-              class={photo.id === heroPhoto?.id ? 'active' : ''}
-              aria-label={`Show ${photo.fileName}`}
-              aria-pressed={photo.id === heroPhoto?.id}
-              onclick={() => { selectedPhotoId = photo.id; }}
-            >
-              <img src={photo.url} alt="" />
-              {#if photo.isPrimary}
-                <span>Primary</span>
-              {/if}
-            </Button.Root>
-          {/each}
+              href={actionHref('archive')}
+              variant="outline"
+              disabled={!actionIsAvailable('archive')}
+              onclick={(event) => openAction(event, 'archive')}
+            ><Archive /> Archive</Button.Root>
+          {:else}
+            <Button.Root
+              href={actionHref('restore')}
+              variant="outline"
+              disabled={!actionIsAvailable('restore')}
+              onclick={(event) => openAction(event, 'restore')}
+            ><RotateCcw /> Restore</Button.Root>
+          {/if}
         </div>
-      {:else}
-        <div class="empty-state compact-empty">
-          <p>No photos yet.</p>
-        </div>
-      {/if}
-      {#if uploadError}
-        <p class="denied-note" role="alert">{uploadError}</p>
-      {/if}
-    </div>
-  </div>
+        {#if !canEdit}
+          <p class="denied-note">Edit actions require asset edit access.</p>
+        {/if}
+      </div>
+    </AssetDetailHero>
   <div class="asset-detail-sections">
     <section class="detail-section" aria-labelledby="asset-description-title">
       <h2 id="asset-description-title">Details</h2>
@@ -664,48 +599,16 @@
         </dl>
       {/if}
     </section>
-    <section class="attachment-section" aria-labelledby="files-title">
-        <div class="section-heading compact">
-          <h2 id="files-title">Files</h2>
-          <div class="attachment-upload">
-            <Button.Root
-              variant="outline"
-              disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
-              onclick={() => fileInput?.click()}
-            >
-              <Upload /> Upload file
-            </Button.Root>
-          </div>
-        </div>
-        {#if fileAttachments.length === 0}
-          <div class="empty-state">
-            <p>No active files.</p>
-          </div>
-        {:else}
-          <div class="asset-list">
-            {#each fileAttachments as attachment}
-              <div class="attachment-row">
-                <div class="asset-thumb asset-thumb-sm"><FileText aria-hidden="true" /></div>
-                <span class="asset-row-main">
-                  <strong>{attachment.fileName}</strong>
-                  <small>{attachment.contentType} / {formatBytes(attachment.sizeBytes)}</small>
-                </span>
-                <div class="attachment-actions">
-                  <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => { void archiveAttachment(attachment); }}>Archive</Button.Root>
-                  <Button.Root
-                    href={attachmentDeleteHref(attachment)}
-                    variant="destructive"
-                    disabled={!canEdit || saving}
-                    onclick={(event) => openAttachmentDelete(event, attachment)}
-                  >
-                    <Trash2 /> Delete
-                  </Button.Root>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </section>
+    <AssetFilesSection
+      attachments={fileAttachments}
+      {canEdit}
+      {saving}
+      active={asset.lifecycleState === 'active'}
+      onChooseFile={() => fileInput?.click()}
+      onArchiveAttachment={(attachment) => { void archiveAttachment(attachment); }}
+      onOpenAttachmentDelete={openAttachmentDelete}
+      {attachmentDeleteHref}
+    />
       {#if panel === 'edit'}
         <section
           bind:this={actionPanelElement}

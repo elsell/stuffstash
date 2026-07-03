@@ -19,6 +19,7 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
   import BinaryOption from './BinaryOption.svelte';
+  import { formatBytes } from './formatBytes';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -348,13 +349,6 @@
     if (field.type === 'date') return 'date';
     if (field.type === 'url') return 'url';
     return 'text';
-  }
-
-  function formatBytes(sizeBytes: number): string {
-    if (sizeBytes < 1024 * 1024) {
-      return `${Math.round(sizeBytes / 1024)} KB`;
-    }
-    return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
   }
 
   function revokePhotoPreviews(photos: SelectedPhoto[]): void {
