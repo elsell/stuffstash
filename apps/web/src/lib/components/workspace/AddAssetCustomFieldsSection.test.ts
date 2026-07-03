@@ -36,46 +36,12 @@ describe('AddAssetCustomFieldsSection', () => {
     expect(selectedIds).toEqual(['']);
   });
 
-  it('renders boolean and enum fields as choice controls', () => {
+  it('passes custom fields and value changes to the shared field controls', () => {
     const changes: Array<[string, string]> = [];
     component = mount(AddAssetCustomFieldsSection, {
       target: document.body,
       props: sectionProps({
-        applicableFields: [
-          customFieldDefinition('fragile', 'Fragile', 'boolean'),
-          customFieldDefinition('condition', 'Condition', 'enum', ['new', 'open'])
-        ],
-        customFieldValues: { fragile: 'true', condition: 'open' },
-        onCustomFieldValueChange: (key, value) => {
-          changes.push([key, value]);
-        }
-      })
-    });
-
-    expect(group('Fragile')?.textContent).toContain('Yes');
-    expect(button('Yes').getAttribute('aria-pressed')).toBe('true');
-    expect(button('open').getAttribute('aria-pressed')).toBe('true');
-
-    button('No').click();
-    button('new').click();
-
-    expect(changes).toEqual([
-      ['fragile', 'false'],
-      ['condition', 'new']
-    ]);
-  });
-
-  it('uses typed inputs for text-like custom fields', () => {
-    const changes: Array<[string, string]> = [];
-    component = mount(AddAssetCustomFieldsSection, {
-      target: document.body,
-      props: sectionProps({
-        applicableFields: [
-          customFieldDefinition('sku', 'SKU', 'text'),
-          customFieldDefinition('quantity', 'Quantity', 'number'),
-          customFieldDefinition('expires', 'Expires', 'date'),
-          customFieldDefinition('manual', 'Manual', 'url')
-        ],
+        applicableFields: [customFieldDefinition('quantity', 'Quantity', 'number')],
         customFieldValues: { quantity: '4' },
         onCustomFieldValueChange: (key, value) => {
           changes.push([key, value]);
@@ -83,10 +49,8 @@ describe('AddAssetCustomFieldsSection', () => {
       })
     });
 
-    expect(input('custom-field-sku').type).toBe('text');
+    expect(group('Custom fields')).not.toBeNull();
     expect(input('custom-field-quantity').type).toBe('number');
-    expect(input('custom-field-expires').type).toBe('date');
-    expect(input('custom-field-manual').type).toBe('url');
 
     const quantity = input('custom-field-quantity');
     quantity.value = '6';

@@ -28,8 +28,8 @@
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetDetailHero, { type DetailPhoto } from './AssetDetailHero.svelte';
   import AssetFilesSection from './AssetFilesSection.svelte';
+  import CustomFieldControls from './CustomFieldControls.svelte';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
   import { formatBytes } from './formatBytes';
 
   let {
@@ -103,7 +103,6 @@
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
   let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
-  const booleanOptions = [{ value: '', label: 'Unset' }, { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }];
   let displayFields = $derived(
     customFieldDefinitions.filter(
       (definition) =>
@@ -454,13 +453,6 @@
     return String(value);
   }
 
-  function inputType(field: CustomFieldDefinition): string {
-    if (field.type === 'number') return 'number';
-    if (field.type === 'date') return 'date';
-    if (field.type === 'url') return 'url';
-    return 'text';
-  }
-
   function isSupportedAttachmentContentType(contentType: string): contentType is SelectedAttachment['contentType'] {
     return mediaPolicy.supportedContentTypes.includes(contentType as SelectedAttachment['contentType']);
   }
@@ -625,49 +617,13 @@
             <Label for="edit-asset-description">Description</Label>
             <Textarea id="edit-asset-description" bind:value={description} />
           </div>
-          {#if applicableFields.length > 0}
-            <div class="custom-field-grid" aria-label="Edit custom fields">
-              {#each applicableFields as field}
-                <div class="field-stack">
-                  <Label for={`edit-custom-field-${field.key}`}>{field.displayName}</Label>
-                  {#if field.type === 'boolean'}
-                    <SegmentedControl
-                      label={field.displayName}
-                      value={customFieldValues[field.key] ?? ''}
-                      options={booleanOptions}
-                      onSelect={(value) => setCustomFieldValue(field.key, value)}
-                    />
-                  {:else if field.type === 'enum'}
-                    <div class="parent-picker option-grid" role="group" aria-label={field.displayName}>
-                      <Button.Root
-                        variant={(customFieldValues[field.key] ?? '') === '' ? 'secondary' : 'outline'}
-                        aria-pressed={(customFieldValues[field.key] ?? '') === ''}
-                        onclick={() => setCustomFieldValue(field.key, '')}
-                      >
-                        Unset
-                      </Button.Root>
-                      {#each field.enumOptions as option}
-                        <Button.Root
-                          variant={customFieldValues[field.key] === option ? 'secondary' : 'outline'}
-                          aria-pressed={customFieldValues[field.key] === option}
-                          onclick={() => setCustomFieldValue(field.key, option)}
-                        >
-                          {option}
-                        </Button.Root>
-                      {/each}
-                    </div>
-                  {:else}
-                    <Input
-                      id={`edit-custom-field-${field.key}`}
-                      type={inputType(field)}
-                      value={customFieldValues[field.key] ?? ''}
-                      oninput={(event) => setCustomFieldValue(field.key, event.currentTarget.value)}
-                    />
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          {/if}
+          <CustomFieldControls
+            fields={applicableFields}
+            values={customFieldValues}
+            idPrefix="edit-custom-field"
+            label="Edit custom fields"
+            onValueChange={setCustomFieldValue}
+          />
           <div class="tray-actions">
             <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
             <Button.Root disabled={saving || title.trim().length === 0} onclick={() => { void save(); }}>Save</Button.Root>
