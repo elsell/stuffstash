@@ -591,6 +591,7 @@ Required implementation split:
 - Settings access invitation action availability and canonical action/cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings access invitation action labels, destructive tone, disabled state, row option metadata, and confirmation copy must live in focused application helpers rather than component-local conditionals.
 - Settings access list loading and empty-state presentation must live in focused application helpers rather than component-local conditional copy.
+- Settings activity audit loading, empty, denied, and error presentation must live in focused application helpers rather than component-local conditional copy.
 - Asset detail action availability and canonical asset/attachment action href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings customization archive action and cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings section, access-status, and audit-scope navigation option composition and href derivation must live in focused application helpers rather than component-local route string assembly.

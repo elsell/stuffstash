@@ -10,6 +10,7 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+  import { auditStatusPresentation } from '$lib/application/workspaceAuditPresentation';
   import { settingsAuditScopeOptions } from '$lib/application/workspaceSettingsNavigation';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -48,6 +49,18 @@
   let canReadInventoryAudit = $derived(hasAccessPermission(inventory?.access, 'view'));
   let canReadTenantAudit = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canReadScope = $derived(scope === 'tenant' ? canReadTenantAudit : canReadInventoryAudit);
+  let auditStatus = $derived(
+    auditStatusPresentation({
+      hasTenant: !!tenant,
+      hasInventory: !!inventory,
+      scope,
+      canReadScope,
+      error,
+      busy,
+      loaded,
+      recordCount: records.length
+    })
+  );
   let contextKey = $derived(
     tenant && (scope === 'tenant' || inventory)
       ? `${tenant.id}:${scope === 'tenant' ? 'tenant' : inventory?.id}:${scope}:${canReadScope}`
@@ -150,18 +163,8 @@
     onSelect={(value) => selectScope(value as AuditScope)}
   />
 
-  {#if !tenant || (scope === 'inventory' && !inventory)}
-    <p class="denied-note">Select an inventory before viewing audit history.</p>
-  {:else if !canReadScope}
-    <p class="denied-note" role="alert">
-      {scope === 'tenant' ? 'Tenant audit history requires tenant configuration access.' : 'Inventory audit history requires inventory view access.'}
-    </p>
-  {:else if error}
-    <p class="denied-note" role="alert">{error}</p>
-  {:else if busy && !loaded}
-    <p class="muted-note">Loading audit history...</p>
-  {:else if records.length === 0}
-    <p class="muted-note">No audit records found.</p>
+  {#if auditStatus.kind !== 'none'}
+    <p class={auditStatus.role === 'alert' ? 'denied-note' : 'muted-note'} role={auditStatus.role}>{auditStatus.message}</p>
   {:else}
     <div class="audit-list" aria-label="Audit records">
       {#each records as record}

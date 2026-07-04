@@ -122,6 +122,39 @@ describe('InventoryAuditPanel', () => {
     expect(document.body.textContent).toContain('Tenant audit history requires tenant configuration access.');
   });
 
+  it('announces initial audit loading', async () => {
+    const repository: InventoryAuditRepository = {
+      listTenantAuditRecords: async () => new Promise(() => {}),
+      listInventoryAuditRecords: async () => new Promise(() => {})
+    };
+
+    component = mount(InventoryAuditPanel, {
+      target: document.body,
+      props: { tenant: tenant(['view', 'configure']), inventory: inventory(['view']), repository }
+    });
+    await tick();
+
+    expect(document.body.querySelector('[role="status"]')?.textContent).toBe('Loading audit history...');
+  });
+
+  it('does not present failed initial audit loads as empty history', async () => {
+    const repository: InventoryAuditRepository = {
+      listTenantAuditRecords: async () => page(null),
+      listInventoryAuditRecords: async () => {
+        throw new Error('Audit service unavailable.');
+      }
+    };
+
+    component = mount(InventoryAuditPanel, {
+      target: document.body,
+      props: { tenant: tenant(['view', 'configure']), inventory: inventory(['view']), repository }
+    });
+    await flush();
+
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Audit service unavailable.');
+    expect(document.body.textContent).not.toContain('No audit records found.');
+  });
+
   it('aborts stale audit reads when the selected scope changes', async () => {
     let inventoryAborted = false;
     let tenantLoads = 0;
