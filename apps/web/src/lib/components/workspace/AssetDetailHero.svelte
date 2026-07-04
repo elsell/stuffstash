@@ -1,15 +1,8 @@
 <script lang="ts" module>
+  import type { DetailPhoto } from '$lib/application/workspaceAssetMedia';
+
   export const PHOTO_UPLOAD_DISABLED_REASON_ID = 'asset-photo-upload-disabled';
   export const PHOTO_UPLOAD_ERROR_ID = 'asset-photo-upload-error';
-
-  export type DetailPhoto = {
-    id: string;
-    url: string;
-    alt: string;
-    fileName: string;
-    sizeBytes?: number;
-    isPrimary: boolean;
-  };
 </script>
 
 <script lang="ts">

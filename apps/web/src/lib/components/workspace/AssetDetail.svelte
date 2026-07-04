@@ -16,6 +16,12 @@
     assetDetailHref,
     attachmentDeleteHref as assetAttachmentDeleteHref
   } from '$lib/application/workspaceAssetActions';
+  import {
+    buildDetailPhotos,
+    photoUploadUnavailableReason,
+    supportedAttachmentContentType,
+    supportedImageContentType
+  } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
   import type {
     AssetAttachment,
@@ -28,7 +34,7 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
-  import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID, type DetailPhoto } from './AssetDetailHero.svelte';
+  import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID } from './AssetDetailHero.svelte';
   import AssetFilesSection from './AssetFilesSection.svelte';
   import { formatBytes } from './formatBytes';
 
@@ -103,7 +109,14 @@
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
   let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
-  let photoUploadDisabledReason = $derived(photoUploadUnavailableReason(canEdit, asset.lifecycleState, saving, imageContentTypes.length));
+  let photoUploadDisabledReason = $derived(
+    photoUploadUnavailableReason({
+      canEditAsset: canEdit,
+      lifecycleState: asset.lifecycleState,
+      isSaving: saving,
+      supportedImageTypeCount: imageContentTypes.length
+    })
+  );
   let photoUploadDescribedBy = $derived(
     [
       photoUploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '',
@@ -328,7 +341,7 @@
       return;
     }
     const contentType = file.type;
-    if (!isSupportedAttachmentContentType(contentType)) {
+    if (!supportedAttachmentContentType(mediaPolicy.supportedContentTypes, contentType)) {
       uploadError = 'Unsupported file type.';
       input.value = '';
       return;
@@ -361,7 +374,7 @@
       return;
     }
     const contentType = file.type;
-    if (!isSupportedImageContentType(contentType)) {
+    if (!supportedImageContentType(imageContentTypes, contentType)) {
       uploadError = 'Unsupported image type.';
       input.value = '';
       return;
@@ -425,60 +438,8 @@
     return String(value);
   }
 
-  function isSupportedAttachmentContentType(contentType: string): contentType is SelectedAttachment['contentType'] {
-    return mediaPolicy.supportedContentTypes.includes(contentType as SelectedAttachment['contentType']);
-  }
-
-  function isSupportedImageContentType(contentType: string): contentType is SelectedAttachment['contentType'] {
-    return imageContentTypes.includes(contentType as SelectedAttachment['contentType']);
-  }
-
-  function buildDetailPhotos(currentAsset: AssetViewModel, imageAttachments: AssetAttachment[]): DetailPhoto[] {
-    const ownAssetPhoto = currentAsset.photo?.assetId === currentAsset.id ? currentAsset.photo : undefined;
-    const photos: DetailPhoto[] = imageAttachments
-      .filter((attachment) => attachment.assetId === currentAsset.id)
-      .filter((attachment) => attachment.thumbnailUrl)
-      .map((attachment) => ({
-        id: attachment.id,
-        url: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.url : (attachment.thumbnailUrl ?? ''),
-        alt: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.alt : attachment.fileName,
-        fileName: attachment.fileName,
-        sizeBytes: attachment.sizeBytes,
-        isPrimary: attachment.id === ownAssetPhoto?.id
-      }));
-    if (ownAssetPhoto && !photos.some((photo) => photo.id === ownAssetPhoto.id)) {
-      photos.unshift({
-        id: ownAssetPhoto.id,
-        url: ownAssetPhoto.url,
-        alt: ownAssetPhoto.alt,
-        fileName: ownAssetPhoto.alt,
-        isPrimary: true
-      });
-    }
-    if (ownAssetPhoto && photos.length > 0 && !photos.some((photo) => photo.isPrimary)) {
-      photos[0] = { ...photos[0], isPrimary: true };
-    }
-    return photos;
-  }
-
   function createClientAttachmentId(): string {
     return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `attachment-${Date.now()}`;
-  }
-
-  function photoUploadUnavailableReason(canEditAsset: boolean, lifecycleState: AssetViewModel['lifecycleState'], isSaving: boolean, supportedImageTypeCount: number): string {
-    if (!canEditAsset) {
-      return 'Photo upload requires asset edit access.';
-    }
-    if (lifecycleState !== 'active') {
-      return 'Restore this asset before adding photos.';
-    }
-    if (isSaving) {
-      return 'Finish the current change before adding photos.';
-    }
-    if (supportedImageTypeCount === 0) {
-      return 'Photo uploads are unavailable for this media policy.';
-    }
-    return '';
   }
 
   function openBack(event: MouseEvent): void {

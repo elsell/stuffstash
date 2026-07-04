@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, unmount } from 'svelte';
-import AssetDetailHero, { type DetailPhoto } from './AssetDetailHero.svelte';
+import type { DetailPhoto } from '$lib/application/workspaceAssetMedia';
+import AssetDetailHero from './AssetDetailHero.svelte';
 import AssetDetailHeroHarness from './AssetDetailHeroHarness.test.svelte';
 
 let component: ReturnType<typeof mount> | null = null;

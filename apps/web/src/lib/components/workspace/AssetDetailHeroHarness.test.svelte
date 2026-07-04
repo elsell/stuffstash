@@ -1,5 +1,6 @@
 <script lang="ts">
-  import AssetDetailHero, { type DetailPhoto } from './AssetDetailHero.svelte';
+  import type { DetailPhoto } from '$lib/application/workspaceAssetMedia';
+  import AssetDetailHero from './AssetDetailHero.svelte';
 
   let {
     heroPhoto,

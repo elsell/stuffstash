@@ -592,6 +592,7 @@ Required implementation split:
 - Settings customization archive action and cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings section, access-status, and audit-scope navigation href derivation must live in focused application helpers rather than component-local route string assembly.
 - Asset-detail loading and attachment refresh orchestration must live in focused application helpers rather than accumulating in the product shell component.
+- Asset-detail photo gallery derivation, supported media-type checks, and photo-upload unavailable reasons must live in focused application helpers rather than component-local derivation.
 - Domain-oriented frontend observability must be represented through an explicit helper or port, even when the first implementation records events only in memory.
 
 The first promotion may include a local seeded adapter for unauthenticated browser review and for unavailable backend operations, but it must be truthful:
