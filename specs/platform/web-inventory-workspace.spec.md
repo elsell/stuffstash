@@ -211,6 +211,7 @@ Add:
 - Add must be disabled or replaced by an explicit denied state for inventories where the user lacks create-asset permission.
 - Header and mobile Add controls must expose a perceivable disabled reason when add creation is unavailable or no inventory is selected.
 - Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
+- On mobile, the add tray must behave like a focused sheet with usable viewport height and sticky completion controls so save/cancel actions remain reachable while long custom-field or parent-picker content scrolls.
 
 ## Mobile Navigation
 
