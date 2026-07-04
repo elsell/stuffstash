@@ -15,7 +15,6 @@
     type SettingsSection
   } from '$lib/application/workspaceRoute';
   import {
-    settingsInvitationStatusHref,
     settingsSectionHref
   } from '$lib/application/workspaceSettingsNavigation';
   import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
@@ -111,10 +110,6 @@
     );
   }
 
-  function invitationStatusHref(status: InvitationStatusFilter): string {
-    return settingsInvitationStatusHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, status);
-  }
-
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
@@ -188,7 +183,6 @@
         {invitationStatus}
         {accessInvitationAction}
         {accessInvitationId}
-        invitationStatusHref={invitationStatusHref}
         onInvitationStatusChange={onInvitationStatusChange}
         onInvitationActionOpen={onAccessInvitationActionOpen}
         onInvitationActionClose={onAccessInvitationActionClose}

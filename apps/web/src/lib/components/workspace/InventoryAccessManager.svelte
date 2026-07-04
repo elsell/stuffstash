@@ -9,6 +9,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
+  import { settingsInvitationStatusOptions } from '$lib/application/workspaceSettingsNavigation';
   import { accessInvitationsHref, invitationActionHref, invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
   import {
     hasAccessPermission,
@@ -21,7 +22,7 @@
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import InventoryAccessInvitationActionPanel from './InventoryAccessInvitationActionPanel.svelte';
-  import SegmentedControl, { type SegmentedOption } from './SegmentedControl.svelte';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
@@ -30,7 +31,6 @@
     invitationStatus = $bindable<InvitationStatusFilter>('all'),
     accessInvitationAction = null,
     accessInvitationId = null,
-    invitationStatusHref,
     onInvitationStatusChange = (status: InvitationStatusFilter) => {
       invitationStatus = status;
     },
@@ -43,23 +43,22 @@
     invitationStatus?: InvitationStatusFilter;
     accessInvitationAction?: AccessInvitationRouteAction;
     accessInvitationId?: string | null;
-    invitationStatusHref?: (status: InvitationStatusFilter) => string;
     onInvitationStatusChange?: (status: InvitationStatusFilter) => void;
     onInvitationActionOpen?: (action: AccessInvitationRouteAction, invitationId: string) => void;
     onInvitationActionClose?: () => void;
   } = $props();
 
   const relationships: InventoryAccessRelationship[] = ['viewer', 'editor'];
-  const invitationStatuses: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
   const relationshipOptions = relationships.map((relationship) => ({
     value: relationship,
     label: relationship === 'viewer' ? 'Viewer' : 'Editor'
   }));
-  let invitationStatusOptions = $derived<SegmentedOption[]>(invitationStatuses.map((status) => ({
-    value: status,
-    label: status[0]?.toUpperCase() + status.slice(1),
-    href: invitationStatusHref?.(status)
-  })));
+  let invitationStatusOptions = $derived(
+    settingsInvitationStatusOptions({
+      tenantId: tenant?.id ?? inventory?.tenantId ?? null,
+      inventoryId: inventory?.id ?? null
+    })
+  );
 
   let grants = $state<InventoryAccessGrant[]>([]);
   let invitations = $state<InventoryAccessInvitation[]>([]);

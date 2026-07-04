@@ -461,11 +461,12 @@ describe('InventoryAccessManager', () => {
     await flush();
 
     const statusFilter = segmentedGroup('Invitation status');
-    expect(statusFilter?.querySelectorAll('button[aria-pressed]')).toHaveLength(6);
-    expect(statusFilter?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('All');
+    expect(statusFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(6);
+    expect(link('All').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/access');
+    expect(link('All').getAttribute('aria-current')).toBe('page');
   });
 
-  it('exposes route-backed invitation status filter links when hrefs are provided', async () => {
+  it('exposes route-backed invitation status filter links', async () => {
     const { repository, calls } = fakeAccessRepository();
     let selectedStatus: InvitationStatusFilter | null = null;
 
@@ -476,10 +477,6 @@ describe('InventoryAccessManager', () => {
         inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
         repository,
         invitationStatus: 'pending',
-        invitationStatusHref: (status) =>
-          status === 'all'
-            ? '/tenants/tenant-one/inventories/inventory-one/settings/access'
-            : `/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=${status}`,
         onInvitationStatusChange: (status) => {
           selectedStatus = status;
         }
@@ -511,11 +508,11 @@ async function setInput(selector: string, value: string): Promise<void> {
 }
 
 function clickButton(text: string): void {
-  const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent === text);
-  if (!button) {
-    throw new Error(`Missing button ${text}`);
+  const control = Array.from(document.body.querySelectorAll<HTMLElement>('button, a')).find((candidate) => candidate.textContent === text);
+  if (!control) {
+    throw new Error(`Missing control ${text}`);
   }
-  button.click();
+  control.click();
 }
 
 function link(text: string): HTMLAnchorElement {

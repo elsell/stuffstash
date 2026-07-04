@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  settingsInvitationStatusOptions,
   settingsAuditScopeOptions,
   settingsAuditScopeHref,
   settingsInvitationStatusHref,
@@ -35,6 +36,52 @@ describe('workspace settings navigation', () => {
     expect(settingsAuditScopeHref('tenant-one', 'inventory-one', 'tenant')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
     );
+  });
+
+  it('builds invitation status segmented options with durable hrefs', () => {
+    expect(settingsInvitationStatusOptions({ tenantId: 'tenant-one', inventoryId: 'inventory-one' })).toEqual([
+      {
+        value: 'all',
+        label: 'All',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access'
+      },
+      {
+        value: 'pending',
+        label: 'Pending',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+      },
+      {
+        value: 'accepted',
+        label: 'Accepted',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=accepted'
+      },
+      {
+        value: 'revoked',
+        label: 'Revoked',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=revoked'
+      },
+      {
+        value: 'cancelled',
+        label: 'Cancelled',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=cancelled'
+      },
+      {
+        value: 'expired',
+        label: 'Expired',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=expired'
+      }
+    ]);
+  });
+
+  it('omits invitation status hrefs until an inventory route exists', () => {
+    expect(settingsInvitationStatusOptions({ tenantId: 'tenant-one', inventoryId: null }).map((option) => option.href)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined
+    ]);
   });
 
   it('builds audit scope segmented options with durable hrefs and availability', () => {

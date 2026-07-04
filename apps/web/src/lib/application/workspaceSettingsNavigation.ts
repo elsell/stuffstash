@@ -8,6 +8,8 @@ export interface SettingsNavigationOption<TValue extends string = string> {
   disabled?: boolean;
 }
 
+const invitationStatusFilters: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
+
 export function settingsSectionHref(
   tenantId: string | null,
   inventoryId: string | null,
@@ -35,6 +37,18 @@ export function settingsInvitationStatusHref(
   return workspaceRouteHref({ mode: 'settings', settingsSection: 'access', invitationStatus: status }, tenantId, inventoryId);
 }
 
+export function settingsInvitationStatusOptions(input: {
+  tenantId: string | null;
+  inventoryId: string | null;
+}): SettingsNavigationOption<InvitationStatusFilter>[] {
+  const routeBacked = !!input.inventoryId;
+  return invitationStatusFilters.map((status) => ({
+    value: status,
+    label: invitationStatusLabel(status),
+    href: routeBacked ? settingsInvitationStatusHref(input.tenantId, input.inventoryId, status) : undefined
+  }));
+}
+
 export function settingsAuditScopeHref(tenantId: string | null, inventoryId: string | null, scope: AuditScope): string {
   return workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: scope }, tenantId, inventoryId);
 }
@@ -60,4 +74,8 @@ export function settingsAuditScopeOptions(input: {
       disabled: !input.hasTenant
     }
   ];
+}
+
+function invitationStatusLabel(status: InvitationStatusFilter): string {
+  return status[0]?.toUpperCase() + status.slice(1);
 }
