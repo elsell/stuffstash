@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Asset, AssetAttachment } from '$lib/domain/inventory';
-import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from './workspaceAssetDetail';
+import { applyLoadedWorkspaceAssetDetail, loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from './workspaceAssetDetail';
 
 function asset(id: string, lifecycleState: Asset['lifecycleState'] = 'active'): Asset {
   return {
@@ -79,7 +79,53 @@ describe('workspace asset detail helpers', () => {
     ).resolves.toEqual([attachment('manual')]);
     expect(calls).toEqual(['attachments:tenant-home:inventory-household:asset-one']);
   });
+
+  it('applies loaded detail into the selected asset workspace state', () => {
+    const original = asset('asset-one');
+    const updated = { ...original, title: 'Updated detail title' };
+    const detailAttachments = [attachment('photo-one')];
+
+    expect(
+      applyLoadedWorkspaceAssetDetail(workspaceData([original]), {
+        loaded: true,
+        asset: updated,
+        attachments: detailAttachments,
+        error: ''
+      })
+    ).toEqual({
+      data: workspaceData([updated]),
+      loadedAssetDetail: updated,
+      selectedAssetId: 'asset-one',
+      selectedAssetAttachments: detailAttachments,
+      mode: 'asset'
+    });
+  });
 });
+
+function workspaceData(assets: Asset[]): import('$lib/domain/inventory').WorkspaceData {
+  return {
+    context: {
+      principal: { id: 'principal-one', email: 'owner@example.com' },
+      tenants: [{ id: 'tenant-home', name: 'Home', access: { relationship: 'owner', permissions: [] } }],
+      selectedTenantId: 'tenant-home',
+      selectedInventoryId: 'inventory-household',
+      inventories: [
+        {
+          id: 'inventory-household',
+          tenantId: 'tenant-home',
+          name: 'Household',
+          access: { relationship: 'editor', permissions: ['edit_asset'] }
+        }
+      ],
+      assetLifecycleState: 'active',
+      mediaUploadPolicy: { supportedContentTypes: ['image/jpeg'], maxBytes: 1024 },
+      customAssetTypes: [],
+      customFieldDefinitions: [],
+      capability: 'editor'
+    },
+    assets
+  };
+}
 
 interface RepositoryOptions {
   asset?: Asset;

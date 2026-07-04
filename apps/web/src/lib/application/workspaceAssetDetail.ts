@@ -1,5 +1,6 @@
-import type { Asset, AssetAttachment } from '$lib/domain/inventory';
+import type { Asset, AssetAttachment, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import { replaceWorkspaceAsset } from './workspaceAssetWorkflow';
 
 type AssetDetailRepository = Pick<InventoryRepository, 'getAsset' | 'listAssetAttachments'>;
 
@@ -14,6 +15,14 @@ export interface AssetDetailIdentity {
   tenantId: string;
   inventoryId: string;
   assetId: string;
+}
+
+export interface WorkspaceAssetDetailState {
+  data: WorkspaceData;
+  loadedAssetDetail: Asset;
+  selectedAssetId: string;
+  selectedAssetAttachments: AssetAttachment[];
+  mode: 'asset';
 }
 
 export async function loadWorkspaceAssetDetail(
@@ -47,3 +56,18 @@ export function refreshWorkspaceAssetAttachments(
 ): Promise<AssetAttachment[]> {
   return repository.listAssetAttachments(identity.tenantId, identity.inventoryId, identity.assetId);
 }
+
+export function applyLoadedWorkspaceAssetDetail(data: WorkspaceData, result: LoadedWorkspaceAssetDetail): WorkspaceAssetDetailState {
+  return {
+    data: replaceWorkspaceAsset(data, result.asset),
+    loadedAssetDetail: result.asset,
+    selectedAssetId: result.asset.id,
+    selectedAssetAttachments: result.attachments,
+    mode: 'asset'
+  };
+}
+
+type LoadedWorkspaceAssetDetail = LoadWorkspaceAssetDetailResult & {
+  loaded: true;
+  asset: Asset;
+};

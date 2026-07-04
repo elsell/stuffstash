@@ -20,7 +20,11 @@
     workspaceHomeHref,
     workspaceHomeRoute
   } from '$lib/application/workspaceAppNavigation';
-  import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from '$lib/application/workspaceAssetDetail';
+  import {
+    applyLoadedWorkspaceAssetDetail,
+    loadWorkspaceAssetDetail,
+    refreshWorkspaceAssetAttachments
+  } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
   import {
@@ -981,11 +985,16 @@
         error = result.error;
         return false;
       }
-      selectedAssetAttachments = result.attachments;
-      data = replaceWorkspaceAsset(data, result.asset);
-      loadedAssetDetail = result.asset;
-      selectedAssetId = result.asset.id;
-      mode = 'asset';
+      const detailState = applyLoadedWorkspaceAssetDetail(data, {
+        ...result,
+        loaded: true,
+        asset: result.asset
+      });
+      data = detailState.data;
+      loadedAssetDetail = detailState.loadedAssetDetail;
+      selectedAssetId = detailState.selectedAssetId;
+      selectedAssetAttachments = detailState.selectedAssetAttachments;
+      mode = detailState.mode;
       return true;
     } finally {
       busy = false;
