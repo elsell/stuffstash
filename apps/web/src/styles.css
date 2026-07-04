@@ -1647,6 +1647,41 @@ dd {
   border-left: 2px solid var(--border);
 }
 
+.quick-parent-context {
+  display: grid;
+  gap: 2px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--secondary) 55%, white);
+}
+
+.quick-parent-context span {
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.quick-parent-context strong,
+.quick-parent-context small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-parent-context strong {
+  color: var(--foreground);
+  font-size: 0.88rem;
+}
+
+.quick-parent-context small {
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
 .option-grid {
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
 }

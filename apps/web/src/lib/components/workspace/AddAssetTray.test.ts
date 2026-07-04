@@ -93,6 +93,10 @@ describe('AddAssetTray', () => {
 
     expect(switchControl('Create a parent first')?.getAttribute('aria-checked')).toBe('true');
     expect(document.querySelector('#quick-parent-title')).not.toBeNull();
+    expect(quickParentContextText()).toContain('Created under');
+    expect(quickParentContextText()).toContain('Inventory root');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('New Location in Inventory root');
+    expect(document.body.querySelector('.quick-parent-context')?.getAttribute('aria-live')).toBeNull();
   });
 
   it('seeds the parent destination from a route-backed parent id', async () => {
@@ -199,8 +203,13 @@ describe('AddAssetTray', () => {
     switchControl('Create a parent first')?.click();
     await flush();
     input('#quick-parent-title', 'Garage shelf');
+    await flush();
+    expect(quickParentContextText()).toContain('Created under');
+    expect(quickParentContextText()).toContain('Inventory root');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('New Location: Garage shelf in Inventory root');
     clickLast('Container');
     await flush();
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('New Container: Garage shelf in Inventory root');
     click('Save');
     await flush();
 
@@ -211,6 +220,81 @@ describe('AddAssetTray', () => {
         title: 'Garage shelf'
       }
     });
+  });
+
+  it('shows where a quick-created parent will be nested when an existing parent is selected', async () => {
+    let savedDraft: AddAssetSubmission | null = null;
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
+        initialParentAssetId: 'garage',
+        parentTargets: [parentTarget('garage', 'Garage', 'Home')],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async (draft) => {
+          savedDraft = draft;
+          return { saved: true };
+        }
+      }
+    });
+
+    await flush();
+    input('#asset-title', 'Tape measure');
+    switchControl('Create a parent first')?.click();
+    await flush();
+    input('#quick-parent-title', 'Garage shelf');
+    await flush();
+
+    expect(quickParentContextText()).toContain('Created under');
+    expect(quickParentContextText()).toContain('Garage');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain('New Location: Garage shelf in Garage / Home');
+
+    click('Save');
+    await flush();
+
+    expect(savedDraft).toMatchObject({
+      parentAssetId: 'garage',
+      parentQuickCreate: {
+        kind: 'location',
+        title: 'Garage shelf'
+      }
+    });
+  });
+
+  it('disambiguates duplicate selected parent names with the containment trail', async () => {
+    component = mount(AddAssetTray, {
+      target: document.body,
+      props: {
+        open: true,
+        closeHref: '/tenants/tenant-home/inventories/inventory-household',
+        initialParentAssetId: 'garage-basement',
+        parentTargets: [
+          parentTarget('garage-main', 'Garage shelf', 'Main garage'),
+          parentTarget('garage-basement', 'Garage shelf', 'Basement / Utility room')
+        ],
+        mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        saving: false,
+        onClose: () => {},
+        onSave: async () => ({ saved: true })
+      }
+    });
+
+    await flush();
+    switchControl('Create a parent first')?.click();
+    await flush();
+
+    expect(quickParentContextText()).toContain('Garage shelf');
+    expect(quickParentContextText()).toContain('Basement / Utility room');
+    expect(document.body.querySelector('.add-summary')?.textContent).toContain(
+      'New Location in Garage shelf / Basement / Utility room'
+    );
   });
 
   it('submits selected custom type and typed custom field values with the asset draft', async () => {
@@ -637,6 +721,12 @@ function switchControl(label: string): HTMLButtonElement | null {
   return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button[role="switch"]')).find((button) =>
     button.textContent?.includes(label)
   ) ?? null;
+}
+
+function quickParentContextText(): string {
+  const context = document.body.querySelector('.quick-parent-context');
+  if (!context) throw new Error('Missing quick parent context');
+  return context.textContent ?? '';
 }
 
 function clickLast(text: string): void {

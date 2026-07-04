@@ -77,6 +77,11 @@
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
   let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
   let selectedParent = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
+  let quickParentContainerLabel = $derived(selectedParent?.title ?? 'Inventory root');
+  let quickParentContainerTrail = $derived(selectedParent?.containmentTrail ?? '');
+  let quickParentContainerSummary = $derived(
+    selectedParent ? `${selectedParent.title} / ${selectedParent.containmentTrail}` : 'Inventory root'
+  );
   let parentSummary = $derived(destinationSummary());
   let photoSummary = $derived(photoCountLabel());
 
@@ -278,7 +283,8 @@
   function destinationSummary(): string {
     if (quickParentEnabled) {
       const parentKindLabel = assetKindLabel(quickParentKind);
-      return quickParentTitle.trim() ? `New ${parentKindLabel}: ${quickParentTitle.trim()}` : `New ${parentKindLabel}`;
+      const parentName = quickParentTitle.trim() ? `New ${parentKindLabel}: ${quickParentTitle.trim()}` : `New ${parentKindLabel}`;
+      return `${parentName} in ${quickParentContainerSummary}`;
     }
     return selectedParent?.title ?? 'Inventory root';
   }
@@ -396,6 +402,13 @@
       />
       {#if quickParentEnabled}
         <div class="quick-parent-fields">
+          <div class="quick-parent-context">
+            <span>Created under</span>
+            <strong>{quickParentContainerLabel}</strong>
+            {#if quickParentContainerTrail}
+              <small>{quickParentContainerTrail}</small>
+            {/if}
+          </div>
           <div class="field-stack">
             <Label for="quick-parent-title">Parent name</Label>
             <Input
