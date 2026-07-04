@@ -120,6 +120,10 @@
 
 <script lang="ts">
   import { containedAssets, moveParentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import {
+    workspaceNoInventoryPresentation,
+    workspaceUnavailableRoutePresentation
+  } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
   import AssetDetail from './AssetDetail.svelte';
   import HomeboxImportPanel from './HomeboxImportPanel.svelte';
@@ -139,25 +143,29 @@
     searchMode = $bindable()
   }: InventoryWorkspaceRouteContentProps = $props();
 
+  let routeUnavailablePresentation = $derived(workspaceUnavailableRoutePresentation(route.routeUnavailable));
+  let noInventoryPresentation = $derived(
+    workspaceNoInventoryPresentation(workspace.data.context.selectedTenantId, status.canCreateStarter)
+  );
 </script>
 
 {#if route.routeUnavailable}
   <section class="workspace-main">
-    <div class="empty-state spacious" role="alert">
-      <h1>Workspace unavailable</h1>
-      <p>{route.routeUnavailable}</p>
-      <Button.Root href={hrefs.homeHref} onclick={handlers.onHome}>Go home</Button.Root>
+    <div class="empty-state spacious" role={routeUnavailablePresentation.role}>
+      <h1>{routeUnavailablePresentation.title}</h1>
+      <p>{routeUnavailablePresentation.message}</p>
+      {#if routeUnavailablePresentation.actionLabel}
+        <Button.Root href={hrefs.homeHref} onclick={handlers.onHome}>{routeUnavailablePresentation.actionLabel}</Button.Root>
+      {/if}
     </div>
   </section>
 {:else if workspace.data.context.inventories.length === 0}
   <section class="workspace-main">
     <div class="empty-state spacious">
-      <h1>No inventory yet</h1>
-      {#if status.canCreateStarter}
-        <p>{workspace.data.context.selectedTenantId ? 'Create the first inventory for this tenant.' : 'Create your first tenant and inventory.'}</p>
-        <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>Create Household</Button.Root>
-      {:else}
-        <p>You can view this tenant, but you cannot create inventories in it.</p>
+      <h1>{noInventoryPresentation.title}</h1>
+      <p>{noInventoryPresentation.message}</p>
+      {#if noInventoryPresentation.actionLabel}
+        <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>{noInventoryPresentation.actionLabel}</Button.Root>
       {/if}
     </div>
   </section>

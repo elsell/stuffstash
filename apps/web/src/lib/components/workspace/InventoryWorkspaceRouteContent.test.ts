@@ -122,6 +122,33 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Create Household');
   });
 
+  it('renders the no-inventory branch without a starter action when creation is unavailable', async () => {
+    const props = await routeContentProps({
+      status: { canCreateStarter: false }
+    });
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: {
+        ...props,
+        workspace: {
+          ...props.workspace,
+          selectedInventory: null,
+          data: {
+            ...props.workspace.data,
+            context: {
+              ...props.workspace.data.context,
+              inventories: [],
+              selectedInventoryId: ''
+            }
+          }
+        }
+      }
+    });
+
+    expect(document.body.textContent).toContain('You can view this tenant, but you cannot create inventories in it.');
+    expect(document.body.textContent).not.toContain('Create Household');
+  });
+
   it('renders the location branch with contained assets', async () => {
     const props = await routeContentProps();
     const location = requiredAsset(props.workspace.data, 'location-garage') as LocationAsset;

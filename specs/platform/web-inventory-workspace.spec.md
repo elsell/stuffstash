@@ -586,6 +586,7 @@ Required implementation split:
 - Shell navigation destination grouping, labels, descriptions, current-state rules, context-switcher option metadata and href derivation, add-menu option labels and href derivation, and import-source href derivation must live in focused application helpers rather than component-local route string assembly.
 - Context switcher trigger labels, active tenant label, and empty-inventory copy must live in focused application helpers rather than component-local fallback copy.
 - Product-shell route recovery, add-close, normalization, and detail-back route derivation must live in focused application helpers rather than accumulating in the workspace shell component.
+- Workspace unavailable-route and no-inventory setup presentation must live in focused application helpers rather than component-local conditional copy.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
 - Search filter option composition, labels, and href derivation must live in focused application helpers rather than component-local route string assembly.
 - Search result and suggestion href derivation must live in focused application helpers rather than component-local route string assembly.
