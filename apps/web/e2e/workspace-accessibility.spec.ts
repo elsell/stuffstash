@@ -40,6 +40,8 @@ test('add tray exposes named modal controls and closes from the keyboard', async
 
   const dialog = page.getByRole('dialog', { name: 'Add item' });
   await expect(dialog).toBeVisible();
+  await expect(page.locator('.product-shell')).toHaveAttribute('aria-hidden', 'true');
+  expect(await page.locator('.product-shell').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(true);
   await expect(dialog.getByRole('button', { name: 'Item', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(dialog.getByRole('button', { name: 'Container', exact: true })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByLabel('Item name')).toBeVisible();
@@ -49,6 +51,8 @@ test('add tray exposes named modal controls and closes from the keyboard', async
 
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  await expect(page.locator('.product-shell')).not.toHaveAttribute('aria-hidden', 'true');
+  expect(await page.locator('.product-shell').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(false);
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household');
 });
 
