@@ -5,7 +5,8 @@
   import { Label } from '$lib/components/ui/label/index.js';
   import type { AssetViewModel } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
-  import KindIcon from './KindIcon.svelte';
+  import AssetThumb from './AssetThumb.svelte';
+  import ParentTargetButton from './ParentTargetButton.svelte';
 
   let {
     legend,
@@ -105,9 +106,9 @@
     <div>
       <p class="selection-summary">Current destination</p>
       <div class="parent-current-card" data-selected={selectedTarget ? 'target' : 'root'}>
-        <div class="parent-kind-mark" aria-hidden="true">
+        <div class="parent-kind-mark" data-kind={selectedTarget ? 'target' : 'root'} aria-hidden="true">
           {#if selectedTarget}
-            <KindIcon kind={selectedTarget.kind} />
+            <AssetThumb asset={selectedTarget} size="sm" />
           {:else}
             <span></span>
           {/if}
@@ -147,19 +148,7 @@
         <div class="parent-result-group" role="group" aria-label="Locations" aria-labelledby={`${searchId}-location-results-label`}>
           <p id={`${searchId}-location-results-label`} class="parent-result-heading">Locations</p>
           {#each locationResults as target}
-            <Button.Root
-              type="button"
-              variant={selectedId === target.id ? 'secondary' : 'outline'}
-              class="parent-target-button"
-              aria-pressed={selectedId === target.id}
-              onclick={() => onSelect(target.id)}
-            >
-              <KindIcon kind={target.kind} />
-              <span>
-                <strong>{target.title}</strong>
-                <small>{assetKindLabel(target.kind)} / {target.containmentTrail}</small>
-              </span>
-            </Button.Root>
+            <ParentTargetButton {target} selected={selectedId === target.id} onSelect={onSelect} />
           {/each}
         </div>
       {/if}
@@ -167,19 +156,7 @@
         <div class="parent-result-group" role="group" aria-label="Containers" aria-labelledby={`${searchId}-container-results-label`}>
           <p id={`${searchId}-container-results-label`} class="parent-result-heading">Containers</p>
           {#each containerResults as target}
-            <Button.Root
-              type="button"
-              variant={selectedId === target.id ? 'secondary' : 'outline'}
-              class="parent-target-button"
-              aria-pressed={selectedId === target.id}
-              onclick={() => onSelect(target.id)}
-            >
-              <KindIcon kind={target.kind} />
-              <span>
-                <strong>{target.title}</strong>
-                <small>{assetKindLabel(target.kind)} / {target.containmentTrail}</small>
-              </span>
-            </Button.Root>
+            <ParentTargetButton {target} selected={selectedId === target.id} onSelect={onSelect} />
           {/each}
         </div>
       {/if}
@@ -196,19 +173,7 @@
     </div>
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} suggested destinations`}>
       {#each suggestedTargets as target}
-        <Button.Root
-          type="button"
-          variant={selectedId === target.id ? 'secondary' : 'outline'}
-          class="parent-target-button"
-          aria-pressed={selectedId === target.id}
-          onclick={() => onSelect(target.id)}
-        >
-          <KindIcon kind={target.kind} />
-          <span>
-            <strong>{target.title}</strong>
-            <small>{assetKindLabel(target.kind)} / {target.containmentTrail}</small>
-          </span>
-        </Button.Root>
+        <ParentTargetButton {target} selected={selectedId === target.id} onSelect={onSelect} />
       {/each}
     </div>
   {:else}

@@ -1686,11 +1686,21 @@ dd {
   white-space: normal;
 }
 
-.parent-target-button > svg,
 .parent-kind-mark svg {
   width: 18px;
   height: 18px;
   color: var(--color-brand-contained);
+}
+
+.parent-target-thumb,
+.parent-current-card .asset-thumb {
+  flex: none;
+  align-self: center;
+}
+
+.parent-target-thumb {
+  display: inline-grid;
+  place-items: center;
 }
 
 .parent-target-button span,
@@ -1746,6 +1756,13 @@ dd {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--secondary);
+}
+
+.parent-kind-mark[data-kind="target"] {
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
 }
 
 .parent-kind-mark span {
