@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, unmount } from 'svelte';
 import ButtonHarness from './button.test-harness.svelte';
 
@@ -22,7 +22,7 @@ describe('Button', () => {
 		expect(link).not.toBeNull();
 		expect(link?.getAttribute('href')).toBeNull();
 		expect(link?.getAttribute('aria-disabled')).toBe('true');
-		expect(link?.getAttribute('tabindex')).toBe('-1');
+		expect(link?.getAttribute('tabindex')).toBe('0');
 		expect(link?.className).toContain('aria-disabled:pointer-events-none');
 		expect(link?.className).toContain('aria-disabled:opacity-50');
 	});
@@ -36,6 +36,23 @@ describe('Button', () => {
 		expect(link).not.toBeNull();
 		expect(link?.getAttribute('href')).toBeNull();
 		expect(link?.getAttribute('aria-disabled')).toBe('true');
-		expect(link?.getAttribute('tabindex')).toBe('-1');
+		expect(link?.getAttribute('tabindex')).toBe('0');
+	});
+
+	it('prevents disabled link activation before caller handlers run', () => {
+		const onDisabledActivate = vi.fn();
+		component = mount(ButtonHarness, {
+			target: document.body,
+			props: { onDisabledActivate }
+		});
+
+		const link = document.body.querySelector<HTMLAnchorElement>('[data-testid="disabled-action-link"]');
+		expect(link).not.toBeNull();
+
+		link?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		link?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+		link?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+
+		expect(onDisabledActivate).not.toHaveBeenCalled();
 	});
 });

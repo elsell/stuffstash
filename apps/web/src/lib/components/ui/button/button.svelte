@@ -50,9 +50,31 @@
 		href = undefined,
 		type = "button",
 		disabled,
+		onclick,
+		onkeydown,
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	function handleAnchorClick(event: MouseEvent): void {
+		if (disabled) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
+		const handleClick = onclick as HTMLAnchorAttributes["onclick"] | undefined;
+		handleClick?.(event as Parameters<NonNullable<HTMLAnchorAttributes["onclick"]>>[0]);
+	}
+
+	function handleAnchorKeydown(event: KeyboardEvent): void {
+		if (disabled && (event.key === "Enter" || event.key === " ")) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
+		const handleKeydown = onkeydown as HTMLAnchorAttributes["onkeydown"] | undefined;
+		handleKeydown?.(event as Parameters<NonNullable<HTMLAnchorAttributes["onkeydown"]>>[0]);
+	}
 </script>
 
 {#if href}
@@ -64,7 +86,9 @@
 		href={disabled ? undefined : href}
 		aria-disabled={disabled}
 		role={disabled ? "link" : undefined}
-		tabindex={disabled ? -1 : undefined}
+		tabindex={disabled ? 0 : undefined}
+		onclick={handleAnchorClick}
+		onkeydown={handleAnchorKeydown}
 	>
 		{@render children?.()}
 	</a>
@@ -76,6 +100,8 @@
 		{type}
 		{disabled}
 		{...restProps}
+		{onclick}
+		{onkeydown}
 	>
 		{@render children?.()}
 	</button>

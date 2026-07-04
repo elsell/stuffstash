@@ -84,7 +84,7 @@ describe('SegmentedControl', () => {
 
     expect(link('Inventory')?.getAttribute('href')).toBeNull();
     expect(link('Inventory')?.getAttribute('aria-disabled')).toBe('true');
-    expect(link('Inventory')?.getAttribute('tabindex')).toBe('-1');
+    expect(link('Inventory')?.getAttribute('tabindex')).toBe('0');
 
     link('Inventory')?.click();
 
