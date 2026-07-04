@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Inventory, Tenant } from '$lib/domain/inventory';
-import { inventoryContextOptions, inventoryCountLabel, relationshipLabel, tenantContextOptions } from './workspaceContextSwitching';
+import {
+  contextSwitcherPresentation,
+  inventoryContextOptions,
+  inventoryCountLabel,
+  relationshipLabel,
+  tenantContextOptions
+} from './workspaceContextSwitching';
 
 const household: Tenant = {
   id: 'tenant-one',
@@ -62,6 +68,21 @@ describe('workspace context switching helpers', () => {
     expect(inventoryCountLabel(inventories, 'missing')).toBe('0 inventories');
     expect(relationshipLabel(undefined)).toBe('Member');
     expect(relationshipLabel('tenant-admin')).toBe('Tenant Admin');
+  });
+
+  it('builds context switcher fallback presentation', () => {
+    expect(contextSwitcherPresentation({ selectedTenant: household, selectedInventory: inventories[0] })).toEqual({
+      triggerInventoryLabel: 'Garage',
+      triggerTenantLabel: 'Household',
+      activeTenantLabel: 'Household',
+      emptyInventoryMessage: 'No inventories in this tenant.'
+    });
+    expect(contextSwitcherPresentation({ selectedTenant: null, selectedInventory: null })).toEqual({
+      triggerInventoryLabel: 'No inventory',
+      triggerTenantLabel: 'No tenant',
+      activeTenantLabel: 'No tenant',
+      emptyInventoryMessage: 'No inventories in this tenant.'
+    });
   });
 });
 

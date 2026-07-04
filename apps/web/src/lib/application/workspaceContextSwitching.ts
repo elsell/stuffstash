@@ -18,6 +18,13 @@ export interface InventoryContextOption {
   selected: boolean;
 }
 
+export interface ContextSwitcherPresentation {
+  triggerInventoryLabel: string;
+  triggerTenantLabel: string;
+  activeTenantLabel: string;
+  emptyInventoryMessage: string;
+}
+
 export function tenantContextOptions(input: {
   tenants: Tenant[];
   inventories: Inventory[];
@@ -65,4 +72,17 @@ export function relationshipLabel(relationship: string | undefined): string {
     .filter(Boolean)
     .map((part) => part[0]?.toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+export function contextSwitcherPresentation(input: {
+  selectedTenant: Pick<Tenant, 'name'> | null;
+  selectedInventory: Pick<Inventory, 'name'> | null;
+}): ContextSwitcherPresentation {
+  const tenantLabel = input.selectedTenant?.name ?? 'No tenant';
+  return {
+    triggerInventoryLabel: input.selectedInventory?.name ?? 'No inventory',
+    triggerTenantLabel: tenantLabel,
+    activeTenantLabel: tenantLabel,
+    emptyInventoryMessage: 'No inventories in this tenant.'
+  };
 }

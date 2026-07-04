@@ -4,7 +4,12 @@
   import Building2 from '@lucide/svelte/icons/building-2';
   import Check from '@lucide/svelte/icons/check';
   import Package from '@lucide/svelte/icons/package';
-  import { inventoryContextOptions, tenantContextOptions, type InventoryContextOption } from '$lib/application/workspaceContextSwitching';
+  import {
+    contextSwitcherPresentation,
+    inventoryContextOptions,
+    tenantContextOptions,
+    type InventoryContextOption
+  } from '$lib/application/workspaceContextSwitching';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
 
@@ -32,6 +37,7 @@
   let selectedInventory = $derived(inventories.find((inventory) => inventory.id === selectedInventoryId) ?? null);
   let tenantOptions = $derived(tenantContextOptions({ tenants, inventories, selectedTenantId }));
   let inventoryOptions = $derived(inventoryContextOptions({ tenants, inventories, selectedTenantId, selectedInventoryId }));
+  let presentation = $derived(contextSwitcherPresentation({ selectedTenant, selectedInventory }));
 
   let rootElement: HTMLDivElement | null = $state(null);
   let triggerElement: HTMLButtonElement | null = $state(null);
@@ -155,8 +161,8 @@
   >
     <span class="identity-icon" data-kind="inventory" aria-hidden="true"><Package /></span>
     <span class="identity-copy">
-      <strong>{selectedInventory?.name ?? 'No inventory'}</strong>
-      <small>{selectedTenant?.name ?? 'No tenant'}</small>
+      <strong>{presentation.triggerInventoryLabel}</strong>
+      <small>{presentation.triggerTenantLabel}</small>
     </span>
   </Button.Root>
 
@@ -177,7 +183,7 @@
       <div class="context-header">
         <span class="identity-label">
           <span class="identity-icon" data-kind="tenant" aria-hidden="true"><Building2 /></span>
-          <span>{selectedTenant?.name ?? 'No tenant'}</span>
+          <span>{presentation.activeTenantLabel}</span>
         </span>
         {#if tenants.length > 1}
           <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
@@ -225,7 +231,7 @@
           {/each}
         </div>
       {:else}
-        <p class="muted small-copy">No inventories in this tenant.</p>
+        <p class="muted small-copy">{presentation.emptyInventoryMessage}</p>
       {/if}
     </div>
   {/if}
