@@ -3,9 +3,11 @@ import type { ImportMessage, ImportPreview } from '$lib/domain/inventory';
 import {
   buildLegacyHomeboxImportRequest,
   importAppliedDescription,
+  importApplyMessagesPresentation,
   importApplyStatus,
   importDeniedPresentation,
   importEmptyPreviewPresentation,
+  importMessageDetail,
   importMessageTone,
   importMissingInventoryPresentation,
   importPreviewSourceSummary,
@@ -104,23 +106,56 @@ describe('workspace import presentation helpers', () => {
       title: 'Preview an import',
       description: 'Review planned records before anything is saved.'
     });
-    expect(importPlannedCountLabel({ counts: { fields: 0, locations: 2, assets: 3, attachments: 0, warnings: 0, errors: 0 } })).toBe(
-      '5 planned'
+    expect(importPlannedCountLabel({ counts: { fields: 1, locations: 2, assets: 3, attachments: 4, warnings: 0, errors: 0 } })).toBe(
+      '10 planned records'
+    );
+    expect(importPlannedCountLabel({ counts: { fields: 0, locations: 1, assets: 0, attachments: 0, warnings: 0, errors: 0 } })).toBe(
+      '1 planned record'
     );
     expect(
       importAppliedDescription({
         counts: {
           locationsCreated: 1,
-          assetsCreated: 2,
-          attachmentsCreated: 3
+          assetsCreated: 0,
+          attachmentsCreated: 3,
+          fieldsCreated: 2,
+          fieldsExisting: 1,
+          assetsSkipped: 1,
+          attachmentsSkipped: 2
         }
       })
-    ).toBe('Created 1 locations, 2 items, and 3 attachments.');
+    ).toBe(
+      'Created 2 field definitions, 1 location, and 3 attachments. Reused 1 field definition. Skipped 1 item and 2 attachments.'
+    );
+    expect(
+      importAppliedDescription({
+        counts: {
+          fieldsCreated: 0,
+          fieldsExisting: 0,
+          locationsCreated: 0,
+          assetsCreated: 0,
+          assetsSkipped: 0,
+          attachmentsCreated: 0,
+          attachmentsSkipped: 0
+        }
+      })
+    ).toBe('Import finished without creating records.');
+    expect(importApplyMessagesPresentation()).toEqual({ title: 'Apply messages' });
   });
 
   it('summarizes preview source identity and maps message tone', () => {
     expect(importPreviewSourceSummary(importSource({ version: '0.10.3', imageImport: 'enabled' }))).toBe('Homebox 0.10.3');
     expect(importPreviewSourceSummary(importSource({ imageImport: 'disabled' }))).toBe('disabled');
+    expect(importMessageDetail({ code: 'missing_parent', severity: 'warning', summary: 'Missing parent' })).toBe('missing_parent');
+    expect(
+      importMessageDetail({
+        code: 'attachment_skipped',
+        severity: 'warning',
+        summary: 'Attachment skipped',
+        detail: 'One attachment could not be downloaded.',
+        sourceName: 'Camera'
+      })
+    ).toBe('Camera: One attachment could not be downloaded.');
     expect(importMessageTone(importMessage('error'))).toBe('destructive');
     expect(importMessageTone(importMessage('warning'))).toBe('secondary');
     expect(importMessageTone(importMessage('info'))).toBe('outline');

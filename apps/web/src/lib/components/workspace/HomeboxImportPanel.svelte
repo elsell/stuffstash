@@ -11,9 +11,11 @@
   import {
     buildLegacyHomeboxImportRequest,
     importAppliedDescription,
+    importApplyMessagesPresentation,
     importApplyStatus,
     importDeniedPresentation,
     importEmptyPreviewPresentation,
+    importMessageDetail,
     importMessageTone,
     importMissingInventoryPresentation,
     importPreviewSourceSummary,
@@ -70,6 +72,7 @@
   let missingInventoryPresentation = importMissingInventoryPresentation();
   let deniedPresentation = importDeniedPresentation();
   let emptyPreviewPresentation = importEmptyPreviewPresentation();
+  let applyMessagesPresentation = importApplyMessagesPresentation();
 
   let canImport = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let ready = $derived(
@@ -331,7 +334,7 @@
                     <Badge variant={importMessageTone(message)}>{message.severity}</Badge>
                     <span>
                       <strong>{message.summary}</strong>
-                      <small>{message.sourceName ? `${message.sourceName}: ` : ''}{message.detail ?? message.code}</small>
+                      <small>{importMessageDetail(message)}</small>
                     </span>
                   </div>
                 {/each}
@@ -402,6 +405,22 @@
               {importAppliedDescription(result)}
             </Alert.Description>
           </Alert.Root>
+          {#if result.messages.length > 0}
+            <section class="settings-panel wide" aria-labelledby="import-apply-messages-title">
+              <h2 id="import-apply-messages-title">{applyMessagesPresentation.title}</h2>
+              <div class="import-message-list">
+                {#each result.messages.slice(0, 12) as message}
+                  <div class="import-message-row">
+                    <Badge variant={importMessageTone(message)}>{message.severity}</Badge>
+                    <span>
+                      <strong>{message.summary}</strong>
+                      <small>{importMessageDetail(message)}</small>
+                    </span>
+                  </div>
+                {/each}
+              </div>
+            </section>
+          {/if}
         {/if}
       </div>
     </div>

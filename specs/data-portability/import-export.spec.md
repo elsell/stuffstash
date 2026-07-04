@@ -203,8 +203,9 @@ The web application must provide a polished import workflow for the first Homebo
 - Live Homebox connection may offer an explicit private-network address option for local or personal Homebox instances. It must be off by default.
 - CSV upload accepts a Homebox CSV export and clearly states that images are not included.
 - Preview shows source version when available, counts, warnings, planned field definitions, locations, assets, and image readiness.
+- The web preview badge counts total planned records: planned field definitions, locations, assets, and attachments.
 - Preview gives users enough detail to understand tag, quantity, date, duplicate, and image warnings before applying.
-- Apply shows progress states and final results.
+- Apply shows progress states and final results, including created field definitions, locations, assets, attachments, reused field definitions, skipped assets, and skipped attachments when those counts are nonzero.
 - The UI must avoid showing passwords, tokens, Homebox internal storage paths, or raw attachment bytes.
 - The UI must fit the existing Stuff Stash web design language and use the real inventory workspace rather than a separate marketing-style page.
 

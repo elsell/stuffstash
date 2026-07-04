@@ -1,4 +1,4 @@
-import type { ImportMessage, ImportPreview, ImportSourceType, LegacyHomeboxImportRequest } from '$lib/domain/inventory';
+import type { ImportApplyResult, ImportMessage, ImportPreview, ImportSourceType, LegacyHomeboxImportRequest } from '$lib/domain/inventory';
 import { importSourceHref } from './workspaceShellNavigation';
 
 export interface ImportSourceOption {
@@ -97,15 +97,47 @@ export function importEmptyPreviewPresentation(): Required<ImportPanelMessage> {
 }
 
 export function importPlannedCountLabel(preview: Pick<ImportPreview, 'counts'>): string {
-  return `${preview.counts.assets + preview.counts.locations} planned`;
+  const plannedCount = preview.counts.fields + preview.counts.locations + preview.counts.assets + preview.counts.attachments;
+  return `${plannedCount} planned ${pluralize(plannedCount, 'record')}`;
 }
 
-export function importAppliedDescription(result: { counts: { locationsCreated: number; assetsCreated: number; attachmentsCreated: number } }): string {
-  return `Created ${result.counts.locationsCreated} locations, ${result.counts.assetsCreated} items, and ${result.counts.attachmentsCreated} attachments.`;
+export function importAppliedDescription(result: Pick<ImportApplyResult, 'counts'>): string {
+  const created = compactList([
+    countPhrase(result.counts.fieldsCreated, 'field definition'),
+    countPhrase(result.counts.locationsCreated, 'location'),
+    countPhrase(result.counts.assetsCreated, 'item'),
+    countPhrase(result.counts.attachmentsCreated, 'attachment')
+  ]);
+  const skipped = compactList([
+    countPhrase(result.counts.assetsSkipped, 'item'),
+    countPhrase(result.counts.attachmentsSkipped, 'attachment')
+  ]);
+  const reused = countPhrase(result.counts.fieldsExisting, 'field definition');
+  const sentences: string[] = [];
+
+  if (created) {
+    sentences.push(`Created ${created}.`);
+  }
+  if (reused) {
+    sentences.push(`Reused ${reused}.`);
+  }
+  if (skipped) {
+    sentences.push(`Skipped ${skipped}.`);
+  }
+  return sentences.join(' ') || 'Import finished without creating records.';
+}
+
+export function importApplyMessagesPresentation(): ImportPanelMessage {
+  return { title: 'Apply messages' };
 }
 
 export function importPreviewSourceSummary(source: ImportPreview['source']): string {
   return source.version ? `Homebox ${source.version}` : source.imageImport;
+}
+
+export function importMessageDetail(message: ImportMessage): string {
+  const detail = message.detail ?? message.code;
+  return message.sourceName ? `${message.sourceName}: ${detail}` : detail;
 }
 
 export function importMessageTone(message: ImportMessage): 'destructive' | 'secondary' | 'outline' {
@@ -130,4 +162,26 @@ export function buildLegacyHomeboxImportRequest(input: ImportRequestInput): Lega
     allowInsecureTLS: input.allowInsecureTLS,
     allowPrivateNetwork: input.allowPrivateNetwork
   };
+}
+
+function countPhrase(count: number, noun: string): string {
+  return count > 0 ? `${count} ${pluralize(count, noun)}` : '';
+}
+
+function pluralize(count: number, noun: string): string {
+  return count === 1 ? noun : `${noun}s`;
+}
+
+function compactList(parts: string[]): string {
+  const values = parts.filter(Boolean);
+  if (values.length === 0) {
+    return '';
+  }
+  if (values.length === 1) {
+    return values[0];
+  }
+  if (values.length === 2) {
+    return `${values[0]} and ${values[1]}`;
+  }
+  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`;
 }

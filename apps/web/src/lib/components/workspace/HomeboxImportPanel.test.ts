@@ -233,7 +233,44 @@ describe('HomeboxImportPanel', () => {
 
     expect(imported).toBe(true);
     expect(document.body.textContent).toContain('Import applied');
-    expect(document.body.textContent).toContain('Created 2 locations, 3 items, and 4 attachments.');
+    expect(document.body.textContent).toContain('Created 1 field definition, 2 locations, 3 items, and 4 attachments.');
+  });
+
+  it('renders safe apply-result messages after applying an import', async () => {
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(undefined, importPreview(), {
+          ...importApplyResult(),
+          messages: [
+            {
+              code: 'attachment_skipped',
+              severity: 'warning',
+              summary: 'Attachment skipped',
+              detail: 'One attachment could not be downloaded.',
+              sourceName: 'Camera'
+            }
+          ]
+        }),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+    click('Apply');
+    await flush();
+
+    expect(document.body.textContent).toContain('Apply messages');
+    expect(document.body.textContent).toContain('Attachment skipped');
+    expect(document.body.textContent).toContain('Camera: One attachment could not be downloaded.');
   });
 });
 
@@ -249,7 +286,7 @@ function inventory(): Inventory {
 function fakeRepository(
   onPreview?: (request: LegacyHomeboxImportRequest) => void,
   preview: ImportPreview = importPreview(),
-  applyResult: ImportApplyResult = importApplyResult()
+  applyResult?: ImportApplyResult
 ): InventoryRepository {
   return {
     loadWorkspace: async () => failRepositoryCall(),
@@ -275,7 +312,7 @@ function fakeRepository(
       onPreview?.(request);
       return preview;
     },
-    applyLegacyHomeboxImport: async () => applyResult
+    applyLegacyHomeboxImport: async () => applyResult ?? failRepositoryCall()
   };
 }
 

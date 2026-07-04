@@ -616,6 +616,7 @@ Required implementation split:
 - Asset-detail photo gallery empty-state copy and unsupported media upload error copy must live in focused application helpers rather than component-local conditional copy.
 - Import source options, source summaries, apply-status copy, preview source summaries, message tone derivation, ready-state checks, and import request construction must live in focused application helpers rather than component-local derivation.
 - Import missing-inventory, denied, first-run preview, planned-count, and applied-result presentation must live in focused application helpers rather than component-local conditional copy.
+- Import preview/apply message detail formatting and apply-message section presentation must live in focused application helpers rather than component-local conditional copy.
 - Domain-oriented frontend observability must be represented through an explicit helper or port, even when the first implementation records events only in memory.
 
 The first promotion may include a local seeded adapter for unauthenticated browser review and for unavailable backend operations, but it must be truthful:
