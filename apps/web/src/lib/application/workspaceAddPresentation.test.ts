@@ -8,6 +8,7 @@ import {
   quickParentContainerLabel,
   quickParentContainerSummary,
   quickParentContainerTrail,
+  quickParentMissingNameMessage,
   quickParentKindOptions
 } from './workspaceAddPresentation';
 
@@ -67,6 +68,7 @@ describe('workspace add presentation helpers', () => {
     expect(quickParentContainerTrail(null)).toBe('');
     expect(quickParentContainerTrail(parent)).toBe('Hall');
     expect(quickParentContainerSummary(parent)).toBe('Hall closet / Hall');
+    expect(quickParentMissingNameMessage()).toBe('Enter a parent name or turn this option off.');
     expect(addPhotoCountLabel(0)).toBe('No photos');
     expect(addPhotoCountLabel(1)).toBe('1 photo');
     expect(addPhotoCountLabel(2)).toBe('2 photos');

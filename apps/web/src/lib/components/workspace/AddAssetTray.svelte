@@ -13,6 +13,7 @@
     assetKindControlOptions,
     quickParentContainerLabel as buildQuickParentContainerLabel,
     quickParentContainerTrail as buildQuickParentContainerTrail,
+    quickParentMissingNameMessage,
     quickParentKindOptions
   } from '$lib/application/workspaceAddPresentation';
   import type {
@@ -95,6 +96,7 @@
     })
   );
   let photoSummary = $derived(addPhotoCountLabel(selectedPhotos.length));
+  let quickParentNameError = quickParentMissingNameMessage();
 
   $effect(() => {
     if (open && !wasOpen) {
@@ -386,7 +388,7 @@
               aria-describedby={quickParentMissingName ? 'quick-parent-error' : undefined}
             />
             {#if quickParentMissingName}
-              <p id="quick-parent-error" class="denied-note" role="alert">Enter a parent name or turn this option off.</p>
+              <p id="quick-parent-error" class="denied-note" role="alert">{quickParentNameError}</p>
             {/if}
           </div>
           <SegmentedControl

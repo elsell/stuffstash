@@ -64,6 +64,10 @@ export function quickParentContainerSummary(selectedParent: ParentTargetViewMode
   return selectedParent ? `${selectedParent.title} / ${selectedParent.containmentTrail}` : 'Inventory root';
 }
 
+export function quickParentMissingNameMessage(): string {
+  return 'Enter a parent name or turn this option off.';
+}
+
 export function addPhotoCountLabel(photoCount: number): string {
   if (photoCount === 0) {
     return 'No photos';
