@@ -73,6 +73,8 @@
   let blockingErrors = $derived(preview?.messages.filter((message) => message.severity === 'error') ?? []);
   let warnings = $derived(preview?.messages.filter((message) => message.severity === 'warning') ?? []);
   let canApply = $derived(!!preview && blockingErrors.length === 0 && !busy && canImport);
+  let applyStatus = $derived(applyStatusMessage());
+  const applyStatusId = 'import-apply-status';
 
   $effect(() => {
     if (sourceType === previousSourceType) {
@@ -182,6 +184,22 @@
     }
   }
 
+  function applyStatusMessage(): string {
+    if (busy) {
+      return 'Import action is running.';
+    }
+    if (!preview) {
+      return 'Preview the import before applying changes.';
+    }
+    if (blockingErrors.length > 0) {
+      return 'Resolve preview errors before applying changes.';
+    }
+    if (!canImport) {
+      return 'Inventory configuration access is required.';
+    }
+    return 'Preview is ready to apply.';
+  }
+
   async function fileToBase64(file: File): Promise<string> {
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
@@ -279,10 +297,17 @@
 
         <div class="heading-actions">
           <Button.Root type="submit" disabled={busy || !ready}>{busy ? 'Working' : 'Preview'}</Button.Root>
-          <Button.Root type="button" variant="outline" disabled={!canApply} onclick={() => { void applyImport(); }}>
+          <Button.Root
+            type="button"
+            variant="outline"
+            disabled={!canApply}
+            aria-describedby={applyStatusId}
+            onclick={() => { void applyImport(); }}
+          >
             Apply
           </Button.Root>
         </div>
+        <p id={applyStatusId} class="muted-note" aria-live={canApply ? undefined : 'polite'}>{applyStatus}</p>
       </form>
 
       <div class="import-results">

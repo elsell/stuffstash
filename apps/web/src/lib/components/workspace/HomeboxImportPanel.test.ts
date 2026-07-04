@@ -142,6 +142,70 @@ describe('HomeboxImportPanel', () => {
       allowPrivateNetwork: true
     });
   });
+
+  it('explains why apply is disabled before previewing', async () => {
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    expect(button('Apply').getAttribute('aria-describedby')).toBe('import-apply-status');
+    expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Preview the import before applying changes.');
+  });
+
+  it('explains blocking preview errors before apply', async () => {
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(undefined, importPreviewWithError()),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(button('Apply').disabled).toBe(true);
+    expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Resolve preview errors before applying changes.');
+    expect(document.body.textContent).toContain('Missing parent');
+  });
+
+  it('keeps the ready-to-apply status visible without live-announcing it', async () => {
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(button('Apply').disabled).toBe(false);
+    expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Preview is ready to apply.');
+    expect(document.body.querySelector('#import-apply-status')?.getAttribute('aria-live')).toBeNull();
+  });
 });
 
 function inventory(): Inventory {
@@ -153,7 +217,7 @@ function inventory(): Inventory {
   };
 }
 
-function fakeRepository(onPreview?: (request: LegacyHomeboxImportRequest) => void): InventoryRepository {
+function fakeRepository(onPreview?: (request: LegacyHomeboxImportRequest) => void, preview: ImportPreview = importPreview()): InventoryRepository {
   return {
     loadWorkspace: async () => failRepositoryCall(),
     createTenantWithInventory: async () => failRepositoryCall(),
@@ -176,9 +240,24 @@ function fakeRepository(onPreview?: (request: LegacyHomeboxImportRequest) => voi
     searchAssets: async () => failRepositoryCall(),
     previewLegacyHomeboxImport: async (_tenantId, _inventoryId, request) => {
       onPreview?.(request);
-      return importPreview();
+      return preview;
     },
     applyLegacyHomeboxImport: async () => failRepositoryCall()
+  };
+}
+
+function importPreviewWithError(): ImportPreview {
+  return {
+    ...importPreview(),
+    counts: { fields: 0, locations: 1, assets: 1, attachments: 0, warnings: 0, errors: 1 },
+    messages: [
+      {
+        code: 'missing_parent',
+        severity: 'error',
+        summary: 'Missing parent',
+        detail: 'One item references a parent that is not present in the export.'
+      }
+    ]
   };
 }
 
@@ -224,13 +303,17 @@ function input(selector: string, value: string): void {
 }
 
 function click(text: string): void {
-  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+  button(text).click();
+}
+
+function button(text: string): HTMLButtonElement {
+  const target = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
     candidate.textContent?.includes(text)
   );
-  if (!button) {
+  if (!target) {
     throw new Error(`Missing button ${text}`);
   }
-  button.click();
+  return target;
 }
 
 async function flush(): Promise<void> {
