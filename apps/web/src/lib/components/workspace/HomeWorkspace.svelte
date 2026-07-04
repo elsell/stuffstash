@@ -3,7 +3,17 @@
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import { browseAssetHref, browseLocationHref, homeAddLocationHref, homeLifecycleHref } from '$lib/application/workspaceBrowseNavigation';
+  import {
+    browseAssetHref,
+    browseLocationHref,
+    homeAddLocationHref,
+    homeArchivedEmptyState,
+    homeCreateLocationDenied,
+    homeHeadingPresentation,
+    homeLifecycleOptions,
+    homeLocationsEmptyState,
+    homeRecentEmptyState
+  } from '$lib/application/workspaceBrowseNavigation';
   import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
@@ -43,14 +53,15 @@
   let routeInventoryId = $derived(
     inventoryId || locations[0]?.location.inventoryId || recentAssets[0]?.inventoryId || archivedAssets[0]?.inventoryId || null
   );
-  const addDeniedNoteId = 'home-add-location-denied';
+  let headingPresentation = $derived(homeHeadingPresentation(lifecycleState, browseMode));
+  let lifecycleOptions = $derived(homeLifecycleOptions(routeTenantId, routeInventoryId));
+  const addDenied = homeCreateLocationDenied();
+  const recentEmpty = homeRecentEmptyState();
+  const archivedEmpty = homeArchivedEmptyState();
+  const locationsEmpty = homeLocationsEmptyState();
 
   function addLocationHref(): string {
     return homeAddLocationHref(routeTenantId, routeInventoryId);
-  }
-
-  function lifecycleHref(nextLifecycleState: AssetLifecycleFilter): string {
-    return homeLifecycleHref(routeTenantId, routeInventoryId, nextLifecycleState);
   }
 
   function openAdd(event: MouseEvent): void {
@@ -84,24 +95,15 @@
 <section class="workspace-main" aria-labelledby="home-title">
   <div class="section-heading">
     <div>
-      <h1 id="home-title">{lifecycleState === 'active' ? (browseMode === 'locations' ? 'Locations' : 'Home') : 'Archived assets'}</h1>
-      <p>
-        {lifecycleState === 'active'
-          ? browseMode === 'locations'
-            ? 'The places where your things live.'
-            : 'Recently added and the places where your things live.'
-          : 'Assets removed from active browsing.'}
-      </p>
+      <h1 id="home-title">{headingPresentation.title}</h1>
+      <p>{headingPresentation.description}</p>
     </div>
     <div class="heading-actions">
       {#if browseMode === 'home'}
         <SegmentedControl
           label="Asset lifecycle"
           value={lifecycleState}
-          options={[
-            { value: 'active', label: 'Active', href: lifecycleHref('active') },
-            { value: 'archived', label: 'Archived', href: lifecycleHref('archived') }
-          ]}
+          options={lifecycleOptions}
           onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
         />
       {/if}
@@ -110,11 +112,11 @@
           href={addLocationHref()}
           variant="outline"
           disabled={!canCreateAsset}
-          aria-describedby={!canCreateAsset ? addDeniedNoteId : undefined}
+          aria-describedby={!canCreateAsset ? addDenied.id : undefined}
           onclick={openAdd}
         >Add location</Button.Root>
         {#if !canCreateAsset && locations.length > 0}
-          <p id={addDeniedNoteId} class="denied-note" role="note">Creating locations is unavailable for this inventory.</p>
+          <p id={addDenied.id} class="denied-note" role="note">{addDenied.message}</p>
         {/if}
       {/if}
     </div>
@@ -127,7 +129,7 @@
       </div>
       {#if recentAssets.length === 0}
         <div class="empty-state">
-          <p>No items or containers yet.</p>
+          <p>{recentEmpty.message}</p>
         </div>
       {:else}
         <div class="recent-rail" aria-label="Recently added assets">
@@ -149,7 +151,7 @@
   {#if lifecycleState === 'archived'}
     {#if archivedAssets.length === 0}
       <div class="empty-state spacious">
-        <h2>No archived assets</h2>
+        <h2>{archivedEmpty.title}</h2>
       </div>
     {:else}
       <div class="asset-list">
@@ -167,16 +169,16 @@
     {/if}
   {:else if locations.length === 0}
     <div class="empty-state spacious">
-      <h2>No locations yet</h2>
-      <p>Add a location before adding things into it.</p>
+      <h2>{locationsEmpty.title}</h2>
+      <p>{locationsEmpty.message}</p>
       <Button.Root
         href={addLocationHref()}
         disabled={!canCreateAsset}
-        aria-describedby={!canCreateAsset ? addDeniedNoteId : undefined}
+        aria-describedby={!canCreateAsset ? addDenied.id : undefined}
         onclick={openAdd}
-      >Add first location</Button.Root>
+      >{locationsEmpty.actionLabel}</Button.Root>
       {#if !canCreateAsset}
-        <p id={addDeniedNoteId} class="denied-note" role="note">Creating locations is unavailable for this inventory.</p>
+        <p id={addDenied.id} class="denied-note" role="note">{addDenied.message}</p>
       {/if}
     </div>
   {:else}

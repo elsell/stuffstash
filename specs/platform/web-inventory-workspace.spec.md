@@ -581,6 +581,7 @@ Required implementation split:
 - Parent target picker result-count, destination-count, suggestion-count, no-match, overflow, and no-target presentation must live in focused application helpers rather than component-local conditional copy.
 - Add surface control options, kind-specific labels, destination summaries, and photo-count summaries must live in focused application helpers rather than component-local derivation.
 - Home and location browse href derivation must live in focused application helpers rather than component-local route string assembly.
+- Home workspace heading, lifecycle filter options, empty-state copy, and create-location denied copy must live in focused application helpers rather than component-local conditional copy.
 - Shell navigation destination grouping, labels, descriptions, current-state rules, context-switcher option metadata and href derivation, add-menu option labels and href derivation, and import-source href derivation must live in focused application helpers rather than component-local route string assembly.
 - Product-shell route recovery, add-close, normalization, and detail-back route derivation must live in focused application helpers rather than accumulating in the workspace shell component.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.

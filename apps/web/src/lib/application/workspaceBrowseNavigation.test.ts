@@ -3,8 +3,14 @@ import type { Asset, LocationAsset } from '$lib/domain/inventory';
 import {
   browseAssetHref,
   browseLocationHref,
+  homeArchivedEmptyState,
   homeAddLocationHref,
+  homeCreateLocationDenied,
+  homeHeadingPresentation,
   homeLifecycleHref,
+  homeLifecycleOptions,
+  homeLocationsEmptyState,
+  homeRecentEmptyState,
   locationAddItemHref,
   locationBackHref,
   locationEditHref,
@@ -37,6 +43,14 @@ describe('workspace browse navigation helpers', () => {
     expect(homeLifecycleHref('tenant-home', 'inventory-household', 'archived')).toBe(
       '/tenants/tenant-home/inventories/inventory-household?lifecycle=archived'
     );
+    expect(homeLifecycleOptions('tenant-home', 'inventory-household')).toEqual([
+      { value: 'active', label: 'Active', href: '/tenants/tenant-home/inventories/inventory-household' },
+      {
+        value: 'archived',
+        label: 'Archived',
+        href: '/tenants/tenant-home/inventories/inventory-household?lifecycle=archived'
+      }
+    ]);
   });
 
   it('derives home asset and location row hrefs', () => {
@@ -52,5 +66,31 @@ describe('workspace browse navigation helpers', () => {
     expect(locationAddItemHref(garage)).toBe('/tenants/tenant-home/inventories/inventory-household/add/item?parent=garage');
     expect(locationRowHref(locationAsset('shelf'))).toBe('/tenants/tenant-home/inventories/inventory-household/locations/shelf');
     expect(locationRowHref(asset('tape'))).toBe('/tenants/tenant-home/inventories/inventory-household/assets/tape');
+  });
+
+  it('builds home heading, empty, and denied presentation', () => {
+    expect(homeHeadingPresentation('active', 'home')).toEqual({
+      title: 'Home',
+      description: 'Recently added and the places where your things live.'
+    });
+    expect(homeHeadingPresentation('active', 'locations')).toEqual({
+      title: 'Locations',
+      description: 'The places where your things live.'
+    });
+    expect(homeHeadingPresentation('archived', 'home')).toEqual({
+      title: 'Archived assets',
+      description: 'Assets removed from active browsing.'
+    });
+    expect(homeRecentEmptyState()).toEqual({ message: 'No items or containers yet.' });
+    expect(homeArchivedEmptyState()).toEqual({ title: 'No archived assets' });
+    expect(homeLocationsEmptyState()).toEqual({
+      title: 'No locations yet',
+      message: 'Add a location before adding things into it.',
+      actionLabel: 'Add first location'
+    });
+    expect(homeCreateLocationDenied()).toEqual({
+      id: 'home-add-location-denied',
+      message: 'Creating locations is unavailable for this inventory.'
+    });
   });
 });
