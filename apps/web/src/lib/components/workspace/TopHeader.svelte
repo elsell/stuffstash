@@ -7,9 +7,8 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { searchAssetHref } from '$lib/application/workspaceSearch';
-  import { shellAddHref } from '$lib/application/workspaceShellNavigation';
+  import { shellAddOptions, type ShellAddOption } from '$lib/application/workspaceShellNavigation';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
   import SearchSuggestions from './SearchSuggestions.svelte';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
 
@@ -52,9 +51,9 @@
   let addMenuElement = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
   let addAvailability = $derived(workspaceAddAvailability({ hasInventory: !!inventory, canCreateAsset }));
+  let addOptions = $derived(shellAddOptions(selectedTenantId || null, selectedInventoryId || null));
   const suggestionIdPrefix = 'global-search-suggestion';
   const addDeniedNoteId = 'header-add-denied';
-  const addKinds: AssetKind[] = ['item', 'container', 'location'];
 
   $effect(() => {
     if (activeSuggestionIndex >= visibleSuggestions.length) {
@@ -65,17 +64,13 @@
     }
   });
 
-  function chooseAddKind(event: MouseEvent, kind: AssetKind): void {
+  function chooseAddKind(event: MouseEvent, option: ShellAddOption): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     closeAddMenu(false);
-    onOpenAdd(kind);
-  }
-
-  function addKindHref(kind: AssetKind): string {
-    return shellAddHref(kind, selectedTenantId || null, selectedInventoryId || null);
+    onOpenAdd(option.kind);
   }
 
   function openSuggestion(event: MouseEvent, asset: Asset): void {
@@ -268,9 +263,9 @@
     {/if}
     {#if addMenuOpen}
       <div bind:this={addMenuElement} id="header-add-menu" class="add-menu" aria-label="Add asset kind">
-        {#each addKinds as kind}
-          <Button.Root href={addKindHref(kind)} variant="ghost" class="add-menu-item" onkeydown={handleAddMenuKeydown} onclick={(event) => chooseAddKind(event, kind)}>
-            {assetKindLabel(kind)}
+        {#each addOptions as option}
+          <Button.Root href={option.href} variant="ghost" class="add-menu-item" onkeydown={handleAddMenuKeydown} onclick={(event) => chooseAddKind(event, option)}>
+            {option.label}
           </Button.Root>
         {/each}
       </div>

@@ -1,4 +1,5 @@
 import type { AssetKind, ImportSourceType, Inventory, WorkspaceMode } from '$lib/domain/inventory';
+import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
 import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from './workspaceRoute';
 
 export type ShellWorkspaceMode = Extract<WorkspaceMode, 'home' | 'locations' | 'search' | 'import' | 'settings'>;
@@ -24,6 +25,12 @@ export interface ShellNavigationInput {
   tenantId: string | null;
   inventoryId: string | null;
   settingsSection?: SettingsSection;
+}
+
+export interface ShellAddOption {
+  kind: AssetKind;
+  label: string;
+  href: string;
 }
 
 type ShellNavigationDefinition = Omit<ShellNavigationDestination, 'href' | 'current'>;
@@ -60,6 +67,14 @@ export function shellModeHref(
 
 export function shellAddHref(kind: AssetKind, tenantId: string | null, inventoryId: string | null): string {
   return workspaceRouteHref({ action: 'add', addKind: kind }, tenantId, inventoryId);
+}
+
+export function shellAddOptions(tenantId: string | null, inventoryId: string | null): ShellAddOption[] {
+  return assetKinds.map((kind) => ({
+    kind,
+    label: assetKindLabel(kind),
+    href: shellAddHref(kind, tenantId, inventoryId)
+  }));
 }
 
 export function desktopShellNavigationGroups(input: ShellNavigationInput): ShellNavigationGroup[] {

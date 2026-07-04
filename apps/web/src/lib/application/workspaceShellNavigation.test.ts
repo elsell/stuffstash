@@ -5,6 +5,7 @@ import {
   desktopShellNavigationGroups,
   importSourceHref,
   mobileShellNavigationItems,
+  shellAddOptions,
   shellAddHref,
   shellModeHref,
   shellModeIsCurrent
@@ -32,6 +33,14 @@ describe('workspace shell navigation helpers', () => {
     expect(shellAddHref('item', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/add/item');
     expect(shellAddHref('container', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/add/container');
     expect(shellAddHref('location', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/add/location');
+  });
+
+  it('builds shell add menu options with kind labels and durable hrefs', () => {
+    expect(shellAddOptions('tenant-one', 'inventory-one')).toEqual([
+      { kind: 'item', label: 'Item', href: '/tenants/tenant-one/inventories/inventory-one/add/item' },
+      { kind: 'container', label: 'Container', href: '/tenants/tenant-one/inventories/inventory-one/add/container' },
+      { kind: 'location', label: 'Location', href: '/tenants/tenant-one/inventories/inventory-one/add/location' }
+    ]);
   });
 
   it('builds grouped desktop navigation destinations with current-state rules', () => {
