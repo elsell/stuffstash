@@ -209,6 +209,7 @@ Add:
 - The add dialog/tray must still allow changing the selected kind after opening.
 - Visible add-tray dismissal controls must expose canonical `href` values back to the workspace route that ordinary in-app close restores.
 - Add must be disabled or replaced by an explicit denied state for inventories where the user lacks create-asset permission.
+- Header and mobile Add controls must expose a perceivable disabled reason when add creation is unavailable or no inventory is selected.
 - Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
 
 ## Mobile Navigation
@@ -222,6 +223,7 @@ The approved first mobile bottom navigation direction is:
 - Add as the central primary action.
 - Locations or equivalent browse destination when a full route exists.
 - Settings or inventory/settings access when it exists.
+- The mobile Add control must expose the same durable add-action URL and unavailable-state semantics as the desktop Add control.
 
 Mobile must not show a desktop-style global search bar in the header when Search is already in bottom navigation.
 

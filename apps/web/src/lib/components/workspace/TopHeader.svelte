@@ -4,6 +4,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
+  import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
@@ -48,7 +49,9 @@
   let addTrigger = $state<HTMLButtonElement | null>(null);
   let addMenuElement = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
+  let addAvailability = $derived(workspaceAddAvailability({ hasInventory: !!inventory, canCreateAsset }));
   const suggestionIdPrefix = 'global-search-suggestion';
+  const addDeniedNoteId = 'header-add-denied';
   const addKinds: AssetKind[] = ['item', 'container', 'location'];
 
   $effect(() => {
@@ -264,7 +267,8 @@
     <Button.Root
       bind:ref={addTrigger}
       class="header-add"
-      disabled={!canCreateAsset || !inventory}
+      disabled={!addAvailability.canOpen}
+      aria-describedby={addAvailability.disabledReason ? addDeniedNoteId : undefined}
       aria-expanded={addMenuOpen}
       aria-controls="header-add-menu"
       onclick={toggleAddMenu}
@@ -272,6 +276,9 @@
     >
       <Plus /> Add
     </Button.Root>
+    {#if addAvailability.disabledReason}
+      <p id={addDeniedNoteId} class="visually-hidden" role="note">{addAvailability.disabledReason}</p>
+    {/if}
     {#if addMenuOpen}
       <div bind:this={addMenuElement} id="header-add-menu" class="add-menu" aria-label="Add asset kind">
         {#each addKinds as kind}

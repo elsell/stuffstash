@@ -237,6 +237,27 @@ describe('TopHeader', () => {
     expect(document.body.querySelector('#header-add-menu')).toBeNull();
   });
 
+  it('exposes a perceivable disabled reason when header add is unavailable', () => {
+    mountHeader({ canCreateAsset: false });
+
+    const trigger = buttonContaining('Add');
+    expect(trigger.disabled).toBe(true);
+    expect(trigger.getAttribute('aria-describedby')).toBe('header-add-denied');
+    expect(document.body.querySelector('#header-add-denied')?.textContent).toBe('Adding assets is unavailable for this inventory.');
+  });
+
+  it('does not open the add menu without a selected inventory', () => {
+    mountHeader({ inventory: null, canCreateAsset: true });
+
+    const trigger = buttonContaining('Add');
+    trigger.click();
+
+    expect(trigger.disabled).toBe(true);
+    expect(trigger.getAttribute('aria-describedby')).toBe('header-add-denied');
+    expect(document.body.querySelector('#header-add-denied')?.textContent).toBe('Select an inventory before adding assets.');
+    expect(document.body.querySelector('#header-add-menu')).toBeNull();
+  });
+
   it('closes the add menu with Escape and restores focus to the trigger', async () => {
     mountHeader();
 

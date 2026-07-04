@@ -4,6 +4,7 @@
   import Search from '@lucide/svelte/icons/search';
   import Settings from '@lucide/svelte/icons/settings';
   import MapPin from '@lucide/svelte/icons/map-pin';
+  import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import * as Button from '$lib/components/ui/button/index.js';
   import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
   import type { WorkspaceMode } from '$lib/domain/inventory';
@@ -26,6 +27,9 @@
     onOpenAdd: () => void;
   } = $props();
 
+  const addDeniedNoteId = 'mobile-add-denied';
+  let addAvailability = $derived(workspaceAddAvailability({ hasInventory: selectedInventoryId.length > 0, canCreateAsset }));
+
   function modeHref(nextMode: WorkspaceMode): string {
     const route: Partial<WorkspaceRouteState> = { mode: nextMode };
     if (nextMode === 'settings') {
@@ -47,7 +51,7 @@
   }
 
   function openAdd(event: MouseEvent): void {
-    if (!canCreateAsset) {
+    if (!addAvailability.canOpen) {
       return;
     }
     if (!shouldHandleInApp(event)) {
@@ -77,7 +81,17 @@
     aria-current={mode === 'search' ? 'page' : undefined}
     onclick={(event) => openMode(event, 'search')}
   ><Search /> Search</Button.Root>
-  <Button.Root href={addHref()} class="mobile-add" disabled={!canCreateAsset} aria-label="Add asset" onclick={openAdd}><Plus /></Button.Root>
+  <Button.Root
+    href={addHref()}
+    class="mobile-add"
+    disabled={!addAvailability.canOpen}
+    aria-label="Add asset"
+    aria-describedby={addAvailability.disabledReason ? addDeniedNoteId : undefined}
+    onclick={openAdd}
+  ><Plus /></Button.Root>
+  {#if addAvailability.disabledReason}
+    <p id={addDeniedNoteId} class="visually-hidden" role="note">{addAvailability.disabledReason}</p>
+  {/if}
   <Button.Root
     href={modeHref('locations')}
     variant={mode === 'locations' || mode === 'location' ? 'secondary' : 'ghost'}

@@ -96,6 +96,36 @@ describe('MobileNav', () => {
     document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.click();
 
     expect(addOpened).toBe(false);
+    expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('href')).toBeNull();
+    expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('aria-disabled')).toBe('true');
+    expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('aria-describedby')).toBe('mobile-add-denied');
+    expect(document.body.querySelector('#mobile-add-denied')?.textContent).toBe('Adding assets is unavailable for this inventory.');
+  });
+
+  it('explains disabled mobile add when no inventory is selected even with create permission', () => {
+    let addOpened = false;
+    component = mount(MobileNav, {
+      target: document.body,
+      props: {
+        mode: 'home',
+        selectedTenantId: 'tenant-one',
+        selectedInventoryId: '',
+        settingsSection: 'overview',
+        canCreateAsset: true,
+        onModeChange: () => {},
+        onOpenAdd: () => {
+          addOpened = true;
+        }
+      }
+    });
+
+    document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.click();
+
+    expect(addOpened).toBe(false);
+    expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('href')).toBeNull();
+    expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('aria-disabled')).toBe('true');
+    expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('aria-describedby')).toBe('mobile-add-denied');
+    expect(document.body.querySelector('#mobile-add-denied')?.textContent).toBe('Select an inventory before adding assets.');
   });
 });
 
