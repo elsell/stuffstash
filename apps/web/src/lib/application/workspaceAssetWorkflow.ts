@@ -14,6 +14,11 @@ import type { WorkspaceRouteState } from './workspaceRoute';
 
 type AssetCreateRepository = Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto'>;
 
+interface PhotoUploadResult {
+  uploaded: UploadedPhoto[];
+  failures: number;
+}
+
 export interface CreateAssetWorkflowResult {
   data: WorkspaceData;
   saveResult: AddAssetSaveResult;
@@ -35,6 +40,7 @@ export async function createAssetWorkflow(
   let createdParent: Asset | null = null;
   let createdAsset: Asset | null = null;
   let savedAsset: Asset | null = null;
+  let uploadResult: PhotoUploadResult = { uploaded: [], failures: 0 };
 
   try {
     createdParent = draft.parentQuickCreate
@@ -54,14 +60,14 @@ export async function createAssetWorkflow(
       parentAssetId: createdParent?.id ?? draft.parentAssetId
     };
     createdAsset = await repository.createAsset(data.context.selectedTenantId, inventory.id, childDraft);
-    const uploadResult = await uploadPhotos(repository, createdAsset, draft.photos);
+    uploadResult = await uploadPhotos(repository, createdAsset, draft.photos);
     savedAsset = assetWithPrimaryPhoto(createdAsset, uploadResult.uploaded[0]);
 
     if (data.context.assetLifecycleState !== 'active') {
       return {
         data: await repository.selectAssetLifecycle(createdAsset.tenantId, createdAsset.inventoryId, 'active'),
         saveResult: { saved: true },
-        message: createAssetMessage(createdAsset, draft.photos.length, uploadResult.failures, createdParent),
+        message: createAssetMessage(createdAsset, uploadResult, createdParent),
         closeAdd: true,
         mode: 'asset',
         selectedAsset: savedAsset,
@@ -75,7 +81,7 @@ export async function createAssetWorkflow(
     }
 
     const nextData = prependCreatedAssets(data, savedAsset, createdParent);
-    const message = createAssetMessage(createdAsset, draft.photos.length, uploadResult.failures, createdParent);
+    const message = createAssetMessage(createdAsset, uploadResult, createdParent);
 
     if (uploadResult.failures > 0) {
       return {
@@ -115,7 +121,7 @@ export async function createAssetWorkflow(
       return {
         data,
         saveResult: { saved: true },
-        message: `Saved ${createdAsset.title}.`,
+        message: createAssetMessage(createdAsset, uploadResult, createdParent),
         error: `Saved ${createdAsset.title}, but could not refresh the active view. ${failure}`,
         closeAdd: true,
         mode: 'asset',
@@ -192,7 +198,7 @@ async function uploadPhotos(
   repository: Pick<InventoryRepository, 'uploadAssetPhoto'>,
   asset: Asset,
   photos: SelectedPhoto[]
-): Promise<{ uploaded: UploadedPhoto[]; failures: number }> {
+): Promise<PhotoUploadResult> {
   let failures = 0;
   const uploaded: UploadedPhoto[] = [];
   for (const photo of photos) {
@@ -208,12 +214,17 @@ async function uploadPhotos(
   return { uploaded, failures };
 }
 
-function createAssetMessage(asset: Asset, photoCount: number, uploadFailures: number, createdParent: Asset | null): string {
-  if (uploadFailures > 0) {
-    return `Saved ${asset.title}. ${uploadFailures} photo upload ${uploadFailures === 1 ? 'failed' : 'failed'}.`;
+function createAssetMessage(asset: Asset, uploadResult: PhotoUploadResult, createdParent: Asset | null): string {
+  const locationSuffix = createdParent ? ` in ${createdParent.title}` : '';
+  const uploadSuffix =
+    uploadResult.uploaded.length > 0 ? ` with ${photoUploadCountLabel(uploadResult.uploaded.length)}` : '';
+  const savedMessage = `Saved ${asset.title}${locationSuffix}${uploadSuffix}.`;
+  if (uploadResult.failures > 0) {
+    return `${savedMessage} ${photoUploadCountLabel(uploadResult.failures)} failed.`;
   }
-  if (photoCount > 0) {
-    return `Saved ${asset.title} with ${photoCount} photo upload.`;
-  }
-  return createdParent ? `Saved ${asset.title} in ${createdParent.title}.` : `Saved ${asset.title}.`;
+  return savedMessage;
+}
+
+function photoUploadCountLabel(count: number): string {
+  return `${count} ${count === 1 ? 'photo upload' : 'photo uploads'}`;
 }

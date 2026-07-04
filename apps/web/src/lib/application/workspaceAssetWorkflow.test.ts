@@ -82,7 +82,7 @@ describe('workspace asset workflow', () => {
 
     expect(result.saveResult).toEqual({ saved: true });
     expect(result.closeAdd).toBe(true);
-    expect(result.message).toBe('Saved Tape measure with 1 photo upload.');
+    expect(result.message).toBe('Saved Tape measure in Garage bin with 1 photo upload.');
     expect(result.route).toMatchObject({ mode: 'asset', assetId: 'asset-one' });
     expect(result.data.assets.map((item) => item.id)).toEqual(['asset-one', 'parent-one']);
     expect(result.data.assets[0]?.photo).toMatchObject({ id: 'photo-one', assetId: 'asset-one', url: 'blob:front' });
@@ -111,7 +111,46 @@ describe('workspace asset workflow', () => {
     expect(result.data.assets.map((item) => item.id)).toEqual(['asset-one']);
   });
 
-  it('pairs the primary attachment with the selected photo that actually uploaded', async () => {
+  it('keeps quick-created parent context when photo upload fails', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('parent-one', 'Garage bin', 'container'), asset('asset-one', 'Tape measure')],
+      uploadFailure: true
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      parentQuickCreate: { kind: 'container', title: 'Garage bin' },
+      customFields: {},
+      photos: [photo()]
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.message).toBe('Saved Tape measure in Garage bin. 1 photo upload failed.');
+  });
+
+  it('uses count-aware photo saved feedback', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('asset-one', 'Tape measure')],
+      uploadedPhotos: [attachment('photo-one', 'asset-one'), attachment('photo-two', 'asset-one')]
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      photos: [selectedPhoto('front.jpg', 'blob:front'), selectedPhoto('back.jpg', 'blob:back')]
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.message).toBe('Saved Tape measure with 2 photo uploads.');
+  });
+
+  it('reports mixed photo upload outcomes and pairs the primary photo with the upload that succeeded', async () => {
     const repository = fakeRepository({
       createdAssets: [asset('asset-one', 'Tape measure')],
       uploadedPhotos: [attachment('photo-two', 'asset-one')],
@@ -128,8 +167,48 @@ describe('workspace asset workflow', () => {
     });
 
     expect(result.saveResult).toEqual({ saved: true });
-    expect(result.message).toBe('Saved Tape measure. 1 photo upload failed.');
+    expect(result.message).toBe('Saved Tape measure with 1 photo upload. 1 photo upload failed.');
     expect(result.selectedAsset?.photo).toMatchObject({ id: 'photo-two', assetId: 'asset-one', url: 'blob:back' });
+  });
+
+  it('keeps quick-created parent context for mixed photo upload outcomes', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('parent-one', 'Garage bin', 'container'), asset('asset-one', 'Tape measure')],
+      uploadedPhotos: [attachment('photo-two', 'asset-one')],
+      failedUploadIndexes: [0]
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      parentQuickCreate: { kind: 'container', title: 'Garage bin' },
+      customFields: {},
+      photos: [selectedPhoto('front.jpg', 'blob:front'), selectedPhoto('back.jpg', 'blob:back')]
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.message).toBe('Saved Tape measure in Garage bin with 1 photo upload. 1 photo upload failed.');
+  });
+
+  it('uses plural failure feedback when multiple photo uploads fail', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('asset-one', 'Tape measure')],
+      uploadFailure: true
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      photos: [selectedPhoto('front.jpg', 'blob:front'), selectedPhoto('back.jpg', 'blob:back')]
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.message).toBe('Saved Tape measure. 2 photo uploads failed.');
   });
 
   it('returns the created parent id when child creation fails', async () => {
@@ -196,6 +275,30 @@ describe('workspace asset workflow', () => {
     expect(result.closeAdd).toBe(true);
     expect(result.error).toBe('Saved Tape measure, but could not refresh the active view. Refresh failed.');
     expect(result.selectedAsset?.id).toBe('asset-one');
+    expect(result.route).toMatchObject({ mode: 'asset', assetId: 'asset-one' });
+  });
+
+  it('keeps quick parent and photo context when active lifecycle refresh fails after create', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('parent-one', 'Garage bin', 'container'), asset('asset-one', 'Tape measure')],
+      uploadedPhotos: [attachment('photo-one', 'asset-one')],
+      selectLifecycleFailure: true
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData([], 'archived'), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      parentQuickCreate: { kind: 'container', title: 'Garage bin' },
+      customFields: {},
+      photos: [photo()]
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.message).toBe('Saved Tape measure in Garage bin with 1 photo upload.');
+    expect(result.error).toBe('Saved Tape measure, but could not refresh the active view. Refresh failed.');
+    expect(result.selectedAsset?.photo).toMatchObject({ id: 'photo-one', assetId: 'asset-one', url: 'blob:front' });
     expect(result.route).toMatchObject({ mode: 'asset', assetId: 'asset-one' });
   });
 

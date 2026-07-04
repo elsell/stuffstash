@@ -389,6 +389,8 @@ Saved state:
 
 - Successful create must show concise saved feedback.
 - When quick-creating a parent and asset together, saved feedback must make both outcomes clear.
+- Saved feedback for photo uploads must be count-aware and must preserve quick-created parent context when both happen in one save.
+- If some photo uploads succeed and others fail, saved feedback must report both the uploaded count and the failed count.
 - Future real implementation must produce audit history through application behavior, not UI-only state.
 
 ## Search
