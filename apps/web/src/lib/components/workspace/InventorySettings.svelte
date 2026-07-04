@@ -16,7 +16,8 @@
   } from '$lib/application/workspaceRoute';
   import {
     type SettingsSectionIcon,
-    settingsSectionOptions
+    settingsSectionOptions,
+    settingsShellPresentation
   } from '$lib/application/workspaceSettingsNavigation';
   import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
@@ -100,6 +101,7 @@
       auditScope
     }));
   let activeSection = $derived(sectionOptions.find((option) => option.current) ?? sectionOptions[0]);
+  let shellPresentation = $derived(settingsShellPresentation({ tenant, inventory, activeSection }));
 
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
@@ -113,8 +115,8 @@
 <section class="workspace-main" aria-labelledby="settings-title">
   <div class="section-heading">
     <div>
-      <h1 id="settings-title">{inventory?.name ?? 'Settings'}</h1>
-      <p>{inventory ? `${tenant?.name ?? 'No tenant'} / ${activeSection.label}` : 'No inventory selected'}</p>
+      <h1 id="settings-title">{shellPresentation.title}</h1>
+      <p>{shellPresentation.contextLabel}</p>
     </div>
     {#if inventory}
       <Badge variant={canConfigureInventory ? 'secondary' : 'outline'}>{inventory.access.relationship}</Badge>
@@ -123,8 +125,8 @@
 
   {#if !inventory}
     <div class="empty-state spacious">
-      <h2>No inventory selected</h2>
-      <p>Select or create an inventory before managing settings.</p>
+      <h2>{shellPresentation.emptyState?.title}</h2>
+      <p>{shellPresentation.emptyState?.message}</p>
     </div>
   {:else}
     <div class="settings-shell">
@@ -148,14 +150,14 @@
       </nav>
 
       <div class="settings-content">
-        <p class="visually-hidden" aria-live="polite">{activeSection.label}: {activeSection.description}</p>
+        <p class="visually-hidden" aria-live="polite">{shellPresentation.liveAnnouncement}</p>
       {#if section === 'overview'}
       <section class="settings-panel" aria-labelledby="settings-overview">
         <div class="settings-panel-heading">
           <Boxes aria-hidden="true" />
           <div>
             <h2 id="settings-overview">Overview</h2>
-            <p>{tenant?.name ?? 'No tenant'} / {inventory.name}</p>
+            <p>{shellPresentation.overviewContextLabel}</p>
           </div>
         </div>
         <dl class="detail-list">

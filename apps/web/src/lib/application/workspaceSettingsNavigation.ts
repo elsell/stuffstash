@@ -1,4 +1,4 @@
-import type { AuditScope, InvitationStatusFilter } from '$lib/domain/inventory';
+import type { AuditScope, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
 import { workspaceRouteHref, type SettingsSection } from './workspaceRoute';
 
 export interface SettingsNavigationOption<TValue extends string = string> {
@@ -14,6 +14,19 @@ export interface SettingsSectionNavigationOption extends SettingsNavigationOptio
   description: string;
   icon: SettingsSectionIcon;
   current: boolean;
+}
+
+export interface SettingsShellPresentation {
+  title: string;
+  contextLabel: string;
+  liveAnnouncement: string;
+  overviewContextLabel: string;
+  emptyState: SettingsEmptyStatePresentation | null;
+}
+
+export interface SettingsEmptyStatePresentation {
+  title: string;
+  message: string;
 }
 
 const invitationStatusFilters: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
@@ -104,6 +117,33 @@ export function settingsAuditScopeOptions(input: {
       disabled: !input.hasTenant
     }
   ];
+}
+
+export function settingsShellPresentation(input: {
+  tenant: Pick<Tenant, 'name'> | null;
+  inventory: Pick<Inventory, 'name'> | null;
+  activeSection: Pick<SettingsSectionNavigationOption, 'label' | 'description'>;
+}): SettingsShellPresentation {
+  if (!input.inventory) {
+    return {
+      title: 'Settings',
+      contextLabel: 'No inventory selected',
+      liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
+      overviewContextLabel: 'Not available',
+      emptyState: {
+        title: 'No inventory selected',
+        message: 'Select or create an inventory before managing settings.'
+      }
+    };
+  }
+  const tenantLabel = input.tenant?.name ?? 'No tenant';
+  return {
+    title: input.inventory.name,
+    contextLabel: `${tenantLabel} / ${input.activeSection.label}`,
+    liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
+    overviewContextLabel: `${tenantLabel} / ${input.inventory.name}`,
+    emptyState: null
+  };
 }
 
 function invitationStatusLabel(status: InvitationStatusFilter): string {

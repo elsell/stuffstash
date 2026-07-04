@@ -5,7 +5,8 @@ import {
   settingsAuditScopeHref,
   settingsInvitationStatusHref,
   settingsSectionHref,
-  settingsSectionOptions
+  settingsSectionOptions,
+  settingsShellPresentation
 } from './workspaceSettingsNavigation';
 
 describe('workspace settings navigation', () => {
@@ -171,5 +172,48 @@ describe('workspace settings navigation', () => {
         hasInventory: false
       }).map((option) => option.href)
     ).toEqual([undefined, undefined]);
+  });
+
+  it('builds settings shell context and missing-inventory presentation', () => {
+    const activeSection = {
+      label: 'Access',
+      description: 'Sharing, grants, and invitations'
+    };
+    expect(
+      settingsShellPresentation({
+        tenant: { name: 'Household' },
+        inventory: { name: 'Garage' },
+        activeSection
+      })
+    ).toEqual({
+      title: 'Garage',
+      contextLabel: 'Household / Access',
+      liveAnnouncement: 'Access: Sharing, grants, and invitations',
+      overviewContextLabel: 'Household / Garage',
+      emptyState: null
+    });
+    expect(
+      settingsShellPresentation({
+        tenant: null,
+        inventory: { name: 'Garage' },
+        activeSection
+      }).contextLabel
+    ).toBe('No tenant / Access');
+    expect(
+      settingsShellPresentation({
+        tenant: null,
+        inventory: null,
+        activeSection
+      })
+    ).toEqual({
+      title: 'Settings',
+      contextLabel: 'No inventory selected',
+      liveAnnouncement: 'Access: Sharing, grants, and invitations',
+      overviewContextLabel: 'Not available',
+      emptyState: {
+        title: 'No inventory selected',
+        message: 'Select or create an inventory before managing settings.'
+      }
+    });
   });
 });

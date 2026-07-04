@@ -601,6 +601,7 @@ Required implementation split:
 - Settings customization archive confirmation title, description, target label, unavailable copy, and disabled state must live in focused application helpers rather than component-local conditionals.
 - Settings customization missing-context, denied, and operation-error presentation must live in focused application helpers rather than component-local conditional copy.
 - Settings section, access-status, and audit-scope navigation option composition and href derivation must live in focused application helpers rather than component-local route string assembly.
+- Settings shell title, context summary, live section announcement, overview context, and missing-inventory presentation must live in focused application helpers rather than component-local conditional copy.
 - Settings section navigation helpers should expose stable icon identifiers rather than importing Svelte icon components into application helpers.
 - Settings access relationship selector option composition must live in focused application helpers backed by canonical frontend-domain relationship values rather than component-local arrays.
 - Settings customization scope, field type, applicability, and target option composition must live in focused application helpers backed by canonical frontend-domain values rather than component-local arrays.
