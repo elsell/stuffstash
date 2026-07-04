@@ -312,6 +312,7 @@ Desktop asset detail layout:
 - The asset title, location trail, lifecycle state, kind, custom type, and primary actions must sit beside the photo/gallery.
 - Description and custom fields belong below the hero identity area.
 - Photos must be presented near the hero as asset identity media, with a thumbnail rail when more than one image is available.
+- Disabled asset-detail photo upload actions must expose a perceivable reason, including missing edit access, inactive lifecycle state, save-in-progress state, or no supported image upload types.
 - The first implementation may choose the first active image attachment as the primary photo until explicit primary-photo selection is specified.
 - Non-image attachments such as receipts, manuals, PDFs, and supporting documents must be visually separated from photos and appear lower than the primary photo/gallery.
 

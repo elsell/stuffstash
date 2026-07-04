@@ -17,6 +17,7 @@
   {heroPhoto}
   {photos}
   canAddPhoto={true}
+  uploadDisabledReason=""
   uploadError=""
   onChoosePhoto={() => {}}
   {onSelectPhoto}

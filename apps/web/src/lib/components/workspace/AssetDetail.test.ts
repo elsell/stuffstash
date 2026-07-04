@@ -516,11 +516,69 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Attachment must be 4 B or smaller.');
   });
 
-  it('disables attachment upload when the viewer cannot edit assets', () => {
-    mountAssetDetail({ canEdit: false });
+  it('explains disabled photo upload states', () => {
+    const cases: Array<{
+      name: string;
+      props: Parameters<typeof mountAssetDetail>[0];
+      reason: string;
+    }> = [
+      {
+        name: 'missing edit access',
+        props: { canEdit: false },
+        reason: 'Photo upload requires asset edit access.'
+      },
+      {
+        name: 'inactive asset',
+        props: { asset: { ...asset(), lifecycleState: 'archived' } },
+        reason: 'Restore this asset before adding photos.'
+      },
+      {
+        name: 'save in progress',
+        props: { saving: true },
+        reason: 'Finish the current change before adding photos.'
+      },
+      {
+        name: 'no supported image types',
+        props: { mediaPolicy: { supportedContentTypes: ['application/pdf'], maxBytes: 1024 } },
+        reason: 'Photo uploads are unavailable for this media policy.'
+      }
+    ];
 
-    expect(buttons('Upload')[0]?.disabled).toBe(true);
-    expect(fileInput().disabled).toBe(true);
+    for (const testCase of cases) {
+      if (component) {
+        unmount(component);
+        component = null;
+      }
+      document.body.innerHTML = '';
+      mountAssetDetail(testCase.props);
+
+      expect(buttons('Add photo'), testCase.name).toHaveLength(2);
+      for (const button of buttons('Add photo')) {
+        expect(button.disabled, testCase.name).toBe(true);
+        expect(button.getAttribute('aria-describedby'), testCase.name).toBe('asset-photo-upload-disabled');
+        for (const id of (button.getAttribute('aria-describedby') ?? '').split(' ')) {
+          expect(document.getElementById(id), `${testCase.name} ${id}`).not.toBeNull();
+        }
+      }
+      expect(document.body.textContent, testCase.name).toContain(testCase.reason);
+      expect(fileInput('Choose photo').disabled, testCase.name).toBe(true);
+    }
+  });
+
+  it('keeps the photo input image-only even when other attachment types are supported', async () => {
+    let uploadCount = 0;
+    mountAssetDetail({
+      mediaPolicy: { supportedContentTypes: ['image/jpeg', 'application/pdf'], maxBytes: 1024 },
+      onUploadAttachment: async () => {
+        uploadCount += 1;
+      }
+    });
+
+    chooseAttachment(new File(['pdf'], 'receipt.pdf', { type: 'application/pdf' }), 'Choose photo');
+    await flush();
+
+    expect(uploadCount).toBe(0);
+    expect(document.body.textContent).toContain('Unsupported image type.');
   });
 });
 

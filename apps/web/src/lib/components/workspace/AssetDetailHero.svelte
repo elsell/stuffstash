@@ -1,4 +1,7 @@
 <script lang="ts" module>
+  export const PHOTO_UPLOAD_DISABLED_REASON_ID = 'asset-photo-upload-disabled';
+  export const PHOTO_UPLOAD_ERROR_ID = 'asset-photo-upload-error';
+
   export type DetailPhoto = {
     id: string;
     url: string;
@@ -21,6 +24,7 @@
     heroPhoto,
     photos,
     canAddPhoto,
+    uploadDisabledReason,
     uploadError,
     children,
     onChoosePhoto,
@@ -30,11 +34,15 @@
     heroPhoto: DetailPhoto | undefined;
     photos: DetailPhoto[];
     canAddPhoto: boolean;
+    uploadDisabledReason: string;
     uploadError: string;
     children?: Snippet;
     onChoosePhoto: () => void;
     onSelectPhoto: (photoId: string) => void;
   } = $props();
+  let uploadDescribedBy = $derived(
+    [uploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '', uploadError ? PHOTO_UPLOAD_ERROR_ID : ''].filter(Boolean).join(' ')
+  );
 </script>
 
 <div class="asset-detail-hero">
@@ -52,10 +60,18 @@
   {@render children?.()}
   <div class="photo-gallery-section" aria-label="Asset photo gallery">
     <div class="photo-panel-actions">
-      <Button.Root variant="outline" disabled={!canAddPhoto} onclick={onChoosePhoto}>
+      <Button.Root
+        variant="outline"
+        disabled={!canAddPhoto}
+        aria-describedby={uploadDescribedBy || undefined}
+        onclick={onChoosePhoto}
+      >
         <Image /> Add photo
       </Button.Root>
     </div>
+    {#if uploadDisabledReason}
+      <p id={PHOTO_UPLOAD_DISABLED_REASON_ID} class="denied-note" role="note">{uploadDisabledReason}</p>
+    {/if}
     {#if photos.length > 0}
       <div class="photo-rail" aria-label="Photos">
         {#each photos as photo}
@@ -79,7 +95,7 @@
       </div>
     {/if}
     {#if uploadError}
-      <p class="denied-note" role="alert">{uploadError}</p>
+      <p id={PHOTO_UPLOAD_ERROR_ID} class="denied-note" role="alert">{uploadError}</p>
     {/if}
   </div>
 </div>

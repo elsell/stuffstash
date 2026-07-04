@@ -25,7 +25,7 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
-  import AssetDetailHero, { type DetailPhoto } from './AssetDetailHero.svelte';
+  import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID, type DetailPhoto } from './AssetDetailHero.svelte';
   import AssetFilesSection from './AssetFilesSection.svelte';
   import { formatBytes } from './formatBytes';
 
@@ -100,6 +100,13 @@
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
   let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
+  let photoUploadDisabledReason = $derived(photoUploadUnavailableReason(canEdit, asset.lifecycleState, saving, imageContentTypes.length));
+  let photoUploadDescribedBy = $derived(
+    [
+      photoUploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '',
+      uploadError ? PHOTO_UPLOAD_ERROR_ID : ''
+    ].filter(Boolean).join(' ')
+  );
   let displayFields = $derived(
     customFieldDefinitions.filter(
       (definition) =>
@@ -394,6 +401,22 @@
     }
   }
 
+  async function uploadPhotoAttachment(event: Event): Promise<void> {
+    uploadError = '';
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    const contentType = file.type;
+    if (!isSupportedImageContentType(contentType)) {
+      uploadError = 'Unsupported image type.';
+      input.value = '';
+      return;
+    }
+    await uploadAttachment(event, 'Unable to upload photo.');
+  }
+
   async function removeAttachment(): Promise<void> {
     if (!selectedAttachment) {
       return;
@@ -454,6 +477,10 @@
     return mediaPolicy.supportedContentTypes.includes(contentType as SelectedAttachment['contentType']);
   }
 
+  function isSupportedImageContentType(contentType: string): contentType is SelectedAttachment['contentType'] {
+    return imageContentTypes.includes(contentType as SelectedAttachment['contentType']);
+  }
+
   function buildDetailPhotos(currentAsset: AssetViewModel, imageAttachments: AssetAttachment[]): DetailPhoto[] {
     const ownAssetPhoto = currentAsset.photo?.assetId === currentAsset.id ? currentAsset.photo : undefined;
     const photos: DetailPhoto[] = imageAttachments
@@ -486,6 +513,22 @@
     return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `attachment-${Date.now()}`;
   }
 
+  function photoUploadUnavailableReason(canEditAsset: boolean, lifecycleState: AssetViewModel['lifecycleState'], isSaving: boolean, supportedImageTypeCount: number): string {
+    if (!canEditAsset) {
+      return 'Photo upload requires asset edit access.';
+    }
+    if (lifecycleState !== 'active') {
+      return 'Restore this asset before adding photos.';
+    }
+    if (isSaving) {
+      return 'Finish the current change before adding photos.';
+    }
+    if (supportedImageTypeCount === 0) {
+      return 'Photo uploads are unavailable for this media policy.';
+    }
+    return '';
+  }
+
   function openBack(event: MouseEvent): void {
     if (!shouldHandleInApp(event)) {
       return;
@@ -503,8 +546,8 @@
     class="visually-hidden"
     type="file"
     accept={imageContentTypes.join(',')}
-    disabled={!canEdit || asset.lifecycleState !== 'active' || saving}
-    onchange={(event) => { void uploadAttachment(event, 'Unable to upload photo.'); }}
+    disabled={!canAddPhoto}
+    onchange={(event) => { void uploadPhotoAttachment(event); }}
   />
   <Input
     bind:ref={fileInput}
@@ -520,6 +563,7 @@
       {heroPhoto}
       photos={detailPhotos}
       {canAddPhoto}
+      uploadDisabledReason={photoUploadDisabledReason}
       {uploadError}
       onChoosePhoto={() => photoInput?.click()}
       onSelectPhoto={(photoId) => { selectedPhotoId = photoId; }}
@@ -548,6 +592,7 @@
           <Button.Root
             variant="outline"
             disabled={!canAddPhoto}
+            aria-describedby={photoUploadDescribedBy || undefined}
             onclick={() => photoInput?.click()}
           >
             <Image /> Add photo
