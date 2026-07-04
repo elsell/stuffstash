@@ -11,9 +11,9 @@
 </script>
 
 <script lang="ts">
-  import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import ChoiceGrid from './ChoiceGrid.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -54,26 +54,12 @@
       {:else if field.type === 'enum'}
         <fieldset class="selection-field">
           <legend>{field.displayName}</legend>
-          <div class="parent-picker option-grid" role="group" aria-label={field.displayName}>
-            <Button.Root
-              type="button"
-              variant={(values[field.key] ?? '') === '' ? 'secondary' : 'outline'}
-              aria-pressed={(values[field.key] ?? '') === ''}
-              onclick={() => onValueChange(field.key, '')}
-            >
-              Unset
-            </Button.Root>
-            {#each field.enumOptions as option}
-              <Button.Root
-                type="button"
-                variant={values[field.key] === option ? 'secondary' : 'outline'}
-                aria-pressed={values[field.key] === option}
-                onclick={() => onValueChange(field.key, option)}
-              >
-                {option}
-              </Button.Root>
-            {/each}
-          </div>
+          <ChoiceGrid
+            label={field.displayName}
+            options={[{ value: '', label: 'Unset' }, ...field.enumOptions.map((option) => ({ value: option, label: option }))]}
+            selectedValues={[values[field.key] ?? '']}
+            onSelect={(value) => onValueChange(field.key, value)}
+          />
         </fieldset>
       {:else}
         <div class="field-stack">

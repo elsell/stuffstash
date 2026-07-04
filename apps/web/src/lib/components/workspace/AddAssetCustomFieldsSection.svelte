@@ -12,7 +12,7 @@
 </script>
 
 <script lang="ts">
-  import * as Button from '$lib/components/ui/button/index.js';
+  import ChoiceGrid, { type ChoiceGridOption } from './ChoiceGrid.svelte';
   import CustomFieldControls from './CustomFieldControls.svelte';
 
   let {
@@ -24,32 +24,26 @@
     onCustomFieldValueChange
   }: AddAssetCustomFieldsSectionProps = $props();
 
+  let customTypeOptions = $derived<ChoiceGridOption[]>([
+    { value: '', label: 'Base asset' },
+    ...activeCustomAssetTypes.map((assetType) => ({
+      value: assetType.id,
+      label: assetType.displayName,
+      description: assetType.description || undefined
+    }))
+  ]);
 </script>
 
 {#if activeCustomAssetTypes.length > 0}
   <div class="field-stack">
     <fieldset class="selection-field">
       <legend>Custom type</legend>
-      <div class="parent-picker option-grid" role="group" aria-label="Custom asset type">
-        <Button.Root
-          type="button"
-          variant={customAssetTypeId === '' ? 'secondary' : 'outline'}
-          aria-pressed={customAssetTypeId === ''}
-          onclick={() => onCustomAssetTypeSelect('')}
-        >
-          Base asset
-        </Button.Root>
-        {#each activeCustomAssetTypes as assetType}
-          <Button.Root
-            type="button"
-            variant={customAssetTypeId === assetType.id ? 'secondary' : 'outline'}
-            aria-pressed={customAssetTypeId === assetType.id}
-            onclick={() => onCustomAssetTypeSelect(assetType.id)}
-          >
-            {assetType.displayName}
-          </Button.Root>
-        {/each}
-      </div>
+      <ChoiceGrid
+        label="Custom asset type"
+        options={customTypeOptions}
+        selectedValues={[customAssetTypeId]}
+        onSelect={onCustomAssetTypeSelect}
+      />
     </fieldset>
   </div>
 {/if}

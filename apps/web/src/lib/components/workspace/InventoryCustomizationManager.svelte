@@ -18,6 +18,7 @@
   } from '$lib/domain/inventory';
   import { hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import ChoiceGrid from './ChoiceGrid.svelte';
   import InventoryCustomizationArchivePanel from './InventoryCustomizationArchivePanel.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -80,6 +81,13 @@
   let activeAssetTypes = $derived(assetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let activeFieldDefinitions = $derived(fieldDefinitions.filter((definition) => definition.lifecycleState === 'active'));
   let targetableAssetTypes = $derived(activeAssetTypes.filter((assetType) => fieldScope === 'tenant' ? assetType.scope === 'tenant' : true));
+  let targetableAssetTypeOptions = $derived(
+    targetableAssetTypes.map((assetType) => ({
+      value: assetType.id,
+      label: assetType.displayName,
+      description: assetType.scope
+    }))
+  );
   let selectedTargetCount = $derived(fieldTargets.filter((id) => targetableAssetTypes.some((assetType) => assetType.id === id)).length);
   let routeArchiveAssetType = $derived(
     archiveAction === 'archive_asset_type'
@@ -421,21 +429,13 @@
                 ? 'No custom types selected'
                 : `${selectedTargetCount} custom ${selectedTargetCount === 1 ? 'type' : 'types'} selected`}
             </p>
-            {#if targetableAssetTypes.length === 0}
-              <p class="muted-note">No eligible custom asset types for this scope.</p>
-            {:else}
-              <div class="parent-picker option-grid" role="group" aria-label="Field custom type targets">
-                {#each targetableAssetTypes as assetType}
-                  <Button.Root
-                    variant={fieldTargets.includes(assetType.id) ? 'secondary' : 'outline'}
-                    aria-pressed={fieldTargets.includes(assetType.id)}
-                    onclick={() => toggleTarget(assetType.id)}
-                  >
-                    {assetType.displayName}
-                  </Button.Root>
-                {/each}
-              </div>
-            {/if}
+            <ChoiceGrid
+              label="Field custom type targets"
+              options={targetableAssetTypeOptions}
+              selectedValues={fieldTargets}
+              emptyMessage="No eligible custom asset types for this scope."
+              onSelect={toggleTarget}
+            />
           </fieldset>
         {/if}
         <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim()} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>

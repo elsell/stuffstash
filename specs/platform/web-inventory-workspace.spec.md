@@ -437,6 +437,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.
 - Settings status and scope filters that correspond to durable settings subsection state, such as access invitation status and activity audit scope, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
+- Custom asset type, enum, and custom field target choice grids must use a shared workspace choice-grid composition so selected-state semantics, disabled behavior, empty state copy, and button styling do not drift between add, edit, and settings surfaces.
 - Import options for images, insecure TLS, and private-network access must use the shared binary-option composition with visible on/off state, clear option copy, and honest switch or checkbox semantics.
 - Import source choices that correspond to distinct import workflows must expose canonical `href` values while preserving ordinary in-app source switching behavior.
 - Route-backed controls rendered as disabled links must remove their `href`, expose `aria-disabled`, leave the tab order, and visually match native disabled buttons through the shared button primitive.
