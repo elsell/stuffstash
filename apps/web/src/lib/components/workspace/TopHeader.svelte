@@ -5,6 +5,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
+  import { searchAssetHref } from '$lib/application/workspaceSearch';
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
@@ -78,17 +79,6 @@
 
   function shouldHandleInApp(event: MouseEvent): boolean {
     return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-  }
-
-  function assetHref(asset: Asset): string {
-    if (asset.kind === 'location') {
-      return workspaceRouteHref(
-        { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
-        asset.tenantId,
-        asset.inventoryId
-      );
-    }
-    return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
   }
 
   function openSuggestion(event: MouseEvent, asset: Asset): void {
@@ -257,7 +247,7 @@
       idPrefix={suggestionIdPrefix}
       suggestions={visibleSuggestions}
       activeIndex={activeSuggestionIndex}
-      {assetHref}
+      assetHref={searchAssetHref}
       onFocusIndex={(index) => { activeSuggestionIndex = index; }}
       onSuggestionKeydown={handleSuggestionKeydown}
       onOpen={openSuggestion}

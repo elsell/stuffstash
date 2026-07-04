@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Asset, SearchRequest, SearchResult } from '$lib/domain/inventory';
-import { buildSearchSuggestions, executeWorkspaceSearch } from './workspaceSearch';
+import { buildSearchSuggestions, executeWorkspaceSearch, searchAssetHref } from './workspaceSearch';
 
 const assets: Asset[] = [
   asset('tape', 'Tape measure', 'Garage measuring tool'),
@@ -52,6 +52,13 @@ describe('workspace search helpers', () => {
         'tape'
       ).map((suggestion) => suggestion.id)
     ).toEqual(['exact-title', 'prefix-title', 'contains-title', 'description-match', 'type-match']);
+  });
+
+  it('derives canonical hrefs for asset and location search hits', () => {
+    expect(searchAssetHref(asset('drill', 'Cordless drill', 'Power tool'))).toBe('/tenants/tenant-home/inventories/inventory-household/assets/drill');
+    expect(searchAssetHref({ ...asset('garage', 'Garage', 'Place'), kind: 'location' })).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/garage'
+    );
   });
 
   it('normalizes blank searches without calling the repository', async () => {

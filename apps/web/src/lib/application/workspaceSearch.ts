@@ -1,5 +1,6 @@
 import type { Asset, SearchLifecycleFilter, SearchMode, SearchRequest, SearchResult } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import { workspaceRouteHref } from './workspaceRoute';
 import { filterAssets } from './workspace';
 
 type SearchRepository = Pick<InventoryRepository, 'searchAssets'>;
@@ -22,6 +23,18 @@ export interface WorkspaceSearchResultState {
 
 export function buildSearchSuggestions(assets: Asset[], query: string, limit = 6): Asset[] {
   return filterAssets(assets, query).slice(0, limit);
+}
+
+export function searchAssetHref(asset: Asset): string {
+  if (asset.kind === 'location') {
+    return workspaceRouteHref(
+      { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
+      asset.tenantId,
+      asset.inventoryId
+    );
+  }
+
+  return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
 }
 
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {

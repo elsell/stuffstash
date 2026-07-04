@@ -3,6 +3,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
+  import { searchAssetHref } from '$lib/application/workspaceSearch';
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
@@ -67,17 +68,6 @@
       activeSuggestionIndex = -1;
     }
   });
-
-  function assetHref(asset: Asset): string {
-    if (asset.kind === 'location') {
-      return workspaceRouteHref(
-        { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
-        asset.tenantId,
-        asset.inventoryId
-      );
-    }
-    return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
-  }
 
   function searchFilterHref(nextLifecycleState: SearchLifecycleFilter, nextSearchMode: SearchMode): string {
     return workspaceRouteHref(
@@ -231,7 +221,7 @@
       idPrefix={suggestionIdPrefix}
       suggestions={visibleSuggestions}
       activeIndex={activeSuggestionIndex}
-      {assetHref}
+      assetHref={searchAssetHref}
       onFocusIndex={(index) => { activeSuggestionIndex = index; }}
       onSuggestionKeydown={handleSuggestionKeydown}
       onOpen={openSuggestion}
@@ -274,7 +264,7 @@
   {:else}
     <div class="asset-list">
       {#each results as result}
-        <Button.Root href={assetHref(result.asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, result.asset)}>
+        <Button.Root href={searchAssetHref(result.asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, result.asset)}>
           <AssetThumb asset={result.asset} />
           <span class="asset-row-main">
             <strong>{result.asset.title}</strong>
