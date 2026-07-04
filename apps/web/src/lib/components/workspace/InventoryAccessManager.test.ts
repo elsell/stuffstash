@@ -40,6 +40,53 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).toContain('friend@example.test');
   });
 
+  it('announces initial access list loading states', async () => {
+    const repository: InventoryAccessRepository = {
+      listInventoryAccessGrants: async () => new Promise(() => {}),
+      listInventoryAccessInvitations: async () => new Promise(() => {}),
+      grantInventoryAccess: async () => failRepositoryCall(),
+      revokeInventoryAccess: async () => failRepositoryCall(),
+      createInventoryAccessInvitation: async () => failRepositoryCall(),
+      updateInventoryAccessInvitationExpiration: async () => failRepositoryCall(),
+      cancelInventoryAccessInvitation: async () => failRepositoryCall(),
+      deleteInventoryAccessInvitation: async () => failRepositoryCall()
+    };
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await tick();
+
+    expect(document.body.querySelector('[aria-label="Direct grants"] [role="status"]')?.textContent).toBe('Loading grants...');
+    expect(document.body.querySelector('[aria-label="Invitations"] [role="status"]')?.textContent).toBe('Loading invitations...');
+  });
+
+  it('does not present failed initial access loads as empty lists', async () => {
+    const repository: InventoryAccessRepository = {
+      listInventoryAccessGrants: async () => {
+        throw new Error('Access service unavailable.');
+      },
+      listInventoryAccessInvitations: async () => page([]),
+      grantInventoryAccess: async () => failRepositoryCall(),
+      revokeInventoryAccess: async () => failRepositoryCall(),
+      createInventoryAccessInvitation: async () => failRepositoryCall(),
+      updateInventoryAccessInvitationExpiration: async () => failRepositoryCall(),
+      cancelInventoryAccessInvitation: async () => failRepositoryCall(),
+      deleteInventoryAccessInvitation: async () => failRepositoryCall()
+    };
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Access service unavailable.');
+    expect(document.body.textContent).not.toContain('No direct grants.');
+    expect(document.body.textContent).not.toContain('No invitations.');
+  });
+
   it('submits direct grants and invitations through the access repository port', async () => {
     const { repository, calls } = fakeAccessRepository();
 

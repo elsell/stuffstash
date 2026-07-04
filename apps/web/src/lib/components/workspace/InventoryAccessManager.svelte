@@ -8,7 +8,7 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { inventoryAccessRelationshipOptions } from '$lib/application/workspaceAccessPresentation';
+  import { inventoryAccessListStatus, inventoryAccessRelationshipOptions } from '$lib/application/workspaceAccessPresentation';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import { settingsInvitationStatusOptions } from '$lib/application/workspaceSettingsNavigation';
   import { accessInvitationsHref, invitationActionOptions } from '$lib/application/workspaceInvitationActions';
@@ -75,6 +75,8 @@
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
   let contextKey = $derived(tenant && inventory && canShare ? `${tenant.id}:${inventory.id}` : '');
+  let grantListStatus = $derived(inventoryAccessListStatus({ kind: 'grants', busy, loaded, count: grants.length }));
+  let invitationListStatus = $derived(inventoryAccessListStatus({ kind: 'invitations', busy, loaded, count: invitations.length }));
   let routeInvitation = $derived(
     accessInvitationAction && accessInvitationId ? invitations.find((invitation) => invitation.id === accessInvitationId) ?? null : null
   );
@@ -543,10 +545,8 @@
     <div class="access-columns">
       <div class="access-list" aria-label="Direct grants">
         <h3>Direct grants</h3>
-        {#if busy && !loaded}
-          <p class="muted-note">Loading grants...</p>
-        {:else if grants.length === 0}
-          <p class="muted-note">No direct grants.</p>
+        {#if grantListStatus.kind !== 'none'}
+          <p class="muted-note" role={grantListStatus.role}>{grantListStatus.message}</p>
         {:else}
           {#each grants as grant}
             <div class="access-row">
@@ -573,10 +573,8 @@
             onSelect={(value) => updateInvitationStatus(value as InvitationStatusFilter)}
           />
         </div>
-        {#if busy && !loaded}
-          <p class="muted-note">Loading invitations...</p>
-        {:else if invitations.length === 0}
-          <p class="muted-note">No invitations.</p>
+        {#if invitationListStatus.kind !== 'none'}
+          <p class="muted-note" role={invitationListStatus.role}>{invitationListStatus.message}</p>
         {:else}
           {#each invitations as invitation}
             <div class="access-row invitation-row">
