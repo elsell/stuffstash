@@ -935,6 +935,10 @@ small {
   align-items: end;
 }
 
+.access-form > * {
+  min-width: 0;
+}
+
 .access-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1315,6 +1319,10 @@ small {
   .schema-row,
   .audit-row {
     grid-template-columns: 1fr;
+  }
+
+  .access-form > [data-slot="button"] {
+    width: 100%;
   }
 
   .import-source-panel {

@@ -125,3 +125,14 @@ test('mobile context sheet keeps a named modal surface', async ({ page }, testIn
   expect(await page.locator('.workspace-route-content').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(false);
   expect(await page.locator('.mobile-nav-shell').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(false);
 });
+
+test('mobile settings access keeps long principals inside the viewport', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile settings layout coverage runs on the mobile project.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/access');
+
+  await expect(page.getByRole('heading', { name: 'Sharing' })).toBeVisible();
+  await expect(page.getByLabel('Direct grants').getByText('oidc_OuQU94grMoaZ8cly6ZUUpXUVhloLanDNZ')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  expect(await page.locator('.settings-panel').filter({ hasText: 'Sharing' }).first().evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+});

@@ -208,6 +208,8 @@ test('settings and import deep links render route-backed sections', async ({ pag
   );
   await expect(page.getByRole('link', { name: 'Pending', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByLabel('Invitations').getByText('friend@example.test')).toBeVisible();
+  await expect(page.getByLabel('Direct grants').getByText('oidc_OuQU94grMoaZ8cly6ZUUpXUVhloLanDNZ')).toBeVisible();
+  expect(await hasHorizontalOverflow(page.locator('.settings-panel').filter({ hasText: 'Sharing' }).first())).toBe(false);
   expect(apiRequestPaths(page)).toContain(
     'GET /tenants/tenant-home/inventories/inventory-household/access-invitations?limit=50&status=pending'
   );
@@ -255,4 +257,8 @@ async function dialogTopLayerInfo(dialog: Locator): Promise<{ ownsPoint: boolean
       topElement: target instanceof HTMLElement ? `${target.tagName}.${target.className}` : String(target)
     };
   });
+}
+
+async function hasHorizontalOverflow(locator: Locator): Promise<boolean> {
+  return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
 }

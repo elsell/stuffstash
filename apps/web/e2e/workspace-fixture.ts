@@ -196,7 +196,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-grants') {
-    await fulfill(route, [accessGrant('principal-owner', 'editor')]);
+    await fulfill(route, [accessGrant('oidc_OuQU94grMoaZ8cly6ZUUpXUVhloLanDNZ', 'editor')]);
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-invitations') {

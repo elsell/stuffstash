@@ -555,7 +555,7 @@
         {:else}
           {#each grants as grant}
             <div class="access-row">
-              <span>
+              <span class="access-row-main">
                 <strong>{grant.principalId}</strong>
                 <small>{grant.relationship}</small>
               </span>
