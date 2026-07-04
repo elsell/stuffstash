@@ -34,9 +34,24 @@ function searchResult(assetResult: Asset): SearchResult {
 
 describe('workspace search helpers', () => {
   it('builds bounded suggestions from visible asset title, description, and custom type labels', () => {
-    expect(buildSearchSuggestions(assets, 'ta').map((suggestion) => suggestion.id)).toEqual(['tape', 'labels', 'archived']);
+    expect(buildSearchSuggestions(assets, 'ta').map((suggestion) => suggestion.id)).toEqual(['tape', 'archived', 'labels']);
     expect(buildSearchSuggestions(assets, 'sup').map((suggestion) => suggestion.id)).toEqual(['labels']);
     expect(buildSearchSuggestions(assets, ' ', 2)).toEqual([]);
+  });
+
+  it('ranks suggestions by title strength before looser metadata matches', () => {
+    expect(
+      buildSearchSuggestions(
+        [
+          asset('description-match', 'Drill charger', 'garage tape'),
+          asset('contains-title', 'Blue tape roll', ''),
+          asset('exact-title', 'Tape', ''),
+          asset('type-match', 'Packing labels', '', 'Tape supplies'),
+          asset('prefix-title', 'Tape measure', '')
+        ],
+        'tape'
+      ).map((suggestion) => suggestion.id)
+    ).toEqual(['exact-title', 'prefix-title', 'contains-title', 'description-match', 'type-match']);
   });
 
   it('normalizes blank searches without calling the repository', async () => {

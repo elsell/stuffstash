@@ -1,5 +1,6 @@
 import type { Asset, SearchLifecycleFilter, SearchMode, SearchRequest, SearchResult } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import { filterAssets } from './workspace';
 
 type SearchRepository = Pick<InventoryRepository, 'searchAssets'>;
 
@@ -20,11 +21,7 @@ export interface WorkspaceSearchResultState {
 }
 
 export function buildSearchSuggestions(assets: Asset[], query: string, limit = 6): Asset[] {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) {
-    return [];
-  }
-  return assets.filter((asset) => assetMatchesSuggestion(asset, normalized)).slice(0, limit);
+  return filterAssets(assets, query).slice(0, limit);
 }
 
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {
@@ -56,12 +53,4 @@ export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput)
       error: caught instanceof Error ? caught.message : 'Search failed.'
     };
   }
-}
-
-function assetMatchesSuggestion(asset: Asset, query: string): boolean {
-  return (
-    asset.title.toLowerCase().includes(query) ||
-    asset.description.toLowerCase().includes(query) ||
-    asset.customAssetTypeLabel?.toLowerCase().includes(query) === true
-  );
 }

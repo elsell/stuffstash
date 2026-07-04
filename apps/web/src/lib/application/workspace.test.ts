@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   containedAssets,
   detailAssetList,
+  filterAssets,
   labelAsset,
   labelAssets,
   moveParentTargets,
@@ -128,6 +129,24 @@ describe('workspace domain helpers', () => {
       'Garage',
       'Garage / Toolbox',
       'Garage / Basement'
+    ]);
+  });
+
+  it('ranks search matches by title strength before looser metadata matches', () => {
+    const searchAssets: Asset[] = [
+      { ...assets[2]!, id: 'description-match', title: 'Drill charger', description: 'garage tape' },
+      { ...assets[1]!, id: 'contains-title', title: 'Blue tape roll', description: '' },
+      { ...assets[0]!, id: 'exact-title', title: 'Tape', description: '' },
+      { ...assets[3]!, id: 'type-match', title: 'Packing labels', description: '', customAssetTypeLabel: 'Tape supplies' },
+      { ...assets[4]!, id: 'prefix-title', title: 'Tape measure', description: '' }
+    ];
+
+    expect(filterAssets(searchAssets, 'tape').map((asset) => asset.id)).toEqual([
+      'exact-title',
+      'prefix-title',
+      'contains-title',
+      'description-match',
+      'type-match'
     ]);
   });
 

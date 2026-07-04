@@ -105,13 +105,31 @@ export function filterAssets(assets: Asset[], query: string): Asset[] {
   if (!normalized) {
     return [];
   }
-  return assets.filter((asset) => {
-    return (
-      asset.title.toLowerCase().includes(normalized) ||
-      asset.description.toLowerCase().includes(normalized) ||
-      asset.customAssetTypeLabel?.toLowerCase().includes(normalized)
-    );
-  });
+  return assets
+    .map((asset, index) => ({ asset, index, score: searchMatchScore(asset, normalized) }))
+    .filter((match) => match.score !== null)
+    .sort((left, right) => left.score! - right.score! || left.index - right.index)
+    .map((match) => match.asset);
+}
+
+function searchMatchScore(asset: Asset, query: string): number | null {
+  const title = asset.title.toLowerCase();
+  if (title === query) {
+    return 0;
+  }
+  if (title.startsWith(query)) {
+    return 1;
+  }
+  if (title.includes(query)) {
+    return 2;
+  }
+  if (asset.description.toLowerCase().includes(query)) {
+    return 3;
+  }
+  if (asset.customAssetTypeLabel?.toLowerCase().includes(query)) {
+    return 4;
+  }
+  return null;
 }
 
 function descendantIds(assets: Asset[], assetId: string): Set<string> {
