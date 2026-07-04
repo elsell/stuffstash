@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  settingsAuditScopeOptions,
   settingsAuditScopeHref,
   settingsInvitationStatusHref,
   settingsSectionHref
@@ -34,5 +35,40 @@ describe('workspace settings navigation', () => {
     expect(settingsAuditScopeHref('tenant-one', 'inventory-one', 'tenant')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
     );
+  });
+
+  it('builds audit scope segmented options with durable hrefs and availability', () => {
+    expect(
+      settingsAuditScopeOptions({
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        hasTenant: true,
+        hasInventory: false
+      })
+    ).toEqual([
+      {
+        value: 'inventory',
+        label: 'Inventory',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/activity',
+        disabled: true
+      },
+      {
+        value: 'tenant',
+        label: 'Tenant',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
+        disabled: false
+      }
+    ]);
+  });
+
+  it('omits audit scope hrefs until an inventory route exists', () => {
+    expect(
+      settingsAuditScopeOptions({
+        tenantId: 'tenant-one',
+        inventoryId: null,
+        hasTenant: true,
+        hasInventory: false
+      }).map((option) => option.href)
+    ).toEqual([undefined, undefined]);
   });
 });

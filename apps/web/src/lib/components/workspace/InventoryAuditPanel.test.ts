@@ -57,11 +57,12 @@ describe('InventoryAuditPanel', () => {
     await flush();
 
     const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
-    expect(scopeFilter?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
-    expect(scopeFilter?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Inventory');
+    expect(scopeFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(2);
+    expect(link('Inventory').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity');
+    expect(link('Inventory').getAttribute('aria-current')).toBe('page');
   });
 
-  it('exposes route-backed audit scope filter links when hrefs are provided', async () => {
+  it('exposes route-backed audit scope filter links', async () => {
     const { repository, calls } = fakeAuditRepository();
     let selectedScope: AuditScope | null = null;
 
@@ -72,10 +73,6 @@ describe('InventoryAuditPanel', () => {
         inventory: inventory(['view']),
         repository,
         scope: 'tenant',
-        scopeHref: (scope) =>
-          scope === 'inventory'
-            ? '/tenants/tenant-one/inventories/inventory-one/settings/activity'
-            : '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
         onScopeChange: (scope) => {
           selectedScope = scope;
         }
@@ -105,8 +102,10 @@ describe('InventoryAuditPanel', () => {
     await flush();
 
     const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
-    expect(buttonIn(scopeFilter, 'Inventory')?.disabled).toBe(true);
-    expect(buttonIn(scopeFilter, 'Tenant')?.disabled).toBe(false);
+    expect((controlIn(scopeFilter, 'Inventory') as HTMLButtonElement | null)?.disabled).toBe(true);
+    expect(controlIn(scopeFilter, 'Inventory')?.getAttribute('href')).toBeNull();
+    expect((controlIn(scopeFilter, 'Tenant') as HTMLButtonElement | null)?.disabled).toBe(false);
+    expect(controlIn(scopeFilter, 'Tenant')?.getAttribute('href')).toBeNull();
   });
 
   it('shows an authorization-aware denied state for tenant audit', async () => {
@@ -192,15 +191,15 @@ describe('InventoryAuditPanel', () => {
 });
 
 function clickButton(text: string): void {
-  const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent === text);
-  if (!button) {
-    throw new Error(`Missing button ${text}`);
+  const control = Array.from(document.body.querySelectorAll<HTMLElement>('button, a')).find((candidate) => candidate.textContent === text);
+  if (!control) {
+    throw new Error(`Missing control ${text}`);
   }
-  button.click();
+  control.click();
 }
 
-function buttonIn(root: HTMLElement | null, text: string): HTMLButtonElement | null {
-  return Array.from(root?.querySelectorAll<HTMLButtonElement>('button') ?? []).find((button) => button.textContent === text) ?? null;
+function controlIn(root: HTMLElement | null, text: string): HTMLElement | null {
+  return Array.from(root?.querySelectorAll<HTMLElement>('button, a') ?? []).find((control) => control.textContent === text) ?? null;
 }
 
 function link(text: string): HTMLAnchorElement {

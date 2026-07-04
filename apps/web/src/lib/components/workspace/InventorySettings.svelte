@@ -15,7 +15,6 @@
     type SettingsSection
   } from '$lib/application/workspaceRoute';
   import {
-    settingsAuditScopeHref,
     settingsInvitationStatusHref,
     settingsSectionHref
   } from '$lib/application/workspaceSettingsNavigation';
@@ -116,10 +115,6 @@
     return settingsInvitationStatusHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, status);
   }
 
-  function auditScopeHref(scope: AuditScope): string {
-    return settingsAuditScopeHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, scope);
-  }
-
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
@@ -205,7 +200,6 @@
         {inventory}
         repository={auditRepository}
         scope={auditScope}
-        scopeHref={auditScopeHref}
         onScopeChange={onAuditScopeChange}
       />
 

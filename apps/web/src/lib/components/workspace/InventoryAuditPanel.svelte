@@ -10,14 +10,14 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
-  import SegmentedControl, { type SegmentedOption } from './SegmentedControl.svelte';
+  import { settingsAuditScopeOptions } from '$lib/application/workspaceSettingsNavigation';
+  import SegmentedControl from './SegmentedControl.svelte';
 
   let {
     tenant,
     inventory,
     repository,
     scope = $bindable<AuditScope>('inventory'),
-    scopeHref,
     onScopeChange = (nextScope: AuditScope) => {
       scope = nextScope;
     }
@@ -26,7 +26,6 @@
     inventory: Inventory | null;
     repository: InventoryAuditRepository;
     scope?: AuditScope;
-    scopeHref?: (scope: AuditScope) => string;
     onScopeChange?: (scope: AuditScope) => void;
   } = $props();
 
@@ -37,10 +36,14 @@
   let error = $state('');
   let requestId = 0;
   let controller: AbortController | null = null;
-  let scopeOptions = $derived<SegmentedOption[]>([
-    { value: 'inventory', label: 'Inventory', href: scopeHref?.('inventory') },
-    { value: 'tenant', label: 'Tenant', href: scopeHref?.('tenant') }
-  ]);
+  let scopeOptions = $derived(
+    settingsAuditScopeOptions({
+      tenantId: tenant?.id ?? inventory?.tenantId ?? null,
+      inventoryId: inventory?.id ?? null,
+      hasTenant: !!tenant,
+      hasInventory: !!inventory
+    })
+  );
 
   let canReadInventoryAudit = $derived(hasAccessPermission(inventory?.access, 'view'));
   let canReadTenantAudit = $derived(hasAccessPermission(tenant?.access, 'configure'));
@@ -143,10 +146,7 @@
   <SegmentedControl
     label="Audit scope"
     value={scope}
-    options={scopeOptions.map((option) => ({
-      ...option,
-      disabled: option.value === 'inventory' ? !inventory : !tenant
-    }))}
+    options={scopeOptions}
     onSelect={(value) => selectScope(value as AuditScope)}
   />
 
