@@ -273,6 +273,33 @@ describe('InventoryCustomizationManager', () => {
     expect(calls).toEqual(['archive-field:field-expiration:inventory']);
     expect(closed).toBe(2);
   });
+
+  it('renders unavailable archive routes from stale schema ids and closes them', async () => {
+    let closed = 0;
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [customAssetType()],
+        initialFieldDefinitions: [customFieldDefinition()],
+        archiveAction: 'archive_asset_type',
+        archiveAssetTypeId: 'missing-type',
+        onArchiveActionClose: () => {
+          closed += 1;
+        },
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Archive target unavailable');
+    link('Back to fields').click();
+    await flush();
+
+    expect(closed).toBe(1);
+  });
 });
 
 function customAssetType(): CustomAssetType {

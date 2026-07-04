@@ -18,6 +18,7 @@
   } from '$lib/domain/inventory';
   import { hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import InventoryCustomizationArchivePanel from './InventoryCustomizationArchivePanel.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -311,57 +312,17 @@
     <p class="denied-note">Custom fields require tenant or inventory configuration access.</p>
   {:else}
     {#if hasArchiveRoute}
-      <section
-        bind:this={archiveConfirmationElement}
-        class="settings-panel archive-confirmation"
-        aria-labelledby="customization-archive-title"
-        tabindex="-1"
-      >
-        {#if routeArchiveAssetType}
-          <div class="settings-panel-heading">
-            <Trash2 aria-hidden="true" />
-            <div>
-              <h3 id="customization-archive-title">Archive asset type</h3>
-              <p>{routeArchiveAssetType.displayName}</p>
-            </div>
-          </div>
-          <p class="muted-note">Existing assets keep their data. This type will stop appearing in new asset forms.</p>
-          <div class="heading-actions">
-            <Button.Root href={fieldsHref()} variant="outline" onclick={closeArchiveAction}>Cancel</Button.Root>
-            <Button.Root variant="destructive" disabled={busy || !canScope(routeArchiveAssetType.scope)} onclick={() => { void archiveAssetType(routeArchiveAssetType); }}>
-              Archive
-            </Button.Root>
-          </div>
-        {:else if routeArchiveFieldDefinition}
-          <div class="settings-panel-heading">
-            <Trash2 aria-hidden="true" />
-            <div>
-              <h3 id="customization-archive-title">Archive field definition</h3>
-              <p>{routeArchiveFieldDefinition.displayName}</p>
-            </div>
-          </div>
-          <p class="muted-note">Existing assets keep their field values. This field will stop appearing in edit forms.</p>
-          <div class="heading-actions">
-            <Button.Root href={fieldsHref()} variant="outline" onclick={closeArchiveAction}>Cancel</Button.Root>
-            <Button.Root
-              variant="destructive"
-              disabled={busy || !canScope(routeArchiveFieldDefinition.scope)}
-              onclick={() => { void archiveFieldDefinition(routeArchiveFieldDefinition); }}
-            >
-              Archive
-            </Button.Root>
-          </div>
-        {:else}
-          <div class="settings-panel-heading">
-            <Trash2 aria-hidden="true" />
-            <div>
-              <h3 id="customization-archive-title">Archive target unavailable</h3>
-              <p>This schema item is not available in the current fields list.</p>
-            </div>
-          </div>
-          <Button.Root href={fieldsHref()} variant="outline" onclick={closeArchiveAction}>Back to fields</Button.Root>
-        {/if}
-      </section>
+      <InventoryCustomizationArchivePanel
+        assetType={routeArchiveAssetType}
+        fieldDefinition={routeArchiveFieldDefinition}
+        {busy}
+        fieldsHref={fieldsHref()}
+        bind:panelElement={archiveConfirmationElement}
+        canArchiveScope={canScope}
+        onClose={closeArchiveAction}
+        onArchiveAssetType={archiveAssetType}
+        onArchiveFieldDefinition={archiveFieldDefinition}
+      />
     {/if}
 
     <div class="customization-grid">
