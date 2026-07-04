@@ -705,6 +705,7 @@ Before this direction is promoted into `apps/web`:
   - add item with selected photo preview,
   - location card to location list,
   - asset row to asset detail,
+  - route-backed settings sections and import source choices,
   - asset edit and move action deep links,
   - unavailable asset action deep-link normalization,
   - back navigation from asset detail to location list,

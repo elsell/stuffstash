@@ -1,5 +1,11 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { installAuthenticatedWorkspace, resetWorkspaceApiState, signedUploadPuts, thumbnailRequestPaths } from './workspace-fixture';
+import {
+  apiRequestPaths,
+  installAuthenticatedWorkspace,
+  resetWorkspaceApiState,
+  signedUploadPuts,
+  thumbnailRequestPaths
+} from './workspace-fixture';
 
 test.beforeEach(async ({ page }) => {
   resetWorkspaceApiState(page);
@@ -188,6 +194,48 @@ test('location navigation opens asset detail and returns to the location list', 
   await page.getByRole('link', { name: /Back/ }).click();
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
   await expect(page.getByRole('heading', { name: 'Garage' })).toBeVisible();
+});
+
+test('settings and import deep links render route-backed sections', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Settings and import deep links run on desktop first.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending');
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending');
+  await expect(page.getByRole('heading', { name: 'Sharing' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Pending', exact: true })).toHaveAttribute(
+    'href',
+    '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending'
+  );
+  await expect(page.getByRole('link', { name: 'Pending', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByLabel('Invitations').getByText('friend@example.test')).toBeVisible();
+  expect(apiRequestPaths(page)).toContain(
+    'GET /tenants/tenant-home/inventories/inventory-household/access-invitations?limit=50&status=pending'
+  );
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+  await expect(page.getByRole('heading', { name: 'Custom fields' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link', { name: /Fields/ })).toHaveAttribute(
+    'aria-current',
+    'page'
+  );
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant');
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant');
+  await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Tenant', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByText('asset-tenant-audit')).toBeVisible();
+  expect(apiRequestPaths(page)).toContain('GET /tenants/tenant-home/audit-records?limit=50');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv');
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv');
+  await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'CSV', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByLabel('CSV file')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Connect', exact: true })).toHaveAttribute(
+    'href',
+    '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox'
+  );
 });
 
 function tinyPng(): Buffer {

@@ -11,6 +11,7 @@ type WorkspaceApiState = {
   pendingUploads: Record<string, PendingUpload>;
   uploadedPhotos: Record<string, UploadedPhoto>;
   thumbnailRequestPaths: string[];
+  apiRequestPaths: string[];
   lastAssetPatch: AssetPatch | null;
 };
 
@@ -61,6 +62,10 @@ export function lastAssetPatch(page: Page): AssetPatch | null {
 
 export function thumbnailRequestPaths(page: Page): string[] {
   return workspaceState(page).thumbnailRequestPaths;
+}
+
+export function apiRequestPaths(page: Page): string[] {
+  return workspaceState(page).apiRequestPaths;
 }
 
 export async function installAuthenticatedWorkspace(page: Page): Promise<void> {
@@ -124,6 +129,7 @@ function freshWorkspaceApiState(): WorkspaceApiState {
     pendingUploads: {},
     uploadedPhotos: {},
     thumbnailRequestPaths: [],
+    apiRequestPaths: [],
     lastAssetPatch: null
   };
 }
@@ -133,6 +139,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   const url = new URL(request.url());
   const path = url.pathname;
   const method = request.method();
+  state.apiRequestPaths.push(`${method} ${path}${url.search}`);
 
   if (request.headers().authorization !== 'Bearer e2e-token') {
     await route.fulfill({
@@ -156,7 +163,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories') {
     await fulfill(route, [
-      inventory('inventory-household', 'tenant-home', 'Household', ['view', 'create_asset', 'edit_asset', 'configure'])
+      inventory('inventory-household', 'tenant-home', 'Household', ['view', 'create_asset', 'edit_asset', 'share', 'configure'])
     ]);
     return;
   }
@@ -186,6 +193,23 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (method === 'GET' && path === '/tenants/tenant-home/search/assets') {
     await fulfill(route, searchResults(state, url.searchParams.get('q') ?? ''));
+    return;
+  }
+  if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-grants') {
+    await fulfill(route, [accessGrant('principal-owner', 'editor')]);
+    return;
+  }
+  if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-invitations') {
+    const status = url.searchParams.get('status') ?? 'all';
+    await fulfill(route, status === 'pending' ? [accessInvitation('invite-friend', 'friend@example.test', 'viewer', status)] : []);
+    return;
+  }
+  if (method === 'GET' && path === '/tenants/tenant-home/audit-records') {
+    await fulfill(route, [auditRecord('tenant')]);
+    return;
+  }
+  if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/audit-records') {
+    await fulfill(route, [auditRecord('inventory')]);
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato') {
@@ -411,6 +435,47 @@ function inventory(id: string, tenantId: string, name: string, permissions: stri
     tenantId,
     name,
     access: { relationship: permissions.includes('create_asset') ? 'editor' : 'viewer', permissions }
+  };
+}
+
+function accessGrant(principalId: string, relationship: string): object {
+  return {
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    principalId,
+    relationship
+  };
+}
+
+function accessInvitation(id: string, email: string, relationship: string, statusFilter: string): object {
+  const status = statusFilter === 'all' ? 'pending' : statusFilter;
+  const isExpired = status === 'expired';
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    email,
+    relationship,
+    status,
+    isExpired,
+    expiresAt: isExpired ? '2026-01-01T00:00:00Z' : '2026-12-31T00:00:00Z',
+    inviterPrincipalId: 'principal-owner'
+  };
+}
+
+function auditRecord(scope: 'inventory' | 'tenant'): object {
+  return {
+    id: `audit-${scope}`,
+    tenantId: 'tenant-home',
+    inventoryId: scope === 'inventory' ? 'inventory-household' : null,
+    principalId: 'principal-owner',
+    action: 'asset.created',
+    source: 'api',
+    targetType: 'asset',
+    targetId: scope === 'inventory' ? 'asset-tomato' : 'asset-tenant-audit',
+    occurredAt: '2026-06-24T12:00:00Z',
+    requestId: `request-${scope}`,
+    metadata: { operation_id: `operation-${scope}` }
   };
 }
 
