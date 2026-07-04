@@ -2022,22 +2022,6 @@ dd {
     padding: 18px 14px calc(156px + env(safe-area-inset-bottom));
   }
 
-  .settings-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .settings-section-nav {
-    display: flex;
-    overflow-x: auto;
-    padding: 4px;
-    scroll-padding-inline: 4px;
-  }
-
-  .settings-section-link {
-    width: min(220px, 72vw);
-    min-width: min(220px, 72vw);
-  }
-
   .filter-control[data-layout="section-rail"] {
     display: flex;
     flex-wrap: wrap;
