@@ -16,6 +16,7 @@
     assetDetailHref,
     attachmentDeleteHref as assetAttachmentDeleteHref
   } from '$lib/application/workspaceAssetActions';
+  import { assetDescriptionText, assetEditUnavailableStatus } from '$lib/application/workspaceAssetDetail';
   import {
     buildDetailPhotos,
     photoUploadUnavailableReason,
@@ -109,6 +110,8 @@
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
   let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
+  let editUnavailableStatus = $derived(assetEditUnavailableStatus(canEdit));
+  let descriptionText = $derived(assetDescriptionText(asset.description));
   let photoUploadDisabledReason = $derived(
     photoUploadUnavailableReason({
       canEditAsset: canEdit,
@@ -526,15 +529,15 @@
             ><RotateCcw /> Restore</Button.Root>
           {/if}
         </div>
-        {#if !canEdit}
-          <p class="denied-note">Edit actions require asset edit access.</p>
+        {#if editUnavailableStatus}
+          <p class="denied-note">{editUnavailableStatus.message}</p>
         {/if}
       </div>
     </AssetDetailHero>
   <div class="asset-detail-sections">
     <section class="detail-section" aria-labelledby="asset-description-title">
       <h2 id="asset-description-title">Details</h2>
-      <p>{asset.description || 'No description.'}</p>
+      <p>{descriptionText}</p>
       {#if displayFields.length > 0}
         <dl class="detail-list custom-detail-list" aria-label="Custom field values">
           {#each displayFields as field}

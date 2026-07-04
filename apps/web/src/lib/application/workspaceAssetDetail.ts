@@ -25,6 +25,11 @@ export interface WorkspaceAssetDetailState {
   mode: 'asset';
 }
 
+export interface AssetDetailStatusPresentation {
+  kind: 'edit-unavailable' | 'files-empty';
+  message: string;
+}
+
 export async function loadWorkspaceAssetDetail(
   repository: AssetDetailRepository,
   tenantId: string,
@@ -71,3 +76,27 @@ type LoadedWorkspaceAssetDetail = LoadWorkspaceAssetDetailResult & {
   loaded: true;
   asset: Asset;
 };
+
+export function assetDescriptionText(description: string): string {
+  return description || 'No description.';
+}
+
+export function assetEditUnavailableStatus(canEdit: boolean): AssetDetailStatusPresentation | null {
+  if (canEdit) {
+    return null;
+  }
+  return {
+    kind: 'edit-unavailable',
+    message: 'Edit actions require asset edit access.'
+  };
+}
+
+export function assetFilesStatus(fileCount: number): AssetDetailStatusPresentation | null {
+  if (fileCount > 0) {
+    return null;
+  }
+  return {
+    kind: 'files-empty',
+    message: 'No active files.'
+  };
+}

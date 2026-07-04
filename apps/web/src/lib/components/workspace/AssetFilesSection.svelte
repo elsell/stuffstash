@@ -3,6 +3,7 @@
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import Upload from '@lucide/svelte/icons/upload';
   import * as Button from '$lib/components/ui/button/index.js';
+  import { assetFilesStatus } from '$lib/application/workspaceAssetDetail';
   import type { AssetAttachment } from '$lib/domain/inventory';
   import { formatBytes } from './formatBytes';
 
@@ -28,6 +29,7 @@
     attachmentDeleteHref: (attachment: AssetAttachment) => string;
   } = $props();
 
+  let status = $derived(assetFilesStatus(attachments.length));
 </script>
 
 <section class="attachment-section" aria-labelledby={titleId}>
@@ -43,9 +45,9 @@
       </Button.Root>
     </div>
   </div>
-  {#if attachments.length === 0}
+  {#if status}
     <div class="empty-state">
-      <p>No active files.</p>
+      <p>{status.message}</p>
     </div>
   {:else}
     <div class="asset-list">

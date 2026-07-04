@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Asset, AssetAttachment } from '$lib/domain/inventory';
-import { applyLoadedWorkspaceAssetDetail, loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from './workspaceAssetDetail';
+import {
+  applyLoadedWorkspaceAssetDetail,
+  assetDescriptionText,
+  assetEditUnavailableStatus,
+  assetFilesStatus,
+  loadWorkspaceAssetDetail,
+  refreshWorkspaceAssetAttachments
+} from './workspaceAssetDetail';
 
 function asset(id: string, lifecycleState: Asset['lifecycleState'] = 'active'): Asset {
   return {
@@ -99,6 +106,21 @@ describe('workspace asset detail helpers', () => {
       selectedAssetAttachments: detailAttachments,
       mode: 'asset'
     });
+  });
+
+  it('builds asset detail fallback and status presentation', () => {
+    expect(assetDescriptionText('Stored in the upstairs closet.')).toBe('Stored in the upstairs closet.');
+    expect(assetDescriptionText('')).toBe('No description.');
+    expect(assetEditUnavailableStatus(false)).toEqual({
+      kind: 'edit-unavailable',
+      message: 'Edit actions require asset edit access.'
+    });
+    expect(assetEditUnavailableStatus(true)).toBeNull();
+    expect(assetFilesStatus(0)).toEqual({
+      kind: 'files-empty',
+      message: 'No active files.'
+    });
+    expect(assetFilesStatus(1)).toBeNull();
   });
 });
 

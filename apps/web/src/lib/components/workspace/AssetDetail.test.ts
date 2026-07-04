@@ -71,6 +71,13 @@ describe('AssetDetail', () => {
     expect(document.body.querySelector<HTMLButtonElement>('button[aria-label="More asset actions"]')).toBeNull();
   });
 
+  it('renders helper-backed detail fallbacks and edit denial copy', () => {
+    mountAssetDetail({ canEdit: false });
+
+    expect(document.body.querySelector('.detail-section')?.textContent).toContain('No description.');
+    expect(document.body.textContent).toContain('Edit actions require asset edit access.');
+  });
+
   it('ignores a photo owned by a different asset', () => {
     mountAssetDetail({
       asset: {
