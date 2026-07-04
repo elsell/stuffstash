@@ -43,9 +43,24 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   await page.keyboard.press('Escape');
 
   await page.getByRole('link', { name: 'Add asset' }).click();
-  await expect(page.getByRole('dialog', { name: 'Add item' })).toBeVisible();
+  const addDialog = page.getByRole('dialog', { name: 'Add item' });
+  await expect(addDialog).toBeVisible();
   await expect(page.getByLabel('Item name')).toBeVisible();
   await expect(page.getByLabel('Find parent')).toBeVisible();
+  await page.setViewportSize({ width: 393, height: 520 });
+  await addDialog.getByRole('switch', { name: 'Create a parent first' }).click();
+  await expect(page.getByLabel('Parent name')).toBeVisible();
+  await expect(addDialog).toHaveCSS('display', 'flex');
+  await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'sticky');
+
+  const dialogBox = await addDialog.boundingBox();
+  const actionsBox = await addDialog.locator('.tray-actions').boundingBox();
+  const viewport = page.viewportSize();
+  expect(dialogBox?.y).toBeLessThanOrEqual(10);
+  expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : 0).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 2);
+  expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
+  expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : 0).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 2);
+  expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
 });
 
 test('add flow saves items with and without selected photo previews', async ({ page }, testInfo) => {
