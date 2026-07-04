@@ -254,6 +254,24 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).not.toContain('Cancel invitation');
   });
 
+  it('disables expire and cancel actions for pending invitations that are already expired', async () => {
+    const { repository } = fakeAccessRepository({ expired: true });
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository,
+        invitationStatus: 'expired'
+      }
+    });
+    await flush();
+
+    expect(link('Expire').getAttribute('aria-disabled')).toBe('true');
+    expect(link('Cancel').getAttribute('aria-disabled')).toBe('true');
+  });
+
   it('supports invitation status filtering and paged load-more actions', async () => {
     const { repository, calls } = fakeAccessRepository({ hasMore: true, invitationStatus: 'revoked' });
 
@@ -454,7 +472,7 @@ function inventory(tenantId: string, id: string, permissions: string[]): Invento
   };
 }
 
-function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: InventoryAccessInvitation['status'] } = {}): {
+function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: InventoryAccessInvitation['status']; expired?: boolean } = {}): {
   repository: InventoryAccessRepository;
   calls: string[];
 } {
@@ -462,7 +480,12 @@ function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: I
   let grants: InventoryAccessGrant[] = [
     { tenantId: 'tenant-one', inventoryId: 'inventory-one', principalId: 'principal-two', relationship: 'viewer' }
   ];
-  let invitations: InventoryAccessInvitation[] = [invitation('invite-one', 'friend@example.test', 'viewer', options.invitationStatus)];
+  let invitations: InventoryAccessInvitation[] = [
+    {
+      ...invitation('invite-one', 'friend@example.test', 'viewer', options.invitationStatus),
+      isExpired: options.expired ?? false
+    }
+  ];
   return {
     calls,
     repository: {
