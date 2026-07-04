@@ -10,11 +10,12 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import {
-    workspaceRouteHref,
-    type AssetRouteAction,
-    type AttachmentRouteAction,
-    type WorkspaceRouteState
-  } from '$lib/application/workspaceRoute';
+    assetActionHref,
+    assetActionIsAvailable,
+    assetDetailHref,
+    attachmentDeleteHref as assetAttachmentDeleteHref
+  } from '$lib/application/workspaceAssetActions';
+  import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
   import type {
     AssetAttachment,
     AssetViewModel,
@@ -223,66 +224,19 @@
   }
 
   function actionHref(nextAction: Exclude<AssetRouteAction, null>): string {
-    const route: Partial<WorkspaceRouteState> = {
-      mode: 'asset',
-      tenantId: asset.tenantId,
-      inventoryId: asset.inventoryId,
-      assetId: asset.id,
-      assetAction: nextAction,
-      action: nextAction === 'edit' ? 'edit' : null
-    };
-    if (nextAction === 'edit' && asset.kind === 'location') {
-      route.locationId = asset.id;
-    }
-    return workspaceRouteHref(route, asset.tenantId, asset.inventoryId);
+    return assetActionHref(asset, nextAction);
   }
 
   function detailHref(): string {
-    return workspaceRouteHref(
-      asset.kind === 'location'
-        ? {
-            mode: 'location',
-            tenantId: asset.tenantId,
-            inventoryId: asset.inventoryId,
-            locationId: asset.id
-          }
-        : {
-            mode: 'asset',
-            tenantId: asset.tenantId,
-            inventoryId: asset.inventoryId,
-            assetId: asset.id
-          },
-      asset.tenantId,
-      asset.inventoryId
-    );
+    return assetDetailHref(asset);
   }
 
   function attachmentDeleteHref(attachment: AssetAttachment): string {
-    return workspaceRouteHref(
-      {
-        mode: 'asset',
-        tenantId: asset.tenantId,
-        inventoryId: asset.inventoryId,
-        assetId: asset.id,
-        attachmentId: attachment.id,
-        attachmentAction: 'delete'
-      },
-      asset.tenantId,
-      asset.inventoryId
-    );
+    return assetAttachmentDeleteHref(asset, attachment);
   }
 
   function actionIsAvailable(nextAction: Exclude<AssetRouteAction, null>): boolean {
-    if (!canEdit || saving) {
-      return false;
-    }
-    if (nextAction === 'delete') {
-      return true;
-    }
-    if (nextAction === 'restore') {
-      return asset.lifecycleState === 'archived';
-    }
-    return asset.lifecycleState === 'active';
+    return assetActionIsAvailable(asset, nextAction, { canEdit, saving });
   }
 
   function shouldHandleInApp(event: MouseEvent): boolean {
