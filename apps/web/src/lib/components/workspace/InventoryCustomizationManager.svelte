@@ -11,7 +11,9 @@
   import {
     customizationArchiveAssetTypeHref,
     customizationArchiveFieldDefinitionHref,
-    customizationFieldsHref
+    customizationFieldsHref,
+    customizationManagerAccessStatus,
+    customizationManagerOperationStatus
   } from '$lib/application/workspaceCustomizationActions';
   import {
     customizationApplicabilityOptions,
@@ -84,6 +86,8 @@
   let canConfigureInventory = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canManage = $derived(canConfigureInventory || canConfigureTenant);
+  let accessStatus = $derived(customizationManagerAccessStatus({ hasTenant: Boolean(tenant), hasInventory: Boolean(inventory), canManage }));
+  let operationStatus = $derived(customizationManagerOperationStatus(error));
   let activeAssetTypes = $derived(assetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let activeFieldDefinitions = $derived(fieldDefinitions.filter((definition) => definition.lifecycleState === 'active'));
   let scopeOptions = $derived(customizationScopeOptions({ canConfigureInventory, canConfigureTenant }));
@@ -312,10 +316,8 @@
     </div>
   </div>
 
-  {#if !tenant || !inventory}
-    <p class="denied-note">Select an inventory before managing fields.</p>
-  {:else if !canManage}
-    <p class="denied-note">Custom fields require tenant or inventory configuration access.</p>
+  {#if accessStatus}
+    <p class="denied-note" role={accessStatus.alert ? 'alert' : undefined}>{accessStatus.message}</p>
   {:else}
     {#if hasArchiveRoute}
       <InventoryCustomizationArchivePanel
@@ -459,7 +461,7 @@
     </div>
   {/if}
 
-  {#if error}
-    <p class="denied-note" role="alert">{error}</p>
+  {#if operationStatus}
+    <p class="denied-note" role={operationStatus.alert ? 'alert' : undefined}>{operationStatus.message}</p>
   {/if}
 </section>

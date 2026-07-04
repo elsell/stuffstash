@@ -16,6 +16,69 @@ afterEach(() => {
 });
 
 describe('InventoryCustomizationManager', () => {
+  it('renders missing inventory customization status without an alert role', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: null,
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Select an inventory before managing fields.');
+    expect(document.body.querySelector('[role="alert"]')).toBeNull();
+    expect(exactButtonOrNull('Create type')).toBeNull();
+  });
+
+  it('renders denied customization status as an alert', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: { ...tenant(), access: { relationship: 'viewer', permissions: ['view'] } },
+        inventory: { ...inventory(), access: { relationship: 'viewer', permissions: ['view'] } },
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain(
+      'Custom fields require tenant or inventory configuration access.'
+    );
+    expect(exactButtonOrNull('Create type')).toBeNull();
+  });
+
+  it('renders customization operation failures as alerts while preserving the form', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    input('#custom-type-key', 'medicine');
+    input('#custom-type-name', 'Medicine');
+    await flush();
+    clickExactButton('Create type');
+    await flush();
+
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Unexpected repository call.');
+    expect(exactButton('Create type')).toBeTruthy();
+  });
+
   it('creates custom asset types and targeted custom fields through the customization port', async () => {
     const calls: string[] = [];
     const medicine: CustomAssetType = {
@@ -438,6 +501,10 @@ function exactButton(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent === text);
   if (!button) throw new Error(`Missing button ${text}`);
   return button;
+}
+
+function exactButtonOrNull(text: string): HTMLButtonElement | null {
+  return Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent === text) ?? null;
 }
 
 function link(text: string): HTMLAnchorElement {

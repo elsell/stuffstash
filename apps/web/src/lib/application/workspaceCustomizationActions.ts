@@ -2,6 +2,7 @@ import type { CustomAssetType, CustomFieldDefinition } from '$lib/domain/invento
 import { workspaceRouteHref } from './workspaceRoute';
 
 export type CustomizationArchiveKind = 'asset_type' | 'field_definition' | 'unavailable';
+export type CustomizationManagerStatusKind = 'missing-context' | 'denied' | 'error';
 
 export interface CustomizationArchiveConfirmation {
   kind: CustomizationArchiveKind;
@@ -11,6 +12,12 @@ export interface CustomizationArchiveConfirmation {
   buttonLabel: string;
   unavailable: boolean;
   disabled: boolean;
+}
+
+export interface CustomizationManagerStatus {
+  kind: CustomizationManagerStatusKind;
+  message: string;
+  alert: boolean;
 }
 
 export function customizationFieldsHref(tenantId: string | null, inventoryId: string | null): string {
@@ -87,5 +94,38 @@ export function customizationArchiveConfirmation(input: {
     buttonLabel: 'Back to fields',
     unavailable: true,
     disabled: false
+  };
+}
+
+export function customizationManagerAccessStatus(input: {
+  hasTenant: boolean;
+  hasInventory: boolean;
+  canManage: boolean;
+}): CustomizationManagerStatus | null {
+  if (!input.hasTenant || !input.hasInventory) {
+    return {
+      kind: 'missing-context',
+      message: 'Select an inventory before managing fields.',
+      alert: false
+    };
+  }
+  if (!input.canManage) {
+    return {
+      kind: 'denied',
+      message: 'Custom fields require tenant or inventory configuration access.',
+      alert: true
+    };
+  }
+  return null;
+}
+
+export function customizationManagerOperationStatus(error: string): CustomizationManagerStatus | null {
+  if (!error) {
+    return null;
+  }
+  return {
+    kind: 'error',
+    message: error,
+    alert: true
   };
 }

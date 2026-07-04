@@ -4,7 +4,9 @@ import {
   customizationArchiveConfirmation,
   customizationArchiveAssetTypeHref,
   customizationArchiveFieldDefinitionHref,
-  customizationFieldsHref
+  customizationFieldsHref,
+  customizationManagerAccessStatus,
+  customizationManagerOperationStatus
 } from './workspaceCustomizationActions';
 
 describe('workspace customization actions', () => {
@@ -75,6 +77,29 @@ describe('workspace customization actions', () => {
       unavailable: true,
       disabled: false
     });
+  });
+
+  it('builds customization manager missing-context and denied statuses', () => {
+    expect(customizationManagerAccessStatus({ hasTenant: true, hasInventory: false, canManage: true })).toEqual({
+      kind: 'missing-context',
+      message: 'Select an inventory before managing fields.',
+      alert: false
+    });
+    expect(customizationManagerAccessStatus({ hasTenant: true, hasInventory: true, canManage: false })).toEqual({
+      kind: 'denied',
+      message: 'Custom fields require tenant or inventory configuration access.',
+      alert: true
+    });
+    expect(customizationManagerAccessStatus({ hasTenant: true, hasInventory: true, canManage: true })).toBeNull();
+  });
+
+  it('builds customization manager operation error status', () => {
+    expect(customizationManagerOperationStatus('Schema service unavailable.')).toEqual({
+      kind: 'error',
+      message: 'Schema service unavailable.',
+      alert: true
+    });
+    expect(customizationManagerOperationStatus('')).toBeNull();
   });
 });
 

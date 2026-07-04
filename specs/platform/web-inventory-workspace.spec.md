@@ -595,6 +595,7 @@ Required implementation split:
 - Asset detail action availability and canonical asset/attachment action href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings customization archive action and cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings customization archive confirmation title, description, target label, unavailable copy, and disabled state must live in focused application helpers rather than component-local conditionals.
+- Settings customization missing-context, denied, and operation-error presentation must live in focused application helpers rather than component-local conditional copy.
 - Settings section, access-status, and audit-scope navigation option composition and href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings section navigation helpers should expose stable icon identifiers rather than importing Svelte icon components into application helpers.
 - Settings access relationship selector option composition must live in focused application helpers backed by canonical frontend-domain relationship values rather than component-local arrays.
