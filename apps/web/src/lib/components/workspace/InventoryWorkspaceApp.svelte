@@ -1,15 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import {
-    containedAssets,
     detailAssetList,
     labelAssets,
-    moveParentTargets,
     parentTargets,
-    recentlyAddedAssets,
-    selectedAssetForDetail,
-    topLevelLocations,
-    withTrail
+    selectedAssetForDetail
   } from '$lib/application/workspace';
   import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
@@ -54,15 +49,9 @@
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
-  import AssetDetail from './AssetDetail.svelte';
-  import HomeboxImportPanel from './HomeboxImportPanel.svelte';
-  import HomeWorkspace from './HomeWorkspace.svelte';
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
-  import InventorySettings from './InventorySettings.svelte';
-  import LocationView from './LocationView.svelte';
-  import SearchPanel from './SearchPanel.svelte';
-  import * as Button from '$lib/components/ui/button/index.js';
+  import InventoryWorkspaceRouteContent from './InventoryWorkspaceRouteContent.svelte';
 
   let {
     repository,
@@ -1168,131 +1157,78 @@
     onOpenAdd={openAdd}
     {onSignOut}
   >
-  {#if routeUnavailable}
-      <section class="workspace-main">
-        <div class="empty-state spacious" role="alert">
-          <h1>Workspace unavailable</h1>
-          <p>{routeUnavailable}</p>
-          <Button.Root href={homeHref()} onclick={openHome}>Go home</Button.Root>
-        </div>
-      </section>
-    {:else if data.context.inventories.length === 0}
-      <section class="workspace-main">
-        <div class="empty-state spacious">
-          <h1>No inventory yet</h1>
-          {#if canCreateStarter}
-            <p>{data.context.selectedTenantId ? 'Create the first inventory for this tenant.' : 'Create your first tenant and inventory.'}</p>
-            <Button.Root onclick={() => { void createStarterInventory(); }}>Create Household</Button.Root>
-          {:else}
-            <p>You can view this tenant, but you cannot create inventories in it.</p>
-          {/if}
-        </div>
-      </section>
-    {:else if mode === 'location' && selectedLocation}
-      <LocationView
-        location={selectedLocation}
-        assets={containedAssets(assets, selectedLocation.id)}
-        canEdit={editAssetAllowed}
-        canCreateAsset={createAssetAllowed}
-        onBack={closeLocationToLocations}
-        onOpenLocation={openLocation}
-        onEditLocation={openLocationEdit}
-        onOpenAsset={openAsset}
-        onOpenAdd={openAdd}
-      />
-    {:else if mode === 'asset' && selectedAsset}
-      <AssetDetail
-        asset={withTrail(selectedAsset, detailAssets)}
-        canEdit={editAssetAllowed}
-        parentTargets={moveParentTargets(detailAssets, selectedAsset.id)}
-        customFieldDefinitions={data.context.customFieldDefinitions}
-        saving={busy}
-        attachments={selectedAssetAttachments}
-        mediaPolicy={data.context.mediaUploadPolicy}
-        action={assetAction}
-        {attachmentId}
-        {attachmentAction}
-        backHref={assetDetailBackHref()}
-        onBack={closeDetailToPrevious}
-        onActionOpen={openAssetActionRoute}
-        onActionClose={closeAssetActionRoute}
-        onSave={updateAsset}
-        onArchive={archiveSelectedAsset}
-        onRestore={restoreSelectedAsset}
-        onDelete={deleteSelectedAsset}
-        onUploadAttachment={uploadSelectedAttachment}
-        onArchiveAttachment={archiveSelectedAttachment}
-        onAttachmentDeleteOpen={openAttachmentDeleteRoute}
-        onAttachmentDeleteClose={closeAttachmentDeleteRoute}
-        onDeleteAttachment={deleteSelectedAttachment}
-      />
-    {:else if mode === 'search'}
-      <SearchPanel
-        tenantId={data.context.selectedTenantId}
-        inventoryId={data.context.selectedInventoryId}
-        bind:query={searchQuery}
-        bind:lifecycleState={searchLifecycleState}
-        bind:searchMode={searchMode}
-        results={searchResults}
-        suggestions={searchSuggestions}
-        submitted={searchSubmitted}
-        error={searchError}
-        {busy}
-        onSearch={() => { void search(); }}
-        onOpenAsset={openSearchAsset}
-      />
-    {:else if mode === 'import'}
-      <HomeboxImportPanel
-        tenantId={data.context.selectedTenantId}
-        inventory={selectedInventory}
-        {repository}
-        sourceType={importSourceType}
-        onSourceChange={openImportSource}
-        onImported={refreshAfterImport}
-      />
-    {:else if mode === 'settings'}
-      <InventorySettings
-        tenant={selectedTenant}
-        inventory={selectedInventory}
-        inventoryCount={data.context.inventories.length}
-        accessRepository={repository}
-        auditRepository={repository}
-        customizationRepository={repository}
-        customAssetTypes={data.context.customAssetTypes}
-        customFieldDefinitions={data.context.customFieldDefinitions}
-        section={settingsSection}
-        {invitationStatus}
-        {accessInvitationAction}
-        {accessInvitationId}
-        {auditScope}
-        {customizationAction}
-        {customAssetTypeId}
-        {customFieldDefinitionId}
-        onSectionChange={openSettingsSection}
-        onInvitationStatusChange={openInvitationStatusFilter}
-        onAccessInvitationActionOpen={openAccessInvitationAction}
-        onAccessInvitationActionClose={closeAccessInvitationAction}
-        onAuditScopeChange={openAuditScopeFilter}
-        onCustomizationArchiveOpen={openCustomizationArchive}
-        onCustomizationArchiveClose={closeCustomizationArchive}
-        onCustomizationChange={updateCustomizationContext}
-      />
-    {:else}
-      <HomeWorkspace
-        tenantId={data.context.selectedTenantId}
-        inventoryId={data.context.selectedInventoryId}
-        lifecycleState={data.context.assetLifecycleState}
-        browseMode={mode === 'locations' ? 'locations' : 'home'}
-        locations={topLevelLocations(assets)}
-        recentAssets={recentlyAddedAssets(assets)}
-        archivedAssets={assets}
-        canCreateAsset={createAssetAllowed}
-        onOpenLocation={openLocation}
-        onOpenAsset={openAsset}
-        onOpenAdd={() => openAdd('location')}
-        onSelectLifecycle={(lifecycleState) => { void selectAssetLifecycle(lifecycleState); }}
-      />
-    {/if}
+  <InventoryWorkspaceRouteContent
+    workspace={{
+      data,
+      repository,
+      selectedTenant,
+      selectedInventory,
+      selectedLocation,
+      selectedAsset,
+      assets,
+      detailAssets,
+      selectedAssetAttachments
+    }}
+    status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed }}
+    route={{
+      routeUnavailable,
+      mode,
+      searchResults,
+      searchSuggestions,
+      searchSubmitted,
+      searchError,
+      assetAction,
+      attachmentId,
+      attachmentAction,
+      settingsSection,
+      invitationStatus,
+      accessInvitationAction,
+      accessInvitationId,
+      auditScope,
+      customizationAction,
+      customAssetTypeId,
+      customFieldDefinitionId,
+      importSourceType
+    }}
+    hrefs={{ homeHref: homeHref(), assetDetailBackHref: assetDetailBackHref() }}
+    bind:searchQuery
+    bind:searchLifecycleState
+    bind:searchMode
+    handlers={{
+      onHome: openHome,
+      onCreateStarterInventory: createStarterInventory,
+      onOpenLocation: openLocation,
+      onEditLocation: openLocationEdit,
+      onOpenAsset: openAsset,
+      onOpenAdd: openAdd,
+      onCloseLocation: closeLocationToLocations,
+      onCloseAssetDetail: closeDetailToPrevious,
+      onAssetActionOpen: openAssetActionRoute,
+      onAssetActionClose: closeAssetActionRoute,
+      onAssetSave: updateAsset,
+      onAssetArchive: archiveSelectedAsset,
+      onAssetRestore: restoreSelectedAsset,
+      onAssetDelete: deleteSelectedAsset,
+      onAssetUploadAttachment: uploadSelectedAttachment,
+      onAssetArchiveAttachment: archiveSelectedAttachment,
+      onAttachmentDeleteOpen: openAttachmentDeleteRoute,
+      onAttachmentDeleteClose: closeAttachmentDeleteRoute,
+      onAssetDeleteAttachment: deleteSelectedAttachment,
+      onSearch: search,
+      onOpenSearchAsset: openSearchAsset,
+      onImportSourceChange: openImportSource,
+      onImported: refreshAfterImport,
+      onSettingsSectionChange: openSettingsSection,
+      onInvitationStatusChange: openInvitationStatusFilter,
+      onAccessInvitationActionOpen: openAccessInvitationAction,
+      onAccessInvitationActionClose: closeAccessInvitationAction,
+      onAuditScopeChange: openAuditScopeFilter,
+      onCustomizationArchiveOpen: openCustomizationArchive,
+      onCustomizationArchiveClose: closeCustomizationArchive,
+      onCustomizationChange: updateCustomizationContext,
+      onSelectLifecycle: selectAssetLifecycle
+    }}
+  />
 
 </InventoryWorkspaceChrome>
 
