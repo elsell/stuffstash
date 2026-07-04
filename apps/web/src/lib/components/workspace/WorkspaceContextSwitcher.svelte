@@ -168,7 +168,7 @@
 
   {#if open}
     {#if mobile}
-      <Button.Root variant="ghost" class="sheet-backdrop" tabindex={-1} aria-hidden="true" onclick={() => closeContext()}></Button.Root>
+      <Button.Root variant="ghost" class="sheet-backdrop" aria-label="Close inventory switcher" onclick={() => closeContext()}></Button.Root>
     {/if}
     <div
       bind:this={panelElement}

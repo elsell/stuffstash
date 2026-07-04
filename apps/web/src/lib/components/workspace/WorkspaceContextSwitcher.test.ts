@@ -212,6 +212,9 @@ describe('WorkspaceContextSwitcher', () => {
     buttonContaining('Garage').click();
     await tick();
 
+    expect(document.body.querySelector<HTMLButtonElement>('.sheet-backdrop')?.getAttribute('aria-label')).toBe(
+      'Close inventory switcher'
+    );
     expect(document.body.textContent).toContain('Inventories');
     expect(currentLinkContaining('Garage').getAttribute('aria-current')).toBe('page');
     expect(document.activeElement?.textContent).toContain('Garage');
