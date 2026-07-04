@@ -136,6 +136,12 @@ describe('AssetDetail', () => {
     expect((requiredElement('#edit-asset-title') as HTMLInputElement).value).toBe('Current asset');
     expect((requiredElement('#edit-custom-field-expiration-date') as HTMLInputElement).value).toBe('2028-02-02');
     expect(document.activeElement).toBe(requiredElement('.detail-action-panel'));
+    expect(
+      Boolean(
+        requiredElement('.detail-action-panel').compareDocumentPosition(requiredElement('#asset-description-title')) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
   });
 
   it('preserves custom field values when moving an asset', async () => {

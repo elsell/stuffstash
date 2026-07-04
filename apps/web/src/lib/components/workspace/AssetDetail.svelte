@@ -537,30 +537,6 @@
       </div>
     </AssetDetailHero>
   <div class="asset-detail-sections">
-    <section class="detail-section" aria-labelledby="asset-description-title">
-      <h2 id="asset-description-title">Details</h2>
-      <p>{descriptionText}</p>
-      {#if displayFields.length > 0}
-        <dl class="detail-list custom-detail-list" aria-label="Custom field values">
-          {#each displayFields as field}
-            <div>
-              <dt>{field.displayName}</dt>
-              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key]) || 'Not set'}</dd>
-            </div>
-          {/each}
-        </dl>
-      {/if}
-    </section>
-    <AssetFilesSection
-      attachments={fileAttachments}
-      {canEdit}
-      {saving}
-      active={asset.lifecycleState === 'active'}
-      onChooseFile={() => fileInput?.click()}
-      onArchiveAttachment={(attachment) => { void archiveAttachment(attachment); }}
-      onOpenAttachmentDelete={openAttachmentDelete}
-      {attachmentDeleteHref}
-    />
       <AssetDetailActionPanel
         {panel}
         bind:panelElement={actionPanelElement}
@@ -585,6 +561,30 @@
         onParentSelect={selectMoveParent}
         onCustomFieldValueChange={setCustomFieldValue}
       />
+    <section class="detail-section" aria-labelledby="asset-description-title">
+      <h2 id="asset-description-title">Details</h2>
+      <p>{descriptionText}</p>
+      {#if displayFields.length > 0}
+        <dl class="detail-list custom-detail-list" aria-label="Custom field values">
+          {#each displayFields as field}
+            <div>
+              <dt>{field.displayName}</dt>
+              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key]) || 'Not set'}</dd>
+            </div>
+          {/each}
+        </dl>
+      {/if}
+    </section>
+    <AssetFilesSection
+      attachments={fileAttachments}
+      {canEdit}
+      {saving}
+      active={asset.lifecycleState === 'active'}
+      onChooseFile={() => fileInput?.click()}
+      onArchiveAttachment={(attachment) => { void archiveAttachment(attachment); }}
+      onOpenAttachmentDelete={openAttachmentDelete}
+      {attachmentDeleteHref}
+    />
       <div class="danger-zone" aria-label="Danger area">
         <div>
           <strong>Permanent deletion</strong>
