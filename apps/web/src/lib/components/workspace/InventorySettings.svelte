@@ -9,11 +9,15 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import {
-    workspaceRouteHref,
     type AccessInvitationRouteAction,
     type CustomizationRouteAction,
     type SettingsSection
   } from '$lib/application/workspaceRoute';
+  import {
+    settingsAuditScopeHref,
+    settingsInvitationStatusHref,
+    settingsSectionHref
+  } from '$lib/application/workspaceSettingsNavigation';
   import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
@@ -98,32 +102,21 @@
   let activeSection = $derived(sectionOptions.find((option) => option.value === section) ?? sectionOptions[0]);
 
   function sectionHref(nextSection: SettingsSection): string {
-    return workspaceRouteHref(
-      {
-        mode: 'settings',
-        settingsSection: nextSection,
-        invitationStatus: nextSection === 'access' ? invitationStatus : 'all',
-        auditScope: nextSection === 'activity' ? auditScope : 'inventory'
-      },
+    return settingsSectionHref(
       tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
+      inventory?.id ?? null,
+      nextSection,
+      invitationStatus,
+      auditScope
     );
   }
 
   function invitationStatusHref(status: InvitationStatusFilter): string {
-    return workspaceRouteHref(
-      { mode: 'settings', settingsSection: 'access', invitationStatus: status },
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
-    );
+    return settingsInvitationStatusHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, status);
   }
 
   function auditScopeHref(scope: AuditScope): string {
-    return workspaceRouteHref(
-      { mode: 'settings', settingsSection: 'activity', auditScope: scope },
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
-    );
+    return settingsAuditScopeHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, scope);
   }
 
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
