@@ -7,6 +7,20 @@ export interface ParentTargetSearchResult {
   containerResults: ParentTargetViewModel[];
 }
 
+export type ParentTargetPickerStatusKind = 'none' | 'no-matches' | 'overflow' | 'no-targets';
+
+export interface ParentTargetPickerStatus {
+  kind: ParentTargetPickerStatusKind;
+  message: string;
+}
+
+export interface ParentTargetPickerPresentation {
+  resultCountLabel: string;
+  destinationCountLabel: string;
+  suggestedCountLabel: string;
+  status: ParentTargetPickerStatus;
+}
+
 export function parentTargetSuggestions(targets: ParentTargetViewModel[], selectedId: string | null, limit: number): ParentTargetViewModel[] {
   const sorted = [...targets].sort(compareParentTargets);
   const chosen: ParentTargetViewModel[] = [];
@@ -39,6 +53,39 @@ export function searchParentTargets(targets: ParentTargetViewModel[], query: str
 
 export function normalizeParentTargetQuery(query: string): string {
   return query.trim().toLowerCase();
+}
+
+export function parentTargetPickerPresentation(input: {
+  hasSearch: boolean;
+  matchingCount: number;
+  visibleCount: number;
+  targetCount: number;
+  suggestedCount: number;
+}): ParentTargetPickerPresentation {
+  return {
+    resultCountLabel: input.hasSearch ? `${input.matchingCount} ${input.matchingCount === 1 ? 'match' : 'matches'}` : '',
+    destinationCountLabel: `${input.targetCount} possible ${input.targetCount === 1 ? 'destination' : 'destinations'}`,
+    suggestedCountLabel: `Showing ${input.suggestedCount} suggested ${input.suggestedCount === 1 ? 'destination' : 'destinations'}.`,
+    status: parentTargetPickerStatus(input)
+  };
+}
+
+function parentTargetPickerStatus(input: {
+  hasSearch: boolean;
+  matchingCount: number;
+  visibleCount: number;
+  targetCount: number;
+}): ParentTargetPickerStatus {
+  if (input.hasSearch && input.visibleCount === 0) {
+    return { kind: 'no-matches', message: 'No matching locations or containers.' };
+  }
+  if (input.hasSearch && input.matchingCount > input.visibleCount) {
+    return { kind: 'overflow', message: `Showing the first ${input.visibleCount} of ${input.matchingCount} matches.` };
+  }
+  if (!input.hasSearch && input.targetCount === 0) {
+    return { kind: 'no-targets', message: 'No locations or containers yet.' };
+  }
+  return { kind: 'none', message: '' };
 }
 
 function parentTargetMatches(target: ParentTargetViewModel, query: string): boolean {

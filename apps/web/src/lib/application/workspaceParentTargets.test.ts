@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { ParentTargetViewModel } from '$lib/domain/inventory';
-import { normalizeParentTargetQuery, parentTargetSuggestions, searchParentTargets } from './workspaceParentTargets';
+import {
+  normalizeParentTargetQuery,
+  parentTargetPickerPresentation,
+  parentTargetSuggestions,
+  searchParentTargets
+} from './workspaceParentTargets';
 
 describe('workspace parent target helpers', () => {
   it('builds bounded location-first suggestions without the selected target', () => {
@@ -53,6 +58,53 @@ describe('workspace parent target helpers', () => {
   it('normalizes search queries before matching', () => {
     expect(normalizeParentTargetQuery('  Garage Shelf  ')).toBe('garage shelf');
     expect(searchParentTargets([parentTarget('garage', 'Garage shelf', 'Root')], '  GARAGE  ', 8).visibleTargets).toHaveLength(1);
+  });
+
+  it('builds parent picker count and status presentation', () => {
+    expect(
+      parentTargetPickerPresentation({
+        hasSearch: false,
+        matchingCount: 0,
+        visibleCount: 0,
+        targetCount: 3,
+        suggestedCount: 1
+      })
+    ).toEqual({
+      resultCountLabel: '',
+      destinationCountLabel: '3 possible destinations',
+      suggestedCountLabel: 'Showing 1 suggested destination.',
+      status: { kind: 'none', message: '' }
+    });
+    expect(
+      parentTargetPickerPresentation({
+        hasSearch: true,
+        matchingCount: 3,
+        visibleCount: 1,
+        targetCount: 3,
+        suggestedCount: 0
+      })
+    ).toMatchObject({
+      resultCountLabel: '3 matches',
+      status: { kind: 'overflow', message: 'Showing the first 1 of 3 matches.' }
+    });
+    expect(
+      parentTargetPickerPresentation({
+        hasSearch: true,
+        matchingCount: 0,
+        visibleCount: 0,
+        targetCount: 3,
+        suggestedCount: 0
+      }).status
+    ).toEqual({ kind: 'no-matches', message: 'No matching locations or containers.' });
+    expect(
+      parentTargetPickerPresentation({
+        hasSearch: false,
+        matchingCount: 0,
+        visibleCount: 0,
+        targetCount: 0,
+        suggestedCount: 0
+      }).status
+    ).toEqual({ kind: 'no-targets', message: 'No locations or containers yet.' });
   });
 });
 

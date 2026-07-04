@@ -3,7 +3,12 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { normalizeParentTargetQuery, parentTargetSuggestions, searchParentTargets } from '$lib/application/workspaceParentTargets';
+  import {
+    normalizeParentTargetQuery,
+    parentTargetPickerPresentation,
+    parentTargetSuggestions,
+    searchParentTargets
+  } from '$lib/application/workspaceParentTargets';
   import type { ParentTargetViewModel } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
@@ -46,10 +51,14 @@
   let containerResults = $derived(searchResult.containerResults);
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
   let hasSearch = $derived(normalizedSearch.length > 0);
-  let resultCountLabel = $derived(`${matchingTargets.length} ${matchingTargets.length === 1 ? 'match' : 'matches'}`);
-  let destinationCountLabel = $derived(`${targets.length} possible ${targets.length === 1 ? 'destination' : 'destinations'}`);
-  let suggestedCountLabel = $derived(
-    `Showing ${suggestedTargets.length} suggested ${suggestedTargets.length === 1 ? 'destination' : 'destinations'}.`
+  let presentation = $derived(
+    parentTargetPickerPresentation({
+      hasSearch,
+      matchingCount: matchingTargets.length,
+      visibleCount: visibleTargets.length,
+      targetCount: targets.length,
+      suggestedCount: suggestedTargets.length
+    })
   );
 
   function clearSelection(): void {
@@ -103,7 +112,7 @@
       {rootLabel}
     </Button.Root>
   </div>
-  <p class="selection-summary" aria-live="polite" aria-atomic="true">{hasSearch ? resultCountLabel : ''}</p>
+  <p class="selection-summary" aria-live="polite" aria-atomic="true">{presentation.resultCountLabel}</p>
   {#if hasSearch}
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
       {#if locationResults.length > 0}
@@ -123,15 +132,13 @@
         </div>
       {/if}
     </div>
-    {#if visibleTargets.length === 0}
-      <p class="muted-note">No matching locations or containers.</p>
-    {:else if matchingTargets.length > visibleTargets.length}
-      <p class="muted-note">Showing the first {visibleTargets.length} of {matchingTargets.length} matches.</p>
+    {#if presentation.status.kind !== 'none'}
+      <p class="muted-note">{presentation.status.message}</p>
     {/if}
   {:else if targets.length > 0}
     <div class="parent-suggestion-header">
       <p class="selection-summary">Suggested destinations</p>
-      <p class="muted-note">{destinationCountLabel}. {suggestedCountLabel}</p>
+      <p class="muted-note">{presentation.destinationCountLabel}. {presentation.suggestedCountLabel}</p>
     </div>
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} suggested destinations`}>
       {#each suggestedTargets as target}
@@ -139,6 +146,6 @@
       {/each}
     </div>
   {:else}
-    <p class="muted-note">No locations or containers yet.</p>
+    <p class="muted-note">{presentation.status.message}</p>
   {/if}
 </fieldset>
