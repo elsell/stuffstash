@@ -60,7 +60,7 @@ describe('AddAssetPhotosSection', () => {
       })
     });
 
-    expect(document.body.querySelector('img[alt=""]')).not.toBeNull();
+    expect(document.body.querySelector('img[alt="front.jpg"]')).not.toBeNull();
     expect(document.body.querySelector('[role="list"][aria-label="Selected photos"]')?.textContent).toContain('front.jpg');
     expect(document.body.querySelector('[role="listitem"]')?.textContent).toContain('front.jpg');
     expect(document.body.querySelector('fieldset')?.getAttribute('aria-describedby')).toBe('photo-help photo-status photo-error');

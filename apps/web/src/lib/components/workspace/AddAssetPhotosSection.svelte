@@ -99,7 +99,7 @@
   <div class="photo-preview-list" role="list" aria-label={addPhotoPickerPresentation.selectedListLabel}>
     {#each photos as photo}
       <div class="photo-preview" role="listitem">
-        <img src={photo.previewUrl} alt="" />
+        <img src={photo.previewUrl} alt={photo.name} />
         <span>{photo.name}</span>
         <Button.Root variant="ghost" size="icon-xs" aria-label={addPhotoRemoveLabel(photo)} onclick={() => onRemove(photo.id)}><X /></Button.Root>
       </div>

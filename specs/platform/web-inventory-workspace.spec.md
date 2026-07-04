@@ -385,6 +385,7 @@ Photos:
 - The first approved web direction supports JPEG, PNG, and WebP image affordances consistent with the media spec.
 - Selected photos should show thumbnails and allow removal before save.
 - Selected photo previews must be exposed as a named list with individual remove actions.
+- Selected photo preview images must expose the selected file name as their accessible image text so users can identify each thumbnail.
 - Invalid or oversized selected photos must block save until removed or corrected.
 - Attachment size and supported type rules must come from configuration or a media policy boundary rather than scattered hard-coded checks.
 
