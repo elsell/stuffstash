@@ -6,6 +6,7 @@
     parentTargets,
     selectedAssetForDetail
   } from '$lib/application/workspace';
+  import { resolveWorkspaceAddRoute } from '$lib/application/workspaceAddRoute';
   import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
@@ -470,7 +471,7 @@
     try {
       const shouldCanonicalizeAlias = shouldCanonicalizeWorkspaceAlias(route);
       routeUnavailable = '';
-      addOpen = route.action === 'add';
+      addOpen = false;
       addKind = route.addKind ?? 'item';
       addParentAssetId = null;
       assetAction = route.assetAction;
@@ -512,20 +513,22 @@
       if (route.mode !== 'search' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
-      if (route.action === 'add' && !createAssetAllowed) {
-        showUnavailableRoute('You do not have permission to add assets in this inventory.');
+      const addRoute = resolveWorkspaceAddRoute(route, {
+        createAllowed: createAssetAllowed,
+        validParentIds: parentTargets(assets).map((target) => target.id),
+        selectedTenantId: data.context.selectedTenantId,
+        selectedInventoryId: data.context.selectedInventoryId
+      });
+      addOpen = addRoute.open;
+      addKind = addRoute.kind;
+      addParentAssetId = addRoute.parentAssetId;
+      if (addRoute.deniedMessage) {
+        showUnavailableRoute(addRoute.deniedMessage);
         return;
       }
-      addParentAssetId = validAddParentId(route.addParentAssetId);
-      if (route.action === 'add' && route.addParentAssetId && !addParentAssetId) {
+      if (addRoute.replacementRoute) {
         route = { ...route, addParentAssetId: null };
-        replaceRoute({
-          action: 'add',
-          addKind: route.addKind,
-          addParentAssetId: null,
-          tenantId: data.context.selectedTenantId,
-          inventoryId: data.context.selectedInventoryId
-        });
+        replaceRoute(addRoute.replacementRoute);
       }
 
       if (route.mode === 'locations') {
@@ -841,13 +844,6 @@
       data.context.selectedTenantId || null,
       data.context.selectedInventoryId || null
     );
-  }
-
-  function validAddParentId(parentAssetId: string | null): string | null {
-    if (!parentAssetId) {
-      return null;
-    }
-    return parentTargets(assets).some((target) => target.id === parentAssetId) ? parentAssetId : null;
   }
 
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
