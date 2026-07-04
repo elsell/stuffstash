@@ -991,6 +991,7 @@ small {
   min-width: 0;
   align-items: center;
   gap: 4px;
+  margin: 0;
   overflow-wrap: anywhere;
 }
 
@@ -1010,10 +1011,20 @@ small {
 }
 
 .one-time-token {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--secondary);
+}
+
+.one-time-token code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.86rem;
 }
 
 .audit-list {

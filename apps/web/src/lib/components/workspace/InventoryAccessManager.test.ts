@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import InventoryAccessManager from './InventoryAccessManager.svelte';
 import type {
@@ -13,6 +13,7 @@ import type {
 import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 
 let component: ReturnType<typeof mount> | null = null;
+const originalClipboardDescriptor = Object.getOwnPropertyDescriptor(Navigator.prototype, 'clipboard');
 
 afterEach(() => {
   if (component) {
@@ -20,6 +21,8 @@ afterEach(() => {
     component = null;
   }
   document.body.innerHTML = '';
+  restoreClipboard();
+  vi.restoreAllMocks();
 });
 
 describe('InventoryAccessManager', () => {
@@ -75,7 +78,94 @@ describe('InventoryAccessManager', () => {
     await flush();
 
     expect(document.body.querySelector('.one-time-token')?.textContent).toContain('raw-token');
+    expect(document.body.querySelector('.one-time-token')?.textContent).toContain('Copy token');
+    expect(document.body.querySelector('.one-time-token')?.getAttribute('aria-label')).toBe('One-time invitation token');
+    expect(document.body.querySelector('.one-time-token')?.getAttribute('role')).toBeNull();
     expect(document.body.querySelector('[aria-label="Invitations"]')?.textContent).not.toContain('raw-token');
+  });
+
+  it('copies the one-time invitation token when clipboard access is available', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    stubClipboard(writeText);
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    await setInput('#invite-email', 'new@example.test');
+    clickButton('Create invite');
+    await flush();
+    clickButton('Copy token');
+    await flush();
+
+    expect(writeText).toHaveBeenCalledWith('raw-token');
+    expect(document.body.textContent).toContain('Invitation token copied.');
+  });
+
+  it('shows a manual-copy error when clipboard copy fails', async () => {
+    stubClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    await setInput('#invite-email', 'new@example.test');
+    clickButton('Create invite');
+    await flush();
+    clickButton('Copy token');
+    await flush();
+
+    expect(document.body.textContent).toContain('Invitation token not copied. Select the token and copy it manually.');
+  });
+
+  it('clears stale copied status when a later copy attempt fails', async () => {
+    const writeText = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('denied'));
+    stubClipboard(writeText);
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    await setInput('#invite-email', 'new@example.test');
+    clickButton('Create invite');
+    await flush();
+    clickButton('Copy token');
+    await flush();
+    expect(document.body.textContent).toContain('Invitation token copied.');
+
+    clickButton('Copy token');
+    await flush();
+
+    expect(document.body.textContent).not.toContain('Invitation token copied.');
+    expect(document.body.textContent).toContain('Invitation token not copied. Select the token and copy it manually.');
+  });
+
+  it('shows a manual-copy error when clipboard access is unavailable', async () => {
+    stubClipboard(undefined);
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    await setInput('#invite-email', 'new@example.test');
+    clickButton('Create invite');
+    await flush();
+    clickButton('Copy token');
+    await flush();
+
+    expect(document.body.textContent).toContain('Invitation token not copied. Select the token and copy it manually.');
   });
 
   it('revokes grants through the access repository port', async () => {
@@ -446,6 +536,21 @@ function iconLink(label: string): HTMLAnchorElement {
 
 function segmentedGroup(label: string): HTMLElement | null {
   return document.body.querySelector<HTMLElement>(`[role="group"][aria-label="${label}"]`);
+}
+
+function stubClipboard(writeText: ((text: string) => Promise<void>) | undefined): void {
+  Object.defineProperty(Navigator.prototype, 'clipboard', {
+    configurable: true,
+    get: () => (writeText ? { writeText } : undefined)
+  });
+}
+
+function restoreClipboard(): void {
+  if (originalClipboardDescriptor) {
+    Object.defineProperty(Navigator.prototype, 'clipboard', originalClipboardDescriptor);
+    return;
+  }
+  Reflect.deleteProperty(Navigator.prototype, 'clipboard');
 }
 
 async function flush(): Promise<void> {

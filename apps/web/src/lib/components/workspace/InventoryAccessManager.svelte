@@ -293,6 +293,23 @@
     });
   }
 
+  async function copyInviteToken(): Promise<void> {
+    const writeText = typeof navigator !== 'undefined' ? navigator.clipboard?.writeText : undefined;
+    if (!inviteLinkToken || !writeText) {
+      message = '';
+      error = 'Invitation token not copied. Select the token and copy it manually.';
+      return;
+    }
+    try {
+      await writeText.call(navigator.clipboard, inviteLinkToken);
+      message = 'Invitation token copied.';
+      error = '';
+    } catch {
+      message = '';
+      error = 'Invitation token not copied. Select the token and copy it manually.';
+    }
+  }
+
   async function expireInvitation(invitation: InventoryAccessInvitation): Promise<void> {
     const context = snapshotContext(contextKey);
     if (!context) {
@@ -486,7 +503,10 @@
       <p class="success-note" role="status">{message}</p>
     {/if}
     {#if inviteLinkToken}
-      <p class="token-line one-time-token" role="status"><Link2 aria-hidden="true" /> {inviteLinkToken}</p>
+      <div class="one-time-token" aria-label="One-time invitation token">
+        <p class="token-line"><Link2 aria-hidden="true" /> <code>{inviteLinkToken}</code></p>
+        <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void copyInviteToken(); }}>Copy token</Button.Root>
+      </div>
     {/if}
 
     {#if hasInvitationActionRoute}
