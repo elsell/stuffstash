@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, unmount } from 'svelte';
 import HomeWorkspace from './HomeWorkspace.svelte';
-import type { AssetViewModel } from '$lib/domain/inventory';
+import type { AssetViewModel, LocationAsset } from '$lib/domain/inventory';
 
 let component: ReturnType<typeof mount> | null = null;
 
@@ -49,7 +49,7 @@ describe('HomeWorkspace', () => {
   });
 
   it('renders a locations-focused browse view without the recent rail', () => {
-    const location: AssetViewModel = {
+    const location: LocationAsset = {
       id: 'garage',
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
@@ -58,7 +58,6 @@ describe('HomeWorkspace', () => {
       description: '',
       parentAssetId: null,
       lifecycleState: 'active',
-      containmentTrail: 'Garage'
     };
 
     component = mount(HomeWorkspace, {
@@ -75,7 +74,8 @@ describe('HomeWorkspace', () => {
             id: 'recent-item',
             kind: 'item',
             title: 'Tape measure',
-            parentAssetId: 'garage'
+            parentAssetId: 'garage',
+            containmentTrail: 'Garage'
           }
         ],
         archivedAssets: [],
@@ -96,7 +96,7 @@ describe('HomeWorkspace', () => {
   });
 
   it('exposes durable hrefs for home actions, location tiles, and archived rows', () => {
-    const location: AssetViewModel = {
+    const location: LocationAsset = {
       id: 'garage',
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
@@ -105,14 +105,14 @@ describe('HomeWorkspace', () => {
       description: '',
       parentAssetId: null,
       lifecycleState: 'active',
-      containmentTrail: 'Garage'
     };
     const archived: AssetViewModel = {
       ...location,
       id: 'old-drill',
       kind: 'item',
       title: 'Old drill',
-      lifecycleState: 'archived'
+      lifecycleState: 'archived',
+      containmentTrail: 'Garage'
     };
 
     component = mount(HomeWorkspace, {

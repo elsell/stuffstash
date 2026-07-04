@@ -1,10 +1,10 @@
-import type { Asset, AssetViewModel, CustomAssetType, LocationSummary } from '$lib/domain/inventory';
+import type { Asset, AssetViewModel, CustomAssetType, LocationAsset, LocationSummary } from '$lib/domain/inventory';
 
 export function topLevelLocations(assets: Asset[]): LocationSummary[] {
   return assets
     .filter((asset) => asset.kind === 'location' && asset.parentAssetId === null && asset.lifecycleState === 'active')
     .map((location) => ({
-      location,
+      location: location as LocationAsset,
       assetCount: containedAssets(assets, location.id).length
     }));
 }

@@ -2,7 +2,7 @@
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
+  import { browseAssetHref, browseLocationHref, homeAddLocationHref, homeLifecycleHref } from '$lib/application/workspaceBrowseNavigation';
   import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
@@ -45,32 +45,11 @@
   const addDeniedNoteId = 'home-add-location-denied';
 
   function addLocationHref(): string {
-    return workspaceRouteHref({ action: 'add', addKind: 'location' }, routeTenantId, routeInventoryId);
+    return homeAddLocationHref(routeTenantId, routeInventoryId);
   }
 
   function lifecycleHref(nextLifecycleState: AssetLifecycleFilter): string {
-    return workspaceRouteHref(
-      {
-        mode: 'home',
-        tenantId: routeTenantId,
-        inventoryId: routeInventoryId,
-        lifecycleState: nextLifecycleState
-      },
-      routeTenantId,
-      routeInventoryId
-    );
-  }
-
-  function assetHref(asset: Asset): string {
-    return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
-  }
-
-  function locationHref(asset: Asset): string {
-    return workspaceRouteHref(
-      { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
-      asset.tenantId,
-      asset.inventoryId
-    );
+    return homeLifecycleHref(routeTenantId, routeInventoryId, nextLifecycleState);
   }
 
   function openAdd(event: MouseEvent): void {
@@ -156,7 +135,7 @@
       {:else}
         <div class="recent-rail" aria-label="Recently added assets">
           {#each recentAssets as asset}
-            <Button.Root href={assetHref(asset)} variant="ghost" class="recent-card" onclick={(event) => openAsset(event, asset)}>
+            <Button.Root href={browseAssetHref(asset)} variant="ghost" class="recent-card" onclick={(event) => openAsset(event, asset)}>
               <AssetThumb {asset} size="lg" />
               <span>
                 <strong>{asset.title}</strong>
@@ -178,7 +157,7 @@
     {:else}
       <div class="asset-list">
         {#each archivedAssets as asset}
-          <Button.Root href={assetHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, asset)}>
+          <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, asset)}>
             <AssetThumb {asset} />
             <span class="asset-row-main">
               <strong>{asset.title}</strong>
@@ -212,7 +191,7 @@
     <div class="location-grid">
       {#each locations as summary}
         <Button.Root
-          href={locationHref(summary.location)}
+          href={browseLocationHref(summary.location)}
           variant="ghost"
           class="location-tile"
           aria-label={`Open location ${summary.location.title}`}

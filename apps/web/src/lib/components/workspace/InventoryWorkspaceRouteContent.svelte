@@ -6,6 +6,7 @@
     CustomAssetType,
     CustomFieldDefinition,
     Inventory,
+    LocationAsset,
     SearchLifecycleFilter,
     SearchMode,
     SearchResult,
@@ -30,7 +31,7 @@
     repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
     selectedTenant: Tenant | null;
     selectedInventory: Inventory | null;
-    selectedLocation: Asset | null;
+    selectedLocation: LocationAsset | null;
     selectedAsset: Asset | null;
     assets: Asset[];
     detailAssets: Asset[];

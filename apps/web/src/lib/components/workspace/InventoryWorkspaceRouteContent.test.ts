@@ -5,6 +5,7 @@ import type {
   Asset,
   AssetKind,
   AssetLifecycleFilter,
+  LocationAsset,
   SearchLifecycleFilter,
   SearchMode,
   WorkspaceData,
@@ -123,7 +124,7 @@ describe('InventoryWorkspaceRouteContent', () => {
 
   it('renders the location branch with contained assets', async () => {
     const props = await routeContentProps();
-    const location = requiredAsset(props.workspace.data, 'location-garage');
+    const location = requiredAsset(props.workspace.data, 'location-garage') as LocationAsset;
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
       props: await routeContentProps({

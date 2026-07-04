@@ -144,6 +144,8 @@ export interface Asset {
   updatedAt?: string;
 }
 
+export type LocationAsset = Asset & { kind: 'location' };
+
 export interface SearchResult {
   type: 'asset';
   asset: Asset;
@@ -314,7 +316,7 @@ export interface WorkspaceData {
 }
 
 export interface LocationSummary {
-  location: Asset;
+  location: LocationAsset;
   assetCount: number;
 }
 

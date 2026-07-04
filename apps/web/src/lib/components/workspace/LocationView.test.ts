@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, unmount } from 'svelte';
 import LocationView from './LocationView.svelte';
-import type { Asset, AssetViewModel } from '$lib/domain/inventory';
+import type { AssetViewModel, LocationAsset } from '$lib/domain/inventory';
 
 let component: ReturnType<typeof mount> | null = null;
 
-const location: Asset = {
+const location: LocationAsset = {
   id: 'garage',
   tenantId: 'tenant-home',
   inventoryId: 'inventory-household',

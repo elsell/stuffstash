@@ -38,6 +38,7 @@
     type AssetLifecycleFilter,
     type CustomAssetType,
     type CustomFieldDefinition,
+    type LocationAsset,
     type SearchLifecycleFilter,
     type SearchMode,
     type SearchResult,
@@ -103,7 +104,9 @@
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
   let assets = $derived(labelAssets(data.assets, data.context.customAssetTypes));
-  let selectedLocation = $derived(assets.find((asset) => asset.id === selectedLocationId) ?? null);
+  let selectedLocation = $derived(
+    (assets.find((asset) => asset.id === selectedLocationId && asset.kind === 'location') as LocationAsset | undefined) ?? null
+  );
   let detailAssets = $derived(detailAssetList(assets, loadedAssetDetail, data.context.customAssetTypes));
   let selectedAsset = $derived(selectedAssetForDetail(selectedAssetId, assets, loadedAssetDetail, data.context.customAssetTypes));
   let searchSuggestions = $derived(buildSearchSuggestions(assets, searchQuery));
