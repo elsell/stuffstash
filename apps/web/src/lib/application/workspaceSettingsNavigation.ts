@@ -8,7 +8,23 @@ export interface SettingsNavigationOption<TValue extends string = string> {
   disabled?: boolean;
 }
 
+export type SettingsSectionIcon = 'activity' | 'boxes' | 'sliders' | 'user-cog' | 'users';
+
+export interface SettingsSectionNavigationOption extends SettingsNavigationOption<SettingsSection> {
+  description: string;
+  icon: SettingsSectionIcon;
+  current: boolean;
+}
+
 const invitationStatusFilters: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
+
+const settingsSections: Array<Omit<SettingsSectionNavigationOption, 'href' | 'current'>> = [
+  { value: 'overview', label: 'Overview', description: 'Inventory context and access summary', icon: 'boxes' },
+  { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations', icon: 'users' },
+  { value: 'fields', label: 'Fields', description: 'Custom asset types and fields', icon: 'sliders' },
+  { value: 'activity', label: 'Activity', description: 'Audit history for this workspace', icon: 'activity' },
+  { value: 'administration', label: 'Admin', description: 'Tenant and inventory administration', icon: 'user-cog' }
+];
 
 export function settingsSectionHref(
   tenantId: string | null,
@@ -35,6 +51,20 @@ export function settingsInvitationStatusHref(
   status: InvitationStatusFilter
 ): string {
   return workspaceRouteHref({ mode: 'settings', settingsSection: 'access', invitationStatus: status }, tenantId, inventoryId);
+}
+
+export function settingsSectionOptions(input: {
+  tenantId: string | null;
+  inventoryId: string | null;
+  section: SettingsSection;
+  invitationStatus: InvitationStatusFilter;
+  auditScope: AuditScope;
+}): SettingsSectionNavigationOption[] {
+  return settingsSections.map((option) => ({
+    ...option,
+    href: settingsSectionHref(input.tenantId, input.inventoryId, option.value, input.invitationStatus, input.auditScope),
+    current: option.value === input.section
+  }));
 }
 
 export function settingsInvitationStatusOptions(input: {

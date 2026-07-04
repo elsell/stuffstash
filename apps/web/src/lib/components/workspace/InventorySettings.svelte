@@ -15,7 +15,8 @@
     type SettingsSection
   } from '$lib/application/workspaceRoute';
   import {
-    settingsSectionHref
+    type SettingsSectionIcon,
+    settingsSectionOptions
   } from '$lib/application/workspaceSettingsNavigation';
   import type { AuditScope, CustomAssetType, CustomFieldDefinition, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
   import { canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
@@ -83,32 +84,22 @@
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canEditAssets = $derived(canEditAsset(inventory));
 
-  type SectionOption = {
-    value: SettingsSection;
-    label: string;
-    description: string;
-    icon: Component;
+  const sectionIconComponents: Record<SettingsSectionIcon, Component> = {
+    activity: Activity,
+    boxes: Boxes,
+    sliders: SlidersHorizontal,
+    'user-cog': UserRoundCog,
+    users: Users
   };
 
-  const sectionOptions: SectionOption[] = [
-    { value: 'overview', label: 'Overview', description: 'Inventory context and access summary', icon: Boxes },
-    { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations', icon: Users },
-    { value: 'fields', label: 'Fields', description: 'Custom asset types and fields', icon: SlidersHorizontal },
-    { value: 'activity', label: 'Activity', description: 'Audit history for this workspace', icon: Activity },
-    { value: 'administration', label: 'Admin', description: 'Tenant and inventory administration', icon: UserRoundCog }
-  ];
-
-  let activeSection = $derived(sectionOptions.find((option) => option.value === section) ?? sectionOptions[0]);
-
-  function sectionHref(nextSection: SettingsSection): string {
-    return settingsSectionHref(
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null,
-      nextSection,
+  let sectionOptions = $derived(settingsSectionOptions({
+      tenantId: tenant?.id ?? inventory?.tenantId ?? null,
+      inventoryId: inventory?.id ?? null,
+      section,
       invitationStatus,
       auditScope
-    );
-  }
+    }));
+  let activeSection = $derived(sectionOptions.find((option) => option.current) ?? sectionOptions[0]);
 
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
@@ -139,12 +130,12 @@
     <div class="settings-shell">
       <nav class="settings-section-nav" aria-label="Settings sections">
         {#each sectionOptions as option}
-          {@const Icon = option.icon}
+          {@const Icon = sectionIconComponents[option.icon]}
           <Button.Root
-            href={sectionHref(option.value)}
-            variant={section === option.value ? 'secondary' : 'ghost'}
+            href={option.href}
+            variant={option.current ? 'secondary' : 'ghost'}
             class="settings-section-link"
-            aria-current={section === option.value ? 'page' : undefined}
+            aria-current={option.current ? 'page' : undefined}
             onclick={(event) => selectSection(event, option.value)}
           >
             <Icon aria-hidden="true" />

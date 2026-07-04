@@ -4,7 +4,8 @@ import {
   settingsAuditScopeOptions,
   settingsAuditScopeHref,
   settingsInvitationStatusHref,
-  settingsSectionHref
+  settingsSectionHref,
+  settingsSectionOptions
 } from './workspaceSettingsNavigation';
 
 describe('workspace settings navigation', () => {
@@ -21,6 +22,59 @@ describe('workspace settings navigation', () => {
     expect(settingsSectionHref('tenant-one', 'inventory-one', 'fields', 'revoked', 'tenant')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/settings/fields'
     );
+  });
+
+  it('builds settings section navigation options with metadata and current state', () => {
+    expect(
+      settingsSectionOptions({
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        section: 'access',
+        invitationStatus: 'pending',
+        auditScope: 'tenant'
+      })
+    ).toEqual([
+      {
+        value: 'overview',
+        label: 'Overview',
+        description: 'Inventory context and access summary',
+        icon: 'boxes',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings',
+        current: false
+      },
+      {
+        value: 'access',
+        label: 'Access',
+        description: 'Sharing, grants, and invitations',
+        icon: 'users',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending',
+        current: true
+      },
+      {
+        value: 'fields',
+        label: 'Fields',
+        description: 'Custom asset types and fields',
+        icon: 'sliders',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/fields',
+        current: false
+      },
+      {
+        value: 'activity',
+        label: 'Activity',
+        description: 'Audit history for this workspace',
+        icon: 'activity',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
+        current: false
+      },
+      {
+        value: 'administration',
+        label: 'Admin',
+        description: 'Tenant and inventory administration',
+        icon: 'user-cog',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/administration',
+        current: false
+      }
+    ]);
   });
 
   it('builds access invitation and audit scope filter hrefs', () => {
