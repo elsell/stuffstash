@@ -2123,8 +2123,13 @@ dd {
     flex-direction: column;
     width: 100%;
     max-height: none;
+    scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
     border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .add-tray .parent-target-button {
+    scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 
   .add-summary {

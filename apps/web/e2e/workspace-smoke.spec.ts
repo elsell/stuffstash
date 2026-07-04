@@ -51,6 +51,18 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   await expect(page.getByLabel('Item name')).toBeVisible();
   await expect(page.getByLabel('Find parent')).toBeVisible();
   await page.setViewportSize({ width: 393, height: 520 });
+  await page.getByLabel('Find parent').fill('g');
+  const lastParentResult = addDialog.locator('.parent-picker-results .parent-target-button').last();
+  await expect(lastParentResult).toBeVisible();
+  await lastParentResult.scrollIntoViewIfNeeded();
+  const lastParentResultBox = await lastParentResult.boundingBox();
+  const actionsBoxAfterParentScroll = await addDialog.locator('.tray-actions').boundingBox();
+  expect(
+    lastParentResultBox && actionsBoxAfterParentScroll
+      ? lastParentResultBox.y + lastParentResultBox.height
+      : Number.POSITIVE_INFINITY
+  ).toBeLessThanOrEqual((actionsBoxAfterParentScroll?.y ?? 0) - 8);
+  await page.getByLabel('Find parent').fill('');
   await addDialog.getByRole('switch', { name: 'Create a parent first' }).click();
   await expect(page.getByLabel('Parent name')).toBeVisible();
   await expect(addDialog).toHaveCSS('display', 'flex');

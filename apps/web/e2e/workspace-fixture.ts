@@ -318,6 +318,13 @@ function activeAssets(state: WorkspaceApiState): object[] {
     asset('location-garage', 'tenant-home', 'inventory-household', 'Garage', null, 'active', false, 'location'),
     tomatoAsset(state),
     asset('asset-bin', 'tenant-home', 'inventory-household', 'Green storage bin', 'location-garage', 'active', false, 'container'),
+    asset('location-basement', 'tenant-home', 'inventory-household', 'Basement storage', null, 'active', false, 'location'),
+    asset('location-attic', 'tenant-home', 'inventory-household', 'Attic storage', null, 'active', false, 'location'),
+    asset('location-shed', 'tenant-home', 'inventory-household', 'Garden shed', null, 'active', false, 'location'),
+    asset('asset-holiday-bin', 'tenant-home', 'inventory-household', 'Holiday storage bin', 'location-basement', 'active', false, 'container'),
+    asset('asset-camping-tote', 'tenant-home', 'inventory-household', 'Camping storage tote', 'location-garage', 'active', false, 'container'),
+    asset('asset-tool-chest', 'tenant-home', 'inventory-household', 'Tool chest', 'location-garage', 'active', false, 'container'),
+    asset('asset-document-box', 'tenant-home', 'inventory-household', 'Document storage box', 'location-attic', 'active', false, 'container'),
     ...Object.values(state.createdAssets).map((created) => createdAssetResponse(created, state))
   ];
 }
