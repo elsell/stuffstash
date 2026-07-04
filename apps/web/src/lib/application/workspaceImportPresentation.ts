@@ -26,6 +26,11 @@ export interface ImportApplyStatusInput {
   canImport: boolean;
 }
 
+export interface ImportPanelMessage {
+  title: string;
+  description?: string;
+}
+
 export const importSourceChoices: Array<Omit<ImportSourceOption, 'href'>> = [
   { value: 'legacy_homebox', label: 'Connect' },
   { value: 'legacy_homebox_csv', label: 'CSV' }
@@ -71,6 +76,32 @@ export function importApplyStatus(input: ImportApplyStatusInput): string {
     return 'Inventory configuration access is required.';
   }
   return 'Preview is ready to apply.';
+}
+
+export function importMissingInventoryPresentation(): ImportPanelMessage {
+  return { title: 'Select an inventory' };
+}
+
+export function importDeniedPresentation(): Required<ImportPanelMessage> {
+  return {
+    title: 'Import unavailable',
+    description: 'Inventory configuration access is required.'
+  };
+}
+
+export function importEmptyPreviewPresentation(): Required<ImportPanelMessage> {
+  return {
+    title: 'Preview an import',
+    description: 'Review planned records before anything is saved.'
+  };
+}
+
+export function importPlannedCountLabel(preview: Pick<ImportPreview, 'counts'>): string {
+  return `${preview.counts.assets + preview.counts.locations} planned`;
+}
+
+export function importAppliedDescription(result: { counts: { locationsCreated: number; assetsCreated: number; attachmentsCreated: number } }): string {
+  return `Created ${result.counts.locationsCreated} locations, ${result.counts.assetsCreated} items, and ${result.counts.attachmentsCreated} attachments.`;
 }
 
 export function importPreviewSourceSummary(source: ImportPreview['source']): string {

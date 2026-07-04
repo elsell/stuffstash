@@ -10,9 +10,14 @@
   import { Label } from '$lib/components/ui/label/index.js';
   import {
     buildLegacyHomeboxImportRequest,
+    importAppliedDescription,
     importApplyStatus,
+    importDeniedPresentation,
+    importEmptyPreviewPresentation,
     importMessageTone,
+    importMissingInventoryPresentation,
     importPreviewSourceSummary,
+    importPlannedCountLabel,
     importSourceOptions,
     importSourceSummary,
     isImportPreviewReady
@@ -62,6 +67,9 @@
   let previousSourceType = $state(sourceType);
   let linkedSourceOptions = $derived(importSourceOptions(tenantId, inventory?.id ?? null));
   let sourceSummary = $derived(importSourceSummary(sourceType, fileName));
+  let missingInventoryPresentation = importMissingInventoryPresentation();
+  let deniedPresentation = importDeniedPresentation();
+  let emptyPreviewPresentation = importEmptyPreviewPresentation();
 
   let canImport = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let ready = $derived(
@@ -198,20 +206,20 @@
     </div>
     {#if preview}
       <Badge variant={preview.counts.errors > 0 ? 'destructive' : 'secondary'}>
-        {preview.counts.assets + preview.counts.locations} planned
+        {importPlannedCountLabel(preview)}
       </Badge>
     {/if}
   </div>
 
   {#if !inventory}
     <div class="empty-state spacious">
-      <h2>Select an inventory</h2>
+      <h2>{missingInventoryPresentation.title}</h2>
     </div>
   {:else if !canImport}
     <Alert.Root variant="destructive">
       <AlertTriangle aria-hidden="true" />
-      <Alert.Title>Import unavailable</Alert.Title>
-      <Alert.Description>Inventory configuration access is required.</Alert.Description>
+      <Alert.Title>{deniedPresentation.title}</Alert.Title>
+      <Alert.Description>{deniedPresentation.description}</Alert.Description>
     </Alert.Root>
   {:else}
     <div class="import-layout">
@@ -381,8 +389,8 @@
           {/if}
         {:else}
           <div class="empty-state spacious">
-            <h2>Preview an import</h2>
-            <p>Review planned records before anything is saved.</p>
+            <h2>{emptyPreviewPresentation.title}</h2>
+            <p>{emptyPreviewPresentation.description}</p>
           </div>
         {/if}
 
@@ -391,7 +399,7 @@
             <CheckCircle2 aria-hidden="true" />
             <Alert.Title>Import applied</Alert.Title>
             <Alert.Description>
-              Created {result.counts.locationsCreated} locations, {result.counts.assetsCreated} items, and {result.counts.attachmentsCreated} attachments.
+              {importAppliedDescription(result)}
             </Alert.Description>
           </Alert.Root>
         {/if}

@@ -2,9 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { ImportMessage, ImportPreview } from '$lib/domain/inventory';
 import {
   buildLegacyHomeboxImportRequest,
+  importAppliedDescription,
   importApplyStatus,
+  importDeniedPresentation,
+  importEmptyPreviewPresentation,
   importMessageTone,
+  importMissingInventoryPresentation,
   importPreviewSourceSummary,
+  importPlannedCountLabel,
   importSourceOptions,
   importSourceSummary,
   isImportPreviewReady
@@ -87,6 +92,30 @@ describe('workspace import presentation helpers', () => {
       'Inventory configuration access is required.'
     );
     expect(importApplyStatus({ busy: false, hasPreview: true, blockingErrorCount: 0, canImport: true })).toBe('Preview is ready to apply.');
+  });
+
+  it('derives import panel fallback, count, and applied-result presentation', () => {
+    expect(importMissingInventoryPresentation()).toEqual({ title: 'Select an inventory' });
+    expect(importDeniedPresentation()).toEqual({
+      title: 'Import unavailable',
+      description: 'Inventory configuration access is required.'
+    });
+    expect(importEmptyPreviewPresentation()).toEqual({
+      title: 'Preview an import',
+      description: 'Review planned records before anything is saved.'
+    });
+    expect(importPlannedCountLabel({ counts: { fields: 0, locations: 2, assets: 3, attachments: 0, warnings: 0, errors: 0 } })).toBe(
+      '5 planned'
+    );
+    expect(
+      importAppliedDescription({
+        counts: {
+          locationsCreated: 1,
+          assetsCreated: 2,
+          attachmentsCreated: 3
+        }
+      })
+    ).toBe('Created 1 locations, 2 items, and 3 attachments.');
   });
 
   it('summarizes preview source identity and maps message tone', () => {

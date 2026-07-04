@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import HomeboxImportPanel from './HomeboxImportPanel.svelte';
 import HomeboxImportPanelHarness from './HomeboxImportPanel.test-harness.svelte';
-import type { ImportPreview, Inventory, LegacyHomeboxImportRequest } from '$lib/domain/inventory';
+import type { ImportApplyResult, ImportPreview, Inventory, LegacyHomeboxImportRequest } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -206,6 +206,35 @@ describe('HomeboxImportPanel', () => {
     expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Preview is ready to apply.');
     expect(document.body.querySelector('#import-apply-status')?.getAttribute('aria-live')).toBeNull();
   });
+
+  it('renders the applied import summary after a successful apply', async () => {
+    let imported = false;
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(undefined, importPreview(), importApplyResult()),
+        onImported: async () => {
+          imported = true;
+        }
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+    click('Apply');
+    await flush();
+
+    expect(imported).toBe(true);
+    expect(document.body.textContent).toContain('Import applied');
+    expect(document.body.textContent).toContain('Created 2 locations, 3 items, and 4 attachments.');
+  });
 });
 
 function inventory(): Inventory {
@@ -217,7 +246,11 @@ function inventory(): Inventory {
   };
 }
 
-function fakeRepository(onPreview?: (request: LegacyHomeboxImportRequest) => void, preview: ImportPreview = importPreview()): InventoryRepository {
+function fakeRepository(
+  onPreview?: (request: LegacyHomeboxImportRequest) => void,
+  preview: ImportPreview = importPreview(),
+  applyResult: ImportApplyResult = importApplyResult()
+): InventoryRepository {
   return {
     loadWorkspace: async () => failRepositoryCall(),
     createTenantWithInventory: async () => failRepositoryCall(),
@@ -242,7 +275,7 @@ function fakeRepository(onPreview?: (request: LegacyHomeboxImportRequest) => voi
       onPreview?.(request);
       return preview;
     },
-    applyLegacyHomeboxImport: async () => failRepositoryCall()
+    applyLegacyHomeboxImport: async () => applyResult
   };
 }
 
@@ -268,6 +301,21 @@ function importPreview(): ImportPreview {
     fields: [],
     assetSamples: [],
     imageSamples: [],
+    messages: []
+  };
+}
+
+function importApplyResult(): ImportApplyResult {
+  return {
+    counts: {
+      fieldsCreated: 1,
+      fieldsExisting: 0,
+      locationsCreated: 2,
+      assetsCreated: 3,
+      assetsSkipped: 0,
+      attachmentsCreated: 4,
+      attachmentsSkipped: 0
+    },
     messages: []
   };
 }
