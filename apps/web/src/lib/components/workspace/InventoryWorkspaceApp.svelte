@@ -7,14 +7,25 @@
     selectedAssetForDetail
   } from '$lib/application/workspace';
   import { resolveWorkspaceAddRoute } from '$lib/application/workspaceAddRoute';
+  import {
+    assetDetailBackHref as workspaceAssetDetailBackHref,
+    assetDetailBackRoute,
+    inventoryHomeNormalizationHref,
+    inventoryHomeNormalizationRoute,
+    settingsOverviewHref,
+    settingsOverviewRoute,
+    workspaceAddCloseHref,
+    workspaceAddCloseRoute,
+    workspaceHomeHref,
+    workspaceHomeRoute
+  } from '$lib/application/workspaceAppNavigation';
   import { loadWorkspaceAssetDetail, refreshWorkspaceAssetAttachments } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
   import {
     type AssetRouteAction,
     type SettingsSection,
-    type WorkspaceRouteState,
-    workspaceRouteHref
+    type WorkspaceRouteState
   } from '$lib/application/workspaceRoute';
   import {
     assetRouteActionIsAvailable,
@@ -74,6 +85,8 @@
   let addOpen = $state(false);
   let addKind = $state<AssetKind>('item');
   let addParentAssetId = $state<string | null>(null);
+  let addReturnLocationId = $state<string | null>(null);
+  let addReturnAssetId = $state<string | null>(null);
   let assetAction = $state<AssetRouteAction>(null);
   let attachmentId = $state<string | null>(null);
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
@@ -525,6 +538,14 @@
       addOpen = addRoute.open;
       addKind = addRoute.kind;
       addParentAssetId = addRoute.parentAssetId;
+      if (addRoute.open && addRoute.parentAssetId) {
+        const parentTarget = parentTargets(assets).find((target) => target.id === addRoute.parentAssetId);
+        addReturnLocationId = parentTarget?.kind === 'location' ? parentTarget.id : null;
+        addReturnAssetId = null;
+      } else if (!addRoute.open) {
+        addReturnLocationId = null;
+        addReturnAssetId = null;
+      }
       if (addRoute.deniedMessage) {
         showUnavailableRoute(addRoute.deniedMessage);
         return;
@@ -669,16 +690,11 @@
   }
 
   function homeRoute(): Partial<WorkspaceRouteState> {
-    return {
-      mode: 'home',
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId,
-      lifecycleState: data.context.assetLifecycleState
-    };
+    return workspaceHomeRoute(data.context);
   }
 
   function homeHref(): string {
-    return workspaceRouteHref(homeRoute(), data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
+    return workspaceHomeHref(data.context);
   }
 
   function openHome(event: MouseEvent): void {
@@ -817,6 +833,8 @@
   }
 
   function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null): void {
+    addReturnLocationId = parentAssetId && selectedLocationId ? selectedLocationId : mode === 'location' ? selectedLocationId : null;
+    addReturnAssetId = !addReturnLocationId && mode === 'asset' ? selectedAssetId : null;
     navigateTo({
       action: 'add',
       addKind: kind,
@@ -827,26 +845,16 @@
   }
 
   function closeAdd(): void {
+    const closeRoute = workspaceAddCloseRoute(data.context, { mode, selectedLocationId: addReturnLocationId, selectedAssetId: addReturnAssetId });
     addOpen = false;
-    replaceRoute({
-      mode,
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId,
-      lifecycleState: data.context.assetLifecycleState
-    });
+    replaceRoute(closeRoute);
+    if (typeof window !== 'undefined') {
+      void applyRoute(currentWorkspaceRoute());
+    }
   }
 
   function addCloseHref(): string {
-    return workspaceRouteHref(
-      {
-        mode,
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        lifecycleState: data.context.assetLifecycleState
-      },
-      data.context.selectedTenantId || null,
-      data.context.selectedInventoryId || null
-    );
+    return workspaceAddCloseHref(data.context, { mode, selectedLocationId: addReturnLocationId, selectedAssetId: addReturnAssetId });
   }
 
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
@@ -936,23 +944,9 @@
     if (route.mode !== 'settings' || route.settingsSection !== 'overview' || typeof window === 'undefined') {
       return;
     }
-    const canonicalHref = workspaceRouteHref(
-      {
-        mode: 'settings',
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        settingsSection: 'overview'
-      },
-      data.context.selectedTenantId || null,
-      data.context.selectedInventoryId || null
-    );
+    const canonicalHref = settingsOverviewHref(data.context);
     if (`${window.location.pathname}${window.location.search}` !== canonicalHref) {
-      replaceRoute({
-        mode: 'settings',
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        settingsSection: 'overview'
-      });
+      replaceRoute(settingsOverviewRoute(data.context));
     }
   }
 
@@ -960,23 +954,9 @@
     if (route.mode !== 'home' || route.action || route.addKind || !route.inventoryId || typeof window === 'undefined') {
       return;
     }
-    const canonicalHref = workspaceRouteHref(
-      {
-        mode: 'home',
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        lifecycleState: route.lifecycleState
-      },
-      data.context.selectedTenantId || null,
-      data.context.selectedInventoryId || null
-    );
+    const canonicalHref = inventoryHomeNormalizationHref(data.context, route);
     if (`${window.location.pathname}${window.location.search}` !== canonicalHref) {
-      replaceRoute({
-        mode: 'home',
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        lifecycleState: route.lifecycleState
-      });
+      replaceRoute(inventoryHomeNormalizationRoute(data.context, route));
     }
   }
 
@@ -1077,42 +1057,12 @@
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
     if (!applyingRoute) {
-      replaceRoute(
-        selectedLocationId
-          ? {
-              mode: 'location',
-              tenantId: data.context.selectedTenantId,
-              inventoryId: data.context.selectedInventoryId,
-              locationId: selectedLocationId
-            }
-          : {
-              mode: 'home',
-              tenantId: data.context.selectedTenantId,
-              inventoryId: data.context.selectedInventoryId,
-              lifecycleState: data.context.assetLifecycleState
-            }
-      );
+      replaceRoute(assetDetailBackRoute(data.context, selectedLocationId));
     }
   }
 
   function assetDetailBackHref(): string {
-    return workspaceRouteHref(
-      selectedLocationId
-        ? {
-            mode: 'location',
-            tenantId: data.context.selectedTenantId,
-            inventoryId: data.context.selectedInventoryId,
-            locationId: selectedLocationId
-          }
-        : {
-            mode: 'home',
-            tenantId: data.context.selectedTenantId,
-            inventoryId: data.context.selectedInventoryId,
-            lifecycleState: data.context.assetLifecycleState
-          },
-      data.context.selectedTenantId || null,
-      data.context.selectedInventoryId || null
-    );
+    return workspaceAssetDetailBackHref(data.context, selectedLocationId);
   }
 
   function invalidateAssetDetailLoad(): void {

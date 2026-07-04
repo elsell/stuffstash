@@ -579,6 +579,7 @@ Required implementation split:
 - Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
 - Home and location browse href derivation must live in focused application helpers rather than component-local route string assembly.
 - Shell navigation, context-switcher, add-menu, and import-source href derivation must live in focused application helpers rather than component-local route string assembly.
+- Product-shell route recovery, add-close, normalization, and detail-back route derivation must live in focused application helpers rather than accumulating in the workspace shell component.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
 - Search filter href derivation must live in focused application helpers rather than component-local route string assembly.
 - Search result and suggestion href derivation must live in focused application helpers rather than component-local route string assembly.

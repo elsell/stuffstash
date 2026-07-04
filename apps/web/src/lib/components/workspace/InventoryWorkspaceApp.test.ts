@@ -563,6 +563,34 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps add tray cancel clicks aligned with the focused location href', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Garage');
+    });
+
+    controlContaining('Add item here').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+      expect(window.location.search).toBe('?parent=location-garage');
+      expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Add item');
+    });
+
+    expect(controlContaining('Cancel').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
+    );
+    controlContaining('Cancel').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.body.textContent).toContain('Main storage area');
+    });
+  });
+
   it('keeps global add and feedback overlays outside the product shell', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item');
 
