@@ -16,7 +16,7 @@
 <script lang="ts">
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { invitationActionIsAvailable } from './invitationActionPolicy';
+  import { invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
 
   let {
     action,

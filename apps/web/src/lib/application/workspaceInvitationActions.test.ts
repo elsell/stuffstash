@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { InventoryAccessInvitation } from '$lib/domain/inventory';
-import { invitationActionIsAvailable } from './invitationActionPolicy';
+import {
+  accessInvitationsHref,
+  invitationActionHref,
+  invitationActionIsAvailable
+} from './workspaceInvitationActions';
 
-describe('invitationActionIsAvailable', () => {
+describe('workspace invitation actions', () => {
   it('allows expire and cancel only for unexpired pending invitations', () => {
     expect(invitationActionIsAvailable('expire', invitation('pending', false))).toBe(true);
     expect(invitationActionIsAvailable('cancel', invitation('pending', false))).toBe(true);
@@ -13,6 +17,18 @@ describe('invitationActionIsAvailable', () => {
 
   it('allows delete for retained invitation records regardless of status', () => {
     expect(invitationActionIsAvailable('delete', invitation('accepted', true))).toBe(true);
+  });
+
+  it('builds canonical access invitation cancel and action hrefs', () => {
+    expect(accessInvitationsHref('tenant-one', 'inventory-one', 'pending')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+    );
+    expect(accessInvitationsHref('tenant-one', 'inventory-one', 'all')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access'
+    );
+    expect(invitationActionHref('tenant-one', 'inventory-one', 'pending', invitation('pending', false), 'delete')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending'
+    );
   });
 });
 

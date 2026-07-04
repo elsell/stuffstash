@@ -7,7 +7,8 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { workspaceRouteHref, type AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
+  import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
+  import { accessInvitationsHref, invitationActionHref, invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
   import {
     hasAccessPermission,
     type Inventory,
@@ -19,7 +20,6 @@
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import InventoryAccessInvitationActionPanel from './InventoryAccessInvitationActionPanel.svelte';
-  import { invitationActionIsAvailable } from './invitationActionPolicy';
   import SegmentedControl, { type SegmentedOption } from './SegmentedControl.svelte';
 
   let {
@@ -386,24 +386,16 @@
   }
 
   function accessHref(): string {
-    return workspaceRouteHref(
-      { mode: 'settings', settingsSection: 'access', invitationStatus },
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
-    );
+    return accessInvitationsHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, invitationStatus);
   }
 
-  function invitationActionHref(invitation: InventoryAccessInvitation, action: Exclude<AccessInvitationRouteAction, null>): string {
-    return workspaceRouteHref(
-      {
-        mode: 'settings',
-        settingsSection: 'access',
-        invitationStatus,
-        accessInvitationAction: action,
-        accessInvitationId: invitation.id
-      },
+  function invitationActionRouteHref(invitation: InventoryAccessInvitation, action: Exclude<AccessInvitationRouteAction, null>): string {
+    return invitationActionHref(
       tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
+      inventory?.id ?? null,
+      invitationStatus,
+      invitation,
+      action
     );
   }
 
@@ -604,21 +596,21 @@
               </Badge>
               <div class="access-actions">
                 <Button.Root
-                  href={invitationActionHref(invitation, 'expire')}
+                  href={invitationActionRouteHref(invitation, 'expire')}
                   variant="outline"
                   size="sm"
                   disabled={busy || !invitationActionIsAvailable('expire', invitation)}
                   onclick={(event) => openInvitationAction(event, 'expire', invitation)}
                 >Expire</Button.Root>
                 <Button.Root
-                  href={invitationActionHref(invitation, 'cancel')}
+                  href={invitationActionRouteHref(invitation, 'cancel')}
                   variant="outline"
                   size="sm"
                   disabled={busy || !invitationActionIsAvailable('cancel', invitation)}
                   onclick={(event) => openInvitationAction(event, 'cancel', invitation)}
                 >Cancel</Button.Root>
                 <Button.Root
-                  href={invitationActionHref(invitation, 'delete')}
+                  href={invitationActionRouteHref(invitation, 'delete')}
                   variant="ghost"
                   size="icon-sm"
                   disabled={busy}

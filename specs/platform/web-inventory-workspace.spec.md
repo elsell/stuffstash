@@ -579,6 +579,7 @@ Required implementation split:
 - Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
 - Add route availability, route-backed parent preselection, and invalid parent-route normalization must live in focused application helpers rather than accumulating in the product shell component.
+- Settings access invitation action availability and canonical action/cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Asset-detail loading and attachment refresh orchestration must live in focused application helpers rather than accumulating in the product shell component.
 - Domain-oriented frontend observability must be represented through an explicit helper or port, even when the first implementation records events only in memory.
 
