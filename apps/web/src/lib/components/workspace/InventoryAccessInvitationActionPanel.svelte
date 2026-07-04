@@ -16,7 +16,7 @@
 <script lang="ts">
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
+  import { invitationActionConfirmation, invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
 
   let {
     action,
@@ -28,49 +28,7 @@
     onConfirm
   }: InventoryAccessInvitationActionPanelProps = $props();
 
-  function title(nextAction: AccessInvitationRouteAction): string {
-    if (nextAction === 'expire') {
-      return 'Expire invitation';
-    }
-    if (nextAction === 'cancel') {
-      return 'Cancel invitation';
-    }
-    if (nextAction === 'delete') {
-      return 'Delete invitation';
-    }
-    return 'Invitation action';
-  }
-
-  function description(nextAction: AccessInvitationRouteAction, target: InventoryAccessInvitation): string {
-    if (nextAction === 'expire') {
-      return `Set the invitation for ${target.email} to expire immediately.`;
-    }
-    if (nextAction === 'cancel') {
-      return `Cancel the pending invitation for ${target.email}.`;
-    }
-    if (nextAction === 'delete') {
-      return `Permanently remove the invitation record for ${target.email}.`;
-    }
-    return 'This invitation action is unavailable.';
-  }
-
-  function disabled(nextAction: AccessInvitationRouteAction, target: InventoryAccessInvitation): boolean {
-    return busy || !invitationActionIsAvailable(nextAction, target);
-  }
-
-  function buttonLabel(nextAction: AccessInvitationRouteAction): string {
-    if (nextAction === 'expire') {
-      return 'Expire';
-    }
-    if (nextAction === 'cancel') {
-      return 'Cancel invitation';
-    }
-    if (nextAction === 'delete') {
-      return 'Delete';
-    }
-    return 'Continue';
-  }
-
+  let confirmation = $derived(invitation ? invitationActionConfirmation(action, invitation, busy) : null);
 </script>
 
 <section
@@ -83,19 +41,19 @@
     <div class="settings-panel-heading">
       <Trash2 aria-hidden="true" />
       <div>
-        <h3 id="access-invitation-action-title">{title(action)}</h3>
+        <h3 id="access-invitation-action-title">{confirmation?.title}</h3>
         <p>{invitation.email}</p>
       </div>
     </div>
-    <p class="muted-note">{description(action, invitation)}</p>
+    <p class="muted-note">{confirmation?.description}</p>
     <div class="heading-actions">
       <Button.Root href={accessHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
       <Button.Root
-        variant={action === 'delete' ? 'destructive' : 'secondary'}
-        disabled={disabled(action, invitation)}
+        variant={confirmation?.destructive ? 'destructive' : 'secondary'}
+        disabled={confirmation?.disabled}
         onclick={() => { void onConfirm(action, invitation); }}
       >
-        {buttonLabel(action)}
+        {confirmation?.buttonLabel}
       </Button.Root>
     </div>
   {:else}

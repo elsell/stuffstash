@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { InventoryAccessInvitation } from '$lib/domain/inventory';
 import {
   accessInvitationsHref,
+  invitationActionConfirmation,
   invitationActionHref,
-  invitationActionIsAvailable
+  invitationActionIsAvailable,
+  invitationActionOptions
 } from './workspaceInvitationActions';
 
 describe('workspace invitation actions', () => {
@@ -29,6 +31,89 @@ describe('workspace invitation actions', () => {
     expect(invitationActionHref('tenant-one', 'inventory-one', 'pending', invitation('pending', false), 'delete')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending'
     );
+  });
+
+  it('builds row action options with hrefs, labels, tone, and availability', () => {
+    expect(
+      invitationActionOptions({
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        invitationStatus: 'pending',
+        invitation: invitation('pending', false),
+        busy: false
+      })
+    ).toEqual([
+      {
+        action: 'expire',
+        label: 'Expire',
+        ariaLabel: undefined,
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/expire?invitationStatus=pending',
+        disabled: false,
+        destructive: false,
+        iconOnly: false
+      },
+      {
+        action: 'cancel',
+        label: 'Cancel',
+        ariaLabel: undefined,
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/cancel?invitationStatus=pending',
+        disabled: false,
+        destructive: false,
+        iconOnly: false
+      },
+      {
+        action: 'delete',
+        label: 'Delete',
+        ariaLabel: 'Delete invitation for friend@example.test',
+        href: '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending',
+        disabled: false,
+        destructive: true,
+        iconOnly: true
+      }
+    ]);
+  });
+
+  it('disables unavailable or busy row action options', () => {
+    expect(
+      invitationActionOptions({
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        invitationStatus: 'expired',
+        invitation: invitation('pending', true),
+        busy: false
+      }).map((option) => [option.action, option.disabled])
+    ).toEqual([
+      ['expire', true],
+      ['cancel', true],
+      ['delete', false]
+    ]);
+
+    expect(
+      invitationActionOptions({
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        invitationStatus: 'pending',
+        invitation: invitation('pending', false),
+        busy: true
+      }).map((option) => option.disabled)
+    ).toEqual([true, true, true]);
+  });
+
+  it('builds confirmation copy and disabled state for routed actions', () => {
+    expect(invitationActionConfirmation('expire', invitation('pending', false), false)).toEqual({
+      title: 'Expire invitation',
+      description: 'Set the invitation for friend@example.test to expire immediately.',
+      buttonLabel: 'Expire',
+      destructive: false,
+      disabled: false
+    });
+    expect(invitationActionConfirmation('delete', invitation('accepted', true), true)).toEqual({
+      title: 'Delete invitation',
+      description: 'Permanently remove the invitation record for friend@example.test.',
+      buttonLabel: 'Delete',
+      destructive: true,
+      disabled: true
+    });
   });
 });
 

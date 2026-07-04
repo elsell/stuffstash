@@ -11,7 +11,7 @@
   import { inventoryAccessRelationshipOptions } from '$lib/application/workspaceAccessPresentation';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import { settingsInvitationStatusOptions } from '$lib/application/workspaceSettingsNavigation';
-  import { accessInvitationsHref, invitationActionHref, invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
+  import { accessInvitationsHref, invitationActionOptions } from '$lib/application/workspaceInvitationActions';
   import {
     hasAccessPermission,
     type Inventory,
@@ -386,14 +386,14 @@
     return accessInvitationsHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, invitationStatus);
   }
 
-  function invitationActionRouteHref(invitation: InventoryAccessInvitation, action: Exclude<AccessInvitationRouteAction, null>): string {
-    return invitationActionHref(
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null,
+  function invitationActions(invitation: InventoryAccessInvitation) {
+    return invitationActionOptions({
+      tenantId: tenant?.id ?? inventory?.tenantId ?? null,
+      inventoryId: inventory?.id ?? null,
       invitationStatus,
       invitation,
-      action
-    );
+      busy
+    });
   }
 
   function openInvitationAction(
@@ -588,28 +588,22 @@
                 {invitation.status}
               </Badge>
               <div class="access-actions">
-                <Button.Root
-                  href={invitationActionRouteHref(invitation, 'expire')}
-                  variant="outline"
-                  size="sm"
-                  disabled={busy || !invitationActionIsAvailable('expire', invitation)}
-                  onclick={(event) => openInvitationAction(event, 'expire', invitation)}
-                >Expire</Button.Root>
-                <Button.Root
-                  href={invitationActionRouteHref(invitation, 'cancel')}
-                  variant="outline"
-                  size="sm"
-                  disabled={busy || !invitationActionIsAvailable('cancel', invitation)}
-                  onclick={(event) => openInvitationAction(event, 'cancel', invitation)}
-                >Cancel</Button.Root>
-                <Button.Root
-                  href={invitationActionRouteHref(invitation, 'delete')}
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={busy}
-                  aria-label={`Delete invitation for ${invitation.email}`}
-                  onclick={(event) => openInvitationAction(event, 'delete', invitation)}
-                ><Trash2 /></Button.Root>
+                {#each invitationActions(invitation) as option}
+                  <Button.Root
+                    href={option.href}
+                    variant={option.destructive ? 'ghost' : 'outline'}
+                    size={option.iconOnly ? 'icon-sm' : 'sm'}
+                    disabled={option.disabled}
+                    aria-label={option.ariaLabel}
+                    onclick={(event) => openInvitationAction(event, option.action, invitation)}
+                  >
+                    {#if option.iconOnly}
+                      <Trash2 />
+                    {:else}
+                      {option.label}
+                    {/if}
+                  </Button.Root>
+                {/each}
               </div>
             </div>
           {/each}

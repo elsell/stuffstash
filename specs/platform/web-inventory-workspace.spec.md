@@ -588,6 +588,7 @@ Required implementation split:
 - Route-backed control click interception must use a shared helper so ordinary in-app clicks, modified clicks, non-primary clicks, and already-prevented events behave consistently across navigation, filters, suggestions, settings actions, and dialogs.
 - Add route availability, route-backed parent preselection, and invalid parent-route normalization must live in focused application helpers rather than accumulating in the product shell component.
 - Settings access invitation action availability and canonical action/cancel href derivation must live in focused application helpers rather than component-local route string assembly.
+- Settings access invitation action labels, destructive tone, disabled state, row option metadata, and confirmation copy must live in focused application helpers rather than component-local conditionals.
 - Asset detail action availability and canonical asset/attachment action href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings customization archive action and cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings section, access-status, and audit-scope navigation option composition and href derivation must live in focused application helpers rather than component-local route string assembly.
