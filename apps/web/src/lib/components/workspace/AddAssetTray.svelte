@@ -9,10 +9,10 @@
     AddAssetSubmission,
     AddAssetSaveResult,
     AssetKind,
-    AssetViewModel,
     CustomAssetType,
     CustomFieldDefinition,
     MediaUploadPolicy,
+    ParentTargetViewModel,
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
@@ -40,7 +40,7 @@
     initialKind?: AssetKind;
     initialParentAssetId?: string | null;
     closeHref: string;
-    parentTargets: AssetViewModel[];
+    parentTargets: ParentTargetViewModel[];
     mediaPolicy: MediaUploadPolicy;
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];

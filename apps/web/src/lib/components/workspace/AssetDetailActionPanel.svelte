@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { AssetAttachment, AssetViewModel, CustomFieldDefinition } from '$lib/domain/inventory';
+  import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
 
   export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'attachment-delete';
 
@@ -7,7 +7,7 @@
     panel: AssetDetailPanel;
     panelElement: HTMLElement | null;
     asset: AssetViewModel;
-    parentTargets: AssetViewModel[];
+    parentTargets: ParentTargetViewModel[];
     selectedAttachment: AssetAttachment | null;
     saving: boolean;
     saveError: string;

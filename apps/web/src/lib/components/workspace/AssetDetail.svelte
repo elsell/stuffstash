@@ -21,6 +21,7 @@
     AssetViewModel,
     CustomFieldDefinition,
     MediaUploadPolicy,
+    ParentTargetViewModel,
     SelectedAttachment,
     UpdateAssetDraft
   } from '$lib/domain/inventory';
@@ -60,7 +61,7 @@
     action?: AssetRouteAction;
     attachmentId?: string | null;
     attachmentAction?: AttachmentRouteAction;
-    parentTargets: AssetViewModel[];
+    parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];

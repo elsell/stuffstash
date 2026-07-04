@@ -1,6 +1,6 @@
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { AssetViewModel } from '$lib/domain/inventory';
+import type { AssetViewModel, ParentTargetViewModel } from '$lib/domain/inventory';
 import ParentTargetButton from './ParentTargetButton.svelte';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -64,7 +64,7 @@ function parentTarget(
   title: string,
   containmentTrail: string,
   photo?: AssetViewModel['photo']
-): AssetViewModel {
+): ParentTargetViewModel {
   return {
     id,
     tenantId: 'tenant-home',

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
-import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, UpdateAssetDraft } from '$lib/domain/inventory';
+import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel, UpdateAssetDraft } from '$lib/domain/inventory';
 import AssetDetailActionPanel, { type AssetDetailActionPanelProps } from './AssetDetailActionPanel.svelte';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -150,13 +150,14 @@ function asset(): AssetViewModel {
   };
 }
 
-function parentTarget(id: string, title: string, containmentTrail: string): AssetViewModel {
+function parentTarget(id: string, title: string, containmentTrail: string): ParentTargetViewModel {
   return {
     ...asset(),
     id,
     title,
     kind: 'container',
     parentAssetId: null,
+    lifecycleState: 'active',
     containmentTrail
   };
 }

@@ -3,7 +3,8 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import type { AssetViewModel } from '$lib/domain/inventory';
+  import { normalizeParentTargetQuery, parentTargetSuggestions, searchParentTargets } from '$lib/application/workspaceParentTargets';
+  import type { ParentTargetViewModel } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
   import ParentTargetButton from './ParentTargetButton.svelte';
@@ -31,25 +32,18 @@
     searchPlaceholder?: string;
     search: string;
     selectedId: string | null;
-    targets: AssetViewModel[];
+    targets: ParentTargetViewModel[];
     visibleLimit?: number;
     onSelect: (id: string | null) => void;
   } = $props();
 
-  let normalizedSearch = $derived(search.trim().toLowerCase());
-  let matchingTargets = $derived(
-    targets.filter((target) => {
-      if (!normalizedSearch) {
-        return true;
-      }
-      return target.title.toLowerCase().includes(normalizedSearch) || target.containmentTrail.toLowerCase().includes(normalizedSearch);
-    })
-  );
-  let sortedMatchingTargets = $derived([...matchingTargets].sort((left, right) => compareTargetsForSearch(left, right, normalizedSearch)));
-  let visibleTargets = $derived(sortedMatchingTargets.slice(0, visibleLimit));
-  let suggestedTargets = $derived(suggestionTargets(targets, selectedId, visibleLimit));
-  let locationResults = $derived(visibleTargets.filter((target) => target.kind === 'location'));
-  let containerResults = $derived(visibleTargets.filter((target) => target.kind === 'container'));
+  let normalizedSearch = $derived(normalizeParentTargetQuery(search));
+  let searchResult = $derived(searchParentTargets(targets, search, visibleLimit));
+  let matchingTargets = $derived(searchResult.matchingTargets);
+  let visibleTargets = $derived(searchResult.visibleTargets);
+  let suggestedTargets = $derived(parentTargetSuggestions(targets, selectedId, visibleLimit));
+  let locationResults = $derived(searchResult.locationResults);
+  let containerResults = $derived(searchResult.containerResults);
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
   let hasSearch = $derived(normalizedSearch.length > 0);
   let resultCountLabel = $derived(`${matchingTargets.length} ${matchingTargets.length === 1 ? 'match' : 'matches'}`);
@@ -62,75 +56,6 @@
     onSelect(null);
   }
 
-  function suggestionTargets(items: AssetViewModel[], currentId: string | null, limit: number): AssetViewModel[] {
-    const sorted = [...items].sort(compareTargets);
-    const chosen: AssetViewModel[] = [];
-    for (const target of sorted) {
-      if (chosen.length >= limit) {
-        break;
-      }
-      if (target.id === currentId || chosen.some((candidate) => candidate.id === target.id)) {
-        continue;
-      }
-      chosen.push(target);
-    }
-    return chosen;
-  }
-
-  function compareTargets(left: AssetViewModel, right: AssetViewModel): number {
-    const kindRank = kindSortRank(left.kind) - kindSortRank(right.kind);
-    if (kindRank !== 0) {
-      return kindRank;
-    }
-    return left.title.localeCompare(right.title);
-  }
-
-  function compareTargetsForSearch(left: AssetViewModel, right: AssetViewModel, query: string): number {
-    if (!query) {
-      return compareTargets(left, right);
-    }
-    const kindRank = kindSortRank(left.kind) - kindSortRank(right.kind);
-    if (kindRank !== 0) {
-      return kindRank;
-    }
-    const relevanceRank = searchRank(left, query) - searchRank(right, query);
-    if (relevanceRank !== 0) {
-      return relevanceRank;
-    }
-    return left.title.localeCompare(right.title);
-  }
-
-  function searchRank(target: AssetViewModel, query: string): number {
-    const title = target.title.toLowerCase();
-    const trail = target.containmentTrail.toLowerCase();
-    const trailSegments = trail.split('/').map((segment) => segment.trim());
-    if (title === query) {
-      return 0;
-    }
-    if (title.startsWith(query)) {
-      return 1;
-    }
-    if (title.includes(query)) {
-      return 2;
-    }
-    if (trailSegments.includes(query)) {
-      return 3;
-    }
-    if (trail.includes(query)) {
-      return 4;
-    }
-    return 5;
-  }
-
-  function kindSortRank(kind: AssetViewModel['kind']): number {
-    if (kind === 'location') {
-      return 0;
-    }
-    if (kind === 'container') {
-      return 1;
-    }
-    return 2;
-  }
 </script>
 
 <fieldset class="selection-field parent-selection">

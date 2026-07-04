@@ -324,6 +324,8 @@ export interface AssetViewModel extends Asset {
   containmentTrail: string;
 }
 
+export type ParentTargetViewModel = AssetViewModel & { kind: 'location' | 'container'; lifecycleState: 'active' };
+
 export const assetKinds: AssetKind[] = ['item', 'container', 'location'];
 export const defaultMediaUploadPolicy: MediaUploadPolicy = {
   supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],

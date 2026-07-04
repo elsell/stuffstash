@@ -6,6 +6,7 @@ import type {
   AssetViewModel,
   CustomFieldDefinition,
   MediaUploadPolicy,
+  ParentTargetViewModel,
   SelectedAttachment,
   UpdateAssetDraft
 } from '$lib/domain/inventory';
@@ -589,7 +590,7 @@ function mountAssetDetail(
     attachmentId: string | null;
     attachmentAction: 'delete' | null;
     canEdit: boolean;
-    parentTargets: AssetViewModel[];
+    parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
@@ -676,13 +677,14 @@ function attachment(
   };
 }
 
-function parentTarget(id: string, title: string, containmentTrail: string): AssetViewModel {
+function parentTarget(id: string, title: string, containmentTrail: string): ParentTargetViewModel {
   return {
     ...asset(),
     id,
     title,
     kind: 'container',
     parentAssetId: null,
+    lifecycleState: 'active',
     containmentTrail
   };
 }

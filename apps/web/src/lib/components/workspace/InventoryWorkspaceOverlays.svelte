@@ -3,10 +3,10 @@
     AddAssetSaveResult,
     AddAssetSubmission,
     AssetKind,
-    AssetViewModel,
     CustomAssetType,
     CustomFieldDefinition,
-    MediaUploadPolicy
+    MediaUploadPolicy,
+    ParentTargetViewModel
   } from '$lib/domain/inventory';
 
   export type InventoryWorkspaceOverlaysProps = {
@@ -15,7 +15,7 @@
     addKind: AssetKind;
     addParentAssetId: string | null;
     addCloseHref: string;
-    parentTargets: AssetViewModel[];
+    parentTargets: ParentTargetViewModel[];
     mediaPolicy: MediaUploadPolicy;
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];

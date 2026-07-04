@@ -1,4 +1,4 @@
-import type { Asset, AssetViewModel, CustomAssetType, LocationAsset, LocationSummary } from '$lib/domain/inventory';
+import type { Asset, AssetViewModel, CustomAssetType, LocationAsset, LocationSummary, ParentTargetViewModel } from '$lib/domain/inventory';
 
 export function topLevelLocations(assets: Asset[]): LocationSummary[] {
   return assets
@@ -22,13 +22,13 @@ export function containedAssets(assets: Asset[], parentAssetId: string): AssetVi
     .map((asset) => withTrail(asset, assets));
 }
 
-export function parentTargets(assets: Asset[]): AssetViewModel[] {
+export function parentTargets(assets: Asset[]): ParentTargetViewModel[] {
   return assets
-    .filter((asset) => (asset.kind === 'container' || asset.kind === 'location') && asset.lifecycleState === 'active')
+    .filter(isActiveParentTarget)
     .map((asset) => withTrail(asset, assets));
 }
 
-export function moveParentTargets(assets: Asset[], movingAssetId: string): AssetViewModel[] {
+export function moveParentTargets(assets: Asset[], movingAssetId: string): ParentTargetViewModel[] {
   const movingAsset = assets.find((asset) => asset.id === movingAssetId);
   if (!movingAsset) {
     return [];
@@ -77,7 +77,7 @@ export function selectedAssetForDetail(
   return assets.find((asset) => asset.id === selectedAssetId) ?? null;
 }
 
-export function withTrail(asset: Asset, assets: Asset[]): AssetViewModel {
+export function withTrail<T extends Asset>(asset: T, assets: Asset[]): T & { containmentTrail: string } {
   return {
     ...asset,
     containmentTrail: containmentTrail(asset, assets)
@@ -130,6 +130,10 @@ function searchMatchScore(asset: Asset, query: string): number | null {
     return 4;
   }
   return null;
+}
+
+function isActiveParentTarget(asset: Asset): asset is Asset & Pick<ParentTargetViewModel, 'kind' | 'lifecycleState'> {
+  return (asset.kind === 'container' || asset.kind === 'location') && asset.lifecycleState === 'active';
 }
 
 function descendantIds(assets: Asset[], assetId: string): Set<string> {
