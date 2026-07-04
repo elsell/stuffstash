@@ -14,6 +14,7 @@ import {
   locationAddItemHref,
   locationBackHref,
   locationEditHref,
+  locationEmptyState,
   locationRowHref
 } from './workspaceBrowseNavigation';
 
@@ -91,6 +92,21 @@ describe('workspace browse navigation helpers', () => {
     expect(homeCreateLocationDenied()).toEqual({
       id: 'home-add-location-denied',
       message: 'Creating locations is unavailable for this inventory.'
+    });
+  });
+
+  it('builds focused location empty and denied presentation', () => {
+    expect(locationEmptyState(true)).toEqual({
+      title: 'No stuff here yet',
+      message: 'Add an item or move existing stuff into this location.',
+      actionLabel: 'Add item here',
+      deniedMessage: 'Adding items is unavailable for this inventory.'
+    });
+    expect(locationEmptyState(false)).toEqual({
+      title: 'No stuff here yet',
+      message: 'This location is empty.',
+      actionLabel: 'Add item here',
+      deniedMessage: 'Adding items is unavailable for this inventory.'
     });
   });
 });

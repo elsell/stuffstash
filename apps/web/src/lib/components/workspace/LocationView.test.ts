@@ -184,6 +184,26 @@ describe('LocationView', () => {
     expect(addParentId).toBe('garage');
   });
 
+  it('uses the helper-backed add label for non-empty location actions', () => {
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [item],
+        canEdit: true,
+        canCreateAsset: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: () => {}
+      }
+    });
+
+    expect(link('Add item here').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/add/item?parent=garage'
+    );
+  });
+
   it('hides location editing when edit access is missing', () => {
     component = mount(LocationView, {
       target: document.body,

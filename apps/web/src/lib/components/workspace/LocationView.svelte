@@ -5,7 +5,13 @@
   import Pencil from '@lucide/svelte/icons/pencil';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
-  import { locationAddItemHref, locationBackHref, locationEditHref, locationRowHref } from '$lib/application/workspaceBrowseNavigation';
+  import {
+    locationAddItemHref,
+    locationBackHref,
+    locationEditHref,
+    locationEmptyState,
+    locationRowHref
+  } from '$lib/application/workspaceBrowseNavigation';
   import type { Asset, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
@@ -31,6 +37,8 @@
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
   } = $props();
+
+  let emptyState = $derived(locationEmptyState(canCreateAsset));
 
   function openBack(event: MouseEvent): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
@@ -82,18 +90,18 @@
       <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
     {/if}
     {#if canCreateAsset && assets.length > 0}
-      <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}><Plus /> Add item here</Button.Root>
+      <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}><Plus /> {emptyState.actionLabel}</Button.Root>
     {/if}
   </div>
 
   {#if assets.length === 0}
     <div class="empty-state spacious">
-      <h2>No stuff here yet</h2>
-      <p>{canCreateAsset ? 'Add an item or move existing stuff into this location.' : 'This location is empty.'}</p>
+      <h2>{emptyState.title}</h2>
+      <p>{emptyState.message}</p>
       {#if canCreateAsset}
-        <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}>Add item here</Button.Root>
+        <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}>{emptyState.actionLabel}</Button.Root>
       {:else}
-        <p class="denied-note" role="note">Adding items is unavailable for this inventory.</p>
+        <p class="denied-note" role="note">{emptyState.deniedMessage}</p>
       {/if}
     </div>
   {:else}

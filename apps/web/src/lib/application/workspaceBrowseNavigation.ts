@@ -19,6 +19,13 @@ export interface HomeDeniedPresentation {
   message: string;
 }
 
+export interface LocationEmptyStatePresentation {
+  title: string;
+  message: string;
+  actionLabel: string;
+  deniedMessage: string;
+}
+
 export interface HomeLifecycleOption {
   value: AssetLifecycleFilter;
   label: string;
@@ -119,5 +126,14 @@ export function homeCreateLocationDenied(): HomeDeniedPresentation {
   return {
     id: 'home-add-location-denied',
     message: 'Creating locations is unavailable for this inventory.'
+  };
+}
+
+export function locationEmptyState(canCreateAsset: boolean): LocationEmptyStatePresentation {
+  return {
+    title: 'No stuff here yet',
+    message: canCreateAsset ? 'Add an item or move existing stuff into this location.' : 'This location is empty.',
+    actionLabel: 'Add item here',
+    deniedMessage: 'Adding items is unavailable for this inventory.'
   };
 }
