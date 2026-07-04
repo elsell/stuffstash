@@ -214,6 +214,7 @@ Add:
 - Add must be disabled or replaced by an explicit denied state for inventories where the user lacks create-asset permission.
 - Header and mobile Add controls must expose a perceivable disabled reason when add creation is unavailable or no inventory is selected.
 - Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
+- Modal add and edit surfaces must make the background workspace inert and hidden from assistive technology while the modal is open.
 - On mobile, the add tray must behave like a focused sheet with usable viewport height and sticky completion controls so save/cancel actions remain reachable while long custom-field or parent-picker content scrolls.
 - Parent-picker destinations in mobile add and edit trays must scroll with enough bottom clearance that focused or selected destination controls are not hidden under sticky action bars.
 

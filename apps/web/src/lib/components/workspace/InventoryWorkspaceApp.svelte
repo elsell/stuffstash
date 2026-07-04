@@ -1104,6 +1104,7 @@
     searchSuggestions={searchSuggestions}
     bind:searchQuery
     canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
+    modalOpen={addOpen}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
     onModeChange={navigateMode}

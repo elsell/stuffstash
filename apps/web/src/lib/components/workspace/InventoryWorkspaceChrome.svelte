@@ -15,6 +15,7 @@
     searchSuggestions: Asset[];
     searchQuery: string;
     canCreateAsset: boolean;
+    modalOpen?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onModeChange: (mode: WorkspaceMode) => void;
@@ -43,6 +44,7 @@
     searchSuggestions,
     searchQuery = $bindable(''),
     canCreateAsset,
+    modalOpen = false,
     onSelectTenant,
     onSelectInventory,
     onModeChange,
@@ -54,7 +56,7 @@
   }: InventoryWorkspaceChromeProps = $props();
 </script>
 
-<div class="product-shell">
+<div class="product-shell" inert={modalOpen ? true : undefined} aria-hidden={modalOpen ? 'true' : undefined}>
   <SideNav
     {tenants}
     {inventories}

@@ -21,10 +21,24 @@ describe('InventoryWorkspaceChrome', () => {
       props: chromeProps()
     });
 
+    const shell = requiredShell();
+    expect(isInert(shell)).toBe(false);
+    expect(shell.getAttribute('aria-hidden')).toBeNull();
     expect(document.body.querySelector('[aria-label="Workspace navigation"]')?.textContent).toContain('Stuff Stash');
     expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
     expect(document.body.querySelector('[aria-label="Mobile navigation"]')?.textContent).toContain('Places');
     expect(document.body.querySelector('.workspace-main')?.textContent).toContain('Fixture workspace');
+  });
+
+  it('hides the background shell from assistive technology while modal overlays are open', () => {
+    component = mount(InventoryWorkspaceChromeHarness, {
+      target: document.body,
+      props: chromeProps({ modalOpen: true })
+    });
+
+    const shell = requiredShell();
+    expect(isInert(shell)).toBe(true);
+    expect(shell.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('routes chrome actions through the coordinator callbacks', async () => {
@@ -143,4 +157,17 @@ function addMenuItemContaining(text: string): HTMLAnchorElement {
     throw new Error(`Missing add menu item containing ${text}`);
   }
   return link;
+}
+
+function requiredShell(): HTMLElement {
+  const shell = document.body.querySelector<HTMLElement>('.product-shell');
+  if (!shell) {
+    throw new Error('Missing product shell');
+  }
+  return shell;
+}
+
+function isInert(element: HTMLElement): boolean {
+  const candidate = element as HTMLElement & { inert?: boolean };
+  return typeof candidate.inert === 'boolean' ? candidate.inert : element.hasAttribute('inert');
 }

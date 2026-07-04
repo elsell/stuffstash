@@ -13,6 +13,7 @@
     searchSuggestions,
     searchQuery = $bindable(''),
     canCreateAsset,
+    modalOpen,
     onSelectTenant,
     onSelectInventory,
     onModeChange,
@@ -37,6 +38,7 @@
   {searchSuggestions}
   bind:searchQuery
   {canCreateAsset}
+  {modalOpen}
   {onSelectTenant}
   {onSelectInventory}
   {onModeChange}

@@ -603,6 +603,8 @@ describe('InventoryWorkspaceApp route application', () => {
     expect(productShell).toBeTruthy();
     expect(dialog).toBeTruthy();
     expect(productShell?.contains(dialog)).toBe(false);
+    expect(productShell ? isInert(productShell) : false).toBe(true);
+    expect(productShell?.getAttribute('aria-hidden')).toBe('true');
 
     const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
     if (!titleInput) throw new Error('Missing add title input');
@@ -615,6 +617,8 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
       expect(document.body.textContent).toContain('Saved Camera bag.');
+      expect(productShell ? isInert(productShell) : true).toBe(false);
+      expect(productShell?.getAttribute('aria-hidden')).toBeNull();
     });
 
     const toast = document.body.querySelector<HTMLElement>('.toast');
@@ -1093,4 +1097,9 @@ function controlWithLabel(label: string): HTMLElement {
     throw new Error(`Missing control labelled ${label}`);
   }
   return control;
+}
+
+function isInert(element: HTMLElement): boolean {
+  const candidate = element as HTMLElement & { inert?: boolean };
+  return typeof candidate.inert === 'boolean' ? candidate.inert : element.hasAttribute('inert');
 }
