@@ -594,6 +594,7 @@ Required implementation split:
 - Asset-detail loading and attachment refresh orchestration must live in focused application helpers rather than accumulating in the product shell component.
 - Loaded asset-detail results must be applied through focused application helpers so workspace asset replacement, selected asset state, attachment state, and mode transitions do not accumulate in the product shell.
 - Asset-detail photo gallery derivation, supported media-type checks, and photo-upload unavailable reasons must live in focused application helpers rather than component-local derivation.
+- Import source options, source summaries, apply-status copy, preview source summaries, message tone derivation, ready-state checks, and import request construction must live in focused application helpers rather than component-local derivation.
 - Domain-oriented frontend observability must be represented through an explicit helper or port, even when the first implementation records events only in memory.
 
 The first promotion may include a local seeded adapter for unauthenticated browser review and for unavailable backend operations, but it must be truthful:

@@ -8,10 +8,17 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { importSourceHref } from '$lib/application/workspaceShellNavigation';
+  import {
+    buildLegacyHomeboxImportRequest,
+    importApplyStatus,
+    importMessageTone,
+    importPreviewSourceSummary,
+    importSourceOptions,
+    importSourceSummary,
+    isImportPreviewReady
+  } from '$lib/application/workspaceImportPresentation';
   import type {
     ImportApplyResult,
-    ImportMessage,
     ImportPreview,
     ImportSourceType,
     Inventory,
@@ -53,27 +60,31 @@
   let busy = $state(false);
   let error = $state('');
   let previousSourceType = $state(sourceType);
-  const sourceOptions = [
-    { value: 'legacy_homebox', label: 'Connect' },
-    { value: 'legacy_homebox_csv', label: 'CSV' }
-  ];
-  let linkedSourceOptions = $derived(
-    sourceOptions.map((option) => ({
-      ...option,
-      href: sourceHref(option.value as ImportSourceType)
-    }))
-  );
+  let linkedSourceOptions = $derived(importSourceOptions(tenantId, inventory?.id ?? null));
+  let sourceSummary = $derived(importSourceSummary(sourceType, fileName));
 
   let canImport = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let ready = $derived(
-    sourceType === 'legacy_homebox'
-      ? !!inventory && baseUrl.trim().length > 0 && username.trim().length > 0 && password.length > 0
-      : !!inventory && contentBase64.length > 0
+    isImportPreviewReady({
+      hasInventory: !!inventory,
+      sourceType,
+      baseUrl,
+      username,
+      password,
+      contentBase64
+    })
   );
   let blockingErrors = $derived(preview?.messages.filter((message) => message.severity === 'error') ?? []);
   let warnings = $derived(preview?.messages.filter((message) => message.severity === 'warning') ?? []);
   let canApply = $derived(!!preview && blockingErrors.length === 0 && !busy && canImport);
-  let applyStatus = $derived(applyStatusMessage());
+  let applyStatus = $derived(
+    importApplyStatus({
+      busy,
+      hasPreview: !!preview,
+      blockingErrorCount: blockingErrors.length,
+      canImport
+    })
+  );
   const applyStatusId = 'import-apply-status';
 
   $effect(() => {
@@ -131,10 +142,6 @@
     contentBase64 = await fileToBase64(file);
   }
 
-  function sourceHref(nextSourceType: ImportSourceType): string {
-    return importSourceHref(tenantId, inventory?.id ?? null, nextSourceType);
-  }
-
   function selectSource(nextSourceType: ImportSourceType): void {
     sourceType = nextSourceType;
     clearImportState();
@@ -148,26 +155,17 @@
   }
 
   function importRequest(): LegacyHomeboxImportRequest {
-    if (sourceType === 'legacy_homebox_csv') {
-      return {
-        sourceType,
-        fileName,
-        contentBase64
-      };
-    }
-    return {
+    return buildLegacyHomeboxImportRequest({
       sourceType,
-      baseUrl: baseUrl.trim(),
-      username: username.trim(),
+      baseUrl,
+      username,
       password,
       includeImages,
       allowInsecureTLS,
-      allowPrivateNetwork
-    };
-  }
-
-  function messageTone(message: ImportMessage): 'destructive' | 'secondary' | 'outline' {
-    return message.severity === 'error' ? 'destructive' : message.severity === 'warning' ? 'secondary' : 'outline';
+      allowPrivateNetwork,
+      fileName,
+      contentBase64
+    });
   }
 
   function toggleImportOption(option: 'images' | 'insecure-tls' | 'private-network'): void {
@@ -178,22 +176,6 @@
     } else {
       allowPrivateNetwork = !allowPrivateNetwork;
     }
-  }
-
-  function applyStatusMessage(): string {
-    if (busy) {
-      return 'Import action is running.';
-    }
-    if (!preview) {
-      return 'Preview the import before applying changes.';
-    }
-    if (blockingErrors.length > 0) {
-      return 'Resolve preview errors before applying changes.';
-    }
-    if (!canImport) {
-      return 'Inventory configuration access is required.';
-    }
-    return 'Preview is ready to apply.';
   }
 
   async function fileToBase64(file: File): Promise<string> {
@@ -238,7 +220,7 @@
           <Upload aria-hidden="true" />
           <div>
             <h2>Source</h2>
-            <p>{sourceType === 'legacy_homebox' ? 'Live Homebox API' : fileName || 'Homebox CSV export'}</p>
+            <p>{sourceSummary}</p>
           </div>
         </div>
 
@@ -321,7 +303,7 @@
               <CheckCircle2 aria-hidden="true" />
               <div>
                 <h2 id="import-preview-title">{preview.source.name}</h2>
-                <p>{preview.source.version ? `Homebox ${preview.source.version}` : preview.source.imageImport}</p>
+                <p>{importPreviewSourceSummary(preview.source)}</p>
               </div>
             </div>
 
@@ -338,7 +320,7 @@
               <div class="import-message-list">
                 {#each preview.messages.slice(0, 12) as message}
                   <div class="import-message-row">
-                    <Badge variant={messageTone(message)}>{message.severity}</Badge>
+                    <Badge variant={importMessageTone(message)}>{message.severity}</Badge>
                     <span>
                       <strong>{message.summary}</strong>
                       <small>{message.sourceName ? `${message.sourceName}: ` : ''}{message.detail ?? message.code}</small>
