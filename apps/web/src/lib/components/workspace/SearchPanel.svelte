@@ -3,8 +3,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
-  import { searchAssetHref } from '$lib/application/workspaceSearch';
-  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
+  import { searchAssetHref, searchFilterHref as searchFilterRouteHref } from '$lib/application/workspaceSearch';
   import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
   import SearchSuggestions from './SearchSuggestions.svelte';
@@ -70,18 +69,7 @@
   });
 
   function searchFilterHref(nextLifecycleState: SearchLifecycleFilter, nextSearchMode: SearchMode): string {
-    return workspaceRouteHref(
-      {
-        mode: 'search',
-        tenantId,
-        inventoryId,
-        searchQuery: query,
-        searchLifecycleState: nextLifecycleState,
-        searchMode: nextSearchMode
-      },
-      tenantId,
-      inventoryId
-    );
+    return searchFilterRouteHref(tenantId, inventoryId, query, nextLifecycleState, nextSearchMode);
   }
 
   function openSuggestion(event: MouseEvent, asset: Asset): void {

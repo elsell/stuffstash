@@ -37,6 +37,16 @@ export function searchAssetHref(asset: Asset): string {
   return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
 }
 
+export function searchFilterHref(
+  tenantId: string,
+  inventoryId: string,
+  query: string,
+  lifecycleState: SearchLifecycleFilter,
+  mode: SearchMode
+): string {
+  return workspaceRouteHref({ mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode }, tenantId, inventoryId);
+}
+
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {
   const query = input.query.trim();
   if (!query || !input.tenantId || !input.inventoryId) {
