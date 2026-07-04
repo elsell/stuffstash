@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { installAuthenticatedWorkspace, resetWorkspaceApiState, signedUploadPuts } from './workspace-fixture';
 
 test.beforeEach(async ({ page }) => {
@@ -38,7 +38,10 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
   await expect(page.getByLabel('Search this inventory')).toBeHidden();
   await page.getByRole('button', { name: /Household/ }).click();
-  await expect(page.getByRole('dialog', { name: 'Inventory context' })).toBeVisible();
+  const contextDialog = page.getByRole('dialog', { name: 'Inventory context' });
+  await expect(contextDialog).toBeVisible();
+  const contextDialogLayer = await dialogTopLayerInfo(contextDialog);
+  expect(contextDialogLayer.ownsPoint, JSON.stringify(contextDialogLayer)).toBe(true);
   await expect(page.getByLabel('Inventories').getByRole('link', { name: /Household/ })).toBeVisible();
   await page.keyboard.press('Escape');
 
@@ -142,3 +145,15 @@ test('location navigation opens asset detail and returns to the location list', 
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
   await expect(page.getByRole('heading', { name: 'Garage' })).toBeVisible();
 });
+
+async function dialogTopLayerInfo(dialog: Locator): Promise<{ ownsPoint: boolean; rect: string; topElement: string }> {
+  return dialog.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + Math.min(32, rect.height / 2));
+    return {
+      ownsPoint: target instanceof Node && element.contains(target),
+      rect: `${Math.round(rect.left)},${Math.round(rect.top)},${Math.round(rect.width)},${Math.round(rect.height)}`,
+      topElement: target instanceof HTMLElement ? `${target.tagName}.${target.className}` : String(target)
+    };
+  });
+}

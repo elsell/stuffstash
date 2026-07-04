@@ -1996,6 +1996,11 @@ dd {
     padding: 12px 14px;
   }
 
+  .workspace-header:has(.mobile-context-menu) {
+    z-index: 60;
+    backdrop-filter: none;
+  }
+
   .mobile-context {
     display: block;
   }
