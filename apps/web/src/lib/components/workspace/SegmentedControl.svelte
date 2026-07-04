@@ -41,10 +41,11 @@
 
 <div class="filter-control" data-layout={layout} role="group" aria-label={label}>
   {#each options as option}
-    {#if option.href && !option.disabled}
+    {#if option.href}
       <Button.Root
         href={option.href}
         variant="ghost"
+        disabled={option.disabled}
         aria-current={value === option.value ? 'page' : undefined}
         data-selected={value === option.value}
         onclick={(event) => selectOption(event, option)}

@@ -437,6 +437,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Add and move parent-target selection must be implemented through a shared workspace picker component so filtering, selected-state language, empty states, and grouped-control semantics do not drift between creation and asset-detail actions.
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.
 - Settings status and scope filters that correspond to durable settings subsection state, such as access invitation status and activity audit scope, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
+- Route-backed segmented-control options must expose link semantics with canonical `href` values, `aria-current` for the selected option, and the same visible selected state as button-backed options.
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
 - Custom asset type, enum, and custom field target choice grids must use a shared workspace choice-grid composition so selected-state semantics, disabled behavior, empty state copy, and button styling do not drift between add, edit, and settings surfaces.
 - Import options for images, insecure TLS, and private-network access must use the shared binary-option composition with visible on/off state, clear option copy, and honest switch or checkbox semantics.
@@ -478,7 +479,8 @@ Repeated segmented controls must be implemented through a reusable workspace con
 - A typed list of options.
 - A visible selected state.
 - `role="group"` with a clear accessible label.
-- `aria-pressed` on each option button.
+- `aria-pressed` on each button-backed option.
+- Link semantics, `aria-current`, and visible selected state on each route-backed option.
 - Disabled options where needed.
 - Consistent wrapping, spacing, focus, and mobile behavior.
 
