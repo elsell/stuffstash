@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { DetailPhoto } from '$lib/application/workspaceAssetMedia';
+  import { photoGalleryEmptyMessage, type DetailPhoto } from '$lib/application/workspaceAssetMedia';
 
   export const PHOTO_UPLOAD_DISABLED_REASON_ID = 'asset-photo-upload-disabled';
   export const PHOTO_UPLOAD_ERROR_ID = 'asset-photo-upload-error';
@@ -36,6 +36,7 @@
   let uploadDescribedBy = $derived(
     [uploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '', uploadError ? PHOTO_UPLOAD_ERROR_ID : ''].filter(Boolean).join(' ')
   );
+  const emptyGalleryMessage = photoGalleryEmptyMessage();
 </script>
 
 <div class="asset-detail-hero">
@@ -84,7 +85,7 @@
       </div>
     {:else}
       <div class="empty-state compact-empty">
-        <p>No photos yet.</p>
+        <p>{emptyGalleryMessage}</p>
       </div>
     {/if}
     {#if uploadError}

@@ -588,6 +588,22 @@ describe('AssetDetail', () => {
     expect(uploadCount).toBe(0);
     expect(document.body.textContent).toContain('Unsupported image type.');
   });
+
+  it('shows a helper-backed error for unsupported file uploads', async () => {
+    let uploadCount = 0;
+    mountAssetDetail({
+      mediaPolicy: { supportedContentTypes: ['image/jpeg'], maxBytes: 1024 },
+      onUploadAttachment: async () => {
+        uploadCount += 1;
+      }
+    });
+
+    chooseAttachment(new File(['pdf'], 'receipt.pdf', { type: 'application/pdf' }), 'Choose file');
+    await flush();
+
+    expect(uploadCount).toBe(0);
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Unsupported file type.');
+  });
 });
 
 function mountAssetDetail(

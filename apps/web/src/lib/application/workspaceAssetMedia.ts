@@ -71,3 +71,15 @@ export function photoUploadUnavailableReason(input: {
   }
   return '';
 }
+
+export function photoGalleryEmptyMessage(): string {
+  return 'No photos yet.';
+}
+
+export function unsupportedAttachmentTypeMessage(): string {
+  return 'Unsupported file type.';
+}
+
+export function unsupportedImageTypeMessage(): string {
+  return 'Unsupported image type.';
+}

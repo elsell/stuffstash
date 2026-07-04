@@ -21,7 +21,9 @@
     buildDetailPhotos,
     photoUploadUnavailableReason,
     supportedAttachmentContentType,
-    supportedImageContentType
+    supportedImageContentType,
+    unsupportedAttachmentTypeMessage,
+    unsupportedImageTypeMessage
   } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
   import type {
@@ -345,7 +347,7 @@
     }
     const contentType = file.type;
     if (!supportedAttachmentContentType(mediaPolicy.supportedContentTypes, contentType)) {
-      uploadError = 'Unsupported file type.';
+      uploadError = unsupportedAttachmentTypeMessage();
       input.value = '';
       return;
     }
@@ -378,7 +380,7 @@
     }
     const contentType = file.type;
     if (!supportedImageContentType(imageContentTypes, contentType)) {
-      uploadError = 'Unsupported image type.';
+      uploadError = unsupportedImageTypeMessage();
       input.value = '';
       return;
     }

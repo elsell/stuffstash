@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { AssetAttachment, AssetViewModel } from '$lib/domain/inventory';
 import {
   buildDetailPhotos,
+  photoGalleryEmptyMessage,
   photoUploadUnavailableReason,
   supportedAttachmentContentType,
-  supportedImageContentType
+  supportedImageContentType,
+  unsupportedAttachmentTypeMessage,
+  unsupportedImageTypeMessage
 } from './workspaceAssetMedia';
 
 describe('workspace asset media helpers', () => {
@@ -94,6 +97,12 @@ describe('workspace asset media helpers', () => {
       'Photo uploads are unavailable for this media policy.'
     );
     expect(photoUploadUnavailableReason({ canEditAsset: true, lifecycleState: 'active', isSaving: false, supportedImageTypeCount: 1 })).toBe('');
+  });
+
+  it('builds asset media empty and unsupported type presentation', () => {
+    expect(photoGalleryEmptyMessage()).toBe('No photos yet.');
+    expect(unsupportedAttachmentTypeMessage()).toBe('Unsupported file type.');
+    expect(unsupportedImageTypeMessage()).toBe('Unsupported image type.');
   });
 });
 
