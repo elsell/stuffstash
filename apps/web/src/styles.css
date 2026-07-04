@@ -896,6 +896,7 @@ small {
 .settings-content {
   display: grid;
   gap: 12px;
+  min-width: 0;
   max-width: 980px;
 }
 
@@ -903,6 +904,7 @@ small {
   display: grid;
   gap: 14px;
   align-content: start;
+  min-width: 0;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -937,6 +939,28 @@ small {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+@media (max-width: 1180px) {
+  .settings-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-section-nav {
+    display: flex;
+    overflow-x: auto;
+    padding: 4px;
+    scroll-padding-inline: 4px;
+  }
+
+  .settings-section-link {
+    width: min(220px, 72vw);
+    min-width: min(220px, 72vw);
+  }
+
+  .settings-content {
+    max-width: none;
+  }
 }
 
 .access-list {

@@ -9,6 +9,7 @@
   import {
     addAssetKindCopy,
     addDestinationSummary,
+    addFormPresentation,
     addPhotoCountLabel,
     assetKindControlOptions,
     quickParentContainerLabel as buildQuickParentContainerLabel,
@@ -326,22 +327,27 @@
 
     <div class="add-summary" aria-live="polite">
       <div>
-        <small>Type</small>
+        <small>{addFormPresentation.summaryTypeLabel}</small>
         <strong>{kindCopy.kindLabel}</strong>
       </div>
       <div>
-        <small>Parent</small>
+        <small>{addFormPresentation.summaryParentLabel}</small>
         <strong>{parentSummary}</strong>
       </div>
       <div>
-        <small>Photos</small>
+        <small>{addFormPresentation.summaryPhotosLabel}</small>
         <strong>{photoSummary}</strong>
       </div>
     </div>
 
     <fieldset class="selection-field">
-      <legend>Asset kind</legend>
-      <SegmentedControl label="Asset kind" value={kind} options={assetKindOptions} onSelect={(value) => { kind = value as AssetKind; }} />
+      <legend>{addFormPresentation.assetKindLegend}</legend>
+      <SegmentedControl
+        label={addFormPresentation.assetKindLegend}
+        value={kind}
+        options={assetKindOptions}
+        onSelect={(value) => { kind = value as AssetKind; }}
+      />
     </fieldset>
 
     <div class="field-stack">
@@ -350,9 +356,9 @@
     </div>
 
     <ParentTargetPicker
-      legend="Place in existing parent"
+      legend={addFormPresentation.parentPickerLegend}
       searchId="parent-search"
-      groupLabel="Parent target"
+      groupLabel={addFormPresentation.parentPickerGroupLabel}
       bind:search={parentSearch}
       selectedId={parentAssetId || null}
       targets={parentTargets}
@@ -360,28 +366,28 @@
     />
 
     <fieldset class="selection-field quick-parent-section">
-      <legend>Create missing parent</legend>
+      <legend>{addFormPresentation.quickParentLegend}</legend>
       <BinaryOption
-        label="Create a parent first"
-        description="Use this when the shelf, box, or location does not exist yet."
+        label={addFormPresentation.quickParentToggleLabel}
+        description={addFormPresentation.quickParentToggleDescription}
         checked={quickParentEnabled}
         onToggle={toggleQuickParent}
       />
       {#if quickParentEnabled}
         <div class="quick-parent-fields">
           <div class="quick-parent-context">
-            <span>Created under</span>
+            <span>{addFormPresentation.quickParentContextLabel}</span>
             <strong>{quickParentContainerLabel}</strong>
             {#if quickParentContainerTrail}
               <small>{quickParentContainerTrail}</small>
             {/if}
           </div>
           <div class="field-stack">
-            <Label for="quick-parent-title">Parent name</Label>
+            <Label for="quick-parent-title">{addFormPresentation.quickParentNameLabel}</Label>
             <Input
               id="quick-parent-title"
               bind:value={quickParentTitle}
-              placeholder="Laundry shelf"
+              placeholder={addFormPresentation.quickParentNamePlaceholder}
               required={quickParentEnabled}
               aria-required={quickParentEnabled}
               aria-invalid={quickParentMissingName}
@@ -392,7 +398,7 @@
             {/if}
           </div>
           <SegmentedControl
-            label="New parent kind"
+            label={addFormPresentation.quickParentKindLabel}
             value={quickParentKind}
             options={quickParentKindOptions}
             onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
@@ -402,8 +408,8 @@
     </fieldset>
 
     <div class="field-stack">
-      <Label for="asset-description">Description</Label>
-      <Textarea id="asset-description" bind:value={description} placeholder="Optional notes" />
+      <Label for="asset-description">{addFormPresentation.descriptionLabel}</Label>
+      <Textarea id="asset-description" bind:value={description} placeholder={addFormPresentation.descriptionPlaceholder} />
     </div>
 
     <AddAssetCustomFieldsSection

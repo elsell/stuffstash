@@ -24,6 +24,24 @@ export interface AddPhotoPickerPresentation {
   selectedListLabel: string;
 }
 
+export interface AddFormPresentation {
+  summaryTypeLabel: string;
+  summaryParentLabel: string;
+  summaryPhotosLabel: string;
+  assetKindLegend: string;
+  parentPickerLegend: string;
+  parentPickerGroupLabel: string;
+  quickParentLegend: string;
+  quickParentToggleLabel: string;
+  quickParentToggleDescription: string;
+  quickParentContextLabel: string;
+  quickParentNameLabel: string;
+  quickParentNamePlaceholder: string;
+  quickParentKindLabel: string;
+  descriptionLabel: string;
+  descriptionPlaceholder: string;
+}
+
 export const addPhotoPickerPresentation: AddPhotoPickerPresentation = {
   actionGroupLabel: 'Photo actions',
   uploadLabel: 'Upload',
@@ -31,6 +49,24 @@ export const addPhotoPickerPresentation: AddPhotoPickerPresentation = {
   uploadInputLabel: 'Upload photos',
   cameraInputLabel: 'Take photo',
   selectedListLabel: 'Selected photos'
+};
+
+export const addFormPresentation: AddFormPresentation = {
+  summaryTypeLabel: 'Type',
+  summaryParentLabel: 'Parent',
+  summaryPhotosLabel: 'Photos',
+  assetKindLegend: 'Asset kind',
+  parentPickerLegend: 'Place in existing parent',
+  parentPickerGroupLabel: 'Parent target',
+  quickParentLegend: 'Create missing parent',
+  quickParentToggleLabel: 'Create a parent first',
+  quickParentToggleDescription: 'Use this when the shelf, box, or location does not exist yet.',
+  quickParentContextLabel: 'Created under',
+  quickParentNameLabel: 'Parent name',
+  quickParentNamePlaceholder: 'Laundry shelf',
+  quickParentKindLabel: 'New parent kind',
+  descriptionLabel: 'Description',
+  descriptionPlaceholder: 'Optional notes'
 };
 
 export const quickParentKindOptions: AddControlOption<'location' | 'container'>[] = [

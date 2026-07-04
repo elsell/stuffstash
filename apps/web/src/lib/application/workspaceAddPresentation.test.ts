@@ -3,6 +3,7 @@ import type { ParentTargetViewModel } from '$lib/domain/inventory';
 import {
   addAssetKindCopy,
   addDestinationSummary,
+  addFormPresentation,
   addPhotoAcceptTypes,
   addPhotoCountLabel,
   addPhotoHelpText,
@@ -29,6 +30,26 @@ describe('workspace add presentation helpers', () => {
       { value: 'location', label: 'Location' },
       { value: 'container', label: 'Container' }
     ]);
+  });
+
+  it('builds stable add form labels and placeholders', () => {
+    expect(addFormPresentation).toEqual({
+      summaryTypeLabel: 'Type',
+      summaryParentLabel: 'Parent',
+      summaryPhotosLabel: 'Photos',
+      assetKindLegend: 'Asset kind',
+      parentPickerLegend: 'Place in existing parent',
+      parentPickerGroupLabel: 'Parent target',
+      quickParentLegend: 'Create missing parent',
+      quickParentToggleLabel: 'Create a parent first',
+      quickParentToggleDescription: 'Use this when the shelf, box, or location does not exist yet.',
+      quickParentContextLabel: 'Created under',
+      quickParentNameLabel: 'Parent name',
+      quickParentNamePlaceholder: 'Laundry shelf',
+      quickParentKindLabel: 'New parent kind',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Optional notes'
+    });
   });
 
   it('builds kind-specific add labels and placeholders', () => {
