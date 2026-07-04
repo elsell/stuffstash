@@ -427,6 +427,8 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Parent target pickers must show the selected destination as a compact summary with target kind and containment trail, expose a clear action when a non-root target is selected, and show result counts without rendering every possible parent before search.
 - Parent target pickers must offer a bounded set of suggested destinations before search, excluding the already-selected destination because it is shown in the current destination summary.
 - Parent target pickers must prefer locations before containers when choosing unfiltered suggestions and ordered search results.
+- Parent target search results must rank exact and prefix title matches before looser title or containment-trail matches within the same target kind.
+- Parent target search result counts must be announced politely to assistive technology users when the query changes.
 - Parent target search results must present target kind, title, and containment trail in each selectable row so locations and containers are distinguishable while scanning.
 - Parent target search results must group locations and containers with named grouped-control semantics for assistive technology users.
 - Parent target pickers must keep suggested destinations and search results bounded by the component's visible limit.

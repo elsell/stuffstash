@@ -45,7 +45,7 @@
       return target.title.toLowerCase().includes(normalizedSearch) || target.containmentTrail.toLowerCase().includes(normalizedSearch);
     })
   );
-  let sortedMatchingTargets = $derived([...matchingTargets].sort(compareTargets));
+  let sortedMatchingTargets = $derived([...matchingTargets].sort((left, right) => compareTargetsForSearch(left, right, normalizedSearch)));
   let visibleTargets = $derived(sortedMatchingTargets.slice(0, visibleLimit));
   let suggestedTargets = $derived(suggestionTargets(targets, selectedId, visibleLimit));
   let locationResults = $derived(visibleTargets.filter((target) => target.kind === 'location'));
@@ -83,6 +83,43 @@
       return kindRank;
     }
     return left.title.localeCompare(right.title);
+  }
+
+  function compareTargetsForSearch(left: AssetViewModel, right: AssetViewModel, query: string): number {
+    if (!query) {
+      return compareTargets(left, right);
+    }
+    const kindRank = kindSortRank(left.kind) - kindSortRank(right.kind);
+    if (kindRank !== 0) {
+      return kindRank;
+    }
+    const relevanceRank = searchRank(left, query) - searchRank(right, query);
+    if (relevanceRank !== 0) {
+      return relevanceRank;
+    }
+    return left.title.localeCompare(right.title);
+  }
+
+  function searchRank(target: AssetViewModel, query: string): number {
+    const title = target.title.toLowerCase();
+    const trail = target.containmentTrail.toLowerCase();
+    const trailSegments = trail.split('/').map((segment) => segment.trim());
+    if (title === query) {
+      return 0;
+    }
+    if (title.startsWith(query)) {
+      return 1;
+    }
+    if (title.includes(query)) {
+      return 2;
+    }
+    if (trailSegments.includes(query)) {
+      return 3;
+    }
+    if (trail.includes(query)) {
+      return 4;
+    }
+    return 5;
   }
 
   function kindSortRank(kind: AssetViewModel['kind']): number {
@@ -141,8 +178,8 @@
       {rootLabel}
     </Button.Root>
   </div>
+  <p class="selection-summary" aria-live="polite" aria-atomic="true">{hasSearch ? resultCountLabel : ''}</p>
   {#if hasSearch}
-    <p class="selection-summary">{resultCountLabel}</p>
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
       {#if locationResults.length > 0}
         <div class="parent-result-group" role="group" aria-label="Locations" aria-labelledby={`${searchId}-location-results-label`}>

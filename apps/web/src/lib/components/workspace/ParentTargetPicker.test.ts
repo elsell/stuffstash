@@ -55,6 +55,7 @@ describe('ParentTargetPicker', () => {
 
     expect(group('Move target search results')).toBeTruthy();
     expect(document.body.textContent).toContain('2 matches');
+    expect(document.body.querySelector('.selection-summary[aria-live="polite"]')?.textContent).toBe('2 matches');
     expect(group('Locations')).toBeTruthy();
     expect(group('Containers')).toBeTruthy();
     expect(destinationButtons('Move target search results')).toHaveLength(2);
@@ -68,6 +69,36 @@ describe('ParentTargetPicker', () => {
     await flush();
 
     expect(selectedIds).toEqual(['hall-closet']);
+  });
+
+  it('orders search results by title relevance before loose path matches', async () => {
+    component = mount(ParentTargetPicker, {
+      target: document.body,
+      props: {
+        legend: 'Parent',
+        searchId: 'parent-target-search',
+        groupLabel: 'Parent target',
+        search: '',
+        selectedId: null,
+        targets: [
+          parentTarget('garage-shelf', 'Garage shelf', 'Garage'),
+          parentTarget('shelf-rack', 'Shelf rack', 'Storage'),
+          parentTarget('storage-shelf', 'Shelf', 'Storage'),
+          parentTarget('bin', 'Utility bin', 'Garage / Shelf')
+        ],
+        visibleLimit: 4,
+        onSelect: () => {}
+      }
+    });
+
+    setInputValue(requiredInput('#parent-target-search'), 'shelf');
+    await flush();
+
+    const labels = destinationButtons('Parent target search results').map((target) => target.textContent ?? '');
+    expect(labels[0]).toContain('Shelf');
+    expect(labels[1]).toContain('Shelf rack');
+    expect(labels[2]).toContain('Garage shelf');
+    expect(labels[3]).toContain('Utility bin');
   });
 
   it('shows empty and overflow states consistently', async () => {
