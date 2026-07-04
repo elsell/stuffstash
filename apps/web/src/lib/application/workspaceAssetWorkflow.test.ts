@@ -111,6 +111,27 @@ describe('workspace asset workflow', () => {
     expect(result.data.assets.map((item) => item.id)).toEqual(['asset-one']);
   });
 
+  it('routes created locations to the focused location surface', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('location-one', 'Garage shelf', 'location')]
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'location',
+      title: 'Garage shelf',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      photos: []
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.closeAdd).toBe(true);
+    expect(result.mode).toBe('location');
+    expect(result.selectedAsset?.id).toBe('location-one');
+    expect(result.route).toMatchObject({ mode: 'location', locationId: 'location-one' });
+  });
+
   it('keeps quick-created parent context when photo upload fails', async () => {
     const repository = fakeRepository({
       createdAssets: [asset('parent-one', 'Garage bin', 'container'), asset('asset-one', 'Tape measure')],
@@ -276,6 +297,29 @@ describe('workspace asset workflow', () => {
     expect(result.error).toBe('Saved Tape measure, but could not refresh the active view. Refresh failed.');
     expect(result.selectedAsset?.id).toBe('asset-one');
     expect(result.route).toMatchObject({ mode: 'asset', assetId: 'asset-one' });
+  });
+
+  it('keeps created locations focused when active lifecycle refresh fails after create', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('location-one', 'Garage shelf', 'location')],
+      selectLifecycleFailure: true
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData([], 'archived'), inventory, {
+      kind: 'location',
+      title: 'Garage shelf',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      photos: []
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.closeAdd).toBe(true);
+    expect(result.error).toBe('Saved Garage shelf, but could not refresh the active view. Refresh failed.');
+    expect(result.mode).toBe('location');
+    expect(result.selectedAsset?.id).toBe('location-one');
+    expect(result.route).toMatchObject({ mode: 'location', locationId: 'location-one' });
   });
 
   it('keeps quick parent and photo context when active lifecycle refresh fails after create', async () => {

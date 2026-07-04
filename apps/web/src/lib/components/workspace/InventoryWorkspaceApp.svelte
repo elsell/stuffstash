@@ -123,7 +123,10 @@
   let selectedTenant = $derived(data.context.tenants.find((tenant) => tenant.id === data.context.selectedTenantId) ?? null);
   let assets = $derived(labelAssets(data.assets, data.context.customAssetTypes));
   let selectedLocation = $derived(
-    (assets.find((asset) => asset.id === selectedLocationId && asset.kind === 'location') as LocationAsset | undefined) ?? null
+    (assets.find((asset) => asset.id === selectedLocationId && asset.kind === 'location') as LocationAsset | undefined) ??
+      (loadedAssetDetail?.id === selectedLocationId && loadedAssetDetail.kind === 'location'
+        ? (loadedAssetDetail as LocationAsset)
+        : null)
   );
   let detailAssets = $derived(detailAssetList(assets, loadedAssetDetail, data.context.customAssetTypes));
   let selectedAsset = $derived(selectedAssetForDetail(selectedAssetId, assets, loadedAssetDetail, data.context.customAssetTypes));
@@ -233,8 +236,8 @@
         attachmentAction = null;
       }
       if (result.selectedAsset) {
-        selectedLocationId = null;
-        selectedAssetId = result.selectedAsset.id;
+        selectedLocationId = result.selectedAsset.kind === 'location' ? result.selectedAsset.id : null;
+        selectedAssetId = result.selectedAsset.kind === 'location' ? null : result.selectedAsset.id;
         loadedAssetDetail = result.selectedAsset;
         selectedAssetAttachments = [];
         attachmentId = null;

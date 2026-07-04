@@ -69,14 +69,9 @@ export async function createAssetWorkflow(
         saveResult: { saved: true },
         message: createAssetMessage(createdAsset, uploadResult, createdParent),
         closeAdd: true,
-        mode: 'asset',
+        mode: createdAsset.kind === 'location' ? 'location' : 'asset',
         selectedAsset: savedAsset,
-        route: {
-          mode: 'asset',
-          tenantId: createdAsset.tenantId,
-          inventoryId: createdAsset.inventoryId,
-          assetId: createdAsset.id
-        }
+        route: createdAssetRoute(createdAsset)
       };
     }
 
@@ -89,14 +84,9 @@ export async function createAssetWorkflow(
         saveResult: { saved: true },
         message,
         closeAdd: true,
-        mode: 'asset',
+        mode: savedAsset.kind === 'location' ? 'location' : 'asset',
         selectedAsset: savedAsset,
-        route: {
-          mode: 'asset',
-          tenantId: createdAsset.tenantId,
-          inventoryId: createdAsset.inventoryId,
-          assetId: createdAsset.id
-        }
+        route: createdAssetRoute(savedAsset)
       };
     }
 
@@ -105,14 +95,9 @@ export async function createAssetWorkflow(
       saveResult: { saved: true },
       message,
       closeAdd: true,
-      mode: 'asset',
+      mode: savedAsset.kind === 'location' ? 'location' : 'asset',
       selectedAsset: savedAsset,
-      route: {
-        mode: 'asset',
-        tenantId: createdAsset.tenantId,
-        inventoryId: createdAsset.inventoryId,
-        assetId: createdAsset.id
-      }
+      route: createdAssetRoute(savedAsset)
     };
   } catch (caught) {
     if (createdAsset) {
@@ -124,14 +109,9 @@ export async function createAssetWorkflow(
         message: createAssetMessage(createdAsset, uploadResult, createdParent),
         error: `Saved ${createdAsset.title}, but could not refresh the active view. ${failure}`,
         closeAdd: true,
-        mode: 'asset',
+        mode: selectedAsset.kind === 'location' ? 'location' : 'asset',
         selectedAsset,
-        route: {
-          mode: 'asset',
-          tenantId: createdAsset.tenantId,
-          inventoryId: createdAsset.inventoryId,
-          assetId: createdAsset.id
-        }
+        route: createdAssetRoute(selectedAsset)
       };
     }
     const nextData =
@@ -173,6 +153,22 @@ export function replaceWorkspaceAsset(data: WorkspaceData, asset: Asset): Worksp
 
 function prependCreatedAssets(data: WorkspaceData, asset: Asset, createdParent: Asset | null): WorkspaceData {
   return { ...data, assets: createdParent ? [asset, createdParent, ...data.assets] : [asset, ...data.assets] };
+}
+
+function createdAssetRoute(asset: Asset): Partial<WorkspaceRouteState> {
+  return asset.kind === 'location'
+    ? {
+        mode: 'location',
+        tenantId: asset.tenantId,
+        inventoryId: asset.inventoryId,
+        locationId: asset.id
+      }
+    : {
+        mode: 'asset',
+        tenantId: asset.tenantId,
+        inventoryId: asset.inventoryId,
+        assetId: asset.id
+      };
 }
 
 interface UploadedPhoto {

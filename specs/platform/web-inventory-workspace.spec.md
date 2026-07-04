@@ -371,6 +371,7 @@ The add surface:
 - The tray must show a compact live summary of the selected kind, parent destination, and photo count so users can confirm what will be created without rescanning the whole form.
 - Must collect name/title.
 - Must collect a valid parent target when required.
+- Saving a new location must land on the canonical focused location route for the created location, `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}`, rather than the generic asset detail route.
 - Add routes may include a `parent` query parameter to preselect an existing valid location or container parent. Location view add actions must use this route-backed preselection rather than component-local-only state.
 - If an add route includes an invalid `parent` query parameter, the app must normalize the URL to the same add route without the invalid parent rather than silently saving to a different destination than the URL implies.
 - Parent target selection must use a picker/search over valid location/container targets, not a free text field that implies invalid foreign keys can be saved.

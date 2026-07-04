@@ -120,6 +120,25 @@ test('add flow saves items with and without selected photo previews', async ({ p
   ).toBeGreaterThan(photoTapeThumbnailRequestsBeforeSearch);
 });
 
+test('add location deep link saves to the canonical focused location route', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Add-location smoke uses the desktop create menu.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/add/location');
+
+  const dialog = page.getByRole('dialog', { name: 'Add location' });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByLabel('Location name')).toHaveAttribute('placeholder', 'Garage shelf');
+  await page.getByLabel('Location name').fill('Garage shelf');
+  await page.getByRole('button', { name: 'Save location' }).click();
+
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/locations/asset-garage-shelf');
+  await expect(page.getByRole('heading', { name: 'Garage shelf' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Back/ })).toHaveAttribute(
+    'href',
+    '/tenants/tenant-home/inventories/inventory-household/locations'
+  );
+});
+
 test('viewer inventory disables desktop add affordances', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Viewer denied smoke runs on desktop.');
 
