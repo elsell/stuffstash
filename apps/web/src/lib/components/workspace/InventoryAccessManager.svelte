@@ -8,6 +8,7 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import { inventoryAccessRelationshipOptions } from '$lib/application/workspaceAccessPresentation';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import { settingsInvitationStatusOptions } from '$lib/application/workspaceSettingsNavigation';
   import { accessInvitationsHref, invitationActionHref, invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
@@ -48,11 +49,7 @@
     onInvitationActionClose?: () => void;
   } = $props();
 
-  const relationships: InventoryAccessRelationship[] = ['viewer', 'editor'];
-  const relationshipOptions = relationships.map((relationship) => ({
-    value: relationship,
-    label: relationship === 'viewer' ? 'Viewer' : 'Editor'
-  }));
+  const relationshipOptions = inventoryAccessRelationshipOptions();
   let invitationStatusOptions = $derived(
     settingsInvitationStatusOptions({
       tenantId: tenant?.id ?? inventory?.tenantId ?? null,
