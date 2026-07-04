@@ -8,7 +8,12 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { inventoryAccessListStatus, inventoryAccessRelationshipOptions } from '$lib/application/workspaceAccessPresentation';
+  import {
+    inventoryAccessListStatus,
+    inventoryAccessManagerAccessStatus,
+    inventoryAccessManagerOperationStatus,
+    inventoryAccessRelationshipOptions
+  } from '$lib/application/workspaceAccessPresentation';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import { settingsInvitationStatusOptions } from '$lib/application/workspaceSettingsNavigation';
   import { accessInvitationsHref, invitationActionOptions } from '$lib/application/workspaceInvitationActions';
@@ -74,6 +79,8 @@
   let invitationConfirmationElement = $state<HTMLElement | null>(null);
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
+  let accessStatus = $derived(inventoryAccessManagerAccessStatus({ hasInventory: Boolean(inventory), canShare }));
+  let operationStatus = $derived(inventoryAccessManagerOperationStatus(error));
   let contextKey = $derived(tenant && inventory && canShare ? `${tenant.id}:${inventory.id}` : '');
   let grantListStatus = $derived(inventoryAccessListStatus({ kind: 'grants', busy, loaded, count: grants.length }));
   let invitationListStatus = $derived(inventoryAccessListStatus({ kind: 'invitations', busy, loaded, count: invitations.length }));
@@ -478,13 +485,11 @@
     </div>
   </div>
 
-  {#if !inventory}
-    <p class="denied-note">Select an inventory before managing sharing.</p>
-  {:else if !canShare}
-    <p class="denied-note" role="alert">You can view this inventory, but you cannot manage sharing.</p>
+  {#if accessStatus}
+    <p class="denied-note" role={accessStatus.role}>{accessStatus.message}</p>
   {:else}
-    {#if error}
-      <p class="denied-note" role="alert">{error}</p>
+    {#if operationStatus}
+      <p class="denied-note" role={operationStatus.role}>{operationStatus.message}</p>
     {/if}
     {#if message}
       <p class="success-note" role="status">{message}</p>

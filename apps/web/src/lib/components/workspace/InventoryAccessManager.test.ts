@@ -26,6 +26,34 @@ afterEach(() => {
 });
 
 describe('InventoryAccessManager', () => {
+  it('renders missing inventory access status without an alert role', async () => {
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: null, repository }
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Select an inventory before managing sharing.');
+    expect(document.body.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('renders denied access status as an alert', async () => {
+    const { repository, calls } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view']), repository }
+    });
+    await flush();
+
+    expect(calls).toEqual([]);
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain(
+      'You can view this inventory, but you cannot manage sharing.'
+    );
+  });
+
   it('loads grants and invitations when share access is available', async () => {
     const { repository, calls } = fakeAccessRepository();
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { inventoryAccessListStatus, inventoryAccessRelationshipLabel, inventoryAccessRelationshipOptions } from './workspaceAccessPresentation';
+import {
+  inventoryAccessListStatus,
+  inventoryAccessManagerAccessStatus,
+  inventoryAccessManagerOperationStatus,
+  inventoryAccessRelationshipLabel,
+  inventoryAccessRelationshipOptions
+} from './workspaceAccessPresentation';
 
 describe('workspace access presentation helpers', () => {
   it('builds relationship selector options from canonical frontend-domain values', () => {
@@ -37,5 +43,27 @@ describe('workspace access presentation helpers', () => {
       kind: 'none',
       message: ''
     });
+  });
+
+  it('builds access manager missing-context and denied statuses', () => {
+    expect(inventoryAccessManagerAccessStatus({ hasInventory: false, canShare: true })).toEqual({
+      kind: 'missing-context',
+      message: 'Select an inventory before managing sharing.'
+    });
+    expect(inventoryAccessManagerAccessStatus({ hasInventory: true, canShare: false })).toEqual({
+      kind: 'denied',
+      message: 'You can view this inventory, but you cannot manage sharing.',
+      role: 'alert'
+    });
+    expect(inventoryAccessManagerAccessStatus({ hasInventory: true, canShare: true })).toBeNull();
+  });
+
+  it('builds access manager operation error status', () => {
+    expect(inventoryAccessManagerOperationStatus('Access service unavailable.')).toEqual({
+      kind: 'error',
+      message: 'Access service unavailable.',
+      role: 'alert'
+    });
+    expect(inventoryAccessManagerOperationStatus('')).toBeNull();
   });
 });

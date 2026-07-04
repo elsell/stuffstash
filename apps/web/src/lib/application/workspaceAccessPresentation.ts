@@ -8,11 +8,18 @@ export interface InventoryAccessRelationshipOption {
 
 export type InventoryAccessListKind = 'grants' | 'invitations';
 export type InventoryAccessListStatusKind = 'none' | 'loading' | 'empty';
+export type InventoryAccessManagerStatusKind = 'missing-context' | 'denied' | 'error';
 
 export interface InventoryAccessListStatusPresentation {
   kind: InventoryAccessListStatusKind;
   message: string;
   role?: 'status';
+}
+
+export interface InventoryAccessManagerStatusPresentation {
+  kind: InventoryAccessManagerStatusKind;
+  message: string;
+  role?: 'alert';
 }
 
 const relationshipLabels: Record<InventoryAccessRelationship, string> = {
@@ -55,4 +62,35 @@ export function inventoryAccessListStatus(input: {
     return { kind: 'empty', message: listCopy[input.kind].empty };
   }
   return { kind: 'none', message: '' };
+}
+
+export function inventoryAccessManagerAccessStatus(input: {
+  hasInventory: boolean;
+  canShare: boolean;
+}): InventoryAccessManagerStatusPresentation | null {
+  if (!input.hasInventory) {
+    return {
+      kind: 'missing-context',
+      message: 'Select an inventory before managing sharing.'
+    };
+  }
+  if (!input.canShare) {
+    return {
+      kind: 'denied',
+      message: 'You can view this inventory, but you cannot manage sharing.',
+      role: 'alert'
+    };
+  }
+  return null;
+}
+
+export function inventoryAccessManagerOperationStatus(error: string): InventoryAccessManagerStatusPresentation | null {
+  if (!error) {
+    return null;
+  }
+  return {
+    kind: 'error',
+    message: error,
+    role: 'alert'
+  };
 }
