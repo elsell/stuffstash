@@ -377,8 +377,10 @@ Photos:
 - Photos must be optional. A user must be able to save an asset without adding a photo.
 - The add surface should expose camera and upload actions.
 - Photo actions must be grouped as one attachment section with accessible group labeling, supported media guidance, and selected-photo count/status.
+- The add photo section must associate supported-media guidance, selected-photo status, and validation errors with the attachment group so assistive technology users hear the current state before acting.
 - The first approved web direction supports JPEG, PNG, and WebP image affordances consistent with the media spec.
 - Selected photos should show thumbnails and allow removal before save.
+- Selected photo previews must be exposed as a named list with individual remove actions.
 - Invalid or oversized selected photos must block save until removed or corrected.
 - Attachment size and supported type rules must come from configuration or a media policy boundary rather than scattered hard-coded checks.
 

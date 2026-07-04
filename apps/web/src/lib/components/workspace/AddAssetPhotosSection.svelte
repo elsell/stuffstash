@@ -35,6 +35,7 @@
   let supportedImageTypes = $derived(mediaPolicy.supportedContentTypes.filter((type) => type.startsWith('image/')));
   let acceptTypes = $derived(supportedImageTypes.join(','));
   let supportedTypeLabel = $derived(formatSupportedTypes(supportedImageTypes));
+  let describedBy = $derived(['photo-help', 'photo-status', error ? 'photo-error' : ''].filter(Boolean).join(' '));
 
   function openPhotoPicker(): void {
     fileInput?.click();
@@ -66,13 +67,13 @@
   }
 </script>
 
-<fieldset class="selection-field attachment-section" aria-describedby="photo-help">
+<fieldset class="selection-field attachment-section" aria-describedby={describedBy}>
   <legend>Photos</legend>
   <p id="photo-help" class="selection-summary">Optional {supportedTypeLabel} up to {formatBytes(mediaPolicy.maxBytes)}.</p>
-  <div class="photo-actions" role="group" aria-label="Photo actions">
-    <Button.Root type="button" variant="outline" class="photo-label" onclick={openPhotoPicker}><Upload /> Upload</Button.Root>
-    <Button.Root type="button" variant="outline" class="photo-label" onclick={openCameraPicker}><Camera /> Camera</Button.Root>
-    <span class="photo-status" aria-live="polite">{summary}</span>
+  <div class="photo-actions" role="group" aria-label="Photo actions" aria-describedby={describedBy}>
+    <Button.Root type="button" variant="outline" class="photo-label" aria-describedby={describedBy} onclick={openPhotoPicker}><Upload /> Upload</Button.Root>
+    <Button.Root type="button" variant="outline" class="photo-label" aria-describedby={describedBy} onclick={openCameraPicker}><Camera /> Camera</Button.Root>
+    <span id="photo-status" class="photo-status" aria-live="polite">{summary}</span>
   </div>
   {#key inputKey}
     <Input
@@ -81,6 +82,7 @@
       class="visually-hidden"
       type="file"
       tabindex={-1}
+      aria-label="Upload photos"
       accept={acceptTypes}
       multiple
       onchange={(event) => onFiles(event.currentTarget.files ?? undefined)}
@@ -91,6 +93,7 @@
       class="visually-hidden"
       type="file"
       tabindex={-1}
+      aria-label="Take photo"
       accept={acceptTypes}
       capture="environment"
       onchange={(event) => onFiles(event.currentTarget.files ?? undefined)}
@@ -99,10 +102,10 @@
 </fieldset>
 
 {#if photos.length > 0}
-  <div class="photo-preview-list">
+  <div class="photo-preview-list" role="list" aria-label="Selected photos">
     {#each photos as photo}
-      <div class="photo-preview">
-        <img src={photo.previewUrl} alt={photo.name} />
+      <div class="photo-preview" role="listitem">
+        <img src={photo.previewUrl} alt="" />
         <span>{photo.name}</span>
         <Button.Root variant="ghost" size="icon-xs" aria-label={`Remove ${photo.name}`} onclick={() => onRemove(photo.id)}><X /></Button.Root>
       </div>
@@ -110,5 +113,5 @@
   </div>
 {/if}
 {#if error}
-  <p class="denied-note" role="alert">{error}</p>
+  <p id="photo-error" class="denied-note" role="alert">{error}</p>
 {/if}
