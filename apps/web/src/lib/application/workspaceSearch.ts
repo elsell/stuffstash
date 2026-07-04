@@ -21,6 +21,15 @@ export interface WorkspaceSearchResultState {
   error: string;
 }
 
+export interface SearchFilterOption<TValue extends string = string> {
+  value: TValue;
+  label: string;
+  href: string;
+}
+
+const searchLifecycleFilters: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
+const searchModes: SearchMode[] = ['fuzzy', 'exact'];
+
 export function buildSearchSuggestions(assets: Asset[], query: string, limit = 6): Asset[] {
   return filterAssets(assets, query).slice(0, limit);
 }
@@ -45,6 +54,32 @@ export function searchFilterHref(
   mode: SearchMode
 ): string {
   return workspaceRouteHref({ mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode }, tenantId, inventoryId);
+}
+
+export function searchLifecycleFilterOptions(input: {
+  tenantId: string;
+  inventoryId: string;
+  query: string;
+  mode: SearchMode;
+}): SearchFilterOption<SearchLifecycleFilter>[] {
+  return searchLifecycleFilters.map((lifecycleState) => ({
+    value: lifecycleState,
+    label: searchLifecycleFilterLabel(lifecycleState),
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode)
+  }));
+}
+
+export function searchModeFilterOptions(input: {
+  tenantId: string;
+  inventoryId: string;
+  query: string;
+  lifecycleState: SearchLifecycleFilter;
+}): SearchFilterOption<SearchMode>[] {
+  return searchModes.map((mode) => ({
+    value: mode,
+    label: searchModeLabel(mode),
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode)
+  }));
 }
 
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {
@@ -76,4 +111,18 @@ export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput)
       error: caught instanceof Error ? caught.message : 'Search failed.'
     };
   }
+}
+
+function searchLifecycleFilterLabel(lifecycleState: SearchLifecycleFilter): string {
+  if (lifecycleState === 'archived') {
+    return 'Archived';
+  }
+  if (lifecycleState === 'all') {
+    return 'All';
+  }
+  return 'Active';
+}
+
+function searchModeLabel(mode: SearchMode): string {
+  return mode === 'exact' ? 'Exact' : 'Contains';
 }

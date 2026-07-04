@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Asset, SearchRequest, SearchResult } from '$lib/domain/inventory';
-import { buildSearchSuggestions, executeWorkspaceSearch, searchAssetHref, searchFilterHref } from './workspaceSearch';
+import {
+  buildSearchSuggestions,
+  executeWorkspaceSearch,
+  searchAssetHref,
+  searchFilterHref,
+  searchLifecycleFilterOptions,
+  searchModeFilterOptions
+} from './workspaceSearch';
 
 const assets: Asset[] = [
   asset('tape', 'Tape measure', 'Garage measuring tool'),
@@ -71,6 +78,52 @@ describe('workspace search helpers', () => {
     expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/search?lifecycle=all'
     );
+  });
+
+  it('builds route-backed search filter options with stable labels', () => {
+    expect(
+      searchLifecycleFilterOptions({
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        query: 'garage shelf',
+        mode: 'fuzzy'
+      })
+    ).toEqual([
+      {
+        value: 'active',
+        label: 'Active',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf'
+      },
+      {
+        value: 'archived',
+        label: 'Archived',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+      },
+      {
+        value: 'all',
+        label: 'All',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=all'
+      }
+    ]);
+    expect(
+      searchModeFilterOptions({
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        query: 'garage shelf',
+        lifecycleState: 'archived'
+      })
+    ).toEqual([
+      {
+        value: 'fuzzy',
+        label: 'Contains',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+      },
+      {
+        value: 'exact',
+        label: 'Exact',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact'
+      }
+    ]);
   });
 
   it('normalizes blank searches without calling the repository', async () => {

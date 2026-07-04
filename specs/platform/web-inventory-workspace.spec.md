@@ -583,7 +583,7 @@ Required implementation split:
 - Shell navigation, context-switcher, add-menu, and import-source href derivation must live in focused application helpers rather than component-local route string assembly.
 - Product-shell route recovery, add-close, normalization, and detail-back route derivation must live in focused application helpers rather than accumulating in the workspace shell component.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
-- Search filter href derivation must live in focused application helpers rather than component-local route string assembly.
+- Search filter option composition, labels, and href derivation must live in focused application helpers rather than component-local route string assembly.
 - Search result and suggestion href derivation must live in focused application helpers rather than component-local route string assembly.
 - Route-backed control click interception must use a shared helper so ordinary in-app clicks, modified clicks, non-primary clicks, and already-prevented events behave consistently across navigation, filters, suggestions, settings actions, and dialogs.
 - Add route availability, route-backed parent preselection, and invalid parent-route normalization must live in focused application helpers rather than accumulating in the product shell component.

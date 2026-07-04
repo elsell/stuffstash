@@ -4,7 +4,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
-  import { searchAssetHref, searchFilterHref as searchFilterRouteHref } from '$lib/application/workspaceSearch';
+  import { searchAssetHref, searchLifecycleFilterOptions, searchModeFilterOptions } from '$lib/application/workspaceSearch';
   import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
   import SearchSuggestions from './SearchSuggestions.svelte';
@@ -38,21 +38,21 @@
     onOpenAsset: (asset: Asset) => void;
   } = $props();
 
-  const lifecycleOptions: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
-  const modeOptions: SearchMode[] = ['fuzzy', 'exact'];
   let lifecycleControlOptions = $derived(
-    lifecycleOptions.map((option) => ({
-      value: option,
-      label: option === 'active' ? 'Active' : option === 'archived' ? 'Archived' : 'All',
-      href: searchFilterHref(option, searchMode)
-    }))
+    searchLifecycleFilterOptions({
+      tenantId,
+      inventoryId,
+      query,
+      mode: searchMode
+    })
   );
   let modeControlOptions = $derived(
-    modeOptions.map((option) => ({
-      value: option,
-      label: option === 'fuzzy' ? 'Contains' : 'Exact',
-      href: searchFilterHref(lifecycleState, option)
-    }))
+    searchModeFilterOptions({
+      tenantId,
+      inventoryId,
+      query,
+      lifecycleState
+    })
   );
   let searchFocused = $state(false);
   let activeSuggestionIndex = $state(-1);
@@ -68,10 +68,6 @@
       activeSuggestionIndex = -1;
     }
   });
-
-  function searchFilterHref(nextLifecycleState: SearchLifecycleFilter, nextSearchMode: SearchMode): string {
-    return searchFilterRouteHref(tenantId, inventoryId, query, nextLifecycleState, nextSearchMode);
-  }
 
   function openSuggestion(event: MouseEvent, asset: Asset): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
