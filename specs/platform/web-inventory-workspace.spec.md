@@ -581,6 +581,7 @@ Required implementation split:
 - Parent target picker result-count, destination-count, suggestion-count, no-match, overflow, and no-target presentation must live in focused application helpers rather than component-local conditional copy.
 - Add surface control options, kind-specific labels, destination summaries, and photo-count summaries must live in focused application helpers rather than component-local derivation.
 - Add surface quick-parent validation copy must live in focused application helpers rather than component-local conditional copy.
+- Add photo-picker action labels, input labels, selected-list labels, supported-image type derivation, and supported-format copy must live in focused application helpers rather than component-local conditional copy.
 - Home and location browse href derivation must live in focused application helpers rather than component-local route string assembly.
 - Home workspace heading, lifecycle filter options, empty-state copy, and create-location denied copy must live in focused application helpers rather than component-local conditional copy.
 - Focused location empty-state copy, add-item action label, and create-item denied copy must live in focused application helpers rather than component-local conditional copy.

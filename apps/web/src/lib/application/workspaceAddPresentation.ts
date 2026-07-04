@@ -1,4 +1,4 @@
-import type { AssetKind, ParentTargetViewModel } from '$lib/domain/inventory';
+import type { AssetKind, MediaUploadPolicy, ParentTargetViewModel, SelectedPhoto } from '$lib/domain/inventory';
 import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
 
 export interface AddAssetKindCopy {
@@ -14,6 +14,24 @@ export interface AddControlOption<TValue extends string = string> {
   value: TValue;
   label: string;
 }
+
+export interface AddPhotoPickerPresentation {
+  actionGroupLabel: string;
+  uploadLabel: string;
+  cameraLabel: string;
+  uploadInputLabel: string;
+  cameraInputLabel: string;
+  selectedListLabel: string;
+}
+
+export const addPhotoPickerPresentation: AddPhotoPickerPresentation = {
+  actionGroupLabel: 'Photo actions',
+  uploadLabel: 'Upload',
+  cameraLabel: 'Camera',
+  uploadInputLabel: 'Upload photos',
+  cameraInputLabel: 'Take photo',
+  selectedListLabel: 'Selected photos'
+};
 
 export const quickParentKindOptions: AddControlOption<'location' | 'container'>[] = [
   { value: 'location', label: 'Location' },
@@ -75,6 +93,36 @@ export function addPhotoCountLabel(photoCount: number): string {
   return `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}`;
 }
 
+export function addSupportedImageTypes(mediaPolicy: MediaUploadPolicy): SelectedPhoto['contentType'][] {
+  return mediaPolicy.supportedContentTypes.filter((type): type is SelectedPhoto['contentType'] => type.startsWith('image/'));
+}
+
+export function addPhotoAcceptTypes(supportedImageTypes: string[]): string {
+  return supportedImageTypes.join(',');
+}
+
+export function addPhotoSupportedTypeLabel(types: string[]): string {
+  if (types.length === 0) {
+    return 'No image formats';
+  }
+  const labels = types.map(formatImageContentType);
+  if (labels.length === 1) {
+    return labels[0] ?? '';
+  }
+  if (labels.length === 2) {
+    return `${labels[0]} or ${labels[1]}`;
+  }
+  return `${labels.slice(0, -1).join(', ')}, or ${labels[labels.length - 1]}`;
+}
+
+export function addPhotoHelpText(supportedTypeLabel: string, maxBytesLabel: string): string {
+  return `Optional ${supportedTypeLabel} up to ${maxBytesLabel}.`;
+}
+
+export function addPhotoRemoveLabel(photo: Pick<SelectedPhoto, 'name'>): string {
+  return `Remove ${photo.name}`;
+}
+
 function addAssetNamePlaceholder(kind: AssetKind): string {
   if (kind === 'location') {
     return 'Garage shelf';
@@ -83,4 +131,11 @@ function addAssetNamePlaceholder(kind: AssetKind): string {
     return 'Clear storage bin';
   }
   return 'Tomato fertilizer';
+}
+
+function formatImageContentType(type: string): string {
+  if (type === 'image/jpeg') return 'JPEG';
+  if (type === 'image/png') return 'PNG';
+  if (type === 'image/webp') return 'WebP';
+  return type.replace(/^image\//, '').toUpperCase();
 }

@@ -3,7 +3,13 @@ import type { ParentTargetViewModel } from '$lib/domain/inventory';
 import {
   addAssetKindCopy,
   addDestinationSummary,
+  addPhotoAcceptTypes,
   addPhotoCountLabel,
+  addPhotoHelpText,
+  addPhotoPickerPresentation,
+  addPhotoRemoveLabel,
+  addPhotoSupportedTypeLabel,
+  addSupportedImageTypes,
   assetKindControlOptions,
   quickParentContainerLabel,
   quickParentContainerSummary,
@@ -72,6 +78,32 @@ describe('workspace add presentation helpers', () => {
     expect(addPhotoCountLabel(0)).toBe('No photos');
     expect(addPhotoCountLabel(1)).toBe('1 photo');
     expect(addPhotoCountLabel(2)).toBe('2 photos');
+  });
+
+  it('builds photo picker labels and supported image type copy', () => {
+    expect(addPhotoPickerPresentation).toEqual({
+      actionGroupLabel: 'Photo actions',
+      uploadLabel: 'Upload',
+      cameraLabel: 'Camera',
+      uploadInputLabel: 'Upload photos',
+      cameraInputLabel: 'Take photo',
+      selectedListLabel: 'Selected photos'
+    });
+
+    const supportedTypes = addSupportedImageTypes({
+      supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+      maxBytes: 1024
+    });
+
+    expect(supportedTypes).toEqual(['image/jpeg', 'image/png', 'image/webp']);
+    expect(addPhotoAcceptTypes(supportedTypes)).toBe('image/jpeg,image/png,image/webp');
+    expect(addPhotoSupportedTypeLabel([])).toBe('No image formats');
+    expect(addPhotoSupportedTypeLabel(['image/png'])).toBe('PNG');
+    expect(addPhotoSupportedTypeLabel(['image/jpeg', 'image/png'])).toBe('JPEG or PNG');
+    expect(addPhotoSupportedTypeLabel(supportedTypes)).toBe('JPEG, PNG, or WebP');
+    expect(addPhotoSupportedTypeLabel(['image/heic'])).toBe('HEIC');
+    expect(addPhotoHelpText('JPEG, PNG, or WebP', '1 KB')).toBe('Optional JPEG, PNG, or WebP up to 1 KB.');
+    expect(addPhotoRemoveLabel({ name: 'front.jpg' })).toBe('Remove front.jpg');
   });
 });
 
