@@ -5,11 +5,13 @@
   import Search from '@lucide/svelte/icons/search';
   import Settings from '@lucide/svelte/icons/settings';
   import MapPin from '@lucide/svelte/icons/map-pin';
+  import Upload from '@lucide/svelte/icons/upload';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
-  import { shellAddHref, shellModeHref, type ShellWorkspaceMode } from '$lib/application/workspaceShellNavigation';
+  import { mobileShellNavigationItems, shellAddHref, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { WorkspaceMode } from '$lib/domain/inventory';
+  import type { Component } from 'svelte';
 
   let {
     mode,
@@ -31,21 +33,33 @@
 
   const addDeniedNoteId = 'mobile-add-denied';
   let addAvailability = $derived(workspaceAddAvailability({ hasInventory: selectedInventoryId.length > 0, canCreateAsset }));
+  let navigationItems = $derived(
+    mobileShellNavigationItems({
+      mode,
+      tenantId: selectedTenantId || null,
+      inventoryId: selectedInventoryId || null,
+      settingsSection
+    })
+  );
 
-  function modeHref(nextMode: ShellWorkspaceMode): string {
-    return shellModeHref(nextMode, selectedTenantId || null, selectedInventoryId || null, settingsSection);
-  }
+  const destinationIcons: Record<ShellNavigationIcon, Component> = {
+    home: Home,
+    locations: MapPin,
+    search: Search,
+    import: Upload,
+    settings: Settings
+  };
 
   function addHref(): string {
     return shellAddHref('item', selectedTenantId || null, selectedInventoryId || null);
   }
 
-  function openMode(event: MouseEvent, nextMode: WorkspaceMode): void {
+  function openMode(event: MouseEvent, destination: ShellNavigationDestination): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
-    onModeChange(nextMode);
+    onModeChange(destination.mode);
   }
 
   function openAdd(event: MouseEvent): void {
@@ -61,20 +75,16 @@
 </script>
 
 <nav class="mobile-nav" aria-label="Mobile navigation">
-  <Button.Root
-    href={modeHref('home')}
-    variant={mode === 'home' ? 'secondary' : 'ghost'}
-    size="sm"
-    aria-current={mode === 'home' ? 'page' : undefined}
-    onclick={(event) => openMode(event, 'home')}
-  ><Home /> Home</Button.Root>
-  <Button.Root
-    href={modeHref('search')}
-    variant={mode === 'search' ? 'secondary' : 'ghost'}
-    size="sm"
-    aria-current={mode === 'search' ? 'page' : undefined}
-    onclick={(event) => openMode(event, 'search')}
-  ><Search /> Search</Button.Root>
+  {#each navigationItems.slice(0, 2) as destination}
+    {@const Icon = destinationIcons[destination.icon]}
+    <Button.Root
+      href={destination.href}
+      variant={destination.current ? 'secondary' : 'ghost'}
+      size="sm"
+      aria-current={destination.current ? 'page' : undefined}
+      onclick={(event) => openMode(event, destination)}
+    ><Icon /> {destination.label}</Button.Root>
+  {/each}
   <Button.Root
     href={addHref()}
     class="mobile-add"
@@ -86,18 +96,14 @@
   {#if addAvailability.disabledReason}
     <p id={addDeniedNoteId} class="visually-hidden" role="note">{addAvailability.disabledReason}</p>
   {/if}
-  <Button.Root
-    href={modeHref('locations')}
-    variant={mode === 'locations' || mode === 'location' ? 'secondary' : 'ghost'}
-    size="sm"
-    aria-current={mode === 'locations' || mode === 'location' ? 'page' : undefined}
-    onclick={(event) => openMode(event, 'locations')}
-  ><MapPin /> Places</Button.Root>
-  <Button.Root
-    href={modeHref('settings')}
-    variant={mode === 'settings' ? 'secondary' : 'ghost'}
-    size="sm"
-    aria-current={mode === 'settings' ? 'page' : undefined}
-    onclick={(event) => openMode(event, 'settings')}
-  ><Settings /> Settings</Button.Root>
+  {#each navigationItems.slice(2) as destination}
+    {@const Icon = destinationIcons[destination.icon]}
+    <Button.Root
+      href={destination.href}
+      variant={destination.current ? 'secondary' : 'ghost'}
+      size="sm"
+      aria-current={destination.current ? 'page' : undefined}
+      onclick={(event) => openMode(event, destination)}
+    ><Icon /> {destination.label}</Button.Root>
+  {/each}
 </nav>

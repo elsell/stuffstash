@@ -2,12 +2,13 @@
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import MapPin from '@lucide/svelte/icons/map-pin';
+  import Search from '@lucide/svelte/icons/search';
   import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
   import LogOut from '@lucide/svelte/icons/log-out';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { shellModeHref, type ShellWorkspaceMode } from '$lib/application/workspaceShellNavigation';
+  import { desktopShellNavigationGroups, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
   import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
@@ -39,38 +40,29 @@
   } = $props();
 
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId));
+  let navigationGroups = $derived(
+    desktopShellNavigationGroups({
+      mode,
+      tenantId: selectedTenantId || null,
+      inventoryId: selectedInventoryId || null,
+      settingsSection
+    })
+  );
 
-  type NavDestination = {
-    mode: ShellWorkspaceMode;
-    label: string;
-    description: string;
-    icon: Component;
+  const destinationIcons: Record<ShellNavigationIcon, Component> = {
+    home: Home,
+    locations: MapPin,
+    search: Search,
+    import: Upload,
+    settings: Settings
   };
 
-  const primaryDestinations: NavDestination[] = [
-    { mode: 'home', label: 'Home', description: 'Recent assets and places', icon: Home },
-    { mode: 'locations', label: 'Locations', description: 'Browse rooms, shelves, and places', icon: MapPin }
-  ];
-
-  const utilityDestinations: NavDestination[] = [
-    { mode: 'import', label: 'Import', description: 'Bring in legacy data', icon: Upload },
-    { mode: 'settings', label: 'Settings', description: 'Access, fields, and audit', icon: Settings }
-  ];
-
-  function openDestination(event: MouseEvent, destination: NavDestination): void {
+  function openDestination(event: MouseEvent, destination: ShellNavigationDestination): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onModeChange(destination.mode);
-  }
-
-  function destinationIsCurrent(destination: NavDestination): boolean {
-    return mode === destination.mode || (destination.mode === 'locations' && mode === 'location');
-  }
-
-  function destinationHref(destination: NavDestination): string {
-    return shellModeHref(destination.mode, selectedTenantId || null, selectedInventoryId || null, settingsSection);
   }
 </script>
 
@@ -93,16 +85,17 @@
   />
 
   <nav class="side-nav-groups" aria-label="Inventory destinations">
-    <div class="nav-section" aria-labelledby="primary-nav-label">
-      <p id="primary-nav-label" class="nav-eyebrow">Inventory</p>
+    {#each navigationGroups as group}
+      <div class="nav-section" aria-labelledby={`${group.id}-nav-label`}>
+      <p id={`${group.id}-nav-label`} class="nav-eyebrow">{group.label}</p>
       <div class="nav-list">
-        {#each primaryDestinations as destination}
-          {@const Icon = destination.icon}
+        {#each group.destinations as destination}
+          {@const Icon = destinationIcons[destination.icon]}
           <Button.Root
-            href={destinationHref(destination)}
-            variant={destinationIsCurrent(destination) ? 'secondary' : 'ghost'}
+            href={destination.href}
+            variant={destination.current ? 'secondary' : 'ghost'}
             class="nav-button"
-            aria-current={destinationIsCurrent(destination) ? 'page' : undefined}
+            aria-current={destination.current ? 'page' : undefined}
             onclick={(event) => openDestination(event, destination)}
           >
             <Icon aria-hidden="true" />
@@ -113,29 +106,8 @@
           </Button.Root>
         {/each}
       </div>
-    </div>
-
-    <div class="nav-section" aria-labelledby="utility-nav-label">
-      <p id="utility-nav-label" class="nav-eyebrow">Tools</p>
-      <div class="nav-list">
-        {#each utilityDestinations as destination}
-          {@const Icon = destination.icon}
-          <Button.Root
-            href={destinationHref(destination)}
-            variant={destinationIsCurrent(destination) ? 'secondary' : 'ghost'}
-            class="nav-button"
-            aria-current={destinationIsCurrent(destination) ? 'page' : undefined}
-            onclick={(event) => openDestination(event, destination)}
-          >
-            <Icon aria-hidden="true" />
-            <span>
-              <strong>{destination.label}</strong>
-              <small>{destination.description}</small>
-            </span>
-          </Button.Root>
-        {/each}
       </div>
-    </div>
+    {/each}
   </nav>
 
   <div class="side-nav-footer">
