@@ -13,15 +13,16 @@ type searchAssetResultResponse struct {
 		Name string `json:"name"`
 	} `json:"inventory"`
 	Asset struct {
-		ID                string         `json:"id"`
-		InventoryID       string         `json:"inventoryId"`
-		ParentAssetID     string         `json:"parentAssetId,omitempty"`
-		CustomAssetTypeID string         `json:"customAssetTypeId,omitempty"`
-		Kind              string         `json:"kind"`
-		Title             string         `json:"title"`
-		Description       string         `json:"description"`
-		CustomFields      map[string]any `json:"customFields"`
-		LifecycleState    string         `json:"lifecycleState"`
+		ID                string             `json:"id"`
+		InventoryID       string             `json:"inventoryId"`
+		ParentAssetID     string             `json:"parentAssetId,omitempty"`
+		CustomAssetTypeID string             `json:"customAssetTypeId,omitempty"`
+		Kind              string             `json:"kind"`
+		Title             string             `json:"title"`
+		Description       string             `json:"description"`
+		CustomFields      map[string]any     `json:"customFields"`
+		LifecycleState    string             `json:"lifecycleState"`
+		PrimaryPhoto      *assetPrimaryPhoto `json:"primaryPhoto,omitempty"`
 	} `json:"asset"`
 	Matches []struct {
 		Field string `json:"field"`

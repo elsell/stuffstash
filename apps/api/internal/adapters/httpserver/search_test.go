@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -15,6 +16,16 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 	attachmentSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "warranty", "", "", "")
 	if len(attachmentSearch.Data) != 1 || attachmentSearch.Data[0].Asset.Title != "Cordless Drill" || attachmentSearch.Data[0].Matches[0].Field != "attachment_file_name" {
 		t.Fatalf("expected attachment metadata search to find drill, got %+v", attachmentSearch.Data)
+	}
+	primaryPhoto := attachmentSearch.Data[0].Asset.PrimaryPhoto
+	if primaryPhoto == nil {
+		t.Fatalf("expected attachment search result to include primary photo, got %+v", attachmentSearch.Data[0].Asset)
+	}
+	if primaryPhoto.FileName != "warranty-card.png" || primaryPhoto.ContentType != "image/png" {
+		t.Fatalf("unexpected search primary photo summary: %+v", primaryPhoto)
+	}
+	if strings.Contains(primaryPhoto.Thumbnails.Small, "storage") || !strings.Contains(primaryPhoto.Thumbnails.Small, "/attachments/"+primaryPhoto.ID+"/thumbnail?variant=small") {
+		t.Fatalf("expected safe search thumbnail API path, got %q", primaryPhoto.Thumbnails.Small)
 	}
 
 	customFieldSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "2027", "", "", "")
