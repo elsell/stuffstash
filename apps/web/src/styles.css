@@ -990,24 +990,38 @@ small {
 }
 
 .invitation-row {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
 }
 
-.access-row span,
+.access-row-main,
+.access-row-status,
 .access-actions {
   min-width: 0;
 }
 
-.access-row span {
+.access-row-main {
   display: grid;
   gap: 2px;
+}
+
+.access-row-main strong,
+.access-row-main small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.access-row-status {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .access-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .token-line {

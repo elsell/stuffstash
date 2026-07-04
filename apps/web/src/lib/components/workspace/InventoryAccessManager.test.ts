@@ -68,6 +68,24 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).toContain('friend@example.test');
   });
 
+  it('renders invitation rows with separated metadata, status, and actions', async () => {
+    const { repository } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    const row = requiredElement('.invitation-row');
+    expect(row.querySelector('.access-row-main')?.textContent).toContain('friend@example.test');
+    expect(row.querySelector('.access-row-meta')?.textContent).toContain('viewer');
+    expect(row.querySelector('.access-row-meta')?.textContent).toContain('pending');
+    expect(row.querySelector('.access-row-status')?.textContent).toContain('pending');
+    expect(row.querySelector('.access-actions')?.textContent).toContain('Expire');
+    expect(row.querySelector('.access-actions')?.textContent).toContain('Cancel');
+  });
+
   it('announces initial access list loading states', async () => {
     const repository: InventoryAccessRepository = {
       listInventoryAccessGrants: async () => new Promise(() => {}),
@@ -745,6 +763,14 @@ function invitationMatchesStatus(invitation: InventoryAccessInvitation, status: 
 
 function page<T>(items: T[], nextCursor: string | null = null): InventoryAccessPage<T> {
   return { items, pagination: { limit: 50, nextCursor, hasMore: nextCursor !== null } };
+}
+
+function requiredElement(selector: string): HTMLElement {
+  const element = document.body.querySelector<HTMLElement>(selector);
+  if (!element) {
+    throw new Error(`Missing element ${selector}`);
+  }
+  return element;
 }
 
 function failRepositoryCall(): never {

@@ -583,13 +583,15 @@
         {:else}
           {#each invitations as invitation}
             <div class="access-row invitation-row">
-              <span>
+              <span class="access-row-main">
                 <strong>{invitation.email}</strong>
-                <small>{invitation.relationship} / {invitation.status}{invitation.isExpired ? ' / expired' : ''}</small>
+                <small class="access-row-meta">{invitation.relationship} / {invitation.status}{invitation.isExpired ? ' / expired' : ''}</small>
               </span>
-              <Badge variant={invitation.status === 'pending' && !invitation.isExpired ? 'secondary' : 'outline'}>
-                {invitation.status}
-              </Badge>
+              <span class="access-row-status">
+                <Badge variant={invitation.status === 'pending' && !invitation.isExpired ? 'secondary' : 'outline'}>
+                  {invitation.status}
+                </Badge>
+              </span>
               <div class="access-actions">
                 {#each invitationActions(invitation) as option}
                   <Button.Root
