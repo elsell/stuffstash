@@ -5,8 +5,8 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
+  import SearchSuggestions from './SearchSuggestions.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -57,6 +57,7 @@
   let activeSuggestionIndex = $state(-1);
   let searchRegion = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
+  const suggestionIdPrefix = 'search-page-suggestion';
 
   $effect(() => {
     if (activeSuggestionIndex >= visibleSuggestions.length) {
@@ -116,7 +117,7 @@
   }
 
   function suggestionId(index: number): string {
-    return `search-page-suggestion-${index}`;
+    return `${suggestionIdPrefix}-${index}`;
   }
 
   function suggestionElement(index: number): HTMLElement | null {
@@ -225,32 +226,16 @@
       />
       <Button.Root disabled={busy || query.trim().length === 0}>Search</Button.Root>
     </form>
-    {#if visibleSuggestions.length > 0}
-      <ul id="search-page-suggestions" class="search-suggestions" aria-label="Search suggestions">
-        {#each visibleSuggestions as suggestion, index}
-          <li>
-            <Button.Root
-              id={suggestionId(index)}
-              href={assetHref(suggestion)}
-              variant="ghost"
-              class="suggestion-row"
-              data-active={activeSuggestionIndex === index}
-              aria-label={`Open ${suggestion.title}`}
-              onfocus={() => { activeSuggestionIndex = index; }}
-              onkeydown={(event) => handleSuggestionKeydown(event, index)}
-              onpointerenter={() => { activeSuggestionIndex = index; }}
-              onclick={(event) => openSuggestion(event, suggestion)}
-            >
-              <AssetThumb asset={suggestion} size="sm" />
-              <span>
-                <strong>{suggestion.title}</strong>
-                <small>{suggestion.customAssetTypeLabel ?? assetKindLabel(suggestion.kind)}</small>
-              </span>
-            </Button.Root>
-          </li>
-        {/each}
-      </ul>
-    {/if}
+    <SearchSuggestions
+      id="search-page-suggestions"
+      idPrefix={suggestionIdPrefix}
+      suggestions={visibleSuggestions}
+      activeIndex={activeSuggestionIndex}
+      {assetHref}
+      onFocusIndex={(index) => { activeSuggestionIndex = index; }}
+      onSuggestionKeydown={handleSuggestionKeydown}
+      onOpen={openSuggestion}
+    />
   </div>
   <div class="search-filters" aria-label="Search filters">
     <SegmentedControl

@@ -7,7 +7,7 @@
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
-  import AssetThumb from './AssetThumb.svelte';
+  import SearchSuggestions from './SearchSuggestions.svelte';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
 
   let {
@@ -48,6 +48,7 @@
   let addTrigger = $state<HTMLButtonElement | null>(null);
   let addMenuElement = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
+  const suggestionIdPrefix = 'global-search-suggestion';
   const addKinds: AssetKind[] = ['item', 'container', 'location'];
 
   $effect(() => {
@@ -99,7 +100,7 @@
   }
 
   function suggestionId(index: number): string {
-    return `global-search-suggestion-${index}`;
+    return `${suggestionIdPrefix}-${index}`;
   }
 
   function suggestionElement(index: number): HTMLElement | null {
@@ -248,32 +249,16 @@
       />
       <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
     </form>
-    {#if visibleSuggestions.length > 0}
-      <ul id="global-search-suggestions" class="search-suggestions" aria-label="Search suggestions">
-        {#each visibleSuggestions as suggestion, index}
-          <li>
-            <Button.Root
-              id={suggestionId(index)}
-              href={assetHref(suggestion)}
-              variant="ghost"
-              class="suggestion-row"
-              data-active={activeSuggestionIndex === index}
-              aria-label={`Open ${suggestion.title}`}
-              onfocus={() => { activeSuggestionIndex = index; }}
-              onkeydown={(event) => handleSuggestionKeydown(event, index)}
-              onpointerenter={() => { activeSuggestionIndex = index; }}
-              onclick={(event) => { openSuggestion(event, suggestion); }}
-            >
-              <AssetThumb asset={suggestion} size="sm" />
-              <span>
-                <strong>{suggestion.title}</strong>
-                <small>{assetKindLabel(suggestion.kind)}</small>
-              </span>
-            </Button.Root>
-          </li>
-        {/each}
-      </ul>
-    {/if}
+    <SearchSuggestions
+      id="global-search-suggestions"
+      idPrefix={suggestionIdPrefix}
+      suggestions={visibleSuggestions}
+      activeIndex={activeSuggestionIndex}
+      {assetHref}
+      onFocusIndex={(index) => { activeSuggestionIndex = index; }}
+      onSuggestionKeydown={handleSuggestionKeydown}
+      onOpen={openSuggestion}
+    />
   </div>
   <div bind:this={addMenuRegion} class="header-add-wrap" onfocusout={handleAddMenuFocusout}>
     <Button.Root

@@ -407,6 +407,7 @@ Search behavior:
 - Search suggestions and search results must show an asset image thumbnail when the asset has its own primary photo, and must show the same explicit kind fallback used elsewhere when it does not.
 - Search result rows should open asset or location detail/list surfaces. Location-kind results and suggestions must route to the focused location URL rather than generic asset detail.
 - Search suggestions and result rows must expose canonical destination `href` values while preserving ordinary in-app navigation behavior.
+- Global header search and the dedicated search page must use a shared suggestion-list composition so thumbnail behavior, kind labels, route links, focus state, and ordinary list/button semantics do not drift.
 - No-results and denied states must be explicit and calm.
 - Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
 
