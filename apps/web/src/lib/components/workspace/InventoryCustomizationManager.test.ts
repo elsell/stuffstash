@@ -89,11 +89,11 @@ describe('InventoryCustomizationManager', () => {
     await flush();
     click('Create type');
     await flush();
-    click('Types only');
+    click('Custom types');
     await flush();
     input('#custom-field-key', 'expiration-date');
     input('#custom-field-name', 'Expiration date');
-    click('date');
+    click('Date');
     click('Medicine');
     await flush();
     expect(group('Field custom type targets')?.querySelector('button[aria-pressed="true"]')?.textContent).toContain('Medicine');
@@ -122,12 +122,81 @@ describe('InventoryCustomizationManager', () => {
     });
     await flush();
 
-    click('Types only');
+    click('Custom types');
     await flush();
 
     expect(document.body.textContent).toContain('No custom types selected');
     expect(document.body.textContent).toContain('No eligible custom asset types for this scope.');
     expect(group('Field custom type targets')).toBeNull();
+  });
+
+  it('selects the tenant scope when only tenant configuration access is available', async () => {
+    const calls: string[] = [];
+    const repository: InventoryCustomizationRepository = {
+      ...fakeCustomizationRepository(),
+      createCustomAssetType: async (_tenantId, _inventoryId, draft) => {
+        calls.push(`type:${draft.scope}:${draft.key}`);
+        return {
+          id: 'type-appliance',
+          tenantId: 'tenant-one',
+          inventoryId: null,
+          scope: draft.scope,
+          key: draft.key,
+          displayName: draft.displayName,
+          description: draft.description,
+          lifecycleState: 'active'
+        };
+      },
+      createCustomFieldDefinition: async (_tenantId, _inventoryId, draft) => {
+        calls.push(`field:${draft.scope}:${draft.key}`);
+        return {
+          id: 'field-warranty',
+          tenantId: 'tenant-one',
+          inventoryId: null,
+          scope: draft.scope,
+          key: draft.key,
+          displayName: draft.displayName,
+          type: draft.type,
+          enumOptions: draft.enumOptions,
+          applicability: draft.applicability,
+          customAssetTypeIds: draft.customAssetTypeIds,
+          lifecycleState: 'active'
+        };
+      }
+    };
+
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: { ...inventory(), access: { relationship: 'viewer', permissions: ['view'] } },
+        repository,
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(selectedOption('Custom type scope')?.textContent).toContain('Tenant');
+    expect(selectedOption('Custom field scope')?.textContent).toContain('Tenant');
+    expect(buttonInGroup('Custom type scope', 'Inventory')?.hasAttribute('disabled')).toBe(true);
+    expect(buttonInGroup('Custom type scope', 'Tenant')?.hasAttribute('disabled')).toBe(false);
+
+    input('#custom-type-key', 'appliance');
+    input('#custom-type-name', 'Appliance');
+    input('#custom-field-key', 'warranty');
+    input('#custom-field-name', 'Warranty');
+    await flush();
+
+    expect(exactButton('Create type').hasAttribute('disabled')).toBe(false);
+    expect(exactButton('Create field').hasAttribute('disabled')).toBe(false);
+
+    clickExactButton('Create type');
+    clickExactButton('Create field');
+    await flush();
+
+    expect(calls).toEqual(['type:tenant:appliance', 'field:tenant:warranty']);
   });
 
   it('uses route-backed archive confirmations for custom schema actions', async () => {
@@ -362,9 +431,13 @@ function click(text: string): void {
 }
 
 function clickExactButton(text: string): void {
+  exactButton(text).click();
+}
+
+function exactButton(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll('button')).find((candidate) => candidate.textContent === text);
   if (!button) throw new Error(`Missing button ${text}`);
-  button.click();
+  return button;
 }
 
 function link(text: string): HTMLAnchorElement {
@@ -381,6 +454,16 @@ function controlWithLabel(label: string): HTMLElement {
 
 function group(label: string): HTMLElement | null {
   return document.body.querySelector<HTMLElement>(`[role="group"][aria-label="${label}"]`);
+}
+
+function selectedOption(groupLabel: string): HTMLButtonElement | null {
+  return group(groupLabel)?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]') ?? null;
+}
+
+function buttonInGroup(groupLabel: string, text: string): HTMLButtonElement | null {
+  return Array.from(group(groupLabel)?.querySelectorAll<HTMLButtonElement>('button') ?? []).find((button) =>
+    button.textContent?.includes(text)
+  ) ?? null;
 }
 
 function fakeCustomizationRepository(): InventoryCustomizationRepository {

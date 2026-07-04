@@ -10,10 +10,13 @@ export const inventoryAccessRelationships = ['viewer', 'editor'] as const;
 export type InventoryAccessRelationship = (typeof inventoryAccessRelationships)[number];
 export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
 export type InvitationStatusFilter = InvitationStatus | 'all';
-export type CustomDefinitionScope = 'tenant' | 'inventory';
+export const customDefinitionScopes = ['inventory', 'tenant'] as const;
+export type CustomDefinitionScope = (typeof customDefinitionScopes)[number];
 export type CustomDefinitionLifecycleState = 'active' | 'archived';
-export type CustomFieldType = 'text' | 'number' | 'boolean' | 'date' | 'url' | 'enum';
-export type CustomFieldApplicability = 'all_assets' | 'custom_asset_types';
+export const customFieldTypes = ['text', 'number', 'boolean', 'date', 'url', 'enum'] as const;
+export type CustomFieldType = (typeof customFieldTypes)[number];
+export const customFieldApplicabilities = ['all_assets', 'custom_asset_types'] as const;
+export type CustomFieldApplicability = (typeof customFieldApplicabilities)[number];
 
 export interface Principal {
   id: string;

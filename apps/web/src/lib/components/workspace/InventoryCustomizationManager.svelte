@@ -13,9 +13,16 @@
     customizationArchiveFieldDefinitionHref,
     customizationFieldsHref
   } from '$lib/application/workspaceCustomizationActions';
+  import {
+    customizationApplicabilityOptions,
+    customizationFieldTypeOptions,
+    customizationScopeOptions,
+    customizationTargetAssetTypeOptions
+  } from '$lib/application/workspaceCustomizationPresentation';
   import type { CustomizationRouteAction } from '$lib/application/workspaceRoute';
   import type {
     CustomAssetType,
+    CustomDefinitionScope,
     CustomFieldApplicability,
     CustomFieldDefinition,
     CustomFieldType,
@@ -58,11 +65,11 @@
   let fieldDefinitions = $state<CustomFieldDefinition[]>([]);
   let busy = $state(false);
   let error = $state('');
-  let typeScope = $state<'tenant' | 'inventory'>('inventory');
+  let typeScope = $state<CustomDefinitionScope>('inventory');
   let typeKey = $state('');
   let typeName = $state('');
   let typeDescription = $state('');
-  let fieldScope = $state<'tenant' | 'inventory'>('inventory');
+  let fieldScope = $state<CustomDefinitionScope>('inventory');
   let fieldKey = $state('');
   let fieldName = $state('');
   let fieldType = $state<CustomFieldType>('text');
@@ -71,30 +78,18 @@
   let enumOptions = $state('');
   let archiveConfirmationElement = $state<HTMLElement | null>(null);
   let lastArchiveRouteKey = $state('');
-  const scopeOptions = [
-    { value: 'inventory', label: 'Inventory', disabled: false },
-    { value: 'tenant', label: 'Tenant', disabled: false }
-  ];
-  const fieldTypeOptions = ['text', 'number', 'boolean', 'date', 'url', 'enum'].map((option) => ({ value: option, label: option }));
-  const applicabilityOptions = [
-    { value: 'all_assets', label: 'All assets' },
-    { value: 'custom_asset_types', label: 'Types only' }
-  ];
+  const fieldTypeOptions = customizationFieldTypeOptions();
+  const applicabilityOptions = customizationApplicabilityOptions();
 
   let canConfigureInventory = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canManage = $derived(canConfigureInventory || canConfigureTenant);
   let activeAssetTypes = $derived(assetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let activeFieldDefinitions = $derived(fieldDefinitions.filter((definition) => definition.lifecycleState === 'active'));
-  let targetableAssetTypes = $derived(activeAssetTypes.filter((assetType) => fieldScope === 'tenant' ? assetType.scope === 'tenant' : true));
-  let targetableAssetTypeOptions = $derived(
-    targetableAssetTypes.map((assetType) => ({
-      value: assetType.id,
-      label: assetType.displayName,
-      description: assetType.scope
-    }))
-  );
-  let selectedTargetCount = $derived(fieldTargets.filter((id) => targetableAssetTypes.some((assetType) => assetType.id === id)).length);
+  let scopeOptions = $derived(customizationScopeOptions({ canConfigureInventory, canConfigureTenant }));
+  let firstAvailableScope = $derived(firstAllowedScope(canConfigureInventory, canConfigureTenant));
+  let targetableAssetTypeOptions = $derived(customizationTargetAssetTypeOptions({ assetTypes, fieldScope }));
+  let selectedTargetCount = $derived(fieldTargets.filter((id) => targetableAssetTypeOptions.some((option) => option.value === id)).length);
   let routeArchiveAssetType = $derived(
     archiveAction === 'archive_asset_type'
       ? activeAssetTypes.find((assetType) => assetType.id === archiveAssetTypeId) ?? null
@@ -117,6 +112,19 @@
   $effect(() => {
     assetTypes = initialAssetTypes;
     fieldDefinitions = initialFieldDefinitions;
+  });
+
+  $effect(() => {
+    const fallbackScope = firstAvailableScope;
+    if (!fallbackScope) {
+      return;
+    }
+    if (!canScope(typeScope)) {
+      typeScope = fallbackScope;
+    }
+    if (!canScope(fieldScope)) {
+      selectFieldScope(fallbackScope);
+    }
   });
 
   $effect(() => {
@@ -236,7 +244,7 @@
       : [...fieldTargets, assetTypeId];
   }
 
-  function selectFieldScope(scope: 'tenant' | 'inventory'): void {
+  function selectFieldScope(scope: CustomDefinitionScope): void {
     fieldScope = scope;
     fieldTargets = fieldTargets.filter((id) =>
       assetTypes.some(
@@ -248,8 +256,14 @@
     );
   }
 
-  function canScope(scope: 'tenant' | 'inventory'): boolean {
+  function canScope(scope: CustomDefinitionScope): boolean {
     return scope === 'tenant' ? canConfigureTenant : canConfigureInventory;
+  }
+
+  function firstAllowedScope(canUseInventoryScope: boolean, canUseTenantScope: boolean): CustomDefinitionScope | null {
+    if (canUseInventoryScope) return 'inventory';
+    if (canUseTenantScope) return 'tenant';
+    return null;
   }
 
   function splitOptions(value: string): string[] {
@@ -323,11 +337,8 @@
         <SegmentedControl
           label="Custom type scope"
           value={typeScope}
-          options={scopeOptions.map((option) => ({
-            ...option,
-            disabled: option.value === 'inventory' ? !canConfigureInventory : !canConfigureTenant
-          }))}
-          onSelect={(value) => { typeScope = value as 'tenant' | 'inventory'; }}
+          options={scopeOptions}
+          onSelect={(value) => { typeScope = value as CustomDefinitionScope; }}
         />
         <div class="field-stack">
           <Label for="custom-type-key">Key</Label>
@@ -341,7 +352,7 @@
           <Label for="custom-type-description">Description</Label>
           <Textarea id="custom-type-description" bind:value={typeDescription} placeholder="Optional" />
         </div>
-        <Button.Root disabled={busy || !typeKey.trim() || !typeName.trim()} onclick={() => { void createAssetType(); }}>Create type</Button.Root>
+        <Button.Root disabled={busy || !typeKey.trim() || !typeName.trim() || !canScope(typeScope)} onclick={() => { void createAssetType(); }}>Create type</Button.Root>
 
         <div class="schema-list" aria-label="Custom asset types">
           {#each activeAssetTypes as assetType}
@@ -373,11 +384,8 @@
         <SegmentedControl
           label="Custom field scope"
           value={fieldScope}
-          options={scopeOptions.map((option) => ({
-            ...option,
-            disabled: option.value === 'inventory' ? !canConfigureInventory : !canConfigureTenant
-          }))}
-          onSelect={(value) => selectFieldScope(value as 'tenant' | 'inventory')}
+          options={scopeOptions}
+          onSelect={(value) => selectFieldScope(value as CustomDefinitionScope)}
         />
         <div class="field-stack">
           <Label for="custom-field-key">Key</Label>
@@ -422,7 +430,7 @@
             />
           </fieldset>
         {/if}
-        <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim()} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>
+        <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim() || !canScope(fieldScope)} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>
 
         <div class="schema-list" aria-label="Custom field definitions">
           {#each activeFieldDefinitions as definition}

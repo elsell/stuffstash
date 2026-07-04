@@ -592,6 +592,7 @@ Required implementation split:
 - Settings customization archive action and cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings section, access-status, and audit-scope navigation option composition and href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings access relationship selector option composition must live in focused application helpers backed by canonical frontend-domain relationship values rather than component-local arrays.
+- Settings customization scope, field type, applicability, and target option composition must live in focused application helpers backed by canonical frontend-domain values rather than component-local arrays.
 - Asset-detail loading and attachment refresh orchestration must live in focused application helpers rather than accumulating in the product shell component.
 - Loaded asset-detail results must be applied through focused application helpers so workspace asset replacement, selected asset state, attachment state, and mode transitions do not accumulate in the product shell.
 - Asset-detail photo gallery derivation, supported media-type checks, and photo-upload unavailable reasons must live in focused application helpers rather than component-local derivation.
