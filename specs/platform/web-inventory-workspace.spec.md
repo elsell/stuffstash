@@ -603,6 +603,7 @@ Required implementation split:
 - Settings access missing-context, denied, and operation-error presentation must live in focused application helpers rather than component-local conditional copy.
 - Settings access list loading and empty-state presentation must live in focused application helpers rather than component-local conditional copy.
 - Settings activity audit loading, empty, denied, and error presentation must live in focused application helpers rather than component-local conditional copy.
+- Settings overview and administration panel headings, row labels, unavailable values, and disabled action copy must live in focused application helpers rather than component-local conditional copy.
 - Asset detail action availability and canonical asset/attachment action href derivation must live in focused application helpers rather than component-local route string assembly.
 - Asset detail description fallback, edit-action unavailable copy, and file-list empty-state presentation must live in focused application helpers rather than component-local conditional copy.
 - Settings customization archive action and cancel href derivation must live in focused application helpers rather than component-local route string assembly.

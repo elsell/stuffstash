@@ -29,6 +29,24 @@ export interface SettingsEmptyStatePresentation {
   message: string;
 }
 
+export interface SettingsDetailRowPresentation {
+  label: string;
+  value: string;
+}
+
+export interface SettingsOverviewPresentation {
+  title: string;
+  contextLabel: string;
+  rows: SettingsDetailRowPresentation[];
+}
+
+export interface SettingsAdministrationPresentation {
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionDisabled: boolean;
+}
+
 const invitationStatusFilters: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
 
 const settingsSections: Array<Omit<SettingsSectionNavigationOption, 'href' | 'current'>> = [
@@ -143,6 +161,36 @@ export function settingsShellPresentation(input: {
     liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
     overviewContextLabel: `${tenantLabel} / ${input.inventory.name}`,
     emptyState: null
+  };
+}
+
+export function settingsOverviewPresentation(input: {
+  tenantName: string | null;
+  inventoryCount: number;
+  accessRelationship: string;
+  canEditAssets: boolean;
+  contextLabel: string;
+}): SettingsOverviewPresentation {
+  return {
+    title: 'Overview',
+    contextLabel: input.contextLabel,
+    rows: [
+      { label: 'Tenant', value: input.tenantName ?? 'Not available' },
+      { label: 'Inventories', value: String(input.inventoryCount) },
+      { label: 'Access', value: input.accessRelationship },
+      { label: 'Asset edits', value: input.canEditAssets ? 'Allowed' : 'View only' }
+    ]
+  };
+}
+
+export function settingsAdministrationPresentation(input: { canConfigureTenant: boolean }): SettingsAdministrationPresentation {
+  return {
+    title: 'Administration',
+    description: input.canConfigureTenant
+      ? 'Tenant-level administration is planned for this workspace.'
+      : 'Tenant administration is not available for this account.',
+    actionLabel: 'Tenant administration unavailable',
+    actionDisabled: true
   };
 }
 

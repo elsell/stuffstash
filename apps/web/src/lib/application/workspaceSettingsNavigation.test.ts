@@ -4,6 +4,8 @@ import {
   settingsAuditScopeOptions,
   settingsAuditScopeHref,
   settingsInvitationStatusHref,
+  settingsAdministrationPresentation,
+  settingsOverviewPresentation,
   settingsSectionHref,
   settingsSectionOptions,
   settingsShellPresentation
@@ -215,5 +217,53 @@ describe('workspace settings navigation', () => {
         message: 'Select or create an inventory before managing settings.'
       }
     });
+  });
+
+  it('builds overview panel presentation without component-local fallback copy', () => {
+    expect(
+      settingsOverviewPresentation({
+        tenantName: 'Household',
+        inventoryCount: 3,
+        accessRelationship: 'owner',
+        canEditAssets: true,
+        contextLabel: 'Household / Garage'
+      })
+    ).toEqual({
+      title: 'Overview',
+      contextLabel: 'Household / Garage',
+      rows: [
+        { label: 'Tenant', value: 'Household' },
+        { label: 'Inventories', value: '3' },
+        { label: 'Access', value: 'owner' },
+        { label: 'Asset edits', value: 'Allowed' }
+      ]
+    });
+
+    expect(
+      settingsOverviewPresentation({
+        tenantName: null,
+        inventoryCount: 0,
+        accessRelationship: 'viewer',
+        canEditAssets: false,
+        contextLabel: 'Not available'
+      }).rows
+    ).toEqual([
+      { label: 'Tenant', value: 'Not available' },
+      { label: 'Inventories', value: '0' },
+      { label: 'Access', value: 'viewer' },
+      { label: 'Asset edits', value: 'View only' }
+    ]);
+  });
+
+  it('builds administration panel presentation from tenant configuration availability', () => {
+    expect(settingsAdministrationPresentation({ canConfigureTenant: true })).toEqual({
+      title: 'Administration',
+      description: 'Tenant-level administration is planned for this workspace.',
+      actionLabel: 'Tenant administration unavailable',
+      actionDisabled: true
+    });
+    expect(settingsAdministrationPresentation({ canConfigureTenant: false }).description).toBe(
+      'Tenant administration is not available for this account.'
+    );
   });
 });

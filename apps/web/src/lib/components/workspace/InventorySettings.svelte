@@ -16,6 +16,8 @@
   } from '$lib/application/workspaceRoute';
   import {
     type SettingsSectionIcon,
+    settingsAdministrationPresentation,
+    settingsOverviewPresentation,
     settingsSectionOptions,
     settingsShellPresentation
   } from '$lib/application/workspaceSettingsNavigation';
@@ -102,6 +104,14 @@
     }));
   let activeSection = $derived(sectionOptions.find((option) => option.current) ?? sectionOptions[0]);
   let shellPresentation = $derived(settingsShellPresentation({ tenant, inventory, activeSection }));
+  let overviewPresentation = $derived(settingsOverviewPresentation({
+    tenantName: tenant?.name ?? null,
+    inventoryCount,
+    accessRelationship: inventory?.access.relationship ?? '',
+    canEditAssets,
+    contextLabel: shellPresentation.overviewContextLabel
+  }));
+  let administrationPresentation = $derived(settingsAdministrationPresentation({ canConfigureTenant }));
 
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
@@ -156,15 +166,14 @@
         <div class="settings-panel-heading">
           <Boxes aria-hidden="true" />
           <div>
-            <h2 id="settings-overview">Overview</h2>
-            <p>{shellPresentation.overviewContextLabel}</p>
+            <h2 id="settings-overview">{overviewPresentation.title}</h2>
+            <p>{overviewPresentation.contextLabel}</p>
           </div>
         </div>
         <dl class="detail-list">
-          <div><dt>Tenant</dt><dd>{tenant?.name ?? 'Not available'}</dd></div>
-          <div><dt>Inventories</dt><dd>{inventoryCount}</dd></div>
-          <div><dt>Access</dt><dd>{inventory.access.relationship}</dd></div>
-          <div><dt>Asset edits</dt><dd>{canEditAssets ? 'Allowed' : 'View only'}</dd></div>
+          {#each overviewPresentation.rows as row}
+            <div><dt>{row.label}</dt><dd>{row.value}</dd></div>
+          {/each}
         </dl>
       </section>
 
@@ -210,15 +219,13 @@
         <div class="settings-panel-heading">
           <Shield aria-hidden="true" />
           <div>
-            <h2 id="settings-admin">Administration</h2>
-            <p>
-              {canConfigureTenant
-                ? 'Tenant-level administration is planned for this workspace.'
-                : 'Tenant administration is not available for this account.'}
-            </p>
+            <h2 id="settings-admin">{administrationPresentation.title}</h2>
+            <p>{administrationPresentation.description}</p>
           </div>
         </div>
-        <Button.Root variant="outline" disabled={true}>Tenant administration unavailable</Button.Root>
+        <Button.Root variant="outline" disabled={administrationPresentation.actionDisabled}>
+          {administrationPresentation.actionLabel}
+        </Button.Root>
       </section>
       {/if}
       </div>
