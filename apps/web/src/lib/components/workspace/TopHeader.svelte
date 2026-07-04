@@ -24,7 +24,8 @@
     onSelectInventory,
     onSearch,
     onOpenAsset,
-    onOpenAdd
+    onOpenAdd,
+    onMobileContextOpenChange
   }: {
     tenants: Tenant[];
     inventories: Inventory[];
@@ -38,6 +39,7 @@
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd: (kind: AssetKind) => void;
+    onMobileContextOpenChange?: (open: boolean) => void;
   } = $props();
 
   let selectedInventoryId = $derived(inventory?.id ?? '');
@@ -219,6 +221,7 @@
       {selectedInventoryId}
       {onSelectTenant}
       {onSelectInventory}
+      onOpenChange={onMobileContextOpenChange}
     />
   </div>
   <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>

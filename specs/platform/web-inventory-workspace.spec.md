@@ -186,6 +186,7 @@ Mobile:
 - The mobile context switcher must not require a search field for the approved first direction.
 - Mobile context switcher backdrop controls must expose a clear accessible close name and must not inherit ordinary button chrome.
 - The open mobile context switcher sheet must render above the backdrop and bottom navigation so the inventory choices are visually and pointer-accessible.
+- The open mobile context switcher sheet must make the route content and mobile bottom navigation inert and hidden from assistive technology while leaving the sheet itself available.
 
 ## Desktop Header
 

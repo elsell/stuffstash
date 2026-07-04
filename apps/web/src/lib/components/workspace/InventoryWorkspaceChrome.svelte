@@ -32,6 +32,8 @@
   import SideNav from './SideNav.svelte';
   import TopHeader from './TopHeader.svelte';
 
+  let mobileContextOpen = $state(false);
+
   let {
     tenants,
     inventories,
@@ -85,18 +87,23 @@
       {onSearch}
       onOpenAsset={onOpenSearchAsset}
       {onOpenAdd}
+      onMobileContextOpenChange={(open) => { mobileContextOpen = open; }}
     />
 
-    {@render children?.()}
+    <div class="workspace-route-content" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
+      {@render children?.()}
+    </div>
   </div>
 
-  <MobileNav
-    {mode}
-    {selectedTenantId}
-    {selectedInventoryId}
-    {settingsSection}
-    {canCreateAsset}
-    {onModeChange}
-    onOpenAdd={() => onOpenAdd('item')}
-  />
+  <div class="mobile-nav-shell" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
+    <MobileNav
+      {mode}
+      {selectedTenantId}
+      {selectedInventoryId}
+      {settingsSection}
+      {canCreateAsset}
+      {onModeChange}
+      onOpenAdd={() => onOpenAdd('item')}
+    />
+  </div>
 </div>

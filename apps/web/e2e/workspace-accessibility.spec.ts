@@ -112,8 +112,16 @@ test('mobile context sheet keeps a named modal surface', async ({ page }, testIn
   const dialog = page.getByRole('dialog', { name: 'Inventory context' });
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('.workspace-route-content')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.mobile-nav-shell')).toHaveAttribute('aria-hidden', 'true');
+  expect(await page.locator('.workspace-route-content').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(true);
+  expect(await page.locator('.mobile-nav-shell').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(true);
   await expect(page.getByLabel('Inventories').getByRole('link', { name: /Household/ })).toBeVisible();
 
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  await expect(page.locator('.workspace-route-content')).not.toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.mobile-nav-shell')).not.toHaveAttribute('aria-hidden', 'true');
+  expect(await page.locator('.workspace-route-content').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(false);
+  expect(await page.locator('.mobile-nav-shell').evaluate((element) => (element as HTMLElement & { inert: boolean }).inert)).toBe(false);
 });

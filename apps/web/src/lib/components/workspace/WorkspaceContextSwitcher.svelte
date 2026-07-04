@@ -20,7 +20,8 @@
     selectedInventoryId,
     mobile = false,
     onSelectTenant,
-    onSelectInventory
+    onSelectInventory,
+    onOpenChange
   }: {
     tenants: Tenant[];
     inventories: Inventory[];
@@ -29,6 +30,7 @@
     mobile?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onOpenChange?: (open: boolean) => void;
   } = $props();
 
   let open = $state(false);
@@ -63,6 +65,7 @@
     }
     restoreFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : triggerElement;
     open = true;
+    onOpenChange?.(true);
     showingTenants = false;
     void focusPanel();
   }
@@ -70,6 +73,7 @@
   function closeContext(restoreFocus = true): void {
     const focusTarget = restoreFocusElement ?? triggerElement;
     open = false;
+    onOpenChange?.(false);
     showingTenants = false;
     restoreFocusElement = null;
     if (restoreFocus) {
