@@ -27,6 +27,15 @@ export interface SearchFilterOption<TValue extends string = string> {
   href: string;
 }
 
+export type SearchPanelStatusKind = 'none' | 'error' | 'busy' | 'first-run' | 'empty';
+
+export interface SearchPanelStatusPresentation {
+  kind: SearchPanelStatusKind;
+  title: string;
+  message: string;
+  role?: 'alert' | 'status';
+}
+
 const searchLifecycleFilters: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
 const searchModes: SearchMode[] = ['fuzzy', 'exact'];
 
@@ -80,6 +89,39 @@ export function searchModeFilterOptions(input: {
     label: searchModeLabel(mode),
     href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode)
   }));
+}
+
+export function searchPanelStatus(input: {
+  error: string;
+  busy: boolean;
+  submitted: boolean;
+  resultCount: number;
+  lifecycleState: SearchLifecycleFilter;
+}): SearchPanelStatusPresentation {
+  if (input.error) {
+    return { kind: 'error', title: 'Search failed', message: input.error, role: 'alert' };
+  }
+  if (input.busy) {
+    return { kind: 'busy', title: 'Searching', message: '', role: 'status' };
+  }
+  if (!input.submitted) {
+    return {
+      kind: 'first-run',
+      title: 'Search this inventory',
+      message: 'Use asset, location, container, custom field, or attachment terms.'
+    };
+  }
+  if (input.resultCount === 0) {
+    return {
+      kind: 'empty',
+      title: 'No results',
+      message:
+        input.lifecycleState === 'all'
+          ? 'No authorized assets matched this query.'
+          : `No authorized ${input.lifecycleState} assets matched this query.`
+    };
+  }
+  return { kind: 'none', title: '', message: '' };
 }
 
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {

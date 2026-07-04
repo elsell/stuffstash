@@ -67,8 +67,10 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
 
 afterEach(() => {
   if (component) {
-    unmount(component);
-    component = null;
+    if (component) {
+      unmount(component);
+      component = null;
+    }
   }
   document.body.innerHTML = '';
   vi.useRealTimers();
@@ -174,6 +176,22 @@ describe('SearchPanel', () => {
 
     expect(searches).toEqual(['search']);
     expect(document.body.querySelector('#search-page-suggestions')).toBeNull();
+  });
+
+  it('announces loading and error states to assistive technology', () => {
+    mountSearchPanel({ busy: true, submitted: true, suggestions: [] });
+    expect(document.body.querySelector('[role="status"]')?.textContent).toContain('Searching');
+
+    const mountedComponent = component;
+    if (mountedComponent) {
+      unmount(mountedComponent);
+      component = null;
+    }
+    document.body.innerHTML = '';
+
+    mountSearchPanel({ error: 'Search service unavailable.', submitted: true, suggestions: [] });
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Search failed');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Search service unavailable.');
   });
 
   it('exposes route-backed search filter hrefs and preserves modified clicks', async () => {

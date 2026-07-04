@@ -4,7 +4,7 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
-  import { searchAssetHref, searchLifecycleFilterOptions, searchModeFilterOptions } from '$lib/application/workspaceSearch';
+  import { searchAssetHref, searchLifecycleFilterOptions, searchModeFilterOptions, searchPanelStatus } from '$lib/application/workspaceSearch';
   import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
   import SearchSuggestions from './SearchSuggestions.svelte';
@@ -58,6 +58,7 @@
   let activeSuggestionIndex = $state(-1);
   let searchRegion = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
+  let statusPresentation = $derived(searchPanelStatus({ error, busy, submitted, resultCount: results.length, lifecycleState }));
   const suggestionIdPrefix = 'search-page-suggestion';
 
   $effect(() => {
@@ -223,24 +224,12 @@
     />
   </div>
 
-  {#if error}
-    <div class="empty-state spacious" role="alert">
-      <h2>Search failed</h2>
-      <p>{error}</p>
-    </div>
-  {:else if busy}
-    <div class="empty-state spacious">
-      <h2>Searching</h2>
-    </div>
-  {:else if !submitted}
-    <div class="empty-state spacious">
-      <h2>Search this inventory</h2>
-      <p>Use asset, location, container, custom field, or attachment terms.</p>
-    </div>
-  {:else if results.length === 0}
-    <div class="empty-state spacious">
-      <h2>No results</h2>
-      <p>{lifecycleState === 'all' ? 'No authorized assets matched this query.' : `No authorized ${lifecycleState} assets matched this query.`}</p>
+  {#if statusPresentation.kind !== 'none'}
+    <div class="empty-state spacious" role={statusPresentation.role}>
+      <h2>{statusPresentation.title}</h2>
+      {#if statusPresentation.message}
+        <p>{statusPresentation.message}</p>
+      {/if}
     </div>
   {:else}
     <div class="asset-list">
