@@ -1513,6 +1513,7 @@ small {
   display: grid;
   gap: 14px;
   max-width: 560px;
+  scroll-margin-top: 86px;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);

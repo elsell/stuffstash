@@ -131,7 +131,7 @@ Deep links must preserve tenant and inventory boundaries:
 - An asset deep link must load the selected asset through the repository port and API adapter.
 - Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
 - Asset action panels that materially change data, such as edit, move, archive confirmation, restore confirmation, and delete confirmation, are durable route states.
-- Route-opened asset action panels must appear before secondary detail, file, and danger-zone sections so their heading and controls are visible when focus moves to the panel.
+- Route-opened asset action panels must appear before secondary detail, file, and danger-zone sections and scroll into view so their heading and controls are visible when focus moves to the panel.
 - Settings access actions that materially change invitations, such as expire, cancel, and delete, must use durable confirmation route states instead of immediate row-button mutations.
 - Settings actions that materially change reusable schema, such as archiving custom asset types or custom field definitions, must use durable confirmation route states instead of immediate icon-button mutations.
 - Unsupported paths under a valid inventory route must fall back to the inventory home without crashing and normalize the browser URL to that inventory home.

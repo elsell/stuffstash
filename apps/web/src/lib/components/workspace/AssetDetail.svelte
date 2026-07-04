@@ -105,6 +105,7 @@
   let selectedPhotoId = $state<string | null>(null);
   let lastRouteActionKey = $state('');
   let actionPanelElement = $state<HTMLElement | null>(null);
+  let shouldScrollRouteActionPanel = false;
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
@@ -143,24 +144,32 @@
       return;
     }
     const initializingWithoutRouteAction = lastRouteActionKey === '' && !action && !attachmentAction;
+    const routeOpenedActionPanel = panel === 'none';
     lastRouteActionKey = actionKey;
     if (attachmentAction === 'delete' && canEdit) {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       const routeAttachment = attachments.find((attachment) => attachment.id === attachmentId) ?? null;
       selectedAttachment = routeAttachment;
       panel = routeAttachment ? 'attachment-delete' : 'none';
     } else if (action === 'edit' && canEdit && asset.lifecycleState === 'active') {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       openEdit(false);
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       openMove(false);
     } else if (action === 'archive' && canEdit && asset.lifecycleState === 'active') {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       panel = 'archive';
     } else if (action === 'restore' && canEdit && asset.lifecycleState === 'archived') {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       panel = 'restore';
     } else if (action === 'delete' && canEdit) {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       panel = 'delete';
     } else if (!action && !attachmentAction && !initializingWithoutRouteAction) {
       panel = 'none';
       selectedAttachment = null;
+      shouldScrollRouteActionPanel = false;
     }
   });
 
@@ -175,6 +184,12 @@
       actionPanelElement
     ) {
       actionPanelElement.focus();
+      if (shouldScrollRouteActionPanel && typeof actionPanelElement.scrollIntoView === 'function') {
+        actionPanelElement.scrollIntoView({ block: 'start', inline: 'nearest' });
+        shouldScrollRouteActionPanel = false;
+      } else if (shouldScrollRouteActionPanel) {
+        shouldScrollRouteActionPanel = false;
+      }
     }
   });
 

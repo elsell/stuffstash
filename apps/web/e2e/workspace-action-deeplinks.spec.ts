@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { installAuthenticatedWorkspace, lastAssetPatch, resetWorkspaceApiState } from './workspace-fixture';
 
 test.beforeEach(async ({ page }) => {
@@ -12,7 +12,11 @@ test('asset edit action can be opened, saved, and closed from a direct URL', asy
   await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/edit');
 
   const editPanel = page.locator('.detail-action-panel').filter({ has: page.getByRole('heading', { name: 'Edit asset' }) });
+  const editHeading = editPanel.getByRole('heading', { name: 'Edit asset' });
   await expect(editPanel).toBeVisible();
+  await expect(async () => {
+    expect(await elementIsInViewportAndUnoccluded(editHeading)).toBe(true);
+  }).toPass();
   await expect(editPanel.getByLabel('Name')).toHaveValue('Tomato fertilizer');
 
   await editPanel.getByLabel('Name').fill('Tomato fertilizer granules');
@@ -24,6 +28,20 @@ test('asset edit action can be opened, saved, and closed from a direct URL', asy
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Tomato fertilizer granules' })).toBeVisible();
+});
+
+test('mobile asset edit direct URL lands on the edit panel', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile direct edit coverage runs on the mobile project.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/edit');
+
+  const editPanel = page.locator('.detail-action-panel').filter({ has: page.getByRole('heading', { name: 'Edit asset' }) });
+  const editHeading = editPanel.getByRole('heading', { name: 'Edit asset' });
+  await expect(editPanel).toBeVisible();
+  await expect(async () => {
+    expect(await elementIsInViewportAndUnoccluded(editHeading)).toBe(true);
+  }).toPass();
+  await expect(editPanel.getByLabel('Name')).toHaveValue('Tomato fertilizer');
 });
 
 test('asset move action direct URL opens the shared searchable parent picker', async ({ page }, testInfo) => {
@@ -58,3 +76,11 @@ test('unavailable action deep links normalize back to asset detail', async ({ pa
   await expect(page.getByRole('heading', { name: 'Tomato fertilizer' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Restore asset' })).toHaveCount(0);
 });
+
+async function elementIsInViewportAndUnoccluded(locator: Locator): Promise<boolean> {
+  return locator.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return rect.top >= 0 && rect.bottom <= window.innerHeight && target instanceof Node && element.contains(target);
+  });
+}

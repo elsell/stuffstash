@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import AssetDetail from './AssetDetail.svelte';
 import type {
@@ -22,6 +22,37 @@ afterEach(() => {
 });
 
 describe('AssetDetail', () => {
+  it('scrolls route-opened action panels into view after focusing them', async () => {
+    const scrollIntoView = vi.fn();
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView });
+    try {
+      mountAssetDetail({ action: 'edit' });
+      await flush();
+
+      expect(document.activeElement).toBe(requiredElement('.detail-action-panel'));
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', inline: 'nearest' });
+    } finally {
+      Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: originalScrollIntoView });
+    }
+  });
+
+  it('does not scroll ordinary action-button opened panels', async () => {
+    const scrollIntoView = vi.fn();
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView });
+    try {
+      mountAssetDetail();
+      clickFirst('Edit');
+      await flush();
+
+      expect(document.body.textContent).toContain('Edit asset');
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: originalScrollIntoView });
+    }
+  });
+
   it('promotes photos to the hero and keeps documents in the files section', () => {
     mountAssetDetail({
       asset: {
