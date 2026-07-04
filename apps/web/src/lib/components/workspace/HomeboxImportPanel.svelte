@@ -8,7 +8,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
+  import { importSourceHref } from '$lib/application/workspaceShellNavigation';
   import type {
     ImportApplyResult,
     ImportMessage,
@@ -132,11 +132,7 @@
   }
 
   function sourceHref(nextSourceType: ImportSourceType): string {
-    return workspaceRouteHref(
-      { mode: 'import', tenantId, inventoryId: inventory?.id ?? null, importSourceType: nextSourceType },
-      tenantId,
-      inventory?.id ?? null
-    );
+    return importSourceHref(tenantId, inventory?.id ?? null, nextSourceType);
   }
 
   function selectSource(nextSourceType: ImportSourceType): void {

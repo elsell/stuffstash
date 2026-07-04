@@ -578,6 +578,7 @@ Required implementation split:
 - Route files may compose authentication, runtime configuration, repository construction, and top-level page state, but must not become the place where transport mapping, containment derivation, visual components, and API calls all accumulate.
 - Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
 - Home and location browse href derivation must live in focused application helpers rather than component-local route string assembly.
+- Shell navigation, context-switcher, add-menu, and import-source href derivation must live in focused application helpers rather than component-local route string assembly.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
 - Search result and suggestion href derivation must live in focused application helpers rather than component-local route string assembly.
 - Add route availability, route-backed parent preselection, and invalid parent-route normalization must live in focused application helpers rather than accumulating in the product shell component.

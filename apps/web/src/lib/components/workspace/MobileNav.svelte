@@ -5,8 +5,9 @@
   import Settings from '@lucide/svelte/icons/settings';
   import MapPin from '@lucide/svelte/icons/map-pin';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
+  import { shellAddHref, shellModeHref, type ShellWorkspaceMode } from '$lib/application/workspaceShellNavigation';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
+  import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { WorkspaceMode } from '$lib/domain/inventory';
 
   let {
@@ -30,16 +31,12 @@
   const addDeniedNoteId = 'mobile-add-denied';
   let addAvailability = $derived(workspaceAddAvailability({ hasInventory: selectedInventoryId.length > 0, canCreateAsset }));
 
-  function modeHref(nextMode: WorkspaceMode): string {
-    const route: Partial<WorkspaceRouteState> = { mode: nextMode };
-    if (nextMode === 'settings') {
-      route.settingsSection = settingsSection;
-    }
-    return workspaceRouteHref(route, selectedTenantId || null, selectedInventoryId || null);
+  function modeHref(nextMode: ShellWorkspaceMode): string {
+    return shellModeHref(nextMode, selectedTenantId || null, selectedInventoryId || null, settingsSection);
   }
 
   function addHref(): string {
-    return workspaceRouteHref({ action: 'add', addKind: 'item' }, selectedTenantId || null, selectedInventoryId || null);
+    return shellAddHref('item', selectedTenantId || null, selectedInventoryId || null);
   }
 
   function openMode(event: MouseEvent, nextMode: WorkspaceMode): void {

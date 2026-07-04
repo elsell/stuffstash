@@ -6,7 +6,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { searchAssetHref } from '$lib/application/workspaceSearch';
-  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
+  import { shellAddHref } from '$lib/application/workspaceShellNavigation';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import SearchSuggestions from './SearchSuggestions.svelte';
@@ -74,7 +74,7 @@
   }
 
   function addKindHref(kind: AssetKind): string {
-    return workspaceRouteHref({ action: 'add', addKind: kind }, selectedTenantId || null, selectedInventoryId || null);
+    return shellAddHref(kind, selectedTenantId || null, selectedInventoryId || null);
   }
 
   function shouldHandleInApp(event: MouseEvent): boolean {

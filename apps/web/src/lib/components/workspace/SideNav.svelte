@@ -6,7 +6,8 @@
   import LogOut from '@lucide/svelte/icons/log-out';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from '$lib/application/workspaceRoute';
+  import { shellModeHref, type ShellWorkspaceMode } from '$lib/application/workspaceShellNavigation';
+  import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
 
@@ -39,7 +40,7 @@
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId));
 
   type NavDestination = {
-    mode: WorkspaceMode;
+    mode: ShellWorkspaceMode;
     label: string;
     description: string;
     icon: Component;
@@ -68,11 +69,7 @@
   }
 
   function destinationHref(destination: NavDestination): string {
-    const route: Partial<WorkspaceRouteState> = { mode: destination.mode };
-    if (destination.mode === 'settings') {
-      route.settingsSection = settingsSection;
-    }
-    return workspaceRouteHref(route, selectedTenantId || null, selectedInventoryId || null);
+    return shellModeHref(destination.mode, selectedTenantId || null, selectedInventoryId || null, settingsSection);
   }
 
   function shouldHandleInApp(event: MouseEvent): boolean {

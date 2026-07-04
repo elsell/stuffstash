@@ -3,7 +3,7 @@
   import Building2 from '@lucide/svelte/icons/building-2';
   import Check from '@lucide/svelte/icons/check';
   import Package from '@lucide/svelte/icons/package';
-  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
+  import { contextInventoryHref } from '$lib/application/workspaceShellNavigation';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
 
@@ -98,11 +98,7 @@
   }
 
   function inventoryHref(inventory: Inventory): string {
-    return workspaceRouteHref(
-      { mode: 'home', tenantId: inventory.tenantId, inventoryId: inventory.id },
-      selectedTenantId || null,
-      selectedInventoryId || null
-    );
+    return contextInventoryHref(inventory);
   }
 
   function inventoryCountLabel(tenantId: string): string {
