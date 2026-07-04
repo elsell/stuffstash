@@ -899,24 +899,6 @@ small {
   max-width: 980px;
 }
 
-.settings-section-context {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.settings-section-context h2,
-.settings-section-context p {
-  overflow-wrap: anywhere;
-}
-
-.settings-section-kicker {
-  color: var(--muted-foreground);
-  font-size: 0.72rem;
-  font-weight: 750;
-  text-transform: uppercase;
-}
-
 .settings-panel {
   display: grid;
   gap: 14px;

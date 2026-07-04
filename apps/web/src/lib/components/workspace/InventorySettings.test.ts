@@ -55,6 +55,9 @@ describe('InventorySettings', () => {
       }
     });
 
+    expect(document.body.querySelector('#settings-title')?.textContent).toBe('Garage');
+    expect(document.body.textContent).toContain('Household / Overview');
+    expect(document.body.textContent).not.toContain('Inventory settings');
     expect(document.body.textContent).toContain('Asset editsAllowed');
     const settingsNav = document.body.querySelector<HTMLElement>('.settings-section-nav');
     expect(settingsNav?.tagName).toBe('NAV');
@@ -62,11 +65,48 @@ describe('InventorySettings', () => {
     expect(linkStartingWith('Overview').getAttribute('aria-current')).toBe('page');
     expect(linkStartingWith('Fields').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
     expect(document.body.textContent).toContain('Custom asset types and fields');
-    expect(document.body.querySelector('.settings-section-context')?.textContent).toContain('Overview');
-    expect(document.body.querySelector('.settings-section-context')?.textContent).toContain('Inventory context and access summary');
+    expect(document.body.querySelector('.settings-section-context')).toBeNull();
+    expect(document.body.querySelector('[aria-live="polite"]')?.textContent).toBe(
+      'Overview: Inventory context and access summary'
+    );
 
     linkStartingWith('Fields').click();
     expect(onSectionChange).toHaveBeenCalledWith('fields');
+  });
+
+  it('keeps non-overview sections identifiable without duplicate visible settings copy', async () => {
+    component = mount(InventorySettings, {
+      target: document.body,
+      props: {
+        tenant: { id: 'tenant-one', name: 'Household', access: { relationship: 'owner', permissions: ['view'] } },
+        inventory: {
+          id: 'inventory-one',
+          tenantId: 'tenant-one',
+          name: 'Garage',
+          access: { relationship: 'owner', permissions: ['view', 'share'] }
+        },
+        inventoryCount: 1,
+        accessRepository: fakeAccessRepository(),
+        auditRepository: fakeAuditRepository(),
+        customizationRepository: fakeCustomizationRepository(),
+        customAssetTypes: [],
+        customFieldDefinitions: [],
+        section: 'access',
+        onSectionChange: () => {},
+        onInvitationStatusChange: () => {},
+        onAuditScopeChange: () => {},
+        onCustomizationChange: () => {}
+      }
+    });
+    await flush();
+
+    expect(document.body.querySelector('#settings-title')?.textContent).toBe('Garage');
+    expect(document.body.textContent).toContain('Household / Access');
+    expect(linkStartingWith('Access').getAttribute('aria-current')).toBe('page');
+    expect(document.body.querySelector('[aria-live="polite"]')?.textContent).toBe(
+      'Access: Sharing, grants, and invitations'
+    );
+    expect(document.body.querySelector('.settings-section-context')).toBeNull();
   });
 
   it('shows administration as a focused settings section', () => {

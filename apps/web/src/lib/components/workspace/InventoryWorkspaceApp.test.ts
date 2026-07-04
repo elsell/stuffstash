@@ -455,8 +455,9 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings');
       expect(window.location.search).toBe('');
+      expect(document.body.querySelector('#settings-title')?.textContent).toBe('Household');
       expect(document.body.textContent).toContain('Overview');
-      expect(document.body.querySelector('.settings-section-context')?.textContent).toContain('Inventory context and access summary');
+      expect(settingsLink('Overview').getAttribute('aria-current')).toBe('page');
     });
   });
 

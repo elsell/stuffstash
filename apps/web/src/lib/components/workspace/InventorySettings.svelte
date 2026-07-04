@@ -142,8 +142,8 @@
 <section class="workspace-main" aria-labelledby="settings-title">
   <div class="section-heading">
     <div>
-      <h1 id="settings-title">Inventory settings</h1>
-      <p>{inventory?.name ?? 'No inventory selected'}</p>
+      <h1 id="settings-title">{inventory?.name ?? 'Settings'}</h1>
+      <p>{inventory ? `${tenant?.name ?? 'No tenant'} / ${activeSection.label}` : 'No inventory selected'}</p>
     </div>
     {#if inventory}
       <Badge variant={canConfigureInventory ? 'secondary' : 'outline'}>{inventory.access.relationship}</Badge>
@@ -177,12 +177,7 @@
       </nav>
 
       <div class="settings-content">
-        <div class="settings-section-context" aria-live="polite">
-          <span class="settings-section-kicker">Settings</span>
-          <h2>{activeSection.label}</h2>
-          <p>{activeSection.description}</p>
-        </div>
-
+        <p class="visually-hidden" aria-live="polite">{activeSection.label}: {activeSection.description}</p>
       {#if section === 'overview'}
       <section class="settings-panel" aria-labelledby="settings-overview">
         <div class="settings-panel-heading">
