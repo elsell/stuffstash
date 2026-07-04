@@ -4,7 +4,7 @@
   import Building2 from '@lucide/svelte/icons/building-2';
   import Check from '@lucide/svelte/icons/check';
   import Package from '@lucide/svelte/icons/package';
-  import { contextInventoryHref } from '$lib/application/workspaceShellNavigation';
+  import { inventoryContextOptions, tenantContextOptions, type InventoryContextOption } from '$lib/application/workspaceContextSwitching';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Inventory, Tenant } from '$lib/domain/inventory';
 
@@ -30,7 +30,8 @@
   let showingTenants = $state(false);
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId) ?? null);
   let selectedInventory = $derived(inventories.find((inventory) => inventory.id === selectedInventoryId) ?? null);
-  let selectedTenantInventories = $derived(inventories.filter((inventory) => inventory.tenantId === selectedTenantId));
+  let tenantOptions = $derived(tenantContextOptions({ tenants, inventories, selectedTenantId }));
+  let inventoryOptions = $derived(inventoryContextOptions({ tenants, inventories, selectedTenantId, selectedInventoryId }));
 
   let rootElement: HTMLDivElement | null = $state(null);
   let triggerElement: HTMLButtonElement | null = $state(null);
@@ -89,33 +90,13 @@
     onSelectTenant(tenantId);
   }
 
-  function chooseInventory(event: MouseEvent, inventory: Inventory): void {
+  function chooseInventory(event: MouseEvent, inventory: InventoryContextOption): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     closeContext();
     onSelectInventory(inventory.tenantId, inventory.id);
-  }
-
-  function inventoryHref(inventory: Inventory): string {
-    return contextInventoryHref(inventory);
-  }
-
-  function inventoryCountLabel(tenantId: string): string {
-    const count = inventories.filter((inventory) => inventory.tenantId === tenantId).length;
-    return `${count} ${count === 1 ? 'inventory' : 'inventories'}`;
-  }
-
-  function relationshipLabel(relationship: string | undefined): string {
-    if (!relationship) {
-      return 'Member';
-    }
-    return relationship
-      .split(/[\s_-]+/)
-      .filter(Boolean)
-      .map((part) => part[0]?.toUpperCase() + part.slice(1))
-      .join(' ');
   }
 
   function handlePanelKeydown(event: KeyboardEvent): void {
@@ -208,38 +189,38 @@
       {#if showingTenants}
         <p class="context-section-label">Tenants</p>
         <div class="context-option-list" aria-label="Tenants">
-          {#each tenants as tenant}
+          {#each tenantOptions as tenant}
             <Button.Root
-              variant={tenant.id === selectedTenantId ? 'secondary' : 'ghost'}
+              variant={tenant.selected ? 'secondary' : 'ghost'}
               class="context-option"
-              aria-pressed={tenant.id === selectedTenantId}
+              aria-pressed={tenant.selected}
               onclick={() => chooseTenant(tenant.id)}
             >
-              <span class="context-option-check" aria-hidden="true">{#if tenant.id === selectedTenantId}<Check />{/if}</span>
+              <span class="context-option-check" aria-hidden="true">{#if tenant.selected}<Check />{/if}</span>
               <span class="context-option-copy">
                 <strong>{tenant.name}</strong>
-                <small>{inventoryCountLabel(tenant.id)}</small>
+                <small>{tenant.inventoryCountLabel}</small>
               </span>
             </Button.Root>
           {/each}
         </div>
-      {:else if selectedTenantInventories.length > 0}
+      {:else if inventoryOptions.length > 0}
         <p class="context-section-label">Inventories</p>
         <div class="context-option-list" aria-label="Inventories">
-          {#each selectedTenantInventories as inventory}
+          {#each inventoryOptions as inventory}
             <Button.Root
-              href={inventoryHref(inventory)}
-              variant={inventory.id === selectedInventoryId ? 'secondary' : 'ghost'}
+              href={inventory.href}
+              variant={inventory.selected ? 'secondary' : 'ghost'}
               class="context-option"
-              aria-current={inventory.id === selectedInventoryId ? 'page' : undefined}
+              aria-current={inventory.selected ? 'page' : undefined}
               onclick={(event) => chooseInventory(event, inventory)}
             >
-              <span class="context-option-check" aria-hidden="true">{#if inventory.id === selectedInventoryId}<Check />{/if}</span>
+              <span class="context-option-check" aria-hidden="true">{#if inventory.selected}<Check />{/if}</span>
               <span class="context-option-copy">
                 <strong>{inventory.name}</strong>
-                <small>{selectedTenant?.name ?? 'Inventory'}</small>
+                <small>{inventory.tenantName}</small>
               </span>
-              <span class="context-option-pill">{relationshipLabel(inventory.access.relationship)}</span>
+              <span class="context-option-pill">{inventory.relationshipLabel}</span>
             </Button.Root>
           {/each}
         </div>
