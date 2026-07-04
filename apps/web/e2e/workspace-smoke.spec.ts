@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { installAuthenticatedWorkspace, resetWorkspaceApiState, signedUploadPuts } from './workspace-fixture';
+import { installAuthenticatedWorkspace, resetWorkspaceApiState, signedUploadPuts, thumbnailRequestPaths } from './workspace-fixture';
 
 test.beforeEach(async ({ page }) => {
   resetWorkspaceApiState(page);
@@ -82,17 +82,30 @@ test('add flow saves items with and without selected photo previews', async ({ p
   await page.locator('#header-add-menu').getByRole('link', { name: 'Item', exact: true }).click();
   await page.getByLabel('Item name').fill('Photo tape');
   await page.locator('#asset-photos').setInputFiles({
-    name: 'front.jpg',
-    mimeType: 'image/jpeg',
-    buffer: Buffer.from('fake-photo')
+    name: 'front.png',
+    mimeType: 'image/png',
+    buffer: tinyPng()
   });
-  await expect(page.locator('.photo-preview img[alt="front.jpg"]')).toBeVisible();
+  await expect(page.locator('.photo-preview img[alt="front.png"]')).toBeVisible();
   await expect(page.getByLabel('Photo actions').getByText('1 photo')).toBeVisible();
   await page.getByRole('button', { name: 'Save item' }).click();
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-photo-tape');
   await expect(page.getByRole('heading', { name: 'Photo tape' })).toBeVisible();
   await expect(page.locator('.asset-photo-panel img[alt="Photo tape"]')).toBeVisible();
   expect(signedUploadPuts(page)).toBe(1);
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/search');
+  await page.getByLabel('Search query').fill('Photo tape');
+  const photoTapeThumbnailRequestsBeforeSearch = thumbnailRequestPaths(page).filter((path) =>
+    path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')
+  ).length;
+  await page.getByRole('button', { name: 'Run search' }).click();
+  await expect(page.locator('.asset-list').getByRole('link', { name: /Photo tape/ })).toBeVisible();
+  const photoTapeThumbnail = page.locator('.asset-list img[alt="Photo tape"]');
+  await expect(photoTapeThumbnail).toBeVisible();
+  expect(
+    thumbnailRequestPaths(page).filter((path) => path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')).length
+  ).toBeGreaterThan(photoTapeThumbnailRequestsBeforeSearch);
 });
 
 test('viewer inventory disables desktop add affordances', async ({ page }, testInfo) => {
@@ -145,6 +158,13 @@ test('location navigation opens asset detail and returns to the location list', 
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
   await expect(page.getByRole('heading', { name: 'Garage' })).toBeVisible();
 });
+
+function tinyPng(): Buffer {
+  return Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
+    'base64'
+  );
+}
 
 async function dialogTopLayerInfo(dialog: Locator): Promise<{ ownsPoint: boolean; rect: string; topElement: string }> {
   return dialog.evaluate((element) => {

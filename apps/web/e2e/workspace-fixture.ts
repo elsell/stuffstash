@@ -7,12 +7,37 @@ const workspaceStates = new WeakMap<Page, WorkspaceApiState>();
 type WorkspaceApiState = {
   signedUploadPutCount: number;
   assetOverrides: Record<string, AssetOverride>;
+  createdAssets: Record<string, CreatedAsset>;
+  pendingUploads: Record<string, PendingUpload>;
+  uploadedPhotos: Record<string, UploadedPhoto>;
+  thumbnailRequestPaths: string[];
   lastAssetPatch: AssetPatch | null;
 };
 
 type AssetOverride = {
   title?: string;
   parentAssetId?: string | null;
+};
+
+type CreatedAsset = {
+  id: string;
+  title: string;
+  parentAssetId: string | null;
+  kind: string;
+};
+
+type UploadedPhoto = {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
+type PendingUpload = UploadedPhoto & {
+  uploadId: string;
+  assetId: string;
+  url: string;
+  putCompleted: boolean;
 };
 
 export type AssetPatch = {
@@ -34,6 +59,10 @@ export function lastAssetPatch(page: Page): AssetPatch | null {
   return workspaceState(page).lastAssetPatch;
 }
 
+export function thumbnailRequestPaths(page: Page): string[] {
+  return workspaceState(page).thumbnailRequestPaths;
+}
+
 export async function installAuthenticatedWorkspace(page: Page): Promise<void> {
   const state = workspaceState(page);
 
@@ -50,10 +79,12 @@ export async function installAuthenticatedWorkspace(page: Page): Promise<void> {
   await page.route('**/config.json', routeRuntimeConfig);
   await page.route(`${apiOrigin}/**`, (route) => routeApiRequest(route, state));
   await page.route('https://uploads.local/**', async (route) => {
-    if (route.request().method() !== 'PUT' || route.request().headers()['content-type'] !== 'image/jpeg') {
+    const pending = Object.values(state.pendingUploads).find((upload) => upload.url === route.request().url());
+    if (!pending || route.request().method() !== 'PUT' || route.request().headers()['content-type'] !== pending.contentType) {
       await route.fulfill({ status: 400 });
       return;
     }
+    pending.putCompleted = true;
     state.signedUploadPutCount += 1;
     await route.fulfill({ status: 204 });
   });
@@ -89,6 +120,10 @@ function freshWorkspaceApiState(): WorkspaceApiState {
   return {
     signedUploadPutCount: 0,
     assetOverrides: {},
+    createdAssets: {},
+    pendingUploads: {},
+    uploadedPhotos: {},
+    thumbnailRequestPaths: [],
     lastAssetPatch: null
   };
 }
@@ -139,23 +174,18 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
     const body = (await request.postDataJSON()) as { kind: string; title: string; parentAssetId?: string | null };
-    await fulfill(
-      route,
-      asset(assetIdForTitle(body.title), 'tenant-home', 'inventory-household', body.title, body.parentAssetId ?? null, 'active', false, body.kind),
-      201
-    );
+    const created = {
+      id: assetIdForTitle(body.title),
+      title: body.title,
+      parentAssetId: body.parentAssetId ?? null,
+      kind: body.kind
+    };
+    state.createdAssets[created.id] = created;
+    await fulfill(route, createdAssetResponse(created, state), 201);
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/search/assets') {
-    await fulfill(route, [
-      {
-        type: 'asset',
-        tenantId: 'tenant-home',
-        inventory: { id: 'inventory-household', name: 'Household' },
-        asset: tomatoAsset(state),
-        matches: [{ field: 'title', value: tomatoTitle(state) }]
-      }
-    ]);
+    await fulfill(route, searchResults(state, url.searchParams.get('q') ?? ''));
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato') {
@@ -180,7 +210,17 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-photo-tape') {
-    await fulfill(route, asset('asset-photo-tape', 'tenant-home', 'inventory-household', 'Photo tape', null, 'active', true));
+    await fulfill(route, createdAssetResponse(state.createdAssets['asset-photo-tape'] ?? {
+      id: 'asset-photo-tape',
+      title: 'Photo tape',
+      parentAssetId: null,
+      kind: 'item'
+    }, state));
+    return;
+  }
+  const createdAssetId = createdAssetIdFromPath(path);
+  if (method === 'GET' && createdAssetId && state.createdAssets[createdAssetId]) {
+    await fulfill(route, createdAssetResponse(state.createdAssets[createdAssetId], state));
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/location-garage') {
@@ -188,14 +228,28 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'POST' && path.match(/^\/tenants\/tenant-home\/inventories\/inventory-household\/assets\/[^/]+\/attachments\/direct-uploads$/)) {
+    const body = (await request.postDataJSON()) as { contentType?: string; fileName?: string; sizeBytes?: number };
+    const assetId = path.split('/')[6] ?? 'asset-photo-tape';
+    const uploadId = `upload-${assetId}`;
+    const pending: PendingUpload = {
+      uploadId,
+      id: 'attachment-photo',
+      assetId,
+      fileName: body.fileName ?? `${assetId}.jpg`,
+      contentType: body.contentType ?? 'image/jpeg',
+      sizeBytes: body.sizeBytes ?? 1024,
+      url: `https://uploads.local/${assetId}/object-one`,
+      putCompleted: false
+    };
+    state.pendingUploads[uploadId] = pending;
     await fulfill(
       route,
       {
-        uploadId: 'upload-photo',
-        attachmentId: 'attachment-photo',
+        uploadId,
+        attachmentId: pending.id,
         method: 'PUT',
-        url: 'https://uploads.local/object-one',
-        headers: { 'Content-Type': 'image/jpeg' },
+        url: pending.url,
+        headers: { 'Content-Type': pending.contentType },
         formFields: {},
         expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
       },
@@ -205,9 +259,15 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (
     method === 'POST' &&
-    path.match(/^\/tenants\/tenant-home\/inventories\/inventory-household\/assets\/[^/]+\/attachments\/direct-uploads\/upload-photo\/complete$/)
+    path.match(/^\/tenants\/tenant-home\/inventories\/inventory-household\/assets\/[^/]+\/attachments\/direct-uploads\/[^/]+\/complete$/)
   ) {
-    if (state.signedUploadPutCount === 0) {
+    const match = path.match(
+      /^\/tenants\/tenant-home\/inventories\/inventory-household\/assets\/([^/]+)\/attachments\/direct-uploads\/([^/]+)\/complete$/
+    );
+    const assetId = match?.[1] ?? 'asset-photo-tape';
+    const uploadId = match?.[2] ?? '';
+    const pending = state.pendingUploads[uploadId];
+    if (!pending || pending.assetId !== assetId || !pending.putCompleted) {
       await route.fulfill({
         status: 409,
         contentType: 'application/json',
@@ -215,8 +275,13 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
       });
       return;
     }
-    const assetId = path.split('/')[6] ?? 'asset-photo-tape';
-    await fulfill(route, attachment('attachment-photo', 'tenant-home', 'inventory-household', assetId, 'front.jpg'), 201);
+    state.uploadedPhotos[assetId] = {
+      id: pending.id,
+      fileName: pending.fileName,
+      contentType: pending.contentType,
+      sizeBytes: pending.sizeBytes
+    };
+    await fulfill(route, attachment(pending.id, 'tenant-home', 'inventory-household', assetId, pending), 201);
     return;
   }
   if (method === 'GET' && path.endsWith('/attachments')) {
@@ -232,6 +297,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path.endsWith('/thumbnail')) {
+    state.thumbnailRequestPaths.push(`${path}?${url.searchParams.toString()}`);
     await route.fulfill({
       status: 200,
       contentType: 'image/svg+xml',
@@ -251,7 +317,8 @@ function activeAssets(state: WorkspaceApiState): object[] {
   return [
     asset('location-garage', 'tenant-home', 'inventory-household', 'Garage', null, 'active', false, 'location'),
     tomatoAsset(state),
-    asset('asset-bin', 'tenant-home', 'inventory-household', 'Green storage bin', 'location-garage', 'active', false, 'container')
+    asset('asset-bin', 'tenant-home', 'inventory-household', 'Green storage bin', 'location-garage', 'active', false, 'container'),
+    ...Object.values(state.createdAssets).map((created) => createdAssetResponse(created, state))
   ];
 }
 
@@ -270,6 +337,44 @@ function tomatoAsset(state: WorkspaceApiState): object {
 
 function tomatoTitle(state: WorkspaceApiState): string {
   return state.assetOverrides['asset-tomato']?.title ?? 'Tomato fertilizer';
+}
+
+function createdAssetResponse(created: CreatedAsset, state: WorkspaceApiState): object {
+  return asset(
+    created.id,
+    'tenant-home',
+    'inventory-household',
+    created.title,
+    created.parentAssetId,
+    'active',
+    state.uploadedPhotos[created.id] ?? false,
+    created.kind
+  );
+}
+
+function searchResults(state: WorkspaceApiState, query: string): object[] {
+  const normalized = query.trim().toLowerCase();
+  const candidates = [tomatoAsset(state), ...Object.values(state.createdAssets).map((created) => createdAssetResponse(created, state))];
+  return candidates
+    .filter((candidate) => {
+      const title = typeof candidate === 'object' && candidate && 'title' in candidate ? String(candidate.title) : '';
+      return !normalized || title.toLowerCase().includes(normalized);
+    })
+    .map((candidate) => {
+      const title = typeof candidate === 'object' && candidate && 'title' in candidate ? String(candidate.title) : '';
+      return {
+        type: 'asset',
+        tenantId: 'tenant-home',
+        inventory: { id: 'inventory-household', name: 'Household' },
+        asset: candidate,
+        matches: [{ field: 'title', value: title }]
+      };
+    });
+}
+
+function createdAssetIdFromPath(path: string): string | null {
+  const match = path.match(/^\/tenants\/tenant-home\/inventories\/inventory-household\/assets\/([^/]+)$/);
+  return match?.[1] ?? null;
 }
 
 async function fulfill(route: Route, data: unknown, status = 200): Promise<void> {
@@ -309,9 +414,10 @@ function asset(
   title: string,
   parentAssetId: string | null = null,
   lifecycleState = 'active',
-  withPrimaryPhoto = false,
+  primaryPhoto: boolean | UploadedPhoto = false,
   kind = 'item'
 ): object {
+  const photo = primaryPhoto === true ? defaultPhoto(id) : primaryPhoto || null;
   return {
     id,
     tenantId,
@@ -321,31 +427,40 @@ function asset(
     description: kind === 'location' ? 'Storage and seasonal items.' : '',
     parentAssetId,
     lifecycleState,
-    primaryPhoto: withPrimaryPhoto
+    primaryPhoto: photo
       ? {
-          id: 'attachment-photo',
-          fileName: `${id}.jpg`,
-          contentType: 'image/jpeg',
-          sizeBytes: 1024,
+          id: photo.id,
+          fileName: photo.fileName,
+          contentType: photo.contentType,
+          sizeBytes: photo.sizeBytes,
           thumbnails: {
-            small: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/attachment-photo/thumbnail?variant=small`,
-            medium: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/attachment-photo/thumbnail?variant=medium`,
-            large: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/attachment-photo/thumbnail?variant=large`
+            small: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/${photo.id}/thumbnail?variant=small`,
+            medium: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/${photo.id}/thumbnail?variant=medium`,
+            large: `/tenants/${tenantId}/inventories/${inventoryId}/assets/${id}/attachments/${photo.id}/thumbnail?variant=large`
           }
         }
       : undefined
   };
 }
 
-function attachment(id: string, tenantId: string, inventoryId: string, assetId: string, fileName: string): object {
+function defaultPhoto(assetId: string): UploadedPhoto {
+  return {
+    id: 'attachment-photo',
+    fileName: `${assetId}.jpg`,
+    contentType: 'image/jpeg',
+    sizeBytes: 1024
+  };
+}
+
+function attachment(id: string, tenantId: string, inventoryId: string, assetId: string, photo: UploadedPhoto): object {
   return {
     id,
     tenantId,
     inventoryId,
     assetId,
-    fileName,
-    contentType: 'image/jpeg',
-    sizeBytes: 1024,
+    fileName: photo.fileName,
+    contentType: photo.contentType,
+    sizeBytes: photo.sizeBytes,
     lifecycleState: 'active'
   };
 }
