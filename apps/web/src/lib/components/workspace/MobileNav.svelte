@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import Plus from '@lucide/svelte/icons/plus';
   import Search from '@lucide/svelte/icons/search';
@@ -40,7 +41,7 @@
   }
 
   function openMode(event: MouseEvent, nextMode: WorkspaceMode): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -51,15 +52,11 @@
     if (!addAvailability.canOpen) {
       return;
     }
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onOpenAdd();
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 </script>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { tick } from 'svelte';
   import Shapes from '@lucide/svelte/icons/shapes';
   import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -272,7 +273,7 @@
   }
 
   function openArchiveAction(event: MouseEvent, action: Exclude<CustomizationRouteAction, null>, id: string): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -280,15 +281,11 @@
   }
 
   function closeArchiveAction(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onArchiveActionClose();
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
   }
 </script>
 

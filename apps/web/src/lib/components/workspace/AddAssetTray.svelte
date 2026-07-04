@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { onDestroy, tick } from 'svelte';
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -212,15 +213,11 @@
   }
 
   function closeFromLink(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onClose();
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
   }
 
   function captureFiles(files: FileList | undefined): void {

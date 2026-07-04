@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { onMount } from 'svelte';
   import {
     detailAssetList,
@@ -698,7 +699,7 @@
   }
 
   function openHome(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -1078,10 +1079,6 @@
         customFieldDefinitions: fieldDefinitions
       }
     };
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
   }
 
 </script>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
@@ -56,7 +57,7 @@
     if (!canCreateAsset) {
       return;
     }
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -64,7 +65,7 @@
   }
 
   function openAsset(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -72,15 +73,11 @@
   }
 
   function openLocation(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onOpenLocation(asset);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 </script>
 

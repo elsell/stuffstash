@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { tick } from 'svelte';
   import Plus from '@lucide/svelte/icons/plus';
   import Search from '@lucide/svelte/icons/search';
@@ -65,7 +66,7 @@
   });
 
   function chooseAddKind(event: MouseEvent, kind: AssetKind): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -77,12 +78,8 @@
     return shellAddHref(kind, selectedTenantId || null, selectedInventoryId || null);
   }
 
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-  }
-
   function openSuggestion(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { tick } from 'svelte';
   import Building2 from '@lucide/svelte/icons/building-2';
   import Check from '@lucide/svelte/icons/check';
@@ -89,7 +90,7 @@
   }
 
   function chooseInventory(event: MouseEvent, inventory: Inventory): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -159,10 +160,6 @@
       }
       closeContext(false);
     }, 0);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
   }
 </script>
 

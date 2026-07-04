@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import * as Button from '$lib/components/ui/button/index.js';
 
   export interface SegmentedOption {
@@ -27,15 +28,11 @@
     if (option.disabled) {
       return;
     }
-    if (option.href && !shouldHandleInApp(event)) {
+    if (option.href && !shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onSelect(option.value);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.defaultPrevented;
   }
 </script>
 

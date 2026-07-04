@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import MapPin from '@lucide/svelte/icons/map-pin';
   import Settings from '@lucide/svelte/icons/settings';
@@ -57,7 +58,7 @@
   ];
 
   function openDestination(event: MouseEvent, destination: NavDestination): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -70,10 +71,6 @@
 
   function destinationHref(destination: NavDestination): string {
     return shellModeHref(destination.mode, selectedTenantId || null, selectedInventoryId || null, settingsSection);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 </script>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Activity from '@lucide/svelte/icons/activity';
   import Boxes from '@lucide/svelte/icons/boxes';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
@@ -120,15 +121,11 @@
   }
 
   function selectSection(event: MouseEvent, nextSection: SettingsSection): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onSectionChange(nextSection);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 </script>
 

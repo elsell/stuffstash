@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { tick } from 'svelte';
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -73,7 +74,7 @@
   }
 
   function openSuggestion(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -83,15 +84,11 @@
   }
 
   function openAsset(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onOpenAsset(asset);
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   function suggestionId(index: number): string {

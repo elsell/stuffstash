@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
   import Image from '@lucide/svelte/icons/image';
@@ -206,7 +207,7 @@
     if (!actionIsAvailable(nextAction)) {
       return;
     }
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -238,10 +239,6 @@
 
   function actionIsAvailable(nextAction: Exclude<AssetRouteAction, null>): boolean {
     return assetActionIsAvailable(asset, nextAction, { canEdit, saving });
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   async function save(): Promise<void> {
@@ -280,7 +277,7 @@
   }
 
   function closeAction(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -391,7 +388,7 @@
     if (!canEdit || saving) {
       return;
     }
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -485,7 +482,7 @@
   }
 
   function openBack(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();

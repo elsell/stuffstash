@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Plus from '@lucide/svelte/icons/plus';
   import Pencil from '@lucide/svelte/icons/pencil';
@@ -32,7 +33,7 @@
   } = $props();
 
   function openBack(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -40,7 +41,7 @@
   }
 
   function openEditLocation(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -48,7 +49,7 @@
   }
 
   function openAddItemHere(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -56,7 +57,7 @@
   }
 
   function openRow(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -65,10 +66,6 @@
     } else {
       onOpenAsset(asset);
     }
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 </script>
 

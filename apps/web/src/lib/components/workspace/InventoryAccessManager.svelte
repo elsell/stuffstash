@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Link2 from '@lucide/svelte/icons/link-2';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import UserPlus from '@lucide/svelte/icons/user-plus';
@@ -404,7 +405,7 @@
     action: Exclude<AccessInvitationRouteAction, null>,
     invitation: InventoryAccessInvitation
   ): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
@@ -412,15 +413,11 @@
   }
 
   function closeInvitationAction(event: MouseEvent): void {
-    if (!shouldHandleInApp(event)) {
+    if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
     onInvitationActionClose();
-  }
-
-  function shouldHandleInApp(event: MouseEvent): boolean {
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   async function confirmInvitationAction(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): Promise<void> {
