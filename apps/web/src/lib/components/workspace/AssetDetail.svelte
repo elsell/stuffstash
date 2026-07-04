@@ -9,8 +9,6 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
   import {
     workspaceRouteHref,
     type AssetRouteAction,
@@ -26,10 +24,9 @@
     UpdateAssetDraft
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
+  import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
   import AssetDetailHero, { type DetailPhoto } from './AssetDetailHero.svelte';
   import AssetFilesSection from './AssetFilesSection.svelte';
-  import CustomFieldControls from './CustomFieldControls.svelte';
-  import ParentTargetPicker from './ParentTargetPicker.svelte';
   import { formatBytes } from './formatBytes';
 
   let {
@@ -82,7 +79,7 @@
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
   } = $props();
 
-  let panel = $state<'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'attachment-delete'>('none');
+  let panel = $state<AssetDetailPanel>('none');
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
@@ -601,131 +598,30 @@
       onOpenAttachmentDelete={openAttachmentDelete}
       {attachmentDeleteHref}
     />
-      {#if panel === 'edit'}
-        <section
-          bind:this={actionPanelElement}
-          class="detail-action-panel"
-          aria-labelledby="edit-asset-panel-title"
-          tabindex="-1"
-        >
-          <h2 id="edit-asset-panel-title">Edit asset</h2>
-          <div class="field-stack">
-            <Label for="edit-asset-title">Name</Label>
-            <Input id="edit-asset-title" bind:value={title} />
-          </div>
-          <div class="field-stack">
-            <Label for="edit-asset-description">Description</Label>
-            <Textarea id="edit-asset-description" bind:value={description} />
-          </div>
-          <CustomFieldControls
-            fields={applicableFields}
-            values={customFieldValues}
-            idPrefix="edit-custom-field"
-            label="Edit custom fields"
-            onValueChange={setCustomFieldValue}
-          />
-          <div class="tray-actions">
-            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
-            <Button.Root disabled={saving || title.trim().length === 0} onclick={() => { void save(); }}>Save</Button.Root>
-          </div>
-          {#if saveError}
-            <p class="denied-note" role="alert">{saveError}</p>
-          {/if}
-        </section>
-      {:else if panel === 'move'}
-        <section
-          bind:this={actionPanelElement}
-          class="detail-action-panel"
-          aria-labelledby="move-asset-panel-title"
-          tabindex="-1"
-        >
-          <h2 id="move-asset-panel-title">Move asset</h2>
-          <ParentTargetPicker
-            legend="Parent"
-            searchId="move-parent-search"
-            groupLabel="Move target"
-            bind:search={moveParentSearch}
-            selectedId={parentAssetId}
-            targets={parentTargets}
-            onSelect={selectMoveParent}
-          />
-          <div class="tray-actions">
-            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
-            <Button.Root disabled={saving} onclick={() => { void save(); }}>Move</Button.Root>
-          </div>
-          {#if saveError}
-            <p class="denied-note" role="alert">{saveError}</p>
-          {/if}
-        </section>
-      {:else if panel === 'archive'}
-        <section
-          bind:this={actionPanelElement}
-          class="detail-action-panel"
-          aria-labelledby="archive-asset-panel-title"
-          tabindex="-1"
-        >
-          <h2 id="archive-asset-panel-title">Archive asset</h2>
-          <p>Move {asset.title} out of active browsing?</p>
-          <div class="tray-actions">
-            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
-            <Button.Root variant="outline" disabled={saving} onclick={() => { void archive(); }}>Archive</Button.Root>
-          </div>
-          {#if saveError}
-            <p class="denied-note" role="alert">{saveError}</p>
-          {/if}
-        </section>
-      {:else if panel === 'restore'}
-        <section
-          bind:this={actionPanelElement}
-          class="detail-action-panel"
-          aria-labelledby="restore-asset-panel-title"
-          tabindex="-1"
-        >
-          <h2 id="restore-asset-panel-title">Restore asset</h2>
-          <p>Return {asset.title} to active browsing?</p>
-          <div class="tray-actions">
-            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
-            <Button.Root disabled={saving} onclick={() => { void restore(); }}>Restore</Button.Root>
-          </div>
-          {#if saveError}
-            <p class="denied-note" role="alert">{saveError}</p>
-          {/if}
-        </section>
-      {:else if panel === 'delete'}
-        <section
-          bind:this={actionPanelElement}
-          class="detail-action-panel"
-          aria-labelledby="delete-asset-panel-title"
-          tabindex="-1"
-        >
-          <h2 id="delete-asset-panel-title">Delete asset</h2>
-          <p>Delete {asset.title} permanently?</p>
-          <div class="tray-actions">
-            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
-            <Button.Root variant="destructive" disabled={saving} onclick={() => { void remove(); }}>Delete</Button.Root>
-          </div>
-          {#if saveError}
-            <p class="denied-note" role="alert">{saveError}</p>
-          {/if}
-        </section>
-      {:else if panel === 'attachment-delete' && selectedAttachment}
-        <section
-          bind:this={actionPanelElement}
-          class="detail-action-panel"
-          aria-labelledby="delete-attachment-panel-title"
-          tabindex="-1"
-        >
-          <h2 id="delete-attachment-panel-title">Delete attachment</h2>
-          <p>Delete {selectedAttachment.fileName} permanently?</p>
-          <div class="tray-actions">
-            <Button.Root href={detailHref()} variant="outline" onclick={closeAction}>Cancel</Button.Root>
-            <Button.Root variant="destructive" disabled={saving} onclick={() => { void removeAttachment(); }}>Delete</Button.Root>
-          </div>
-          {#if saveError}
-            <p class="denied-note" role="alert">{saveError}</p>
-          {/if}
-        </section>
-      {/if}
+      <AssetDetailActionPanel
+        {panel}
+        bind:panelElement={actionPanelElement}
+        {asset}
+        {parentTargets}
+        {selectedAttachment}
+        {saving}
+        {saveError}
+        detailHref={detailHref()}
+        {applicableFields}
+        bind:title
+        bind:description
+        bind:parentAssetId
+        bind:moveParentSearch
+        {customFieldValues}
+        onClose={closeAction}
+        onSave={save}
+        onArchive={archive}
+        onRestore={restore}
+        onDelete={remove}
+        onDeleteAttachment={removeAttachment}
+        onParentSelect={selectMoveParent}
+        onCustomFieldValueChange={setCustomFieldValue}
+      />
       <div class="danger-zone" aria-label="Danger area">
         <div>
           <strong>Permanent deletion</strong>
