@@ -5,6 +5,15 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import {
+    addAssetKindCopy,
+    addDestinationSummary,
+    addPhotoCountLabel,
+    assetKindControlOptions,
+    quickParentContainerLabel as buildQuickParentContainerLabel,
+    quickParentContainerTrail as buildQuickParentContainerTrail,
+    quickParentKindOptions
+  } from '$lib/application/workspaceAddPresentation';
   import type {
     AddAssetSubmission,
     AddAssetSaveResult,
@@ -15,7 +24,7 @@
     ParentTargetViewModel,
     SelectedPhoto
   } from '$lib/domain/inventory';
-  import { applicableCustomFieldDefinitions, assetKindLabel, assetKinds } from '$lib/domain/inventory';
+  import { applicableCustomFieldDefinitions } from '$lib/domain/inventory';
   import AddAssetCustomFieldsSection from './AddAssetCustomFieldsSection.svelte';
   import AddAssetPhotosSection from './AddAssetPhotosSection.svelte';
   import BinaryOption from './BinaryOption.svelte';
@@ -68,22 +77,23 @@
   let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
-  const assetKindOptions = assetKinds.map((option) => ({ value: option, label: assetKindLabel(option) }));
-  const parentKindOptions = [
-    { value: 'location', label: 'Location' },
-    { value: 'container', label: 'Container' }
-  ];
+  const assetKindOptions = assetKindControlOptions();
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
   let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
   let selectedParent = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
-  let quickParentContainerLabel = $derived(selectedParent?.title ?? 'Inventory root');
-  let quickParentContainerTrail = $derived(selectedParent?.containmentTrail ?? '');
-  let quickParentContainerSummary = $derived(
-    selectedParent ? `${selectedParent.title} / ${selectedParent.containmentTrail}` : 'Inventory root'
+  let kindCopy = $derived(addAssetKindCopy(kind));
+  let quickParentContainerLabel = $derived(buildQuickParentContainerLabel(selectedParent));
+  let quickParentContainerTrail = $derived(buildQuickParentContainerTrail(selectedParent));
+  let parentSummary = $derived(
+    addDestinationSummary({
+      quickParentEnabled,
+      quickParentKind,
+      quickParentTitle,
+      selectedParent
+    })
   );
-  let parentSummary = $derived(destinationSummary());
-  let photoSummary = $derived(photoCountLabel());
+  let photoSummary = $derived(addPhotoCountLabel(selectedPhotos.length));
 
   $effect(() => {
     if (open && !wasOpen) {
@@ -280,48 +290,6 @@
     customFieldValues = { ...customFieldValues, [key]: value };
   }
 
-  function destinationSummary(): string {
-    if (quickParentEnabled) {
-      const parentKindLabel = assetKindLabel(quickParentKind);
-      const parentName = quickParentTitle.trim() ? `New ${parentKindLabel}: ${quickParentTitle.trim()}` : `New ${parentKindLabel}`;
-      return `${parentName} in ${quickParentContainerSummary}`;
-    }
-    return selectedParent?.title ?? 'Inventory root';
-  }
-
-  function photoCountLabel(): string {
-    if (selectedPhotos.length === 0) {
-      return 'No photos';
-    }
-    return `${selectedPhotos.length} ${selectedPhotos.length === 1 ? 'photo' : 'photos'}`;
-  }
-
-  function selectedKindLabel(): string {
-    return assetKindLabel(kind).toLowerCase();
-  }
-
-  function addHeading(): string {
-    return `Add ${selectedKindLabel()}`;
-  }
-
-  function nameLabel(): string {
-    return `${assetKindLabel(kind)} name`;
-  }
-
-  function namePlaceholder(): string {
-    if (kind === 'location') {
-      return 'Garage shelf';
-    }
-    if (kind === 'container') {
-      return 'Clear storage bin';
-    }
-    return 'Tomato fertilizer';
-  }
-
-  function saveLabel(): string {
-    return `Save ${selectedKindLabel()}`;
-  }
-
   function buildCustomFields(): Record<string, unknown> {
     const values: Record<string, unknown> = {};
     for (const field of applicableFields) {
@@ -353,14 +321,14 @@
     onkeydown={handleDialogKeydown}
   >
     <div class="section-heading compact">
-      <h2 id="add-title">{addHeading()}</h2>
+      <h2 id="add-title">{kindCopy.heading}</h2>
       <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
     </div>
 
     <div class="add-summary" aria-live="polite">
       <div>
         <small>Type</small>
-        <strong>{assetKindLabel(kind)}</strong>
+        <strong>{kindCopy.kindLabel}</strong>
       </div>
       <div>
         <small>Parent</small>
@@ -378,8 +346,8 @@
     </fieldset>
 
     <div class="field-stack">
-      <Label for="asset-title">{nameLabel()}</Label>
-      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder={namePlaceholder()} required aria-required="true" />
+      <Label for="asset-title">{kindCopy.nameLabel}</Label>
+      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder={kindCopy.namePlaceholder} required aria-required="true" />
     </div>
 
     <ParentTargetPicker
@@ -427,7 +395,7 @@
           <SegmentedControl
             label="New parent kind"
             value={quickParentKind}
-            options={parentKindOptions}
+            options={quickParentKindOptions}
             onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
           />
         </div>
@@ -460,7 +428,7 @@
 
     <div class="tray-actions">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{saveLabel()}</Button.Root>
+      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
     </div>
   </div>
 {/if}
