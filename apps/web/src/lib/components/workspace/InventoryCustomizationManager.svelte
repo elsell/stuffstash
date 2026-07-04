@@ -7,7 +7,12 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import { workspaceRouteHref, type CustomizationRouteAction } from '$lib/application/workspaceRoute';
+  import {
+    customizationArchiveAssetTypeHref,
+    customizationArchiveFieldDefinitionHref,
+    customizationFieldsHref
+  } from '$lib/application/workspaceCustomizationActions';
+  import type { CustomizationRouteAction } from '$lib/application/workspaceRoute';
   import type {
     CustomAssetType,
     CustomFieldApplicability,
@@ -251,36 +256,18 @@
   }
 
   function fieldsHref(): string {
-    return workspaceRouteHref(
-      { mode: 'settings', settingsSection: 'fields' },
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
-    );
+    return customizationFieldsHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null);
   }
 
   function archiveAssetTypeHref(assetType: CustomAssetType): string {
-    return workspaceRouteHref(
-      {
-        mode: 'settings',
-        settingsSection: 'fields',
-        customizationAction: 'archive_asset_type',
-        customAssetTypeId: assetType.id
-      },
-      tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
-    );
+    return customizationArchiveAssetTypeHref(tenant?.id ?? inventory?.tenantId ?? null, inventory?.id ?? null, assetType);
   }
 
   function archiveFieldDefinitionHref(definition: CustomFieldDefinition): string {
-    return workspaceRouteHref(
-      {
-        mode: 'settings',
-        settingsSection: 'fields',
-        customizationAction: 'archive_field_definition',
-        customFieldDefinitionId: definition.id
-      },
+    return customizationArchiveFieldDefinitionHref(
       tenant?.id ?? inventory?.tenantId ?? null,
-      inventory?.id ?? null
+      inventory?.id ?? null,
+      definition
     );
   }
 
