@@ -5,12 +5,12 @@
   import { Label } from '$lib/components/ui/label/index.js';
   import {
     normalizeParentTargetQuery,
+    parentTargetMetadataLabel,
     parentTargetPickerPresentation,
     parentTargetSuggestions,
     searchParentTargets
   } from '$lib/application/workspaceParentTargets';
   import type { ParentTargetViewModel } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
   import ParentTargetButton from './ParentTargetButton.svelte';
 
@@ -50,6 +50,7 @@
   let locationResults = $derived(searchResult.locationResults);
   let containerResults = $derived(searchResult.containerResults);
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
+  let selectedTargetMetadataLabel = $derived(selectedTarget ? parentTargetMetadataLabel(selectedTarget) : rootSummaryLabel);
   let hasSearch = $derived(normalizedSearch.length > 0);
   let presentation = $derived(
     parentTargetPickerPresentation({
@@ -86,7 +87,7 @@
         </div>
         <span>
           <strong>{selectedTarget?.title ?? rootLabel}</strong>
-          <small>{selectedTarget ? `${assetKindLabel(selectedTarget.kind)} / ${selectedTarget.containmentTrail}` : rootSummaryLabel}</small>
+          <small>{selectedTargetMetadataLabel}</small>
         </span>
       </div>
     </div>

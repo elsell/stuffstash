@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ParentTargetViewModel } from '$lib/domain/inventory';
 import {
   normalizeParentTargetQuery,
+  parentTargetMetadataLabel,
   parentTargetPickerPresentation,
   parentTargetSuggestions,
   searchParentTargets
@@ -58,6 +59,11 @@ describe('workspace parent target helpers', () => {
   it('normalizes search queries before matching', () => {
     expect(normalizeParentTargetQuery('  Garage Shelf  ')).toBe('garage shelf');
     expect(searchParentTargets([parentTarget('garage', 'Garage shelf', 'Root')], '  GARAGE  ', 8).visibleTargets).toHaveLength(1);
+  });
+
+  it('formats parent destination metadata without dangling trail separators', () => {
+    expect(parentTargetMetadataLabel(parentTarget('hall', 'Hall', '', 'location'))).toBe('Location');
+    expect(parentTargetMetadataLabel(parentTarget('garage-shelf', 'Garage shelf', 'Garage'))).toBe('Container / Garage');
   });
 
   it('builds parent picker count and status presentation', () => {

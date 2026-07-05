@@ -1,4 +1,5 @@
 import type { ParentTargetViewModel } from '$lib/domain/inventory';
+import { assetKindLabel } from '$lib/domain/inventory';
 
 export interface ParentTargetSearchResult {
   matchingTargets: ParentTargetViewModel[];
@@ -53,6 +54,12 @@ export function searchParentTargets(targets: ParentTargetViewModel[], query: str
 
 export function normalizeParentTargetQuery(query: string): string {
   return query.trim().toLowerCase();
+}
+
+export function parentTargetMetadataLabel(target: ParentTargetViewModel): string {
+  const kindLabel = assetKindLabel(target.kind);
+  const trail = target.containmentTrail.trim();
+  return trail ? `${kindLabel} / ${trail}` : kindLabel;
 }
 
 export function parentTargetPickerPresentation(input: {

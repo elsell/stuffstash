@@ -57,6 +57,20 @@ describe('ParentTargetButton', () => {
     expect(document.body.querySelector('img')).toBeNull();
     expect(document.body.querySelector('.parent-target-thumb')?.getAttribute('aria-hidden')).toBe('true');
   });
+
+  it('omits the trail separator for top-level destinations', () => {
+    component = mount(ParentTargetButton, {
+      target: document.body,
+      props: {
+        target: { ...parentTarget('hall', 'Hall', ''), kind: 'location' },
+        selected: false,
+        onSelect: () => {}
+      }
+    });
+
+    expect(requiredButton().textContent).toContain('Location');
+    expect(requiredButton().textContent).not.toContain('Location /');
+  });
 });
 
 function parentTarget(

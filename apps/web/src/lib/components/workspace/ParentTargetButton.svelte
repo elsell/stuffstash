@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as Button from '$lib/components/ui/button/index.js';
+  import { parentTargetMetadataLabel } from '$lib/application/workspaceParentTargets';
   import type { ParentTargetViewModel } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
 
   let {
@@ -13,6 +13,8 @@
     selected: boolean;
     onSelect: (id: string) => void;
   } = $props();
+
+  let metadataLabel = $derived(parentTargetMetadataLabel(target));
 </script>
 
 <Button.Root
@@ -27,6 +29,6 @@
   </span>
   <span>
     <strong>{target.title}</strong>
-    <small>{assetKindLabel(target.kind)} / {target.containmentTrail}</small>
+    <small>{metadataLabel}</small>
   </span>
 </Button.Root>

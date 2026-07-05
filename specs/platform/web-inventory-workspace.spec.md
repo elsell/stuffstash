@@ -450,6 +450,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Parent target search results must rank exact and prefix title matches before looser title or containment-trail matches within the same target kind.
 - Parent target search result counts must be announced politely to assistive technology users when the query changes.
 - Parent target search results must present target kind, title, and containment trail in each selectable row so locations and containers are distinguishable while scanning.
+- Parent target kind/trail labels must omit empty containment trails and must not render dangling separators.
 - Parent target search results must group locations and containers with named grouped-control semantics for assistive technology users.
 - Parent target pickers must keep suggested destinations and search results bounded by the component's visible limit.
 - Asset detail edit and move panels must use the same grouped-control and searchable parent-target patterns as the add surface.
@@ -593,6 +594,7 @@ Required implementation split:
 - Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
 - Parent target picker suggestion, search ranking, result limiting, and location/container grouping must live in focused application helpers rather than component-local derivation.
 - Parent target picker result-count, destination-count, suggestion-count, no-match, overflow, and no-target presentation must live in focused application helpers rather than component-local conditional copy.
+- Parent target destination metadata labels must live in focused application helpers rather than component-local string assembly.
 - Add surface control options, kind-specific labels, destination summaries, and photo-count summaries must live in focused application helpers rather than component-local derivation.
 - Add form summary labels, section labels, description placeholders, and quick-parent labels must live in focused application helpers rather than component-local conditional copy.
 - Add surface quick-parent validation copy must live in focused application helpers rather than component-local conditional copy.

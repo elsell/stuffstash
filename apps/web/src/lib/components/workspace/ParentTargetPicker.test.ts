@@ -164,6 +164,24 @@ describe('ParentTargetPicker', () => {
 
     expect(selectedIds).toEqual([null]);
   });
+
+  it('uses graceful metadata labels for top-level selected destinations', async () => {
+    component = mount(ParentTargetPicker, {
+      target: document.body,
+      props: {
+        legend: 'Parent',
+        searchId: 'parent-target-search',
+        groupLabel: 'Parent target',
+        search: '',
+        selectedId: 'hall',
+        targets: [parentTarget('hall', 'Hall', '', 'location')],
+        onSelect: () => {}
+      }
+    });
+
+    expect(document.body.querySelector('.parent-current-card')?.textContent).toContain('Location');
+    expect(document.body.querySelector('.parent-current-card')?.textContent).not.toContain('Location /');
+  });
 });
 
 function parentTarget(
