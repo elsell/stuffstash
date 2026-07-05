@@ -25,7 +25,7 @@
     search = $bindable(''),
     selectedId,
     targets,
-    visibleLimit = 8,
+    visibleLimit = 4,
     onSelect
   }: {
     legend: string;

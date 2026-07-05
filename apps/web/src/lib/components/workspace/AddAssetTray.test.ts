@@ -504,7 +504,7 @@ describe('AddAssetTray', () => {
     expect(closeCount).toBe(1);
   });
 
-  it('filters parent targets and exposes grouped picker controls', async () => {
+  it('filters parent targets and exposes grouped picker controls without dumping every parent before search', async () => {
     component = mount(AddAssetTray, {
       target: document.body,
       props: {
@@ -514,7 +514,9 @@ describe('AddAssetTray', () => {
           parentTarget('garage', 'Garage shelf', 'Garage'),
           parentTarget('closet', 'Hall closet', 'Hall'),
           parentTarget('closet-bin', 'Closet bin', 'Hall'),
-          parentTarget('pantry', 'Pantry bin', 'Kitchen')
+          parentTarget('pantry', 'Pantry bin', 'Kitchen'),
+          parentTarget('attic', 'Attic', 'Upstairs'),
+          parentTarget('laundry', 'Laundry shelf', 'Laundry')
         ],
         mediaPolicy: { supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 1024 },
         customAssetTypes: [],
@@ -530,11 +532,13 @@ describe('AddAssetTray', () => {
     const fieldsets = Array.from(document.body.querySelectorAll('fieldset')).map((field) => field.textContent ?? '');
     expect(fieldsets.some((text) => text.includes('Place in existing parent'))).toBe(true);
     expect(fieldsets.some((text) => text.includes('Asset kind'))).toBe(true);
-    expect(document.body.textContent).toContain('4 possible destinations');
+    expect(document.body.textContent).toContain('6 possible destinations');
     expect(document.body.textContent).toContain('Suggested destinations');
     expect(document.body.textContent).toContain('Showing 4 suggested destinations.');
     expect(document.body.textContent).toContain('Garage shelf');
     expect(document.body.textContent).toContain('Hall closet');
+    expect(document.body.textContent).not.toContain('Laundry shelf');
+    expect(parentTargetButtons('Parent target suggested destinations')).toHaveLength(4);
 
     input('#parent-search', 'closet');
     await flush();
@@ -721,6 +725,14 @@ function switchControl(label: string): HTMLButtonElement | null {
   return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button[role="switch"]')).find((button) =>
     button.textContent?.includes(label)
   ) ?? null;
+}
+
+function parentTargetButtons(groupLabel: string): HTMLButtonElement[] {
+  const group = Array.from(document.body.querySelectorAll<HTMLElement>('[role="group"]')).find(
+    (candidate) => candidate.getAttribute('aria-label') === groupLabel
+  );
+  if (!group) throw new Error(`Missing parent target group ${groupLabel}`);
+  return Array.from(group.querySelectorAll<HTMLButtonElement>('button.parent-target-button'));
 }
 
 function quickParentContextText(): string {
