@@ -206,6 +206,9 @@ The web application must provide a polished import workflow for the first Homebo
 - Preview shows source version when available, counts, warnings, planned field definitions, locations, assets, and image readiness.
 - The web preview badge counts total planned records: planned field definitions, locations, assets, and attachments.
 - Preview gives users enough detail to understand tag, quantity, date, duplicate, and image warnings before applying.
+- Apply must only be enabled for the current source input that was previewed. Changing the source URL, credentials, security options, image option, selected file, or file content after preview must require a new preview before apply.
+- Preview failures must be labeled as preview or source-connection failures, not as applied import failures.
+- If a browser or transport failure prevents the preview request from completing, the UI must replace raw fetch errors such as `Load failed` with actionable copy that explains the preview request could not complete and points users toward API reachability, Homebox reachability, and the explicit private-network option for local Homebox sources.
 - Apply shows progress states and final results, including created field definitions, locations, assets, attachments, reused field definitions, skipped assets, and skipped attachments when those counts are nonzero.
 - After apply returns successfully, the web UI must present the import as applied even if a follow-up workspace refresh fails. Refresh failures may be shown as a non-fatal warning, but they must not overwrite the successful apply result with an import-failed state.
 - The UI must avoid showing passwords, tokens, Homebox internal storage paths, or raw attachment bytes.

@@ -7,6 +7,7 @@ import {
   importApplyStatus,
   importDeniedPresentation,
   importEmptyPreviewPresentation,
+  importFailurePresentation,
   importMessageDetail,
   importMessageTone,
   importMissingInventoryPresentation,
@@ -141,6 +142,22 @@ describe('workspace import presentation helpers', () => {
       })
     ).toBe('Import finished without creating records.');
     expect(importApplyMessagesPresentation()).toEqual({ title: 'Apply messages' });
+  });
+
+  it('presents preview and apply failures by operation', () => {
+    expect(importFailurePresentation('preview', 'legacy_homebox', new Error('Load failed'))).toEqual({
+      title: 'Preview failed',
+      description:
+        'The preview request could not complete. Check that Stuff Stash is reachable, then verify the Homebox URL. For a local Homebox server, enable Private network address and try again.'
+    });
+    expect(importFailurePresentation('apply', 'legacy_homebox', new Error('Load failed'))).toEqual({
+      title: 'Import failed',
+      description: 'The apply request could not complete. Check that Stuff Stash is reachable and try again.'
+    });
+    expect(importFailurePresentation('apply', 'legacy_homebox', new Error('Homebox returned 401 Unauthorized'))).toEqual({
+      title: 'Import failed',
+      description: 'Homebox returned 401 Unauthorized'
+    });
   });
 
   it('summarizes preview source identity and maps message tone', () => {

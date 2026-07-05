@@ -15,11 +15,13 @@
     importApplyStatus,
     importDeniedPresentation,
     importEmptyPreviewPresentation,
+    importFailurePresentation,
     importMessageDetail,
     importMessageTone,
     importMissingInventoryPresentation,
     importPreviewSourceSummary,
     importPlannedCountLabel,
+    legacyHomeboxImportRequestKey,
     importSourceOptions,
     importSourceSummary,
     isImportPreviewReady
@@ -63,13 +65,33 @@
   let fileName = $state('');
   let contentBase64 = $state('');
   let preview = $state<ImportPreview | null>(null);
+  let previewRequestKey = $state('');
   let result = $state<ImportApplyResult | null>(null);
-  let busy = $state(false);
-  let error = $state('');
+  let activeOperation = $state<'preview' | 'apply' | null>(null);
+  let failure = $state<{ title: string; description: string } | null>(null);
   let refreshWarning = $state('');
   let previousSourceType = $state(sourceType);
-  let linkedSourceOptions = $derived(importSourceOptions(tenantId, inventory?.id ?? null));
+  let previewRun = 0;
+  let applyRun = 0;
+  let fileReadRun = 0;
+  let busy = $derived(activeOperation !== null);
+  let linkedSourceOptions = $derived(
+    importSourceOptions(tenantId, inventory?.id ?? null).map((option) => ({
+      ...option,
+      disabled: busy
+    }))
+  );
   let sourceSummary = $derived(importSourceSummary(sourceType, fileName));
+  let currentImportRequest = $derived(importRequest());
+  let currentImportRequestKey = $derived(legacyHomeboxImportRequestKey(currentImportRequest));
+  let currentImportPlanKey = $derived(
+    JSON.stringify({
+      tenantId,
+      inventoryId: inventory?.id ?? '',
+      request: currentImportRequestKey
+    })
+  );
+  let previousImportPlanKey = $state('');
   let missingInventoryPresentation = importMissingInventoryPresentation();
   let deniedPresentation = importDeniedPresentation();
   let emptyPreviewPresentation = importEmptyPreviewPresentation();
@@ -88,11 +110,12 @@
   );
   let blockingErrors = $derived(preview?.messages.filter((message) => message.severity === 'error') ?? []);
   let warnings = $derived(preview?.messages.filter((message) => message.severity === 'warning') ?? []);
-  let canApply = $derived(!!preview && !result && blockingErrors.length === 0 && !busy && canImport);
+  let hasCurrentPreview = $derived(!!preview && previewRequestKey !== '' && previewRequestKey === currentImportPlanKey);
+  let canApply = $derived(hasCurrentPreview && !result && blockingErrors.length === 0 && !busy && canImport);
   let applyStatus = $derived(
     importApplyStatus({
       busy,
-      hasPreview: !!preview,
+      hasPreview: hasCurrentPreview,
       blockingErrorCount: blockingErrors.length,
       canImport
     })
@@ -107,20 +130,48 @@
     clearImportState();
   });
 
+  $effect(() => {
+    if (previousImportPlanKey === '') {
+      previousImportPlanKey = currentImportPlanKey;
+      return;
+    }
+    if (currentImportPlanKey === previousImportPlanKey) {
+      return;
+    }
+    previousImportPlanKey = currentImportPlanKey;
+    invalidatePreviewState();
+  });
+
   async function runPreview(): Promise<void> {
     if (!inventory || !ready || !canImport) {
       return;
     }
-    busy = true;
-    error = '';
+    activeOperation = 'preview';
+    failure = null;
     refreshWarning = '';
+    preview = null;
+    previewRequestKey = '';
     result = null;
+    const run = ++previewRun;
+    const request = currentImportRequest;
+    const planKey = currentImportPlanKey;
+    const requestSourceType = sourceType;
     try {
-      preview = await repository.previewLegacyHomeboxImport(tenantId, inventory.id, importRequest());
+      const nextPreview = await repository.previewLegacyHomeboxImport(tenantId, inventory.id, request);
+      if (run !== previewRun) {
+        return;
+      }
+      preview = nextPreview;
+      previewRequestKey = planKey;
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Import preview failed.';
+      if (run !== previewRun) {
+        return;
+      }
+      failure = importFailurePresentation('preview', requestSourceType, caught);
     } finally {
-      busy = false;
+      if (run === previewRun) {
+        activeOperation = null;
+      }
     }
   }
 
@@ -128,52 +179,88 @@
     if (!inventory || !canApply) {
       return;
     }
-    busy = true;
-    error = '';
+    activeOperation = 'apply';
+    failure = null;
     refreshWarning = '';
+    const run = ++applyRun;
+    const request = currentImportRequest;
+    const planKey = currentImportPlanKey;
+    const requestSourceType = sourceType;
     try {
-      const applied = await repository.applyLegacyHomeboxImport(tenantId, inventory.id, importRequest());
+      const applied = await repository.applyLegacyHomeboxImport(tenantId, inventory.id, request);
+      if (run !== applyRun || planKey !== currentImportPlanKey) {
+        return;
+      }
       result = applied;
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Import failed.';
-      busy = false;
+      if (run !== applyRun || planKey !== currentImportPlanKey) {
+        return;
+      }
+      failure = importFailurePresentation('apply', requestSourceType, caught);
+      activeOperation = null;
       return;
     }
     try {
       await onImported();
     } catch (caught) {
+      if (run !== applyRun || planKey !== currentImportPlanKey) {
+        return;
+      }
       refreshWarning = caught instanceof Error ? caught.message : 'Import applied, but the workspace could not refresh.';
     } finally {
-      busy = false;
+      if (run === applyRun) {
+        activeOperation = null;
+      }
     }
   }
 
   async function selectCSV(event: Event): Promise<void> {
+    if (activeOperation === 'apply') {
+      return;
+    }
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
-    preview = null;
-    result = null;
-    error = '';
-    refreshWarning = '';
+    const run = ++fileReadRun;
+    invalidatePreviewState();
     if (!file) {
       fileName = '';
       contentBase64 = '';
       return;
     }
     fileName = file.name;
-    contentBase64 = await fileToBase64(file);
+    contentBase64 = '';
+    const nextContentBase64 = await fileToBase64(file);
+    if (run !== fileReadRun || activeOperation !== null) {
+      return;
+    }
+    contentBase64 = nextContentBase64;
   }
 
   function selectSource(nextSourceType: ImportSourceType): void {
+    if (activeOperation === 'apply') {
+      return;
+    }
     sourceType = nextSourceType;
     clearImportState();
     onSourceChange(nextSourceType);
   }
 
   function clearImportState(): void {
+    applyRun += 1;
+    fileReadRun += 1;
+    invalidatePreviewState();
+    activeOperation = null;
+  }
+
+  function invalidatePreviewState(): void {
+    previewRun += 1;
+    if (activeOperation === 'preview') {
+      activeOperation = null;
+    }
     preview = null;
+    previewRequestKey = '';
     result = null;
-    error = '';
+    failure = null;
     refreshWarning = '';
   }
 
@@ -257,15 +344,15 @@
         {#if sourceType === 'legacy_homebox'}
           <div class="field-stack">
             <Label for="homebox-url">Homebox URL</Label>
-            <Input id="homebox-url" bind:value={baseUrl} placeholder="https://homebox.example.com" />
+            <Input id="homebox-url" bind:value={baseUrl} placeholder="https://homebox.example.com" disabled={busy} />
           </div>
           <div class="field-stack">
             <Label for="homebox-username">User</Label>
-            <Input id="homebox-username" bind:value={username} autocomplete="username" />
+            <Input id="homebox-username" bind:value={username} autocomplete="username" disabled={busy} />
           </div>
           <div class="field-stack">
             <Label for="homebox-password">Password</Label>
-            <Input id="homebox-password" bind:value={password} type="password" autocomplete="current-password" />
+            <Input id="homebox-password" bind:value={password} type="password" autocomplete="current-password" disabled={busy} />
           </div>
           <div class="import-option-list" aria-label="Live Homebox import options">
             <BinaryOption
@@ -273,25 +360,28 @@
               description="Import Homebox image attachments when available."
               checked={includeImages}
               icon={Image}
+              disabled={busy}
               onToggle={() => toggleImportOption('images')}
             />
             <BinaryOption
               label="Self-signed certificate"
               description="Allow a Homebox server with an untrusted TLS certificate."
               checked={allowInsecureTLS}
+              disabled={busy}
               onToggle={() => toggleImportOption('insecure-tls')}
             />
             <BinaryOption
               label="Private network address"
               description="Allow connections to private LAN addresses."
               checked={allowPrivateNetwork}
+              disabled={busy}
               onToggle={() => toggleImportOption('private-network')}
             />
           </div>
         {:else}
           <div class="field-stack">
             <Label for="homebox-csv">CSV file</Label>
-            <Input id="homebox-csv" type="file" accept=".csv,text/csv" onchange={(event) => { void selectCSV(event); }} />
+            <Input id="homebox-csv" type="file" accept=".csv,text/csv" disabled={busy} onchange={(event) => { void selectCSV(event); }} />
           </div>
           <p class="muted-note">CSV imports do not include image bytes.</p>
         {/if}
@@ -312,11 +402,11 @@
       </form>
 
       <div class="import-results">
-        {#if error}
+        {#if failure}
           <Alert.Root variant="destructive">
             <AlertTriangle aria-hidden="true" />
-            <Alert.Title>Import failed</Alert.Title>
-            <Alert.Description>{error}</Alert.Description>
+            <Alert.Title>{failure.title}</Alert.Title>
+            <Alert.Description>{failure.description}</Alert.Description>
           </Alert.Root>
         {/if}
 

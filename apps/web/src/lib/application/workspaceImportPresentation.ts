@@ -31,6 +31,8 @@ export interface ImportPanelMessage {
   description?: string;
 }
 
+export type ImportFailureOperation = 'preview' | 'apply';
+
 export const importSourceChoices: Array<Omit<ImportSourceOption, 'href'>> = [
   { value: 'legacy_homebox', label: 'Connect' },
   { value: 'legacy_homebox_csv', label: 'CSV' }
@@ -131,6 +133,49 @@ export function importApplyMessagesPresentation(): ImportPanelMessage {
   return { title: 'Apply messages' };
 }
 
+export function importFailurePresentation(
+  operation: ImportFailureOperation,
+  sourceType: ImportSourceType,
+  caught: unknown
+): Required<ImportPanelMessage> {
+  const title = operation === 'preview' ? 'Preview failed' : 'Import failed';
+  const message = caught instanceof Error ? caught.message.trim() : '';
+  if (isFetchFailureMessage(message)) {
+    return {
+      title,
+      description:
+        operation === 'preview'
+          ? sourceType === 'legacy_homebox'
+            ? 'The preview request could not complete. Check that Stuff Stash is reachable, then verify the Homebox URL. For a local Homebox server, enable Private network address and try again.'
+            : 'The preview request could not complete. Check that Stuff Stash is reachable and try again.'
+          : 'The apply request could not complete. Check that Stuff Stash is reachable and try again.'
+    };
+  }
+  return {
+    title,
+    description: message || (operation === 'preview' ? 'Import preview failed.' : 'Import failed.')
+  };
+}
+
+export function legacyHomeboxImportRequestKey(request: LegacyHomeboxImportRequest): string {
+  if (request.sourceType === 'legacy_homebox_csv') {
+    return JSON.stringify({
+      sourceType: request.sourceType,
+      fileName: request.fileName ?? '',
+      contentBase64: request.contentBase64 ?? ''
+    });
+  }
+  return JSON.stringify({
+    sourceType: request.sourceType,
+    baseUrl: request.baseUrl ?? '',
+    username: request.username ?? '',
+    password: request.password ?? '',
+    includeImages: request.includeImages ?? false,
+    allowInsecureTLS: request.allowInsecureTLS ?? false,
+    allowPrivateNetwork: request.allowPrivateNetwork ?? false
+  });
+}
+
 export function importPreviewSourceSummary(source: ImportPreview['source']): string {
   return source.version ? `Homebox ${source.version}` : source.imageImport;
 }
@@ -184,4 +229,13 @@ function compactList(parts: string[]): string {
     return `${values[0]} and ${values[1]}`;
   }
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`;
+}
+
+function isFetchFailureMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized === 'load failed' ||
+    normalized === 'failed to fetch' ||
+    normalized === 'networkerror when attempting to fetch resource.'
+  );
 }

@@ -207,6 +207,173 @@ describe('HomeboxImportPanel', () => {
     expect(document.body.querySelector('#import-apply-status')?.getAttribute('aria-live')).toBeNull();
   });
 
+  it('labels preview transport failures and clears stale preview state', async () => {
+    let previewCalls = 0;
+    const repository = fakeRepository();
+    repository.previewLegacyHomeboxImport = async () => {
+      previewCalls += 1;
+      if (previewCalls > 1) {
+        throw new Error('Load failed');
+      }
+      return importPreview();
+    };
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository,
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(button('Apply').disabled).toBe(false);
+
+    click('Preview');
+    await flush();
+
+    expect(document.body.textContent).toContain('Preview failed');
+    expect(document.body.textContent).toContain('The preview request could not complete.');
+    expect(document.body.textContent).toContain('Private network address');
+    expect(document.body.textContent).not.toContain('Import failed');
+    expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Preview the import before applying changes.');
+    expect(button('Apply').disabled).toBe(true);
+  });
+
+  it('ignores stale preview results after switching sources', async () => {
+    const pendingPreview = deferred<ImportPreview>();
+    const repository = fakeRepository();
+    repository.previewLegacyHomeboxImport = async () => pendingPreview.promise;
+    component = mount(HomeboxImportPanelHarness, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository,
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+    click('Switch source externally');
+    await flush();
+
+    pendingPreview.resolve(importPreview());
+    await flush();
+
+    expect(document.body.textContent).toContain('CSV file');
+    expect(document.body.textContent).toContain('Preview an import');
+    expect(document.body.textContent).not.toContain('Field definitions');
+    expect(button('Apply').disabled).toBe(true);
+  });
+
+  it('requires a new preview after source input changes', async () => {
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(button('Apply').disabled).toBe(false);
+
+    input('#homebox-url', 'https://other-homebox.local');
+    await flush();
+
+    expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Preview the import before applying changes.');
+    expect(button('Apply').disabled).toBe(true);
+    expect(document.body.textContent).not.toContain('Field definitions');
+  });
+
+  it('requires a new preview after the target inventory changes', async () => {
+    component = mount(HomeboxImportPanelHarness, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(button('Apply').disabled).toBe(false);
+
+    click('Switch inventory externally');
+    await flush();
+
+    expect(document.body.textContent).toContain('Garage');
+    expect(document.body.querySelector('#import-apply-status')?.textContent).toBe('Preview the import before applying changes.');
+    expect(document.body.textContent).not.toContain('Field definitions');
+    expect(button('Apply').disabled).toBe(true);
+  });
+
+  it('ignores stale apply results after a parent-driven source change', async () => {
+    const pendingApply = deferred<ImportApplyResult>();
+    const repository = fakeRepository(undefined, importPreview());
+    repository.applyLegacyHomeboxImport = async () => pendingApply.promise;
+    component = mount(HomeboxImportPanelHarness, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository,
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+    click('Apply');
+    await flush();
+    click('Switch source externally');
+    await flush();
+
+    pendingApply.resolve(importApplyResult());
+    await flush();
+
+    expect(document.body.textContent).toContain('CSV file');
+    expect(document.body.textContent).toContain('Preview an import');
+    expect(document.body.textContent).not.toContain('Import applied');
+  });
+
   it('renders the applied import summary after a successful apply', async () => {
     let imported = false;
     component = mount(HomeboxImportPanel, {
@@ -437,4 +604,14 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void; reject: (reason?: unknown) => void } {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve;
+    reject = nextReject;
+  });
+  return { promise, resolve, reject };
 }
