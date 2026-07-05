@@ -75,6 +75,29 @@ describe('SearchSuggestions', () => {
     expect(document.body.querySelector('img')).toBeNull();
     expect(document.body.querySelector('.asset-thumb svg')).not.toBeNull();
   });
+
+  it('renders polite no-suggestion feedback for a focused query without results', () => {
+    component = mount(SearchSuggestions, {
+      target: document.body,
+      props: {
+        id: 'suggestions',
+        idPrefix: 'suggestion',
+        suggestions: [],
+        activeIndex: -1,
+        query: '  box  ',
+        showEmpty: true,
+        assetHref: (candidate) => `/assets/${candidate.id}`,
+        onFocusIndex: () => {},
+        onSuggestionKeydown: () => {},
+        onOpen: () => {}
+      }
+    });
+
+    expect(document.body.querySelector('ul')).toBeNull();
+    const emptyState = document.body.querySelector<HTMLElement>('.search-suggestions-empty');
+    expect(emptyState?.getAttribute('role')).toBe('status');
+    expect(emptyState?.textContent).toBe('No suggestions for "box". Press Search to run a full search.');
+  });
 });
 
 function asset(id: string, title: string, kind: Asset['kind'], photoUrl?: string): Asset {

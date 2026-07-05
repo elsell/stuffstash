@@ -427,7 +427,7 @@ Search behavior:
 - Search result rows should open asset or location detail/list surfaces. Location-kind results and suggestions must route to the focused location URL rather than generic asset detail.
 - Search suggestions and result rows must expose canonical destination `href` values while preserving ordinary in-app navigation behavior.
 - Global header search and the dedicated search page must use a shared suggestion-list composition so thumbnail behavior, kind labels, route links, focus state, and ordinary list/button semantics do not drift.
-- No-results and denied states must be explicit and calm.
+- No-results and denied states must be explicit and calm. Submitted searches with no results must name the query so the user can tell the search ran. Focused autocomplete fields with a non-empty query and no suggestions must expose calm no-suggestion feedback instead of appearing inert.
 - Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
 
 ## Consistent Controls

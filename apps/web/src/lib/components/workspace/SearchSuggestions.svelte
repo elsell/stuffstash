@@ -10,6 +10,8 @@
     suggestions,
     activeIndex,
     label = 'Search suggestions',
+    query = '',
+    showEmpty = false,
     assetHref,
     onFocusIndex,
     onSuggestionKeydown,
@@ -20,6 +22,8 @@
     suggestions: Asset[];
     activeIndex: number;
     label?: string;
+    query?: string;
+    showEmpty?: boolean;
     assetHref: (asset: Asset) => string;
     onFocusIndex: (index: number) => void;
     onSuggestionKeydown: (event: KeyboardEvent, index: number) => void;
@@ -33,6 +37,9 @@
   function photoUnavailableId(index: number): string {
     return `${suggestionId(index)}-photo-unavailable`;
   }
+
+  let normalizedQuery = $derived(query.trim());
+  let emptyLabel = $derived(`No suggestions for "${normalizedQuery}". Press Search to run a full search.`);
 </script>
 
 {#if suggestions.length > 0}
@@ -64,4 +71,6 @@
       </li>
     {/each}
   </ul>
+{:else if showEmpty && normalizedQuery.length > 0}
+  <p class="search-suggestions-empty" role="status">{emptyLabel}</p>
 {/if}

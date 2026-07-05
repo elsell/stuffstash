@@ -205,6 +205,20 @@ describe('SearchPanel', () => {
     expect(document.body.querySelector('#search-page-suggestions')).toBeNull();
   });
 
+  it('shows clear feedback for empty submitted searches and empty autocomplete suggestions', async () => {
+    mountSearchPanel({ query: 'box', suggestions: [], results: [], submitted: true });
+
+    expect(document.body.textContent).toContain('No results for "box"');
+    expect(document.body.textContent).not.toContain('Search this inventory');
+
+    searchInput().focus();
+    await flush();
+
+    const noSuggestions = document.body.querySelector<HTMLElement>('.search-suggestions-empty');
+    expect(noSuggestions?.getAttribute('role')).toBe('status');
+    expect(noSuggestions?.textContent).toBe('No suggestions for "box". Press Search to run a full search.');
+  });
+
   it('announces loading and error states to assistive technology', () => {
     mountSearchPanel({ busy: true, submitted: true, suggestions: [] });
     expect(document.body.querySelector('[role="status"]')?.textContent).toContain('Searching');

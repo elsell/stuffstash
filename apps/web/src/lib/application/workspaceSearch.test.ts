@@ -128,34 +128,34 @@ describe('workspace search helpers', () => {
   });
 
   it('builds search panel status presentation for transient and empty states', () => {
-    expect(searchPanelStatus({ error: 'Search service unavailable.', busy: false, submitted: true, resultCount: 0, lifecycleState: 'active' })).toEqual({
+    expect(searchPanelStatus({ error: 'Search service unavailable.', busy: false, submitted: true, query: 'box', resultCount: 0, lifecycleState: 'active' })).toEqual({
       kind: 'error',
       title: 'Search failed',
       message: 'Search service unavailable.',
       role: 'alert'
     });
-    expect(searchPanelStatus({ error: '', busy: true, submitted: false, resultCount: 0, lifecycleState: 'active' })).toEqual({
+    expect(searchPanelStatus({ error: '', busy: true, submitted: false, query: 'box', resultCount: 0, lifecycleState: 'active' })).toEqual({
       kind: 'busy',
       title: 'Searching',
       message: '',
       role: 'status'
     });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: false, resultCount: 0, lifecycleState: 'active' })).toEqual({
+    expect(searchPanelStatus({ error: '', busy: false, submitted: false, query: '', resultCount: 0, lifecycleState: 'active' })).toEqual({
       kind: 'first-run',
       title: 'Search this inventory',
       message: 'Use asset, location, container, custom field, or attachment terms.'
     });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: true, resultCount: 0, lifecycleState: 'archived' })).toEqual({
+    expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: '  box  ', resultCount: 0, lifecycleState: 'archived' })).toEqual({
       kind: 'empty',
-      title: 'No results',
+      title: 'No results for "box"',
       message: 'No authorized archived assets matched this query.'
     });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: true, resultCount: 0, lifecycleState: 'all' })).toEqual({
+    expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: '', resultCount: 0, lifecycleState: 'all' })).toEqual({
       kind: 'empty',
       title: 'No results',
       message: 'No authorized assets matched this query.'
     });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: true, resultCount: 1, lifecycleState: 'all' }).kind).toBe('none');
+    expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: 'box', resultCount: 1, lifecycleState: 'all' }).kind).toBe('none');
   });
 
   it('normalizes blank searches without calling the repository', async () => {

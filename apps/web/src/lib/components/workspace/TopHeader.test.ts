@@ -127,6 +127,41 @@ describe('TopHeader', () => {
     expect(document.body.querySelectorAll('#global-search-suggestions .asset-thumb svg')).toHaveLength(2);
   });
 
+  it('shows calm no-suggestion feedback for focused global search queries', async () => {
+    mountHeader({ query: 'box', suggestions: [] });
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+
+    const noSuggestions = document.body.querySelector<HTMLElement>('.search-suggestions-empty');
+    expect(noSuggestions?.getAttribute('role')).toBe('status');
+    expect(noSuggestions?.textContent).toBe('No suggestions for "box". Press Search to run a full search.');
+    expect(document.body.querySelector('#global-search-suggestions')).toBeNull();
+  });
+
+  it('closes global no-suggestion feedback when submitting search', async () => {
+    const searches: string[] = [];
+    mountHeader({
+      query: 'box',
+      suggestions: [],
+      onSearch: () => {
+        searches.push('search');
+      }
+    });
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+    expect(document.body.querySelector('.search-suggestions-empty')).not.toBeNull();
+
+    document.body.querySelector('form.global-search')?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    await flush();
+
+    expect(searches).toEqual(['search']);
+    expect(document.body.querySelector('.search-suggestions-empty')).toBeNull();
+  });
+
   it('marks global suggestions when a primary photo cannot render', async () => {
     mountHeader({
       suggestions: [{ ...asset('tape', 'Tape measure'), photoUnavailable: true }]

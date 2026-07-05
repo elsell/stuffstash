@@ -95,6 +95,7 @@ export function searchPanelStatus(input: {
   error: string;
   busy: boolean;
   submitted: boolean;
+  query: string;
   resultCount: number;
   lifecycleState: SearchLifecycleFilter;
 }): SearchPanelStatusPresentation {
@@ -112,9 +113,11 @@ export function searchPanelStatus(input: {
     };
   }
   if (input.resultCount === 0) {
+    const query = input.query.trim();
+    const querySuffix = query ? ` for "${query}"` : '';
     return {
       kind: 'empty',
-      title: 'No results',
+      title: `No results${querySuffix}`,
       message:
         input.lifecycleState === 'all'
           ? 'No authorized assets matched this query.'

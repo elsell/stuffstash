@@ -58,7 +58,8 @@
   let activeSuggestionIndex = $state(-1);
   let searchRegion = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
-  let statusPresentation = $derived(searchPanelStatus({ error, busy, submitted, resultCount: results.length, lifecycleState }));
+  let showNoSuggestions = $derived(searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0);
+  let statusPresentation = $derived(searchPanelStatus({ error, busy, submitted, query, resultCount: results.length, lifecycleState }));
   const suggestionIdPrefix = 'search-page-suggestion';
 
   $effect(() => {
@@ -207,6 +208,8 @@
       idPrefix={suggestionIdPrefix}
       suggestions={visibleSuggestions}
       activeIndex={activeSuggestionIndex}
+      {query}
+      showEmpty={showNoSuggestions}
       assetHref={searchAssetHref}
       onFocusIndex={(index) => { activeSuggestionIndex = index; }}
       onSuggestionKeydown={handleSuggestionKeydown}

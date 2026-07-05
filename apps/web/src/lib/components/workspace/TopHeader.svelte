@@ -52,6 +52,7 @@
   let addTrigger = $state<HTMLButtonElement | null>(null);
   let addMenuElement = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
+  let showNoSuggestions = $derived(searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0);
   let addAvailability = $derived(workspaceAddAvailability({ hasInventory: !!inventory, canCreateAsset }));
   let addOptions = $derived(shellAddOptions(selectedTenantId || null, selectedInventoryId || null));
   const suggestionIdPrefix = 'global-search-suggestion';
@@ -225,7 +226,7 @@
     />
   </div>
   <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
-    <form class="global-search" onsubmit={(event) => { event.preventDefault(); onSearch(); }}>
+    <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>
       <Search aria-hidden="true" />
       <Input
         bind:ref={searchInput}
@@ -242,6 +243,8 @@
       idPrefix={suggestionIdPrefix}
       suggestions={visibleSuggestions}
       activeIndex={activeSuggestionIndex}
+      {query}
+      showEmpty={showNoSuggestions}
       assetHref={searchAssetHref}
       onFocusIndex={(index) => { activeSuggestionIndex = index; }}
       onSuggestionKeydown={handleSuggestionKeydown}
