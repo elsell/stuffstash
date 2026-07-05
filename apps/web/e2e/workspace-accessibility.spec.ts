@@ -117,6 +117,25 @@ test('asset detail photo upload action is not duplicated on mobile', async ({ pa
   expect(visibleAddPhotoActions).toBe(testInfo.project.name === 'mobile-chromium' ? 1 : 2);
 });
 
+test('mobile workspace controls provide comfortable touch targets', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile target-size coverage runs on the mobile project.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
+
+  await expect(page.getByRole('heading', { name: 'Tomato fertilizer' })).toBeVisible();
+  expect(await visibleControlsMeetTarget(page.locator('.mobile-nav [data-slot="button"]'), 44)).toBe(true);
+  expect(await visibleControlsMeetTarget(page.locator('.detail-actions [data-slot="button"]'), 44)).toBe(true);
+
+  await page.getByRole('button', { name: /Household/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Inventory context' })).toBeVisible();
+  expect(await visibleControlsMeetTarget(page.locator('.mobile-context-menu [data-slot="button"]'), 44)).toBe(true);
+  await page.keyboard.press('Escape');
+
+  await page.getByRole('link', { name: 'Add asset' }).click();
+  await expect(page.getByRole('dialog', { name: 'Add item' })).toBeVisible();
+  expect(await visibleControlsMeetTarget(page.locator('.add-tray [data-slot="button"]'), 44)).toBe(true);
+});
+
 test('mobile context sheet keeps a named modal surface', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile accessibility coverage runs on the mobile project.');
 
@@ -193,6 +212,23 @@ test('mobile settings access keeps long principals inside the viewport', async (
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   expect(await page.locator('.settings-panel').filter({ hasText: 'Sharing' }).first().evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
 });
+
+async function visibleControlsMeetTarget(locator: import('@playwright/test').Locator, minimum: number): Promise<boolean> {
+  return locator.evaluateAll((elements, minSize) =>
+    {
+      const visibleElements = elements.filter((element) => {
+        const styles = getComputedStyle(element);
+        const box = element.getBoundingClientRect();
+        return styles.display !== 'none' && styles.visibility !== 'hidden' && box.width > 0 && box.height > 0;
+      });
+      return visibleElements.length > 0 && visibleElements.every((element) => {
+        const box = element.getBoundingClientRect();
+        return box.width >= minSize && box.height >= minSize;
+      });
+    },
+    minimum
+  );
+}
 
 test('mobile settings sections stay compact in phone landscape width', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile settings layout coverage runs on the mobile project.');

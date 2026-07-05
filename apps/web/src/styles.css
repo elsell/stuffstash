@@ -2130,7 +2130,7 @@ dd {
 
 @media (max-width: 900px) {
   :root {
-    --mobile-bottom-chrome-height: calc(66px + env(safe-area-inset-bottom));
+    --mobile-bottom-chrome-height: calc(68px + env(safe-area-inset-bottom));
     --mobile-scroll-clearance: calc(var(--mobile-bottom-chrome-height) + 96px);
   }
 
@@ -2197,6 +2197,13 @@ dd {
     min-height: 100dvh;
     scroll-padding-bottom: var(--mobile-scroll-clearance);
     padding: 18px 14px var(--mobile-scroll-clearance);
+  }
+
+  .workspace-main [data-slot="button"],
+  .mobile-context-menu [data-slot="button"],
+  .add-tray [data-slot="button"] {
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .workspace-main > *,
@@ -2280,7 +2287,8 @@ dd {
 
   .mobile-nav [data-slot="button"] {
     min-width: 0;
-    height: 42px;
+    min-height: 44px;
+    height: 44px;
     padding: 0 4px;
     font-size: 0.72rem;
   }
