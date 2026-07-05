@@ -188,8 +188,8 @@ describe('workspace settings navigation', () => {
         activeSection
       })
     ).toEqual({
-      title: 'Garage',
-      contextLabel: 'Household / Access',
+      title: 'Settings',
+      contextLabel: 'Garage / Access',
       liveAnnouncement: 'Access: Sharing, grants, and invitations',
       overviewContextLabel: 'Household / Garage',
       emptyState: null
@@ -200,7 +200,7 @@ describe('workspace settings navigation', () => {
         inventory: { name: 'Garage' },
         activeSection
       }).contextLabel
-    ).toBe('No tenant / Access');
+    ).toBe('Garage / Access');
     expect(
       settingsShellPresentation({
         tenant: null,

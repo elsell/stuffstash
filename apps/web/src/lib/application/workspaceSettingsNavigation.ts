@@ -154,12 +154,11 @@ export function settingsShellPresentation(input: {
       }
     };
   }
-  const tenantLabel = input.tenant?.name ?? 'No tenant';
   return {
-    title: input.inventory.name,
-    contextLabel: `${tenantLabel} / ${input.activeSection.label}`,
+    title: 'Settings',
+    contextLabel: `${input.inventory.name} / ${input.activeSection.label}`,
     liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
-    overviewContextLabel: `${tenantLabel} / ${input.inventory.name}`,
+    overviewContextLabel: `${input.tenant?.name ?? 'No tenant'} / ${input.inventory.name}`,
     emptyState: null
   };
 }

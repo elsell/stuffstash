@@ -8,7 +8,6 @@
   import Users from '@lucide/svelte/icons/users';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
   import {
     type AccessInvitationRouteAction,
     type CustomizationRouteAction,
@@ -82,8 +81,6 @@
     onCustomizationChange: (assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]) => void;
   } = $props();
 
-  let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
-  let canConfigureInventory = $derived(hasAccessPermission(inventory?.access, 'configure'));
   let canConfigureTenant = $derived(hasAccessPermission(tenant?.access, 'configure'));
   let canEditAssets = $derived(canEditAsset(inventory));
 
@@ -123,14 +120,11 @@
 </script>
 
 <section class="workspace-main" aria-labelledby="settings-title">
-  <div class="section-heading">
+  <div class="section-heading settings-heading">
     <div>
       <h1 id="settings-title">{shellPresentation.title}</h1>
       <p>{shellPresentation.contextLabel}</p>
     </div>
-    {#if inventory}
-      <Badge variant={canConfigureInventory ? 'secondary' : 'outline'}>{inventory.access.relationship}</Badge>
-    {/if}
   </div>
 
   {#if !inventory}

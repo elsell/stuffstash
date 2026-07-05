@@ -495,6 +495,7 @@ Inventory settings must be structured as focused sections rather than one long m
 - The settings section navigator must remain compact and scannable on desktop, and collapse into a compact mobile pattern on narrow screens that exposes all available sections without clipping labels or consuming the first viewport before the active settings task.
 - Settings surfaces must collapse before controls, panels, or invitation lists force horizontal page overflow at tablet and narrow desktop widths.
 - The settings content area should restate the active section with a concise heading and context so the user can confirm where they are after deep linking.
+- The settings page shell must avoid duplicating inventory and role context that is already present in the workspace chrome or the active settings panel. The top heading should name the task surface, while detailed inventory, tenant, and relationship values belong in the overview or focused settings content.
 
 Settings section navigation must be URL-addressable through `/settings/{section}`. Unknown settings sections must resolve to `overview` and normalize to the canonical `/settings` overview URL rather than leaving an unsupported section slug in the browser.
 

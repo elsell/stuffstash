@@ -55,10 +55,12 @@ describe('InventorySettings', () => {
       }
     });
 
-    expect(document.body.querySelector('#settings-title')?.textContent).toBe('Garage');
-    expect(document.body.textContent).toContain('Household / Overview');
+    expect(document.body.querySelector('#settings-title')?.textContent).toBe('Settings');
+    expect(document.body.textContent).toContain('Garage / Overview');
     expect(document.body.textContent).not.toContain('Inventory settings');
+    expect(document.body.querySelector('.settings-heading')?.textContent).not.toContain('editor');
     expect(document.body.textContent).toContain('Asset editsAllowed');
+    expect(document.body.textContent).toContain('Accesseditor');
     const settingsNav = document.body.querySelector<HTMLElement>('.settings-section-nav');
     expect(settingsNav?.tagName).toBe('NAV');
     expect(settingsNav?.getAttribute('aria-label')).toBe('Settings sections');
@@ -100,8 +102,11 @@ describe('InventorySettings', () => {
     });
     await flush();
 
-    expect(document.body.querySelector('#settings-title')?.textContent).toBe('Garage');
-    expect(document.body.textContent).toContain('Household / Access');
+    expect(document.body.querySelector('#settings-title')?.textContent).toBe('Settings');
+    expect(document.body.textContent).toContain('Garage / Access');
+    expect(document.body.querySelector('.settings-heading')?.textContent).not.toContain('owner');
+    expect(document.body.textContent).toContain('Sharing');
+    expect(document.body.textContent).toContain('Manage direct grants and invite links for this inventory.');
     expect(linkStartingWith('Access').getAttribute('aria-current')).toBe('page');
     expect(document.body.querySelector('[aria-live="polite"]')?.textContent).toBe(
       'Access: Sharing, grants, and invitations'
