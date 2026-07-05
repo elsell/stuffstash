@@ -192,6 +192,14 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/search/assets') {
+    if (url.searchParams.get('inventoryId') !== 'inventory-household') {
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { code: 'missing_inventory_scope', message: 'Search must include inventoryId.' } })
+      });
+      return;
+    }
     await fulfill(route, searchResults(state, url.searchParams.get('q') ?? ''));
     return;
   }

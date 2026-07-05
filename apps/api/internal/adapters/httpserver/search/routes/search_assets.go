@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
@@ -18,9 +19,15 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 			return nil, err
 		}
 
+		inventoryIDs := []inventory.InventoryID(nil)
+		if input.InventoryID != "" {
+			inventoryIDs = []inventory.InventoryID{inventory.InventoryID(input.InventoryID)}
+		}
+
 		result, err := application.SearchAssets(ctx, app.SearchAssetsInput{
 			Principal:         principal,
 			TenantID:          tenant.ID(input.TenantID),
+			InventoryIDs:      inventoryIDs,
 			Query:             input.Query,
 			Mode:              input.Mode,
 			CustomAssetTypeID: input.CustomAssetTypeID,

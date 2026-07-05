@@ -186,6 +186,7 @@ export type SearchMode = 'fuzzy' | 'exact';
 export interface SearchAssetsOptions {
   limit?: number;
   cursor?: string;
+  inventoryId?: string;
   lifecycleState?: AssetLifecycleFilter;
   mode?: SearchMode;
 }
@@ -620,6 +621,7 @@ export class StuffStashClient {
             q: query,
             limit,
             cursor: options.cursor,
+            inventoryId: options.inventoryId,
             lifecycleState: options.lifecycleState ?? 'active',
             mode: options.mode ?? 'fuzzy'
           }

@@ -429,7 +429,7 @@ describe('StuffStashInventoryRepository', () => {
 
     expect(results).toMatchObject([{ asset: { id: 'asset-passport', lifecycleState: 'archived' } }]);
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&lifecycleState=archived&mode=exact'
+      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&inventoryId=inventory-household&lifecycleState=archived&mode=exact'
     ]);
   });
 
@@ -659,7 +659,7 @@ function fakeFetch(
         return new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 });
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/search/assets') {
-        const results = [
+        const tenantWideResults = [
           {
             type: 'asset',
             tenantId: 'tenant-home',
@@ -683,6 +683,10 @@ function fakeFetch(
             matches: [{ field: 'title', value: 'Passport' }]
           }
         ];
+        const results =
+          url.searchParams.get('inventoryId') === 'inventory-household'
+            ? tenantWideResults.filter((result) => result.inventory.id === 'inventory-household')
+            : tenantWideResults;
         if (options.includeUnphotographedContainerAndLocation) {
           results.push(
             {

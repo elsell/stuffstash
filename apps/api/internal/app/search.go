@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -66,7 +67,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
-	cursorScope := searchCursorScope(input.TenantID, query, mode, customAssetTypeID, lifecycleFilter)
+	cursorScope := searchCursorScope(input.TenantID, input.InventoryIDs, query, mode, customAssetTypeID, lifecycleFilter)
 	afterResultKey, err := decodePageCursor("search.assets", cursorScope, input.Cursor)
 	if err != nil {
 		return SearchAssetsResult{}, ErrInvalidInput
@@ -208,12 +209,32 @@ func parseSearchCustomAssetTypeID(raw string) (asset.CustomAssetTypeID, error) {
 	return id, nil
 }
 
-func searchCursorScope(tenantID tenant.ID, query search.Query, mode search.Mode, customAssetTypeID asset.CustomAssetTypeID, lifecycleFilter ports.AssetLifecycleFilter) string {
+func searchCursorScope(
+	tenantID tenant.ID,
+	inventoryIDs []inventory.InventoryID,
+	query search.Query,
+	mode search.Mode,
+	customAssetTypeID asset.CustomAssetTypeID,
+	lifecycleFilter ports.AssetLifecycleFilter,
+) string {
 	return strings.Join([]string{
 		tenantID.String(),
+		searchInventoryCursorScope(inventoryIDs),
 		query.String(),
 		mode.String(),
 		customAssetTypeID.String(),
 		string(lifecycleFilter),
 	}, ":")
+}
+
+func searchInventoryCursorScope(inventoryIDs []inventory.InventoryID) string {
+	if len(inventoryIDs) == 0 {
+		return "*"
+	}
+	ids := make([]string, 0, len(inventoryIDs))
+	for _, id := range inventoryIDs {
+		ids = append(ids, id.String())
+	}
+	sort.Strings(ids)
+	return strings.Join(ids, ",")
 }

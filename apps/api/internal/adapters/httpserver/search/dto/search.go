@@ -5,6 +5,7 @@ import "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 type SearchAssetsInput struct {
 	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	TenantID          string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID       string `query:"inventoryId" doc:"Optional inventory ID scope"`
 	Query             string `query:"q" required:"true" minLength:"1" maxLength:"120" doc:"Search query"`
 	Mode              string `query:"mode" enum:"fuzzy,exact" doc:"Search mode; defaults to fuzzy"`
 	CustomAssetTypeID string `query:"customAssetTypeId" doc:"Custom asset type filter"`

@@ -1719,10 +1719,11 @@ dd {
   bottom: 16px;
   z-index: 50;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 14px;
   width: min(460px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
-  overflow: auto;
+  overflow: hidden;
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1734,6 +1735,10 @@ dd {
   display: grid;
   gap: 14px;
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+  scroll-padding-bottom: 18px;
 }
 
 .add-summary {
@@ -2316,9 +2321,11 @@ dd {
   }
 
   .add-tray-body {
+    flex: 1 1 auto;
     overflow: auto;
     min-height: 0;
-    padding-bottom: 12px;
+    padding-right: 0;
+    padding-bottom: 18px;
     scroll-padding-bottom: 18px;
   }
 

@@ -345,13 +345,13 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.search_started');
     try {
       const page = await this.client.searchAssets(request.tenantId, request.query, {
+        inventoryId: request.inventoryId,
         lifecycleState: request.lifecycleState,
         mode: request.mode
       });
-      const items = page.items.filter((result) => result.inventory.id === request.inventoryId);
-      this.observer.record('workspace.search_completed', { resultCount: items.length });
+      this.observer.record('workspace.search_completed', { resultCount: page.items.length });
       return Promise.all(
-        items.map(async (result) => ({
+        page.items.map(async (result) => ({
           ...mapSearchResult(result),
           asset: await this.mapAssetWithPrimaryPhoto(result.asset)
         }))

@@ -54,11 +54,58 @@ func TestAssetSearchPaginatesAndRejectsWrongCursorScope(t *testing.T) {
 		t.Fatalf("expected second page to advance, got first=%+v second=%+v", firstPage.Data, secondPage.Data)
 	}
 
-	wrongScopeCursor := searchAssetsResponse(fixture.server, fixture.tenantID, "Bearer dev:owner", "Aspirin", "", "", "", 0, *firstPage.Meta.Pagination.NextCursor)
+	wrongScopeCursor := searchAssetsResponse(fixture.server, fixture.tenantID, "", "Bearer dev:owner", "Aspirin", "", "", "", 0, *firstPage.Meta.Pagination.NextCursor)
 	if wrongScopeCursor.Code != http.StatusBadRequest {
 		t.Fatalf("expected wrong-scope cursor status %d, got %d with body %s", http.StatusBadRequest, wrongScopeCursor.Code, wrongScopeCursor.Body.String())
 	}
 	assertSafeError(t, wrongScopeCursor, "invalid_request", "Invalid request.")
+}
+
+func TestAssetSearchFiltersByInventoryScope(t *testing.T) {
+	fixture := newAssetSearchFixture(t)
+
+	tenantWideSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "i", "", "", "")
+	if !assetSearchContainsTitle(tenantWideSearch.Data, "Cordless Drill") || !assetSearchContainsTitle(tenantWideSearch.Data, "Aspirin") {
+		t.Fatalf("expected tenant-wide search to include both inventories, got %+v", tenantWideSearch.Data)
+	}
+
+	toolsSearch := searchAssetsInInventory(t, fixture.server, fixture.tenantID, fixture.toolsInventoryID, "Bearer dev:owner", "i", "", "", "")
+	if !assetSearchContainsTitle(toolsSearch.Data, "Cordless Drill") || assetSearchContainsTitle(toolsSearch.Data, "Aspirin") {
+		t.Fatalf("expected inventory-scoped search to include tools only, got %+v", toolsSearch.Data)
+	}
+
+	firstScopedPage := searchAssetsInInventoryWithLimit(
+		t,
+		fixture.server,
+		fixture.tenantID,
+		fixture.toolsInventoryID,
+		"Bearer dev:owner",
+		"i",
+		"",
+		"",
+		"",
+		1,
+		"",
+	)
+	if firstScopedPage.Meta.Pagination == nil || firstScopedPage.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected inventory-scoped search cursor, got %+v", firstScopedPage)
+	}
+	wrongInventoryScopeCursor := searchAssetsResponse(
+		fixture.server,
+		fixture.tenantID,
+		fixture.medicineInventoryID,
+		"Bearer dev:owner",
+		"i",
+		"",
+		"",
+		"",
+		1,
+		*firstScopedPage.Meta.Pagination.NextCursor,
+	)
+	if wrongInventoryScopeCursor.Code != http.StatusBadRequest {
+		t.Fatalf("expected wrong inventory cursor status %d, got %d with body %s", http.StatusBadRequest, wrongInventoryScopeCursor.Code, wrongInventoryScopeCursor.Body.String())
+	}
+	assertSafeError(t, wrongInventoryScopeCursor, "invalid_request", "Invalid request.")
 }
 
 func TestAssetSearchFiltersByAuthorization(t *testing.T) {
@@ -80,7 +127,7 @@ func TestAssetSearchFiltersByAuthorization(t *testing.T) {
 		t.Fatalf("expected viewer to see granted inventory result, got %+v", viewerAspirinSearch.Data)
 	}
 
-	crossTenantSearch := searchAssetsResponse(fixture.server, fixture.otherTenantID, "Bearer dev:owner", "Cordless", "", "", "", 0, "")
+	crossTenantSearch := searchAssetsResponse(fixture.server, fixture.otherTenantID, "", "Bearer dev:owner", "Cordless", "", "", "", 0, "")
 	if crossTenantSearch.Code != http.StatusForbidden {
 		t.Fatalf("expected cross-tenant search status %d, got %d with body %s", http.StatusForbidden, crossTenantSearch.Code, crossTenantSearch.Body.String())
 	}
@@ -137,6 +184,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"serial-field", "audit-serial-field",
 			"expires-field", "audit-expires-field",
 			"drill-asset", "audit-drill-asset",
+			"drill-bits-asset", "audit-drill-bits-asset",
 			"aspirin-asset", "audit-aspirin-asset",
 			"other-asset", "audit-other-asset",
 			"drill-attachment", "audit-drill-attachment",
@@ -186,6 +234,14 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 		t.Fatalf("expected drill status %d, got %d with body %s", http.StatusCreated, createDrill.Code, createDrill.Body.String())
 	}
 	drill := decodeAsset(t, createDrill)
+
+	createDrillBits := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Drill Bits",
+	})
+	if createDrillBits.Code != http.StatusCreated {
+		t.Fatalf("expected drill bits status %d, got %d with body %s", http.StatusCreated, createDrillBits.Code, createDrillBits.Body.String())
+	}
 
 	createAspirin := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+medicineInventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":              "item",
@@ -270,15 +326,32 @@ func searchAssets(t *testing.T, server *http.Server, tenantID string, authorizat
 
 func searchAssetsWithLimit(t *testing.T, server *http.Server, tenantID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, limit int, cursor string) searchAssetListBody {
 	t.Helper()
-	response := searchAssetsResponse(server, tenantID, authorization, query, mode, customAssetTypeID, lifecycleState, limit, cursor)
+	response := searchAssetsResponse(server, tenantID, "", authorization, query, mode, customAssetTypeID, lifecycleState, limit, cursor)
 	if response.Code != http.StatusOK {
 		t.Fatalf("expected search status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
 	}
 	return decodeAssetSearch(t, response)
 }
 
-func searchAssetsResponse(server *http.Server, tenantID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, limit int, cursor string) *httptest.ResponseRecorder {
+func searchAssetsInInventory(t *testing.T, server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string) searchAssetListBody {
+	t.Helper()
+	return searchAssetsInInventoryWithLimit(t, server, tenantID, inventoryID, authorization, query, mode, customAssetTypeID, lifecycleState, 0, "")
+}
+
+func searchAssetsInInventoryWithLimit(t *testing.T, server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, limit int, cursor string) searchAssetListBody {
+	t.Helper()
+	response := searchAssetsResponse(server, tenantID, inventoryID, authorization, query, mode, customAssetTypeID, lifecycleState, limit, cursor)
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected search status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
+	}
+	return decodeAssetSearch(t, response)
+}
+
+func searchAssetsResponse(server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, limit int, cursor string) *httptest.ResponseRecorder {
 	values := url.Values{}
+	if inventoryID != "" {
+		values.Set("inventoryId", inventoryID)
+	}
 	if query != "" {
 		values.Set("q", query)
 	}

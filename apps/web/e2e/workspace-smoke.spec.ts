@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   apiRequestPaths,
   installAuthenticatedWorkspace,
@@ -96,9 +96,11 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   expect(bodyBox && actionsBox ? bodyBox.y + bodyBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((actionsBox?.y ?? 0) + 1);
   expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
   expect(actionsBox && viewport ? viewport.height - (actionsBox.y + actionsBox.height) : Number.POSITIVE_INFINITY).toBeLessThanOrEqual(32);
+  await expectAddTrayPhotosClearActions(addDialog, page);
 
   await page.setViewportSize({ width: 320, height: 520 });
   await expectCompactAddSummary(addDialog);
+  await expectAddTrayPhotosClearActions(addDialog, page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
@@ -109,6 +111,7 @@ test('add flow saves items with and without selected photo previews', async ({ p
 
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.locator('#header-add-menu').getByRole('link', { name: 'Item', exact: true }).click();
+  await expectAddTrayPhotosClearActions(page.getByRole('dialog', { name: 'Add item' }), page);
   await page.getByLabel('Item name').fill('Cordless drill');
   await page.getByRole('button', { name: 'Save item' }).click();
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-cordless-drill');
@@ -142,6 +145,35 @@ test('add flow saves items with and without selected photo previews', async ({ p
   expect(
     thumbnailRequestPaths(page).filter((path) => path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')).length
   ).toBeGreaterThan(photoTapeThumbnailRequestsBeforeSearch);
+});
+
+test('direct add item deep link saves to canonical asset detail', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Direct add-item smoke runs on desktop first.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/add/item');
+
+  const dialog = page.getByRole('dialog', { name: 'Add item' });
+  await expect(dialog).toBeVisible();
+  await page.getByLabel('Item name').fill('Direct link flashlight');
+  await page.getByRole('button', { name: 'Save item' }).click();
+
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-direct-link-flashlight');
+  await expect(page.getByRole('heading', { name: 'Direct link flashlight' })).toBeVisible();
+});
+
+test('mobile bottom add saves an item', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile add save coverage runs on the mobile project.');
+
+  await page.goto('/');
+
+  await page.getByRole('link', { name: 'Add asset' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add item' });
+  await expect(dialog).toBeVisible();
+  await page.getByLabel('Item name').fill('Mobile drawer labels');
+  await page.getByRole('button', { name: 'Save item' }).click();
+
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-mobile-drawer-labels');
+  await expect(page.getByRole('heading', { name: 'Mobile drawer labels' })).toBeVisible();
 });
 
 test('add location deep link saves to the canonical focused location route', async ({ page }, testInfo) => {
@@ -373,4 +405,14 @@ async function expectCompactAddSummary(addDialog: Locator): Promise<void> {
   );
   expect(hiddenSummaryText).toMatch(/^Type: .+ Parent: .+ Photos: .+$/);
   await expect(summary.locator('.add-summary-destination strong')).not.toHaveText('');
+}
+
+async function expectAddTrayPhotosClearActions(addDialog: Locator, page: Page): Promise<void> {
+  const photos = addDialog.locator('.attachment-section');
+  await photos.scrollIntoViewIfNeeded();
+  const photosBox = await photos.boundingBox();
+  const actionsBox = await addDialog.locator('.tray-actions').boundingBox();
+  const viewport = page.viewportSize();
+  expect(photosBox && actionsBox ? photosBox.y + photosBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((actionsBox?.y ?? 0) - 8);
+  expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
 }

@@ -637,13 +637,13 @@ describe('StuffStashClient', () => {
     });
 
     await expect(
-      client.searchAssets('tenant-one', 'Passport', { limit: 5, lifecycleState: 'archived', mode: 'exact' })
+      client.searchAssets('tenant-one', 'Passport', { limit: 5, inventoryId: 'inventory-one', lifecycleState: 'archived', mode: 'exact' })
     ).resolves.toMatchObject({
       items: [{ asset: { id: 'asset-one', lifecycleState: 'archived' } }]
     });
 
     expect(requests[0]?.url).toBe(
-      'http://api.local/tenants/tenant-one/search/assets?q=Passport&limit=5&lifecycleState=archived&mode=exact'
+      'http://api.local/tenants/tenant-one/search/assets?q=Passport&limit=5&inventoryId=inventory-one&lifecycleState=archived&mode=exact'
     );
   });
 

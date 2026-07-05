@@ -5586,6 +5586,8 @@ export interface operations {
     "get-tenants-by-tenant-id-search-assets": {
         parameters: {
             query: {
+                /** @description Optional inventory ID scope */
+                inventoryId?: string;
                 /** @description Search query */
                 q: string;
                 /** @description Search mode; defaults to fuzzy */
