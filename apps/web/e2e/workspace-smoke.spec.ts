@@ -61,13 +61,23 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   const lastParentResult = addDialog.locator('.parent-picker-results .parent-target-button').last();
   await expect(lastParentResult).toBeVisible();
   await lastParentResult.scrollIntoViewIfNeeded();
+  const selectedParentName = await lastParentResult.locator('strong').textContent();
   const lastParentResultBox = await lastParentResult.boundingBox();
   const actionsBoxAfterParentScroll = await addDialog.locator('.tray-actions').boundingBox();
+  const addDialogBoxAfterParentScroll = await addDialog.boundingBox();
   expect(
     lastParentResultBox && actionsBoxAfterParentScroll
       ? lastParentResultBox.y + lastParentResultBox.height
       : Number.POSITIVE_INFINITY
   ).toBeLessThanOrEqual((actionsBoxAfterParentScroll?.y ?? 0) - 8);
+  expect(
+    addDialogBoxAfterParentScroll && lastParentResultBox
+      ? addDialogBoxAfterParentScroll.y + addDialogBoxAfterParentScroll.height - (lastParentResultBox.y + lastParentResultBox.height)
+      : 0
+  ).toBeGreaterThanOrEqual(88);
+  await lastParentResult.click();
+  await expect(addDialog.locator('.add-summary').getByText(selectedParentName ?? '')).toBeVisible();
+  await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'sticky');
   await page.getByLabel('Find parent').fill('');
   await addDialog.getByRole('switch', { name: 'Create a parent first' }).click();
   await expect(page.getByLabel('Parent name')).toBeVisible();
@@ -238,6 +248,29 @@ test('settings and import deep links render route-backed sections', async ({ pag
     'href',
     '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox'
   );
+});
+
+test('mobile import source actions clear the bottom nav', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile import layout coverage runs on the mobile project.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+
+  await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
+  const sourcePanel = page.locator('.import-source-panel');
+  await sourcePanel.getByRole('button', { name: 'Preview' }).scrollIntoViewIfNeeded();
+  await page.evaluate(() => { window.scrollBy(0, 96); });
+  const actionsBox = await sourcePanel.locator('.heading-actions').boundingBox();
+  const navBox = await page.locator('.mobile-nav').boundingBox();
+  const lastOptionBox = await sourcePanel.locator('.binary-option').filter({ hasText: 'Private network address' }).boundingBox();
+  expect(lastOptionBox && actionsBox ? lastOptionBox.y + lastOptionBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
+    (actionsBox?.y ?? 0) - 8
+  );
+  expect(actionsBox && navBox ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((navBox?.y ?? 0) - 8);
+
+  await page.setViewportSize({ width: 820, height: 650 });
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+  await expect(page.locator('.mobile-nav')).toBeVisible();
+  await expect(page.locator('.import-layout')).toHaveCSS('grid-template-columns', '792px');
 });
 
 function tinyPng(): Buffer {

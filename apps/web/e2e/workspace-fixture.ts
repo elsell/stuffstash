@@ -349,6 +349,9 @@ function activeAssets(state: WorkspaceApiState): object[] {
     asset('asset-camping-tote', 'tenant-home', 'inventory-household', 'Camping storage tote', 'location-garage', 'active', false, 'container'),
     asset('asset-tool-chest', 'tenant-home', 'inventory-household', 'Tool chest', 'location-garage', 'active', false, 'container'),
     asset('asset-document-box', 'tenant-home', 'inventory-household', 'Document storage box', 'location-attic', 'active', false, 'container'),
+    asset('asset-gear-crate', 'tenant-home', 'inventory-household', 'Gear crate', 'location-garage', 'active', false, 'container'),
+    asset('asset-garden-cabinet', 'tenant-home', 'inventory-household', 'Garden cabinet', 'location-shed', 'active', false, 'container'),
+    asset('asset-gift-wrap-tote', 'tenant-home', 'inventory-household', 'Gift wrap tote', 'location-basement', 'active', false, 'container'),
     ...Object.values(state.createdAssets).map((created) => createdAssetResponse(created, state))
   ];
 }

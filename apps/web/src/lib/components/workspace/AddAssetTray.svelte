@@ -85,6 +85,7 @@
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
   let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
   let selectedParent = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
+  let parentSearchPicking = $derived(parentSearch.trim().length > 0 && parentSearch.trim() !== (selectedParent?.title ?? ''));
   let kindCopy = $derived(addAssetKindCopy(kind));
   let quickParentContainerLabel = $derived(buildQuickParentContainerLabel(selectedParent));
   let quickParentContainerTrail = $derived(buildQuickParentContainerTrail(selectedParent));
@@ -317,6 +318,7 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="add-title"
+    data-parent-search-active={parentSearchPicking ? 'true' : undefined}
     tabindex="-1"
     onkeydown={handleDialogKeydown}
   >
