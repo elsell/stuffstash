@@ -196,7 +196,8 @@ describe('HomeWorkspace', () => {
     expect(componentPreventedModifiedClick).toBe(false);
   });
 
-  it('uses selected context for add-location links when the inventory is empty', () => {
+  it('uses selected context for empty-inventory add links', () => {
+    const openedKinds: Array<'item' | 'location' | undefined> = [];
     component = mount(HomeWorkspace, {
       target: document.body,
       props: {
@@ -208,12 +209,42 @@ describe('HomeWorkspace', () => {
         archivedAssets: [],
         onOpenLocation: () => {},
         onOpenAsset: () => {},
+        onOpenAdd: (kind) => {
+          openedKinds.push(kind);
+        },
+        onSelectLifecycle: () => {}
+      }
+    });
+
+    expect(document.body.textContent).toContain('Locations make browsing easier, but you can capture an item now.');
+    expect(link('Add first location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
+    expect(link('Add item').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+
+    link('Add item').click();
+    expect(openedKinds).toEqual(['item']);
+  });
+
+  it('keeps the empty locations route focused on creating a location', () => {
+    component = mount(HomeWorkspace, {
+      target: document.body,
+      props: {
+        lifecycleState: 'active',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        browseMode: 'locations',
+        locations: [],
+        recentAssets: [],
+        archivedAssets: [],
+        onOpenLocation: () => {},
+        onOpenAsset: () => {},
         onOpenAdd: () => {},
         onSelectLifecycle: () => {}
       }
     });
 
+    expect(document.body.textContent).toContain('Add a location to start browsing by place.');
     expect(link('Add first location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
+    expect(document.body.textContent).not.toContain('Add item');
   });
 
   it('disables home add-location controls when creation is unavailable', () => {
@@ -239,6 +270,7 @@ describe('HomeWorkspace', () => {
 
     const headerAdd = disabledLink('Add location');
     const emptyAdd = disabledLink('Add first location');
+    expect(document.body.textContent).not.toContain('Add item');
     expect(headerAdd.hasAttribute('href')).toBe(false);
     expect(headerAdd.getAttribute('aria-disabled')).toBe('true');
     expect(headerAdd.getAttribute('aria-describedby')).toBe('home-add-location-denied');

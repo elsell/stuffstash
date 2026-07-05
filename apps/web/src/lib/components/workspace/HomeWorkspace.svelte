@@ -6,6 +6,7 @@
   import {
     browseAssetHref,
     browseLocationHref,
+    homeAddItemHref,
     homeAddLocationHref,
     homeArchivedEmptyState,
     homeCreateLocationDenied,
@@ -43,7 +44,7 @@
     canCreateAsset?: boolean;
     onOpenLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd: () => void;
+    onOpenAdd: (kind?: 'item' | 'location') => void;
     onSelectLifecycle: (lifecycleState: AssetLifecycleFilter) => void;
   } = $props();
 
@@ -58,13 +59,17 @@
   const addDenied = homeCreateLocationDenied();
   const recentEmpty = homeRecentEmptyState();
   const archivedEmpty = homeArchivedEmptyState();
-  const locationsEmpty = homeLocationsEmptyState();
+  let locationsEmpty = $derived(homeLocationsEmptyState(browseMode));
 
   function addLocationHref(): string {
     return homeAddLocationHref(routeTenantId, routeInventoryId);
   }
 
-  function openAdd(event: MouseEvent): void {
+  function addItemHref(): string {
+    return homeAddItemHref(routeTenantId, routeInventoryId);
+  }
+
+  function openAdd(event: MouseEvent, kind: 'item' | 'location' = 'location'): void {
     if (!canCreateAsset) {
       return;
     }
@@ -72,7 +77,7 @@
       return;
     }
     event.preventDefault();
-    onOpenAdd();
+    onOpenAdd(kind);
   }
 
   function openAsset(event: MouseEvent, asset: Asset): void {
@@ -113,7 +118,7 @@
           variant="outline"
           disabled={!canCreateAsset}
           aria-describedby={!canCreateAsset ? addDenied.id : undefined}
-          onclick={openAdd}
+          onclick={(event) => openAdd(event, 'location')}
         >Add location</Button.Root>
         {#if !canCreateAsset && locations.length > 0}
           <p id={addDenied.id} class="denied-note" role="note">{addDenied.message}</p>
@@ -175,8 +180,15 @@
         href={addLocationHref()}
         disabled={!canCreateAsset}
         aria-describedby={!canCreateAsset ? addDenied.id : undefined}
-        onclick={openAdd}
+        onclick={(event) => openAdd(event, 'location')}
       >{locationsEmpty.actionLabel}</Button.Root>
+      {#if browseMode === 'home' && canCreateAsset && locationsEmpty.secondaryActionLabel}
+        <Button.Root
+          href={addItemHref()}
+          variant="outline"
+          onclick={(event) => openAdd(event, 'item')}
+        >{locationsEmpty.secondaryActionLabel}</Button.Root>
+      {/if}
       {#if !canCreateAsset}
         <p id={addDenied.id} class="denied-note" role="note">{addDenied.message}</p>
       {/if}

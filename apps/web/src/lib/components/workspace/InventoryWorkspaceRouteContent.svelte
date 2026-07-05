@@ -270,7 +270,7 @@
     canCreateAsset={status.createAssetAllowed}
     onOpenLocation={handlers.onOpenLocation}
     onOpenAsset={handlers.onOpenAsset}
-    onOpenAdd={() => handlers.onOpenAdd('location')}
+    onOpenAdd={(kind = 'location') => handlers.onOpenAdd(kind)}
     onSelectLifecycle={(lifecycleState) => { void handlers.onSelectLifecycle(lifecycleState); }}
   />
 {/if}

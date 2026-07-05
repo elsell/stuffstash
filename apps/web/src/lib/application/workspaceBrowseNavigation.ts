@@ -12,6 +12,7 @@ export interface HomeEmptyStatePresentation {
   title?: string;
   message?: string;
   actionLabel?: string;
+  secondaryActionLabel?: string;
 }
 
 export interface HomeDeniedPresentation {
@@ -34,6 +35,10 @@ export interface HomeLifecycleOption {
 
 export function homeAddLocationHref(tenantId: string | null, inventoryId: string | null): string {
   return workspaceRouteHref({ action: 'add', addKind: 'location' }, tenantId, inventoryId);
+}
+
+export function homeAddItemHref(tenantId: string | null, inventoryId: string | null): string {
+  return workspaceRouteHref({ action: 'add', addKind: 'item' }, tenantId, inventoryId);
 }
 
 export function homeLifecycleHref(
@@ -114,11 +119,19 @@ export function homeArchivedEmptyState(): HomeEmptyStatePresentation {
   return { title: 'No archived assets' };
 }
 
-export function homeLocationsEmptyState(): HomeEmptyStatePresentation {
+export function homeLocationsEmptyState(browseMode: HomeBrowseMode = 'home'): HomeEmptyStatePresentation {
+  if (browseMode === 'locations') {
+    return {
+      title: 'No locations yet',
+      message: 'Add a location to start browsing by place.',
+      actionLabel: 'Add first location'
+    };
+  }
   return {
     title: 'No locations yet',
-    message: 'Add a location before adding things into it.',
-    actionLabel: 'Add first location'
+    message: 'Locations make browsing easier, but you can capture an item now.',
+    actionLabel: 'Add first location',
+    secondaryActionLabel: 'Add item'
   };
 }
 

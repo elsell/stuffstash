@@ -70,6 +70,38 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(openedKinds).toEqual(['location']);
   });
 
+  it('routes empty-inventory add item and location actions separately', async () => {
+    const openedKinds: AssetKind[] = [];
+    const props = await routeContentProps({
+      handlers: {
+        onOpenAdd: (kind = 'item') => {
+          openedKinds.push(kind);
+        }
+      }
+    });
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: {
+        ...props,
+        workspace: {
+          ...props.workspace,
+          assets: [],
+          detailAssets: []
+        }
+      }
+    });
+
+    expect(link('Add first location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
+    expect(link('Add item').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+
+    link('Add first location').click();
+    await tick();
+    link('Add item').click();
+    await tick();
+
+    expect(openedKinds).toEqual(['location', 'item']);
+  });
+
   it('keeps search state bindable through the extracted route content', async () => {
     let searched = false;
     component = mount(InventoryWorkspaceRouteContent, {

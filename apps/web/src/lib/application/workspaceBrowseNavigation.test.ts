@@ -3,6 +3,7 @@ import type { Asset, LocationAsset } from '$lib/domain/inventory';
 import {
   browseAssetHref,
   browseLocationHref,
+  homeAddItemHref,
   homeArchivedEmptyState,
   homeAddLocationHref,
   homeCreateLocationDenied,
@@ -40,6 +41,7 @@ describe('workspace browse navigation helpers', () => {
     expect(homeAddLocationHref('tenant-home', 'inventory-household')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/add/location'
     );
+    expect(homeAddItemHref('tenant-home', 'inventory-household')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
     expect(homeLifecycleHref('tenant-home', 'inventory-household', 'active')).toBe('/tenants/tenant-home/inventories/inventory-household');
     expect(homeLifecycleHref('tenant-home', 'inventory-household', 'archived')).toBe(
       '/tenants/tenant-home/inventories/inventory-household?lifecycle=archived'
@@ -86,7 +88,13 @@ describe('workspace browse navigation helpers', () => {
     expect(homeArchivedEmptyState()).toEqual({ title: 'No archived assets' });
     expect(homeLocationsEmptyState()).toEqual({
       title: 'No locations yet',
-      message: 'Add a location before adding things into it.',
+      message: 'Locations make browsing easier, but you can capture an item now.',
+      actionLabel: 'Add first location',
+      secondaryActionLabel: 'Add item'
+    });
+    expect(homeLocationsEmptyState('locations')).toEqual({
+      title: 'No locations yet',
+      message: 'Add a location to start browsing by place.',
       actionLabel: 'Add first location'
     });
     expect(homeCreateLocationDenied()).toEqual({

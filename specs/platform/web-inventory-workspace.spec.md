@@ -266,6 +266,7 @@ Recently added:
 - Recently added rows must open the asset detail view.
 - Recently added rows, archived asset rows, location tiles, and add-location actions must expose canonical `href` values while preserving ordinary in-app navigation behavior.
 - Home add-location controls, including empty-inventory calls to action, must respect the selected inventory's create permission. When creation is unavailable they must render as explicit disabled or denied states instead of live deep links.
+- Empty-inventory home states must not imply that item creation is blocked when the inventory can accept root-level items. They should recommend creating locations for better browsing while still exposing a route-backed add-item action when creation is allowed.
 
 ## Location View
 
