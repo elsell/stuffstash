@@ -236,6 +236,37 @@ describe('HomeboxImportPanel', () => {
     expect(document.body.textContent).toContain('Created 1 field definition, 2 locations, 3 items, and 4 attachments.');
   });
 
+  it('keeps a successful apply result when the follow-up workspace refresh fails', async () => {
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(undefined, importPreview(), importApplyResult()),
+        onImported: async () => {
+          throw new Error('Workspace refresh failed.');
+        }
+      }
+    });
+    await flush();
+
+    input('#homebox-url', 'https://homebox.local');
+    input('#homebox-username', 'owner');
+    input('#homebox-password', 'secret');
+    await flush();
+    click('Preview');
+    await flush();
+    click('Apply');
+    await flush();
+
+    expect(document.body.textContent).toContain('Import applied');
+    expect(document.body.textContent).toContain('Created 1 field definition, 2 locations, 3 items, and 4 attachments.');
+    expect(document.body.textContent).toContain('Workspace refresh needed');
+    expect(document.body.textContent).toContain('Workspace refresh failed.');
+    expect(document.body.textContent).not.toContain('Import failed');
+    expect(button('Apply').disabled).toBe(true);
+  });
+
   it('renders safe apply-result messages after applying an import', async () => {
     component = mount(HomeboxImportPanel, {
       target: document.body,

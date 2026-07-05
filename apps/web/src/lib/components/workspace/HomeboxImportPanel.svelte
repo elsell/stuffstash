@@ -66,6 +66,7 @@
   let result = $state<ImportApplyResult | null>(null);
   let busy = $state(false);
   let error = $state('');
+  let refreshWarning = $state('');
   let previousSourceType = $state(sourceType);
   let linkedSourceOptions = $derived(importSourceOptions(tenantId, inventory?.id ?? null));
   let sourceSummary = $derived(importSourceSummary(sourceType, fileName));
@@ -87,7 +88,7 @@
   );
   let blockingErrors = $derived(preview?.messages.filter((message) => message.severity === 'error') ?? []);
   let warnings = $derived(preview?.messages.filter((message) => message.severity === 'warning') ?? []);
-  let canApply = $derived(!!preview && blockingErrors.length === 0 && !busy && canImport);
+  let canApply = $derived(!!preview && !result && blockingErrors.length === 0 && !busy && canImport);
   let applyStatus = $derived(
     importApplyStatus({
       busy,
@@ -112,6 +113,7 @@
     }
     busy = true;
     error = '';
+    refreshWarning = '';
     result = null;
     try {
       preview = await repository.previewLegacyHomeboxImport(tenantId, inventory.id, importRequest());
@@ -128,11 +130,19 @@
     }
     busy = true;
     error = '';
+    refreshWarning = '';
     try {
-      result = await repository.applyLegacyHomeboxImport(tenantId, inventory.id, importRequest());
-      await onImported();
+      const applied = await repository.applyLegacyHomeboxImport(tenantId, inventory.id, importRequest());
+      result = applied;
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Import failed.';
+      busy = false;
+      return;
+    }
+    try {
+      await onImported();
+    } catch (caught) {
+      refreshWarning = caught instanceof Error ? caught.message : 'Import applied, but the workspace could not refresh.';
     } finally {
       busy = false;
     }
@@ -144,6 +154,7 @@
     preview = null;
     result = null;
     error = '';
+    refreshWarning = '';
     if (!file) {
       fileName = '';
       contentBase64 = '';
@@ -163,6 +174,7 @@
     preview = null;
     result = null;
     error = '';
+    refreshWarning = '';
   }
 
   function importRequest(): LegacyHomeboxImportRequest {
@@ -405,6 +417,13 @@
               {importAppliedDescription(result)}
             </Alert.Description>
           </Alert.Root>
+          {#if refreshWarning}
+            <Alert.Root variant="default">
+              <AlertTriangle aria-hidden="true" />
+              <Alert.Title>Workspace refresh needed</Alert.Title>
+              <Alert.Description>{refreshWarning}</Alert.Description>
+            </Alert.Root>
+          {/if}
           {#if result.messages.length > 0}
             <section class="settings-panel wide" aria-labelledby="import-apply-messages-title">
               <h2 id="import-apply-messages-title">{applyMessagesPresentation.title}</h2>

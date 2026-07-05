@@ -207,6 +207,7 @@ The web application must provide a polished import workflow for the first Homebo
 - The web preview badge counts total planned records: planned field definitions, locations, assets, and attachments.
 - Preview gives users enough detail to understand tag, quantity, date, duplicate, and image warnings before applying.
 - Apply shows progress states and final results, including created field definitions, locations, assets, attachments, reused field definitions, skipped assets, and skipped attachments when those counts are nonzero.
+- After apply returns successfully, the web UI must present the import as applied even if a follow-up workspace refresh fails. Refresh failures may be shown as a non-fatal warning, but they must not overwrite the successful apply result with an import-failed state.
 - The UI must avoid showing passwords, tokens, Homebox internal storage paths, or raw attachment bytes.
 - The UI must fit the existing Stuff Stash web design language and use the real inventory workspace rather than a separate marketing-style page.
 
