@@ -41,6 +41,8 @@
   --color-brand-contained: #6b90aa;
   --color-brand-accent: #f5ab4b;
   --shadow-panel: 0 1px 2px rgb(16 24 40 / 0.06), 0 10px 30px rgb(16 24 40 / 0.08);
+  --mobile-bottom-chrome-height: 0px;
+  --mobile-scroll-clearance: 96px;
   font-family:
     InterVariable, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -2024,6 +2026,11 @@ dd {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --mobile-bottom-chrome-height: calc(66px + env(safe-area-inset-bottom));
+    --mobile-scroll-clearance: calc(var(--mobile-bottom-chrome-height) + 96px);
+  }
+
   .product-shell {
     display: block;
   }
@@ -2063,7 +2070,7 @@ dd {
   .mobile-context-menu {
     position: fixed;
     right: 10px;
-    bottom: calc(82px + env(safe-area-inset-bottom));
+    bottom: calc(var(--mobile-bottom-chrome-height) + 10px);
     left: 10px;
     top: auto;
     z-index: 40;
@@ -2084,7 +2091,20 @@ dd {
 
   .workspace-main {
     width: 100%;
-    padding: 18px 14px calc(156px + env(safe-area-inset-bottom));
+    min-height: 100dvh;
+    scroll-padding-bottom: var(--mobile-scroll-clearance);
+    padding: 18px 14px var(--mobile-scroll-clearance);
+  }
+
+  .workspace-main > *,
+  .settings-panel,
+  .import-source-panel,
+  .heading-actions,
+  .tray-actions,
+  .import-results > *,
+  .asset-row,
+  .binary-option {
+    scroll-margin-bottom: var(--mobile-scroll-clearance);
   }
 
   .filter-control[data-layout="section-rail"] {
@@ -2175,13 +2195,13 @@ dd {
     flex-direction: column;
     width: 100%;
     max-height: none;
-    scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(var(--mobile-bottom-chrome-height) + 112px);
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
     border-radius: var(--radius) var(--radius) 0 0;
   }
 
   .add-tray .parent-target-button {
-    scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom));
+    scroll-margin-bottom: calc(var(--mobile-bottom-chrome-height) + 112px);
   }
 
   .add-summary {
@@ -2190,7 +2210,7 @@ dd {
 
   .add-tray .tray-actions {
     position: sticky;
-    bottom: calc(-18px - env(safe-area-inset-bottom));
+    bottom: 0;
     margin: 4px -18px calc(-18px - env(safe-area-inset-bottom));
     padding: 12px 18px calc(18px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
@@ -2200,7 +2220,7 @@ dd {
 
   .add-tray[data-parent-search-active="true"] .tray-actions {
     position: static;
-    margin: 10px -18px calc(-18px - env(safe-area-inset-bottom));
+    margin: 10px -18px 0;
   }
 
   .auth-banner {

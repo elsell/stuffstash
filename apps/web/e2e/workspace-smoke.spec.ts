@@ -90,8 +90,8 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   expect(dialogBox?.y).toBeLessThanOrEqual(10);
   expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : 0).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 2);
   expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
-  expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : 0).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 2);
   expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
+  expect(actionsBox && viewport ? viewport.height - (actionsBox.y + actionsBox.height) : Number.POSITIVE_INFINITY).toBeLessThanOrEqual(32);
 });
 
 test('add flow saves items with and without selected photo previews', async ({ page }, testInfo) => {
@@ -273,6 +273,25 @@ test('mobile import source actions clear the bottom nav', async ({ page }, testI
   await expect(page.locator('.import-layout')).toHaveCSS('grid-template-columns', '792px');
 });
 
+test('mobile long settings and import pages keep final content above bottom chrome', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile bottom clearance coverage runs on the mobile project.');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending');
+  await expect(page.getByRole('heading', { name: 'Sharing' })).toBeVisible();
+  await scrollToEnd(page.locator('.settings-panel').last());
+  expect(await clearsBottomChrome(page.locator('.settings-panel').last(), page.locator('.mobile-nav'))).toBe(true);
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant');
+  await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible();
+  await scrollToEnd(page.locator('.settings-panel').last());
+  expect(await clearsBottomChrome(page.locator('.settings-panel').last(), page.locator('.mobile-nav'))).toBe(true);
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+  await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
+  await scrollToEnd(page.locator('.import-source-panel .heading-actions'));
+  expect(await clearsBottomChrome(page.locator('.import-source-panel .heading-actions'), page.locator('.mobile-nav'))).toBe(true);
+});
+
 function tinyPng(): Buffer {
   return Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
@@ -294,4 +313,16 @@ async function dialogTopLayerInfo(dialog: Locator): Promise<{ ownsPoint: boolean
 
 async function hasHorizontalOverflow(locator: Locator): Promise<boolean> {
   return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+}
+
+async function clearsBottomChrome(content: Locator, chrome: Locator): Promise<boolean> {
+  const [contentBox, chromeBox] = await Promise.all([content.boundingBox(), chrome.boundingBox()]);
+  if (!contentBox || !chromeBox) {
+    return false;
+  }
+  return contentBox.y + contentBox.height <= chromeBox.y - 8;
+}
+
+async function scrollToEnd(locator: Locator): Promise<void> {
+  await locator.evaluate((element) => element.scrollIntoView({ block: 'end', inline: 'nearest' }));
 }
