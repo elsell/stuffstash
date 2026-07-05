@@ -40,6 +40,10 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - Generated OpenAPI types or client code must be used for the API adapter boundary as soon as the web package exists.
 - Generated DTOs must not become frontend domain models.
 - The web app must move toward shadcn-style reusable components through the Svelte-compatible shadcn implementation before broad UI expansion.
+- After authentication or workspace load selects a tenant and inventory, the
+  browser URL must normalize to the canonical
+  `/tenants/{tenantId}/inventories/{inventoryId}` workspace home rather than
+  leaving the user on `/`.
 - The production-style Kubernetes deployment must serve the web app as its own static container, not from the Go API.
 - The production-style Kubernetes deployment must use separate hostnames for browser UI and API traffic.
 - The local-cluster production-style UI hostname is `stuffstash.jsksell.com`.

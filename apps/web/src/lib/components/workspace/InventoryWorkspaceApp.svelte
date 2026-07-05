@@ -959,7 +959,15 @@
   }
 
   function normalizeInventoryHomeRoute(route: WorkspaceRouteState): void {
-    if (route.mode !== 'home' || route.action || route.addKind || !route.inventoryId || typeof window === 'undefined') {
+    if (
+      route.mode !== 'home' ||
+      route.action ||
+      route.addKind ||
+      typeof window === 'undefined' ||
+      (!route.inventoryId && window.location.pathname !== '/') ||
+      !data.context.selectedTenantId ||
+      !data.context.selectedInventoryId
+    ) {
       return;
     }
     const canonicalHref = inventoryHomeNormalizationHref(data.context, route);

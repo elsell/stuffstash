@@ -158,6 +158,34 @@ afterEach(() => {
 });
 
 describe('InventoryWorkspaceApp route application', () => {
+  it('normalizes the authenticated root workspace to the selected inventory URL', async () => {
+    await mountWorkspace('/');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(document.body.textContent).toContain('Recently added');
+    });
+  });
+
+  it('preserves root lifecycle filters while canonicalizing to the selected inventory URL', async () => {
+    await mountWorkspace('/?lifecycle=archived');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(window.location.search).toBe('?lifecycle=archived');
+      expect(document.body.textContent).toContain('Archived Passport');
+    });
+  });
+
+  it('does not canonicalize arbitrary catch-all paths as the inventory home', async () => {
+    await mountWorkspace('/not-a-workspace-route');
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/not-a-workspace-route');
+      expect(document.body.textContent).toContain('Recently added');
+    });
+  });
+
   it('canonicalizes inventory-only asset aliases after loading the asset detail', async () => {
     await mountWorkspace('/inventories/inventory-household/assets/asset-home');
 
