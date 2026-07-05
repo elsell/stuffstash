@@ -185,6 +185,10 @@ The tracer bullet should:
 - Keep primary actions blue/system-like.
 - Avoid green SaaS styling, purple-blue AI gradients, beige/rustic palettes, decorative blobs, and oversized marketing composition.
 - Keep the first screen as the usable product surface, not a landing page.
+- Keep the home screen's recently added assets as a horizontal rail ahead of
+  locations. On narrow mobile viewports, the rail may scroll horizontally, but
+  each card's media and text must remain clipped or wrapped inside its own card
+  rather than protruding into the next card or outside the viewport.
 
 The provisional logo-direction colors are:
 

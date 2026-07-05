@@ -764,20 +764,36 @@ small {
   display: grid;
   justify-items: start;
   align-content: start;
+  justify-content: stretch;
   width: 100%;
+  min-width: 0;
   height: auto;
   min-height: 190px;
+  overflow: hidden;
   padding: 10px;
   border: 1px solid var(--border);
   background: var(--card);
   text-align: left;
   scroll-snap-align: start;
+  white-space: normal;
 }
 
 .recent-card span {
   display: grid;
+  width: 100%;
   min-width: 0;
+  overflow: hidden;
   gap: 3px;
+}
+
+.recent-card strong,
+.recent-card small {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recent-card .asset-thumb {

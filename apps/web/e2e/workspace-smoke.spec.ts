@@ -176,6 +176,23 @@ test('mobile bottom add saves an item', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { name: 'Mobile drawer labels' })).toBeVisible();
 });
 
+test('mobile home recent cards keep long titles inside each card', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile recent rail geometry runs on the mobile project.');
+
+  const longTitle = 'Replacement refrigerator water filter cartridge set';
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/edit');
+  await page.getByLabel('Name').fill(longTitle);
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household');
+  const recentCard = page.locator('.recent-card').filter({ hasText: longTitle }).first();
+  await expect(recentCard).toBeVisible();
+  expect(await cardTextFitsInside(recentCard)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
 test('add location deep link saves to the canonical focused location route', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Add-location smoke uses the desktop create menu.');
 
@@ -356,6 +373,17 @@ async function dialogTopLayerInfo(dialog: Locator): Promise<{ ownsPoint: boolean
 
 async function hasHorizontalOverflow(locator: Locator): Promise<boolean> {
   return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+}
+
+async function cardTextFitsInside(locator: Locator): Promise<boolean> {
+  return locator.evaluate((element) => {
+    const card = element.getBoundingClientRect();
+    return Array.from(element.querySelectorAll('strong, small')).every((child) => {
+      const rect = child.getBoundingClientRect();
+      const style = window.getComputedStyle(child);
+      return rect.left >= card.left - 1 && rect.right <= card.right + 1 && style.overflowX !== 'visible';
+    });
+  });
 }
 
 async function clearsBottomChrome(content: Locator, chrome: Locator): Promise<boolean> {
