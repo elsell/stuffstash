@@ -22,6 +22,7 @@ test('desktop shell loads the authenticated tenant and compact inventory switche
   await expect(page.getByRole('navigation', { name: 'Inventory destinations' }).getByText('Search')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Open location Garage/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
+  expect(await clippedTextCount(page.locator('.nav-button small'))).toBe(0);
 
   await page.getByRole('button', { name: /Household/ }).click();
   await expect(page.getByRole('dialog', { name: 'Inventory context' })).toBeVisible();
@@ -325,4 +326,10 @@ async function clearsBottomChrome(content: Locator, chrome: Locator): Promise<bo
 
 async function scrollToEnd(locator: Locator): Promise<void> {
   await locator.evaluate((element) => element.scrollIntoView({ block: 'end', inline: 'nearest' }));
+}
+
+async function clippedTextCount(locator: Locator): Promise<number> {
+  return locator.evaluateAll((elements) =>
+    elements.filter((element) => element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1).length
+  );
 }
