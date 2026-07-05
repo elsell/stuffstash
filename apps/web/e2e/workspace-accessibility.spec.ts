@@ -143,6 +143,23 @@ test('mobile settings access keeps long principals inside the viewport', async (
     elements.every((element) => element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1)
   )).toBe(true);
   await expect(page.getByLabel('Direct grants').getByText('oidc_OuQU94grMoaZ8cly6ZUUpXUVhloLanDNZ')).toBeVisible();
+  const disabledGrantAction = page.getByRole('button', { name: 'Grant access' });
+  await expect(disabledGrantAction).toBeDisabled();
+  const disabledGrantStyles = await disabledGrantAction.evaluate((element) => {
+    const styles = getComputedStyle(element);
+    const rootStyles = getComputedStyle(document.documentElement);
+    const probe = document.createElement('span');
+    probe.style.color = rootStyles.getPropertyValue('--muted-foreground');
+    probe.style.backgroundColor = rootStyles.getPropertyValue('--secondary');
+    document.body.append(probe);
+    const probeStyles = getComputedStyle(probe);
+    const expected = { backgroundColor: probeStyles.backgroundColor, color: probeStyles.color };
+    probe.remove();
+    return { backgroundColor: styles.backgroundColor, color: styles.color, opacity: styles.opacity, expected };
+  });
+  expect(disabledGrantStyles.opacity).toBe('1');
+  expect(disabledGrantStyles.backgroundColor).toBe(disabledGrantStyles.expected.backgroundColor);
+  expect(disabledGrantStyles.color).toBe(disabledGrantStyles.expected.color);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   expect(await page.locator('.settings-panel').filter({ hasText: 'Sharing' }).first().evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
 });

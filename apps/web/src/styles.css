@@ -1758,6 +1758,16 @@ dd {
   gap: 6px;
 }
 
+.access-form > [data-slot="button"]:disabled,
+.customization-column > [data-slot="button"]:disabled,
+.tray-actions > [data-slot="button"]:disabled {
+  border-color: var(--border);
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  opacity: 1;
+  box-shadow: none;
+}
+
 .field-label {
   color: var(--foreground);
   font-size: 0.85rem;

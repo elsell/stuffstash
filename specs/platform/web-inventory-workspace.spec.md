@@ -467,6 +467,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Route-backed controls rendered as disabled links must remove their `href`, expose `aria-disabled`, leave the tab order, and visually match native disabled buttons through the shared button primitive.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 - Passive saved/status feedback must not intercept pointer interaction with dialogs, sheets, or workspace controls.
+- Disabled primary actions in workspace forms must have a visibly unavailable treatment rather than relying only on opacity over the active primary color.
 
 ## Inventory Settings
 
