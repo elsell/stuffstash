@@ -327,111 +327,113 @@
       <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
     </div>
 
-    <div class="add-summary" aria-live="polite">
-      <div>
-        <small>{addFormPresentation.summaryTypeLabel}</small>
-        <strong>{kindCopy.kindLabel}</strong>
-      </div>
-      <div>
-        <small>{addFormPresentation.summaryParentLabel}</small>
-        <strong>{parentSummary}</strong>
-      </div>
-      <div>
-        <small>{addFormPresentation.summaryPhotosLabel}</small>
-        <strong>{photoSummary}</strong>
-      </div>
-    </div>
-
-    <fieldset class="selection-field">
-      <legend>{addFormPresentation.assetKindLegend}</legend>
-      <SegmentedControl
-        label={addFormPresentation.assetKindLegend}
-        value={kind}
-        options={assetKindOptions}
-        onSelect={(value) => { kind = value as AssetKind; }}
-      />
-    </fieldset>
-
-    <div class="field-stack">
-      <Label for="asset-title">{kindCopy.nameLabel}</Label>
-      <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder={kindCopy.namePlaceholder} required aria-required="true" />
-    </div>
-
-    <ParentTargetPicker
-      legend={addFormPresentation.parentPickerLegend}
-      searchId="parent-search"
-      groupLabel={addFormPresentation.parentPickerGroupLabel}
-      bind:search={parentSearch}
-      selectedId={parentAssetId || null}
-      targets={parentTargets}
-      onSelect={selectParentTarget}
-    />
-
-    <fieldset class="selection-field quick-parent-section">
-      <legend>{addFormPresentation.quickParentLegend}</legend>
-      <BinaryOption
-        label={addFormPresentation.quickParentToggleLabel}
-        description={addFormPresentation.quickParentToggleDescription}
-        checked={quickParentEnabled}
-        onToggle={toggleQuickParent}
-      />
-      {#if quickParentEnabled}
-        <div class="quick-parent-fields">
-          <div class="quick-parent-context">
-            <span>{addFormPresentation.quickParentContextLabel}</span>
-            <strong>{quickParentContainerLabel}</strong>
-            {#if quickParentContainerTrail}
-              <small>{quickParentContainerTrail}</small>
-            {/if}
-          </div>
-          <div class="field-stack">
-            <Label for="quick-parent-title">{addFormPresentation.quickParentNameLabel}</Label>
-            <Input
-              id="quick-parent-title"
-              bind:value={quickParentTitle}
-              placeholder={addFormPresentation.quickParentNamePlaceholder}
-              required={quickParentEnabled}
-              aria-required={quickParentEnabled}
-              aria-invalid={quickParentMissingName}
-              aria-describedby={quickParentMissingName ? 'quick-parent-error' : undefined}
-            />
-            {#if quickParentMissingName}
-              <p id="quick-parent-error" class="denied-note" role="alert">{quickParentNameError}</p>
-            {/if}
-          </div>
-          <SegmentedControl
-            label={addFormPresentation.quickParentKindLabel}
-            value={quickParentKind}
-            options={quickParentKindOptions}
-            onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
-          />
+    <div class="add-tray-body">
+      <div class="add-summary" aria-live="polite">
+        <div>
+          <small>{addFormPresentation.summaryTypeLabel}</small>
+          <strong>{kindCopy.kindLabel}</strong>
         </div>
-      {/if}
-    </fieldset>
+        <div>
+          <small>{addFormPresentation.summaryParentLabel}</small>
+          <strong>{parentSummary}</strong>
+        </div>
+        <div>
+          <small>{addFormPresentation.summaryPhotosLabel}</small>
+          <strong>{photoSummary}</strong>
+        </div>
+      </div>
 
-    <div class="field-stack">
-      <Label for="asset-description">{addFormPresentation.descriptionLabel}</Label>
-      <Textarea id="asset-description" bind:value={description} placeholder={addFormPresentation.descriptionPlaceholder} />
+      <fieldset class="selection-field">
+        <legend>{addFormPresentation.assetKindLegend}</legend>
+        <SegmentedControl
+          label={addFormPresentation.assetKindLegend}
+          value={kind}
+          options={assetKindOptions}
+          onSelect={(value) => { kind = value as AssetKind; }}
+        />
+      </fieldset>
+
+      <div class="field-stack">
+        <Label for="asset-title">{kindCopy.nameLabel}</Label>
+        <Input id="asset-title" bind:ref={titleInput} bind:value={title} placeholder={kindCopy.namePlaceholder} required aria-required="true" />
+      </div>
+
+      <ParentTargetPicker
+        legend={addFormPresentation.parentPickerLegend}
+        searchId="parent-search"
+        groupLabel={addFormPresentation.parentPickerGroupLabel}
+        bind:search={parentSearch}
+        selectedId={parentAssetId || null}
+        targets={parentTargets}
+        onSelect={selectParentTarget}
+      />
+
+      <fieldset class="selection-field quick-parent-section">
+        <legend>{addFormPresentation.quickParentLegend}</legend>
+        <BinaryOption
+          label={addFormPresentation.quickParentToggleLabel}
+          description={addFormPresentation.quickParentToggleDescription}
+          checked={quickParentEnabled}
+          onToggle={toggleQuickParent}
+        />
+        {#if quickParentEnabled}
+          <div class="quick-parent-fields">
+            <div class="quick-parent-context">
+              <span>{addFormPresentation.quickParentContextLabel}</span>
+              <strong>{quickParentContainerLabel}</strong>
+              {#if quickParentContainerTrail}
+                <small>{quickParentContainerTrail}</small>
+              {/if}
+            </div>
+            <div class="field-stack">
+              <Label for="quick-parent-title">{addFormPresentation.quickParentNameLabel}</Label>
+              <Input
+                id="quick-parent-title"
+                bind:value={quickParentTitle}
+                placeholder={addFormPresentation.quickParentNamePlaceholder}
+                required={quickParentEnabled}
+                aria-required={quickParentEnabled}
+                aria-invalid={quickParentMissingName}
+                aria-describedby={quickParentMissingName ? 'quick-parent-error' : undefined}
+              />
+              {#if quickParentMissingName}
+                <p id="quick-parent-error" class="denied-note" role="alert">{quickParentNameError}</p>
+              {/if}
+            </div>
+            <SegmentedControl
+              label={addFormPresentation.quickParentKindLabel}
+              value={quickParentKind}
+              options={quickParentKindOptions}
+              onSelect={(value) => { quickParentKind = value as 'location' | 'container'; }}
+            />
+          </div>
+        {/if}
+      </fieldset>
+
+      <div class="field-stack">
+        <Label for="asset-description">{addFormPresentation.descriptionLabel}</Label>
+        <Textarea id="asset-description" bind:value={description} placeholder={addFormPresentation.descriptionPlaceholder} />
+      </div>
+
+      <AddAssetCustomFieldsSection
+        {activeCustomAssetTypes}
+        {applicableFields}
+        {customAssetTypeId}
+        {customFieldValues}
+        onCustomAssetTypeSelect={setCustomAssetType}
+        onCustomFieldValueChange={setCustomFieldValue}
+      />
+
+      <AddAssetPhotosSection
+        photos={selectedPhotos}
+        summary={photoSummary}
+        {mediaPolicy}
+        inputKey={fileInputKey}
+        error={photoError}
+        onFiles={captureFiles}
+        onRemove={removePhoto}
+      />
     </div>
-
-    <AddAssetCustomFieldsSection
-      {activeCustomAssetTypes}
-      {applicableFields}
-      {customAssetTypeId}
-      {customFieldValues}
-      onCustomAssetTypeSelect={setCustomAssetType}
-      onCustomFieldValueChange={setCustomFieldValue}
-    />
-
-    <AddAssetPhotosSection
-      photos={selectedPhotos}
-      summary={photoSummary}
-      {mediaPolicy}
-      inputKey={fileInputKey}
-      error={photoError}
-      onFiles={captureFiles}
-      onRemove={removePhoto}
-    />
 
     <div class="tray-actions">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>

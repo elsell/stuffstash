@@ -78,19 +78,21 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   ).toBeGreaterThanOrEqual(88);
   await lastParentResult.click();
   await expect(addDialog.locator('.add-summary').getByText(selectedParentName ?? '')).toBeVisible();
-  await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'sticky');
+  await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'static');
   await page.getByLabel('Find parent').fill('');
   await addDialog.getByRole('switch', { name: 'Create a parent first' }).click();
   await expect(page.getByLabel('Parent name')).toBeVisible();
   await expect(addDialog).toHaveCSS('display', 'flex');
-  await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'sticky');
+  await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'static');
 
   const dialogBox = await addDialog.boundingBox();
+  const bodyBox = await addDialog.locator('.add-tray-body').boundingBox();
   const actionsBox = await addDialog.locator('.tray-actions').boundingBox();
   const viewport = page.viewportSize();
   expect(dialogBox?.y).toBeLessThanOrEqual(10);
   expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : 0).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 2);
   expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
+  expect(bodyBox && actionsBox ? bodyBox.y + bodyBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((actionsBox?.y ?? 0) + 1);
   expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
   expect(actionsBox && viewport ? viewport.height - (actionsBox.y + actionsBox.height) : Number.POSITIVE_INFINITY).toBeLessThanOrEqual(32);
 });

@@ -523,6 +523,7 @@ Mobile:
 - Keep add/search reachable without making the header tall.
 - Fixed bottom chrome such as mobile navigation, saved/status toasts, and local-auth/demo banners must not occlude the final reachable content in the main workspace.
 - Mobile workspace pages and sheets must share a named bottom-clearance rhythm so long settings, import, add, edit, and picker content can be scrolled fully above fixed bottom navigation, sticky action rows, and safe-area insets.
+- Mobile add-tray content must scroll in a body region that ends above its action row. The save/cancel action row must remain reachable without covering parent picker, quick-parent, custom field, or photo controls.
 - Use sheets/trays for transient creation and context switching.
 - Ensure bottom navigation does not cover primary form actions; account for safe area insets.
 

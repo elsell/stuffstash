@@ -1703,6 +1703,12 @@ dd {
   box-shadow: var(--shadow-panel);
 }
 
+.add-tray-body {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
 .add-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2255,13 +2261,20 @@ dd {
     flex-direction: column;
     width: 100%;
     max-height: none;
-    scroll-padding-bottom: calc(var(--mobile-bottom-chrome-height) + 112px);
-    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    overflow: hidden;
+    padding-bottom: 0;
     border-radius: var(--radius) var(--radius) 0 0;
   }
 
+  .add-tray-body {
+    overflow: auto;
+    min-height: 0;
+    padding-bottom: 12px;
+    scroll-padding-bottom: 18px;
+  }
+
   .add-tray .parent-target-button {
-    scroll-margin-bottom: calc(var(--mobile-bottom-chrome-height) + 112px);
+    scroll-margin-bottom: 18px;
   }
 
   .add-summary {
@@ -2269,9 +2282,8 @@ dd {
   }
 
   .add-tray .tray-actions {
-    position: sticky;
-    bottom: 0;
-    margin: 4px -18px calc(-18px - env(safe-area-inset-bottom));
+    flex: 0 0 auto;
+    margin: 4px -18px 0;
     padding: 12px 18px calc(18px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     background: color-mix(in oklab, var(--card) 94%, white);
@@ -2279,7 +2291,6 @@ dd {
   }
 
   .add-tray[data-parent-search-active="true"] .tray-actions {
-    position: static;
     margin: 10px -18px 0;
   }
 
