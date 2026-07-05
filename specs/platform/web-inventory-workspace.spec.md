@@ -450,6 +450,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Parent target pickers must avoid unfiltered all-parent stacks by default; suggested destinations, search results, current selection, and empty states must be visually distinct.
 - Parent target pickers must show the selected destination as a compact summary with target kind and containment trail, expose a clear action when a non-root target is selected, and show result counts without rendering every possible parent before search. When inventory root is already selected, the root summary is the selected-state surface and must not be duplicated as a separate pressed option.
 - Parent target pickers must offer a compact bounded set of suggested destinations before search, initially no more than four suggestions, excluding the already-selected destination because it is shown in the current destination summary.
+- Parent target search results may start with the same compact visible limit, but overflow states must expose an explicit keyboard-reachable action to reveal the remaining matches without changing the query or hiding the current destination.
 - Parent target pickers must prefer locations before containers when choosing unfiltered suggestions and ordered search results.
 - Parent target search results must rank exact and prefix title matches before looser title or containment-trail matches within the same target kind.
 - Parent target search result counts must be announced politely to assistive technology users when the query changes.

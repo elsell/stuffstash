@@ -230,7 +230,6 @@
   {#if showSearch}
     <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
       <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>
-        <Search aria-hidden="true" />
         <Input
           bind:ref={searchInput}
           bind:value={query}

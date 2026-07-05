@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
@@ -42,8 +43,11 @@
     onSelect: (id: string | null) => void;
   } = $props();
 
+  let searchExpanded = $state(false);
+  let previousNormalizedSearch = $state('');
   let normalizedSearch = $derived(normalizeParentTargetQuery(search));
-  let searchResult = $derived(searchParentTargets(targets, search, visibleLimit));
+  let effectiveVisibleLimit = $derived(normalizedSearch && searchExpanded ? Math.max(visibleLimit, targets.length) : visibleLimit);
+  let searchResult = $derived(searchParentTargets(targets, search, effectiveVisibleLimit));
   let matchingTargets = $derived(searchResult.matchingTargets);
   let visibleTargets = $derived(searchResult.visibleTargets);
   let suggestedTargets = $derived(parentTargetSuggestions(targets, selectedId, visibleLimit));
@@ -63,9 +67,33 @@
       suggestedCount: suggestedTargets.length
     })
   );
+  let canExpandSearch = $derived(hasSearch && matchingTargets.length > visibleTargets.length);
+
+  $effect(() => {
+    if (normalizedSearch === previousNormalizedSearch) {
+      return;
+    }
+    previousNormalizedSearch = normalizedSearch;
+    searchExpanded = false;
+  });
 
   function clearSelection(): void {
     onSelect(null);
+  }
+
+  function expandSearchResults(): void {
+    const firstNewResultIndex = visibleTargets.length;
+    searchExpanded = true;
+    void tick().then(() => {
+      resultButtonElements()[firstNewResultIndex]?.focus();
+    });
+  }
+
+  function resultButtonElements(): HTMLButtonElement[] {
+    if (typeof document === 'undefined') {
+      return [];
+    }
+    return Array.from(document.querySelectorAll<HTMLButtonElement>(`#${searchId}-results .parent-target-button`));
   }
 
 </script>
@@ -123,7 +151,7 @@
   {/if}
   <p class="selection-summary" aria-live="polite" aria-atomic="true">{presentation.resultCountLabel}</p>
   {#if hasSearch}
-    <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
+    <div id={`${searchId}-results`} class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
       {#if locationResults.length > 0}
         <div class="parent-result-group" role="group" aria-label="Locations" aria-labelledby={`${searchId}-location-results-label`}>
           <p id={`${searchId}-location-results-label`} class="parent-result-heading">Locations</p>
@@ -143,6 +171,18 @@
     </div>
     {#if presentation.status.kind !== 'none'}
       <p class="muted-note">{presentation.status.message}</p>
+      {#if canExpandSearch}
+        <Button.Root
+          type="button"
+          variant="outline"
+          size="sm"
+          class="parent-show-more"
+          aria-label={`Show all ${matchingTargets.length} matching parent destinations`}
+          onclick={expandSearchResults}
+        >
+          Show all {matchingTargets.length} matches
+        </Button.Root>
+      {/if}
     {/if}
   {:else if targets.length > 0}
     <div class="parent-suggestion-header">

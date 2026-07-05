@@ -182,7 +182,7 @@
   }
 </script>
 
-<section class="workspace-main" aria-labelledby="search-title">
+<section class="workspace-main search-workspace" aria-labelledby="search-title">
   <div class="section-heading">
     <div>
       <h1 id="search-title">Search</h1>

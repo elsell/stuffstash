@@ -148,6 +148,53 @@ describe('ParentTargetPicker', () => {
     expect(document.body.textContent).toContain('No matching locations or containers.');
   });
 
+  it('lets users reveal overflowing search results without changing the query', async () => {
+    component = mount(ParentTargetPicker, {
+      target: document.body,
+      props: {
+        legend: 'Parent',
+        searchId: 'parent-target-search',
+        groupLabel: 'Parent target',
+        search: '',
+        selectedId: null,
+        targets: [
+          parentTarget('target-1', 'Target 1', 'Root', 'location'),
+          parentTarget('target-2', 'Target 2', 'Root', 'location'),
+          parentTarget('target-3', 'Target 3', 'Root', 'location'),
+          parentTarget('target-4', 'Target 4', 'Root', 'container'),
+          parentTarget('target-5', 'Target 5', 'Root', 'container')
+        ],
+        visibleLimit: 3,
+        onSelect: () => {}
+      }
+    });
+
+    setInputValue(requiredInput('#parent-target-search'), 'target');
+    await flush();
+
+    expect(destinationButtons('Parent target search results')).toHaveLength(3);
+    expect(document.body.textContent).toContain('Showing the first 3 of 5 matches.');
+    expect(button('Show all 5 matches').getAttribute('aria-label')).toBe('Show all 5 matching parent destinations');
+
+    button('Show all 5 matches').focus();
+    button('Show all 5 matches').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    button('Show all 5 matches').click();
+    await flush();
+
+    expect(destinationButtons('Parent target search results')).toHaveLength(5);
+    expect(document.body.textContent).not.toContain('Showing the first 3 of 5 matches.');
+    expect(document.body.textContent).not.toContain('Show all 5 matches');
+    expect(document.activeElement?.textContent).toContain('Target 4');
+
+    setInputValue(requiredInput('#parent-target-search'), 'target 1');
+    await flush();
+    setInputValue(requiredInput('#parent-target-search'), 'target');
+    await flush();
+
+    expect(destinationButtons('Parent target search results')).toHaveLength(3);
+    expect(document.body.textContent).toContain('Show all 5 matches');
+  });
+
   it('clears selected parent back to the root destination', async () => {
     const selectedIds: Array<string | null> = [];
     component = mount(ParentTargetPicker, {
