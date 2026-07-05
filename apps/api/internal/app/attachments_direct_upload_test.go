@@ -46,7 +46,7 @@ func TestCompleteAttachmentDirectUploadPersistsVerifiedMetadata(t *testing.T) {
 		DirectUploads:        directUploads,
 		Audit:                &fakeAuditRepository{},
 		IDs:                  &attachmentIDGenerator{ids: []string{"audit-one"}},
-		MaxAttachmentBytes:   32,
+		MaxAttachmentBytes:   1024,
 	})
 
 	attachment, err := application.CompleteAttachmentDirectUpload(context.Background(), CompleteAttachmentDirectUploadInput{
@@ -96,7 +96,7 @@ func TestCompleteAttachmentDirectUploadRejectsContentTypeMismatch(t *testing.T) 
 		DirectUploads:        directUploads,
 		Audit:                &fakeAuditRepository{},
 		IDs:                  &attachmentIDGenerator{ids: []string{"audit-one"}},
-		MaxAttachmentBytes:   32,
+		MaxAttachmentBytes:   1024,
 	})
 
 	_, err := application.CompleteAttachmentDirectUpload(context.Background(), CompleteAttachmentDirectUploadInput{
@@ -112,6 +112,57 @@ func TestCompleteAttachmentDirectUploadRejectsContentTypeMismatch(t *testing.T) 
 	}
 	if repository.saved {
 		t.Fatalf("expected mismatched direct upload to avoid metadata persistence")
+	}
+}
+
+func TestCompleteAttachmentDirectUploadRejectsUndecodableImageContent(t *testing.T) {
+	content := truncatedPNGAttachmentBytes()
+	repository := &recordingAttachmentRepository{}
+	directUploads := &fakeDirectAttachmentUploader{
+		completed: ports.CompletedDirectAttachmentUpload{
+			UploadID:     "upload-one",
+			AttachmentID: media.ID("attachment-one"),
+			TenantID:     tenant.ID("tenant-one"),
+			InventoryID:  inventory.InventoryID("inventory-one"),
+			AssetID:      asset.ID("asset-one"),
+			StorageKey:   media.StorageKey("tenant-one/inventory-one/asset-one/attachment-one"),
+			FileName:     media.FileName("receipt.png"),
+			ContentType:  media.ContentTypePNG,
+			SizeBytes:    int64(len(content)),
+			SHA256:       sha256Of(content),
+			ExpiresAt:    time.Now().Add(time.Hour),
+		},
+	}
+	application := New(Dependencies{
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          repository,
+		AttachmentUnitOfWork: repository,
+		Blobs:                &recordingBlobStorage{content: content},
+		DirectUploads:        directUploads,
+		Audit:                &fakeAuditRepository{},
+		IDs:                  &attachmentIDGenerator{ids: []string{"audit-one"}},
+		MaxAttachmentBytes:   1024,
+	})
+
+	_, err := application.CompleteAttachmentDirectUpload(context.Background(), CompleteAttachmentDirectUploadInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		UploadID:    "upload-one",
+	})
+	if !errors.Is(err, ErrAttachmentContentMismatch) {
+		t.Fatalf("expected content mismatch for undecodable image, got %v", err)
+	}
+	if repository.saved {
+		t.Fatalf("expected undecodable direct upload to avoid metadata persistence")
 	}
 }
 

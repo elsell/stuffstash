@@ -1,11 +1,15 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"image"
+	"image/color"
+	"image/png"
 	"sync"
 	"testing"
 	"time"
@@ -33,7 +37,7 @@ func TestCreateAttachmentDeletesBlobWhenMetadataSaveFails(t *testing.T) {
 		AttachmentUnitOfWork: failingAttachmentRepository{},
 		Blobs:                blobStore,
 		IDs:                  &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
-		MaxAttachmentBytes:   32,
+		MaxAttachmentBytes:   1024,
 	})
 
 	_, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
@@ -44,7 +48,7 @@ func TestCreateAttachmentDeletesBlobWhenMetadataSaveFails(t *testing.T) {
 		AssetID:     asset.ID("asset-one"),
 		FileName:    "receipt.png",
 		ContentType: "image/png",
-		Content:     []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'},
+		Content:     pngAttachmentBytes(),
 	})
 	if !errors.Is(err, ports.ErrConflict) {
 		t.Fatalf("expected repository conflict, got %v", err)
@@ -82,6 +86,37 @@ func TestCreateAttachmentRejectsContentTypeMismatch(t *testing.T) {
 	})
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected invalid input, got %v", err)
+	}
+}
+
+func TestCreateAttachmentRejectsUndecodableImageContent(t *testing.T) {
+	application := New(Dependencies{
+		Observer:             noopObserver{},
+		Authorizer:           allowInventoryAuthorizer{},
+		Tenants:              attachmentTenantRepository{},
+		TenantUnitOfWork:     attachmentTenantRepository{},
+		Inventories:          attachmentInventoryRepository{},
+		InventoryUnitOfWork:  attachmentInventoryRepository{},
+		Assets:               attachmentAssetRepository{},
+		Attachments:          failingAttachmentRepository{},
+		AttachmentUnitOfWork: failingAttachmentRepository{},
+		Blobs:                &recordingBlobStorage{},
+		IDs:                  &attachmentIDGenerator{ids: []string{"attachment-one", "audit-one"}},
+		MaxAttachmentBytes:   1024,
+	})
+
+	_, err := application.CreateAttachment(context.Background(), CreateAttachmentInput{
+		Principal:   identity.Principal{ID: "owner"},
+		Source:      audit.SourceAPI,
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("asset-one"),
+		FileName:    "receipt.png",
+		ContentType: "image/png",
+		Content:     truncatedPNGAttachmentBytes(),
+	})
+	if !errors.Is(err, ErrAttachmentContentMismatch) {
+		t.Fatalf("expected content mismatch for undecodable image, got %v", err)
 	}
 }
 
@@ -689,7 +724,18 @@ func (r *recordingImageProcessor) PrepareImageForModelUse(_ context.Context, req
 }
 
 func pngAttachmentBytes() []byte {
-	return []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
+	source := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	source.Set(0, 0, color.RGBA{R: 0x2e, G: 0x7d, B: 0x32, A: 0xff})
+	var output bytes.Buffer
+	if err := png.Encode(&output, source); err != nil {
+		panic("encode png test fixture")
+	}
+	return output.Bytes()
+}
+
+func truncatedPNGAttachmentBytes() []byte {
+	content := pngAttachmentBytes()
+	return content[:len(content)-8]
 }
 
 func webPAttachmentBytes() []byte {

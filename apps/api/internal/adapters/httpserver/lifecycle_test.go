@@ -74,7 +74,7 @@ func TestResourceLifecycleEndpointsCoverCurrentSurface(t *testing.T) {
 	attachmentCreate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+assetID+"/attachments", "Bearer dev:owner", map[string]any{
 		"fileName":      "receipt.png",
 		"contentType":   "image/png",
-		"contentBase64": base64.StdEncoding.EncodeToString([]byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}),
+		"contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent()),
 	})
 	requireStatus(t, attachmentCreate, http.StatusCreated)
 	attachmentID := decodeAttachment(t, attachmentCreate).Data.ID
@@ -144,7 +144,7 @@ func TestResourceLifecycleEndpointsRejectUnauthorizedCallers(t *testing.T) {
 	attachmentCreate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+assetID+"/attachments", "Bearer dev:owner", map[string]any{
 		"fileName":      "receipt.png",
 		"contentType":   "image/png",
-		"contentBase64": base64.StdEncoding.EncodeToString([]byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}),
+		"contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent()),
 	})
 	requireStatus(t, attachmentCreate, http.StatusCreated)
 	attachmentID := decodeAttachment(t, attachmentCreate).Data.ID

@@ -579,6 +579,11 @@ func TestAttachmentUploadRejectsUnsafeInput(t *testing.T) {
 			wantMessage: "Attachment content does not match its file type.",
 		},
 		{
+			name:        "undecodable image content",
+			body:        map[string]any{"fileName": "receipt.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(truncatedPNGAttachmentContent())},
+			wantMessage: "Attachment content does not match its file type.",
+		},
+		{
 			name:        "unsafe file name",
 			body:        map[string]any{"fileName": "../receipt.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent())},
 			wantMessage: "Invalid attachment file name.",
@@ -651,7 +656,18 @@ func (failingBlobStorage) DeleteBlob(context.Context, media.StorageKey) error {
 }
 
 func pngAttachmentContent() []byte {
-	return []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	img.Set(0, 0, color.RGBA{R: 46, G: 125, B: 50, A: 255})
+	buffer := bytes.Buffer{}
+	if err := png.Encode(&buffer, img); err != nil {
+		panic("encode png fixture")
+	}
+	return buffer.Bytes()
+}
+
+func truncatedPNGAttachmentContent() []byte {
+	content := pngAttachmentContent()
+	return content[:len(content)-8]
 }
 
 func realPNGAttachmentContent(t *testing.T) []byte {
@@ -715,57 +731,6 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		ImportSources:             homebox.NewLegacyImporter(nil),
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
-}
-
-type httpFakeDirectAttachmentUploader struct {
-	request ports.DirectAttachmentUploadRequest
-	blobs   ports.BlobStorage
-	err     error
-}
-
-func (f *httpFakeDirectAttachmentUploader) CreateDirectAttachmentUpload(_ context.Context, request ports.DirectAttachmentUploadRequest) (ports.DirectAttachmentUpload, error) {
-	f.request = request
-	return ports.DirectAttachmentUpload{
-		UploadID:     request.UploadID,
-		AttachmentID: request.AttachmentID,
-		Method:       "PUT",
-		URL:          "https://uploads.example.test/" + request.UploadID,
-		Headers:      map[string]string{"content-type": request.ContentType.String()},
-		ExpiresAt:    request.ExpiresAt,
-	}, nil
-}
-
-func (f *httpFakeDirectAttachmentUploader) CompleteDirectAttachmentUpload(_ context.Context, uploadID string) (ports.CompletedDirectAttachmentUpload, error) {
-	if f.err != nil {
-		return ports.CompletedDirectAttachmentUpload{}, f.err
-	}
-	if f.request.UploadID != uploadID {
-		return ports.CompletedDirectAttachmentUpload{}, app.ErrInvalidInput
-	}
-	content := pngAttachmentContent()
-	hashBytes := sha256.Sum256(content)
-	hash, ok := media.NewSHA256(hex.EncodeToString(hashBytes[:]))
-	if !ok {
-		return ports.CompletedDirectAttachmentUpload{}, app.ErrInvalidInput
-	}
-	if f.blobs != nil {
-		if err := f.blobs.PutBlob(context.Background(), f.request.StorageKey, f.request.ContentType, content); err != nil {
-			return ports.CompletedDirectAttachmentUpload{}, err
-		}
-	}
-	return ports.CompletedDirectAttachmentUpload{
-		UploadID:     uploadID,
-		AttachmentID: f.request.AttachmentID,
-		TenantID:     f.request.TenantID,
-		InventoryID:  f.request.InventoryID,
-		AssetID:      f.request.AssetID,
-		StorageKey:   f.request.StorageKey,
-		FileName:     f.request.FileName,
-		ContentType:  f.request.ContentType,
-		SizeBytes:    int64(len(content)),
-		SHA256:       hash,
-		ExpiresAt:    f.request.ExpiresAt,
-	}, nil
 }
 
 type httpFakeImageProcessor struct {

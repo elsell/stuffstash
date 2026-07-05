@@ -292,7 +292,15 @@ func (a App) generateThumbnail(ctx context.Context, attachment media.Attachment,
 		Content:     content,
 	})
 	if err != nil {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "thumbnail generation failed"})
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventBlobStorageFailed,
+			Message: "thumbnail generation failed",
+			Fields: map[string]string{
+				"content_type": attachment.ContentType.String(),
+				"reason":       "image_processing_failed",
+				"variant":      variant.String(),
+			},
+		})
 		return thumbnailGenerationResult{}, err
 	}
 	if !thumbnail.ContentType.IsImage() || len(thumbnail.Content) == 0 {

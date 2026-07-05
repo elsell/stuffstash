@@ -193,7 +193,7 @@ Blob storage mode:
 
 - `STUFF_STASH_BLOB_STORAGE_MODE=filesystem` uses local filesystem storage.
 - `STUFF_STASH_BLOB_STORAGE_MODE=s3` uses the S3-compatible adapter.
-- Memory repository mode may still use the in-memory fake blob storage.
+- Memory repository mode may still use the in-memory fake blob storage and must wire the local direct-upload sentinel adapter so browser and mobile clients can fall back to the authorized JSON attachment route in local tracer-bullet runs.
 
 S3-compatible adapter configuration:
 
@@ -214,6 +214,7 @@ When a browser client cannot use an advertised direct-upload target because the 
 - Uploads must enforce size limits.
 - Uploads must enforce allowed MIME types.
 - Uploads must inspect content signatures for supported types and reject content that does not match the claimed MIME type.
+- Image uploads must also decode as the claimed image format before attachment metadata is committed, so thumbnail and search-card image paths do not store broken image attachments that later fail at read time.
 - Download URLs must not bypass authorization.
 - Direct upload targets must be opaque, bounded, expiring, and usable only for the intended tenant, inventory, asset, attachment ID, content type, and size.
 - Direct upload completion must verify uploaded object metadata before committing attachment metadata.

@@ -1,10 +1,15 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"image"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"strconv"
 	"strings"
 
@@ -15,6 +20,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"golang.org/x/image/webp"
 )
 
 type CreateAttachmentInput struct {
@@ -575,16 +581,31 @@ func contentMatchesType(contentType media.ContentType, content []byte) bool {
 			content[4] == '\r' &&
 			content[5] == '\n' &&
 			content[6] == 0x1a &&
-			content[7] == '\n'
+			content[7] == '\n' &&
+			imageContentDecodes(content, png.Decode)
 	case media.ContentTypeJPEG:
-		return len(content) >= 3 && content[0] == 0xff && content[1] == 0xd8 && content[2] == 0xff
+		return len(content) >= 3 &&
+			content[0] == 0xff &&
+			content[1] == 0xd8 &&
+			content[2] == 0xff &&
+			imageContentDecodes(content, jpeg.Decode)
 	case media.ContentTypeWEBP:
 		return len(content) >= 12 &&
 			string(content[0:4]) == "RIFF" &&
-			string(content[8:12]) == "WEBP"
+			string(content[8:12]) == "WEBP" &&
+			imageContentDecodes(content, webp.Decode)
 	case media.ContentTypePDF:
 		return len(content) >= 5 && string(content[0:5]) == "%PDF-"
 	default:
 		return false
 	}
+}
+
+func imageContentDecodes(content []byte, decode func(io.Reader) (image.Image, error)) bool {
+	decoded, err := decode(bytes.NewReader(content))
+	if err != nil {
+		return false
+	}
+	bounds := decoded.Bounds()
+	return bounds.Dx() > 0 && bounds.Dy() > 0
 }

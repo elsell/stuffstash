@@ -393,6 +393,21 @@ func TestBuildBlobStorageAcceptsFilesystemModeWithLocalDirectUploadSentinel(t *t
 	}
 }
 
+func TestBuildRepositoriesMemoryModeWiresLocalDirectUploadSentinel(t *testing.T) {
+	repositories, closeRepositories, err := buildRepositories(context.Background(), config.Config{RepositoryMode: "memory"})
+	if err != nil {
+		t.Fatalf("build memory repositories: %v", err)
+	}
+	defer func() {
+		if err := closeRepositories(); err != nil {
+			t.Fatalf("close memory repositories: %v", err)
+		}
+	}()
+	if repositories.blobs == nil || repositories.directUploads == nil {
+		t.Fatalf("expected memory repositories to expose blob storage and local direct upload sentinel")
+	}
+}
+
 func sqliteBootstrapProviderProfile(t *testing.T, tenantID tenant.ID) agentmodel.ProviderProfile {
 	t.Helper()
 
