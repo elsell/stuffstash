@@ -44,11 +44,14 @@ test('mobile shell opens context and add flows without desktop-only controls', a
 
   await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
   await expect(page.getByLabel('Search this inventory')).toBeHidden();
-  await page.getByRole('button', { name: /Household/ }).click();
+  const contextTrigger = page.getByRole('button', { name: /Household/ });
+  await contextTrigger.click();
   const contextDialog = page.getByRole('dialog', { name: 'Inventory context' });
   await expect(contextDialog).toBeVisible();
   const contextDialogLayer = await dialogTopLayerInfo(contextDialog);
   expect(contextDialogLayer.ownsPoint, JSON.stringify(contextDialogLayer)).toBe(true);
+  expect(await dialogOpensAsAnchoredPopover(contextTrigger, contextDialog, page.locator('.mobile-nav'))).toBe(true);
+  expect(await backdropIsVisuallyTransparent(page.locator('.sheet-backdrop'))).toBe(true);
   await expect(page.getByLabel('Inventories').getByRole('link', { name: /Household/ })).toBeVisible();
   await page.keyboard.press('Escape');
 
@@ -368,6 +371,32 @@ async function dialogTopLayerInfo(dialog: Locator): Promise<{ ownsPoint: boolean
       rect: `${Math.round(rect.left)},${Math.round(rect.top)},${Math.round(rect.width)},${Math.round(rect.height)}`,
       topElement: target instanceof HTMLElement ? `${target.tagName}.${target.className}` : String(target)
     };
+  });
+}
+
+async function dialogOpensAsAnchoredPopover(trigger: Locator, dialog: Locator, bottomChrome: Locator): Promise<boolean> {
+  const [triggerBox, dialogBox, bottomChromeBox] = await Promise.all([
+    trigger.boundingBox(),
+    dialog.boundingBox(),
+    bottomChrome.boundingBox()
+  ]);
+  if (!triggerBox || !dialogBox || !bottomChromeBox) {
+    return false;
+  }
+  const expectedTop = triggerBox.y + triggerBox.height;
+  return (
+    dialogBox.y >= expectedTop &&
+    dialogBox.y <= expectedTop + 18 &&
+    dialogBox.x >= triggerBox.x - 1 &&
+    dialogBox.x + dialogBox.width <= triggerBox.x + triggerBox.width + 1 &&
+    dialogBox.y + dialogBox.height <= bottomChromeBox.y - 8
+  );
+}
+
+async function backdropIsVisuallyTransparent(backdrop: Locator): Promise<boolean> {
+  return backdrop.evaluate((element) => {
+    const background = window.getComputedStyle(element).backgroundColor;
+    return background === 'transparent' || background === 'rgba(0, 0, 0, 0)';
   });
 }
 

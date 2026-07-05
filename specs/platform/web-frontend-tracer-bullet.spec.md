@@ -189,6 +189,10 @@ The tracer bullet should:
   locations. On narrow mobile viewports, the rail may scroll horizontally, but
   each card's media and text must remain clipped or wrapped inside its own card
   rather than protruding into the next card or outside the viewport.
+- Keep tenant and inventory context switching compact: the closed state must be
+  a single row that names the selected inventory and tenant, and the open state
+  must behave like a lightweight inventory-first popover with a clear Switch
+  tenant affordance rather than a persistent sidebar management block.
 
 The provisional logo-direction colors are:
 

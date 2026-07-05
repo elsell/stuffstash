@@ -40,6 +40,7 @@
   let tenantOptions = $derived(tenantContextOptions({ tenants, inventories, selectedTenantId }));
   let inventoryOptions = $derived(inventoryContextOptions({ tenants, inventories, selectedTenantId, selectedInventoryId }));
   let presentation = $derived(contextSwitcherPresentation({ selectedTenant, selectedInventory }));
+  let modalContext = $derived(mobile && Boolean(onOpenChange));
 
   let rootElement: HTMLDivElement | null = $state(null);
   let triggerElement: HTMLButtonElement | null = $state(null);
@@ -116,7 +117,7 @@
       return;
     }
 
-    if (!mobile || event.key !== 'Tab' || !panelElement) {
+    if (!modalContext || event.key !== 'Tab' || !panelElement) {
       return;
     }
     const focusable = Array.from(
@@ -179,7 +180,7 @@
       class:context-popover={!mobile}
       class:mobile-context-menu={mobile}
       role="dialog"
-      aria-modal={mobile ? 'true' : undefined}
+      aria-modal={modalContext ? 'true' : undefined}
       aria-label="Inventory context"
       tabindex={-1}
       onkeydown={handlePanelKeydown}

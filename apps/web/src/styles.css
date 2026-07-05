@@ -240,18 +240,35 @@ small {
 
 .identity-copy,
 .context-option-copy {
-  display: grid;
   min-width: 0;
   gap: 2px;
+}
+
+.identity-copy {
+  display: flex;
+  align-items: baseline;
+}
+
+.context-option-copy {
+  display: grid;
 }
 
 .identity-copy strong,
 .identity-copy small,
 .context-option-copy strong,
 .context-option-copy small {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.identity-copy strong {
+  flex: 1 1 auto;
+}
+
+.identity-copy small {
+  flex: 0 1 auto;
 }
 
 .identity-copy small,
@@ -259,6 +276,11 @@ small {
   color: var(--muted-foreground);
   font-size: 0.75rem;
   font-weight: 520;
+}
+
+.identity-copy small::before {
+  content: "/ ";
+  color: var(--muted-foreground);
 }
 
 .context-header {
@@ -2188,19 +2210,19 @@ dd {
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: rgb(15 23 42 / 0.24);
+    background: transparent;
   }
 
   .mobile-context-menu {
-    position: fixed;
-    right: 10px;
-    bottom: calc(var(--mobile-bottom-chrome-height) + 10px);
-    left: 10px;
-    top: auto;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: 0;
     z-index: 40;
     width: auto;
-    max-height: min(520px, calc(100vh - 110px));
+    max-height: min(420px, calc(100dvh - var(--mobile-bottom-chrome-height) - 104px));
     overflow: auto;
+    box-shadow: 0 18px 36px rgb(15 23 42 / 0.14);
   }
 
   .global-search-wrap,
