@@ -1336,6 +1336,7 @@ small {
 }
 
 .asset-thumb {
+  position: relative;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -1366,9 +1367,29 @@ small {
   object-fit: cover;
 }
 
-.asset-thumb svg {
+.asset-thumb > svg {
   width: 42%;
   height: 42%;
+}
+
+.photo-unavailable-mark {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--background) 92%, transparent);
+  color: var(--muted-foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.photo-unavailable-mark svg {
+  width: 11px;
+  height: 11px;
 }
 
 .asset-detail-hero {

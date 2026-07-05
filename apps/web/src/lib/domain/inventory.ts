@@ -145,6 +145,7 @@ export interface Asset {
   customFields?: Record<string, unknown>;
   customAssetTypeLabel?: string;
   photo?: AssetPhoto;
+  photoUnavailable?: boolean;
   updatedAt?: string;
 }
 

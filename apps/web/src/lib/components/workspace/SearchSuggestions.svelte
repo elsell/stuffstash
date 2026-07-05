@@ -29,6 +29,10 @@
   function suggestionId(index: number): string {
     return `${idPrefix}-${index}`;
   }
+
+  function photoUnavailableId(index: number): string {
+    return `${suggestionId(index)}-photo-unavailable`;
+  }
 </script>
 
 {#if suggestions.length > 0}
@@ -42,6 +46,7 @@
           class="suggestion-row"
           data-active={activeIndex === index}
           aria-label={`Open ${suggestion.title}`}
+          aria-describedby={suggestion.photoUnavailable ? photoUnavailableId(index) : undefined}
           onfocus={() => onFocusIndex(index)}
           onkeydown={(event) => onSuggestionKeydown(event, index)}
           onpointerenter={() => onFocusIndex(index)}
@@ -51,6 +56,9 @@
           <span>
             <strong>{suggestion.title}</strong>
             <small>{suggestion.customAssetTypeLabel ?? assetKindLabel(suggestion.kind)}</small>
+            {#if suggestion.photoUnavailable}
+              <small id={photoUnavailableId(index)} class="visually-hidden">Photo unavailable</small>
+            {/if}
           </span>
         </Button.Root>
       </li>

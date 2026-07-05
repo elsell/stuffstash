@@ -112,6 +112,25 @@ describe('StuffStashInventoryRepository', () => {
 
     expect(data.assets[0]?.id).toBe('asset-archived');
     expect(data.assets[0]?.photo).toBeUndefined();
+    expect(data.assets[0]?.photoUnavailable).toBe(true);
+    expect(observer.events).toContainEqual({
+      eventName: 'workspace.asset_primary_photo_load_failed',
+      attributes: { assetId: 'asset-archived' }
+    });
+  });
+
+  it('marks workspace photos unavailable when a primary photo thumbnail returns an HTTP error', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'], failedThumbnailStatusByAssetId: { 'asset-archived': 500 } });
+    const observer = new InMemoryWorkspaceObserver();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
+
+    const data = await repository.loadWorkspace();
+
+    expect(data.assets[0]?.id).toBe('asset-archived');
+    expect(data.assets[0]?.photo).toBeUndefined();
+    expect(data.assets[0]?.photoUnavailable).toBe(true);
     expect(observer.events).toContainEqual({
       eventName: 'workspace.asset_primary_photo_load_failed',
       attributes: { assetId: 'asset-archived' }
@@ -500,12 +519,13 @@ describe('StuffStashInventoryRepository', () => {
 });
 
 function fakeFetch(
-	  options: {
-	    directUploadUrl?: string;
-	    directUploadRejected?: boolean;
-	    directUploadThrows?: boolean;
-	    primaryPhotoAssetIds?: string[];
+  options: {
+    directUploadUrl?: string;
+    directUploadRejected?: boolean;
+    directUploadThrows?: boolean;
+    primaryPhotoAssetIds?: string[];
     rejectedThumbnailAssetIds?: string[];
+    failedThumbnailStatusByAssetId?: Record<string, number>;
     includeUnphotographedContainerAndLocation?: boolean;
   } = {}
 ): { fetch: typeof fetch; requests: Request[] } {
@@ -631,6 +651,10 @@ function fakeFetch(
       if (request.method === 'GET' && thumbnailAssetID) {
         if (options.rejectedThumbnailAssetIds?.includes(thumbnailAssetID)) {
           throw new Error('Thumbnail fetch failed.');
+        }
+        const failedStatus = options.failedThumbnailStatusByAssetId?.[thumbnailAssetID];
+        if (failedStatus) {
+          return new Response('Thumbnail unavailable.', { status: failedStatus });
         }
         return new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 });
       }

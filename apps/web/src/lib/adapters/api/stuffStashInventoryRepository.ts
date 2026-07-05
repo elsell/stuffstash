@@ -679,7 +679,8 @@ export class StuffStashInventoryRepository
       );
       const thumbnailUrl = await this.thumbnailObjectUrl(thumbnail);
       if (!thumbnailUrl) {
-        return mapped;
+        this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
+        return { ...mapped, photoUnavailable: true };
       }
       return {
         ...mapped,
@@ -692,7 +693,7 @@ export class StuffStashInventoryRepository
       };
     } catch {
       this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
-      return mapped;
+      return { ...mapped, photoUnavailable: true };
     }
   }
 

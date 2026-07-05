@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ImageOff from '@lucide/svelte/icons/image-off';
   import type { Asset } from '$lib/domain/inventory';
   import KindIcon from './KindIcon.svelte';
 
@@ -11,5 +12,11 @@
     <img src={ownPhoto.url} alt={ownPhoto.alt} />
   {:else}
     <KindIcon kind={asset.kind} />
+    {#if asset.photoUnavailable}
+      <span class="photo-unavailable-mark" aria-hidden="true" title="Photo unavailable">
+        <ImageOff aria-hidden="true" />
+      </span>
+      <span class="visually-hidden">Photo unavailable</span>
+    {/if}
   {/if}
 </div>

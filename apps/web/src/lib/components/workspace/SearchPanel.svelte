@@ -92,6 +92,10 @@
     return `${suggestionIdPrefix}-${index}`;
   }
 
+  function resultPhotoUnavailableId(asset: Asset): string {
+    return `search-result-${asset.id}-photo-unavailable`;
+  }
+
   function suggestionElement(index: number): HTMLElement | null {
     if (typeof document === 'undefined') {
       return null;
@@ -234,11 +238,20 @@
   {:else}
     <div class="asset-list">
       {#each results as result}
-        <Button.Root href={searchAssetHref(result.asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, result.asset)}>
+        <Button.Root
+          href={searchAssetHref(result.asset)}
+          variant="ghost"
+          class="asset-row"
+          aria-describedby={result.asset.photoUnavailable ? resultPhotoUnavailableId(result.asset) : undefined}
+          onclick={(event) => openAsset(event, result.asset)}
+        >
           <AssetThumb asset={result.asset} />
           <span class="asset-row-main">
             <strong>{result.asset.title}</strong>
             <small>{result.inventory.name} / {result.asset.lifecycleState}</small>
+            {#if result.asset.photoUnavailable}
+              <small id={resultPhotoUnavailableId(result.asset)} class="visually-hidden">Photo unavailable</small>
+            {/if}
           </span>
           <span class="asset-row-meta">
             <small>{result.matches[0]?.field ?? 'match'}</small>

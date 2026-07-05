@@ -119,6 +119,33 @@ describe('SearchPanel', () => {
     expect(document.body.querySelectorAll('#search-page-suggestions .asset-thumb svg')).toHaveLength(2);
   });
 
+  it('marks suggestions and results when a primary photo cannot render', async () => {
+    const unavailablePhotoAsset = { ...asset('tape', 'Tape measure'), photoUnavailable: true };
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: unavailablePhotoAsset,
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'title', value: 'Tape measure' }]
+      }
+    ];
+    mountSearchPanel({ query: 'tape', suggestions: [unavailablePhotoAsset], results, submitted: true });
+
+    searchInput().focus();
+    await flush();
+
+    const suggestion = controlWithLabel('Open Tape measure');
+    const result = document.body.querySelector<HTMLAnchorElement>('.asset-list a');
+    expect(result).not.toBeNull();
+    expect(suggestion.getAttribute('aria-describedby')).toBe('search-page-suggestion-0-photo-unavailable');
+    expect(document.getElementById('search-page-suggestion-0-photo-unavailable')?.textContent).toBe('Photo unavailable');
+    expect(result?.getAttribute('aria-describedby')).toBe('search-result-tape-photo-unavailable');
+    expect(document.getElementById('search-result-tape-photo-unavailable')?.textContent).toBe('Photo unavailable');
+    expect(document.body.querySelectorAll('.photo-unavailable-mark')).toHaveLength(2);
+    expect(document.body.querySelector<HTMLImageElement>('#search-page-suggestions img')).toBeNull();
+    expect(document.body.querySelector<HTMLImageElement>('.asset-list img')).toBeNull();
+  });
+
   it('supports keyboard traversal for autocomplete suggestions', async () => {
     const { openedAssetIds } = mountSearchPanel();
     const input = searchInput();

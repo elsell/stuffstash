@@ -127,6 +127,22 @@ describe('TopHeader', () => {
     expect(document.body.querySelectorAll('#global-search-suggestions .asset-thumb svg')).toHaveLength(2);
   });
 
+  it('marks global suggestions when a primary photo cannot render', async () => {
+    mountHeader({
+      suggestions: [{ ...asset('tape', 'Tape measure'), photoUnavailable: true }]
+    });
+    const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
+
+    input?.focus();
+    await flush();
+
+    expect(document.body.querySelector('#global-search-suggestions img')).toBeNull();
+    const suggestion = controlWithLabel('Open Tape measure');
+    expect(suggestion.getAttribute('aria-describedby')).toBe('global-search-suggestion-0-photo-unavailable');
+    expect(document.getElementById('global-search-suggestion-0-photo-unavailable')?.textContent).toBe('Photo unavailable');
+    expect(document.body.querySelector('.photo-unavailable-mark')).not.toBeNull();
+  });
+
   it('routes global location suggestions to the focused location surface', async () => {
     const { selectedAssets } = mountHeader({
       suggestions: [asset('garage', 'Garage', undefined, 'location')]
