@@ -41,7 +41,7 @@ func (i LegacyImporter) withRequestOptions(request ports.ImportSourceRequest) Le
 	}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 5 {
-			return errors.New("too many Homebox redirects")
+			return ports.NewImportSourceUserError("too many Homebox redirects")
 		}
 		return validateOutboundURL(req.URL.String())
 	}
@@ -66,7 +66,7 @@ func guardedDialContext(allowPrivateNetwork bool) func(context.Context, string, 
 func vettedDialAddress(ctx context.Context, host string, port string, allowPrivateNetwork bool) (string, error) {
 	if ip := net.ParseIP(host); ip != nil {
 		if !allowPrivateNetwork && blockedOutboundIP(ip) {
-			return "", errors.New("Homebox URL resolves to a blocked address")
+			return "", ports.NewImportSourceUserError("Homebox URL resolves to a blocked address")
 		}
 		return net.JoinHostPort(ip.String(), port), nil
 	}
@@ -81,7 +81,7 @@ func vettedDialAddress(ctx context.Context, host string, port string, allowPriva
 		}
 		return net.JoinHostPort(candidate.IP.String(), port), nil
 	}
-	return "", errors.New("Homebox URL resolves to a blocked address")
+	return "", ports.NewImportSourceUserError("Homebox URL resolves to a blocked address")
 }
 
 func cloneTLSConfig(config *tls.Config, insecure bool) *tls.Config {
@@ -94,17 +94,25 @@ func cloneTLSConfig(config *tls.Config, insecure bool) *tls.Config {
 	return config
 }
 
+func safeLiveSourceError(err error) error {
+	var userError ports.ImportSourceUserError
+	if errors.As(err, &userError) {
+		return userError
+	}
+	return err
+}
+
 func validateOutboundURL(raw string) error {
 	parsed, err := url.Parse(raw)
 	if err != nil {
 		return err
 	}
 	if parsed.Scheme != "https" && parsed.Scheme != "http" {
-		return errors.New("Homebox URL must use http or https")
+		return ports.NewImportSourceUserError("Homebox URL must use http or https")
 	}
 	host := parsed.Hostname()
 	if strings.TrimSpace(host) == "" {
-		return errors.New("Homebox URL host is required")
+		return ports.NewImportSourceUserError("Homebox URL host is required")
 	}
 	return nil
 }
@@ -330,7 +338,7 @@ func (i LegacyImporter) doJSON(ctx context.Context, method string, endpoint stri
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("Homebox returned %s", resp.Status)
+		return ports.NewImportSourceUserError(fmt.Sprintf("Homebox returned %s", resp.Status))
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
 }
@@ -437,14 +445,14 @@ func getCSV(row []string, header map[string]int, name string) string {
 func normalizeBaseURL(value string) (string, error) {
 	value = strings.TrimRight(strings.TrimSpace(value), "/")
 	if value == "" {
-		return "", errors.New("Homebox URL is required")
+		return "", ports.NewImportSourceUserError("Homebox URL is required")
 	}
 	if !strings.HasPrefix(value, "http://") && !strings.HasPrefix(value, "https://") {
 		value = "https://" + value
 	}
 	parsed, err := url.Parse(value)
 	if err != nil || parsed.Host == "" {
-		return "", errors.New("Homebox URL is invalid")
+		return "", ports.NewImportSourceUserError("Homebox URL is invalid")
 	}
 	if strings.HasSuffix(parsed.Path, "/api/v1") {
 		return strings.TrimRight(value, "/"), nil

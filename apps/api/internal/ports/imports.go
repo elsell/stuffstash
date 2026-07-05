@@ -22,3 +22,15 @@ type ImportSourceRequest struct {
 type ImportSourceReader interface {
 	ReadImportPlan(ctx context.Context, request ImportSourceRequest) (importplan.Plan, error)
 }
+
+type ImportSourceUserError struct {
+	Detail string
+}
+
+func (e ImportSourceUserError) Error() string {
+	return e.Detail
+}
+
+func NewImportSourceUserError(detail string) error {
+	return ImportSourceUserError{Detail: detail}
+}

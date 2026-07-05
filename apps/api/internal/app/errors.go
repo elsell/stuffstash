@@ -23,3 +23,22 @@ var (
 	ErrAttachmentContentEmpty           = fmt.Errorf("%w: empty attachment content", ErrInvalidInput)
 	ErrAttachmentTooLarge               = fmt.Errorf("%w: attachment too large", ErrInvalidInput)
 )
+
+type ImportSourceInvalidInputError struct {
+	Detail string
+}
+
+func (e ImportSourceInvalidInputError) Error() string {
+	return e.Detail
+}
+
+func (e ImportSourceInvalidInputError) Unwrap() error {
+	return ErrInvalidInput
+}
+
+func NewImportSourceInvalidInputError(detail string) error {
+	if detail == "" {
+		detail = "Invalid request."
+	}
+	return ImportSourceInvalidInputError{Detail: detail}
+}

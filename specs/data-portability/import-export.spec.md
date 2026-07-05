@@ -34,6 +34,7 @@ This spec does not define the final Stuff Stash-native CSV columns, final Stuff 
 - Import plans must include source references so repeated imports can detect likely duplicates before writing.
 - Import preview must report warnings and blocking errors separately.
 - Import warnings must be safe to show to users and must not include source passwords, bearer tokens, attachment storage paths, or provider internals.
+- Import source validation and connection failures may return a safe, actionable error detail, such as missing URL, unsupported URL scheme, blocked private-network source, TLS trust failure, or Homebox HTTP status, only when the source adapter marks the detail with the import-source user-error contract. Ordinary adapter errors must remain generic at the HTTP boundary. The web UI must prefer typed safe details over a generic invalid-request message.
 - Import apply may reject stale or tampered preview plans. The client must not be trusted as the source of validation truth.
 
 ## Import Source Ports And Adapters

@@ -152,7 +152,7 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 	}
 	token, status, err := importer.login(ctx, baseURL, request.Username, request.Password)
 	if err != nil {
-		return importplan.Plan{}, err
+		return importplan.Plan{}, safeLiveSourceError(err)
 	}
 	plan := importplan.Plan{
 		Source: importplan.SourceSummary{
@@ -166,11 +166,11 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 	}
 	locations, err := importer.locations(ctx, baseURL, token)
 	if err != nil {
-		return importplan.Plan{}, err
+		return importplan.Plan{}, safeLiveSourceError(err)
 	}
 	locationTree, err := importer.locationTree(ctx, baseURL, token)
 	if err != nil {
-		return importplan.Plan{}, err
+		return importplan.Plan{}, safeLiveSourceError(err)
 	}
 	locationsByID := map[string]legacyLocation{}
 	for _, location := range locations {

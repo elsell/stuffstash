@@ -45,6 +45,7 @@ func NewErrorEnvelope(status int, msg string, errs ...error) huma.StatusError {
 }
 
 func ToHumaError(err error) error {
+	var importSourceInvalidInput app.ImportSourceInvalidInputError
 	switch {
 	case errors.Is(err, app.ErrUnauthenticated):
 		return huma.Error401Unauthorized("Authentication required.")
@@ -60,6 +61,8 @@ func ToHumaError(err error) error {
 		return huma.Error400BadRequest("Attachment content is empty.")
 	case errors.Is(err, app.ErrAttachmentTooLarge):
 		return huma.Error400BadRequest("Attachment is too large.")
+	case errors.As(err, &importSourceInvalidInput):
+		return huma.Error400BadRequest("Invalid request.", err)
 	case errors.Is(err, app.ErrValidation), errors.Is(err, app.ErrInvalidInput):
 		return huma.Error400BadRequest("Invalid request.")
 	case errors.Is(err, app.ErrConflict):

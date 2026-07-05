@@ -3,6 +3,7 @@ package httpserver
 import (
 	"encoding/base64"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -47,5 +48,25 @@ func TestLegacyHomeboxImportAuthorizationAndSourceSafety(t *testing.T) {
 	if blockedLiveSource.Code != http.StatusBadRequest {
 		t.Fatalf("expected blocked live source status %d, got %d with body %s", http.StatusBadRequest, blockedLiveSource.Code, blockedLiveSource.Body.String())
 	}
-	assertSafeError(t, blockedLiveSource, "invalid_request", "Invalid request.")
+	assertImportSourceError(t, blockedLiveSource, "Homebox URL resolves to a blocked address")
+}
+
+func assertImportSourceError(t *testing.T, response *httptest.ResponseRecorder, expectedDetail string) {
+	t.Helper()
+
+	var body errorResponse
+	decodeBody(t, response, &body)
+	if body.Error.Code != "invalid_request" {
+		t.Fatalf("expected error code invalid_request, got %q", body.Error.Code)
+	}
+	if body.Error.Message != "Invalid request." {
+		t.Fatalf("expected generic error message, got %q", body.Error.Message)
+	}
+	if len(body.Error.Details) != 1 {
+		t.Fatalf("expected one safe import source detail, got %+v", body.Error.Details)
+	}
+	detail, ok := body.Error.Details[0].(map[string]any)
+	if !ok || detail["message"] != expectedDetail {
+		t.Fatalf("expected safe import source detail %q, got %+v", expectedDetail, body.Error.Details)
+	}
 }

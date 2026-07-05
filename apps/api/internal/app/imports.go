@@ -66,7 +66,7 @@ func (a App) PreviewLegacyHomeboxImport(ctx context.Context, input PreviewImport
 	}
 	plan, err := a.readImportSource(ctx, input.Source)
 	if err != nil {
-		return ImportPreview{}, ErrInvalidInput
+		return ImportPreview{}, importSourceInputError(err)
 	}
 	plan.Messages = append(plan.Messages, a.duplicateWarnings(ctx, input.TenantID, input.InventoryID, plan)...)
 	plan.Messages = append(plan.Messages, archivedWarnings(plan)...)
@@ -80,7 +80,7 @@ func (a App) ApplyLegacyHomeboxImport(ctx context.Context, input ApplyImportInpu
 	}
 	plan, err := a.readImportSource(ctx, input.Source)
 	if err != nil {
-		return ImportResult{}, ErrInvalidInput
+		return ImportResult{}, importSourceInputError(err)
 	}
 	result := ImportResult{}
 	result.Messages = append(result.Messages, plan.Messages...)
@@ -218,6 +218,14 @@ func (a App) readImportSource(ctx context.Context, input ImportSourceInput) (imp
 		FileName:            input.FileName,
 		Content:             content,
 	})
+}
+
+func importSourceInputError(err error) error {
+	var userError ports.ImportSourceUserError
+	if errors.As(err, &userError) {
+		return NewImportSourceInvalidInputError(strings.TrimSpace(userError.Detail))
+	}
+	return ErrInvalidInput
 }
 
 func (a App) createImportedAsset(ctx context.Context, input ApplyImportInput, planned importplan.Asset, sourceToAssetID map[string]string, duplicates map[string]struct{}) (asset.Asset, bool, error) {
