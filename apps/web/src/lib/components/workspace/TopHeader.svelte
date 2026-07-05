@@ -20,6 +20,7 @@
     suggestions,
     query = $bindable(''),
     canCreateAsset,
+    showSearch = true,
     onSelectTenant,
     onSelectInventory,
     onSearch,
@@ -34,6 +35,7 @@
     suggestions: Asset[];
     query: string;
     canCreateAsset: boolean;
+    showSearch?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onSearch: () => void;
@@ -225,32 +227,34 @@
       onOpenChange={onMobileContextOpenChange}
     />
   </div>
-  <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
-    <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>
-      <Search aria-hidden="true" />
-      <Input
-        bind:ref={searchInput}
-        bind:value={query}
-        placeholder="Search this inventory"
-        aria-label="Search this inventory"
-        onfocus={() => { searchFocused = true; }}
-        onkeydown={handleSearchKeydown}
+  {#if showSearch}
+    <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
+      <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>
+        <Search aria-hidden="true" />
+        <Input
+          bind:ref={searchInput}
+          bind:value={query}
+          placeholder="Search this inventory"
+          aria-label="Search this inventory"
+          onfocus={() => { searchFocused = true; }}
+          onkeydown={handleSearchKeydown}
+        />
+        <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
+      </form>
+      <SearchSuggestions
+        id="global-search-suggestions"
+        idPrefix={suggestionIdPrefix}
+        suggestions={visibleSuggestions}
+        activeIndex={activeSuggestionIndex}
+        {query}
+        showEmpty={showNoSuggestions}
+        assetHref={searchAssetHref}
+        onFocusIndex={(index) => { activeSuggestionIndex = index; }}
+        onSuggestionKeydown={handleSuggestionKeydown}
+        onOpen={openSuggestion}
       />
-      <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
-    </form>
-    <SearchSuggestions
-      id="global-search-suggestions"
-      idPrefix={suggestionIdPrefix}
-      suggestions={visibleSuggestions}
-      activeIndex={activeSuggestionIndex}
-      {query}
-      showEmpty={showNoSuggestions}
-      assetHref={searchAssetHref}
-      onFocusIndex={(index) => { activeSuggestionIndex = index; }}
-      onSuggestionKeydown={handleSuggestionKeydown}
-      onOpen={openSuggestion}
-    />
-  </div>
+    </div>
+  {/if}
   <div bind:this={addMenuRegion} class="header-add-wrap" onfocusout={handleAddMenuFocusout}>
     <Button.Root
       bind:ref={addTrigger}

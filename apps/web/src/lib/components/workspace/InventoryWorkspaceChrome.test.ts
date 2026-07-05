@@ -87,6 +87,16 @@ describe('InventoryWorkspaceChrome', () => {
 
     expect(document.body.querySelector('[data-testid="bound-search-query"]')?.textContent).toBe('saw');
   });
+
+  it('lets the dedicated search route own the search field', () => {
+    component = mount(InventoryWorkspaceChromeHarness, {
+      target: document.body,
+      props: chromeProps({ mode: 'search' })
+    });
+
+    expect(document.body.querySelector('input[aria-label="Search this inventory"]')).toBeNull();
+    expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
+  });
 });
 
 function chromeProps(overrides: Partial<InventoryWorkspaceChromeProps> = {}): InventoryWorkspaceChromeProps {

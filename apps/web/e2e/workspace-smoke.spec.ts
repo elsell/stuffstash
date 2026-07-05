@@ -135,7 +135,7 @@ test('add flow saves items with and without selected photo previews', async ({ p
   const photoTapeThumbnailRequestsBeforeSearch = thumbnailRequestPaths(page).filter((path) =>
     path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')
   ).length;
-  await page.getByRole('button', { name: 'Run search' }).click();
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
   await expect(page.locator('.asset-list').getByRole('link', { name: /Photo tape/ })).toBeVisible();
   const photoTapeThumbnail = page.locator('.asset-list img[alt="Photo tape"]');
   await expect(photoTapeThumbnail).toBeVisible();
@@ -189,6 +189,8 @@ test('search entry shows autocomplete and image-bearing results', async ({ page 
   await page.getByRole('button', { name: 'Run search' }).click();
 
   await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible();
+  await expect(page.getByLabel('Search this inventory')).toHaveCount(0);
+  await expect(page.getByLabel('Search query')).toBeVisible();
   await expect(page.locator('.asset-list').getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
     'href',
     '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato'

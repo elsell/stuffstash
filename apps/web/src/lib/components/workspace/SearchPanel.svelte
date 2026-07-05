@@ -201,7 +201,7 @@
         onfocus={() => { searchFocused = true; }}
         onkeydown={handleSearchKeydown}
       />
-      <Button.Root disabled={busy || query.trim().length === 0}>Search</Button.Root>
+      <Button.Root type="submit" disabled={busy || query.trim().length === 0}>Search</Button.Root>
     </form>
     <SearchSuggestions
       id="search-page-suggestions"

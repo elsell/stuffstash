@@ -82,6 +82,7 @@
       suggestions={searchSuggestions}
       bind:query={searchQuery}
       {canCreateAsset}
+      showSearch={mode !== 'search'}
       {onSelectTenant}
       {onSelectInventory}
       {onSearch}
