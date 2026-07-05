@@ -2238,6 +2238,10 @@ dd {
     max-height: 44vh;
   }
 
+  .photo-gallery-section .photo-panel-actions {
+    display: none;
+  }
+
   .asset-row {
     grid-template-columns: auto minmax(0, 1fr);
   }

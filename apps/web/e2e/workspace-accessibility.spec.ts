@@ -102,6 +102,21 @@ test('location and detail flows expose named links, headings, and image alt text
   );
 });
 
+test('asset detail photo upload action is not duplicated on mobile', async ({ page }, testInfo) => {
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
+
+  await expect(page.getByRole('heading', { name: 'Tomato fertilizer' })).toBeVisible();
+  const visibleAddPhotoActions = await page.getByRole('button', { name: 'Add photo' }).evaluateAll((buttons) =>
+    buttons.filter((button) => {
+      const styles = getComputedStyle(button);
+      const box = button.getBoundingClientRect();
+      return styles.display !== 'none' && styles.visibility !== 'hidden' && box.width > 0 && box.height > 0;
+    }).length
+  );
+
+  expect(visibleAddPhotoActions).toBe(testInfo.project.name === 'mobile-chromium' ? 1 : 2);
+});
+
 test('mobile context sheet keeps a named modal surface', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile accessibility coverage runs on the mobile project.');
 

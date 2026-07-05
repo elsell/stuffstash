@@ -328,6 +328,7 @@ Mobile asset detail layout:
 
 - The primary photo/gallery must appear first.
 - Asset title and location trail must appear immediately after the photo/gallery so the user can confirm identity without a long scroll.
+- Photo upload must expose one visible mobile affordance near the primary asset actions; a gallery-local upload action may remain on desktop but must not create duplicate adjacent mobile `Add photo` controls.
 - `Edit`, `Move`, and photo upload actions must remain close to the title and identity area.
 - The photo thumbnail rail must appear before non-image documents.
 - The photo area must not consume so much vertical space that the title and location are hidden for common mobile viewport heights.
