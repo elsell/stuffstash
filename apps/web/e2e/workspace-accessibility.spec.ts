@@ -138,9 +138,24 @@ test('mobile settings access keeps long principals inside the viewport', async (
   await expect(page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link', { name: /Fields/ })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link', { name: /Activity/ })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link', { name: /Admin/ })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link', {
+    name: /Overview\s+Inventory context and access summary/
+  })).toBeVisible();
   expect(await page.locator('.settings-section-nav').evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  expect(await page.locator('.settings-section-link').evaluateAll((elements) =>
+    elements.every((element) => element.getBoundingClientRect().height <= 58)
+  )).toBe(true);
+  expect(await page.locator('.settings-section-link strong').evaluateAll((elements) =>
+    elements.every((element) => {
+      const box = element.getBoundingClientRect();
+      return box.width > 0 && box.height > 0 && element.scrollWidth <= element.clientWidth + 1;
+    })
+  )).toBe(true);
   expect(await page.locator('.settings-section-link small').evaluateAll((elements) =>
-    elements.every((element) => element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1)
+    elements.every((element) => {
+      const styles = getComputedStyle(element);
+      return styles.position === 'absolute' && element.getBoundingClientRect().width <= 1;
+    })
   )).toBe(true);
   await expect(page.getByLabel('Direct grants').getByText('oidc_OuQU94grMoaZ8cly6ZUUpXUVhloLanDNZ')).toBeVisible();
   const disabledGrantAction = page.getByRole('button', { name: 'Grant access' });
@@ -162,4 +177,24 @@ test('mobile settings access keeps long principals inside the viewport', async (
   expect(disabledGrantStyles.color).toBe(disabledGrantStyles.expected.color);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   expect(await page.locator('.settings-panel').filter({ hasText: 'Sharing' }).first().evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+});
+
+test('mobile settings sections stay compact in phone landscape width', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile settings layout coverage runs on the mobile project.');
+
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+
+  await expect(page.getByRole('heading', { name: 'Custom fields' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link')).toHaveCount(5);
+  expect(await page.locator('.settings-section-nav').evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  expect(await page.locator('.settings-section-link').evaluateAll((elements) =>
+    elements.every((element) => element.getBoundingClientRect().height <= 58)
+  )).toBe(true);
+  expect(await page.locator('.settings-section-link strong').evaluateAll((elements) =>
+    elements.every((element) => {
+      const box = element.getBoundingClientRect();
+      return box.width > 0 && box.height > 0 && element.scrollWidth <= element.clientWidth + 1;
+    })
+  )).toBe(true);
 });
