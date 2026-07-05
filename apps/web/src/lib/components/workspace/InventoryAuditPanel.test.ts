@@ -30,7 +30,12 @@ describe('InventoryAuditPanel', () => {
       'inventory:tenant-one:inventory-one:',
       'inventory:tenant-one:inventory-one:next-page'
     ]);
-    expect(document.body.textContent).toContain('asset.created');
+    const auditRow = document.body.querySelector('.audit-row');
+    expect(auditRow?.querySelector('strong')?.textContent).toBe('Asset created');
+    expect(auditRow?.querySelector('.audit-target')?.textContent).toBe('Asset');
+    expect(auditRow?.querySelector('[data-audit-primary]')?.textContent).not.toContain('asset-one');
+    expect(auditRow?.querySelector('[data-audit-primary]')?.textContent).not.toContain('oidc_local_owner_123');
+    expect(auditRow?.querySelector('details')?.textContent).toContain('oidc_local_owner_123');
   });
 
   it('switches to tenant audit only when tenant configure access exists', async () => {
@@ -185,7 +190,7 @@ describe('InventoryAuditPanel', () => {
 
     expect(inventoryAborted).toBe(true);
     expect(tenantLoads).toBe(1);
-    expect(document.body.textContent).toContain('asset.created');
+    expect(document.body.querySelector('.audit-row strong')?.textContent).toBe('Asset created');
   });
 
   it('aborts pending pagination reads when the panel unmounts', async () => {
@@ -291,7 +296,7 @@ function page(nextCursor: string | null): AuditRecordPage {
         id: 'audit-one',
         tenantId: 'tenant-one',
         inventoryId: 'inventory-one',
-        principalId: 'principal-one',
+        principalId: 'oidc_local_owner_123',
         action: 'asset.created',
         source: 'api',
         targetType: 'asset',

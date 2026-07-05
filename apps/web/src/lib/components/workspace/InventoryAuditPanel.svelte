@@ -10,7 +10,7 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
-  import { auditStatusPresentation } from '$lib/application/workspaceAuditPresentation';
+  import { auditRecordPresentation, auditStatusPresentation } from '$lib/application/workspaceAuditPresentation';
   import { settingsAuditScopeOptions } from '$lib/application/workspaceSettingsNavigation';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -138,13 +138,6 @@
     onScopeChange(nextScope);
   }
 
-  function formatDate(value: string): string {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return value;
-    }
-    return date.toLocaleString();
-  }
 </script>
 
 <section class="settings-panel wide" aria-labelledby="settings-activity">
@@ -168,17 +161,28 @@
   {:else}
     <div class="audit-list" aria-label="Audit records">
       {#each records as record}
+        {@const presented = auditRecordPresentation(record)}
         <article class="audit-row">
-          <div>
-            <strong>{record.action}</strong>
-            <small>{record.targetType} / {record.targetId}</small>
-            <small>{formatDate(record.occurredAt)}</small>
+          <div data-audit-primary>
+            <strong>{presented.title}</strong>
+            <small class="audit-target">{presented.targetLabel}</small>
+            <small>{presented.occurredAtLabel}</small>
           </div>
           <div class="audit-meta">
-            <Badge variant="outline">{record.source}</Badge>
-            <small>{record.principalId}</small>
-            {#if record.requestId}
-              <small>{record.requestId}</small>
+            <Badge variant="outline">{presented.sourceLabel}</Badge>
+            <small>{presented.actorLabel}</small>
+            {#if presented.technicalDetails.length > 0}
+              <details class="audit-technical">
+                <summary>Technical details</summary>
+                <dl>
+                  {#each presented.technicalDetails as detail}
+                    <div>
+                      <dt>{detail.label}</dt>
+                      <dd>{detail.value}</dd>
+                    </div>
+                  {/each}
+                </dl>
+              </details>
             {/if}
           </div>
         </article>

@@ -237,7 +237,8 @@ test('settings and import deep links render route-backed sections', async ({ pag
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant');
   await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Tenant', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByText('asset-tenant-audit')).toBeVisible();
+  await expect(page.locator('.audit-row').first().getByText('Asset created')).toBeVisible();
+  await expect(page.locator('.audit-row').first().locator('[data-slot="badge"]')).toHaveText('API');
   expect(apiRequestPaths(page)).toContain('GET /tenants/tenant-home/audit-records?limit=50');
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv');

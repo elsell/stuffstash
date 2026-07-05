@@ -1133,6 +1133,41 @@ small {
   justify-items: end;
 }
 
+.audit-technical {
+  max-width: min(360px, 100%);
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+.audit-technical summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.audit-technical dl {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.audit-technical dl > div {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.audit-technical dt {
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.audit-technical dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--foreground);
+}
+
 .customization-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1366,6 +1401,11 @@ small {
   .audit-meta {
     justify-content: flex-start;
     justify-items: start;
+  }
+
+  .audit-technical dl > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 }
 
