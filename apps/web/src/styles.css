@@ -2314,8 +2314,22 @@ dd {
     scroll-margin-bottom: 18px;
   }
 
-  .add-summary {
-    grid-template-columns: 1fr;
+  .add-tray .add-summary {
+    grid-template-columns: minmax(56px, 0.8fr) minmax(96px, 1.4fr) minmax(58px, 0.8fr);
+    gap: 6px;
+  }
+
+  .add-tray .add-summary div {
+    min-height: 46px;
+    padding: 7px 8px;
+  }
+
+  .add-tray .add-summary small {
+    font-size: 0.64rem;
+  }
+
+  .add-tray .add-summary strong {
+    font-size: 0.8rem;
   }
 
   .add-tray .tray-actions {

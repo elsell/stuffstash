@@ -51,6 +51,8 @@
   let containerResults = $derived(searchResult.containerResults);
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
   let selectedTargetMetadataLabel = $derived(selectedTarget ? parentTargetMetadataLabel(selectedTarget) : rootSummaryLabel);
+  let selectedDestinationName = $derived(selectedTarget?.title ?? rootLabel);
+  let selectedDestinationAnnouncement = $derived(`Current destination: ${selectedDestinationName}, ${selectedTargetMetadataLabel}`);
   let hasSearch = $derived(normalizedSearch.length > 0);
   let presentation = $derived(
     parentTargetPickerPresentation({
@@ -74,10 +76,14 @@
     <Label for={searchId}>{searchLabel}</Label>
     <Input id={searchId} bind:value={search} placeholder={searchPlaceholder} />
   </div>
-  <div class="parent-current-shell">
+  <div class="parent-current-shell" role="group" aria-label={`${groupLabel} current destination`}>
     <div>
       <p class="selection-summary">Current destination</p>
-      <div class="parent-current-card" data-selected={selectedTarget ? 'target' : 'root'}>
+      <div
+        class="parent-current-card"
+        data-selected={selectedTarget ? 'target' : 'root'}
+        aria-label={selectedDestinationAnnouncement}
+      >
         <div class="parent-kind-mark" data-kind={selectedTarget ? 'target' : 'root'} aria-hidden="true">
           {#if selectedTarget}
             <AssetThumb asset={selectedTarget} size="sm" />
@@ -86,7 +92,7 @@
           {/if}
         </div>
         <span>
-          <strong>{selectedTarget?.title ?? rootLabel}</strong>
+          <strong>{selectedDestinationName}</strong>
           <small>{selectedTargetMetadataLabel}</small>
         </span>
       </div>
@@ -103,16 +109,18 @@
       </Button.Root>
     {/if}
   </div>
-  <div class="parent-picker parent-current" role="group" aria-label={`${groupLabel} current destination`}>
-    <Button.Root
-      type="button"
-      variant={selectedId === null ? 'secondary' : 'outline'}
-      aria-pressed={selectedId === null}
-      onclick={() => onSelect(null)}
-    >
-      {rootLabel}
-    </Button.Root>
-  </div>
+  {#if selectedTarget}
+    <div class="parent-picker parent-current" role="group" aria-label={`${groupLabel} root destination`}>
+      <Button.Root
+        type="button"
+        variant="outline"
+        aria-pressed="false"
+        onclick={() => onSelect(null)}
+      >
+        {rootLabel}
+      </Button.Root>
+    </div>
+  {/if}
   <p class="selection-summary" aria-live="polite" aria-atomic="true">{presentation.resultCountLabel}</p>
   {#if hasSearch}
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>

@@ -193,6 +193,7 @@ describe('AssetDetail', () => {
           lifecycleState: 'active'
         }
       ],
+      parentTargets: [parentTarget('parent-one', 'Hall closet', '')],
       onSave: async (draft) => {
         savedDraft = draft;
       }

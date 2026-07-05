@@ -56,7 +56,7 @@ test('asset move action direct URL opens the shared searchable parent picker', a
 
   await page.getByLabel('Find parent').fill('Garage');
   await expect(page.getByRole('group', { name: 'Move target search results' })).toBeVisible();
-  await page.getByRole('group', { name: 'Move target current destination' }).getByRole('button', { name: 'Inventory root' }).click();
+  await page.getByRole('group', { name: 'Move target root destination' }).getByRole('button', { name: 'Inventory root' }).click();
   await page.getByRole('button', { name: 'Move' }).click();
 
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');

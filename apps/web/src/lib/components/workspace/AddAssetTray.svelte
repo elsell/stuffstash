@@ -328,12 +328,17 @@
     </div>
 
     <div class="add-tray-body">
-      <div class="add-summary" aria-live="polite">
+      <div class="add-summary">
+        <p class="visually-hidden" aria-live="polite" aria-atomic="true">
+          {addFormPresentation.summaryTypeLabel}: {kindCopy.kindLabel}.
+          {addFormPresentation.summaryParentLabel}: {parentSummary}.
+          {addFormPresentation.summaryPhotosLabel}: {photoSummary}.
+        </p>
         <div>
           <small>{addFormPresentation.summaryTypeLabel}</small>
           <strong>{kindCopy.kindLabel}</strong>
         </div>
-        <div>
+        <div class="add-summary-destination">
           <small>{addFormPresentation.summaryParentLabel}</small>
           <strong>{parentSummary}</strong>
         </div>

@@ -77,7 +77,7 @@ test('mobile shell opens context and add flows without desktop-only controls', a
       : 0
   ).toBeGreaterThanOrEqual(88);
   await lastParentResult.click();
-  await expect(addDialog.locator('.add-summary').getByText(selectedParentName ?? '')).toBeVisible();
+  await expect(addDialog.locator('.add-summary-destination strong')).toHaveText(selectedParentName ?? '');
   await expect(addDialog.locator('.tray-actions')).toHaveCSS('position', 'static');
   await page.getByLabel('Find parent').fill('');
   await addDialog.getByRole('switch', { name: 'Create a parent first' }).click();
@@ -89,12 +89,17 @@ test('mobile shell opens context and add flows without desktop-only controls', a
   const bodyBox = await addDialog.locator('.add-tray-body').boundingBox();
   const actionsBox = await addDialog.locator('.tray-actions').boundingBox();
   const viewport = page.viewportSize();
+  await expectCompactAddSummary(addDialog);
   expect(dialogBox?.y).toBeLessThanOrEqual(10);
   expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : 0).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 2);
   expect(dialogBox && viewport ? dialogBox.y + dialogBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
   expect(bodyBox && actionsBox ? bodyBox.y + bodyBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((actionsBox?.y ?? 0) + 1);
   expect(actionsBox && viewport ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((viewport?.height ?? 0) + 2);
   expect(actionsBox && viewport ? viewport.height - (actionsBox.y + actionsBox.height) : Number.POSITIVE_INFINITY).toBeLessThanOrEqual(32);
+
+  await page.setViewportSize({ width: 320, height: 520 });
+  await expectCompactAddSummary(addDialog);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
 test('add flow saves items with and without selected photo previews', async ({ page }, testInfo) => {
@@ -335,4 +340,35 @@ async function clippedTextCount(locator: Locator): Promise<number> {
   return locator.evaluateAll((elements) =>
     elements.filter((element) => element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1).length
   );
+}
+
+async function expectCompactAddSummary(addDialog: Locator): Promise<void> {
+  const summary = addDialog.locator('.add-summary');
+  const summaryMetrics = await summary.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const childBoxes = Array.from(element.querySelectorAll(':scope > div')).map((child) => child.getBoundingClientRect());
+    const firstY = childBoxes[0]?.y ?? 0;
+    return {
+      height: box.height,
+      width: box.width,
+      scrollWidth: element.scrollWidth,
+      sameRow: childBoxes.every((childBox) => Math.abs(childBox.y - firstY) <= 1),
+      destinationWidth: childBoxes[1]?.width ?? 0,
+      typeWidth: childBoxes[0]?.width ?? 0,
+      photoWidth: childBoxes[2]?.width ?? 0
+    };
+  });
+  expect(summaryMetrics.height).toBeLessThanOrEqual(62);
+  expect(summaryMetrics.scrollWidth).toBeLessThanOrEqual(summaryMetrics.width + 1);
+  expect(summaryMetrics.sameRow).toBe(true);
+  expect(summaryMetrics.destinationWidth).toBeGreaterThan(summaryMetrics.typeWidth);
+  expect(summaryMetrics.destinationWidth).toBeGreaterThan(summaryMetrics.photoWidth);
+  const hiddenSummary = summary.locator('.visually-hidden');
+  await expect(hiddenSummary).toHaveAttribute('aria-live', 'polite');
+  await expect(hiddenSummary).toHaveAttribute('aria-atomic', 'true');
+  const hiddenSummaryText = await hiddenSummary.evaluate((element) =>
+    (element.textContent ?? '').replace(/\s+/g, ' ').trim()
+  );
+  expect(hiddenSummaryText).toMatch(/^Type: .+ Parent: .+ Photos: .+$/);
+  await expect(summary.locator('.add-summary-destination strong')).not.toHaveText('');
 }

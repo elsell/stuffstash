@@ -216,7 +216,7 @@ Add:
 - Header and mobile Add controls must expose a perceivable disabled reason when add creation is unavailable or no inventory is selected.
 - Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
 - Modal add and edit surfaces must make the background workspace inert and hidden from assistive technology while the modal is open.
-- On mobile, the add tray must behave like a focused sheet with usable viewport height and sticky completion controls so save/cancel actions remain reachable while long custom-field or parent-picker content scrolls.
+- On mobile, the add tray must behave like a focused sheet with usable viewport height and fixed completion controls so save/cancel actions remain reachable while long custom-field or parent-picker content scrolls.
 - Parent-picker destinations in mobile add and edit trays must scroll with enough bottom clearance that focused or selected destination controls are not hidden under sticky action bars.
 
 ## Mobile Navigation
@@ -370,13 +370,14 @@ The add surface:
 - Must reflect the selected kind in the tray heading, title/name prompt, placeholder, and primary save action so add-location and add-container routes do not read like item-only forms.
 - The kind selector must be compact. It must not use large stacked cards.
 - The tray must show a compact live summary of the selected kind, parent destination, and photo count so users can confirm what will be created without rescanning the whole form.
+- On mobile, the live summary must remain a single compact row so it does not displace the primary create fields or completion controls. The destination value must receive more horizontal priority than the kind and photo-count values, and full summary values must remain available to assistive technology when visible text is elided.
 - Must collect name/title.
 - Must collect a valid parent target when required.
 - Saving a new location must land on the canonical focused location route for the created location, `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}`, rather than the generic asset detail route.
 - Add routes may include a `parent` query parameter to preselect an existing valid location or container parent. Location view add actions must use this route-backed preselection rather than component-local-only state.
 - If an add route includes an invalid `parent` query parameter, the app must normalize the URL to the same add route without the invalid parent rather than silently saving to a different destination than the URL implies.
 - Parent target selection must use a picker/search over valid location/container targets, not a free text field that implies invalid foreign keys can be saved.
-- Parent target selection must be search-first when many locations or containers are available: it must always show the current destination and inventory root option, but it must not render an unfiltered stack of every possible parent by default.
+- Parent target selection must be search-first when many locations or containers are available: it must always show the current destination, expose an inventory root action only when the current destination is not already root, and avoid rendering an unfiltered stack of every possible parent by default.
 - The parent picker must support quick creation when the user realizes the parent location/container does not exist yet.
 - Quick parent creation in add flows must be an explicit opt-in section, not always-visible secondary fields that compete with the common add path.
 - Quick creation must be explicit and must preserve authorization, validation, and audit expectations when implemented against the real API.
@@ -445,7 +446,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Parent, type, and custom-field pickers must have keyboard-reachable controls, screen-reader labels, and visible selected state.
 - The add surface parent picker must support filtering valid parent targets and must expose each picker group with honest grouped-control semantics rather than unlabeled piles of buttons.
 - Parent target pickers must avoid unfiltered all-parent stacks by default; suggested destinations, search results, current selection, and empty states must be visually distinct.
-- Parent target pickers must show the selected destination as a compact summary with target kind and containment trail, expose a clear action when a non-root target is selected, and show result counts without rendering every possible parent before search.
+- Parent target pickers must show the selected destination as a compact summary with target kind and containment trail, expose a clear action when a non-root target is selected, and show result counts without rendering every possible parent before search. When inventory root is already selected, the root summary is the selected-state surface and must not be duplicated as a separate pressed option.
 - Parent target pickers must offer a compact bounded set of suggested destinations before search, initially no more than four suggestions, excluding the already-selected destination because it is shown in the current destination summary.
 - Parent target pickers must prefer locations before containers when choosing unfiltered suggestions and ordered search results.
 - Parent target search results must rank exact and prefix title matches before looser title or containment-trail matches within the same target kind.

@@ -39,8 +39,10 @@ describe('ParentTargetPicker', () => {
       }
     });
 
-    expect(document.body.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Move target current destination');
-    expect(button('Inventory root').getAttribute('aria-pressed')).toBe('true');
+    expect(document.body.querySelector('.parent-current-card')?.getAttribute('aria-label')).toBe(
+      'Current destination: Inventory root, inventory root'
+    );
+    expect(groupOrNull('Move target root destination')).toBeNull();
     expect(document.body.textContent).toContain('6 possible destinations');
     expect(group('Move target suggested destinations')).toBeTruthy();
     expect(document.body.textContent).toContain('Suggested destinations');
@@ -123,6 +125,10 @@ describe('ParentTargetPicker', () => {
     expect(document.body.textContent).toContain('Current destination');
     expect(document.body.textContent).toContain('Container');
     expect(document.body.textContent).toContain('Root');
+    expect(document.body.querySelector('.parent-current-card')?.getAttribute('aria-label')).toBe(
+      'Current destination: Target 1, Container / Root'
+    );
+    expect(group('Parent target root destination').textContent).toContain('Inventory root');
     expect(button('Clear parent').getAttribute('aria-label')).toBe('Clear parent selection');
     expect(document.body.textContent).toContain('3 possible destinations');
     expect(document.body.textContent).toContain('Showing 1 suggested destination.');
@@ -244,6 +250,12 @@ function group(label: string): HTMLElement {
     throw new Error(`Missing group ${label}`);
   }
   return target;
+}
+
+function groupOrNull(label: string): HTMLElement | null {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('[role="group"]')).find(
+    (candidate) => candidate.getAttribute('aria-label') === label
+  ) ?? null;
 }
 
 function setInputValue(input: HTMLInputElement, value: string): void {
