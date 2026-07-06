@@ -10,9 +10,9 @@ Users should be able to export inventory data and later import data through supp
 
 This spec covers initial import and export requirements.
 
-This spec covers the first legacy Homebox import workflow.
+This spec covers the first legacy Homebox import workflow and the durable import-job direction for production-scale imports.
 
-This spec does not define the final Stuff Stash-native CSV columns, final Stuff Stash-native JSON schema, backup packaging, media export packaging, newer Homebox entity import behavior, permanent source-link management UI, or all future import conflict resolution modes.
+This spec does not define the final Stuff Stash-native CSV columns, final Stuff Stash-native JSON schema, backup packaging, media export packaging, newer Homebox entity import behavior, permanent source-link management UI, exact durable import-job endpoint shapes, or all future import conflict resolution modes.
 
 ## Requirements
 
@@ -36,6 +36,9 @@ This spec does not define the final Stuff Stash-native CSV columns, final Stuff 
 - Import warnings must be safe to show to users and must not include source passwords, bearer tokens, attachment storage paths, or provider internals.
 - Import source validation and connection failures may return a safe, actionable error detail, such as missing URL, unsupported URL scheme, blocked private-network source, TLS trust failure, or Homebox HTTP status, only when the source adapter marks the detail with the import-source user-error contract. Ordinary adapter errors must remain generic at the HTTP boundary. The web UI must prefer typed safe details over a generic invalid-request message.
 - Import apply may reject stale or tampered preview plans. The client must not be trusted as the source of validation truth.
+- Production-scale imports must use durable import jobs rather than request-lifetime HTTP execution.
+- Durable import jobs are inventory-scoped. Import jobs must not create inventories in the durable Homebox import slice.
+- Durable import jobs must be source-adapter agnostic. Homebox is the first import source adapter, not a special import-job architecture.
 
 ## Import Source Ports And Adapters
 
@@ -51,6 +54,138 @@ Initial source adapters:
 - `legacy_homebox_csv`: parses a Homebox legacy CSV export uploaded by the user.
 
 Future adapters may support newer Homebox entity APIs, Stuff Stash JSON, Stuff Stash CSV, folder/photo imports, or other inventory systems without changing the core import apply behavior.
+
+## Durable Import Jobs
+
+Durable import jobs are the production import execution model.
+
+The synchronous Homebox preview and apply endpoints are only the first small import slice. Production-scale live imports must move to inventory-scoped durable jobs with persisted preview state, progress, cancellation, audit, observability, source-link uniqueness, encrypted temporary credentials, and worker-based execution.
+
+Durable import jobs must support:
+
+- In-progress job visibility.
+- Past successful job visibility.
+- Past failed job visibility.
+- Past cancelled job visibility.
+- Explicit user removal from import history.
+- Inventory-scoped job listing and job detail.
+
+Completed, failed, and cancelled jobs must remain visible until explicitly removed from import history by an authorized user.
+Removing a job from import history must not remove audit history.
+Removing a job from import history must not remove imported records.
+Removing a job from import history must not remove source-link records needed for duplicate prevention unless a future source-link management spec explicitly defines that behavior.
+
+Durable import jobs must have explicit permissions:
+
+- Import job view permission.
+- Import job create permission.
+
+The first authorization mapping may derive these permissions from the existing inventory write permission or relationship, but application and adapter code must represent import-job permissions explicitly so future access policy changes do not require changing the import domain model.
+
+Durable import-job execution must be behind a worker port.
+The first runtime may provide an in-process worker adapter hosted by the API process, but route handlers must not directly execute long-running import work.
+The worker port must allow a future standalone worker process without changing import application behavior.
+
+Import jobs must persist normalized plan metadata and source references after preview.
+Import jobs must not persist Homebox attachment bytes or other source attachment bytes in the preview plan.
+Attachment bytes must be fetched during apply when the source adapter and user options require attachment import.
+
+Durable import jobs must persist enough source fingerprint information to detect that a reviewed live source changed between preview and apply.
+If the source fingerprint changes after preview, apply must require a new preview.
+Apply must not silently continue with warning-only skips when the source fingerprint changed.
+
+For live Homebox, the same Homebox instance may contain different records at different times.
+Source fingerprints and source links therefore represent repeatable import identity, not full synchronization.
+The import model must not imply that Stuff Stash and Homebox are continuously synchronized.
+Homebox records added after a preview require a new preview before import.
+Homebox records removed or changed after a preview require a new preview before apply when the source fingerprint detects the change.
+
+Durable import jobs must use encrypted stored credentials when the job cannot complete within the request that supplied source credentials.
+Credential storage must reuse the repository's existing encryption patterns.
+Credentials must never be returned by the API.
+Credentials for terminal jobs must be cleaned by a recurring credential vacuum job.
+Credentials for non-terminal jobs that run longer than `STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS` must also be cleaned by the credential vacuum job.
+`STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS` defaults to `900`.
+
+Import-job credential cleanup must be observable and auditable without exposing credentials, bearer tokens, passwords, or provider internals.
+
+Durable import jobs must be observable through domain-oriented probes.
+Observability must include job lifecycle, worker claiming, worker retry, worker failure, credential cleanup, source-fingerprint mismatch, preview progress, apply progress, cancellation, discard cleanup, and source-link duplicate prevention.
+Observability fields must not include source credentials, bearer tokens, raw provider paths, raw storage keys, or raw adapter internals.
+
+Durable import jobs must be fully auditable.
+Audit history must include job creation, preview start, preview completion, apply start, apply completion, apply failure, cancellation request, cancellation completion, discard cleanup, credential cleanup, and imported record creation or modification where state changes occur.
+Existing asset, custom field, attachment, and other domain audit records must still be written by the existing application services used during import apply.
+Import-specific audit metadata must include the import job ID where practical.
+
+## Source Links And Idempotency
+
+Durable import jobs must enforce source-link uniqueness for imported records.
+
+Homebox custom fields such as `homebox-source-id` and `homebox-asset-id` may remain useful for user-facing display, search, and diagnostics, but they are not the correctness mechanism for import idempotency.
+
+The durable import model must include source-link records outside the asset table.
+Source-link records must map a source entity to the Stuff Stash resource created or modified from that source entity.
+Source links must cover assets and imported images or attachments.
+Source links must be source-adapter agnostic.
+
+Source-link uniqueness must be scoped by:
+
+- Tenant.
+- Inventory.
+- Source type.
+- Source instance identity or fingerprint.
+- Source entity type.
+- Source entity ID.
+
+The implementation must enforce this uniqueness at the persistence boundary, not only through application-layer preflight checks.
+Repeated apply, worker retry, route retry, or process restart must not create duplicate Stuff Stash records for the same source entity in the same tenant and inventory.
+
+Durable import apply must also track records created or modified by an import job in separate import-owned tables.
+The asset table must not receive a `pending_import`, `import_job_id`, or equivalent import-specific column for this purpose.
+If the UI needs to show which assets or images were created or modified by an import job, it must derive that state through import-owned records or query surfaces.
+
+## Durable Conflict Policy
+
+The first durable import conflict policy is conservative:
+
+- If a source link already exists for a source entity, apply must skip that source entity by default.
+- If an existing Stuff Stash record appears to match by supported Homebox duplicate fields but lacks a source link, preview must report a duplicate warning and apply must skip by default.
+- Import apply must not overwrite existing Stuff Stash records by default.
+- Import apply must not delete Stuff Stash records because records disappeared from the source.
+- Import apply must not treat repeated imports as continuous synchronization.
+
+Future import modes such as merge, overwrite, fill-empty-fields, replace, delete propagation, or user-assisted conflict resolution must be specified before implementation.
+
+## Durable Cancellation Semantics
+
+Durable import jobs must support two user-visible cancellation choices:
+
+- Cancel and keep partial progress.
+- Cancel and discard partial progress.
+
+Cancel and keep partial progress:
+
+- Stops future import work as soon as the worker reaches a safe cancellation point.
+- Preserves records and source links already created or modified by the job.
+- Preserves all audit history.
+- Leaves the job visible in import history as cancelled with partial progress kept.
+
+Cancel and discard partial progress:
+
+- Stops future import work as soon as the worker reaches a safe cancellation point.
+- Runs durable discard cleanup for records created or modified by the job up to the cancellation point.
+- Deletes or otherwise compensates for all records created or modified by the job, including imported images or attachments, through application services and ports rather than direct persistence mutation.
+- Removes source-link records created by the job for records that were discarded.
+- Preserves all audit history.
+- Leaves the job visible in import history as cancelled with partial progress discarded, unless explicitly removed from import history later.
+
+Discard cleanup must use import-owned mapping records as its source of truth.
+Discard cleanup must not depend on import-specific columns on assets.
+Discard cleanup must be resumable and idempotent.
+If discard cleanup cannot fully complete, the job must remain visible with a safe failure state and safe messages.
+
+The exact terminal status names for cancelled and discard-failed jobs are implementation details, but the user-visible meaning must distinguish partial progress kept from partial progress discarded.
 
 ## Legacy Homebox Import
 
@@ -159,9 +294,8 @@ Preview response must include:
 - Safe warnings and blocking errors.
 
 Preview must not persist source passwords or Homebox bearer tokens.
-The first Homebox slice does not persist preview plans. Apply re-reads and revalidates the submitted source input immediately before writing. A signed preview plan token or durable import job is a future enhancement before broader import formats or long-running imports are exposed.
-
-Production-scale live imports require a future durable import-job API before large Homebox instances are treated as fully production-ready. That future API must include a job ID, status polling or progress events, cancellation semantics, retry or idempotency keys, persisted safe result messages, and a uniqueness guarantee for imported source links per tenant, inventory, source type, and source ID.
+The first synchronous Homebox slice does not persist preview plans. Apply re-reads and revalidates the submitted source input immediately before writing.
+Production-scale imports must follow the durable import-job, source-link, conflict-policy, and cancellation semantics defined above.
 
 ## Import Apply API
 
