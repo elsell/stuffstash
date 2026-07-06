@@ -14,6 +14,7 @@ test('desktop context switcher and nav expose keyboard-friendly current state', 
   const destinationNav = page.getByRole('navigation', { name: 'Inventory destinations' });
   await expect(destinationNav.getByRole('link', { name: /Home/ })).toHaveAttribute('aria-current', 'page');
 
+  await expect(page.getByRole('button', { name: /Household/ })).toHaveCount(1);
   const contextTrigger = page.getByRole('button', { name: /Household/ });
   await contextTrigger.focus();
   await page.keyboard.press('Enter');
