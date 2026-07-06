@@ -187,6 +187,110 @@ If discard cleanup cannot fully complete, the job must remain visible with a saf
 
 The exact terminal status names for cancelled and discard-failed jobs are implementation details, but the user-visible meaning must distinguish partial progress kept from partial progress discarded.
 
+## Durable Import UX
+
+Durable imports must be presented as reviewable background jobs, not as modal-only tasks.
+The user-facing mental model is: choose a source, preview a plan, start a durable job, monitor progress, and review history.
+
+The durable import UI must live inside the inventory workspace.
+It must preserve inventory context throughout source setup, preview, running progress, result review, and history.
+The import surface must not look or behave like a marketing page or separate administration console.
+
+The import workspace must include:
+
+- A way to start a new import.
+- A way to view in-progress imports.
+- A way to view past successful imports.
+- A way to view past failed imports.
+- A way to view past cancelled imports.
+- A way to open an individual import job detail.
+- A way to remove terminal jobs from import history without removing audit history or imported records.
+
+If an inventory has active import jobs, the UI must make those jobs easy to resume from the import surface before encouraging a new import.
+
+The new-import flow must follow the durable import job lifecycle:
+
+- Source setup.
+- Preview review.
+- Job execution.
+- Result review.
+
+Source setup must:
+
+- Let the user choose the import source adapter.
+- Show only the fields and options required for the chosen source adapter.
+- Keep advanced or risky source options visually subordinate to common options.
+- Make image-import choices explicit when the source adapter can import images.
+- Avoid showing or retaining source passwords, tokens, Homebox internal storage paths, or raw attachment bytes in visible UI state.
+
+Preview review must:
+
+- Clearly state that nothing has been saved yet.
+- Show source identity and source version when available.
+- Show planned counts for locations, assets, images or attachments, custom fields, duplicates, warnings, and blocking errors when available.
+- Group warnings and blocking errors by user-understandable cause.
+- Show bounded samples of planned records and state when only a subset is shown.
+- Disable start-import actions when the preview has blocking errors.
+- Require a new preview when the source input, source options, selected file, file content, image option, security options, or source fingerprint changes.
+- Treat source-fingerprint changes as blocking re-preview requirements, not warning-only states.
+
+Job execution must:
+
+- Show that the import is running as a durable background job.
+- Let the user leave and return without implying that the browser tab owns the job.
+- Show the current phase in user-facing language.
+- Show progress counts when a phase has a known total.
+- Avoid misleading exact percentages when the current phase total is unknown.
+- Show safe warnings and failures as they are available.
+- Provide a cancellation action while the job is cancellable.
+
+Cancellation UI must present both supported choices:
+
+- Cancel and keep imported items.
+- Cancel and discard imported items.
+
+The cancellation confirmation must explain the consequence of each choice in plain language.
+The discard choice must make clear that audit history remains even when imported records are removed from the inventory.
+
+Result review must:
+
+- Show final status.
+- Show created, modified, skipped, warned, failed, and discarded counts when applicable.
+- Distinguish import failure from non-fatal refresh or navigation failures.
+- Provide a path to inspect imported records when records remain in the inventory.
+- Provide a path to relevant audit history.
+- Preserve safe failure detail without exposing credentials, bearer tokens, provider internals, raw source paths, or raw storage keys.
+
+Import history rows must summarize:
+
+- Source adapter.
+- Status.
+- Started time.
+- Completed time when available.
+- Actor when available.
+- Counts or progress summary when available.
+- Whether partial progress was kept or discarded for cancelled jobs.
+
+Import job detail must include:
+
+- Summary.
+- Source and options summary without secrets.
+- Preview plan summary.
+- Progress and phase history.
+- Warnings and failures.
+- Created or modified records when records remain.
+- Cancellation and discard outcome when applicable.
+- Link or navigation path to audit history.
+
+The durable import UI must follow Stuff Stash brand guidance:
+
+- Clean, calm, task-focused layout.
+- Compact workspace-native information density.
+- System-like primary actions.
+- Semantic status colors only where they communicate real status.
+- No decorative import illustrations, marketing hero treatment, or enterprise data-loader styling.
+- Direct, specific, actionable copy.
+
 ## Legacy Homebox Import
 
 The first Homebox implementation targets Homebox `v0.24.x` style APIs.
@@ -353,6 +457,7 @@ The web application must provide a polished import workflow for the first Homebo
 - After apply returns successfully, the web UI must present the import as applied even if a follow-up workspace refresh fails. Refresh failures may be shown as a non-fatal warning, but they must not overwrite the successful apply result with an import-failed state.
 - The UI must avoid showing passwords, tokens, Homebox internal storage paths, or raw attachment bytes.
 - The UI must fit the existing Stuff Stash web design language and use the real inventory workspace rather than a separate marketing-style page.
+- As the import surface moves from the synchronous Homebox slice to durable import jobs, the web UI must follow the durable import UX requirements above.
 
 ## Media And Backups
 
