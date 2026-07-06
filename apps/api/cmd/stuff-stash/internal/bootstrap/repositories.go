@@ -18,41 +18,47 @@ import (
 )
 
 type repositories struct {
-	tenants                   ports.TenantRepository
-	tenantUnitOfWork          ports.TenantUnitOfWork
-	inventories               ports.InventoryRepository
-	inventoryUnitOfWork       ports.InventoryUnitOfWork
-	inventoryAccess           ports.InventoryAccessRepository
-	inventoryAccessUnitOfWork ports.InventoryAccessUnitOfWork
-	customAssetTypes          ports.CustomAssetTypeRepository
-	customAssetTypeUnitOfWork ports.CustomAssetTypeUnitOfWork
-	customFields              ports.CustomFieldDefinitionRepository
-	customFieldUnitOfWork     ports.CustomFieldDefinitionUnitOfWork
-	assets                    ports.AssetRepository
-	assetUnitOfWork           ports.AssetUnitOfWork
-	undoables                 ports.UndoableOperationRepository
-	search                    ports.AssetSearchRepository
-	attachments               ports.AttachmentRepository
-	attachmentUnitOfWork      ports.AttachmentUnitOfWork
-	blobs                     ports.BlobStorage
-	blobDeletionOutbox        ports.BlobDeletionOutbox
-	directUploads             ports.DirectAttachmentUploader
-	imageProcessor            ports.ImageProcessor
-	audit                     ports.AuditRepository
-	outbox                    ports.AuthorizationOutbox
-	providerProfiles          ports.ProviderProfileRepository
-	providerProfileUnitOfWork ports.ProviderProfileUnitOfWork
-	voiceProviderConfigs      ports.VoiceProviderConfigurationRepository
-	providerCredentials       ports.ProviderCredentialRepository
-	realtimeSessions          ports.RealtimeSessionRepository
-	actionPlans               ports.ActionPlanRepository
+	tenants                    ports.TenantRepository
+	tenantUnitOfWork           ports.TenantUnitOfWork
+	inventories                ports.InventoryRepository
+	inventoryUnitOfWork        ports.InventoryUnitOfWork
+	inventoryAccess            ports.InventoryAccessRepository
+	inventoryAccessUnitOfWork  ports.InventoryAccessUnitOfWork
+	customAssetTypes           ports.CustomAssetTypeRepository
+	customAssetTypeUnitOfWork  ports.CustomAssetTypeUnitOfWork
+	customFields               ports.CustomFieldDefinitionRepository
+	customFieldUnitOfWork      ports.CustomFieldDefinitionUnitOfWork
+	assets                     ports.AssetRepository
+	assetUnitOfWork            ports.AssetUnitOfWork
+	undoables                  ports.UndoableOperationRepository
+	search                     ports.AssetSearchRepository
+	attachments                ports.AttachmentRepository
+	attachmentUnitOfWork       ports.AttachmentUnitOfWork
+	blobs                      ports.BlobStorage
+	blobDeletionOutbox         ports.BlobDeletionOutbox
+	directUploads              ports.DirectAttachmentUploader
+	imageProcessor             ports.ImageProcessor
+	audit                      ports.AuditRepository
+	outbox                     ports.AuthorizationOutbox
+	providerProfiles           ports.ProviderProfileRepository
+	providerProfileUnitOfWork  ports.ProviderProfileUnitOfWork
+	voiceProviderConfigs       ports.VoiceProviderConfigurationRepository
+	providerCredentials        ports.ProviderCredentialRepository
+	realtimeSessions           ports.RealtimeSessionRepository
+	actionPlans                ports.ActionPlanRepository
+	importJobs                 ports.ImportJobRepository
+	importJobSources           ports.ImportJobSourceRepository
+	importLinks                ports.ImportLinkRepository
+	importAssetUnitOfWork      ports.ImportAssetUnitOfWork
+	importAttachmentUnitOfWork ports.ImportAttachmentUnitOfWork
+	users                      ports.UserRepository
 }
 
 func buildRepositories(ctx context.Context, cfg config.Config) (repositories, func() error, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, directUploads: blobstore.NewLocalDirectAttachmentUploader(store), imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store}, func() error { return nil }, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, directUploads: blobstore.NewLocalDirectAttachmentUploader(store), imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -82,7 +88,7 @@ func repositoriesFromGORMStore(cfg config.Config, store gormstore.Store, closeSt
 		_ = closeStore()
 		return repositories{}, nil, err
 	}
-	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store}, closeStore, nil
+	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
 }
 
 func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {

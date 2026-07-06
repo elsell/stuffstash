@@ -117,7 +117,7 @@ func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateIn
 		ExpiresAt:          a.clock.Now().Add(a.invitationTTL),
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -173,7 +173,7 @@ func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptIn
 	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -219,7 +219,7 @@ func (a App) RevokeInventoryAccessInvitation(ctx context.Context, input RevokeIn
 		return false, err
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -267,7 +267,7 @@ func (a App) GetInventoryAccessInvitation(ctx context.Context, input GetInventor
 		return ports.InventoryAccessInvitation{}, ErrNotFound
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -341,7 +341,7 @@ func (a App) ListInventoryAccessInvitations(ctx context.Context, input ListInven
 		},
 	})
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -374,7 +374,7 @@ func (a App) UpdateInventoryAccessInvitationExpiration(ctx context.Context, inpu
 		return ports.InventoryAccessInvitation{}, ErrInvalidInput
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -418,7 +418,7 @@ func (a App) CancelInventoryAccessInvitation(ctx context.Context, input RevokeIn
 		return false, err
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -459,7 +459,7 @@ func (a App) DeleteInventoryAccessInvitation(ctx context.Context, input RevokeIn
 		return false, err
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

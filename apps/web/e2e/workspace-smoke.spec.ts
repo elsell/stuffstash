@@ -302,21 +302,21 @@ test('settings and import deep links render route-backed sections', async ({ pag
   await expect(page.locator('.audit-row').first().locator('[data-slot="badge"]')).toHaveText('API');
   expect(apiRequestPaths(page)).toContain('GET /tenants/tenant-home/audit-records?limit=50');
 
-  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv');
-  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv');
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox-csv');
+  await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/import/homebox-csv');
   await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'CSV', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByLabel('CSV file')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Connect', exact: true })).toHaveAttribute(
     'href',
-    '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox'
+    '/tenants/tenant-home/inventories/inventory-household/import/homebox'
   );
 });
 
 test('mobile import source actions clear the bottom nav', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile import layout coverage runs on the mobile project.');
 
-  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox');
 
   await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
   const sourcePanel = page.locator('.import-source-panel');
@@ -331,7 +331,7 @@ test('mobile import source actions clear the bottom nav', async ({ page }, testI
   expect(actionsBox && navBox ? actionsBox.y + actionsBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual((navBox?.y ?? 0) - 8);
 
   await page.setViewportSize({ width: 820, height: 650 });
-  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox');
   await expect(page.locator('.mobile-nav')).toBeVisible();
   await expect(page.locator('.import-layout')).toHaveCSS('grid-template-columns', '792px');
 });
@@ -349,7 +349,7 @@ test('mobile long settings and import pages keep final content above bottom chro
   await scrollToEnd(page.locator('.settings-panel').last());
   expect(await clearsBottomChrome(page.locator('.settings-panel').last(), page.locator('.mobile-nav'))).toBe(true);
 
-  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox');
   await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
   await scrollToEnd(page.locator('.import-source-panel .heading-actions'));
   expect(await clearsBottomChrome(page.locator('.import-source-panel .heading-actions'), page.locator('.mobile-nav'))).toBe(true);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -37,6 +38,7 @@ import {
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
+import { useAppFeedback } from '../feedback/AppFeedback';
 import { colors, radius, spacing } from '../theme/tokens';
 import {
   assertSelectableParent,
@@ -45,6 +47,7 @@ import {
   resolveSelectedParent
 } from './AddAssetResolution';
 import { applyInitialParentToDraft } from './AddAssetInitialParent';
+import { assetDetailHref } from './AssetDetailNavigation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 
 type AddAssetScreenProps = {
@@ -88,6 +91,7 @@ export function AddAssetScreen({
   parentLookupQuery,
   photoSelectionQuery
 }: AddAssetScreenProps) {
+  const feedback = useAppFeedback();
   const safeAreaInsets = useSafeAreaInsets();
   const bottomChromeAllowance = safeAreaInsets.bottom + addSheetBottomChromePadding;
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
@@ -272,8 +276,19 @@ export function AddAssetScreen({
         });
       }
       setSaveState({ status: 'saved', message: result.message });
+      feedback.showNotice({
+        tone: 'success',
+        title: 'Asset saved',
+        message: result.message,
+        action: {
+          label: 'View',
+          onPress: () => router.push(assetDetailHref(result.id))
+        }
+      });
     } catch (error) {
-      setSaveState({ status: 'error', message: readableError(error, 'Could not save asset.') });
+      const message = readableError(error, 'Could not save asset.');
+      setSaveState({ status: 'idle' });
+      feedback.showNotice({ tone: 'error', title: 'Could not save asset', message });
     }
   }
 
@@ -312,7 +327,9 @@ export function AddAssetScreen({
         ...current.filter((parent) => parent.id !== result.id)
       ]);
     } catch (error) {
-      setSaveState({ status: 'error', message: readableError(error, 'Could not create parent.') });
+      const message = readableError(error, 'Could not create parent.');
+      setSaveState({ status: 'idle' });
+      feedback.showNotice({ tone: 'error', title: 'Could not create parent', message });
     } finally {
       setIsCreatingParent(false);
     }
@@ -329,10 +346,9 @@ export function AddAssetScreen({
       setSelectedPhotos((current) => [...current, ...photos]);
       setSaveState({ status: 'idle' });
     } catch (error) {
-      setSaveState({
-        status: 'error',
-        message: readableError(error, 'Could not select photos.')
-      });
+      const message = readableError(error, 'Could not select photos.');
+      setSaveState({ status: 'idle' });
+      feedback.showNotice({ tone: 'error', title: 'Could not select photos', message });
     }
   }
 
@@ -347,10 +363,9 @@ export function AddAssetScreen({
       setSelectedPhotos((current) => [...current, ...photos]);
       setSaveState({ status: 'idle' });
     } catch (error) {
-      setSaveState({
-        status: 'error',
-        message: readableError(error, 'Could not take photo.')
-      });
+      const message = readableError(error, 'Could not take photo.');
+      setSaveState({ status: 'idle' });
+      feedback.showNotice({ tone: 'error', title: 'Could not take photo', message });
     }
   }
 
@@ -539,13 +554,6 @@ export function AddAssetScreen({
                       <Text style={styles.clearDraftText}>Clear draft</Text>
                     </Pressable>
                   </View>
-                ) : null}
-
-                {saveState.status === 'saved' ? (
-                  <Text style={styles.savedText}>{saveState.message}</Text>
-                ) : null}
-                {saveState.status === 'error' ? (
-                  <Text style={styles.errorText}>{saveState.message}</Text>
                 ) : null}
 
                 <Pressable

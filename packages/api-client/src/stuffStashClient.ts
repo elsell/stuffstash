@@ -56,6 +56,7 @@ export interface AuditRecord {
   tenantId: string;
   inventoryId: string | null;
   principalId: string;
+  principal?: Principal;
   action: string;
   source: string;
   targetType: string;
@@ -250,7 +251,7 @@ export interface UpdateCustomFieldDefinitionInput {
 
 export type ImportSourceType = 'legacy_homebox' | 'legacy_homebox_csv';
 
-export interface LegacyHomeboxImportRequest {
+export interface ImportSourceRequest {
   sourceType: ImportSourceType;
   baseUrl?: string;
   username?: string;
@@ -260,6 +261,10 @@ export interface LegacyHomeboxImportRequest {
   allowPrivateNetwork?: boolean;
   fileName?: string;
   contentBase64?: string;
+}
+
+export interface ImportJobRequestOptions {
+  requestId?: string;
 }
 
 export interface ImportSourceSummary {
@@ -279,30 +284,6 @@ export interface ImportCounts {
   errors: number;
 }
 
-export interface ImportField {
-  key: string;
-  displayName: string;
-  type: string;
-}
-
-export interface ImportAssetSample {
-  sourceId: string;
-  kind: string;
-  title: string;
-  description: string;
-  parentSourceId?: string;
-  customFields: Record<string, unknown>;
-}
-
-export interface ImportImageSample {
-  sourceId: string;
-  assetSourceId: string;
-  fileName: string;
-  contentType: string;
-  sizeBytes: number;
-  primary: boolean;
-}
-
 export interface ImportMessage {
   code: string;
   severity: string;
@@ -312,16 +293,7 @@ export interface ImportMessage {
   sourceName?: string;
 }
 
-export interface ImportPreview {
-  source: ImportSourceSummary;
-  counts: ImportCounts;
-  fields: ImportField[];
-  assetSamples: ImportAssetSample[];
-  imageSamples: ImportImageSample[];
-  messages: ImportMessage[];
-}
-
-export interface ImportApplyCounts {
+export interface ImportAppliedCounts {
   fieldsCreated: number;
   fieldsExisting: number;
   locationsCreated: number;
@@ -331,8 +303,95 @@ export interface ImportApplyCounts {
   attachmentsSkipped: number;
 }
 
-export interface ImportApplyResult {
-  counts: ImportApplyCounts;
+export type ImportJobStatus =
+  | 'previewed'
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'cancel_requested'
+  | 'cancelled_kept'
+  | 'cancelled_discarded'
+  | 'discard_failed';
+
+export type ImportJobCancellationMode = 'keep_partial_progress' | 'discard_partial_progress';
+
+export interface ImportJobSourceSummary extends ImportSourceSummary {
+  fingerprint?: string;
+}
+
+export interface ImportJobCounts extends ImportCounts, ImportAppliedCounts {
+  recordsDiscarded: number;
+  sourceLinksDiscarded: number;
+}
+
+export interface ImportJobProgress {
+  phase: string;
+  done: number;
+  total: number;
+  message?: string;
+  updatedAt?: string;
+}
+
+export interface ImportJobPreviewField {
+  key: string;
+  displayName: string;
+  type: string;
+}
+
+export interface ImportJobPreviewAsset {
+  sourceId?: string;
+  kind: string;
+  title: string;
+  parentSourceId?: string;
+  archived: boolean;
+}
+
+export interface ImportJobPreviewAttachment {
+  sourceId?: string;
+  assetSourceId?: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  primary: boolean;
+}
+
+export interface ImportJobPreview {
+  fields: ImportJobPreviewField[];
+  locations: ImportJobPreviewAsset[];
+  assets: ImportJobPreviewAsset[];
+  attachments: ImportJobPreviewAttachment[];
+  messages: ImportMessage[];
+  fieldsTruncated: boolean;
+  locationsTruncated: boolean;
+  assetsTruncated: boolean;
+  attachmentsTruncated: boolean;
+  messagesTruncated: boolean;
+}
+
+export interface ImportJobResourceSummary {
+  resourceType: string;
+  resourceId: string;
+  resourceOwnerId?: string;
+  sourceEntityType: string;
+  sourceEntityId: string;
+  createdAt: string;
+}
+
+export interface ImportJob {
+  id: string;
+  status: ImportJobStatus;
+  actorId?: string;
+  source: ImportJobSourceSummary;
+  counts: ImportJobCounts;
+  preview: ImportJobPreview;
+  progress: ImportJobProgress;
+  progressHistory: ImportJobProgress[];
+  cancellationMode?: ImportJobCancellationMode;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  updatedAt: string;
+  resources: ImportJobResourceSummary[];
   messages: ImportMessage[];
 }
 
@@ -459,8 +518,8 @@ type DefinitionResponse = components['schemas']['DefinitionResponse'];
 type ProviderProfileResponse = components['schemas']['ProviderProfileResponse'];
 type TestProviderProfileResponse = components['schemas']['TestProviderProfileResponse'];
 type VoiceProviderConfigurationResponse = components['schemas']['VoiceProviderConfigurationResponse'];
-type ImportPreviewResponse = components['schemas']['ImportPreviewResponse'];
-type ImportApplyResponse = components['schemas']['ImportApplyResponse'];
+type ImportJobResponse = components['schemas']['ImportJobResponse'];
+type ImportJobListResponse = components['schemas']['ImportJobListResponse'];
 
 interface SuccessEnvelope<T> {
   data: T;
@@ -631,34 +690,88 @@ export class StuffStashClient {
     return mapPage(envelope, mapAssetSearchResult);
   }
 
-  async previewLegacyHomeboxImport(
-    tenantId: string,
-    inventoryId: string,
-    input: LegacyHomeboxImportRequest
-  ): Promise<ImportPreview> {
+  async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
     const envelope = await this.unwrap(
-      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/preview', {
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs', {
         headers: await this.authHeaders(),
-        params: { path: { tenantId, inventoryId } },
-        body: input
+        params: { path: { tenantId, inventoryId } }
       })
     );
-    return mapImportPreview(envelope.data);
+    return mapImportJobList(envelope.data).jobs;
   }
 
-  async applyLegacyHomeboxImport(
+  async previewImportJob(
     tenantId: string,
     inventoryId: string,
-    input: LegacyHomeboxImportRequest
-  ): Promise<ImportApplyResult> {
+    input: ImportSourceRequest,
+    options: ImportJobRequestOptions = {}
+  ): Promise<ImportJob> {
     const envelope = await this.unwrap(
-      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply', {
-        headers: await this.authHeaders(),
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview', {
+        headers: await this.authHeaders(options),
         params: { path: { tenantId, inventoryId } },
         body: input
       })
     );
-    return mapImportApply(envelope.data);
+    return mapImportJob(envelope.data);
+  }
+
+  async getImportJob(tenantId: string, inventoryId: string, jobId: string): Promise<ImportJob> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, jobId } }
+      })
+    );
+    return mapImportJob(envelope.data);
+  }
+
+  async startImportJob(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    input: ImportSourceRequest,
+    options: ImportJobRequestOptions = {}
+  ): Promise<ImportJob> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start', {
+        headers: await this.authHeaders(options),
+        params: { path: { tenantId, inventoryId, jobId } },
+        body: input
+      })
+    );
+    return mapImportJob(envelope.data);
+  }
+
+  async cancelImportJob(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    mode: ImportJobCancellationMode,
+    options: ImportJobRequestOptions = {}
+  ): Promise<ImportJob> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/cancel', {
+        headers: await this.authHeaders(options),
+        params: { path: { tenantId, inventoryId, jobId } },
+        body: { mode }
+      })
+    );
+    return mapImportJob(envelope.data);
+  }
+
+  async removeImportJobFromHistory(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    options: ImportJobRequestOptions = {}
+  ): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}', {
+        headers: await this.authHeaders(options),
+        params: { path: { tenantId, inventoryId, jobId } }
+      })
+    );
   }
 
   async listTenantCustomAssetTypes(tenantId: string, limit = 50, cursor?: string): Promise<Page<CustomAssetType>> {
@@ -1048,6 +1161,26 @@ export class StuffStashClient {
     return mapPage(envelope, mapAuditRecord);
   }
 
+  async listAssetAuditRecords(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    limit = 20,
+    signal?: AbortSignal
+  ): Promise<Page<AuditRecord>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId, assetId },
+          query: { limit }
+        },
+        signal
+      })
+    );
+    return mapPage(envelope, mapAuditRecord);
+  }
+
   async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/provider-profiles', {
@@ -1328,11 +1461,14 @@ export class StuffStashClient {
     };
   }
 
-  private async authHeaders(): Promise<Record<string, string>> {
+  private async authHeaders(options: { requestId?: string } = {}): Promise<Record<string, string>> {
     const headers: Record<string, string> = {};
     const token = await this.tokenProvider();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
+    }
+    if (options.requestId) {
+      headers['X-Request-ID'] = options.requestId;
     }
     return headers;
   }
@@ -1377,7 +1513,7 @@ function safeAssetPhotoVariant(variant: AssetPhotoVariant): AssetPhotoVariant {
 }
 
 function readableAPIErrorMessage(status: number, error: ErrorEnvelope | undefined): string {
-  const message = error?.error?.message?.trim() || 'Request failed.';
+  const message = error?.error?.message?.trim() || `Request failed with status ${status}.`;
   const detail = error?.error?.details?.find((item) => item?.message?.trim())?.message?.trim();
   const safeValidationStatus = status === 400 || status === 422;
   if (
@@ -1478,6 +1614,7 @@ function mapAuditRecord(response: RecordResponse): AuditRecord {
     tenantId: response.tenantId,
     inventoryId: response.inventoryId ?? null,
     principalId: response.principalId,
+    principal: response.principal ? mapPrincipal(response.principal) : undefined,
     action: response.action,
     source: response.source,
     targetType: response.targetType,
@@ -1647,35 +1784,110 @@ function mapProviderProfileSummary(response: ProviderProfileSummary): ProviderPr
   };
 }
 
-function mapImportPreview(response: ImportPreviewResponse): ImportPreview {
+function mapImportJobList(response: ImportJobListResponse): { jobs: ImportJob[] } {
   return {
+    jobs: (response.jobs ?? []).map(mapImportJob)
+  };
+}
+
+function mapImportJob(response: ImportJobResponse): ImportJob {
+  const preview = (response as ImportJobResponse & { preview?: Partial<ImportJobPreview> }).preview;
+  return {
+    id: response.id,
+    status: mapImportJobStatus(response.status),
+    actorId: response.actorId,
     source: {
       type: response.source.type,
       name: response.source.name,
       baseUrl: response.source.baseUrl,
       version: response.source.version,
-      imageImport: response.source.imageImport
+      imageImport: response.source.imageImport,
+      fingerprint: response.source.fingerprint
     },
-    counts: response.counts,
-    fields: response.fields ?? [],
-    assetSamples: (response.assetSamples ?? []).map((asset) => ({
-      sourceId: asset.sourceId,
-      kind: asset.kind,
-      title: asset.title,
-      description: asset.description,
-      parentSourceId: asset.parentSourceId,
-      customFields: asset.customFields ?? {}
+    counts: {
+      fields: response.counts.fields,
+      locations: response.counts.locations,
+      assets: response.counts.assets,
+      attachments: response.counts.attachments,
+      warnings: response.counts.warnings,
+      errors: response.counts.errors,
+      fieldsCreated: response.counts.fieldsCreated,
+      fieldsExisting: response.counts.fieldsExisting,
+      locationsCreated: response.counts.locationsCreated,
+      assetsCreated: response.counts.assetsCreated,
+      assetsSkipped: response.counts.assetsSkipped,
+      attachmentsCreated: response.counts.attachmentsCreated,
+      attachmentsSkipped: response.counts.attachmentsSkipped,
+      recordsDiscarded: response.counts.recordsDiscarded,
+      sourceLinksDiscarded: response.counts.sourceLinksDiscarded
+    },
+    preview: {
+      fields: preview?.fields ?? [],
+      locations: preview?.locations ?? [],
+      assets: preview?.assets ?? [],
+      attachments: preview?.attachments ?? [],
+      messages: preview?.messages ?? [],
+      fieldsTruncated: preview?.fieldsTruncated ?? false,
+      locationsTruncated: preview?.locationsTruncated ?? false,
+      assetsTruncated: preview?.assetsTruncated ?? false,
+      attachmentsTruncated: preview?.attachmentsTruncated ?? false,
+      messagesTruncated: preview?.messagesTruncated ?? false
+    },
+    progress: {
+      phase: response.progress.phase,
+      done: response.progress.done,
+      total: response.progress.total,
+      message: response.progress.message,
+      updatedAt: response.progress.updatedAt
+    },
+    progressHistory: (response.progressHistory ?? []).map((progress) => ({
+      phase: progress.phase,
+      done: progress.done,
+      total: progress.total,
+      message: progress.message,
+      updatedAt: progress.updatedAt
     })),
-    imageSamples: response.imageSamples ?? [],
+    cancellationMode: response.cancellationMode ? mapImportJobCancellationMode(response.cancellationMode) : undefined,
+    createdAt: response.createdAt,
+    startedAt: response.startedAt,
+    completedAt: response.completedAt,
+    updatedAt: response.updatedAt,
+    resources: (response.resources ?? []).map((resource) => ({
+      resourceType: resource.resourceType,
+      resourceId: resource.resourceId,
+      resourceOwnerId: resource.resourceOwnerId,
+      sourceEntityType: resource.sourceEntityType,
+      sourceEntityId: resource.sourceEntityId,
+      createdAt: resource.createdAt
+    })),
     messages: response.messages ?? []
   };
 }
 
-function mapImportApply(response: ImportApplyResponse): ImportApplyResult {
-  return {
-    counts: response.counts,
-    messages: response.messages ?? []
-  };
+function mapImportJobStatus(status: string): ImportJobStatus {
+  switch (status) {
+    case 'previewed':
+    case 'running':
+    case 'succeeded':
+    case 'failed':
+    case 'cancel_requested':
+    case 'cancelled_kept':
+    case 'cancelled_discarded':
+    case 'discard_failed':
+      return status;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_import_job_status', 'Invalid import job status.');
+  }
+}
+
+function mapImportJobCancellationMode(mode: string): ImportJobCancellationMode {
+  switch (mode) {
+    case 'keep_partial_progress':
+    case 'discard_partial_progress':
+      return mode;
+    default:
+      throw new StuffStashAPIError(200, 'invalid_import_job_cancellation_mode', 'Invalid import job cancellation mode.');
+  }
 }
 
 function mapCreateCustomFieldDefinitionInput(

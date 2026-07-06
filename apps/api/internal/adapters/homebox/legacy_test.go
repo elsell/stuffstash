@@ -72,6 +72,16 @@ func TestLegacyHomeboxRejectsBlockedOutboundAddress(t *testing.T) {
 	}
 }
 
+func TestNormalizeBaseURLPreservesExplicitHTTPSchemeCaseInsensitively(t *testing.T) {
+	baseURL, err := normalizeBaseURL("HTTP://homebox.local:7744")
+	if err != nil {
+		t.Fatalf("normalize explicit http URL: %v", err)
+	}
+	if baseURL != "http://homebox.local:7744/api/v1" {
+		t.Fatalf("base URL = %q", baseURL)
+	}
+}
+
 func TestLegacyHomeboxAllowsPrivateNetworkWhenExplicit(t *testing.T) {
 	server := newLegacyHomeboxTestServer(t)
 
@@ -90,6 +100,86 @@ func TestLegacyHomeboxAllowsPrivateNetworkWhenExplicit(t *testing.T) {
 	}
 	if plan.Assets[1].CustomFields["homebox-source-id"] != "item-one" {
 		t.Fatalf("live item source id = %#v", plan.Assets[1].CustomFields["homebox-source-id"])
+	}
+}
+
+func TestLegacyHomeboxPreviewPlansImagesWithoutDownloadingAttachmentBytes(t *testing.T) {
+	var attachmentDownloads int
+	server := newLegacyHomeboxTestServerWithAttachmentCounter(t, http.StatusOK, &attachmentDownloads)
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             server.URL,
+		Username:            "user@example.com",
+		Password:            "secret",
+		IncludeImages:       true,
+		AllowPrivateNetwork: true,
+	})
+	if err != nil {
+		t.Fatalf("read private-network Homebox source: %v", err)
+	}
+	if attachmentDownloads != 0 {
+		t.Fatalf("preview downloaded attachment bytes %d times", attachmentDownloads)
+	}
+	if len(plan.Attachments) != 1 {
+		t.Fatalf("expected planned attachment metadata, got %+v", plan.Attachments)
+	}
+	if len(plan.Attachments[0].Content) != 0 {
+		t.Fatalf("preview attachment included content bytes")
+	}
+}
+
+func TestLegacyHomeboxApplyDownloadsAttachmentBytesWhenRequested(t *testing.T) {
+	var attachmentDownloads int
+	server := newLegacyHomeboxTestServerWithAttachmentCounter(t, http.StatusOK, &attachmentDownloads)
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType:           importplan.SourceLegacyHomebox,
+		BaseURL:              server.URL,
+		Username:             "user@example.com",
+		Password:             "secret",
+		IncludeImages:        true,
+		FetchAttachmentBytes: true,
+		AllowPrivateNetwork:  true,
+	})
+	if err != nil {
+		t.Fatalf("read private-network Homebox source: %v", err)
+	}
+	if attachmentDownloads != 1 {
+		t.Fatalf("apply downloaded attachment bytes %d times", attachmentDownloads)
+	}
+	if len(plan.Attachments) != 1 || string(plan.Attachments[0].Content) != "image-bytes" {
+		t.Fatalf("expected downloaded attachment content, got %+v", plan.Attachments)
+	}
+}
+
+func TestLegacyHomeboxApplyPreservesAttachmentIdentityWhenDownloadFails(t *testing.T) {
+	var attachmentDownloads int
+	server := newLegacyHomeboxTestServerWithAttachmentResponse(t, http.StatusOK, http.StatusNotFound, &attachmentDownloads)
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType:           importplan.SourceLegacyHomebox,
+		BaseURL:              server.URL,
+		Username:             "user@example.com",
+		Password:             "secret",
+		IncludeImages:        true,
+		FetchAttachmentBytes: true,
+		AllowPrivateNetwork:  true,
+	})
+	if err != nil {
+		t.Fatalf("read private-network Homebox source: %v", err)
+	}
+	if attachmentDownloads != 1 {
+		t.Fatalf("apply downloaded attachment bytes %d times", attachmentDownloads)
+	}
+	if len(plan.Attachments) != 1 || plan.Attachments[0].SourceID != "attachment-one" || len(plan.Attachments[0].Content) != 0 {
+		t.Fatalf("expected attachment identity without bytes, got %+v", plan.Attachments)
+	}
+	if plan.Attachments[0].UnavailableReason != "attachment could not be downloaded" {
+		t.Fatalf("expected unavailable attachment reason, got %+v", plan.Attachments[0])
+	}
+	if len(plan.Messages) != 0 {
+		t.Fatalf("expected application layer to report unavailable attachment warning, got %+v", plan.Messages)
 	}
 }
 
@@ -137,6 +227,14 @@ func newLegacyHomeboxTestServer(t *testing.T) *httptest.Server {
 }
 
 func newLegacyHomeboxTestServerWithItemDetailStatus(t *testing.T, itemDetailStatus int) *httptest.Server {
+	return newLegacyHomeboxTestServerWithAttachmentCounter(t, itemDetailStatus, nil)
+}
+
+func newLegacyHomeboxTestServerWithAttachmentCounter(t *testing.T, itemDetailStatus int, attachmentDownloads *int) *httptest.Server {
+	return newLegacyHomeboxTestServerWithAttachmentResponse(t, itemDetailStatus, http.StatusOK, attachmentDownloads)
+}
+
+func newLegacyHomeboxTestServerWithAttachmentResponse(t *testing.T, itemDetailStatus int, attachmentStatus int, attachmentDownloads *int) *httptest.Server {
 	t.Helper()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +255,17 @@ func newLegacyHomeboxTestServerWithItemDetailStatus(t *testing.T, itemDetailStat
 				http.Error(w, "database password leaked", itemDetailStatus)
 				return
 			}
-			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"attachments":[]}`))
+			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"attachments":[{"id":"attachment-one","type":"photo","primary":true,"title":"drill.jpg","mimeType":"image/jpeg"}]}`))
+		case "/api/v1/items/item-one/attachments/attachment-one":
+			if attachmentDownloads != nil {
+				(*attachmentDownloads)++
+			}
+			if attachmentStatus != http.StatusOK {
+				http.Error(w, "not found", attachmentStatus)
+				return
+			}
+			w.Header().Set("Content-Type", "image/jpeg")
+			_, _ = w.Write([]byte("image-bytes"))
 		default:
 			http.NotFound(w, r)
 		}

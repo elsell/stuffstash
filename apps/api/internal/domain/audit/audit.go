@@ -108,6 +108,14 @@ const (
 	ActionProviderProfileCredentialReplaced    Action = "provider_profile.credential_replaced"
 	ActionProviderProfileTested                Action = "provider_profile.tested"
 	ActionVoiceProviderConfigurationUpdated    Action = "voice_provider_configuration.updated"
+	ActionImportJobPreviewed                   Action = "import_job.previewed"
+	ActionImportJobStarted                     Action = "import_job.started"
+	ActionImportJobCompleted                   Action = "import_job.completed"
+	ActionImportJobFailed                      Action = "import_job.failed"
+	ActionImportJobCancellationRequested       Action = "import_job.cancellation_requested"
+	ActionImportJobCancelled                   Action = "import_job.cancelled"
+	ActionImportJobHistoryRemoved              Action = "import_job.history_removed"
+	ActionImportJobCredentialCleaned           Action = "import_job.credential_cleaned"
 )
 
 func NewAction(value string) (Action, bool) {
@@ -180,7 +188,15 @@ func NewAction(value string) (Action, bool) {
 		ActionProviderProfileArchived,
 		ActionProviderProfileCredentialReplaced,
 		ActionProviderProfileTested,
-		ActionVoiceProviderConfigurationUpdated:
+		ActionVoiceProviderConfigurationUpdated,
+		ActionImportJobPreviewed,
+		ActionImportJobStarted,
+		ActionImportJobCompleted,
+		ActionImportJobFailed,
+		ActionImportJobCancellationRequested,
+		ActionImportJobCancelled,
+		ActionImportJobHistoryRemoved,
+		ActionImportJobCredentialCleaned:
 		return action, true
 	default:
 		return "", false
@@ -230,12 +246,13 @@ const (
 	TargetAuditRecord           TargetType = "audit_record"
 	TargetUndoableOperation     TargetType = "undoable_operation"
 	TargetProviderProfile       TargetType = "provider_profile"
+	TargetImportJob             TargetType = "import_job"
 )
 
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile:
+	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob:
 		return targetType, true
 	default:
 		return "", false

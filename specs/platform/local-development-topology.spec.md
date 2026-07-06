@@ -47,7 +47,9 @@ The base Compose topology includes:
 
 The OIDC Compose override adds:
 
-- `dex`: local OIDC provider fixture.
+- `dex`: local OIDC provider fixture. Developers may run Dex either through
+  the Compose override or as a host-installed `dex` binary with a generated
+  ignored config.
 
 ## Configuration
 
@@ -60,7 +62,15 @@ The OIDC Compose override adds:
 - Compose must expose a Garage S3 API port for browser direct-upload attempts and local verification. The browser-reachable S3 endpoint must be configurable because `localhost` is correct only when the browser runs on the same host as Docker.
 - Dex static users and static client secrets are local-only verification fixtures.
 - Dex must be selected through the same `STUFF_STASH_AUTH_MODE=oidc`, `STUFF_STASH_OIDC_ISSUER`, and `STUFF_STASH_OIDC_CLIENT_ID` configuration used by any other OIDC issuer.
-- Local Dex may configure `STUFF_STASH_OIDC_CLIENT_IDS` when the API must accept ID tokens issued to more than one local client, such as the API verification fixture and browser public client.
+- Local Dex may configure `STUFF_STASH_OIDC_CLIENT_IDS` when the API must accept ID tokens issued to more than one local client, such as the API verification fixture, browser public client, and mobile public client.
+- Local Dex must provide a public native mobile client for Expo development builds using the app scheme redirect URI specified by `specs/identity-access/mobile-oidc-authentication.spec.md`.
+- Physical-device mobile OIDC development must use a generated local Dex config
+  whose issuer is reachable from the device and must start the API with that
+  same issuer. `make dex-local STUFF_STASH_LOCAL_HOST=<host-ip>` and
+  `make run-oidc-local STUFF_STASH_LOCAL_HOST=<host-ip>` are the named
+  host-binary workflow for this topology. `make compose-up-oidc-lan
+  STUFF_STASH_LAN_HOST=<host-ip>` remains the named Docker Compose workflow when
+  Docker is available.
 
 ## Verification
 
@@ -74,5 +84,10 @@ The OIDC Compose override adds:
 - The local verification script must cover health, unauthenticated rejection, authenticated identity, tenant creation, inventory creation, inventory listing with pagination metadata, custom field definition creation/listing, asset creation with validated custom field values, asset update/movement, asset listing with pagination metadata, asset attachment upload/list/download, inventory audit listing with pagination metadata, direct inventory sharing, direct grant listing with pagination metadata, and adversarial viewer permission checks.
 - The Dex OIDC verification script must run that same API user flow using two real Dex-issued ID tokens and SpiceDB authorization.
 - The Dex OIDC verification script must also reject missing, malformed, unsigned, and wrong-audience OIDC tokens at the HTTP boundary.
+- The mobile OIDC verification command must prove the native-app public-client
+  authorization-code flow with PKCE against Dex discovery, callback state, token
+  exchange, refresh exchange, and API mobile metadata. When an API base URL is
+  provided, it must verify that the API accepts a refreshed mobile ID token at
+  the HTTP boundary.
 - The repository must provide an explicit real-SpiceDB adapter verification command that starts pinned local SpiceDB, runs the adapter integration tests, and cleans up.
 - The repository must provide an explicit Garage blob storage verification command that starts a digest-pinned Garage image, runs the S3-compatible blob adapter integration test, and cleans up. Any custom image override must also be pinned with `@sha256:`.

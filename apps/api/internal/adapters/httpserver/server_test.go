@@ -163,6 +163,7 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 		{"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/restore", "patch"},
 		{"/tenants/{tenantId}/audit-records", "get"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/audit-records", "get"},
+		{"/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records", "get"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo", "post"},
 		{"/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo", "post"},
 	}

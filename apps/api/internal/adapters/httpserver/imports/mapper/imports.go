@@ -1,99 +1,150 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/dto"
+	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 )
 
-type ApplyCounts struct {
-	FieldsCreated      int
-	FieldsExisting     int
-	LocationsCreated   int
-	AssetsCreated      int
-	AssetsSkipped      int
-	AttachmentsCreated int
-	AttachmentsSkipped int
+func JobListToResponse(jobs []importjob.Record) dto.ImportJobListResponse {
+	out := make([]dto.ImportJobResponse, 0, len(jobs))
+	for _, job := range jobs {
+		out = append(out, JobToResponse(job))
+	}
+	return dto.ImportJobListResponse{Jobs: out}
 }
 
-func PreviewToResponse(plan importplan.Plan) dto.ImportPreviewResponse {
-	counts := plan.Counts()
-	return dto.ImportPreviewResponse{
-		Source: dto.ImportSourceResponse{
-			Type:        string(plan.Source.Type),
-			Name:        plan.Source.Name,
-			BaseURL:     plan.Source.BaseURL,
-			Version:     plan.Source.Version,
-			ImageImport: plan.Source.ImageImport,
+func JobToResponse(job importjob.Record) dto.ImportJobResponse {
+	return dto.ImportJobResponse{
+		ID:      job.ID.String(),
+		Status:  string(job.Status),
+		ActorID: job.ActorID.String(),
+		Source: dto.ImportJobSourceResponse{
+			Type:        string(job.Source.Type),
+			Name:        job.Source.Name,
+			BaseURL:     job.Source.BaseURL,
+			Version:     job.Source.Version,
+			ImageImport: job.Source.ImageImport,
+			Fingerprint: job.Source.Fingerprint,
 		},
-		Counts: dto.ImportCountsResponse{
-			Fields:      counts.Fields,
-			Locations:   counts.Locations,
-			Assets:      counts.Assets,
-			Attachments: counts.Attachments,
-			Warnings:    counts.Warnings,
-			Errors:      counts.Errors,
+		Counts: dto.ImportJobCountsResponse{
+			Fields:               job.Counts.Fields,
+			Locations:            job.Counts.Locations,
+			Assets:               job.Counts.Assets,
+			Attachments:          job.Counts.Attachments,
+			Warnings:             job.Counts.Warnings,
+			Errors:               job.Counts.Errors,
+			FieldsCreated:        job.Counts.FieldsCreated,
+			FieldsExisting:       job.Counts.FieldsExisting,
+			LocationsCreated:     job.Counts.LocationsCreated,
+			AssetsCreated:        job.Counts.AssetsCreated,
+			AssetsSkipped:        job.Counts.AssetsSkipped,
+			AttachmentsCreated:   job.Counts.AttachmentsCreated,
+			AttachmentsSkipped:   job.Counts.AttachmentsSkipped,
+			RecordsDiscarded:     job.Counts.RecordsDiscarded,
+			SourceLinksDiscarded: job.Counts.SourceLinksDiscarded,
 		},
-		Fields:       fieldsToResponse(plan.Fields),
-		AssetSamples: assetSamplesToResponse(plan.Assets, 25),
-		ImageSamples: imageSamplesToResponse(plan.Attachments, 12),
-		Messages:     messagesToResponse(plan.Messages),
-	}
-}
-
-func ApplyToResponse(counts ApplyCounts, messages []importplan.Message) dto.ImportApplyResponse {
-	return dto.ImportApplyResponse{
-		Counts: dto.ImportApplyCountsResponse{
-			FieldsCreated:      counts.FieldsCreated,
-			FieldsExisting:     counts.FieldsExisting,
-			LocationsCreated:   counts.LocationsCreated,
-			AssetsCreated:      counts.AssetsCreated,
-			AssetsSkipped:      counts.AssetsSkipped,
-			AttachmentsCreated: counts.AttachmentsCreated,
-			AttachmentsSkipped: counts.AttachmentsSkipped,
+		Preview: previewToResponse(job.Preview),
+		Progress: dto.ImportJobProgress{
+			Phase:     string(job.Progress.Phase),
+			Done:      job.Progress.Done,
+			Total:     job.Progress.Total,
+			Message:   job.Progress.Message,
+			UpdatedAt: timeString(job.Progress.UpdatedAt),
 		},
-		Messages: messagesToResponse(messages),
+		ProgressHistory:  progressHistoryToResponse(job.ProgressHistory),
+		CancellationMode: string(job.CancellationMode),
+		CreatedAt:        timeString(job.CreatedAt),
+		StartedAt:        timeString(job.StartedAt),
+		CompletedAt:      timeString(job.CompletedAt),
+		UpdatedAt:        timeString(job.UpdatedAt),
+		Resources:        resourcesToResponse(job.Resources),
+		Messages:         messagesToResponse(job.Messages),
 	}
 }
 
-func fieldsToResponse(fields []importplan.FieldDefinition) []dto.ImportFieldResponse {
-	out := make([]dto.ImportFieldResponse, 0, len(fields))
-	for _, field := range fields {
-		out = append(out, dto.ImportFieldResponse{Key: field.Key, DisplayName: field.DisplayName, Type: field.Type})
-	}
-	return out
-}
-
-func assetSamplesToResponse(assets []importplan.Asset, limit int) []dto.ImportAssetSample {
-	if len(assets) < limit {
-		limit = len(assets)
-	}
-	out := make([]dto.ImportAssetSample, 0, limit)
-	for _, asset := range assets[:limit] {
-		out = append(out, dto.ImportAssetSample{
-			SourceID:       asset.SourceID,
-			Kind:           asset.Kind,
-			Title:          asset.Title,
-			Description:    asset.Description,
-			ParentSourceID: asset.ParentSourceID,
-			CustomFields:   asset.CustomFields,
+func progressHistoryToResponse(history []importjob.Progress) []dto.ImportJobProgress {
+	out := make([]dto.ImportJobProgress, 0, len(history))
+	for _, progress := range history {
+		out = append(out, dto.ImportJobProgress{
+			Phase:     string(progress.Phase),
+			Done:      progress.Done,
+			Total:     progress.Total,
+			Message:   progress.Message,
+			UpdatedAt: timeString(progress.UpdatedAt),
 		})
 	}
 	return out
 }
 
-func imageSamplesToResponse(attachments []importplan.Attachment, limit int) []dto.ImportImageSample {
-	if len(attachments) < limit {
-		limit = len(attachments)
+func previewToResponse(preview importjob.PreviewSummary) dto.ImportJobPreview {
+	return dto.ImportJobPreview{
+		Fields:               previewFieldsToResponse(preview.Fields),
+		Locations:            previewAssetsToResponse(preview.Locations),
+		Assets:               previewAssetsToResponse(preview.Assets),
+		Attachments:          previewAttachmentsToResponse(preview.Attachments),
+		Messages:             messagesToResponse(preview.Messages),
+		FieldsTruncated:      preview.FieldsTruncated,
+		LocationsTruncated:   preview.LocationsTruncated,
+		AssetsTruncated:      preview.AssetsTruncated,
+		AttachmentsTruncated: preview.AttachmentsTruncated,
+		MessagesTruncated:    preview.MessagesTruncated,
 	}
-	out := make([]dto.ImportImageSample, 0, limit)
-	for _, attachment := range attachments[:limit] {
-		out = append(out, dto.ImportImageSample{
+}
+
+func previewFieldsToResponse(fields []importjob.PreviewField) []dto.ImportJobPreviewField {
+	out := make([]dto.ImportJobPreviewField, 0, len(fields))
+	for _, field := range fields {
+		out = append(out, dto.ImportJobPreviewField{
+			Key:         field.Key,
+			DisplayName: field.DisplayName,
+			Type:        field.Type,
+		})
+	}
+	return out
+}
+
+func previewAssetsToResponse(items []importjob.PreviewAsset) []dto.ImportJobPreviewAsset {
+	out := make([]dto.ImportJobPreviewAsset, 0, len(items))
+	for _, item := range items {
+		out = append(out, dto.ImportJobPreviewAsset{
+			SourceID:       item.SourceID,
+			Kind:           item.Kind,
+			Title:          item.Title,
+			ParentSourceID: item.ParentSourceID,
+			Archived:       item.Archived,
+		})
+	}
+	return out
+}
+
+func previewAttachmentsToResponse(attachments []importjob.PreviewAttachment) []dto.ImportJobPreviewAttachment {
+	out := make([]dto.ImportJobPreviewAttachment, 0, len(attachments))
+	for _, attachment := range attachments {
+		out = append(out, dto.ImportJobPreviewAttachment{
 			SourceID:      attachment.SourceID,
 			AssetSourceID: attachment.AssetSourceID,
 			FileName:      attachment.FileName,
 			ContentType:   attachment.ContentType,
 			SizeBytes:     attachment.SizeBytes,
 			Primary:       attachment.Primary,
+		})
+	}
+	return out
+}
+
+func resourcesToResponse(resources []importjob.ResourceSummary) []dto.ImportJobResource {
+	out := make([]dto.ImportJobResource, 0, len(resources))
+	for _, resource := range resources {
+		out = append(out, dto.ImportJobResource{
+			ResourceType:     resource.ResourceType,
+			ResourceID:       resource.ResourceID,
+			ResourceOwnerID:  resource.ResourceOwnerID,
+			SourceEntityType: resource.SourceEntityType,
+			SourceEntityID:   resource.SourceEntityID,
+			CreatedAt:        timeString(resource.CreatedAt),
 		})
 	}
 	return out
@@ -112,4 +163,11 @@ func messagesToResponse(messages []importplan.Message) []dto.ImportMessageRespon
 		})
 	}
 	return out
+}
+
+func timeString(value time.Time) string {
+	if value.IsZero() {
+		return ""
+	}
+	return value.UTC().Format(time.RFC3339)
 }

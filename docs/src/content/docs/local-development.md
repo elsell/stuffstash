@@ -47,22 +47,53 @@ make test
 
 ## Full Local Stack
 
-Run Postgres, SpiceDB, Dex, migrations, and the API:
+Run Postgres, SpiceDB, Dex, migrations, and the API with Docker:
 
 ```sh
 make compose-up-oidc
 ```
 
-Verify the OIDC and authorization flow:
+With the Docker stack, verify the OIDC and authorization flow:
 
 ```sh
 make verify-dex-oidc-api
 ```
 
-Stop the stack:
+Stop the Docker stack:
 
 ```sh
 make compose-down
+```
+
+## Host Dex Mobile OIDC
+
+If you use the local Dex binary, start Dex and the API as host processes:
+
+```sh
+make dex-local
+make run-oidc-local
+```
+
+Verify the native mobile authorization-code flow, PKCE exchange, refresh
+exchange, API mobile metadata, and `/me` with the refreshed mobile ID token:
+
+```sh
+make verify-mobile-oidc-pkce-local
+```
+
+For physical-device mobile OIDC testing, run Dex and the API with a LAN-reachable
+issuer. Replace `192.168.1.50` with this machine's LAN IP:
+
+```sh
+make dex-local STUFF_STASH_LOCAL_HOST=192.168.1.50
+make run-oidc-local STUFF_STASH_LOCAL_HOST=192.168.1.50
+STUFF_STASH_LOCAL_HOST=192.168.1.50 make verify-mobile-oidc-pkce-local
+```
+
+The Docker workflow can also use a LAN issuer:
+
+```sh
+make compose-up-oidc-lan STUFF_STASH_LAN_HOST=192.168.1.50
 ```
 
 ## Web App

@@ -19,6 +19,7 @@ func init() {
 
 type Options struct {
 	CORSAllowedOrigins          []string
+	MobileAuth                  MobileAuthOptions
 	MaxJSONBodyBytes            int64
 	RateLimitDisabled           bool
 	RateLimiter                 ports.RateLimiter
@@ -41,6 +42,7 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("GET /healthz", handleHealth(application))
+	mux.HandleFunc("GET /.well-known/stuff-stash/mobile-auth", handleMobileAuthMetadata(options.MobileAuth))
 	mux.HandleFunc("GET "+realtimeVoicePath, handleRealtimeVoice(application, normalizeDuration(options.RealtimeVoiceSessionTimeout, 60*time.Second)))
 
 	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")

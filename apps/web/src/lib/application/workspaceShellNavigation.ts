@@ -1,5 +1,5 @@
-import type { AssetKind, ImportSourceType, Inventory, WorkspaceMode } from '$lib/domain/inventory';
-import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
+import type { AssetKind, Inventory, WorkspaceMode } from '$lib/domain/inventory';
+import { assetKindLabel, assetKinds, canViewImportJobs } from '$lib/domain/inventory';
 import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from './workspaceRoute';
 
 export type ShellWorkspaceMode = Extract<WorkspaceMode, 'home' | 'locations' | 'search' | 'import' | 'settings'>;
@@ -24,6 +24,7 @@ export interface ShellNavigationInput {
   mode: WorkspaceMode;
   tenantId: string | null;
   inventoryId: string | null;
+  inventory?: Inventory | null;
   settingsSection?: SettingsSection;
 }
 
@@ -104,14 +105,12 @@ export function contextInventoryHref(inventory: Inventory): string {
   return workspaceRouteHref({ mode: 'home', tenantId: inventory.tenantId, inventoryId: inventory.id }, inventory.tenantId, inventory.id);
 }
 
-export function importSourceHref(tenantId: string, inventoryId: string | null, sourceType: ImportSourceType): string {
-  return workspaceRouteHref({ mode: 'import', tenantId, inventoryId, importSourceType: sourceType }, tenantId, inventoryId);
-}
-
 function shellDestinations(definitions: ShellNavigationDefinition[], input: ShellNavigationInput): ShellNavigationDestination[] {
-  return definitions.map((destination) => ({
-    ...destination,
-    href: shellModeHref(destination.mode, input.tenantId, input.inventoryId, input.settingsSection ?? 'overview'),
-    current: shellModeIsCurrent(input.mode, destination.mode)
-  }));
+  return definitions
+    .filter((destination) => destination.mode !== 'import' || canViewImportJobs(input.inventory))
+    .map((destination) => ({
+      ...destination,
+      href: shellModeHref(destination.mode, input.tenantId, input.inventoryId, input.settingsSection ?? 'overview'),
+      current: shellModeIsCurrent(input.mode, destination.mode)
+    }));
 }

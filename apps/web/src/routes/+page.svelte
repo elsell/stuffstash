@@ -8,6 +8,8 @@
   import * as Card from '$lib/components/ui/card/index.js';
   import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
   import type { WorkspaceData } from '$lib/domain/inventory';
+  import { hasRecentlyCompletedSignIn } from '$lib/auth';
+  import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { StuffStashInventoryRepository } from '$lib/adapters/api/stuffStashInventoryRepository';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
@@ -20,6 +22,7 @@
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
   let error = $state('');
+  let authNotice = $state<'expired' | 'rejected' | null>(null);
 
   onMount(async () => {
     try {
@@ -31,7 +34,11 @@
         workspaceData = await repository.loadWorkspace();
       }
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to load Stuff Stash.';
+      if (isAuthenticationRequiredError(caught)) {
+        expireSession();
+      } else {
+        error = caught instanceof Error ? caught.message : 'Unable to load Stuff Stash.';
+      }
     } finally {
       loading = false;
     }
@@ -39,6 +46,7 @@
 
   async function signIn(): Promise<void> {
     if (config) {
+      authNotice = null;
       await startSignIn(config);
     }
   }
@@ -49,7 +57,27 @@
     repository = null;
     workspaceData = null;
     error = '';
+    authNotice = null;
   }
+
+  function expireSession(): void {
+    const notice = hasRecentlyCompletedSignIn() ? 'rejected' : 'expired';
+    signOut();
+    session = null;
+    repository = null;
+    workspaceData = null;
+    error = '';
+    authNotice = notice;
+  }
+
+  const authTitle = $derived(authNotice === 'expired' ? 'Session expired.' : authNotice === 'rejected' ? 'Sign-in was rejected.' : 'Sign in to continue.');
+  const authDescription = $derived(
+    authNotice === 'expired'
+      ? 'Sign in again to continue.'
+      : authNotice === 'rejected'
+        ? 'Dex completed sign-in, but the API rejected the new session. Check that the API accepts this web client ID.'
+        : 'Use your configured identity provider.'
+  );
 </script>
 
 <svelte:head>
@@ -65,9 +93,15 @@
     </Card.Root>
   </main>
 {:else if !session}
-  <AuthSignInScreen {error} canSignIn={Boolean(config)} onSignIn={signIn} />
+  <AuthSignInScreen
+    title={authTitle}
+    description={authDescription}
+    {error}
+    canSignIn={Boolean(config)}
+    onSignIn={signIn}
+  />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {repository} initialData={workspaceData} onSignOut={signOutAndReset} />
+  <InventoryWorkspaceApp {repository} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if error}
   <main class="loading-shell">
     <Card.Root>

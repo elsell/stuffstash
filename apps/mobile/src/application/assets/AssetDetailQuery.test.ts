@@ -11,6 +11,7 @@ import type {
   InventoryWorkspace
 } from '../home/InventorySummaryRepository';
 import { AssetDetailQuery } from './AssetDetailQuery';
+import type { InventoryMapAssetRepository } from './InventoryMapQuery';
 import { toAssetDetailViewModel } from './AssetViewModels';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
@@ -157,6 +158,32 @@ describe('AssetDetailQuery', () => {
     await expect(query.execute('asset-missing')).rejects.toThrow(
       'Asset is not available in the selected inventory.'
     );
+  });
+
+  it('falls back to the selected active map tree when the summary page is missing a visible map row', async () => {
+    const query = new AssetDetailQuery(
+      new FakeInventorySummaryRepository(),
+      new FakeInventoryMapAssetRepository([
+        {
+          id: assetId('asset-living-room-table'),
+          title: 'Living room table',
+          kind: 'location',
+          lifecycleState: 'active',
+          locationLabel: 'Inventory root',
+          locationTrail: ['Home', 'Living room table'],
+          description: 'Temporary landing spot.',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        }
+      ])
+    );
+
+    await expect(query.execute('asset-living-room-table')).resolves.toMatchObject({
+      id: 'asset-living-room-table',
+      title: 'Living room table',
+      kind: 'location',
+      canAddContainedAssets: true
+    });
   });
 
   it('does not expose lifecycle controls without edit permission', async () => {
@@ -308,3 +335,18 @@ describe('AssetDetailQuery', () => {
     ]);
   });
 });
+
+class FakeInventoryMapAssetRepository implements InventoryMapAssetRepository {
+  constructor(private readonly assets: readonly AssetSummary[]) {}
+
+  async listActiveInventoryMapAssets() {
+    return {
+      sessionScopeId: 'scope-one',
+      tenantId: tenantId('tenant-home'),
+      inventoryId: inventoryId('inventory-home'),
+      inventoryName: 'Home',
+      permissions: ['view', 'create_asset', 'edit_asset'],
+      assets: this.assets
+    };
+  }
+}

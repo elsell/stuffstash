@@ -8,7 +8,11 @@ Stuff Stash must authenticate users from the beginning while keeping provider de
 
 This spec covers authentication boundaries, local development authentication, the first local OIDC verification fixture, and the first production-shaped OIDC token verification adapter.
 
-It does not define the final browser redirect UX, mobile sign-in UX, refresh-token storage, logout, account-linking flows, final external identity provider rollout, or invitation delivery adapters.
+Mobile native sign-in UX, refresh-token storage, and mobile logout behavior are
+defined in `specs/identity-access/mobile-oidc-authentication.spec.md`.
+
+This spec does not define account-linking flows, final external identity
+provider rollout, or invitation delivery adapters.
 
 ## Decisions
 
@@ -52,6 +56,14 @@ Any unknown mode must fail startup.
 - OIDC configuration must come from environment variables.
 - Missing issuer, missing client ID, provider discovery failure, verification failure, or malformed claims must fail closed.
 
+## Mobile Authentication Metadata
+
+The API must provide a public mobile authentication metadata endpoint when
+mobile SSO is configured. The endpoint must let mobile discover the configured
+OIDC issuer and mobile client ID without hard-coding a provider in the app. It
+must expose only public client configuration and must never expose secrets,
+tokens, static fixture passwords, or internal provider credentials.
+
 ## Local Dex Fixture
 
 Local Compose provides Dex for realistic OIDC verification without requiring a Google client during early development.
@@ -83,6 +95,17 @@ The authenticated principal must include:
 Provider-specific claims must be normalized at the adapter edge. Domain behavior may use project-owned principal fields such as verified email, but must not depend on provider-specific claim names or token objects.
 
 Local development authentication may accept an optional email fixture in addition to the stable user ID so invitation flows can be tested without OIDC. The email fixture exists only in explicit local/test mode.
+
+## User Profiles
+
+Stuff Stash must keep a durable user profile row for authenticated principals.
+
+- The user profile key is the stable internal principal ID.
+- The first profile fields are the stable principal ID and the latest verified email address supplied by the authentication adapter.
+- Authentication must upsert the user profile when a request includes profile information that is safe to store.
+- Audit records must not duplicate user profile fields such as email. They store the principal ID only.
+- Audit read responses may join audit records to user profiles and return a safe resolved principal object for display.
+- Missing or unreadable user profile rows must not make audit records unreadable; clients must fall back to the stored principal ID.
 
 ## Verification
 

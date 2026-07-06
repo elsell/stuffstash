@@ -61,7 +61,7 @@ func (a App) applyUndoableOperation(ctx context.Context, input ApplyUndoableOper
 		eventMessage = "undoable operation redone"
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

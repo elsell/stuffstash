@@ -4,13 +4,28 @@ import { SearchScreen } from '../../ui/screens/SearchScreen';
 import { parseBrowseScope } from '../../ui/screens/SearchScreenPresentation';
 
 export default function SearchRoute() {
-  const { locationsQuery, searchAssetsQuery } = useAppServices();
+  const {
+    addAssetPhotosCommand,
+    assetDetailQuery,
+    assetLifecycleCommand,
+    deleteAssetPhotoCommand,
+    inventoryMapQuery,
+    locationsQuery,
+    photoSelectionQuery,
+    searchAssetsQuery
+  } = useAppServices();
   const params = useLocalSearchParams<{ readonly scope?: string }>();
 
   return (
     <SearchScreen
       initialScope={parseBrowseScope(params.scope)}
+      addAssetPhotosCommand={addAssetPhotosCommand}
+      assetDetailQuery={assetDetailQuery}
+      assetLifecycleCommand={assetLifecycleCommand}
+      deleteAssetPhotoCommand={deleteAssetPhotoCommand}
+      inventoryMapQuery={inventoryMapQuery}
       locationsQuery={locationsQuery}
+      photoSelectionQuery={photoSelectionQuery}
       searchAssetsQuery={searchAssetsQuery}
     />
   );

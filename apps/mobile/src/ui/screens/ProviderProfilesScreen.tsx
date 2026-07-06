@@ -31,6 +31,7 @@ import {
   buildPromptEditorPresentation
 } from './ProviderProfilesScreenPresentation';
 import { VoiceSetupPanel } from './ProviderProfilesVoiceSetup';
+import { useAppFeedback } from '../feedback/AppFeedback';
 
 type ProviderProfilesScreenProps = {
   readonly manageCommand: ManageProviderProfileCommand;
@@ -63,6 +64,7 @@ export function ProviderProfilesScreen({
   query,
   testCommand
 }: ProviderProfilesScreenProps) {
+  const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [testingProfileId, setTestingProfileId] = useState<string | undefined>();
@@ -102,8 +104,9 @@ export function ProviderProfilesScreen({
       const viewModel = await query.execute();
       setScreenState({ status: 'ready', viewModel });
     } catch (error) {
-      setScreenState({
-        status: 'error',
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not refresh providers',
         message: readableError(error, 'Stuff Stash could not refresh provider profiles.')
       });
     } finally {
@@ -116,7 +119,11 @@ export function ProviderProfilesScreen({
     try {
       await action();
     } catch (error) {
-      Alert.alert('Provider profile action failed', readableError(error, 'The action failed safely.'));
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Provider profile action failed',
+        message: readableError(error, 'The action failed safely.')
+      });
     } finally {
       setWorkingAction(undefined);
     }
@@ -205,7 +212,11 @@ export function ProviderProfilesScreen({
       }));
       await refresh();
     } catch (error) {
-      Alert.alert('Provider test failed', readableError(error, 'The provider test failed safely.'));
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Provider test failed',
+        message: readableError(error, 'The provider test failed safely.')
+      });
     } finally {
       setTestingProfileId(undefined);
     }

@@ -31,7 +31,7 @@ func (s Service) GetAsset(ctx context.Context, input GetAssetInput) (asset.Asset
 		return asset.Asset{}, apperrors.ErrNotFound
 	}
 	if err := s.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -139,7 +139,7 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 		},
 	})
 	if err := s.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

@@ -217,7 +217,7 @@ func (a App) persistVerifiedAttachment(ctx context.Context, input verifiedAttach
 		return media.Attachment{}, ErrInvalidInput
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

@@ -11,6 +11,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Check, ExternalLink, Server, ShieldCheck } from 'lucide-react-native';
 import { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
 import {
   OnboardingCommand,
@@ -60,6 +61,19 @@ export function OnboardingScreen({
     });
   }
 
+  async function signIn(): Promise<void> {
+    const profile = initialState.profile;
+    if (!profile) {
+      setErrorMessage('Save the instance URL first.');
+      return;
+    }
+
+    await submit(async () => {
+      const next = await command.signIn({ profile });
+      continueWith(next);
+    });
+  }
+
   async function createInventory(): Promise<void> {
     const profile = initialState.profile;
     if (!profile) {
@@ -73,6 +87,14 @@ export function OnboardingScreen({
         name: inventoryName
       });
       onComplete(profileAfterInventory);
+    });
+  }
+
+  async function changeInstance(): Promise<void> {
+    await submit(async () => {
+      await command.reset();
+      setApiBaseUrl(initialApiBaseUrl ?? '');
+      onStateChange({ step: 'instance' });
     });
   }
 
@@ -110,6 +132,7 @@ export function OnboardingScreen({
           <View style={styles.brandRow}>
             <BrandMark showWordmark />
           </View>
+          <OnboardingProgress currentStep={initialState.step} />
           <Text style={styles.title}>{titleForStep(initialState.step)}</Text>
           <Text style={styles.subtitle}>{subtitleForStep(initialState)}</Text>
 
@@ -123,6 +146,29 @@ export function OnboardingScreen({
               onChangeText={setApiBaseUrl}
               onSubmitEditing={saveInstance}
             />
+          ) : null}
+
+          {initialState.step === 'signIn' ? (
+            <View style={styles.signInPanel}>
+              <View style={styles.signInHeader}>
+                <View style={styles.signInIconFrame}>
+                  <ShieldCheck color={colors.success} size={24} strokeWidth={2.5} />
+                </View>
+                <View style={styles.signInHeaderText}>
+                  <Text style={styles.signInLabel}>Secure sign-in</Text>
+                  <Text style={styles.instanceText} numberOfLines={1}>
+                    {initialState.profile?.apiBaseUrl}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.signInText}>
+                Continue with the provider configured by this Stuff Stash instance. You will return here after approval.
+              </Text>
+              <View style={styles.browserRow}>
+                <ExternalLink color={colors.textMuted} size={16} strokeWidth={2.4} />
+                <Text style={styles.browserText}>Opens in the system browser</Text>
+              </View>
+            </View>
           ) : null}
 
           {initialState.step === 'tenant' ? (
@@ -147,12 +193,25 @@ export function OnboardingScreen({
 
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
+          {initialState.step === 'signIn' ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={isSubmitting}
+              onPress={changeInstance}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>Change instance</Text>
+            </Pressable>
+          ) : null}
+
           <Pressable
             accessibilityRole="button"
             disabled={isSubmitting}
             onPress={
               initialState.step === 'instance'
                 ? saveInstance
+                : initialState.step === 'signIn'
+                  ? signIn
                 : initialState.step === 'tenant'
                   ? createTenant
                   : createInventory
@@ -162,13 +221,82 @@ export function OnboardingScreen({
             {isSubmitting ? (
               <ActivityIndicator color={colors.onAction} />
             ) : (
-              <Text style={styles.primaryButtonText}>{buttonLabelForStep(initialState.step)}</Text>
+              <View style={styles.primaryButtonContent}>
+                <Text style={styles.primaryButtonText}>{buttonLabelForStep(initialState.step)}</Text>
+                {initialState.step === 'signIn' ? (
+                  <View style={styles.primaryButtonIcon}>
+                    <ExternalLink color={colors.onAction} size={18} strokeWidth={2.5} />
+                  </View>
+                ) : null}
+              </View>
             )}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function OnboardingProgress({
+  currentStep
+}: {
+  readonly currentStep: OnboardingStartState['step'];
+}) {
+  const steps = onboardingSteps();
+  const currentIndex = Math.max(0, steps.findIndex((step) => step.id === currentStep));
+
+  return (
+    <View style={styles.progressRow} accessibilityRole="progressbar">
+      {steps.map((step, index) => {
+        const isComplete = index < currentIndex || currentStep === 'complete';
+        const isCurrent = index === currentIndex && currentStep !== 'complete';
+        return (
+          <View
+            key={step.id}
+            style={[
+              styles.progressStep,
+              index < steps.length - 1 ? styles.progressStepWithGap : null
+            ]}
+          >
+            <View
+              style={[
+                styles.progressDot,
+                isComplete ? styles.progressDotComplete : null,
+                isCurrent ? styles.progressDotCurrent : null
+              ]}
+            >
+              {isComplete ? (
+                <Check color={colors.onAction} size={13} strokeWidth={3} />
+              ) : step.id === 'instance' ? (
+                <Server color={isCurrent ? colors.onAction : colors.textMuted} size={13} strokeWidth={2.7} />
+              ) : null}
+            </View>
+            <Text
+              style={[
+                styles.progressLabel,
+                isCurrent || isComplete ? styles.progressLabelActive : null
+              ]}
+              numberOfLines={1}
+            >
+              {step.label}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function onboardingSteps(): ReadonlyArray<{
+  readonly id: Exclude<OnboardingStartState['step'], 'complete'>;
+  readonly label: string;
+}> {
+  return [
+    { id: 'instance', label: 'Instance' },
+    { id: 'signIn', label: 'Sign in' },
+    { id: 'tenant', label: 'Tenant' },
+    { id: 'inventory', label: 'Inventory' }
+  ];
 }
 
 function OnboardingTextInput({
@@ -202,9 +330,11 @@ function titleForStep(step: OnboardingStartState['step']): string {
     case 'instance':
       return 'Connect Stuff Stash';
     case 'tenant':
-      return 'Create Tenant';
+      return 'Create tenant';
+    case 'signIn':
+      return 'Sign in with SSO';
     case 'inventory':
-      return 'Create Inventory';
+      return 'Create inventory';
     case 'complete':
       return 'Ready';
   }
@@ -216,6 +346,8 @@ function subtitleForStep(state: OnboardingStartState): string {
       return 'Enter the URL for your Stuff Stash instance.';
     case 'tenant':
       return 'Create the top-level space for this household or organization.';
+    case 'signIn':
+      return 'Use the sign-in provider configured by this Stuff Stash instance.';
     case 'inventory':
       return `Create the first inventory${state.tenantName ? ` in ${state.tenantName}` : ''}.`;
     case 'complete':
@@ -229,6 +361,8 @@ function buttonLabelForStep(step: OnboardingStartState['step']): string {
       return 'Continue';
     case 'tenant':
       return 'Create tenant';
+    case 'signIn':
+      return 'Continue with SSO';
     case 'inventory':
       return 'Create inventory';
     case 'complete':
@@ -237,7 +371,19 @@ function buttonLabelForStep(step: OnboardingStartState['step']): string {
 }
 
 function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : 'Onboarding failed.';
+  if (!(error instanceof Error)) {
+    return 'Setup could not continue. Try again.';
+  }
+
+  switch (error.message) {
+    case 'Enter a Stuff Stash instance URL.':
+    case 'Enter a valid Stuff Stash instance URL.':
+    case 'Stuff Stash instance URLs must use HTTP or HTTPS.':
+    case 'No usable tenant is available for mobile onboarding.':
+      return error.message;
+    default:
+      return 'Setup could not continue. Check your instance and sign-in settings, then try again.';
+  }
 }
 
 const styles = StyleSheet.create({
@@ -255,6 +401,48 @@ const styles = StyleSheet.create({
   },
   brandRow: {
     marginBottom: spacing.lg
+  },
+  progressRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.lg
+  },
+  progressStep: {
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0
+  },
+  progressStepWithGap: {
+    marginRight: spacing.xs
+  },
+  progressDot: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderRadius: 11,
+    borderWidth: 1,
+    height: 22,
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+    width: 22
+  },
+  progressDotComplete: {
+    backgroundColor: colors.success,
+    borderColor: colors.success
+  },
+  progressDotCurrent: {
+    backgroundColor: colors.action,
+    borderColor: colors.action
+  },
+  progressLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 14,
+    maxWidth: '100%'
+  },
+  progressLabelActive: {
+    color: colors.text
   },
   title: {
     color: colors.text,
@@ -292,6 +480,63 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: spacing.md
   },
+  signInPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+    padding: spacing.md
+  },
+  signInHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: spacing.md
+  },
+  signInIconFrame: {
+    alignItems: 'center',
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.md,
+    height: 44,
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+    width: 44
+  },
+  signInHeaderText: {
+    flex: 1,
+    minWidth: 0
+  },
+  signInLabel: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0,
+    marginBottom: spacing.xs
+  },
+  signInText: {
+    color: colors.textMuted,
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 21,
+    marginBottom: spacing.sm
+  },
+  browserRow: {
+    alignItems: 'center',
+    flexDirection: 'row'
+  },
+  browserText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+    marginLeft: spacing.xs
+  },
+  instanceText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+    lineHeight: 20
+  },
   errorText: {
     color: colors.danger,
     fontSize: 14,
@@ -307,12 +552,35 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: spacing.md
   },
+  primaryButtonContent: {
+    alignItems: 'center',
+    flexDirection: 'row'
+  },
   primaryButtonDisabled: {
     opacity: 0.7
   },
   primaryButtonText: {
     color: colors.onAction,
     fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  primaryButtonIcon: {
+    marginLeft: spacing.xs
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    minHeight: 46,
+    paddingHorizontal: spacing.md
+  },
+  secondaryButtonText: {
+    color: colors.text,
+    fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0
   }

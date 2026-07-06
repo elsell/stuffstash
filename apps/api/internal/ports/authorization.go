@@ -22,11 +22,13 @@ const (
 type InventoryPermission string
 
 const (
-	InventoryPermissionView        InventoryPermission = "view"
-	InventoryPermissionCreateAsset InventoryPermission = "create_asset"
-	InventoryPermissionEditAsset   InventoryPermission = "edit_asset"
-	InventoryPermissionShare       InventoryPermission = "share"
-	InventoryPermissionConfigure   InventoryPermission = "configure"
+	InventoryPermissionView            InventoryPermission = "view"
+	InventoryPermissionCreateAsset     InventoryPermission = "create_asset"
+	InventoryPermissionEditAsset       InventoryPermission = "edit_asset"
+	InventoryPermissionShare           InventoryPermission = "share"
+	InventoryPermissionConfigure       InventoryPermission = "configure"
+	InventoryPermissionViewImportJob   InventoryPermission = "view_import_job"
+	InventoryPermissionCreateImportJob InventoryPermission = "create_import_job"
 )
 
 type InventoryAccessRelationship string

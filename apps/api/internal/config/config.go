@@ -26,6 +26,9 @@ const (
 	envOIDCIssuer                         = "STUFF_STASH_OIDC_ISSUER"
 	envOIDCClientID                       = "STUFF_STASH_OIDC_CLIENT_ID"
 	envOIDCClientIDs                      = "STUFF_STASH_OIDC_CLIENT_IDS"
+	envOIDCMobileClientID                 = "STUFF_STASH_OIDC_MOBILE_CLIENT_ID"
+	envOIDCMobileRedirectURI              = "STUFF_STASH_OIDC_MOBILE_REDIRECT_URI"
+	envOIDCMobileScopes                   = "STUFF_STASH_OIDC_MOBILE_SCOPES"
 	envRepositoryMode                     = "STUFF_STASH_REPOSITORY_MODE"
 	envDatabaseDSN                        = "STUFF_STASH_DATABASE_DSN"
 	envSpiceDBEndpoint                    = "STUFF_STASH_SPICEDB_ENDPOINT"
@@ -69,6 +72,8 @@ const (
 	envGoogleAccessToken                  = "STUFF_STASH_GOOGLE_ACCESS_TOKEN"
 	envProviderCredentialKeyID            = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID"
 	envProviderCredentialKey              = "STUFF_STASH_PROVIDER_CREDENTIAL_KEY"
+	envImportJobTimeoutSeconds            = "STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS"
+	envImportCredentialVacuumSeconds      = "STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS"
 	defaultHTTPAddr                       = ":8080"
 	defaultHTTPReadHeader                 = 5 * time.Second
 	defaultHTTPRead                       = 15 * time.Second
@@ -81,6 +86,7 @@ const (
 	defaultHTTPRateLimitBurst             = DefaultHTTPRateLimitBurst
 	defaultAuthMode                       = "local-dev"
 	defaultAuthzMode                      = "memory"
+	defaultOIDCMobileRedirectURI          = "stuffstash://auth/callback"
 	defaultRepositoryMode                 = "memory"
 	defaultSpiceDBSchemaPath              = "deploy/spicedb/schema.zed"
 	defaultAuthorizationLimit             = 25
@@ -110,6 +116,8 @@ const (
 	defaultGoogleGeminiModel              = "gemini-2.5-flash-lite"
 	defaultGoogleTTSLanguageCode          = "en-US"
 	defaultGoogleTTSVoiceName             = "en-US-Standard-C"
+	defaultImportJobTimeout               = 15 * time.Minute
+	defaultImportCredentialVacuumInterval = time.Minute
 )
 
 const (
@@ -136,6 +144,9 @@ type Config struct {
 	OIDCIssuer                       string
 	OIDCClientID                     string
 	OIDCClientIDs                    []string
+	OIDCMobileClientID               string
+	OIDCMobileRedirectURI            string
+	OIDCMobileScopes                 []string
 	RepositoryMode                   string
 	DatabaseDSN                      string
 	SpiceDBEndpoint                  string
@@ -179,6 +190,8 @@ type Config struct {
 	GoogleAccessToken                string
 	ProviderCredentialKeyID          string
 	ProviderCredentialKey            string
+	ImportJobTimeout                 time.Duration
+	ImportCredentialVacuumInterval   time.Duration
 }
 
 func Load() Config {
@@ -199,6 +212,9 @@ func Load() Config {
 		OIDCIssuer:                       os.Getenv(envOIDCIssuer),
 		OIDCClientID:                     os.Getenv(envOIDCClientID),
 		OIDCClientIDs:                    oidcClientIDs(),
+		OIDCMobileClientID:               strings.TrimSpace(os.Getenv(envOIDCMobileClientID)),
+		OIDCMobileRedirectURI:            envOrDefault(envOIDCMobileRedirectURI, defaultOIDCMobileRedirectURI),
+		OIDCMobileScopes:                 oidcMobileScopes(),
 		RepositoryMode:                   envOrDefault(envRepositoryMode, defaultRepositoryMode),
 		DatabaseDSN:                      os.Getenv(envDatabaseDSN),
 		SpiceDBEndpoint:                  os.Getenv(envSpiceDBEndpoint),
@@ -242,21 +258,47 @@ func Load() Config {
 		GoogleAccessToken:                os.Getenv(envGoogleAccessToken),
 		ProviderCredentialKeyID:          os.Getenv(envProviderCredentialKeyID),
 		ProviderCredentialKey:            os.Getenv(envProviderCredentialKey),
+		ImportJobTimeout:                 secondsEnvOrDefault(envImportJobTimeoutSeconds, defaultImportJobTimeout),
+		ImportCredentialVacuumInterval:   secondsEnvOrDefault(envImportCredentialVacuumSeconds, defaultImportCredentialVacuumInterval),
 	}
+}
+
+func oidcMobileScopes() []string {
+	scopes := stringListEnv(envOIDCMobileScopes)
+	if len(scopes) > 0 {
+		return scopes
+	}
+	return []string{"openid", "email", "profile", "offline_access"}
 }
 
 func oidcClientIDs() []string {
 	clientIDs := stringListEnv(envOIDCClientIDs)
-	singleClientID := strings.TrimSpace(os.Getenv(envOIDCClientID))
-	if singleClientID == "" {
+	clientIDs = prependUniqueClientID(clientIDs, strings.TrimSpace(os.Getenv(envOIDCClientID)))
+	clientIDs = appendUniqueClientID(clientIDs, strings.TrimSpace(os.Getenv(envOIDCMobileClientID)))
+	return clientIDs
+}
+
+func prependUniqueClientID(clientIDs []string, clientID string) []string {
+	if clientID == "" || containsString(clientIDs, clientID) {
 		return clientIDs
 	}
-	for _, clientID := range clientIDs {
-		if clientID == singleClientID {
-			return clientIDs
+	return append([]string{clientID}, clientIDs...)
+}
+
+func appendUniqueClientID(clientIDs []string, clientID string) []string {
+	if clientID == "" || containsString(clientIDs, clientID) {
+		return clientIDs
+	}
+	return append(clientIDs, clientID)
+}
+
+func containsString(values []string, value string) bool {
+	for _, candidate := range values {
+		if candidate == value {
+			return true
 		}
 	}
-	return append([]string{singleClientID}, clientIDs...)
+	return false
 }
 
 func stringListEnv(name string) []string {
@@ -323,6 +365,18 @@ func durationEnvOrDefault(name string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return parsed
+}
+
+func secondsEnvOrDefault(name string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return time.Duration(parsed) * time.Second
 }
 
 func boolEnvOrDefault(name string, fallback bool) bool {

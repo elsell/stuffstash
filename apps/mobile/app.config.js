@@ -9,6 +9,8 @@ module.exports = {
     userInterfaceStyle: 'automatic',
     plugins: [
       'expo-router',
+      'expo-secure-store',
+      'expo-web-browser',
       [
         'expo-image-picker',
         {
@@ -45,7 +47,6 @@ module.exports = {
       stuffStash: {
         apiBaseUrl: process.env.EXPO_PUBLIC_STUFF_STASH_API_BASE_URL ?? '',
         tenantId: process.env.EXPO_PUBLIC_STUFF_STASH_TENANT_ID ?? '',
-        devToken: process.env.EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN ?? '',
         voiceDeveloperDiagnosticsEnabled:
           process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED ?? ''
       }

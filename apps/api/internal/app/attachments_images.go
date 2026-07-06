@@ -178,7 +178,7 @@ func (a App) authorizeImageAttachmentRead(ctx context.Context, principal identit
 		return media.Attachment{}, ErrInvalidInput
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: principal.ID,
+		Principal:   principal,
 		TenantID:    tenantID,
 		InventoryID: inventoryID,
 		Source:      source,

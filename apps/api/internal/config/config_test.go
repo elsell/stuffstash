@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envHTTPAddr, "")
@@ -170,6 +173,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.ProviderCredentialKeyID != "" || cfg.ProviderCredentialKey != "" {
 		t.Fatalf("expected empty provider credential encryption config by default")
 	}
+	if cfg.ImportJobTimeout != 15*time.Minute {
+		t.Fatalf("expected import job timeout default 15m, got %s", cfg.ImportJobTimeout)
+	}
+	if cfg.ImportCredentialVacuumInterval != time.Minute {
+		t.Fatalf("expected import credential vacuum interval default 1m, got %s", cfg.ImportCredentialVacuumInterval)
+	}
 }
 
 func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
@@ -188,6 +197,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envOIDCIssuer, "https://accounts.google.com")
 	t.Setenv(envOIDCClientID, "client-id")
 	t.Setenv(envOIDCClientIDs, "web-client-id, mobile-client-id, client-id")
+	t.Setenv(envOIDCMobileClientID, "mobile-client-id")
+	t.Setenv(envOIDCMobileRedirectURI, "stuffstash://auth/callback")
+	t.Setenv(envOIDCMobileScopes, "openid,email,profile,offline_access")
 	t.Setenv(envRepositoryMode, "postgres")
 	t.Setenv(envDatabaseDSN, "postgres://stuffstash:stuffstash-local@postgres:5432/stuffstash?sslmode=disable")
 	t.Setenv(envSpiceDBEndpoint, "spicedb:50051")
@@ -231,6 +243,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envGoogleAccessToken, "ya29.test")
 	t.Setenv(envProviderCredentialKeyID, "local-key")
 	t.Setenv(envProviderCredentialKey, "base64-key")
+	t.Setenv(envImportJobTimeoutSeconds, "120")
+	t.Setenv(envImportCredentialVacuumSeconds, "30")
 
 	cfg := Load()
 
@@ -257,6 +271,12 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if len(cfg.OIDCClientIDs) != 3 || cfg.OIDCClientIDs[0] != "web-client-id" || cfg.OIDCClientIDs[1] != "mobile-client-id" || cfg.OIDCClientIDs[2] != "client-id" {
 		t.Fatalf("unexpected OIDC client IDs: %+v", cfg.OIDCClientIDs)
+	}
+	if cfg.OIDCMobileClientID != "mobile-client-id" || cfg.OIDCMobileRedirectURI != "stuffstash://auth/callback" {
+		t.Fatalf("unexpected mobile OIDC config: %+v", cfg)
+	}
+	if len(cfg.OIDCMobileScopes) != 4 || cfg.OIDCMobileScopes[0] != "openid" || cfg.OIDCMobileScopes[3] != "offline_access" {
+		t.Fatalf("unexpected mobile OIDC scopes: %+v", cfg.OIDCMobileScopes)
 	}
 	if cfg.RepositoryMode != "postgres" || cfg.DatabaseDSN == "" {
 		t.Fatalf("unexpected repository config: %+v", cfg)
@@ -338,5 +358,26 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.ProviderCredentialKeyID != "local-key" || cfg.ProviderCredentialKey != "base64-key" {
 		t.Fatalf("unexpected provider credential encryption config: %+v", cfg)
+	}
+	if cfg.ImportJobTimeout.String() != "2m0s" {
+		t.Fatalf("expected import job timeout 120s, got %s", cfg.ImportJobTimeout)
+	}
+	if cfg.ImportCredentialVacuumInterval.String() != "30s" {
+		t.Fatalf("expected import credential vacuum interval 30s, got %s", cfg.ImportCredentialVacuumInterval)
+	}
+}
+
+func TestLoadAddsMobileClientIDToAcceptedOIDCAudiences(t *testing.T) {
+	t.Setenv(envOIDCClientID, "api-client-id")
+	t.Setenv(envOIDCClientIDs, "web-client-id")
+	t.Setenv(envOIDCMobileClientID, "mobile-client-id")
+
+	cfg := Load()
+
+	if len(cfg.OIDCClientIDs) != 3 {
+		t.Fatalf("expected 3 accepted client IDs, got %+v", cfg.OIDCClientIDs)
+	}
+	if cfg.OIDCClientIDs[0] != "api-client-id" || cfg.OIDCClientIDs[1] != "web-client-id" || cfg.OIDCClientIDs[2] != "mobile-client-id" {
+		t.Fatalf("unexpected accepted client IDs: %+v", cfg.OIDCClientIDs)
 	}
 }

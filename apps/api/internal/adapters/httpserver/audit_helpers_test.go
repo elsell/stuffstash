@@ -6,17 +6,23 @@ import (
 )
 
 type auditRecordResponse struct {
-	ID          string            `json:"id"`
-	TenantID    string            `json:"tenantId"`
-	InventoryID string            `json:"inventoryId,omitempty"`
-	PrincipalID string            `json:"principalId"`
-	Action      string            `json:"action"`
-	Source      string            `json:"source"`
-	TargetType  string            `json:"targetType"`
-	TargetID    string            `json:"targetId"`
-	OccurredAt  string            `json:"occurredAt"`
-	RequestID   string            `json:"requestId,omitempty"`
-	Metadata    map[string]string `json:"metadata"`
+	ID          string             `json:"id"`
+	TenantID    string             `json:"tenantId"`
+	InventoryID string             `json:"inventoryId,omitempty"`
+	PrincipalID string             `json:"principalId"`
+	Principal   *principalResponse `json:"principal,omitempty"`
+	Action      string             `json:"action"`
+	Source      string             `json:"source"`
+	TargetType  string             `json:"targetType"`
+	TargetID    string             `json:"targetId"`
+	OccurredAt  string             `json:"occurredAt"`
+	RequestID   string             `json:"requestId,omitempty"`
+	Metadata    map[string]string  `json:"metadata"`
+}
+
+type principalResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email,omitempty"`
 }
 
 type auditRecordListBody struct {

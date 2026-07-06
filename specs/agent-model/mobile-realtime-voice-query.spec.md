@@ -155,7 +155,7 @@ When `transcript.delta` events are available, mobile may display the latest part
 
 Developer diagnostics in the mobile voice surface must be disabled by default and enabled only through explicit runtime configuration. Enabling diagnostics may allow the mobile UI to render sanitized tool-call progress labels and statuses that have already passed through the mobile application redaction boundary, but it must not alter provider prompts, tool availability, authorization, model inputs, session persistence, or raw event retention.
 
-Mobile realtime voice is local-development testable before production mobile authentication exists. A production mobile rollout requires a specified mobile authentication flow and must not rely on `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`.
+Mobile realtime voice must use the same mobile OIDC token provider as REST API calls. It must not rely on `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`.
 
 ## Realtime Session
 

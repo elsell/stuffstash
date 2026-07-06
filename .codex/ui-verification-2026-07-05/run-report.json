@@ -1,0 +1,376 @@
+{
+  "created": [
+    {
+      "kind": "location",
+      "name": "Mudroom cubbies July check",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations/01KWSJTY28K9GRX7278KK05VDC"
+    },
+    {
+      "kind": "location",
+      "name": "Kitchen pantry July check",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations/01KWSJTZ6M0HBSH2YGHDDAR0BY"
+    },
+    {
+      "kind": "location",
+      "name": "Garage workbench July check",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations/01KWSJV0BK4AJW5PEEZNJ9QNES"
+    },
+    {
+      "kind": "location",
+      "name": "Hall closet July check",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations/01KWSJV1HKB7NVQ3AM9BJVBA0P"
+    },
+    {
+      "kind": "container",
+      "name": "Camping gear bin July check",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/assets/01KWSJV310CQHE02SD1SHMJDAQ"
+    },
+    {
+      "kind": "item",
+      "name": "Rechargeable lantern July check",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/assets/01KWSJV4VYHF01Y7TYZ9PJPYM9"
+    }
+  ],
+  "urls": [
+    "http://localhost:5173",
+    "http://localhost:5556/dex/auth/local/login?back=&state=xdwdngw75wmhsncicwphz6bju",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/location",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/container",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/item",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/search",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/access",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/fields",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/activity",
+    "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/assets/01KWSJV4VYHF01Y7TYZ9PJPYM9"
+  ],
+  "screenshots": [
+    {
+      "label": "desktop-home",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-home.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ"
+    },
+    {
+      "label": "mobile-home",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-home.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ"
+    },
+    {
+      "label": "desktop-search-lantern",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-search-lantern.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/search?q=lantern"
+    },
+    {
+      "label": "mobile-search-lantern",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-search-lantern.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/search?q=lantern"
+    },
+    {
+      "label": "desktop-locations",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-locations.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations"
+    },
+    {
+      "label": "mobile-locations",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-locations.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/locations"
+    },
+    {
+      "label": "desktop-settings-overview",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-settings-overview.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings"
+    },
+    {
+      "label": "mobile-settings-overview",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-settings-overview.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings"
+    },
+    {
+      "label": "desktop-settings-access",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-settings-access.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/access"
+    },
+    {
+      "label": "mobile-settings-access",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-settings-access.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/access"
+    },
+    {
+      "label": "desktop-settings-fields",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-settings-fields.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/fields"
+    },
+    {
+      "label": "mobile-settings-fields",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-settings-fields.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/fields"
+    },
+    {
+      "label": "desktop-settings-activity",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-settings-activity.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/activity"
+    },
+    {
+      "label": "mobile-settings-activity",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-settings-activity.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/settings/activity"
+    },
+    {
+      "label": "desktop-asset-detail-lantern",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-asset-detail-lantern.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/assets/01KWSJV4VYHF01Y7TYZ9PJPYM9"
+    },
+    {
+      "label": "mobile-asset-detail-lantern",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-asset-detail-lantern.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/assets/01KWSJV4VYHF01Y7TYZ9PJPYM9"
+    },
+    {
+      "label": "desktop-add-item-tray",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-add-item-tray.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/item"
+    },
+    {
+      "label": "desktop-add-location-tray",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-add-location-tray.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/location"
+    },
+    {
+      "label": "desktop-parent-picker-search-july-check",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-parent-picker-search-july-check.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/item"
+    },
+    {
+      "label": "mobile-add-item-tray",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-add-item-tray.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/item"
+    },
+    {
+      "label": "mobile-parent-picker-search-july-check",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-parent-picker-search-july-check.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/item"
+    },
+    {
+      "label": "mobile-add-location-tray",
+      "viewport": "393x852",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/mobile-add-location-tray.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ/add/location"
+    },
+    {
+      "label": "desktop-header-search-suggestions-lantern",
+      "viewport": "1440x1000",
+      "path": "/Users/john/Documents/StuffStash/.codex/ui-verification-2026-07-05/desktop-header-search-suggestions-lantern.png",
+      "url": "http://localhost:5173/tenants/01KWS8DZAE1GEPFGE6H19N00W2/inventories/01KWS8DZAXQSJAFPGBD66ADNFZ"
+    }
+  ],
+  "metrics": [
+    {
+      "label": "desktop-home",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets"
+    },
+    {
+      "label": "mobile-home",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-search-lantern",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nSearch\n\nFind authorized assets in this inventory.\n\nSearch\nActive\nArchived\nAll\nContains\nExact\nPhoto unavailable\nRechargeable lantern July check\nHousehold / active\nPhoto unavailable\ntitle\nRechargeable lantern July check"
+    },
+    {
+      "label": "mobile-search-lantern",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nSearch\n\nFind authorized assets in this inventory.\n\nSearch\nActive\nArchived\nAll\nContains\nExact\nPhoto unavailable\nRechargeable lantern July check\nHousehold / active\nPhoto unavailable\ntitle\nRechargeable lantern July check\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-locations",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nLocations\n\nThe places where your things live.\n\nAdd location\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets"
+    },
+    {
+      "label": "mobile-locations",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nLocations\n\nThe places where your things live.\n\nAdd location\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-settings-overview",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHousehold\n\nHome / Overview\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nOverview: Inventory context and access summary\n\nOverview\n\nHome / Household\n\nTenant\nHome\nInventories\n1\nAccess\nowner\nAsset edits\nAllowed"
+    },
+    {
+      "label": "mobile-settings-overview",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHousehold\n\nHome / Overview\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nOverview: Inventory context and access summary\n\nOverview\n\nHome / Household\n\nTenant\nHome\nInventories\n1\nAccess\nowner\nAsset edits\nAllowed\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-settings-access",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHousehold\n\nHome / Access\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nAccess: Sharing, grants, and invitations\n\nSharing\n\nManage direct grants and invite links for this inventory.\n\nPrincipal ID\nGrant relationship\nViewer\nEditor\nGrant access\nInvitee email\nInvitation relationship\nViewer\nEditor\nCreate invite\nDirect grants\n\nNo direct grants.\n\nInvitations\nAll\nPending\nAccepted\nRevoked\nCancelled\nExpired\n\nNo invitations."
+    },
+    {
+      "label": "mobile-settings-access",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHousehold\n\nHome / Access\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nAccess: Sharing, grants, and invitations\n\nSharing\n\nManage direct grants and invite links for this inventory.\n\nPrincipal ID\nGrant relationship\nViewer\nEditor\nGrant access\nInvitee email\nInvitation relationship\nViewer\nEditor\nCreate invite\nDirect grants\n\nNo direct grants.\n\nInvitations\nAll\nPending\nAccepted\nRevoked\nCancelled\nExpired\n\nNo invitations.\n\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-settings-fields",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHousehold\n\nHome / Fields\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nFields: Custom asset types and fields\n\nCustom fields\n\nTypes and fields available to this inventory.\n\nAsset types\nInventory\nTenant\nKey\nDisplay name\nDescription\nCreate type\nField definitions\nInventory\nTenant\nKey\nDisplay name\nText\nNumber\nYes/no\nDate\nURL\nList\nAll assets\nCustom types\nCreate field"
+    },
+    {
+      "label": "mobile-settings-fields",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHousehold\n\nHome / Fields\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nFields: Custom asset types and fields\n\nCustom fields\n\nTypes and fields available to this inventory.\n\nAsset types\nInventory\nTenant\nKey\nDisplay name\nDescription\nCreate type\nField definitions\nInventory\nTenant\nKey\nDisplay name\nText\nNumber\nYes/no\nDate\nURL\nList\nAll assets\nCustom types\nCreate field\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-settings-activity",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHousehold\n\nHome / Activity\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nActivity: Audit history for this workspace\n\nActivity\n\nAudit history for authorized tenant and inventory activity.\n\nInventory\nTenant\nInventory created\nInventory\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nAsset created\nAsset\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nAttachment added\nAsset\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nAttachment content downloaded\nAttachment\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nCustom asset type listed\nTenant\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical details\nCustom field definition listed\nTenant\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical details\nAsset listed\nInventory\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical"
+    },
+    {
+      "label": "mobile-settings-activity",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHousehold\n\nHome / Activity\n\nowner\nOverview\nInventory context and access summary\nAccess\nSharing, grants, and invitations\nFields\nCustom asset types and fields\nActivity\nAudit history for this workspace\nAdmin\nTenant and inventory administration\n\nActivity: Audit history for this workspace\n\nActivity\n\nAudit history for authorized tenant and inventory activity.\n\nInventory\nTenant\nInventory created\nInventory\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nAsset created\nAsset\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nAttachment added\nAsset\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nAttachment content downloaded\nAttachment\n7/5/2026, 9:45:35 AM\nAPI\nSigned-in user\nTechnical details\nCustom asset type listed\nTenant\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical details\nCustom field definition listed\nTenant\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical details\nAsset listed\nInventory\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical details\nAttachment content downloaded\nAttachment\n7/5/2026, 9:46:10 AM\nAPI\nSigned-in user\nTechnical details\nCustom asset type listed\nTenant\n7/5/2026, 9:47:01 AM\nAPI\nSigned-in user\nTechnical details\nCustom fiel"
+    },
+    {
+      "label": "desktop-asset-detail-lantern",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nBack\nRechargeable lantern July check\n\nGarage workbench July check / Camping gear bin July check\n\nactive\nKind\nItem\nType\nBase asset\nUpdated\nNot available\nEdit\nMove\nAdd photo\nArchive\nAdd photo\n\nNo photos yet.\n\nDetails\n\nUSB-C lantern used for outages and camping.\n\nFiles\nUpload file\n\nNo active files.\n\nPermanent deletion\n\nRemove this asset from the inventory permanently.\n\nDelete"
+    },
+    {
+      "label": "mobile-asset-detail-lantern",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nBack\nRechargeable lantern July check\n\nGarage workbench July check / Camping gear bin July check\n\nactive\nKind\nItem\nType\nBase asset\nUpdated\nNot available\nEdit\nMove\nAdd photo\nArchive\n\nNo photos yet.\n\nDetails\n\nUSB-C lantern used for outages and camping.\n\nFiles\nUpload file\n\nNo active files.\n\nPermanent deletion\n\nRemove this asset from the inventory permanently.\n\nDelete\nHome\nSearch\nPlaces\nSettings"
+    },
+    {
+      "label": "desktop-add-item-tray",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nAdd item\n\nType: Item. Parent: Inventory root. Photos: No photos.\n\nTYPE\nItem\nPARENT\nInventory root\nPHOTOS\nNo photos\nAsset kind\nItem\nContainer\nLocation\nItem name\nPlace in existing parent\nFind parent\n\nCurrent destination\n\nInventory root\ninventory root\n\nSuggested destinations\n\n5 possible destinations. Showing 4 suggested destinations.\n\nGarage workbench July check\nLocation / Inventory root\nHall closet July check\nLocation / Inventory root\nKitchen pant"
+    },
+    {
+      "label": "desktop-add-location-tray",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nAdd location\n\nType: Location. Parent: Inventory root. Photos: No photos.\n\nTYPE\nLocation\nPARENT\nInventory root\nPHOTOS\nNo photos\nAsset kind\nItem\nContainer\nLocation\nLocation name\nPlace in existing parent\nFind parent\n\nCurrent destination\n\nInventory root\ninventory root\n\nSuggested destinations\n\n5 possible destinations. Showing 4 suggested destinations.\n\nGarage workbench July check\nLocation / Inventory root\nHall closet July check\nLocation / Inventory r"
+    },
+    {
+      "label": "desktop-parent-picker-search-july-check",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nAdd\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nAdd item\n\nType: Item. Parent: Inventory root. Photos: No photos.\n\nTYPE\nItem\nPARENT\nInventory root\nPHOTOS\nNo photos\nAsset kind\nItem\nContainer\nLocation\nItem name\nPlace in existing parent\nFind parent\n\nCurrent destination\n\nInventory root\ninventory root\n\n5 matches\n\nLOCATIONS\n\nGarage workbench July check\nLocation / Inventory root\nHall closet July check\nLocation / Inventory root\nKitchen pantry July check\nLocation / Inventory root\nMudroom cubbies July c"
+    },
+    {
+      "label": "mobile-add-item-tray",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nHome\nSearch\nPlaces\nSettings\nAdd item\n\nType: Item. Parent: Inventory root. Photos: No photos.\n\nTYPE\nItem\nPARENT\nInventory root\nPHOTOS\nNo photos\nAsset kind\nItem\nContainer\nLocation\nItem name\nPlace in existing parent\nFind parent\n\nCurrent destination\n\nInventory root\ninventory root\n\nSuggested destinations\n\n5 possible destinations. Showing 4 suggested destinations.\n\nGarage workbench July check\nLocation / Inventory root\nHall closet July check\nLocation / Inventory root\nKitchen pantry July check\nLocation / Inventory root\nMudroom cubbies July check\nLocation / Inventory root\nCreate missing parent\nCreate a parent first\nUse this when the shelf, box, or location do"
+    },
+    {
+      "label": "mobile-parent-picker-search-july-check",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nHome\nSearch\nPlaces\nSettings\nAdd item\n\nType: Item. Parent: Inventory root. Photos: No photos.\n\nTYPE\nItem\nPARENT\nInventory root\nPHOTOS\nNo photos\nAsset kind\nItem\nContainer\nLocation\nItem name\nPlace in existing parent\nFind parent\n\nCurrent destination\n\nInventory root\ninventory root\n\n5 matches\n\nLOCATIONS\n\nGarage workbench July check\nLocation / Inventory root\nHall closet July check\nLocation / Inventory root\nKitchen pantry July check\nLocation / Inventory root\nMudroom cubbies July check\nLocation / Inventory root\n\nShowing the first 4 of 5 matches.\n\nCreate missing parent\nCreate a parent first\nUse this when the shelf, box, or location does not exist yet.\nOff\nDesc"
+    },
+    {
+      "label": "mobile-add-location-tray",
+      "viewport": "393x852",
+      "overflowX": false,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bodyText": "Household\nHome\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets\nHome\nSearch\nPlaces\nSettings\nAdd location\n\nType: Location. Parent: Inventory root. Photos: No photos.\n\nTYPE\nLocation\nPARENT\nInventory root\nPHOTOS\nNo photos\nAsset kind\nItem\nContainer\nLocation\nLocation name\nPlace in existing parent\nFind parent\n\nCurrent destination\n\nInventory root\ninventory root\n\nSuggested destinations\n\n5 possible destinations. Showing 4 suggested destinations.\n\nGarage workbench July check\nLocation / Inventory root\nHall closet July check\nLocation / Inventory root\nKitchen pantry July check\nLocation / Inventory root\nMudroom cubbies July check\nLocation / Inventory root\nCreate missing parent\nCreate a parent first\nUse this when the shelf, box"
+    },
+    {
+      "label": "desktop-header-search-suggestions-lantern",
+      "viewport": "1440x1000",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "Stuff Stash\n\nHome\n\nHousehold\nHome\n\nINVENTORY\n\nHome\nRecent assets and places\nLocations\nBrowse rooms, shelves, and places\n\nTOOLS\n\nImport\nBring in legacy data\nSettings\nAccess, fields, and audit\n\nowner@example.com\n\nSign out\nPhoto unavailable\nRechargeable lantern July check\nItem\nPhoto unavailable\nAdd\nHome\n\nRecently added and the places where your things live.\n\nActive\nArchived\nAdd location\nRecently added\nDisposable PNG diagnostic 20260705134534\nItem\nInventory root\nCamping gear bin July check\nContainer\nGarage workbench July check\nPhoto unavailable\nRechargeable lantern July check\nItem\nGarage workbench July check / Camping gear bin July check\nLocations\nMudroom cubbies July check\n0 visible assets\nKitchen pantry July check\n0 visible assets\nGarage workbench July check\n1 visible assets\nHall closet July check\n0 visible assets"
+    }
+  ],
+  "failures": []
+}

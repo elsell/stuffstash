@@ -14,15 +14,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, SlidersHorizontal, X } from 'lucide-react-native';
+import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
+import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
+import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type {
   AssetBrowseLifecycleFilter,
   AssetBrowseSort
 } from '../../application/home/InventorySummaryRepository';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
+import type { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
+import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
 import {
   LocationBrowserItemViewModel,
   LocationsQuery
 } from '../../application/locations/LocationsQuery';
+import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
 import { colors, radius, spacing } from '../theme/tokens';
@@ -34,10 +40,18 @@ import {
   locationRowsFromAssetCards,
   searchResultSummaryLabel
 } from './SearchScreenPresentation';
+import { BrowseSurfaceControl, InventoryMapScreen } from './InventoryMapScreen';
+import type { InventoryMapSurface } from './InventoryMapPresentation';
 
 type SearchScreenProps = {
   readonly initialScope?: BrowseScope;
+  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
+  readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
+  readonly inventoryMapQuery: InventoryMapQuery;
   readonly locationsQuery: LocationsQuery;
+  readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly searchAssetsQuery: SearchAssetsQuery;
 };
 
@@ -69,9 +83,21 @@ const emptyResults: BrowseResults = {
   hasMore: false
 };
 
-export function SearchScreen({ initialScope = 'all', locationsQuery, searchAssetsQuery }: SearchScreenProps) {
+export function SearchScreen({
+  initialScope = 'all',
+  addAssetPhotosCommand,
+  assetDetailQuery,
+  assetLifecycleCommand,
+  deleteAssetPhotoCommand,
+  inventoryMapQuery,
+  locationsQuery,
+  photoSelectionQuery,
+  searchAssetsQuery
+}: SearchScreenProps) {
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<BrowseScope>(initialScope);
+  const mapPathStore = useRef(new Map<string, readonly string[]>());
+  const [surface, setSurface] = useState<InventoryMapSurface>('list');
   const [lifecycleState, setLifecycleState] = useState<AssetBrowseLifecycleFilter>('active');
   const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
   const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
@@ -302,6 +328,24 @@ export function SearchScreen({ initialScope = 'all', locationsQuery, searchAsset
   const listItems = toBrowseListItems(state.results);
   const isPlacesScope = scope === 'places';
 
+  if (surface === 'map') {
+    return (
+      <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
+        <InventoryMapScreen
+          addAssetPhotosCommand={addAssetPhotosCommand}
+          assetDetailQuery={assetDetailQuery}
+          assetLifecycleCommand={assetLifecycleCommand}
+          deleteAssetPhotoCommand={deleteAssetPhotoCommand}
+          inventoryMapQuery={inventoryMapQuery}
+          pathStore={mapPathStore}
+          photoSelectionQuery={photoSelectionQuery}
+          selectedSurface={surface}
+          onChangeSurface={setSurface}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       <FlatList
@@ -330,11 +374,13 @@ export function SearchScreen({ initialScope = 'all', locationsQuery, searchAsset
             query={query}
             resultCount={listItems.length}
             scope={scope}
+            selectedSurface={surface}
             searchInputRef={searchInputRef}
             searchInputFocused={isSearchFocused}
             sort={sort}
             statusMessage={state.status === 'error' ? state.message : undefined}
             submittedQuery={state.results.query}
+            onChangeSurface={setSurface}
             onChangeLifecycleState={updateLifecycleState}
             onChangeQuery={setQuery}
             onChangeScope={updateScope}
@@ -368,11 +414,13 @@ export function SearchHeader({
   query,
   resultCount,
   scope,
+  selectedSurface,
   searchInputRef,
   searchInputFocused,
   sort,
   statusMessage,
   submittedQuery,
+  onChangeSurface,
   onChangeLifecycleState,
   onChangeQuery,
   onChangeScope,
@@ -387,11 +435,13 @@ export function SearchHeader({
   readonly query: string;
   readonly resultCount: number;
   readonly scope: BrowseScope;
+  readonly selectedSurface: InventoryMapSurface;
   readonly searchInputRef: RefObject<TextInput | null>;
   readonly searchInputFocused: boolean;
   readonly sort: AssetBrowseSort;
   readonly statusMessage?: string;
   readonly submittedQuery: string;
+  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
   readonly onChangeQuery: (query: string) => void;
   readonly onChangeScope: (scope: BrowseScope) => void;
@@ -401,9 +451,23 @@ export function SearchHeader({
   readonly onSearchFocus: () => void;
   readonly onSubmit: () => void;
 }) {
+  const summaryLabel = searchResultSummaryLabel({
+    lifecycleState,
+    query: submittedQuery,
+    resultCount,
+    scope,
+    sort
+  });
+
   return (
     <View>
-      <Text style={styles.title}>Browse</Text>
+      <View style={styles.headerTopRow}>
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>Browse</Text>
+          <Text numberOfLines={1} style={styles.resultCount}>{summaryLabel}</Text>
+        </View>
+        <BrowseSurfaceControl selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
+      </View>
       <View style={[styles.searchBar, searchInputFocused ? styles.searchBarFocused : null]}>
         <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
         <TextInput
@@ -443,15 +507,6 @@ export function SearchHeader({
         onChangeSort={onChangeSort}
       />
       {statusMessage ? <Text style={styles.errorText}>{statusMessage}</Text> : null}
-      <Text style={styles.resultCount}>
-        {searchResultSummaryLabel({
-          lifecycleState,
-          query: submittedQuery,
-          resultCount,
-          scope,
-          sort
-        })}
-      </Text>
     </View>
   );
 }
@@ -664,16 +719,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.xl
+  },
+  headerTopRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.xs
+  },
+  titleBlock: {
+    flex: 1,
+    minWidth: 0
   },
   title: {
     color: colors.text,
-    fontSize: 32,
+    fontSize: 25,
     fontWeight: '900',
     letterSpacing: 0,
-    lineHeight: 38,
-    marginBottom: spacing.sm
+    lineHeight: 30
   },
   searchBar: {
     alignItems: 'center',
@@ -683,8 +748,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.sm,
-    minHeight: 48,
-    paddingHorizontal: spacing.md
+    minHeight: 44,
+    paddingHorizontal: spacing.sm
   },
   searchBarFocused: {
     borderColor: colors.focusRing,
@@ -693,13 +758,13 @@ const styles = StyleSheet.create({
   searchInput: {
     color: colors.text,
     flex: 1,
-    fontSize: 16,
-    minHeight: 46,
+    fontSize: 15,
+    minHeight: 44,
     paddingVertical: 0
   },
   clearButton: {
     alignItems: 'center',
-    minHeight: 32,
+    minHeight: 44,
     minWidth: 32,
     justifyContent: 'center'
   },
@@ -708,14 +773,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     flexDirection: 'row',
     gap: 2,
-    marginTop: spacing.md,
-    padding: 3
+    marginTop: spacing.xs,
+    padding: 2
   },
   scopeButton: {
     alignItems: 'center',
     borderRadius: radius.sm,
     flex: 1,
-    minHeight: 38,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: spacing.xs
   },
@@ -728,7 +793,7 @@ const styles = StyleSheet.create({
   },
   scopeText: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0
   },
@@ -738,11 +803,12 @@ const styles = StyleSheet.create({
   refinementBar: {
     alignItems: 'center',
     gap: spacing.xs,
-    paddingVertical: spacing.sm
+    paddingBottom: spacing.xs,
+    paddingTop: spacing.xs
   },
   refinementIcon: {
     alignItems: 'center',
-    height: 34,
+    height: 44,
     justifyContent: 'center',
     width: 28
   },
@@ -758,7 +824,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
-    minHeight: 34,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: spacing.sm
   },
@@ -768,7 +834,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0
   },
@@ -783,10 +849,10 @@ const styles = StyleSheet.create({
   },
   resultCount: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0,
-    marginBottom: spacing.md
+    marginTop: 0
   },
   emptyPanel: {
     backgroundColor: colors.surface,

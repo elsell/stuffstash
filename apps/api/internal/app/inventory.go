@@ -120,13 +120,13 @@ func (a App) CreateTenant(ctx context.Context, input CreateTenantInput) (tenant.
 	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
-		TenantID:    item.ID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionTenantCreated,
-		TargetType:  audit.TargetTenant,
-		TargetID:    item.ID.String(),
+		Principal:  input.Principal,
+		TenantID:   item.ID,
+		Source:     input.Source,
+		RequestID:  input.RequestID,
+		Action:     audit.ActionTenantCreated,
+		TargetType: audit.TargetTenant,
+		TargetID:   item.ID.String(),
 		Metadata: map[string]string{
 			"name": item.Name.String(),
 		},
@@ -187,7 +187,7 @@ func (a App) CreateInventory(ctx context.Context, input CreateInventoryInput) (i
 	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: item.ID,
 		Source:      input.Source,
@@ -499,13 +499,13 @@ func (a App) ListInventories(ctx context.Context, input ListInventoriesInput) (L
 		},
 	})
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
-		TenantID:    input.TenantID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionInventoryListed,
-		TargetType:  audit.TargetTenant,
-		TargetID:    input.TenantID.String(),
+		Principal:  input.Principal,
+		TenantID:   input.TenantID,
+		Source:     input.Source,
+		RequestID:  input.RequestID,
+		Action:     audit.ActionInventoryListed,
+		TargetType: audit.TargetTenant,
+		TargetID:   input.TenantID.String(),
 		Metadata: map[string]string{
 			"limit": strconv.Itoa(limit),
 		},

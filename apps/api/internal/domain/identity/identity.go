@@ -32,6 +32,18 @@ type Principal struct {
 	Email Email
 }
 
+type User struct {
+	ID    PrincipalID
+	Email Email
+}
+
+func NewUser(id PrincipalID, email Email) (User, bool) {
+	if id.String() == "" {
+		return User{}, false
+	}
+	return User{ID: id, Email: email}, true
+}
+
 type Email string
 
 func NewEmail(value string) (Email, bool) {

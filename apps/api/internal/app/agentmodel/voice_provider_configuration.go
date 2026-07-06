@@ -136,7 +136,7 @@ func (s Service) UpdateVoiceProviderConfiguration(ctx context.Context, input Upd
 		UpdatedAt:                  now,
 	}
 	auditRecord, err := appsupport.NewAuditRecord(s.ids, s.clock, appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: inventory.InventoryID(""),
 		Source:      input.Source,

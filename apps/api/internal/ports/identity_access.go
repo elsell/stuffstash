@@ -16,6 +16,11 @@ type TenantRepository interface {
 	ListTenants(ctx context.Context, page TenantListPageRequest) ([]tenant.Tenant, error)
 }
 
+type UserRepository interface {
+	SaveUser(ctx context.Context, user identity.User) error
+	UsersByID(ctx context.Context, ids []identity.PrincipalID) (map[identity.PrincipalID]identity.User, error)
+}
+
 type TenantListPageRequest struct {
 	AfterTenantID tenant.ID
 	Limit         int

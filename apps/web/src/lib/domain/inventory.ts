@@ -171,7 +171,7 @@ export interface SearchRequest {
 
 export type ImportSourceType = 'legacy_homebox' | 'legacy_homebox_csv';
 
-export interface LegacyHomeboxImportRequest {
+export interface ImportSourceRequest {
   sourceType: ImportSourceType;
   baseUrl?: string;
   username?: string;
@@ -201,47 +201,84 @@ export interface ImportMessage {
   sourceName?: string;
 }
 
-export interface ImportField {
-  key: string;
-  displayName: string;
-  type: string;
+export type ImportJobStatus =
+  | 'previewed'
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'cancel_requested'
+  | 'cancelled_kept'
+  | 'cancelled_discarded'
+  | 'discard_failed';
+
+export type ImportJobCancellationMode = 'keep_partial_progress' | 'discard_partial_progress';
+
+export interface ImportJobPreview {
+  fields: Array<{
+    key: string;
+    displayName: string;
+    type: string;
+  }>;
+  locations: Array<{
+    sourceId?: string;
+    kind: string;
+    title: string;
+    parentSourceId?: string;
+    archived: boolean;
+  }>;
+  assets: Array<{
+    sourceId?: string;
+    kind: string;
+    title: string;
+    parentSourceId?: string;
+    archived: boolean;
+  }>;
+  attachments: Array<{
+    sourceId?: string;
+    assetSourceId?: string;
+    fileName: string;
+    contentType: string;
+    sizeBytes: number;
+    primary: boolean;
+  }>;
+  messages: ImportMessage[];
+  fieldsTruncated: boolean;
+  locationsTruncated: boolean;
+  assetsTruncated: boolean;
+  attachmentsTruncated: boolean;
+  messagesTruncated: boolean;
 }
 
-export interface ImportAssetSample {
-  sourceId: string;
-  kind: string;
-  title: string;
-  description: string;
-  parentSourceId?: string;
-  customFields: Record<string, unknown>;
+export interface ImportJobResourceSummary {
+  resourceType: string;
+  resourceId: string;
+  resourceOwnerId?: string;
+  sourceEntityType: string;
+  sourceEntityId: string;
+  createdAt: string;
 }
 
-export interface ImportImageSample {
-  sourceId: string;
-  assetSourceId: string;
-  fileName: string;
-  contentType: string;
-  sizeBytes: number;
-  primary: boolean;
+export interface ImportJobProgress {
+  phase: string;
+  done: number;
+  total: number;
+  message?: string;
+  updatedAt?: string;
 }
 
-export interface ImportPreview {
+export interface ImportJob {
+  id: string;
+  status: ImportJobStatus;
+  actorId?: string;
   source: {
     type: string;
     name: string;
     baseUrl?: string;
     version?: string;
     imageImport: string;
+    fingerprint?: string;
   };
-  counts: ImportCounts;
-  fields: ImportField[];
-  assetSamples: ImportAssetSample[];
-  imageSamples: ImportImageSample[];
-  messages: ImportMessage[];
-}
-
-export interface ImportApplyResult {
-  counts: {
+  counts: ImportCounts & {
     fieldsCreated: number;
     fieldsExisting: number;
     locationsCreated: number;
@@ -249,7 +286,18 @@ export interface ImportApplyResult {
     assetsSkipped: number;
     attachmentsCreated: number;
     attachmentsSkipped: number;
+    recordsDiscarded: number;
+    sourceLinksDiscarded: number;
   };
+  preview: ImportJobPreview;
+  progress: ImportJobProgress;
+  progressHistory: ImportJobProgress[];
+  cancellationMode?: ImportJobCancellationMode;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  updatedAt: string;
+  resources: ImportJobResourceSummary[];
   messages: ImportMessage[];
 }
 
@@ -366,6 +414,14 @@ export function canEditInventory(inventory: Inventory | null | undefined): boole
 
 export function canEditAsset(inventory: Inventory | null | undefined): boolean {
   return hasAccessPermission(inventory?.access, 'edit_asset');
+}
+
+export function canViewImportJobs(inventory: Inventory | null | undefined): boolean {
+  return hasAccessPermission(inventory?.access, 'view_import_job');
+}
+
+export function canCreateImportJob(inventory: Inventory | null | undefined): boolean {
+  return hasAccessPermission(inventory?.access, 'create_import_job');
 }
 
 export function applicableCustomFieldDefinitions(

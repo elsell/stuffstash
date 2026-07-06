@@ -13,11 +13,11 @@ import {
   type Inventory,
   type InventoryAccessGrant,
   type InventoryAccessInvitation,
-  type ImportApplyResult,
-  type ImportPreview,
+  type ImportJob,
+  type ImportJobCancellationMode,
   type InventoryAccessRelationship,
   type InvitationStatusFilter,
-  type LegacyHomeboxImportRequest,
+  type ImportSourceRequest,
   type SearchRequest,
   type SearchResult,
   type SelectedAttachment,
@@ -35,6 +35,12 @@ import type {
 } from '$lib/ports/inventoryCustomizationRepository';
 import { filterAssets } from '$lib/application/workspace';
 
+type ScopedImportJob = {
+  tenantId: string;
+  inventoryId: string;
+  job: ImportJob;
+};
+
 export class SeededInventoryRepository
   implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
 {
@@ -43,10 +49,12 @@ export class SeededInventoryRepository
   private auditRecords: AuditRecord[] = [];
   private grants: InventoryAccessGrant[] = [];
   private invitations: InventoryAccessInvitation[] = [];
+  private importJobs: ScopedImportJob[] = [];
   private selectedTenantId: string;
   private selectedInventoryId: string;
   private selectedLifecycleState: AssetLifecycleFilter = 'active';
   private nextAssetSequence = 1;
+  private nextImportJobSequence = 1;
 
   constructor(seed: WorkspaceSeed) {
     this.seed = seed;
@@ -73,7 +81,7 @@ export class SeededInventoryRepository
       name: input.inventoryName,
       access: {
         relationship: 'owner',
-        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure']
+        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure', 'view_import_job', 'create_import_job']
       }
     };
     this.seed = {
@@ -107,7 +115,7 @@ export class SeededInventoryRepository
       name: inventoryName,
       access: {
         relationship: 'owner',
-        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure']
+        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure', 'view_import_job', 'create_import_job']
       }
     };
     this.seed = {
@@ -357,20 +365,122 @@ export class SeededInventoryRepository
     }));
   }
 
-  async previewLegacyHomeboxImport(
-    _tenantId: string,
-    _inventoryId: string,
-    _input: LegacyHomeboxImportRequest
-  ): Promise<ImportPreview> {
-    throw new Error('Import requires a connected Stuff Stash API.');
+  async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
+    return this.importJobs.filter((entry) => entry.tenantId === tenantId && entry.inventoryId === inventoryId).map((entry) => entry.job);
   }
 
-  async applyLegacyHomeboxImport(
-    _tenantId: string,
-    _inventoryId: string,
-    _input: LegacyHomeboxImportRequest
-  ): Promise<ImportApplyResult> {
-    throw new Error('Import requires a connected Stuff Stash API.');
+  async previewImportJob(tenantId: string, inventoryId: string, input: ImportSourceRequest): Promise<ImportJob> {
+    const now = new Date().toISOString();
+    const job: ImportJob = {
+      id: `import-job-local-${this.nextImportJobSequence}`,
+      status: 'previewed',
+      source: {
+        type: input.sourceType,
+        name: input.sourceType === 'legacy_homebox_csv' ? 'Homebox CSV' : 'Homebox',
+        baseUrl: input.baseUrl,
+        imageImport: input.includeImages ? 'enabled' : 'disabled',
+        fingerprint: `local-preview-${this.nextImportJobSequence}`
+      },
+      counts: {
+        fields: 0,
+        locations: 0,
+        assets: 0,
+        attachments: 0,
+        warnings: 0,
+        errors: 0,
+        fieldsCreated: 0,
+        fieldsExisting: 0,
+        locationsCreated: 0,
+        assetsCreated: 0,
+        assetsSkipped: 0,
+        attachmentsCreated: 0,
+        attachmentsSkipped: 0,
+        recordsDiscarded: 0,
+        sourceLinksDiscarded: 0
+      },
+      preview: {
+        fields: [],
+        locations: [],
+        assets: [],
+        attachments: [],
+        messages: [
+          {
+            code: 'local-import-preview',
+            severity: 'warning',
+            summary: 'Connect to the Stuff Stash API to preview real import records.'
+          }
+        ],
+        fieldsTruncated: false,
+        locationsTruncated: false,
+        assetsTruncated: false,
+        attachmentsTruncated: false,
+        messagesTruncated: false
+      },
+      progress: { phase: 'ready', done: 0, total: 0, updatedAt: now },
+      progressHistory: [{ phase: 'ready', done: 0, total: 0, updatedAt: now }],
+      createdAt: now,
+      updatedAt: now,
+      resources: [],
+      messages: [
+        {
+          code: 'local-import-preview',
+          severity: 'warning',
+          summary: 'Connect to the Stuff Stash API to preview real import records.'
+        }
+      ]
+    };
+    this.nextImportJobSequence += 1;
+    this.importJobs.unshift({ tenantId, inventoryId, job });
+    return job;
+  }
+
+  async getImportJob(tenantId: string, inventoryId: string, jobId: string): Promise<ImportJob> {
+    const entry = this.importJobs.find(
+      (candidate) => candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.job.id === jobId
+    );
+    if (!entry) {
+      throw new Error('Import job not found.');
+    }
+    return entry.job;
+  }
+
+  async startImportJob(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    _input: ImportSourceRequest
+  ): Promise<ImportJob> {
+    const job = await this.getImportJob(tenantId, inventoryId, jobId);
+    const now = new Date().toISOString();
+    job.status = 'running';
+    job.startedAt = now;
+    job.updatedAt = now;
+    job.progress = { phase: 'reading_source', done: 0, total: job.counts.assets, message: 'Queued locally', updatedAt: now };
+    job.progressHistory = importJobProgressHistoryWith(job.progressHistory, job.progress);
+    return job;
+  }
+
+  async cancelImportJob(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    mode: ImportJobCancellationMode
+  ): Promise<ImportJob> {
+    const job = await this.getImportJob(tenantId, inventoryId, jobId);
+    const now = new Date().toISOString();
+    job.status = 'cancel_requested';
+    job.cancellationMode = mode;
+    job.updatedAt = now;
+    job.progress = { ...job.progress, message: 'Cancellation requested', updatedAt: now };
+    job.progressHistory = importJobProgressHistoryWith(job.progressHistory, job.progress);
+    return job;
+  }
+
+  async removeImportJobFromHistory(tenantId: string, inventoryId: string, jobId: string): Promise<void> {
+    await this.getImportJob(tenantId, inventoryId, jobId);
+    this.importJobs = this.importJobs.filter(
+      (candidate) => !(candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.job.id === jobId)
+    );
   }
 
   async listTenantAuditRecords(tenantId: string, cursor?: string, _signal?: AbortSignal): Promise<AuditRecordPage> {
@@ -983,6 +1093,15 @@ function exactAssets(assets: Asset[], query: string): Asset[] {
       asset.description.toLowerCase() === normalized ||
       asset.customAssetTypeLabel?.toLowerCase() === normalized
   );
+}
+
+function importJobProgressHistoryWith(history: ImportJob['progressHistory'], progress: ImportJob['progress']): ImportJob['progressHistory'] {
+  const existing = [...history];
+  const last = existing.at(-1);
+  if (last?.phase === progress.phase && last.message === progress.message) {
+    return existing;
+  }
+  return [...existing, progress];
 }
 
 function page<T>(items: T[], cursor?: string): InventoryAccessPage<T> {

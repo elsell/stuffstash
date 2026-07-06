@@ -76,7 +76,7 @@ The first slice may implement creation, approval, and cancellation before comman
 
 Mobile realtime approval and cancellation must use the same action-plan application service methods as any future REST, web, or MCP review surface. The realtime adapter may translate `action.plan.approve` and `action.plan.cancel` WebSocket messages into application-service calls, but it must not update action-plan persistence directly.
 
-The first execution slices support single-command asset lifecycle work, multi-command create plans, and multi-command create-then-move plans. `create_location` is executed as asset creation with kind `location`; `create_asset` is executed as asset creation with kind `item` unless the validated command arguments explicitly provide `item`, `container`, or `location`. `move_asset` is executed as an asset update that changes containment. `archive_asset` is executed as an asset lifecycle transition from active to archived. `restore_asset` is executed as an asset lifecycle transition from archived to active. Execution must use the existing asset application service boundary so tenant and inventory authorization, domain validation, audit history, undoable operations, observability, and persistence continue to behave exactly like equivalent REST or UI commands.
+The first execution slices support single-command asset lifecycle work, asset checkout work, multi-command create plans, and multi-command create-then-move plans. `create_location` is executed as asset creation with kind `location`; `create_asset` is executed as asset creation with kind `item` unless the validated command arguments explicitly provide `item`, `container`, or `location`. `move_asset` is executed as an asset update that changes containment. `archive_asset` is executed as an asset lifecycle transition from active to archived. `restore_asset` is executed as an asset lifecycle transition from archived to active. `checkout_asset` creates an open asset checkout record without moving the asset. `return_asset` closes the open checkout record without moving the asset. Execution must use the existing asset application service boundary so tenant and inventory authorization, domain validation, audit history, undoable operations where supported, observability, and persistence continue to behave exactly like equivalent REST or UI commands.
 
 Multi-command execution is initially limited to ordered plans containing `create_asset`, `create_location`, and `move_asset` commands. Each dependent command may depend only on an earlier create command in the same plan. The agent should prefer a multi-command plan for a clear request that needs missing parent containers or locations created, such as creating `Kitchen` and then moving an existing water bottle there. Clarification is appropriate when the intended destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription. Unsupported command mixes, forward references, cycles, missing references, or unsupported write commands in a multi-command plan must transition the plan to `failed` without applying inventory changes.
 
@@ -115,6 +115,8 @@ The first command enumeration is:
 - `update_asset`
 - `archive_asset`
 - `restore_asset`
+- `checkout_asset`
+- `return_asset`
 
 Commands must be stored as project-owned typed command records with a command ID, command kind, safe human summary, and bounded JSON arguments. The first persistence slice may store command arguments as reviewed JSON while application services still validate the command kind and safe summary. Command arguments must not contain provider-specific model output, raw prompts, credentials, bearer tokens, hidden resource data, or approval claims.
 
@@ -152,6 +154,20 @@ The first executable `restore_asset` argument shape is:
 
 The execution service must reject command arguments outside this shape for executable restore commands until richer command schemas are specified. `restore_asset` must use the same lifecycle rules as the asset application service, including rejecting restore when the asset has an archived or unavailable parent.
 
+The first executable `checkout_asset` argument shape is:
+
+- `assetId`: required existing active asset ID in the same inventory.
+- `details`: optional bounded user text.
+
+The execution service must reject command arguments outside this shape for executable checkout commands until richer command schemas are specified. `checkout_asset` must use the asset checkout application service specified in `specs/assets/asset-checkout.spec.md`, including rejecting checkout when the asset already has an open checkout.
+
+The first executable `return_asset` argument shape is:
+
+- `assetId`: required existing asset ID in the same inventory with an open checkout.
+- `details`: optional bounded user text.
+
+The execution service must reject command arguments outside this shape for executable return commands until richer command schemas are specified. `return_asset` must use the asset checkout application service specified in `specs/assets/asset-checkout.spec.md`, including allowing any authorized editor to return the asset.
+
 ## Command Rules
 
 - Commands must map to application operations, not database operations.
@@ -167,6 +183,7 @@ The execution service must reject command arguments outside this shape for execu
 - Clients must be able to display a concise human-readable summary of the plan.
 - Clients must be able to display the specific operations that need approval.
 - Users must be able to approve or cancel a plan.
+- State-changing voice plans, including checkout and return, require explicit client UI approval through a button or equivalent accessible control in the first slice. Spoken approval must not execute the plan.
 - Users must be able to answer clarifying questions without restarting the conversation.
 - Approval must be recorded with the audit history of executed actions.
 - Approval of one plan must not authorize unrelated future plans.

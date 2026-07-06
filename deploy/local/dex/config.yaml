@@ -27,6 +27,11 @@ staticClients:
     public: true
     redirectURIs:
       - http://localhost:5173/callback
+  - id: stuff-stash-mobile-local
+    name: Stuff Stash Mobile Local
+    public: true
+    redirectURIs:
+      - stuffstash://auth/callback
   - id: stuff-stash-wrong-audience
     name: Stuff Stash Wrong Audience Fixture
     secret: stuff-stash-wrong-audience-secret

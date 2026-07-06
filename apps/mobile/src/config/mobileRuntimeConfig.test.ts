@@ -6,13 +6,11 @@ describe('mobileRuntimeConfig', () => {
     expect(
       parseMobileRuntimeConfig({
         apiBaseUrl: 'http://192.168.1.97:8080/',
-        tenantId: 'tenant-home',
-        devToken: 'dev:john:john@example.com'
+        tenantId: 'tenant-home'
       })
     ).toEqual({
       apiBaseUrl: 'http://192.168.1.97:8080',
       tenantId: 'tenant-home',
-      devToken: 'dev:john:john@example.com',
       voiceDeveloperDiagnosticsEnabled: false
     });
   });
@@ -22,7 +20,6 @@ describe('mobileRuntimeConfig', () => {
       parseMobileRuntimeConfig({
         apiBaseUrl: 'http://192.168.1.97:8080/',
         tenantId: 'tenant-home',
-        devToken: 'dev:john:john@example.com',
         voiceDeveloperDiagnosticsEnabled: 'true'
       }).voiceDeveloperDiagnosticsEnabled
     ).toBe(true);
@@ -31,7 +28,6 @@ describe('mobileRuntimeConfig', () => {
       parseMobileRuntimeConfig({
         apiBaseUrl: 'http://192.168.1.97:8080/',
         tenantId: 'tenant-home',
-        devToken: 'dev:john:john@example.com',
         voiceDeveloperDiagnosticsEnabled: '0'
       }).voiceDeveloperDiagnosticsEnabled
     ).toBe(false);
@@ -42,7 +38,6 @@ describe('mobileRuntimeConfig', () => {
       parseMobileRuntimeConfig({
         apiBaseUrl: 'http://192.168.1.97:8080',
         tenantId: 'tenant-home',
-        devToken: 'dev:john',
         voiceDeveloperDiagnosticsEnabled: 'sometimes'
       })
     ).toThrow('EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED');
@@ -52,8 +47,7 @@ describe('mobileRuntimeConfig', () => {
     expect(() =>
       parseMobileRuntimeConfig({
         apiBaseUrl: 'http://192.168.1.97:8080',
-        tenantId: '',
-        devToken: 'dev:john'
+        tenantId: ''
       })
     ).toThrow('EXPO_PUBLIC_STUFF_STASH_TENANT_ID');
   });
@@ -64,20 +58,17 @@ describe('mobileRuntimeConfig', () => {
         {
           apiBaseUrl: 'http://192.168.1.117:8080',
           tenantId: 'tenant-home',
-          devToken: 'dev:owner',
           voiceDeveloperDiagnosticsEnabled: 'true'
         },
         {
           apiBaseUrl: undefined,
           tenantId: '',
-          devToken: undefined,
           voiceDeveloperDiagnosticsEnabled: undefined
         }
       )
     ).toEqual({
       apiBaseUrl: 'http://192.168.1.117:8080',
       tenantId: 'tenant-home',
-      devToken: 'dev:owner',
       voiceDeveloperDiagnosticsEnabled: 'true'
     });
   });

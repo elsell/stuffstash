@@ -4,7 +4,7 @@ import {
   locationAssetDetailHref,
   navigateAfterDeletedAsset
 } from './AssetDetailNavigation';
-import { addHereParams } from './AddAssetInitialParent';
+import { addHereParams, addHereRouteParams } from './AddAssetInitialParent';
 import {
   consumeAssetActionCompletion,
   recordAssetActionCompletion
@@ -147,6 +147,25 @@ describe('addHereParams', () => {
       parentSubtitle: 'Living room',
       parentPathLabel: 'Living room / TV box',
       parentSelectionHint: 'Container',
+      parentWillPromoteToContainer: 'false'
+    });
+  });
+
+  it('builds the same Add parent route params from a map row source', () => {
+    expect(addHereRouteParams({
+      id: 'asset-garage-shelf',
+      title: 'Garage shelf',
+      kind: 'location',
+      kindLabel: 'Location',
+      parentLocationTrailLabel: 'Garage',
+      locationTrailLabel: 'Garage / Garage shelf'
+    })).toEqual({
+      parentAssetId: 'asset-garage-shelf',
+      parentTitle: 'Garage shelf',
+      parentKind: 'location',
+      parentSubtitle: 'Garage',
+      parentPathLabel: 'Garage / Garage shelf',
+      parentSelectionHint: 'Location',
       parentWillPromoteToContainer: 'false'
     });
   });

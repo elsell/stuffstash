@@ -40,11 +40,13 @@
   } = $props();
 
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId));
+  let selectedInventory = $derived(inventories.find((inventory) => inventory.id === selectedInventoryId) ?? null);
   let navigationGroups = $derived(
     desktopShellNavigationGroups({
       mode,
       tenantId: selectedTenantId || null,
       inventoryId: selectedInventoryId || null,
+      inventory: selectedInventory,
       settingsSection
     })
   );

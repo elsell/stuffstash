@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
+	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
+	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -32,35 +34,42 @@ func newTestApp(observer ports.Observer, ids ...string) app.App {
 
 func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authorizer, ids ...string) app.App {
 	store := memory.NewStore()
-	return app.New(app.Dependencies{
-		Observer:                  observer,
-		Auth:                      auth.NewLocalDevAuthenticator(),
-		Authorizer:                authorizer,
-		Tenants:                   store,
-		TenantUnitOfWork:          store,
-		Inventories:               store,
-		InventoryUnitOfWork:       store,
-		InventoryAccess:           store,
-		InventoryAccessUnitOfWork: store,
-		CustomAssetTypes:          store,
-		CustomAssetTypeUnitOfWork: store,
-		CustomFields:              store,
-		CustomFieldUnitOfWork:     store,
-		Assets:                    store,
-		AssetUnitOfWork:           store,
-		Undoables:                 store,
-		Search:                    store,
-		Attachments:               store,
-		AttachmentUnitOfWork:      store,
-		Blobs:                     store,
-		BlobDeletionOutbox:        store,
-		Audit:                     store,
-		Outbox:                    store,
-		RealtimeSessions:          store,
-		ActionPlans:               store,
-		ImportSources:             homebox.NewLegacyImporter(nil),
-		IDs:                       &fakeIDGenerator{ids: ids},
+	application := app.New(app.Dependencies{
+		Observer:                   observer,
+		Auth:                       auth.NewLocalDevAuthenticator(),
+		Authorizer:                 authorizer,
+		Users:                      store,
+		Tenants:                    store,
+		TenantUnitOfWork:           store,
+		Inventories:                store,
+		InventoryUnitOfWork:        store,
+		InventoryAccess:            store,
+		InventoryAccessUnitOfWork:  store,
+		CustomAssetTypes:           store,
+		CustomAssetTypeUnitOfWork:  store,
+		CustomFields:               store,
+		CustomFieldUnitOfWork:      store,
+		Assets:                     store,
+		AssetUnitOfWork:            store,
+		Undoables:                  store,
+		Search:                     store,
+		Attachments:                store,
+		AttachmentUnitOfWork:       store,
+		Blobs:                      store,
+		BlobDeletionOutbox:         store,
+		Audit:                      store,
+		Outbox:                     store,
+		RealtimeSessions:           store,
+		ActionPlans:                store,
+		ImportSources:              homebox.NewLegacyImporter(nil),
+		ImportJobs:                 store,
+		ImportSourceVault:          newHTTPTestImportSourceVault(store),
+		ImportLinks:                store,
+		ImportAssetUnitOfWork:      store,
+		ImportAttachmentUnitOfWork: store,
+		IDs:                        &fakeIDGenerator{ids: ids},
 	})
+	return application.WithImportWorker(importworker.NewInProcess(application, observer))
 }
 
 func newSeededTestApp(t *testing.T, state seededState) app.App {
@@ -78,6 +87,18 @@ func newSeededTestAppWithAuthorizer(t *testing.T, state seededState, authorizer 
 func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blobStorage ports.BlobStorage, authorizer ports.Authorizer) app.App {
 	t.Helper()
 
+	return newSeededTestAppWithBlobAuthorizerAndImportSource(t, state, blobStorage, authorizer, homebox.NewLegacyImporter(nil))
+}
+
+func newSeededTestAppWithImportSource(t *testing.T, state seededState, importSource ports.ImportSourceReader) app.App {
+	t.Helper()
+
+	return newSeededTestAppWithBlobAuthorizerAndImportSource(t, state, nil, memory.NewAuthorizer(), importSource)
+}
+
+func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seededState, blobStorage ports.BlobStorage, authorizer ports.Authorizer, importSource ports.ImportSourceReader) app.App {
+	t.Helper()
+
 	ctx := context.Background()
 	store := memory.NewStore()
 	seedMemoryStore(t, ctx, store, authorizer, state)
@@ -86,37 +107,44 @@ func newSeededTestAppWithBlobAndAuthorizer(t *testing.T, state seededState, blob
 		blobStorage = store
 	}
 
-	return app.New(app.Dependencies{
-		Observer:                  &fakeObserver{},
-		Auth:                      auth.NewLocalDevAuthenticator(),
-		Authorizer:                authorizer,
-		Tenants:                   store,
-		TenantUnitOfWork:          store,
-		Inventories:               store,
-		InventoryUnitOfWork:       store,
-		InventoryAccess:           store,
-		InventoryAccessUnitOfWork: store,
-		CustomAssetTypes:          store,
-		CustomAssetTypeUnitOfWork: store,
-		CustomFields:              store,
-		CustomFieldUnitOfWork:     store,
-		Assets:                    store,
-		AssetUnitOfWork:           store,
-		Undoables:                 store,
-		Search:                    store,
-		Attachments:               store,
-		AttachmentUnitOfWork:      store,
-		Blobs:                     blobStorage,
-		DirectUploads:             blobstore.NewLocalDirectAttachmentUploader(blobStorage),
-		BlobDeletionOutbox:        store,
-		Audit:                     store,
-		Outbox:                    store,
-		RealtimeSessions:          store,
-		ActionPlans:               store,
-		ImportSources:             homebox.NewLegacyImporter(nil),
-		IDs:                       &fakeIDGenerator{ids: state.ids},
-		InvitationTTL:             state.invitationTTL,
+	application := app.New(app.Dependencies{
+		Observer:                   &fakeObserver{},
+		Auth:                       auth.NewLocalDevAuthenticator(),
+		Authorizer:                 authorizer,
+		Users:                      store,
+		Tenants:                    store,
+		TenantUnitOfWork:           store,
+		Inventories:                store,
+		InventoryUnitOfWork:        store,
+		InventoryAccess:            store,
+		InventoryAccessUnitOfWork:  store,
+		CustomAssetTypes:           store,
+		CustomAssetTypeUnitOfWork:  store,
+		CustomFields:               store,
+		CustomFieldUnitOfWork:      store,
+		Assets:                     store,
+		AssetUnitOfWork:            store,
+		Undoables:                  store,
+		Search:                     store,
+		Attachments:                store,
+		AttachmentUnitOfWork:       store,
+		Blobs:                      blobStorage,
+		DirectUploads:              blobstore.NewLocalDirectAttachmentUploader(blobStorage),
+		BlobDeletionOutbox:         store,
+		Audit:                      store,
+		Outbox:                     store,
+		RealtimeSessions:           store,
+		ActionPlans:                store,
+		ImportSources:              importSource,
+		ImportJobs:                 store,
+		ImportSourceVault:          newHTTPTestImportSourceVault(store),
+		ImportLinks:                store,
+		ImportAssetUnitOfWork:      store,
+		ImportAttachmentUnitOfWork: store,
+		IDs:                        &fakeIDGenerator{ids: state.ids},
+		InvitationTTL:              state.invitationTTL,
 	})
+	return application.WithImportWorker(importworker.NewInProcess(application, nil))
 }
 
 func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, store *memory.Store, authorizer ports.Authorizer) app.App {
@@ -124,35 +152,53 @@ func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, sto
 
 	seedMemoryStore(t, context.Background(), store, authorizer, state)
 
-	return app.New(app.Dependencies{
-		Observer:                  &fakeObserver{},
-		Auth:                      auth.NewLocalDevAuthenticator(),
-		Authorizer:                authorizer,
-		Tenants:                   store,
-		TenantUnitOfWork:          store,
-		Inventories:               store,
-		InventoryUnitOfWork:       store,
-		InventoryAccess:           store,
-		InventoryAccessUnitOfWork: store,
-		CustomAssetTypes:          store,
-		CustomAssetTypeUnitOfWork: store,
-		CustomFields:              store,
-		CustomFieldUnitOfWork:     store,
-		Assets:                    store,
-		AssetUnitOfWork:           store,
-		Undoables:                 store,
-		Search:                    store,
-		Attachments:               store,
-		AttachmentUnitOfWork:      store,
-		Blobs:                     store,
-		BlobDeletionOutbox:        store,
-		Audit:                     store,
-		Outbox:                    store,
-		RealtimeSessions:          store,
-		ActionPlans:               store,
-		ImportSources:             homebox.NewLegacyImporter(nil),
-		IDs:                       &fakeIDGenerator{ids: state.ids},
+	application := app.New(app.Dependencies{
+		Observer:                   &fakeObserver{},
+		Auth:                       auth.NewLocalDevAuthenticator(),
+		Authorizer:                 authorizer,
+		Users:                      store,
+		Tenants:                    store,
+		TenantUnitOfWork:           store,
+		Inventories:                store,
+		InventoryUnitOfWork:        store,
+		InventoryAccess:            store,
+		InventoryAccessUnitOfWork:  store,
+		CustomAssetTypes:           store,
+		CustomAssetTypeUnitOfWork:  store,
+		CustomFields:               store,
+		CustomFieldUnitOfWork:      store,
+		Assets:                     store,
+		AssetUnitOfWork:            store,
+		Undoables:                  store,
+		Search:                     store,
+		Attachments:                store,
+		AttachmentUnitOfWork:       store,
+		Blobs:                      store,
+		BlobDeletionOutbox:         store,
+		Audit:                      store,
+		Outbox:                     store,
+		RealtimeSessions:           store,
+		ActionPlans:                store,
+		ImportSources:              homebox.NewLegacyImporter(nil),
+		ImportJobs:                 store,
+		ImportSourceVault:          newHTTPTestImportSourceVault(store),
+		ImportLinks:                store,
+		ImportAssetUnitOfWork:      store,
+		ImportAttachmentUnitOfWork: store,
+		IDs:                        &fakeIDGenerator{ids: state.ids},
 	})
+	return application.WithImportWorker(importworker.NewInProcess(application, nil))
+}
+
+func newHTTPTestImportSourceVault(repository ports.ImportJobSourceRepository) ports.ImportJobSourceVault {
+	sealer, err := credentials.NewAESGCMSealer(credentials.AESGCMSealerConfig{
+		KeyID: "http-test-import-source-key",
+		Key:   []byte("0123456789abcdef0123456789abcdef"),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return credentials.NewDatabaseImportJobSourceVault(repository, sealer)
 }
 
 func seedMemoryStore(t *testing.T, ctx context.Context, store *memory.Store, authorizer ports.Authorizer, state seededState) {

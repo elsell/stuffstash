@@ -619,6 +619,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID audit records */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-audit-records"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
         parameters: {
             query?: never;
@@ -795,24 +812,24 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore"];
         trace?: never;
     };
-    "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply": {
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID inventories by inventory ID imports jobs */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs"];
         put?: never;
-        /** Post tenants by tenant ID inventories by inventory ID imports legacy homebox apply */
-        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-apply"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/preview": {
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -821,8 +838,60 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post tenants by tenant ID inventories by inventory ID imports legacy homebox preview */
-        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-preview"];
+        /** Post tenants by tenant ID inventories by inventory ID imports jobs preview */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID imports jobs by job ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID imports jobs by job ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID imports jobs by job ID cancel */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID imports jobs by job ID start */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1147,6 +1216,10 @@ export interface components {
             sizeBytes: number;
             tenantId: string;
         };
+        AuditPrincipalResponse: {
+            email?: string;
+            id: string;
+        };
         CreateAssetBody: {
             /**
              * Format: uri
@@ -1344,63 +1417,128 @@ export interface components {
             relationship: string;
             tenantId: string;
         };
-        ImportApplyCountsResponse: {
+        ImportJobCancelRequest: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ImportJobCancelRequest.json
+             */
+            readonly $schema?: string;
+            /**
+             * @description Cancellation behavior for already imported records
+             * @enum {string}
+             */
+            mode: "keep_partial_progress" | "discard_partial_progress";
+        };
+        ImportJobCountsResponse: {
+            /** Format: int64 */
+            assets: number;
             /** Format: int64 */
             assetsCreated: number;
             /** Format: int64 */
             assetsSkipped: number;
             /** Format: int64 */
+            attachments: number;
+            /** Format: int64 */
             attachmentsCreated: number;
             /** Format: int64 */
             attachmentsSkipped: number;
-            /** Format: int64 */
-            fieldsCreated: number;
-            /** Format: int64 */
-            fieldsExisting: number;
-            /** Format: int64 */
-            locationsCreated: number;
-        };
-        ImportApplyResponse: {
-            counts: components["schemas"]["ImportApplyCountsResponse"];
-            messages: components["schemas"]["ImportMessageResponse"][] | null;
-        };
-        ImportAssetSample: {
-            customFields: {
-                [key: string]: unknown;
-            };
-            description: string;
-            kind: string;
-            parentSourceId?: string;
-            sourceId: string;
-            title: string;
-        };
-        ImportCountsResponse: {
-            /** Format: int64 */
-            assets: number;
-            /** Format: int64 */
-            attachments: number;
             /** Format: int64 */
             errors: number;
             /** Format: int64 */
             fields: number;
             /** Format: int64 */
+            fieldsCreated: number;
+            /** Format: int64 */
+            fieldsExisting: number;
+            /** Format: int64 */
             locations: number;
+            /** Format: int64 */
+            locationsCreated: number;
+            /** Format: int64 */
+            recordsDiscarded: number;
+            /** Format: int64 */
+            sourceLinksDiscarded: number;
             /** Format: int64 */
             warnings: number;
         };
-        ImportFieldResponse: {
-            displayName: string;
-            key: string;
-            type: string;
+        ImportJobListResponse: {
+            jobs: components["schemas"]["ImportJobResponse"][] | null;
         };
-        ImportImageSample: {
-            assetSourceId: string;
+        ImportJobPreview: {
+            assets: components["schemas"]["ImportJobPreviewAsset"][] | null;
+            assetsTruncated: boolean;
+            attachments: components["schemas"]["ImportJobPreviewAttachment"][] | null;
+            attachmentsTruncated: boolean;
+            fields: components["schemas"]["ImportJobPreviewField"][] | null;
+            fieldsTruncated: boolean;
+            locations: components["schemas"]["ImportJobPreviewAsset"][] | null;
+            locationsTruncated: boolean;
+            messages: components["schemas"]["ImportMessageResponse"][] | null;
+            messagesTruncated: boolean;
+        };
+        ImportJobPreviewAsset: {
+            archived: boolean;
+            kind: string;
+            parentSourceId?: string;
+            sourceId?: string;
+            title: string;
+        };
+        ImportJobPreviewAttachment: {
+            assetSourceId?: string;
             contentType: string;
             fileName: string;
             primary: boolean;
             /** Format: int64 */
             sizeBytes: number;
-            sourceId: string;
+            sourceId?: string;
+        };
+        ImportJobPreviewField: {
+            displayName: string;
+            key: string;
+            type: string;
+        };
+        ImportJobProgress: {
+            /** Format: int64 */
+            done: number;
+            message?: string;
+            phase: string;
+            /** Format: int64 */
+            total: number;
+            updatedAt?: string;
+        };
+        ImportJobResource: {
+            createdAt: string;
+            resourceId: string;
+            resourceOwnerId?: string;
+            resourceType: string;
+            sourceEntityId: string;
+            sourceEntityType: string;
+        };
+        ImportJobResponse: {
+            actorId?: string;
+            cancellationMode?: string;
+            completedAt?: string;
+            counts: components["schemas"]["ImportJobCountsResponse"];
+            createdAt: string;
+            id: string;
+            messages: components["schemas"]["ImportMessageResponse"][] | null;
+            preview: components["schemas"]["ImportJobPreview"];
+            progress: components["schemas"]["ImportJobProgress"];
+            progressHistory: components["schemas"]["ImportJobProgress"][] | null;
+            resources: components["schemas"]["ImportJobResource"][] | null;
+            source: components["schemas"]["ImportJobSourceResponse"];
+            startedAt?: string;
+            status: string;
+            updatedAt: string;
+        };
+        ImportJobSourceResponse: {
+            baseUrl?: string;
+            fingerprint?: string;
+            imageImport: string;
+            name: string;
+            type: string;
+            version?: string;
         };
         ImportMessageResponse: {
             code: string;
@@ -1410,20 +1548,34 @@ export interface components {
             sourceName?: string;
             summary: string;
         };
-        ImportPreviewResponse: {
-            assetSamples: components["schemas"]["ImportAssetSample"][] | null;
-            counts: components["schemas"]["ImportCountsResponse"];
-            fields: components["schemas"]["ImportFieldResponse"][] | null;
-            imageSamples: components["schemas"]["ImportImageSample"][] | null;
-            messages: components["schemas"]["ImportMessageResponse"][] | null;
-            source: components["schemas"]["ImportSourceResponse"];
-        };
-        ImportSourceResponse: {
+        ImportSourceRequest: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ImportSourceRequest.json
+             */
+            readonly $schema?: string;
+            /** @description Allow self-signed or otherwise untrusted TLS certificates for live-source imports */
+            allowInsecureTLS?: boolean;
+            /** @description Allow source URLs that resolve to private or local network addresses */
+            allowPrivateNetwork?: boolean;
+            /** @description Source base URL for live-source imports */
             baseUrl?: string;
-            imageImport: string;
-            name: string;
-            type: string;
-            version?: string;
+            /** @description Base64-encoded source file content */
+            contentBase64?: string;
+            /** @description Uploaded source file name */
+            fileName?: string;
+            /** @description Import supported image attachments when the source supports them */
+            includeImages?: boolean;
+            /** @description Source password for live-source imports */
+            password?: string;
+            /**
+             * @description Import source type
+             * @enum {string}
+             */
+            sourceType: "legacy_homebox" | "legacy_homebox_csv";
+            /** @description Source username for live-source imports */
+            username?: string;
         };
         InitiateDirectUploadBody: {
             /**
@@ -1488,35 +1640,6 @@ export interface components {
             status: string;
             tenantId: string;
         };
-        LegacyHomeboxImportRequest: {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/LegacyHomeboxImportRequest.json
-             */
-            readonly $schema?: string;
-            /** @description Allow self-signed or otherwise untrusted Homebox TLS certificates */
-            allowInsecureTLS?: boolean;
-            /** @description Allow Homebox URLs that resolve to private or local network addresses */
-            allowPrivateNetwork?: boolean;
-            /** @description Homebox base URL for live imports */
-            baseUrl?: string;
-            /** @description Base64-encoded Homebox CSV content */
-            contentBase64?: string;
-            /** @description Uploaded CSV file name */
-            fileName?: string;
-            /** @description Import supported image attachments for live imports */
-            includeImages?: boolean;
-            /** @description Homebox password for live imports */
-            password?: string;
-            /**
-             * @description Import source type
-             * @enum {string}
-             */
-            sourceType: "legacy_homebox" | "legacy_homebox_csv";
-            /** @description Homebox username for live imports */
-            username?: string;
-        };
         Meta: {
             pagination?: components["schemas"]["PaginationMeta"];
             requestId?: string;
@@ -1579,6 +1702,7 @@ export interface components {
             };
             /** Format: date-time */
             occurredAt: string;
+            principal?: components["schemas"]["AuditPrincipalResponse"];
             principalId: string;
             requestId?: string;
             source: string;
@@ -1662,24 +1786,24 @@ export interface components {
             data: components["schemas"]["GrantResponse"];
             meta: components["schemas"]["Meta"];
         };
-        SuccessEnvelopeImportApplyResponse: {
+        SuccessEnvelopeImportJobListResponse: {
             /**
              * Format: uri
              * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/SuccessEnvelopeImportApplyResponse.json
+             * @example https://example.com/schemas/SuccessEnvelopeImportJobListResponse.json
              */
             readonly $schema?: string;
-            data: components["schemas"]["ImportApplyResponse"];
+            data: components["schemas"]["ImportJobListResponse"];
             meta: components["schemas"]["Meta"];
         };
-        SuccessEnvelopeImportPreviewResponse: {
+        SuccessEnvelopeImportJobResponse: {
             /**
              * Format: uri
              * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/SuccessEnvelopeImportPreviewResponse.json
+             * @example https://example.com/schemas/SuccessEnvelopeImportJobResponse.json
              */
             readonly $schema?: string;
-            data: components["schemas"]["ImportPreviewResponse"];
+            data: components["schemas"]["ImportJobResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeInventoryResponse: {
@@ -4309,6 +4433,48 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-audit-records": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListRecordResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
         parameters: {
             query?: never;
@@ -4980,14 +5146,12 @@ export interface operations {
             };
         };
     };
-    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-apply": {
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs": {
         parameters: {
             query?: never;
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
-                /** @description Optional request correlation ID */
-                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
@@ -4997,11 +5161,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LegacyHomeboxImportRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -5009,7 +5169,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelopeImportApplyResponse"];
+                    "application/json": components["schemas"]["SuccessEnvelopeImportJobListResponse"];
                 };
             };
             /** @description Error */
@@ -5023,7 +5183,7 @@ export interface operations {
             };
         };
     };
-    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-legacy-homebox-preview": {
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-preview": {
         parameters: {
             query?: never;
             header?: {
@@ -5042,7 +5202,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LegacyHomeboxImportRequest"];
+                "application/json": components["schemas"]["ImportSourceRequest"];
             };
         };
         responses: {
@@ -5052,7 +5212,175 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelopeImportPreviewResponse"];
+                    "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Import job ID */
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Import job ID */
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-cancel": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Import job ID */
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportJobCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-start": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Import job ID */
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportSourceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
                 };
             };
             /** @description Error */

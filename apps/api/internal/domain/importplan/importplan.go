@@ -49,13 +49,14 @@ type Asset struct {
 }
 
 type Attachment struct {
-	SourceID      string
-	AssetSourceID string
-	FileName      string
-	ContentType   string
-	Content       []byte
-	SizeBytes     int
-	Primary       bool
+	SourceID          string
+	AssetSourceID     string
+	FileName          string
+	ContentType       string
+	Content           []byte
+	SizeBytes         int
+	Primary           bool
+	UnavailableReason string
 }
 
 type Plan struct {

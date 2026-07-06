@@ -119,6 +119,8 @@ Rules:
 - Asset detail must not return archived assets unless the request explicitly allows archived detail through a lifecycle-aware endpoint or query parameter. The first implementation may allow direct detail for archived assets to support restore UI when the caller has `inventory.view`.
 - Asset hard delete requires `inventory.edit_asset`.
 - Asset hard delete must be blocked while active children exist.
+- Asset hard delete must be blocked while the asset has an open checkout record.
+- Asset hard delete may remove closed checkout records for the deleted asset only when audit records remain preserved.
 - Asset hard delete must preserve audit records.
 - Asset hard delete must emit audit history before removing the asset.
 - Existing archive/restore behavior remains the default reversible delete path.

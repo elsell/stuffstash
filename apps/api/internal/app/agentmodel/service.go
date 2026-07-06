@@ -85,7 +85,7 @@ func (s Service) ensureTenantConfigure(ctx context.Context, principal identity.P
 
 func (s Service) auditRecord(input providerProfileAuditInput) (audit.Record, error) {
 	return appsupport.NewAuditRecord(s.ids, s.clock, appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: inventory.InventoryID(""),
 		Source:      input.Source,

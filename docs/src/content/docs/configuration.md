@@ -50,6 +50,9 @@ invalid enabled provider settings fail startup.
 | `STUFF_STASH_OIDC_ISSUER` | empty | OIDC issuer URL when `STUFF_STASH_AUTH_MODE=oidc`. |
 | `STUFF_STASH_OIDC_CLIENT_ID` | empty | Primary expected OIDC audience/client ID. |
 | `STUFF_STASH_OIDC_CLIENT_IDS` | empty | Additional accepted OIDC client IDs, comma-separated. |
+| `STUFF_STASH_OIDC_MOBILE_CLIENT_ID` | empty | Public native mobile OIDC client ID advertised to the mobile app. |
+| `STUFF_STASH_OIDC_MOBILE_REDIRECT_URI` | `stuffstash://auth/callback` | Native redirect URI advertised to the mobile app. |
+| `STUFF_STASH_OIDC_MOBILE_SCOPES` | `openid,email,profile,offline_access` | Comma-separated scopes requested by mobile sign-in. |
 
 `STUFF_STASH_OIDC_CLIENT_ID` is included in the accepted client ID set even when
 `STUFF_STASH_OIDC_CLIENT_IDS` is also configured.
@@ -87,6 +90,8 @@ the parent directory for file-backed database paths.
 | `STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL` | `10s` | Background blob-deletion outbox drain interval. |
 | `STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE` | `30s` | Lease duration for claimed blob-deletion outbox events. |
 | `STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS` | `5` | Attempts before blob-deletion work is treated as terminal. |
+| `STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS` | `900` | Seconds before stored import source credentials are considered expired. |
+| `STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS` | `60` | Seconds between background cleanup passes for expired import source credentials. |
 | `STUFF_STASH_INVITATION_TTL` | `168h` | Default inventory invitation token lifetime. |
 | `STUFF_STASH_DEFAULT_PAGE_LIMIT` | `50` | Default API collection page size. |
 | `STUFF_STASH_MAX_PAGE_LIMIT` | `100` | Maximum accepted API collection page size. |
@@ -133,7 +138,7 @@ both are enabled.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID` | empty | Identifier stored with sealed tenant provider credentials. |
-| `STUFF_STASH_PROVIDER_CREDENTIAL_KEY` | empty | Base64-encoded 32-byte AES-GCM key for sealing provider credentials. |
+| `STUFF_STASH_PROVIDER_CREDENTIAL_KEY` | empty | Base64-encoded 32-byte AES-GCM key for sealing provider credentials and temporary import source material. |
 
 If active provider credentials exist, startup fails closed unless a valid
 provider credential sealing key is configured.
@@ -170,18 +175,18 @@ Example:
 Keep the web upload policy aligned with `STUFF_STASH_MAX_ATTACHMENT_BYTES`; the
 API remains authoritative.
 
-## Mobile Development Config
+## Mobile Runtime Config
 
-These Expo public variables are development defaults for the mobile app. They
-are not a production mobile authentication model.
+The mobile app asks for a Stuff Stash instance URL, reads the API's public
+mobile authentication metadata, and signs in with the configured OIDC provider.
+These Expo public variables are optional development defaults only.
 
 Mobile booleans accept `1`, `true`, `yes`, `0`, `false`, and `no`.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL` | yes | API base URL used by the mobile app. |
-| `EXPO_PUBLIC_STUFF_STASH_TENANT_ID` | yes | Initial tenant ID for local development flows. |
-| `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN` | yes | Local development bearer token value. |
+| `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL` | no | Optional API base URL seed shown on first launch. |
+| `EXPO_PUBLIC_STUFF_STASH_TENANT_ID` | no | Optional initial tenant selection hint. |
 | `EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED` | no | Enables mobile voice developer diagnostics. |
 
 ## Docs Build Config

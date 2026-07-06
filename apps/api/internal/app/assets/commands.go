@@ -102,7 +102,7 @@ func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput,
 				converted.Kind = asset.KindContainer
 				converted.UpdatedAt = now
 				parentPromotionRecordValue, err := s.newAuditRecord(auditRecordInput{
-					PrincipalID: input.Principal.ID,
+					Principal:   input.Principal,
 					TenantID:    input.TenantID,
 					InventoryID: input.InventoryID,
 					Source:      input.Source,
@@ -147,7 +147,7 @@ func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput,
 	}
 
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -327,7 +327,7 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 			metadata["operation_id"] = undoableOperation.ID
 		}
 		auditRecord, err := s.newAuditRecord(auditRecordInput{
-			PrincipalID: input.Principal.ID,
+			Principal:   input.Principal,
 			TenantID:    input.TenantID,
 			InventoryID: input.InventoryID,
 			Source:      input.Source,
@@ -352,7 +352,7 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 			metadata["operation_id"] = undoableOperation.ID
 		}
 		auditRecord, err := s.newAuditRecord(auditRecordInput{
-			PrincipalID: input.Principal.ID,
+			Principal:   input.Principal,
 			TenantID:    input.TenantID,
 			InventoryID: input.InventoryID,
 			Source:      input.Source,
@@ -440,7 +440,7 @@ func (s Service) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInpu
 		return apperrors.ErrNotFound
 	}
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -543,7 +543,7 @@ func (s Service) prepareUpdateAssetLifecycle(ctx context.Context, input UpdateAs
 		return PreparedUpdateAssetLifecycle{}, err
 	}
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

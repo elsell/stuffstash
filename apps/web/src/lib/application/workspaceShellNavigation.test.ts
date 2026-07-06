@@ -3,7 +3,6 @@ import type { Inventory } from '$lib/domain/inventory';
 import {
   contextInventoryHref,
   desktopShellNavigationGroups,
-  importSourceHref,
   mobileShellNavigationItems,
   shellAddOptions,
   shellAddHref,
@@ -15,7 +14,7 @@ const inventory: Inventory = {
   id: 'inventory-one',
   tenantId: 'tenant-one',
   name: 'Garage',
-  access: { relationship: 'owner', permissions: ['view'] }
+  access: { relationship: 'owner', permissions: ['view', 'view_import_job', 'create_import_job'] }
 };
 
 describe('workspace shell navigation helpers', () => {
@@ -49,6 +48,7 @@ describe('workspace shell navigation helpers', () => {
         mode: 'location',
         tenantId: 'tenant-one',
         inventoryId: 'inventory-one',
+        inventory,
         settingsSection: 'activity'
       })
     ).toEqual([
@@ -97,6 +97,23 @@ describe('workspace shell navigation helpers', () => {
         ]
       }
     ]);
+  });
+
+  it('omits import navigation when the inventory lacks import view access', () => {
+    const viewerInventory: Inventory = {
+      ...inventory,
+      access: { relationship: 'viewer', permissions: ['view'] }
+    };
+
+    const groups = desktopShellNavigationGroups({
+      mode: 'home',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      inventory: viewerInventory,
+      settingsSection: 'overview'
+    });
+
+    expect(groups[1].destinations.map((destination) => destination.mode)).toEqual(['settings']);
   });
 
   it('builds mobile navigation items without desktop-only utility grouping', () => {
@@ -149,13 +166,7 @@ describe('workspace shell navigation helpers', () => {
     expect(shellModeIsCurrent('settings', 'settings')).toBe(true);
   });
 
-  it('derives inventory and import source hrefs', () => {
+  it('derives inventory hrefs', () => {
     expect(contextInventoryHref(inventory)).toBe('/tenants/tenant-one/inventories/inventory-one');
-    expect(importSourceHref('tenant-one', 'inventory-one', 'legacy_homebox')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/import/legacy-homebox'
-    );
-    expect(importSourceHref('tenant-one', 'inventory-one', 'legacy_homebox_csv')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/import/legacy-homebox-csv'
-    );
   });
 });

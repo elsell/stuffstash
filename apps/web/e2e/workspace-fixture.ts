@@ -8,6 +8,7 @@ type WorkspaceApiState = {
   signedUploadPutCount: number;
   assetOverrides: Record<string, AssetOverride>;
   createdAssets: Record<string, CreatedAsset>;
+  importJobs: object[];
   pendingUploads: Record<string, PendingUpload>;
   uploadedPhotos: Record<string, UploadedPhoto>;
   thumbnailRequestPaths: string[];
@@ -126,6 +127,7 @@ function freshWorkspaceApiState(): WorkspaceApiState {
     signedUploadPutCount: 0,
     assetOverrides: {},
     createdAssets: {},
+    importJobs: initialImportJobs(),
     pendingUploads: {},
     uploadedPhotos: {},
     thumbnailRequestPaths: [],
@@ -163,7 +165,15 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories') {
     await fulfill(route, [
-      inventory('inventory-household', 'tenant-home', 'Household', ['view', 'create_asset', 'edit_asset', 'share', 'configure'])
+      inventory('inventory-household', 'tenant-home', 'Household', [
+        'view',
+        'create_asset',
+        'edit_asset',
+        'share',
+        'configure',
+        'view_import_job',
+        'create_import_job'
+      ])
     ]);
     return;
   }
@@ -218,6 +228,10 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/audit-records') {
     await fulfill(route, [auditRecord('inventory')]);
+    return;
+  }
+  if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/imports/jobs') {
+    await fulfill(route, { jobs: state.importJobs });
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato') {
@@ -487,6 +501,162 @@ function auditRecord(scope: 'inventory' | 'tenant'): object {
     occurredAt: '2026-06-24T12:00:00Z',
     requestId: `request-${scope}`,
     metadata: { operation_id: `operation-${scope}` }
+  };
+}
+
+function initialImportJobs(): object[] {
+  return [
+    importJob({
+      id: 'import-running',
+      status: 'running',
+      progress: {
+        phase: 'importing_attachments',
+        done: 2,
+        total: 5,
+        message: 'Importing attachments',
+        updatedAt: '2026-07-06T12:04:00Z'
+      },
+      startedAt: '2026-07-06T12:01:00Z',
+      updatedAt: '2026-07-06T12:04:00Z',
+      counts: {
+        fieldsCreated: 2,
+        locationsCreated: 1,
+        assetsCreated: 3,
+        attachmentsCreated: 2
+      }
+    }),
+    importJob({
+      id: 'import-completed',
+      status: 'succeeded',
+      progress: {
+        phase: 'terminal',
+        done: 4,
+        total: 4,
+        message: 'Import completed',
+        updatedAt: '2026-07-06T11:15:00Z'
+      },
+      startedAt: '2026-07-06T11:10:00Z',
+      completedAt: '2026-07-06T11:15:00Z',
+      updatedAt: '2026-07-06T11:15:00Z',
+      counts: {
+        fieldsCreated: 1,
+        locationsCreated: 1,
+        assetsCreated: 2,
+        attachmentsCreated: 1
+      },
+      resources: [
+        {
+          resourceType: 'asset',
+          resourceId: 'asset-tomato',
+          sourceEntityType: 'asset',
+          sourceEntityId: 'asset:tomato',
+          createdAt: '2026-07-06T11:12:00Z'
+        }
+      ]
+    }),
+    importJob({
+      id: 'import-discarded',
+      status: 'cancelled_discarded',
+      cancellationMode: 'discard_partial_progress',
+      progress: {
+        phase: 'terminal',
+        done: 1,
+        total: 1,
+        message: 'Import cancelled and partial progress discarded',
+        updatedAt: '2026-07-06T10:05:00Z'
+      },
+      startedAt: '2026-07-06T10:00:00Z',
+      completedAt: '2026-07-06T10:05:00Z',
+      updatedAt: '2026-07-06T10:05:00Z',
+      counts: {
+        assetsCreated: 1,
+        recordsDiscarded: 1,
+        sourceLinksDiscarded: 1
+      },
+      resources: [
+        {
+          resourceType: 'asset',
+          resourceId: 'asset-discarded',
+          sourceEntityType: 'asset',
+          sourceEntityId: 'asset:discarded',
+          createdAt: '2026-07-06T10:02:00Z'
+        }
+      ]
+    })
+  ];
+}
+
+function importJob(input: {
+  id: string;
+  status: string;
+  cancellationMode?: string;
+  progress: object;
+  startedAt?: string;
+  completedAt?: string;
+  updatedAt: string;
+  counts?: Partial<Record<string, number>>;
+  resources?: object[];
+}): object {
+  const counts = {
+    fields: 2,
+    locations: 1,
+    assets: 3,
+    attachments: 2,
+    warnings: 0,
+    errors: 0,
+    fieldsCreated: 0,
+    fieldsExisting: 0,
+    locationsCreated: 0,
+    assetsCreated: 0,
+    assetsSkipped: 0,
+    attachmentsCreated: 0,
+    attachmentsSkipped: 0,
+    recordsDiscarded: 0,
+    sourceLinksDiscarded: 0,
+    ...input.counts
+  };
+  return {
+    id: input.id,
+    status: input.status,
+    actorId: 'principal-owner',
+    source: {
+      type: 'legacy_homebox',
+      name: 'Homebox',
+      baseUrl: 'http://homebox.local:7744',
+      imageImport: 'enabled',
+      fingerprint: `fingerprint-${input.id}`
+    },
+    counts,
+    preview: {
+      fields: [{ key: 'homebox-source-id', displayName: 'Homebox source ID', type: 'text' }],
+      locations: [{ sourceId: 'location:garage', kind: 'location', title: 'Garage', archived: false }],
+      assets: [{ sourceId: 'asset:tomato', kind: 'item', title: 'Tomato fertilizer', parentSourceId: 'location:garage', archived: false }],
+      attachments: [{ sourceId: 'attachment:photo', assetSourceId: 'asset:tomato', fileName: 'tomato.png', contentType: 'image/png', sizeBytes: 512, primary: true }],
+      messages: [],
+      fieldsTruncated: false,
+      locationsTruncated: false,
+      assetsTruncated: false,
+      attachmentsTruncated: false,
+      messagesTruncated: false
+    },
+    progress: input.progress,
+    progressHistory: [
+      {
+        phase: 'ready',
+        done: counts.fields + counts.locations + counts.assets + counts.attachments,
+        total: counts.fields + counts.locations + counts.assets + counts.attachments,
+        message: 'Preview ready',
+        updatedAt: '2026-07-06T09:59:00Z'
+      },
+      input.progress
+    ],
+    cancellationMode: input.cancellationMode,
+    createdAt: '2026-07-06T09:59:00Z',
+    startedAt: input.startedAt,
+    completedAt: input.completedAt,
+    updatedAt: input.updatedAt,
+    resources: input.resources ?? [],
+    messages: []
   };
 }
 

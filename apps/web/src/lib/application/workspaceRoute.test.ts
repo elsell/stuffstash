@@ -143,15 +143,15 @@ describe('workspace route state', () => {
     });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import'))).toMatchObject({
       mode: 'import',
-      importSourceType: 'legacy_homebox'
+      importSource: null
     });
-    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox'))).toMatchObject({
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/homebox'))).toMatchObject({
       mode: 'import',
-      importSourceType: 'legacy_homebox'
+      importSource: 'homebox'
     });
-    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox-csv'))).toMatchObject({
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/homebox-csv'))).toMatchObject({
       mode: 'import',
-      importSourceType: 'legacy_homebox_csv'
+      importSource: 'homebox-csv'
     });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/add/item?parent=location_1'))).toMatchObject({
       action: 'add',
@@ -249,11 +249,11 @@ describe('workspace route state', () => {
       )
     ).toBe('/tenants/tenant_1/inventories/inv_1/settings/fields/field-definitions/field%201/archive');
     expect(workspaceRouteHref({ mode: 'import' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/import');
-    expect(workspaceRouteHref({ mode: 'import', importSourceType: 'legacy_homebox' }, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/import/legacy-homebox'
+    expect(workspaceRouteHref({ mode: 'import', importSource: 'homebox' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/import/homebox'
     );
-    expect(workspaceRouteHref({ mode: 'import', importSourceType: 'legacy_homebox_csv' }, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/import/legacy-homebox-csv'
+    expect(workspaceRouteHref({ mode: 'import', importSource: 'homebox-csv' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/import/homebox-csv'
     );
     expect(
       workspaceRouteHref(
@@ -307,14 +307,19 @@ describe('workspace route state', () => {
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/asset-types/type_1/edit',
       'https://app.test/tenants/tenant_1/inventories/inv_1/settings/fields/nope/type_1/archive',
       'https://app.test/tenants/tenant_1/inventories/inv_1/import/junk',
-      'https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox/junk',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox',
+      'https://app.test/tenants/tenant_1/inventories/inv_1/import/legacy-homebox-csv',
+      'https://app.test/inventories/inv_1/import',
+      'https://app.test/inventories/inv_1/import/homebox',
+      'https://app.test/inventories/inv_1/import/homebox-csv',
       'https://app.test/tenants/tenant_1/inventories/inv_1/add/location/junk'
     ];
 
     for (const href of unsupported) {
+      const expectedTenantId = href.includes('/tenants/') ? 'tenant_1' : null;
       expect(parseWorkspaceRoute(new URL(href))).toMatchObject({
         mode: 'home',
-        tenantId: 'tenant_1',
+        tenantId: expectedTenantId,
         inventoryId: 'inv_1'
       });
     }

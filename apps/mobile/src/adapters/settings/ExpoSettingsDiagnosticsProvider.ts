@@ -12,7 +12,7 @@ export class ExpoSettingsDiagnosticsProvider implements SettingsDiagnosticsProvi
     return {
       apiBaseUrl: this.runtimeConfig?.apiBaseUrl ?? 'Not configured',
       appVersion: Constants.expoConfig?.version ?? 'Unknown',
-      authenticationMode: this.runtimeConfig ? 'local-development-token' : 'unconfigured'
+      authenticationMode: this.runtimeConfig ? 'oidc-sso' : 'unconfigured'
     };
   }
 }

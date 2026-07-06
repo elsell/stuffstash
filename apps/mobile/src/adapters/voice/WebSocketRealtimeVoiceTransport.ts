@@ -24,14 +24,14 @@ type ActiveRealtimeReviewSession = {
 
 export type WebSocketRealtimeVoiceTransportOptions = {
   readonly apiBaseUrl: string;
-  readonly tokenProvider: () => string;
+  readonly tokenProvider: () => string | Promise<string>;
   readonly diagnosticsEnabled?: boolean;
   readonly webSocketFactory?: VoiceWebSocketFactory;
 };
 
 export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
   private readonly apiBaseUrl: string;
-  private readonly tokenProvider: () => string;
+  private readonly tokenProvider: () => string | Promise<string>;
   private readonly diagnosticsEnabled: boolean;
   private readonly webSocketFactory: VoiceWebSocketFactory;
   private activeReviewSession: ActiveRealtimeReviewSession | null = null;
@@ -48,8 +48,13 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
     options: RealtimeVoiceTransportRunOptions = {}
   ): Promise<void> {
+    const maybeToken = this.tokenProvider();
+    const token = typeof maybeToken === 'string' ? maybeToken : await maybeToken;
+    if (!token) {
+      throw new Error('Sign in before starting a voice session.');
+    }
     const socket = this.webSocketFactory(realtimeVoiceUrl(this.apiBaseUrl), {
-      Authorization: `Bearer ${this.tokenProvider()}`
+      Authorization: `Bearer ${token}`
     });
     const thisTransport = this;
 

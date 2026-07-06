@@ -21,6 +21,7 @@ The second implementation slice defines undo and redo for a narrow set of asset 
 - Every state-changing action must produce an audit record.
 - List, detail, and content read endpoints must produce safe read audit records where specified by the REST and lifecycle specs.
 - Audit records must include the authenticated principal, tenant, inventory, action type, target resources, timestamp, source adapter, and request identifier where available.
+- Audit records must store only the stable principal ID for the actor. Audit read responses may resolve that ID to a safe user profile from the identity store, while preserving `principalId` as the durable audit identity and fallback. User profile resolution must be best-effort and must not make audit history unreadable.
 - Audit records must distinguish between direct user actions, conversational actions, MCP actions, imports, background jobs, and system actions.
 - Conversational audit records must reference the action plan and approval when available.
 - Audit records must not store raw provider prompts, raw model responses, raw audio, secrets, tokens, or sensitive data beyond what the audit use case requires.
@@ -33,6 +34,7 @@ The second implementation slice defines undo and redo for a narrow set of asset 
 - Audit pagination must be ordered by `(occurredAt, id)`, not by ID alone, so same-millisecond records remain deterministic without relying on monotonic ID generation.
 - Inventory audit reads must require `inventory.view` for the target inventory.
 - Tenant audit reads without an inventory scope must require `tenant.configure`.
+- Asset audit history reads must require `inventory.view` for the asset's inventory and should expose a bounded asset-scoped read endpoint so clients do not need to scan broader inventory audit pages.
 - Audit read responses must use the standard API success and error envelopes.
 - HTTP adapters must capture `X-Request-ID` for audited requests when the client supplies it and store it on emitted audit records.
 
@@ -65,6 +67,7 @@ The first implementation wrote audit records for:
 - `asset.created`.
 - `asset.updated`.
 - `asset.moved`.
+- Asset checkout actions are specified in `specs/assets/asset-checkout.spec.md` and extend the action set with `asset.checked_out` and `asset.returned`.
 
 Asset update and asset movement may produce separate audit records from one request when both non-location fields and `parentAssetId` change.
 
@@ -219,6 +222,8 @@ The full audited action set should eventually include:
 - Asset updated.
 - Asset moved.
 - Asset archived or removed.
+- Asset checked out.
+- Asset returned.
 - Location created.
 - Location updated.
 - Location moved.

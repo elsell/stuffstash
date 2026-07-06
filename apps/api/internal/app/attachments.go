@@ -88,48 +88,74 @@ type AttachmentContentResult struct {
 	Content    []byte
 }
 
+type preparedAttachment struct {
+	Attachment  media.Attachment
+	AuditRecord audit.Record
+	StorageKey  media.StorageKey
+	ContentType media.ContentType
+}
+
 func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) (media.Attachment, error) {
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
 		return media.Attachment{}, err
 	}
+	prepared, err := a.prepareAttachment(ctx, input)
+	if err != nil {
+		return media.Attachment{}, err
+	}
+	if err := a.blobs.PutBlob(ctx, prepared.StorageKey, prepared.ContentType, input.Content); err != nil {
+		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
+		return media.Attachment{}, err
+	}
+	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, prepared.Attachment, prepared.AuditRecord); err != nil {
+		if deleteErr := a.blobs.DeleteBlob(ctx, prepared.StorageKey); deleteErr != nil {
+			a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob cleanup failed"})
+		}
+		return media.Attachment{}, err
+	}
+	a.recordAttachmentCreated(ctx, input, prepared.Attachment)
+	return prepared.Attachment, nil
+}
+
+func (a App) prepareAttachment(ctx context.Context, input CreateAttachmentInput) (preparedAttachment, error) {
 	if a.attachments == nil || a.blobs == nil {
-		return media.Attachment{}, ErrInvalidInput
+		return preparedAttachment{}, ErrInvalidInput
 	}
 	if input.AssetID.String() == "" {
-		return media.Attachment{}, ErrInvalidInput
+		return preparedAttachment{}, ErrInvalidInput
 	}
 	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
-		return media.Attachment{}, err
+		return preparedAttachment{}, err
 	}
 	fileName, ok := media.NewFileName(input.FileName)
 	if !ok {
-		return media.Attachment{}, ErrAttachmentFileNameInvalid
+		return preparedAttachment{}, ErrAttachmentFileNameInvalid
 	}
 	contentType, ok := media.NewContentType(input.ContentType)
 	if !ok {
-		return media.Attachment{}, ErrAttachmentContentTypeUnsupported
+		return preparedAttachment{}, ErrAttachmentContentTypeUnsupported
 	}
 	if len(input.Content) == 0 {
-		return media.Attachment{}, ErrAttachmentContentEmpty
+		return preparedAttachment{}, ErrAttachmentContentEmpty
 	}
 	if len(input.Content) > a.maxAttachmentBytes {
-		return media.Attachment{}, ErrAttachmentTooLarge
+		return preparedAttachment{}, ErrAttachmentTooLarge
 	}
 	if !contentMatchesType(contentType, input.Content) {
-		return media.Attachment{}, ErrAttachmentContentMismatch
+		return preparedAttachment{}, ErrAttachmentContentMismatch
 	}
 	attachmentID, ok := media.NewID(a.ids.NewID())
 	if !ok {
-		return media.Attachment{}, ErrInvalidInput
+		return preparedAttachment{}, ErrInvalidInput
 	}
 	storageKey, ok := media.NewStorageKey(input.TenantID.String() + "/" + input.InventoryID.String() + "/" + input.AssetID.String() + "/" + attachmentID.String())
 	if !ok {
-		return media.Attachment{}, ErrInvalidInput
+		return preparedAttachment{}, ErrInvalidInput
 	}
 	hashBytes := sha256.Sum256(input.Content)
 	hash, ok := media.NewSHA256(hex.EncodeToString(hashBytes[:]))
 	if !ok {
-		return media.Attachment{}, ErrInvalidInput
+		return preparedAttachment{}, ErrInvalidInput
 	}
 	attachment, ok := media.NewAttachment(
 		attachmentID,
@@ -144,10 +170,10 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 		a.clock.Now().UTC(),
 	)
 	if !ok {
-		return media.Attachment{}, ErrInvalidInput
+		return preparedAttachment{}, ErrInvalidInput
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -162,18 +188,12 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 		},
 	})
 	if err != nil {
-		return media.Attachment{}, err
+		return preparedAttachment{}, err
 	}
-	if err := a.blobs.PutBlob(ctx, storageKey, contentType, input.Content); err != nil {
-		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
-		return media.Attachment{}, err
-	}
-	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, attachment, auditRecord); err != nil {
-		if deleteErr := a.blobs.DeleteBlob(ctx, storageKey); deleteErr != nil {
-			a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob cleanup failed"})
-		}
-		return media.Attachment{}, err
-	}
+	return preparedAttachment{Attachment: attachment, AuditRecord: auditRecord, StorageKey: storageKey, ContentType: contentType}, nil
+}
+
+func (a App) recordAttachmentCreated(ctx context.Context, input CreateAttachmentInput, attachment media.Attachment) {
 	a.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAttachmentCreated,
 		Message: "attachment created",
@@ -185,7 +205,6 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 			"principal_id":  input.Principal.ID.String(),
 		},
 	})
-	return attachment, nil
 }
 
 func (a App) ListAttachments(ctx context.Context, input ListAttachmentsInput) (ListAttachmentsResult, error) {
@@ -225,7 +244,7 @@ func (a App) ListAttachments(ctx context.Context, input ListAttachmentsInput) (L
 		},
 	})
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -257,7 +276,7 @@ func (a App) GetAttachment(ctx context.Context, input GetAttachmentInput) (media
 		return media.Attachment{}, ErrNotFound
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -302,7 +321,7 @@ func (a App) DownloadAttachment(ctx context.Context, input DownloadAttachmentInp
 		return AttachmentContentResult{}, ErrNotFound
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -363,7 +382,7 @@ func (a App) updateAttachmentLifecycle(ctx context.Context, input UpdateAttachme
 	updated := attachment
 	updated.LifecycleState = to
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -414,7 +433,7 @@ func (a App) DeleteAttachment(ctx context.Context, input UpdateAttachmentLifecyc
 		return ErrNotFound
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

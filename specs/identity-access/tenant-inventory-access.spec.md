@@ -266,5 +266,4 @@ Neither `viewer` nor `editor` allows sharing access onward.
 
 ## Open Questions
 
-- What is the first mobile-friendly OIDC flow?
 - How should users switch between tenants and inventories?

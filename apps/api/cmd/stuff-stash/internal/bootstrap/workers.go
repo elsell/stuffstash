@@ -12,6 +12,7 @@ import (
 func startOutboxWorkers(ctx context.Context, application app.App, observer ports.Observer, cfg config.Config) {
 	go drainAuthorizationOutbox(ctx, application, observer, cfg.AuthorizationOutboxDrainLimit, cfg.AuthorizationOutboxDrainInterval)
 	go drainBlobDeletionOutbox(ctx, application, observer, cfg.BlobDeletionOutboxDrainLimit, cfg.BlobDeletionOutboxDrainInterval)
+	go vacuumImportJobCredentials(ctx, application, observer, cfg.ImportCredentialVacuumInterval)
 }
 
 func drainAuthorizationOutbox(ctx context.Context, application app.App, observer ports.Observer, limit int, interval time.Duration) {
@@ -40,7 +41,17 @@ func drainBlobDeletionOutbox(ctx context.Context, application app.App, observer 
 	runPeriodicDrain(ctx, interval, drain)
 }
 
+func vacuumImportJobCredentials(ctx context.Context, application app.App, _ ports.Observer, interval time.Duration) {
+	drain := func() {
+		_, _ = application.VacuumImportJobCredentials(ctx)
+	}
+	runPeriodicDrain(ctx, interval, drain)
+}
+
 func runPeriodicDrain(ctx context.Context, interval time.Duration, drain func()) {
+	if interval <= 0 {
+		interval = time.Minute
+	}
 	drain()
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()

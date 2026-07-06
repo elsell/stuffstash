@@ -4,6 +4,10 @@ import {
   normalizeInstanceUrl,
   SavedConnectionProfile
 } from './ConnectionProfile';
+import {
+  MobileAuthenticationRequiredError,
+  MobileAuthStatus
+} from '../auth/MobileAuthSession';
 
 export type OnboardingTenant = {
   readonly id: string;
@@ -23,7 +27,7 @@ export interface OnboardingApiPort {
   createInventory(tenantId: string, name: string): Promise<OnboardingInventory>;
 }
 
-export type OnboardingStartStep = 'instance' | 'tenant' | 'inventory' | 'complete';
+export type OnboardingStartStep = 'instance' | 'signIn' | 'tenant' | 'inventory' | 'complete';
 
 export type OnboardingStartState = {
   readonly step: OnboardingStartStep;
@@ -33,11 +37,18 @@ export type OnboardingStartState = {
 
 export type OnboardingClientFactory = (profile: ConnectionProfile) => OnboardingApiPort;
 
+export interface OnboardingAuthPort {
+  prepareSignIn(apiBaseUrl: string): Promise<void>;
+  signIn(apiBaseUrl: string): Promise<unknown>;
+  signOut(): Promise<void>;
+  status(apiBaseUrl?: string): Promise<MobileAuthStatus>;
+}
+
 export class OnboardingCommand {
   constructor(
     private readonly profiles: ConnectionProfileStore,
     private readonly clientFactory: OnboardingClientFactory,
-    private readonly defaultDevToken?: string
+    private readonly auth: OnboardingAuthPort
   ) {}
 
   async getStartState(): Promise<OnboardingStartState> {
@@ -46,20 +57,22 @@ export class OnboardingCommand {
       return { step: 'instance' };
     }
 
-    return this.resolveProfileState(this.toConnectionProfile(profile));
+    return this.resolveAuthenticatedProfileState(profile);
   }
 
   async saveInstanceUrl(input: { readonly apiBaseUrl: string }): Promise<OnboardingStartState> {
-    if (!this.defaultDevToken) {
-      throw new Error('Mobile authentication is not configured for this build.');
-    }
-
     const savedProfile = {
       apiBaseUrl: normalizeInstanceUrl(input.apiBaseUrl)
     };
+    await this.auth.prepareSignIn(savedProfile.apiBaseUrl);
     await this.profiles.save(savedProfile);
 
-    return this.resolveProfileState(this.toConnectionProfile(savedProfile));
+    return { step: 'signIn', profile: savedProfile };
+  }
+
+  async signIn(input: { readonly profile: ConnectionProfile }): Promise<OnboardingStartState> {
+    await this.auth.signIn(input.profile.apiBaseUrl);
+    return this.resolveProfileState(input.profile);
   }
 
   async createTenant(input: {
@@ -91,7 +104,30 @@ export class OnboardingCommand {
   }
 
   async reset(): Promise<void> {
+    await this.auth.signOut();
     await this.profiles.clear();
+  }
+
+  async expireSession(input: { readonly profile: ConnectionProfile }): Promise<OnboardingStartState> {
+    await this.auth.signOut();
+    return { step: 'signIn', profile: input.profile };
+  }
+
+  private async resolveAuthenticatedProfileState(profile: ConnectionProfile): Promise<OnboardingStartState> {
+    const status = await this.auth.status(profile.apiBaseUrl);
+    if (status.status !== 'signed_in') {
+      return { step: 'signIn', profile };
+    }
+
+    try {
+      return await this.resolveProfileState(profile);
+    } catch (error) {
+      if (isAuthenticationRequiredError(error)) {
+        await this.auth.signOut();
+        return { step: 'signIn', profile };
+      }
+      throw error;
+    }
   }
 
   private async resolveProfileState(profile: ConnectionProfile): Promise<OnboardingStartState> {
@@ -119,17 +155,6 @@ export class OnboardingCommand {
     return this.resolveTenantState(nextProfile, firstTenant);
   }
 
-  private toConnectionProfile(profile: SavedConnectionProfile): ConnectionProfile {
-    if (!this.defaultDevToken) {
-      throw new Error('Mobile authentication is not configured for this build.');
-    }
-
-    return {
-      ...profile,
-      devToken: this.defaultDevToken
-    };
-  }
-
   private async resolveTenantState(
     profile: ConnectionProfile,
     tenant: OnboardingTenant
@@ -145,6 +170,18 @@ export class OnboardingCommand {
 
     return { step: 'complete', profile, tenantName: tenant.name };
   }
+}
+
+function isAuthenticationRequiredError(error: unknown): boolean {
+  if (error instanceof MobileAuthenticationRequiredError) {
+    return true;
+  }
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const candidate = error as { readonly status?: unknown; readonly code?: unknown };
+  return candidate.status === 401 || candidate.code === 'authentication_required';
 }
 
 function toSavedProfile(profile: ConnectionProfile): SavedConnectionProfile {

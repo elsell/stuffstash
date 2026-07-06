@@ -2,6 +2,7 @@ import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
+import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import type {
   Asset,
   AssetAttachment,
@@ -87,6 +88,16 @@ class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
   }
 }
 
+class LifecycleSelectionExpiredRepository extends SeededInventoryRepository {
+  async selectAssetLifecycle(
+    _tenantId: string,
+    _inventoryId: string,
+    _lifecycleState: AssetLifecycleFilter
+  ): Promise<WorkspaceData> {
+    throw new AuthenticationRequiredError();
+  }
+}
+
 class InvitationStatusRecordingRepository extends SeededInventoryRepository {
   invitationStatuses: InvitationStatusFilter[] = [];
 
@@ -120,14 +131,19 @@ class AuditScopeRecordingRepository extends SeededInventoryRepository {
   }
 }
 
-async function mountWorkspace(path: string, repository = new SeededInventoryRepository(structuredClone(seed))): Promise<SeededInventoryRepository> {
+async function mountWorkspace(
+  path: string,
+  repository = new SeededInventoryRepository(structuredClone(seed)),
+  options: { onSessionExpired?: () => void } = {}
+): Promise<SeededInventoryRepository> {
   window.history.replaceState({}, '', path);
   component = mount(InventoryWorkspaceApp, {
     target: document.body,
     props: {
       repository,
       initialData: await repository.loadWorkspace(),
-      onSignOut: () => {}
+      onSignOut: () => {},
+      onSessionExpired: options.onSessionExpired
     }
   });
   return repository;
@@ -174,6 +190,20 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
       expect(window.location.search).toBe('?lifecycle=archived');
       expect(document.body.textContent).toContain('Archived Passport');
+    });
+  });
+
+  it('notifies the shell when a workspace API request reports an expired session', async () => {
+    let expired = false;
+    await mountWorkspace('/?lifecycle=archived', new LifecycleSelectionExpiredRepository(structuredClone(seed)), {
+      onSessionExpired: () => {
+        expired = true;
+      }
+    });
+
+    await waitFor(() => {
+      expect(expired).toBe(true);
+      expect(document.body.textContent).not.toContain('Authentication required.');
     });
   });
 
@@ -330,35 +360,40 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('deep-links and updates the import source route', async () => {
+  it('deep-links to the import workspace', async () => {
     const importSeed = structuredClone(seed);
-    importSeed.inventories[0].access.permissions.push('configure');
+    importSeed.inventories[0].access.permissions.push('configure', 'view_import_job', 'create_import_job');
 
     await mountWorkspace(
-      '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv',
+      '/tenants/tenant-home/inventories/inventory-household/import',
       new SeededInventoryRepository(importSeed)
     );
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv'
-      );
-      expect(document.body.textContent).toContain('CSV file');
-      expect(importSourceControl('CSV').getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox-csv'
-      );
-      expect(importSourceControl('CSV').getAttribute('aria-current')).toBe('page');
-      expect(importSourceControl('Connect').getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox'
-      );
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import');
+      expect(document.body.textContent).toContain('Import history');
+      expect(document.body.textContent).toContain('No import runs yet');
     });
+  });
 
-    importSourceControl('Connect').click();
+  it('resets the import child to history when the route returns to bare import', async () => {
+    const importSeed = structuredClone(seed);
+    importSeed.inventories[0].access.permissions.push('configure', 'view_import_job', 'create_import_job');
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/import/homebox', new SeededInventoryRepository(importSeed));
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import/legacy-homebox');
-      expect(document.body.textContent).toContain('Homebox URL');
-      expect(importSourceControl('Connect').getAttribute('aria-current')).toBe('page');
+      expect(document.body.textContent).toContain('Connect to Homebox');
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-url')).toBeTruthy();
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/import');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Import history');
+      expect(document.body.textContent).toContain('No import runs yet');
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-url')).toBeFalsy();
     });
   });
 
@@ -1092,15 +1127,6 @@ function auditScopeControl(label: string): HTMLElement {
   const control = Array.from(group?.querySelectorAll<HTMLElement>('button, a') ?? []).find((candidate) => candidate.textContent === label);
   if (!control) {
     throw new Error(`Missing audit scope control ${label}`);
-  }
-  return control;
-}
-
-function importSourceControl(label: string): HTMLElement {
-  const group = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Import source"]');
-  const control = Array.from(group?.querySelectorAll<HTMLElement>('button, a') ?? []).find((candidate) => candidate.textContent === label);
-  if (!control) {
-    throw new Error(`Missing import source control ${label}`);
   }
   return control;
 }

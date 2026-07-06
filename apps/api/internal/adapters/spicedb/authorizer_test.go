@@ -123,6 +123,27 @@ func TestAuthorizerChecksSharePermission(t *testing.T) {
 	}
 }
 
+func TestAuthorizerChecksImportJobPermissions(t *testing.T) {
+	gateway := &fakeGateway{
+		permissionship: v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION,
+	}
+	authorizer := NewAuthorizer(gateway)
+
+	if err := authorizer.CheckInventory(context.Background(), principal("user-one"), ports.InventoryPermissionViewImportJob, inventory.InventoryID("inventory-one")); err != nil {
+		t.Fatalf("check view import job: %v", err)
+	}
+	if err := authorizer.CheckInventory(context.Background(), principal("user-one"), ports.InventoryPermissionCreateImportJob, inventory.InventoryID("inventory-one")); err != nil {
+		t.Fatalf("check create import job: %v", err)
+	}
+
+	if gateway.checks[0].Permission != "view_import_job" {
+		t.Fatalf("unexpected view import job permission: %q", gateway.checks[0].Permission)
+	}
+	if gateway.checks[1].Permission != "create_import_job" {
+		t.Fatalf("unexpected create import job permission: %q", gateway.checks[1].Permission)
+	}
+}
+
 func TestAuthorizerPropagatesBackendFailure(t *testing.T) {
 	expected := errors.New("backend unavailable")
 	gateway := &fakeGateway{checkErr: expected}

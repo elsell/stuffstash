@@ -3,6 +3,10 @@ export type AssetAuditRecord = {
   readonly action: string;
   readonly source: string;
   readonly principalId: string;
+  readonly principal?: {
+    readonly id: string;
+    readonly email?: string;
+  };
   readonly targetType: string;
   readonly targetId: string;
   readonly occurredAt: string;
@@ -36,7 +40,7 @@ export type AssetAuditRecordViewModel = {
   readonly subtitle: string;
   readonly occurredAtLabel: string;
   readonly sourceLabel: string;
-  readonly principalLabel: string;
+  readonly actorLabel: string;
   readonly requestLabel?: string;
   readonly metadataRows: readonly AssetAuditMetadataRowViewModel[];
 };
@@ -123,10 +127,10 @@ function toRecordViewModel(record: AssetAuditRecord): AssetAuditRecordViewModel 
   return {
     id: record.id,
     title: labelAction(record.action),
-    subtitle: `${labelTarget(record.targetType)} ${record.targetId}`,
+    subtitle: labelAuditContext(record),
     occurredAtLabel: labelOccurredAt(record.occurredAt),
     sourceLabel: labelSource(record.source),
-    principalLabel: `Principal ${record.principalId}`,
+    actorLabel: labelActor(record),
     requestLabel: record.requestId ? `Request ${record.requestId}` : undefined,
     metadataRows: Object.entries(record.metadata)
       .flatMap(toSafeMetadataRow)
@@ -190,8 +194,18 @@ function labelAction(action: string): string {
     .join(' ');
 }
 
-function labelTarget(targetType: string): string {
-  return targetType.charAt(0).toUpperCase() + targetType.slice(1).replaceAll('_', ' ');
+function labelAuditContext(record: AssetAuditRecord): string {
+  return [labelActor(record), labelOccurredAt(record.occurredAt), labelSource(record.source)]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function labelActor(record: AssetAuditRecord): string {
+  const email = record.principal?.email?.trim();
+  if (email) {
+    return email;
+  }
+  return `Principal ${record.principalId}`;
 }
 
 function labelSource(source: string): string {

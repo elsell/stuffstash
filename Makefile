@@ -1,8 +1,13 @@
-.PHONY: test api-release-build run run-spicedb spicedb-up spicedb-down verify-local-api verify-dex-oidc-api verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-down docker-build docker-build-web dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
+.PHONY: test api-release-build run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
 STUFF_STASH_TEST_POSTGRES_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
+STUFF_STASH_LOCAL_HOST ?= localhost
+STUFF_STASH_LOCAL_DEX_PORT ?= 5556
+STUFF_STASH_LOCAL_API_PORT ?= 8080
+STUFF_STASH_LOCAL_WEB_PORT ?= 5173
+STUFF_STASH_LOCAL_DEX_CONFIG ?= .stuffstash/local/dex/config.yaml
 SPICEDB_CONTAINER ?= stuff-stash-spicedb
 SPICEDB_GRPC_PORT ?= 50051
 SPICEDB_PRESHARED_KEY ?=
@@ -19,6 +24,20 @@ api-release-build:
 	cd apps/api && GOWORK=off GOCACHE=$(GOCACHE) CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash-release-check ./cmd/stuff-stash
 
 run:
+	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
+
+run-oidc-local:
+	STUFF_STASH_HTTP_ADDR=:$(STUFF_STASH_LOCAL_API_PORT) \
+	STUFF_STASH_AUTH_MODE=oidc \
+	STUFF_STASH_AUTHZ_MODE=memory \
+	STUFF_STASH_REPOSITORY_MODE=memory \
+	STUFF_STASH_CORS_ALLOWED_ORIGINS=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_WEB_PORT) \
+	STUFF_STASH_OIDC_ISSUER=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_DEX_PORT)/dex \
+	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
+	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local \
+	STUFF_STASH_OIDC_MOBILE_CLIENT_ID=stuff-stash-mobile-local \
+	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
+	STUFF_STASH_OIDC_MOBILE_SCOPES=openid,email,profile,offline_access \
 	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
 
 run-spicedb: spicedb-up
@@ -47,6 +66,14 @@ verify-local-api:
 
 verify-dex-oidc-api:
 	scripts/verify-dex-oidc-api.sh
+
+verify-mobile-oidc-pkce:
+	PATH="$(DOCS_PATH)" node scripts/verify-mobile-oidc-pkce.mjs
+
+verify-mobile-oidc-pkce-local:
+	STUFF_STASH_VERIFY_MOBILE_OIDC_ISSUER=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_DEX_PORT)/dex \
+	STUFF_STASH_VERIFY_MOBILE_OIDC_API_BASE_URL=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_API_PORT) \
+	PATH="$(DOCS_PATH)" node scripts/verify-mobile-oidc-pkce.mjs
 
 verify-spicedb-adapter:
 	scripts/verify-spicedb-adapter.sh
@@ -77,6 +104,18 @@ compose-up-spicedb:
 	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
 	docker compose up --build
 
+dex-local-config:
+	STUFF_STASH_WEB_ORIGIN=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_WEB_PORT) \
+	STUFF_STASH_API_ORIGIN=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_API_PORT) \
+	STUFF_STASH_DEX_ISSUER=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_DEX_PORT)/dex \
+	STUFF_STASH_DEX_HTTP_ADDR=0.0.0.0:$(STUFF_STASH_LOCAL_DEX_PORT) \
+	STUFF_STASH_DEX_CONFIG_OUT=$(STUFF_STASH_LOCAL_DEX_CONFIG) \
+	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
+	PATH="$(DOCS_PATH)" node scripts/render-local-dex-config.mjs
+
+dex-local: dex-local-config
+	dex serve $(STUFF_STASH_LOCAL_DEX_CONFIG)
+
 compose-up-oidc:
 	STUFF_STASH_AUTH_MODE=oidc \
 	STUFF_STASH_AUTHZ_MODE=spicedb \
@@ -86,7 +125,32 @@ compose-up-oidc:
 	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
 	STUFF_STASH_OIDC_ISSUER=http://dex:5556/dex \
 	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
-	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local \
+	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local \
+	STUFF_STASH_OIDC_MOBILE_CLIENT_ID=stuff-stash-mobile-local \
+	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
+	STUFF_STASH_OIDC_MOBILE_SCOPES=openid,email,profile,offline_access \
+	docker compose -f compose.yaml -f compose.oidc.yaml up --build
+
+compose-up-oidc-lan:
+	@if [ -z "$(STUFF_STASH_LAN_HOST)" ]; then echo "Set STUFF_STASH_LAN_HOST to this machine's LAN IP, for example: make compose-up-oidc-lan STUFF_STASH_LAN_HOST=192.168.1.50" >&2; exit 1; fi
+	STUFF_STASH_WEB_ORIGIN=http://$(STUFF_STASH_LAN_HOST):5173 \
+	STUFF_STASH_API_ORIGIN=http://$(STUFF_STASH_LAN_HOST):8080 \
+	STUFF_STASH_DEX_ISSUER=http://$(STUFF_STASH_LAN_HOST):5556/dex \
+	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
+	PATH="$(DOCS_PATH)" node scripts/render-local-dex-config.mjs
+	DEX_CONFIG_PATH=.stuffstash/local/dex/config.yaml \
+	STUFF_STASH_AUTH_MODE=oidc \
+	STUFF_STASH_AUTHZ_MODE=spicedb \
+	STUFF_STASH_CORS_ALLOWED_ORIGINS=http://$(STUFF_STASH_LAN_HOST):5173 \
+	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
+	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
+	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
+	STUFF_STASH_OIDC_ISSUER=http://$(STUFF_STASH_LAN_HOST):5556/dex \
+	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
+	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local \
+	STUFF_STASH_OIDC_MOBILE_CLIENT_ID=stuff-stash-mobile-local \
+	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
+	STUFF_STASH_OIDC_MOBILE_SCOPES=openid,email,profile,offline_access \
 	docker compose -f compose.yaml -f compose.oidc.yaml up --build
 
 compose-down:
@@ -106,6 +170,9 @@ release-plan-test:
 
 scripts-test: release-plan-test
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
+	python3 scripts/test-dependency-age.py
+	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs
+	PATH="$(DOCS_PATH)" node --check scripts/verify-mobile-oidc-pkce.mjs
 
 docs-install:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir docs install --frozen-lockfile

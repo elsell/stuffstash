@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
   createMobileComposition,
@@ -7,9 +7,12 @@ import {
   createSeedConnectionProfile,
   MobileComposition
 } from '../../bootstrap/mobileComposition';
+import type { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
+import { AppFeedbackProvider, useAppFeedback } from '../feedback/AppFeedback';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { colors, spacing } from '../theme/tokens';
 import {
+  appServicesStateAfterAuthenticationRequired,
   appServicesStateAfterReset,
   appServicesStateAfterStartupError,
   appServicesStateFromOnboardingStart,
@@ -25,8 +28,47 @@ type AppServicesProviderProps = {
 };
 
 export function AppServicesProvider({ children }: AppServicesProviderProps) {
+  return (
+    <AppFeedbackProvider>
+      <AppServicesProviderInner>{children}</AppServicesProviderInner>
+    </AppFeedbackProvider>
+  );
+}
+
+function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   const onboardingCommand = useMemo(() => createOnboardingCommand(), []);
   const [state, setState] = useState<AppServicesState>({ status: 'loading' });
+  const feedback = useAppFeedback();
+  const authPromptVisibleRef = useRef(false);
+
+  const buildComposition = useCallback((profile: ConnectionProfile) => createMobileComposition(profile, {
+    onAuthenticationRequired: () => {
+      if (authPromptVisibleRef.current) {
+        return;
+      }
+
+      authPromptVisibleRef.current = true;
+      onboardingCommand
+        .expireSession({ profile })
+        .then((onboardingState) => {
+          setState(appServicesStateAfterAuthenticationRequired(onboardingState.profile ?? profile));
+          feedback.showDialog({
+            title: 'Session expired',
+          message: 'Please sign in again to continue using Stuff Stash.',
+          primaryAction: {
+              label: 'Continue',
+              onPress: () => {
+                authPromptVisibleRef.current = false;
+              }
+            }
+          });
+        })
+        .catch(() => {
+          authPromptVisibleRef.current = false;
+          setState(appServicesStateAfterAuthenticationRequired(profile));
+        });
+    }
+  }), [feedback, onboardingCommand]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -37,7 +79,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
         if (!isCurrent) {
           return;
         }
-        setState(appServicesStateFromOnboardingStart(startState, createMobileComposition));
+        setState(appServicesStateFromOnboardingStart(startState, buildComposition));
       })
       .catch(() => {
         if (isCurrent) {
@@ -48,7 +90,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     return () => {
       isCurrent = false;
     };
-  }, [onboardingCommand]);
+  }, [buildComposition, onboardingCommand]);
 
   if (state.status === 'loading') {
     return <LoadingAppState />;
@@ -61,7 +103,8 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
         initialApiBaseUrl={createSeedConnectionProfile()?.apiBaseUrl}
         initialState={state.onboardingState}
         onComplete={(profile) => {
-          setState({ status: 'ready', composition: createMobileComposition(profile) });
+          authPromptVisibleRef.current = false;
+          setState({ status: 'ready', composition: buildComposition(profile) });
         }}
         onStateChange={(onboardingState) => {
           setState({ status: 'onboarding', onboardingState });
@@ -76,7 +119,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       <AppConnectionActionsContext.Provider
         value={{
           resetConnectionProfile: async () => {
-            await getConnectionProfileStore().clear();
+            await onboardingCommand.reset();
             setState(appServicesStateAfterReset());
           }
         }}

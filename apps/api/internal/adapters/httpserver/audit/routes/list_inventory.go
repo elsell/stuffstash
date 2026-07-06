@@ -32,7 +32,7 @@ func RegisterListInventory(api huma.API, application app.App) {
 
 		return &dto.ListAuditRecordsOutput{
 			Body: shared.SuccessEnvelope[[]dto.RecordResponse]{
-				Data: mapper.RecordsToResponse(result.Items),
+				Data: mapper.RecordsToResponse(result.Items, result.ResolvedPrincipals),
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

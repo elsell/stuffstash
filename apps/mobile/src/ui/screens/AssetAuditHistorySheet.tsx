@@ -73,24 +73,23 @@ function ReadyHistory({ history }: { readonly history: AssetAuditHistoryViewMode
   return (
     <ScrollView contentContainerStyle={styles.recordList}>
       {history.records.map((record) => (
-        <View key={record.id} style={styles.recordCard}>
-          <Text style={styles.recordTitle}>{record.title}</Text>
-          <Text style={styles.recordSubtitle}>{record.occurredAtLabel}</Text>
-          <View style={styles.recordMetaRow}>
-            <Text style={styles.recordPill}>{record.sourceLabel}</Text>
-            <Text style={styles.recordPill}>{record.principalLabel}</Text>
+        <View key={record.id} style={styles.recordRow}>
+          <View style={styles.timelineDot} />
+          <View style={styles.recordContent}>
+            <Text style={styles.recordTitle}>{record.title}</Text>
+            <Text style={styles.recordSubtitle}>{record.subtitle}</Text>
+            {record.requestLabel ? <Text style={styles.recordFinePrint}>{record.requestLabel}</Text> : null}
+            {record.metadataRows.length > 0 ? (
+              <View style={styles.metadataList}>
+                {record.metadataRows.map((row) => (
+                  <View key={row.label} style={styles.metadataRow}>
+                    <Text style={styles.metadataLabel}>{row.label}</Text>
+                    <Text style={styles.metadataValue}>{row.value}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </View>
-          {record.requestLabel ? <Text style={styles.recordFinePrint}>{record.requestLabel}</Text> : null}
-          {record.metadataRows.length > 0 ? (
-            <View style={styles.metadataList}>
-              {record.metadataRows.map((row) => (
-                <View key={row.label} style={styles.metadataRow}>
-                  <Text style={styles.metadataLabel}>{row.label}</Text>
-                  <Text style={styles.metadataValue}>{row.value}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
         </View>
       ))}
       {history.hasMore ? (
@@ -169,70 +168,66 @@ const styles = StyleSheet.create({
     letterSpacing: 0
   },
   recordList: {
-    gap: spacing.sm,
+    gap: spacing.xs,
     paddingBottom: spacing.lg
   },
-  recordCard: {
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    gap: spacing.xs,
-    padding: spacing.md
+  recordRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm
+  },
+  timelineDot: {
+    backgroundColor: colors.action,
+    borderRadius: 4,
+    height: 8,
+    marginTop: 7,
+    width: 8
+  },
+  recordContent: {
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+    flex: 1,
+    gap: 3,
+    paddingBottom: spacing.sm
   },
   recordTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0
   },
   recordSubtitle: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18
-  },
-  recordMetaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.xs
-  },
-  recordPill: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    color: colors.text,
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
+    lineHeight: 17
   },
   recordFinePrint: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18
+    fontSize: 11,
+    lineHeight: 16
   },
   metadataList: {
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
     gap: spacing.xs,
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm
+    marginTop: spacing.xs
   },
   metadataRow: {
-    gap: 2
+    alignItems: 'baseline',
+    flexDirection: 'row',
+    gap: spacing.sm
   },
   metadataLabel: {
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0,
+    minWidth: 92,
     textTransform: 'uppercase'
   },
   metadataValue: {
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 20
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18
   },
   moreText: {
     color: colors.textMuted,

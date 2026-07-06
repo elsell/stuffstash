@@ -27,3 +27,9 @@ export function appServicesStateAfterStartupError(): AppServicesGateState {
 export function appServicesStateAfterReset(): AppServicesGateState {
   return { status: 'onboarding', onboardingState: { step: 'instance' } };
 }
+
+export function appServicesStateAfterAuthenticationRequired(
+  profile: ConnectionProfile
+): AppServicesGateState {
+  return { status: 'onboarding', onboardingState: { step: 'signIn', profile } };
+}

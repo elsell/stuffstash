@@ -25,7 +25,7 @@ type RouteContentOverrides = Partial<Omit<InventoryWorkspaceRouteContentProps, '
   inventoryPermissions?: InventoryPermissionFixture[];
 };
 
-type InventoryPermissionFixture = 'view' | 'create_asset' | 'edit_asset' | 'configure';
+type InventoryPermissionFixture = 'view' | 'create_asset' | 'edit_asset' | 'configure' | 'view_import_job' | 'create_import_job';
 
 afterEach(() => {
   if (component) {
@@ -231,11 +231,12 @@ describe('InventoryWorkspaceRouteContent', () => {
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
       props: await routeContentProps({
-        route: { mode: 'import', importSourceType: 'legacy_homebox' }
+        route: { mode: 'import' }
       })
     });
 
-    expect(document.body.textContent).toContain('Homebox URL');
+    expect(document.body.textContent).toContain('Import history');
+    expect(document.body.textContent).toContain('No import runs yet');
 
     unmount(component);
     component = null;
@@ -249,18 +250,6 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Fields');
   });
 
-  it('denies the import form without inventory configuration access', async () => {
-    component = mount(InventoryWorkspaceRouteContent, {
-      target: document.body,
-      props: await routeContentProps({
-        route: { mode: 'import', importSourceType: 'legacy_homebox' },
-        inventoryPermissions: ['view', 'create_asset', 'edit_asset']
-      })
-    });
-
-    expect(document.body.textContent).toContain('Import unavailable');
-    expect(document.body.textContent).not.toContain('Homebox URL');
-  });
 });
 
 async function routeContentProps(overrides: RouteContentOverrides = {}): Promise<InventoryWorkspaceRouteContentProps> {
@@ -272,7 +261,17 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
         id: 'inventory-household',
         tenantId: 'tenant-home',
         name: 'Household',
-        access: { relationship: 'owner', permissions: overrides.inventoryPermissions ?? ['view', 'create_asset', 'edit_asset', 'configure'] }
+        access: {
+          relationship: 'owner',
+          permissions: overrides.inventoryPermissions ?? [
+            'view',
+            'create_asset',
+            'edit_asset',
+            'configure',
+            'view_import_job',
+            'create_import_job'
+          ]
+        }
       }
     ],
     customAssetTypes: [],
@@ -323,7 +322,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       customizationAction: null,
       customAssetTypeId: null,
       customFieldDefinitionId: null,
-      importSourceType: 'legacy_homebox'
+      importSource: null
     },
     hrefs: {
       homeHref: '/tenants/tenant-home/inventories/inventory-household',
@@ -355,7 +354,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       onSearch: async () => {},
       onOpenSearchAsset: () => {},
       onImportSourceChange: () => {},
-      onImported: async () => {},
+      onImportJobInventoryChanged: async () => {},
       onSettingsSectionChange: () => {},
       onInvitationStatusChange: () => {},
       onAccessInvitationActionOpen: () => {},

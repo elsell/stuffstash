@@ -1,5 +1,6 @@
 import type {
   Asset,
+  AssetPhotoReference,
   AssetSearchResult,
   Inventory,
   StuffStashClient,
@@ -16,6 +17,7 @@ import {
   InventoryWorkspace,
   UpdateInventoryAssetInput
 } from '../../application/home/InventorySummaryRepository';
+import type { InventoryMapAssetRepository } from '../../application/assets/InventoryMapQuery';
 import { assetId, AssetSummary } from '../../domain/assets/AssetSummary';
 import {
   AccessRole,
@@ -58,13 +60,14 @@ type DirectUploadTransportInput = {
   readonly contentType: CreateInventoryAssetPhotoInput['contentType'];
 };
 
-export class ApiInventorySummaryRepository implements InventorySummaryRepository {
+export class ApiInventorySummaryRepository implements InventorySummaryRepository, InventoryMapAssetRepository {
   private selectedInventoryId: InventoryId | undefined;
 
   constructor(
     private readonly client: InventoryApiClient,
     private readonly configuredTenantId: string,
-    private readonly directUploadTransport: DirectUploadTransport = new ExpoDirectUploadTransport()
+    private readonly directUploadTransport: DirectUploadTransport = new ExpoDirectUploadTransport(),
+    private readonly sessionScopeId = 'mobile-composition'
   ) {}
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
@@ -231,6 +234,28 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       : await this.listInventoryAssetPage(inventory, input, knownAssets);
   }
 
+  async listActiveInventoryMapAssets(): Promise<{
+    readonly sessionScopeId: string;
+    readonly tenantId: InventorySummary['tenantId'];
+    readonly inventoryId: InventorySummary['id'];
+    readonly inventoryName: string;
+    readonly permissions: readonly string[];
+    readonly assets: readonly AssetSummary[];
+  }> {
+    const inventory = await this.getDefaultInventoryForMap();
+    const activeAssets = await this.listAllActiveInventoryAssets(tenantId(inventory.tenant.id), inventory.inventory.id);
+    const assets = await this.mapAssetsWithMapPhotos(inventory.inventory.name, activeAssets);
+
+    return {
+      sessionScopeId: this.sessionScopeId,
+      tenantId: tenantId(inventory.tenant.id),
+      inventoryId: inventoryId(inventory.inventory.id),
+      inventoryName: inventory.inventory.name,
+      permissions: inventory.inventory.access.permissions,
+      assets
+    };
+  }
+
   async searchAssets(query: string): Promise<readonly AssetSummary[]> {
     const workspace = await this.getInventoryWorkspace();
     const inventory =
@@ -319,6 +344,56 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return page.items;
   }
 
+  private async getDefaultInventoryForMap(): Promise<{
+    readonly tenant: Tenant;
+    readonly inventory: Inventory;
+  }> {
+    const tenantsPage = await this.client.listMyTenants(100);
+    const tenants = tenantsPage.items;
+    const inventoriesByTenant = await Promise.all(
+      tenants.map(async (tenant) => {
+        const inventoriesPage = await this.client.listInventories(tenant.id, 100);
+        return inventoriesPage.items.map((inventory) => ({ tenant, inventory }));
+      })
+    );
+    const inventories = inventoriesByTenant.flat();
+    const preferredInventory =
+      inventories.find((item) => item.tenant.id === this.configuredTenantId) ??
+      inventories[0];
+    const defaultInventory =
+      inventories.find((item) => inventoryId(item.inventory.id) === this.selectedInventoryId) ??
+      preferredInventory;
+
+    if (!defaultInventory) {
+      throw new Error('API principal did not include any inventories.');
+    }
+
+    return defaultInventory;
+  }
+
+  private async listAllActiveInventoryAssets(
+    tenantID: string,
+    inventoryID: string
+  ): Promise<readonly Asset[]> {
+    const assets: Asset[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const page = await this.client.listAssets(
+        tenantID,
+        inventoryID,
+        inventoryAssetPageSize,
+        cursor,
+        'active',
+        'id_asc'
+      );
+      assets.push(...page.items);
+      cursor = page.pagination.nextCursor ?? undefined;
+    } while (cursor);
+
+    return assets;
+  }
+
   private async mapAssetWithPhoto(
     inventoryName: string,
     asset: Asset,
@@ -335,6 +410,42 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   ): Promise<AssetSummary> {
     const photo = await this.primaryPhotoForAsset(asset);
     return mapAsset(inventoryName, asset, assets, photo ? [photo] : []);
+  }
+
+  private async mapAssetsWithMapPhotos(
+    inventoryName: string,
+    assets: readonly Asset[]
+  ): Promise<readonly AssetSummary[]> {
+    return mapWithConcurrency(assets, 6, async (asset) => {
+      const photo = await this.primaryMapPhotoForAsset(asset);
+      return mapAsset(inventoryName, asset, assets, photo ? [photo] : []);
+    });
+  }
+
+  private async primaryMapPhotoForAsset(asset: Asset): Promise<NonNullable<AssetSummary['photo']> | undefined> {
+    if (!asset.primaryPhoto) {
+      return undefined;
+    }
+    let smallReference: AssetPhotoReference;
+    try {
+      smallReference = await this.client.assetAttachmentThumbnailReference(
+        asset.tenantId,
+        asset.inventoryId,
+        asset.id,
+        asset.primaryPhoto.id,
+        'small'
+      );
+    } catch {
+      return undefined;
+    }
+    return {
+      id: asset.primaryPhoto.id,
+      fileName: asset.primaryPhoto.fileName,
+      contentType: asset.primaryPhoto.contentType,
+      sizeBytes: asset.primaryPhoto.sizeBytes,
+      uri: smallReference.uri,
+      headers: smallReference.headers
+    };
   }
 
   private async primaryPhotoForAsset(asset: Asset): Promise<NonNullable<AssetSummary['photo']> | undefined> {
@@ -771,4 +882,24 @@ function summaryToApiAsset(
     createdAt: '',
     updatedAt: ''
   };
+}
+
+async function mapWithConcurrency<Input, Output>(
+  items: readonly Input[],
+  concurrency: number,
+  mapper: (item: Input) => Promise<Output>
+): Promise<readonly Output[]> {
+  const results = new Array<Output>(items.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, items.length);
+
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(items[index]);
+    }
+  }));
+
+  return results;
 }

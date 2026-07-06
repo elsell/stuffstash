@@ -33,6 +33,13 @@ evaluate the full stack on one machine.
 **You need:** Docker with Compose, Node.js with Corepack, an available API port,
 and an available web port.
 
+Clone the repository and enter the checkout:
+
+```sh
+git clone https://github.com/elsell/stuffstash.git
+cd stuffstash
+```
+
 Start the local stack:
 
 ```sh
@@ -62,7 +69,74 @@ Then follow [First Inventory](../first-inventory/).
 The default web config points at `http://localhost:8080`. If you change the API
 host port, update `apps/web/static/config.json` before starting the web app.
 
-To stop the stack:
+To open the web app or mobile app from another device on your network, generate
+an ignored Dex config with a LAN issuer and start Dex with the local `dex`
+binary:
+
+```sh
+export STUFF_STASH_WEB_ORIGIN=http://192.168.1.50:5173
+export STUFF_STASH_API_ORIGIN=http://192.168.1.50:8080
+export STUFF_STASH_DEX_ISSUER=http://192.168.1.50:5556/dex
+export STUFF_STASH_DEX_HTTP_ADDR=0.0.0.0:5556
+export STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback
+node scripts/render-local-dex-config.mjs
+dex serve .stuffstash/local/dex/config.yaml
+```
+
+Then start the API with the same issuer:
+
+```sh
+STUFF_STASH_AUTH_MODE=oidc \
+STUFF_STASH_AUTHZ_MODE=memory \
+STUFF_STASH_REPOSITORY_MODE=memory \
+STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
+STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local \
+STUFF_STASH_OIDC_MOBILE_CLIENT_ID=stuff-stash-mobile-local \
+STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
+STUFF_STASH_CORS_ALLOWED_ORIGINS="$STUFF_STASH_WEB_ORIGIN" \
+STUFF_STASH_OIDC_ISSUER="$STUFF_STASH_DEX_ISSUER" \
+go run ./apps/api/cmd/stuff-stash
+```
+
+If you prefer the Docker stack, pass the generated Dex config to Compose:
+
+```sh
+DEX_CONFIG_PATH=.stuffstash/local/dex/config.yaml \
+STUFF_STASH_CORS_ALLOWED_ORIGINS="$STUFF_STASH_WEB_ORIGIN" \
+STUFF_STASH_OIDC_ISSUER="$STUFF_STASH_DEX_ISSUER" \
+docker compose -f compose.yaml -f compose.oidc.yaml up --build
+```
+
+Then start the web app:
+
+```sh
+VITE_STUFF_STASH_WEB_ORIGIN="$STUFF_STASH_WEB_ORIGIN" \
+corepack pnpm --dir apps/web dev --host 0.0.0.0
+```
+
+Replace `192.168.1.50` with the host IP of the machine running Dex, the API, and
+the web dev server. The API, browser, and mobile app must all use the same
+reachable Dex issuer URL so OIDC discovery, token issuer checks, and native
+sign-in agree.
+Check the mobile metadata before opening the Expo app:
+
+```sh
+curl http://192.168.1.50:8080/.well-known/stuff-stash/mobile-auth
+```
+
+The response should advertise `http://192.168.1.50:5556/dex` as the issuer and
+`stuffstash://auth/callback` as the mobile redirect URI.
+
+You can also verify the mobile public-client authorization-code flow from the
+host:
+
+```sh
+STUFF_STASH_VERIFY_MOBILE_OIDC_ISSUER=http://192.168.1.50:5556/dex \
+STUFF_STASH_VERIFY_MOBILE_OIDC_API_BASE_URL=http://192.168.1.50:8080 \
+node scripts/verify-mobile-oidc-pkce.mjs
+```
+
+To stop the Docker stack:
 
 ```sh
 docker compose -f compose.yaml -f compose.oidc.yaml down
@@ -120,6 +194,9 @@ This is the short list most deployments need first. The full list is in the
 | `STUFF_STASH_AUTH_MODE` | Use `oidc` for SSO-backed deployments |
 | `STUFF_STASH_OIDC_ISSUER` | OIDC issuer URL |
 | `STUFF_STASH_OIDC_CLIENT_ID` | API audience/client ID |
+| `STUFF_STASH_OIDC_CLIENT_IDS` | Accepted API audiences, including web and mobile clients |
+| `STUFF_STASH_OIDC_MOBILE_CLIENT_ID` | Public native mobile OIDC client ID advertised by the API |
+| `STUFF_STASH_OIDC_MOBILE_REDIRECT_URI` | Native mobile redirect URI advertised by the API |
 | `STUFF_STASH_AUTHZ_MODE` | Use `spicedb` for relationship-based authorization |
 | `STUFF_STASH_SPICEDB_ENDPOINT` | SpiceDB gRPC endpoint |
 | `STUFF_STASH_REPOSITORY_MODE` | Use `postgres` for durable persistence |

@@ -41,12 +41,14 @@ The first API slice is asset search:
 - Query parameter `mode` supports `fuzzy` and `exact`. It defaults to `fuzzy`.
 - Query parameter `customAssetTypeId` filters to assets with that custom asset type when present.
 - Query parameter `lifecycleState` supports `active`, `archived`, and `all`. It defaults to `active`.
+- Query parameter `checkoutState` supports `any`, `checked_out`, and `available`. It defaults to `any`. `checked_out` returns only assets with an open checkout record. `available` returns only assets without an open checkout record.
 - Query parameter `inventoryId` is optional. When present, search must be restricted to that inventory after tenant and authorization candidate intersection and before result payloads are returned. When absent, search remains tenant-scoped across inventories the principal may view.
 - `limit` and `cursor` follow the standard collection pagination contract.
-- Search cursors must be scoped by tenant, query, mode, custom asset type, lifecycle state, and requested inventory scope so cursors cannot be reused across tenant-wide and inventory-scoped searches.
+- Search cursors must be scoped by tenant, query, mode, custom asset type, lifecycle state, checkout state, and requested inventory scope so cursors cannot be reused across tenant-wide and inventory-scoped searches.
 - Results must be ordered deterministically by inventory ID and asset ID for the first slice.
 - Results must include a stable `type` field. The first value is `asset`.
 - Results must include the matching asset and simple match metadata so clients can explain why a result appeared.
+- Results must include current checkout state when the asset has an open checkout.
 - Location-like assets are returned as assets with kind `location`.
 - The first slice searches asset title, description, custom field values, custom asset type key/display name/description, and attachment file name/content type.
 - Exact search uses case-insensitive whole-value equality for fields and metadata.
@@ -70,7 +72,7 @@ The first API slice is asset search:
 
 ## Testing
 
-- Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, and authorization filtering.
+- Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, checkout-state filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
 - Web inventory search must pass the selected inventory ID to the REST search endpoint so inventory-scoped UI routes do not receive cross-inventory result payloads and then filter them in the browser.
 - PostgreSQL-backed tests are required for PostgreSQL-specific search behavior.

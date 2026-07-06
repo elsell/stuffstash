@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stuff Stash Inventory Map Mockup</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --panel: #ffffff;
+      --panel-2: #f9fafb;
+      --text: #15181d;
+      --muted: #68707c;
+      --muted-2: #8a919c;
+      --line: rgba(35, 42, 52, 0.11);
+      --blue: #0a84ff;
+      --blue-soft: #e8f2ff;
+      --charcoal: #222831;
+      --dust: #587792;
+      --green: #2f8b57;
+      --amber: #b7791f;
+      --shadow: 0 18px 60px rgba(20, 26, 34, 0.18);
+      --phone-w: min(430px, 100vw);
+      --safe-top: 12px;
+      --safe-bottom: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 16% 0%, rgba(88, 119, 146, 0.18), transparent 32%),
+        linear-gradient(180deg, #eef1f5 0%, #dadfe7 100%);
+      color: var(--text);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .phone {
+      width: var(--phone-w);
+      height: min(932px, 100vh);
+      background: var(--bg);
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+
+    @media (min-width: 520px) and (min-height: 760px) {
+      .phone {
+        height: min(880px, calc(100vh - 32px));
+        border-radius: 44px;
+        border: 10px solid #111318;
+      }
+    }
+
+    .status {
+      height: 44px;
+      padding: var(--safe-top) 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: 0;
+      background: rgba(244, 245, 247, 0.92);
+      backdrop-filter: blur(18px);
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      color: var(--charcoal);
+      font-size: 12px;
+    }
+
+    .nav {
+      position: relative;
+      z-index: 6;
+      padding: 8px 16px 10px;
+      background: rgba(244, 245, 247, 0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-top {
+      display: grid;
+      grid-template-columns: 34px 1fr 34px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      color: var(--blue);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .icon-button:active {
+      background: rgba(10, 132, 255, 0.12);
+    }
+
+    .title-group {
+      min-width: 0;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 22px;
+      font-weight: 700;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .search {
+      margin-top: 10px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(118, 118, 128, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      color: var(--muted);
+    }
+
+    .search input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .breadcrumbs {
+      position: relative;
+      z-index: 5;
+      min-height: 45px;
+      padding: 8px 14px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      background: rgba(244, 245, 247, 0.96);
+      border-bottom: 1px solid var(--line);
+      scrollbar-width: none;
+    }
+
+    .breadcrumbs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .crumb {
+      flex: 0 0 auto;
+      border: 0;
+      min-height: 29px;
+      max-width: 156px;
+      border-radius: 999px;
+      padding: 0 10px;
+      color: var(--blue);
+      background: transparent;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .crumb span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crumb.current {
+      color: var(--charcoal);
+      background: #fff;
+      box-shadow: inset 0 0 0 1px var(--line);
+      font-weight: 650;
+    }
+
+    .crumb:active {
+      background: rgba(10, 132, 255, 0.12);
+    }
+
+    .content {
+      position: absolute;
+      inset: 137px 0 78px;
+      overflow: hidden;
+    }
+
+    .depth-header {
+      height: 44px;
+      padding: 10px 20px 6px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .depth-title {
+      font-size: 22px;
+      line-height: 26px;
+      font-weight: 760;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .depth-count {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .stage-wrap {
+      position: absolute;
+      inset: 44px 0 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      scroll-behavior: smooth;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+      touch-action: pan-x pan-y;
+    }
+
+    .stage-wrap::-webkit-scrollbar {
+      display: none;
+    }
+
+    .stage {
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      padding: 0 9%;
+    }
+
+    .column {
+      width: 82%;
+      flex: 0 0 82%;
+      height: 100%;
+      padding: 0 8px 12px;
+      opacity: 0.58;
+      transform: scale(0.985);
+      transition: opacity 300ms ease, transform 300ms ease;
+      scroll-snap-align: center;
+    }
+
+    .column.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .column-inner {
+      height: 100%;
+      overflow-y: auto;
+      padding: 0 10px 22px;
+      scrollbar-width: none;
+      scroll-behavior: smooth;
+    }
+
+    .column-inner::-webkit-scrollbar {
+      display: none;
+    }
+
+    .section-label {
+      padding: 10px 4px 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .rows {
+      overflow: hidden;
+      border-radius: 17px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    .row {
+      position: relative;
+      width: 100%;
+      min-height: 76px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      align-items: stretch;
+      color: inherit;
+    }
+
+    .row-main {
+      min-width: 0;
+      padding: 10px 0 10px 12px;
+      border: 0;
+      background: transparent;
+      display: grid;
+      grid-template-columns: 48px 1fr 18px;
+      align-items: center;
+      gap: 11px;
+      text-align: left;
+      cursor: pointer;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .row-main:active,
+    .info-button:active {
+      background: #eef6ff;
+    }
+
+    .row.selected {
+      background: var(--blue-soft);
+    }
+
+    .row.selected::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 0 99px 99px 0;
+      background: var(--blue);
+    }
+
+    .thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #e6ebf1, #f8fafc);
+      color: var(--dust);
+      font-size: 21px;
+      overflow: hidden;
+    }
+
+    .thumb.place {
+      background: linear-gradient(145deg, #e9f3f4, #f8fafc);
+      color: #497f87;
+    }
+
+    .thumb.container {
+      background: linear-gradient(145deg, #eef0e5, #fbfcf4);
+      color: #7e7a42;
+    }
+
+    .thumb.item {
+      background: linear-gradient(145deg, #eef1f7, #ffffff);
+      color: #677489;
+    }
+
+    .row-body {
+      min-width: 0;
+    }
+
+    .row-title {
+      display: block;
+      font-size: 16px;
+      line-height: 21px;
+      font-weight: 650;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row-meta {
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--muted-2);
+      flex: 0 0 auto;
+    }
+
+    .row-side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-2);
+      font-size: 14px;
+    }
+
+    .disclosure {
+      color: var(--muted-2);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .info-button {
+      width: 44px;
+      min-height: 76px;
+      border: 0;
+      background: transparent;
+      color: var(--muted-2);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .info-button svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .info-stack {
+      display: grid;
+      place-items: center;
+      gap: 4px;
+    }
+
+    .count-pill {
+      min-width: 28px;
+      height: 24px;
+      border-radius: 999px;
+      padding: 0 7px;
+      display: grid;
+      place-items: center;
+      background: rgba(118, 118, 128, 0.1);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .empty {
+      margin: 0 2px;
+      border-radius: 17px;
+      border: 1px dashed rgba(35, 42, 52, 0.18);
+      background: rgba(255, 255, 255, 0.66);
+      padding: 22px 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty strong {
+      display: block;
+      color: var(--text);
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .tabbar {
+      position: absolute;
+      z-index: 7;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 78px;
+      padding: 8px 12px var(--safe-bottom);
+      background: rgba(250, 250, 251, 0.92);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(24px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 2px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 590;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: var(--blue);
+    }
+
+    .tab svg,
+    .icon-button svg,
+    .search svg {
+      width: 21px;
+      height: 21px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .drawer {
+      position: absolute;
+      z-index: 10;
+      inset: auto 10px 88px;
+      min-height: 180px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 22px 70px rgba(20, 26, 34, 0.26);
+      border: 1px solid rgba(35, 42, 52, 0.12);
+      transform: translateY(calc(100% + 116px));
+      opacity: 0;
+      transition: transform 320ms cubic-bezier(0.2, 0.88, 0.22, 1), opacity 220ms ease;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .drawer.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .grabber {
+      width: 38px;
+      height: 5px;
+      border-radius: 99px;
+      background: rgba(60, 60, 67, 0.24);
+      margin: 9px auto 7px;
+    }
+
+    .drawer-content {
+      padding: 0 18px 18px;
+    }
+
+    .drawer-title {
+      font-size: 22px;
+      line-height: 27px;
+      font-weight: 760;
+      margin: 0 0 4px;
+    }
+
+    .drawer-meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 20px;
+      margin-bottom: 14px;
+    }
+
+    .drawer-actions {
+      display: grid;
+      gap: 9px;
+    }
+
+    .action-row {
+      height: 46px;
+      border-radius: 13px;
+      border: 0;
+      background: rgba(118, 118, 128, 0.1);
+      color: var(--text);
+      padding: 0 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 630;
+      cursor: pointer;
+    }
+
+    .action-row.primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    .scrim {
+      position: absolute;
+      z-index: 9;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.08);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+
+    .scrim.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stage,
+      .column,
+      .drawer,
+      .scrim {
+        transition-duration: 1ms;
+      }
+
+      .column-inner,
+      .breadcrumbs,
+      .stage-wrap {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" aria-label="Stuff Stash mobile inventory map mockup">
+    <div class="status" aria-hidden="true">
+      <span>9:41</span>
+      <span class="status-icons">5G ▰▰▰ ◖</span>
+    </div>
+
+    <header class="nav">
+      <div class="nav-top">
+        <button class="icon-button" aria-label="Back">
+          <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>
+        </button>
+        <div class="title-group">
+          <span class="eyebrow">John's house / Home</span>
+          <h1>Inventory Map</h1>
+        </div>
+        <button class="icon-button" id="collapseAll" aria-label="Collapse all">
+          <svg viewBox="0 0 24 24"><path d="M8 6h8"></path><path d="M6 12h12"></path><path d="M9 18h6"></path></svg>
+        </button>
+      </div>
+      <label class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input id="search" type="search" autocomplete="off" placeholder="Search map">
+      </label>
+    </header>
+
+    <nav class="breadcrumbs" id="breadcrumbs" aria-label="Inventory path"></nav>
+
+    <section class="content">
+      <div class="depth-header">
+        <div class="depth-title" id="depthTitle">Home</div>
+        <div class="depth-count" id="depthCount">Top level</div>
+      </div>
+      <div class="stage-wrap" id="stageWrap">
+        <div class="stage" id="stage"></div>
+      </div>
+    </section>
+
+    <div class="scrim" id="scrim"></div>
+    <aside class="drawer" id="drawer" aria-live="polite">
+      <div class="grabber" aria-hidden="true"></div>
+      <div class="drawer-content" id="drawerContent"></div>
+    </aside>
+
+    <nav class="tabbar" aria-label="Primary">
+      <button class="tab">
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10.5V20h14v-9.5"></path></svg>
+        <span>Home</span>
+      </button>
+      <button class="tab active">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
+        <span>Browse</span>
+      </button>
+      <button class="tab">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+        <span>Add</span>
+      </button>
+      <button class="tab">
+        <svg viewBox="0 0 24 24"><path d="M12 3v18"></path><path d="M8 7v10"></path><path d="M16 7v10"></path></svg>
+        <span>Voice</span>
+      </button>
+    </nav>
+  </main>
+
+  <script>
+    const inventory = {
+      id: "root",
+      title: "Home",
+      kind: "inventory",
+      children: [
+        {
+          id: "garage",
+          title: "Garage",
+          kind: "location",
+          note: "Utility shelves, tools, seasonal bins",
+          children: [
+            {
+              id: "tool-chest",
+              title: "Tool chest",
+              kind: "container",
+              note: "Rolling black chest",
+              children: [
+                { id: "socket-set", title: "Socket set", kind: "item", note: "Metric and SAE" },
+                { id: "torque-wrench", title: "Torque wrench", kind: "item", note: "Lower drawer" },
+                { id: "drill-bits", title: "Drill bits box", kind: "container", note: "Small yellow case", children: [
+                  { id: "masonry-bits", title: "Masonry bits", kind: "item", note: "Blue sleeve" },
+                  { id: "hex-bits", title: "Hex driver bits", kind: "item", note: "Assorted sizes" },
+                  { id: "hole-saws", title: "Hole saw kit", kind: "item", note: "Red case" }
+                ] }
+              ]
+            },
+            {
+              id: "wire-shelf",
+              title: "Wire shelf",
+              kind: "location",
+              note: "Left wall",
+              children: [
+                { id: "furnace-filters", title: "Furnace filters", kind: "item", note: "20x25x1, 3 left" },
+                { id: "fertilizer", title: "Lawn fertilizer", kind: "item", note: "Half bag" },
+                { id: "paint-bin", title: "Paint bin", kind: "container", note: "Touch-up paint", children: [
+                  { id: "trim-paint", title: "White trim paint", kind: "item", note: "Opened May" },
+                  { id: "roller-covers", title: "Roller covers", kind: "item", note: "Two-pack" }
+                ] }
+              ]
+            },
+            {
+              id: "camping-bin",
+              title: "Camping bin",
+              kind: "container",
+              note: "Clear latching tote",
+              children: [
+                { id: "headlamps", title: "Headlamps", kind: "item", note: "Needs batteries" },
+                { id: "tent-stakes", title: "Tent stakes", kind: "item", note: "Orange pouch" }
+              ]
+            }
+          ]
+        },
+        {
+          id: "kitchen",
+          title: "Kitchen",
+          kind: "location",
+          note: "Pantry, drawers, cabinets",
+          children: [
+            {
+              id: "pantry",
+              title: "Pantry",
+              kind: "location",
+              note: "Back wall cabinet",
+              children: [
+                { id: "batteries", title: "AA batteries", kind: "item", note: "12 pack" },
+                { id: "coffee-filters", title: "Coffee filters", kind: "item", note: "Cone #4" },
+                { id: "medicine-basket", title: "Medicine basket", kind: "container", note: "Top shelf", children: [
+                  { id: "ibuprofen", title: "Ibuprofen", kind: "item", note: "Expires Oct 2027" },
+                  { id: "thermometer", title: "Thermometer", kind: "item", note: "Digital" }
+                ] }
+              ]
+            },
+            { id: "junk-drawer", title: "Utility drawer", kind: "location", note: "By sink", children: [
+              { id: "zip-ties", title: "Zip ties", kind: "item", note: "Assorted lengths" },
+              { id: "tape-measure", title: "Tape measure", kind: "item", note: "25 ft" }
+            ] },
+            { id: "under-sink", title: "Under sink", kind: "location", note: "Cleaning supplies", children: [
+              { id: "dish-tabs", title: "Dishwasher tabs", kind: "item", note: "Box of 48" },
+              { id: "gloves", title: "Rubber gloves", kind: "item", note: "Yellow pair" }
+            ] }
+          ]
+        },
+        {
+          id: "office",
+          title: "Office closet",
+          kind: "location",
+          note: "Documents and electronics",
+          children: [
+            { id: "passport-folder", title: "Passport folder", kind: "container", note: "Blue folder", children: [
+              { id: "birth-cert", title: "Birth certificate", kind: "item", note: "Certified copy" },
+              { id: "passport", title: "Passport", kind: "item", note: "Expires 2031" }
+            ] },
+            { id: "cable-bin", title: "Cable bin", kind: "container", note: "Black fabric cube", children: [
+              { id: "usb-c", title: "USB-C cables", kind: "item", note: "Several lengths" },
+              { id: "hdmi", title: "HDMI cable", kind: "item", note: "6 ft" }
+            ] }
+          ]
+        },
+        { id: "attic", title: "Attic", kind: "location", note: "Seasonal storage", children: [
+          { id: "holiday-tote", title: "Holiday tote", kind: "container", note: "Red lid", children: [
+            { id: "tree-lights", title: "Tree lights", kind: "item", note: "Warm white" },
+            { id: "ornaments", title: "Ornaments", kind: "item", note: "Fragile" }
+          ] }
+        ] }
+      ]
+    };
+
+    const stage = document.getElementById("stage");
+    const stageWrap = document.getElementById("stageWrap");
+    const breadcrumbs = document.getElementById("breadcrumbs");
+    const depthTitle = document.getElementById("depthTitle");
+    const depthCount = document.getElementById("depthCount");
+    const collapseAll = document.getElementById("collapseAll");
+    const search = document.getElementById("search");
+    const drawer = document.getElementById("drawer");
+    const drawerContent = document.getElementById("drawerContent");
+    const scrim = document.getElementById("scrim");
+
+    let path = [inventory];
+    let activeDepth = 0;
+    let scrollFrame = 0;
+
+    function childrenOf(node) {
+      return Array.isArray(node.children) ? node.children : [];
+    }
+
+    function childCount(node) {
+      return childrenOf(node).reduce((count, child) => count + 1 + childCount(child), 0);
+    }
+
+    function kindLabel(kind) {
+      if (kind === "location") return "Location";
+      if (kind === "container") return "Container";
+      if (kind === "item") return "Item";
+      return "Inventory";
+    }
+
+    function kindIcon(kind) {
+      if (kind === "location") return "⌂";
+      if (kind === "container") return "□";
+      if (kind === "item") return "•";
+      return "⌁";
+    }
+
+    function pluralThings(count) {
+      return count === 1 ? "1 thing" : `${count} things`;
+    }
+
+    function render() {
+      const levels = path.map((node) => childrenOf(node));
+      if (levels[levels.length - 1].length > 0) {
+        levels.push([]);
+      }
+
+      stage.innerHTML = "";
+      levels.forEach((items, index) => {
+        const parent = path[index];
+        const selected = path[index + 1];
+        const column = document.createElement("section");
+        column.className = `column${index === activeDepth ? " active" : ""}`;
+        column.setAttribute("aria-label", `${parent ? parent.title : "Contents"} contents`);
+        column.dataset.depth = String(index);
+
+        const inner = document.createElement("div");
+        inner.className = "column-inner";
+
+        const label = document.createElement("div");
+        label.className = "section-label";
+        label.textContent = parent ? `Inside ${parent.title}` : "Top level";
+        inner.appendChild(label);
+
+        if (items.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.innerHTML = `<strong>No deeper level</strong><span>Choose another branch or open details for this item.</span>`;
+          inner.appendChild(empty);
+        } else {
+          const rows = document.createElement("div");
+          rows.className = "rows";
+          items.forEach((node) => rows.appendChild(renderRow(node, selected)));
+          inner.appendChild(rows);
+        }
+
+        column.appendChild(inner);
+        stage.appendChild(column);
+      });
+
+      renderBreadcrumbs();
+      syncHeader();
+      moveStage();
+      requestAnimationFrame(() => scrollActiveColumn());
+    }
+
+    function renderRow(node, selected) {
+      const hasChildren = childrenOf(node).length > 0;
+      const row = document.createElement("div");
+      row.className = `row${selected && selected.id === node.id ? " selected" : ""}`;
+      row.dataset.id = node.id;
+
+      row.innerHTML = `
+        <button class="row-main" type="button" aria-label="${escapeHtml(node.title)}, ${kindLabel(node.kind)}">
+          <span class="thumb ${node.kind}">${kindIcon(node.kind)}</span>
+          <span class="row-body">
+            <span class="row-title">${escapeHtml(node.title)}</span>
+            <span class="row-meta">
+              <span>${kindLabel(node.kind)}</span>
+              <span class="dot"></span>
+              <span>${escapeHtml(node.note || (hasChildren ? "Contains inventory assets" : "No note"))}</span>
+            </span>
+          </span>
+          <span class="disclosure" aria-hidden="true">${hasChildren ? "›" : ""}</span>
+        </button>
+        <button class="info-button" type="button" aria-label="Details for ${escapeHtml(node.title)}">
+          <span class="info-stack">
+            ${hasChildren ? `<span class="count-pill">${childCount(node)}</span>` : ""}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg>
+          </span>
+        </button>
+      `;
+
+      row.querySelector(".row-main").addEventListener("click", () => activateNode(node));
+      row.querySelector(".info-button").addEventListener("click", (event) => {
+        event.stopPropagation();
+        openDrawer(node);
+      });
+      return row;
+    }
+
+    function renderBreadcrumbs() {
+      breadcrumbs.innerHTML = "";
+      path.forEach((node, index) => {
+        const crumb = document.createElement("button");
+        crumb.className = `crumb${index === path.length - 1 ? " current" : ""}`;
+        crumb.type = "button";
+        crumb.setAttribute("aria-label", index === 0 ? "Home" : `Jump to ${node.title}`);
+        crumb.innerHTML = `<span>${escapeHtml(node.title)}</span>${index < path.length - 1 ? "<span aria-hidden=\"true\">›</span>" : ""}`;
+        crumb.addEventListener("click", () => jumpToDepth(index));
+        breadcrumbs.appendChild(crumb);
+      });
+      requestAnimationFrame(() => {
+        breadcrumbs.scrollTo({ left: breadcrumbs.scrollWidth, behavior: "smooth" });
+      });
+    }
+
+    function syncHeader() {
+      const current = path[activeDepth] || path[path.length - 1];
+      const items = childrenOf(current);
+      depthTitle.textContent = current.title;
+      depthCount.textContent = items.length > 0
+        ? `${items.length} here · ${pluralThings(childCount(current))} total`
+        : kindLabel(current.kind);
+    }
+
+    function moveStage() {
+      [...stage.children].forEach((column, index) => {
+        column.classList.toggle("active", index === activeDepth);
+      });
+      requestAnimationFrame(() => {
+        const targetColumn = stage.children[activeDepth];
+        if (targetColumn) {
+          stageWrap.scrollTo({ left: targetColumn.offsetLeft - stageWrap.clientWidth * 0.09, behavior: "smooth" });
+        }
+      });
+    }
+
+    function syncDepthFromScroll() {
+      scrollFrame = 0;
+      const columns = [...stage.children];
+      if (columns.length === 0) return;
+
+      const viewportCenter = stageWrap.scrollLeft + stageWrap.clientWidth / 2;
+      let nearestDepth = activeDepth;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      columns.forEach((column, index) => {
+        const columnCenter = column.offsetLeft + column.clientWidth / 2;
+        const distance = Math.abs(columnCenter - viewportCenter);
+        if (distance < nearestDistance) {
+          nearestDepth = index;
+          nearestDistance = distance;
+        }
+      });
+
+      const clampedDepth = Math.max(0, Math.min(path.length - 1, nearestDepth));
+      if (clampedDepth !== activeDepth) {
+        activeDepth = clampedDepth;
+        syncHeader();
+        [...stage.children].forEach((column, index) => {
+          column.classList.toggle("active", index === activeDepth);
+        });
+      }
+    }
+
+    function navigateDepth(delta) {
+      const nextDepth = Math.max(0, Math.min(path.length - 1, activeDepth + delta));
+      if (nextDepth === activeDepth) return;
+      closeDrawer();
+      activeDepth = nextDepth;
+      render();
+    }
+
+    function scrollActiveColumn() {
+      const column = stage.children[activeDepth];
+      if (!column) return;
+      const selectedId = path[activeDepth + 1]?.id;
+      const inner = column.querySelector(".column-inner");
+      const row = selectedId ? column.querySelector(`[data-id="${CSS.escape(selectedId)}"]`) : null;
+      if (inner && row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (inner) {
+        inner.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function activateNode(node) {
+      closeDrawer();
+      const existingDepth = path.findIndex((candidate) => candidate.id === node.id);
+      if (existingDepth >= 0) {
+        jumpToDepth(existingDepth);
+        return;
+      }
+
+      const nextPath = path.slice(0, activeDepth + 1);
+      nextPath.push(node);
+      path = nextPath;
+      activeDepth = childrenOf(node).length > 0 ? path.length - 1 : Math.max(path.length - 2, 0);
+      if (!childrenOf(node).length) {
+        openDrawer(node);
+      }
+      render();
+    }
+
+    function jumpToDepth(depth) {
+      closeDrawer();
+      path = path.slice(0, depth + 1);
+      activeDepth = depth;
+      render();
+    }
+
+    function openDrawer(node) {
+      drawerContent.innerHTML = `
+        <h2 class="drawer-title">${escapeHtml(node.title)}</h2>
+        <div class="drawer-meta">${kindLabel(node.kind)} · ${childrenOf(node).length ? `${pluralThings(childCount(node))} inside` : "No contained items"}<br>${escapeHtml(node.note || "No details yet")}</div>
+        <div class="drawer-actions">
+          ${node.kind !== "item" ? `<button class="action-row primary" type="button"><span>Add item here</span><span>+</span></button>` : ""}
+          ${node.kind !== "item" ? `<button class="action-row" type="button"><span>Move items here</span><span>›</span></button>` : ""}
+          <button class="action-row" type="button"><span>Open details</span><span>›</span></button>
+        </div>
+      `;
+      drawer.classList.add("open");
+      scrim.classList.add("open");
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      scrim.classList.remove("open");
+    }
+
+    function findNodeAndPath(query, node = inventory, ancestry = [inventory]) {
+      const normalized = query.trim().toLowerCase();
+      if (!normalized) return null;
+      for (const child of childrenOf(node)) {
+        const nextAncestry = ancestry.concat(child);
+        if (child.title.toLowerCase().includes(normalized)) {
+          return nextAncestry;
+        }
+        const found = findNodeAndPath(query, child, nextAncestry);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    collapseAll.addEventListener("click", () => {
+      closeDrawer();
+      path = [inventory];
+      activeDepth = 0;
+      render();
+    });
+
+    search.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const foundPath = findNodeAndPath(search.value);
+      if (foundPath) {
+        path = foundPath;
+        const last = path[path.length - 1];
+        activeDepth = childrenOf(last).length > 0 ? path.length - 1 : Math.max(path.length - 2, 0);
+        render();
+        if (!childrenOf(last).length) {
+          setTimeout(() => openDrawer(last), 360);
+        }
+      }
+    });
+
+    scrim.addEventListener("click", closeDrawer);
+
+    stageWrap.addEventListener("scroll", () => {
+      if (scrollFrame !== 0) return;
+      scrollFrame = requestAnimationFrame(syncDepthFromScroll);
+    }, { passive: true });
+
+    stageWrap.addEventListener("wheel", (event) => {
+      if (!event.shiftKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      event.preventDefault();
+      stageWrap.scrollBy({ left: event.deltaY, behavior: "smooth" });
+    }, { passive: false });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        navigateDepth(-1);
+      }
+      if (event.key === "ArrowRight") {
+        navigateDepth(1);
+      }
+    });
+
+    window.addEventListener("resize", moveStage);
+    render();
+  </script>
+</body>
+</html>

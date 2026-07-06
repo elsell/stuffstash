@@ -2,6 +2,81 @@ import { describe, expect, it } from 'vitest';
 import { WebSocketRealtimeVoiceTransport } from './WebSocketRealtimeVoiceTransport';
 
 describe('WebSocketRealtimeVoiceTransport', () => {
+  it('awaits an async OIDC token before opening the realtime socket', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: async () => 'refreshed-id-token',
+      webSocketFactory: (url, headers) => {
+        socket.url = url;
+        socket.headers = headers;
+        return socket;
+      }
+    });
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async () => {});
+
+    await waitForSocketReady(socket);
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({ type: 'session.completed', seq: 2, sessionId: 'session-1' });
+
+    await run;
+    expect(socket.headers).toEqual({ Authorization: 'Bearer refreshed-id-token' });
+  });
+
+  it('does not open a realtime socket when mobile auth is unavailable', async () => {
+    let openedSocket = false;
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: async () => {
+        throw new Error('Sign in to Stuff Stash.');
+      },
+      webSocketFactory: () => {
+        openedSocket = true;
+        return new FakeWebSocket();
+      }
+    });
+
+    await expect(transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async () => {})).rejects.toThrow('Sign in to Stuff Stash.');
+    expect(openedSocket).toBe(false);
+  });
+
+  it('does not open a realtime socket when mobile auth returns no token', async () => {
+    let openedSocket = false;
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => '',
+      webSocketFactory: () => {
+        openedSocket = true;
+        return new FakeWebSocket();
+      }
+    });
+
+    await expect(transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async () => {})).rejects.toThrow('Sign in before starting a voice session.');
+    expect(openedSocket).toBe(false);
+  });
+
   it('opens the API realtime voice socket and sends start, audio chunks, and end messages', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
@@ -535,6 +610,12 @@ class FakeWebSocket {
 
 async function waitForSentMessageCount(socket: FakeWebSocket, count: number): Promise<void> {
   for (let attempts = 0; attempts < 20 && socket.sent.length < count; attempts++) {
+    await Promise.resolve();
+  }
+}
+
+async function waitForSocketReady(socket: FakeWebSocket): Promise<void> {
+  for (let attempts = 0; attempts < 20 && !socket.onmessage; attempts++) {
     await Promise.resolve();
   }
 }

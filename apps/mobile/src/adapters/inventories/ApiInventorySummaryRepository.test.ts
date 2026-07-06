@@ -87,6 +87,11 @@ class FakeInventoryApiClient {
     readonly limit?: number;
     readonly cursor?: string;
   }> = [];
+  thumbnailRequests: Array<{
+    readonly assetId: string;
+    readonly attachmentId: string;
+    readonly variant: string;
+  }> = [];
   createdAssetInput:
     | {
         readonly tenantId: string;
@@ -147,6 +152,7 @@ class FakeInventoryApiClient {
   }> = [];
   searchedQuery: string | undefined;
   shouldFailAttachmentLookup = false;
+  failedThumbnailAssetIds = new Set<string>();
 
   async listMyTenants(): Promise<Page<Tenant>> {
     return page([this.tenant, this.cabinTenant]);
@@ -173,7 +179,12 @@ class FakeInventoryApiClient {
       return page([]);
     }
 
-    const sortedAssets = sort === 'updated_desc' ? sortAssetsByUpdatedDesc(this.assets) : this.assets;
+    const lifecycleAssets = lifecycleState === 'active'
+      ? this.assets.filter((asset) => asset.lifecycleState === 'active')
+      : lifecycleState === 'archived'
+        ? this.assets.filter((asset) => asset.lifecycleState === 'archived')
+        : this.assets;
+    const sortedAssets = sort === 'updated_desc' ? sortAssetsByUpdatedDesc(lifecycleAssets) : lifecycleAssets;
     const start = cursor ? Number.parseInt(cursor, 10) : 0;
     const items = sortedAssets.slice(start, start + limit);
     const nextCursor =
@@ -248,6 +259,10 @@ class FakeInventoryApiClient {
     attachmentId: string,
     variant: 'small' | 'medium' | 'large' = 'small'
   ): Promise<AssetPhotoReference> {
+    this.thumbnailRequests.push({ assetId: assetIdValue, attachmentId, variant });
+    if (this.failedThumbnailAssetIds.has(assetIdValue)) {
+      throw new Error('Thumbnail reference failed.');
+    }
     return {
       uri: `https://api.example.test/tenants/${tenantId}/inventories/${inventoryId}/assets/${assetIdValue}/attachments/${attachmentId}/thumbnail?variant=${variant}`,
       headers: { Authorization: 'Bearer dev-token' }
@@ -1150,6 +1165,140 @@ describe('ApiInventorySummaryRepository', () => {
         title: 'Furnace filters'
       }
     ]);
+  });
+
+  it('pages active inventory map assets to completion instead of using only the recent summary page', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = Array.from({ length: 102 }, (_, index): Asset => ({
+      id: index === 101 ? 'asset-final-child' : `asset-map-${index.toString().padStart(3, '0')}`,
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      kind: index === 0 ? 'location' : 'item',
+      title: index === 101 ? 'Final child' : `Map asset ${index.toString().padStart(3, '0')}`,
+      description: '',
+      parentAssetId: index === 101 ? 'asset-map-000' : null,
+      lifecycleState: index === 50 ? 'archived' : 'active',
+      customFields: {},
+      createdAt: '2026-06-20T10:00:00Z',
+      updatedAt: `2026-06-20T10:${index.toString().padStart(2, '0')}:00Z`,
+      ...(index > 0 ? {
+        primaryPhoto: {
+          id: `attachment-map-${index.toString()}`,
+          fileName: `map-${index.toString()}.jpg`,
+          contentType: 'image/jpeg',
+          sizeBytes: 1024,
+          thumbnails: {
+            small: 'small',
+            medium: 'medium',
+            large: 'large'
+          }
+        }
+      } : {})
+    }));
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', undefined, 'scope-map-test');
+
+    const mapAssets = await repository.listActiveInventoryMapAssets();
+
+    expect(mapAssets).toMatchObject({
+      sessionScopeId: 'scope-map-test',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      inventoryName: 'Home Inventory'
+    });
+    expect(mapAssets.assets).toHaveLength(101);
+    expect(mapAssets.assets.find((asset) => asset.id === 'asset-map-000')).toMatchObject({
+      id: 'asset-map-000',
+      title: 'Map asset 000'
+    });
+    expect(mapAssets.assets.find((asset) => asset.id === 'asset-final-child')).toMatchObject({
+      id: 'asset-final-child',
+      title: 'Final child',
+      parentAssetId: 'asset-map-000',
+      locationTrail: ['Home Inventory', 'Map asset 000', 'Final child']
+    });
+    expect(client.thumbnailRequests).toHaveLength(100);
+    expect(new Set(client.thumbnailRequests.map((request) => request.variant))).toEqual(new Set(['small']));
+    const mapAssetRequests = client.listAssetRequests.filter((request) => request.lifecycleState === 'active');
+    expect(mapAssetRequests).toEqual([
+      {
+        inventoryId: 'inventory-home',
+        limit: 100,
+        cursor: undefined,
+        lifecycleState: 'active',
+        sort: 'id_asc'
+      },
+      {
+        inventoryId: 'inventory-home',
+        limit: 100,
+        cursor: '100',
+        lifecycleState: 'active',
+        sort: 'id_asc'
+      }
+    ]);
+  });
+
+  it('keeps inventory map structure available when one row thumbnail fails', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-garage',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'location',
+        title: 'Garage',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T10:00:00Z',
+        updatedAt: '2026-06-20T10:00:00Z',
+        primaryPhoto: {
+          id: 'attachment-garage',
+          fileName: 'garage.jpg',
+          contentType: 'image/jpeg',
+          sizeBytes: 1024,
+          thumbnails: { small: 'small', medium: 'medium', large: 'large' }
+        }
+      },
+      {
+        id: 'asset-bin',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Camping bin',
+        description: '',
+        parentAssetId: 'asset-garage',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T10:00:00Z',
+        updatedAt: '2026-06-20T10:00:00Z',
+        primaryPhoto: {
+          id: 'attachment-bin',
+          fileName: 'bin.jpg',
+          contentType: 'image/jpeg',
+          sizeBytes: 1024,
+          thumbnails: { small: 'small', medium: 'medium', large: 'large' }
+        }
+      }
+    ];
+    client.failedThumbnailAssetIds.add('asset-garage');
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    const mapAssets = await repository.listActiveInventoryMapAssets();
+
+    expect(mapAssets.assets).toHaveLength(2);
+    expect(mapAssets.assets.find((asset) => asset.id === 'asset-garage')).toMatchObject({
+      id: 'asset-garage',
+      hasPhoto: false,
+      photo: undefined
+    });
+    expect(mapAssets.assets.find((asset) => asset.id === 'asset-bin')).toMatchObject({
+      id: 'asset-bin',
+      hasPhoto: true,
+      photo: {
+        uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-bin/attachments/attachment-bin/thumbnail?variant=small'
+      }
+    });
   });
 });
 

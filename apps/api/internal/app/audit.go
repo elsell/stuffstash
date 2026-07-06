@@ -33,15 +33,18 @@ type ListAssetAuditHistoryInput struct {
 }
 
 type ListAuditRecordsResult struct {
-	Items      []audit.Record
-	Limit      int
-	NextCursor *string
-	HasMore    bool
+	Items              []audit.Record
+	ResolvedPrincipals map[identity.PrincipalID]identity.User
+	Limit              int
+	NextCursor         *string
+	HasMore            bool
 }
 
 type ListAssetAuditHistoryResult struct {
-	Items []audit.Record
-	Limit int
+	Items              []audit.Record
+	ResolvedPrincipals map[identity.PrincipalID]identity.User
+	Limit              int
+	HasMore            bool
 }
 
 type auditRecordInput = appsupport.AuditRecordInput
@@ -110,10 +113,14 @@ func (a App) ListAssetAuditHistory(ctx context.Context, input ListAssetAuditHist
 
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
 	items, err := a.audit.ListAssetAuditRecords(ctx, input.TenantID, input.InventoryID, input.AssetID, ports.AssetAuditRecordListRequest{
-		Limit: limit,
+		Limit: limit + 1,
 	})
 	if err != nil {
 		return ListAssetAuditHistoryResult{}, err
+	}
+	hasMore := len(items) > limit
+	if hasMore {
+		items = items[:limit]
 	}
 	a.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAuditRecordsListed,
@@ -127,21 +134,27 @@ func (a App) ListAssetAuditHistory(ctx context.Context, input ListAssetAuditHist
 		},
 	})
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      audit.SourceAPI,
 		Action:      audit.ActionAuditRecordListed,
 		TargetType:  audit.TargetAuditRecord,
-		TargetID:    audit.TargetAsset.String(),
+		TargetID:    input.AssetID,
 		Metadata: map[string]string{
 			"limit":       strconv.Itoa(limit),
 			"target_type": audit.TargetAsset.String(),
+			"target_id":   input.AssetID,
 		},
 	}); err != nil {
 		return ListAssetAuditHistoryResult{}, err
 	}
-	return ListAssetAuditHistoryResult{Items: items, Limit: limit}, nil
+	return ListAssetAuditHistoryResult{
+		Items:              items,
+		ResolvedPrincipals: a.resolveAuditPrincipals(ctx, ListAuditRecordsInput{Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID}, items),
+		Limit:              limit,
+		HasMore:            hasMore,
+	}, nil
 }
 
 func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsInput, items []audit.Record, limit int) (ListAuditRecordsResult, error) {
@@ -152,6 +165,7 @@ func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsIn
 		nextCursor = encodeAuditRecordCursor(input.TenantID, input.InventoryID, items[len(items)-1])
 	}
 
+	resolvedPrincipals := a.resolveAuditPrincipals(ctx, input, items)
 	a.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAuditRecordsListed,
 		Message: "audit records listed",
@@ -163,7 +177,7 @@ func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsIn
 		},
 	})
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Action:      audit.ActionAuditRecordListed,
@@ -177,11 +191,47 @@ func (a App) auditRecordListResult(ctx context.Context, input ListAuditRecordsIn
 	}
 
 	return ListAuditRecordsResult{
-		Items:      items,
-		Limit:      limit,
-		NextCursor: nextCursor,
-		HasMore:    hasMore,
+		Items:              items,
+		ResolvedPrincipals: resolvedPrincipals,
+		Limit:              limit,
+		NextCursor:         nextCursor,
+		HasMore:            hasMore,
 	}, nil
+}
+
+func (a App) resolveAuditPrincipals(ctx context.Context, input ListAuditRecordsInput, items []audit.Record) map[identity.PrincipalID]identity.User {
+	if a.users == nil || len(items) == 0 {
+		return map[identity.PrincipalID]identity.User{}
+	}
+	ids := make([]identity.PrincipalID, 0, len(items))
+	seen := map[identity.PrincipalID]struct{}{}
+	for _, item := range items {
+		id := identity.PrincipalID(item.PrincipalID.String())
+		if id.String() == "" {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	users, err := a.users.UsersByID(ctx, ids)
+	if err != nil {
+		a.observer.Record(ctx, ports.Event{
+			Name:    ports.EventAuditPrincipalResolutionFailed,
+			Message: "audit principal resolution failed",
+			Fields: map[string]string{
+				"tenant_id":    input.TenantID.String(),
+				"inventory_id": input.InventoryID.String(),
+				"principal_id": input.Principal.ID.String(),
+				"count":        strconv.Itoa(len(ids)),
+				"error":        err.Error(),
+			},
+		})
+		return map[identity.PrincipalID]identity.User{}
+	}
+	return users
 }
 
 type auditRecordCursorPayload struct {

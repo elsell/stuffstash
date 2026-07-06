@@ -236,6 +236,85 @@ func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
 	}
 }
 
+func TestListAuditRecordsFallsBackWhenPrincipalResolutionFails(t *testing.T) {
+	audits := &fakeAuditRepository{items: []audit.Record{
+		auditRecord("audit-one", "tenant-one", "inventory-one", audit.ActionAssetCreated),
+	}}
+	observer := &fakeObserver{}
+	application := New(Dependencies{
+		Observer:         observer,
+		Authorizer:       &fakeAuthorizer{},
+		Users:            &fakeUserRepository{err: errors.New("profile store unavailable")},
+		Tenants:          &fakeTenantRepository{exists: true},
+		TenantUnitOfWork: &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		}},
+		Audit:  audits,
+		Outbox: &fakeOutbox{},
+	})
+
+	page, err := application.ListInventoryAuditRecords(context.Background(), ListAuditRecordsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Limit:       10,
+	})
+	if err != nil {
+		t.Fatalf("list audit records: %v", err)
+	}
+	if len(page.Items) != 1 || page.Items[0].PrincipalID.String() != "owner" {
+		t.Fatalf("expected audit row with raw principal fallback, got %+v", page.Items)
+	}
+	if len(page.ResolvedPrincipals) != 0 {
+		t.Fatalf("expected unresolved principals when profile lookup fails, got %+v", page.ResolvedPrincipals)
+	}
+	if !observer.hasEvent(ports.EventAuditPrincipalResolutionFailed) {
+		t.Fatalf("expected principal resolution failure event, got %+v", observer.events)
+	}
+}
+
+func TestListAssetAuditHistoryRecordsConcreteAssetRead(t *testing.T) {
+	audits := &fakeAuditRepository{items: []audit.Record{
+		auditRecord("audit-one", "tenant-one", "inventory-one", audit.ActionAssetCreated),
+		auditRecord("audit-two", "tenant-one", "inventory-one", audit.ActionAssetUpdated),
+	}}
+	audits.items[0].TargetID = "asset-one"
+	audits.items[1].TargetID = "asset-one"
+	application := New(Dependencies{
+		Observer:         &fakeObserver{},
+		Authorizer:       &fakeAuthorizer{},
+		Tenants:          &fakeTenantRepository{exists: true},
+		TenantUnitOfWork: &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem("inventory-one", "tenant-one", "Tools"),
+		}},
+		Audit:  audits,
+		Outbox: &fakeOutbox{},
+	})
+
+	page, err := application.ListAssetAuditHistory(context.Background(), ListAssetAuditHistoryInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     "asset-one",
+		Limit:       1,
+	})
+	if err != nil {
+		t.Fatalf("list asset audit history: %v", err)
+	}
+	if len(page.Items) != 1 || !page.HasMore {
+		t.Fatalf("expected bounded asset audit page with more history, got %+v", page)
+	}
+	readRecord, ok := audits.recordForAction(audit.ActionAuditRecordListed)
+	if !ok {
+		t.Fatalf("expected asset audit read record, got %+v", audits.items)
+	}
+	if readRecord.TargetID != "asset-one" || readRecord.Metadata["target_id"] != "asset-one" || readRecord.Metadata["target_type"] != audit.TargetAsset.String() {
+		t.Fatalf("expected read audit to name concrete asset, got %+v", readRecord)
+	}
+}
+
 func fakeAuditResultsContain(items []audit.Record, id audit.ID) bool {
 	for _, item := range items {
 		if item.ID == id {

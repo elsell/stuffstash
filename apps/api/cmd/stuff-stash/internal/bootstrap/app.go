@@ -6,6 +6,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
+	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
 	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/config"
@@ -21,12 +22,13 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		return app.App{}, err
 	}
 	providerCredentialVault := buildProviderCredentialVault(repositories.providerCredentials, providerCredentialSealer)
+	importSourceVault := buildImportJobSourceVault(repositories.importJobSources, providerCredentialSealer)
 	stt, languageInference, tts, err := buildRealtimeVoiceProviders(ctx, cfg)
 	if err != nil {
 		return app.App{}, err
 	}
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
-	return app.New(app.Dependencies{
+	application := app.New(app.Dependencies{
 		Observer:                        observer,
 		Auth:                            authenticator,
 		Authorizer:                      authorizer,
@@ -52,6 +54,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		BlobDeletionOutbox:              repositories.blobDeletionOutbox,
 		Audit:                           repositories.audit,
 		Outbox:                          repositories.outbox,
+		Users:                           repositories.users,
 		ProviderProfiles:                repositories.providerProfiles,
 		ProviderProfileUnitOfWork:       repositories.providerProfileUnitOfWork,
 		VoiceProviderConfigs:            repositories.voiceProviderConfigs,
@@ -60,6 +63,11 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		RealtimeSessions:                repositories.realtimeSessions,
 		ActionPlans:                     repositories.actionPlans,
 		ImportSources:                   homebox.NewLegacyImporter(nil),
+		ImportJobs:                      repositories.importJobs,
+		ImportSourceVault:               importSourceVault,
+		ImportLinks:                     repositories.importLinks,
+		ImportAssetUnitOfWork:           repositories.importAssetUnitOfWork,
+		ImportAttachmentUnitOfWork:      repositories.importAttachmentUnitOfWork,
 		IDs:                             idgen.NewULIDGenerator(),
 		AuthorizationOutboxDrainLimit:   cfg.AuthorizationOutboxDrainLimit,
 		AuthorizationOutboxClaimLease:   cfg.AuthorizationOutboxClaimLease,
@@ -69,6 +77,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		DefaultPageLimit:                cfg.DefaultPageLimit,
 		MaxPageLimit:                    cfg.MaxPageLimit,
 		MaxAttachmentBytes:              cfg.MaxAttachmentBytes,
+		ImportJobTimeout:                cfg.ImportJobTimeout,
 		PrimaryThumbnailWarmLimit:       cfg.PrimaryThumbnailWarmLimit,
 		PrimaryThumbnailWarmConcurrency: cfg.PrimaryThumbnailWarmConcurrency,
 		PrimaryThumbnailWarmTimeout:     cfg.PrimaryThumbnailWarmTimeout,
@@ -76,7 +85,12 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		LanguageInference:               languageInference,
 		TextToSpeech:                    tts,
 		RealtimeVoiceProviderResolver:   realtimeVoiceProviderResolver,
-	}), nil
+	})
+	application = application.WithImportWorker(importworker.NewInProcess(application, observer))
+	if _, err := application.ResumeRunningImportJobs(ctx, 25); err != nil {
+		return app.App{}, err
+	}
+	return application, nil
 }
 
 func buildProviderCredentialVault(repository ports.ProviderCredentialRepository, sealer ports.ProviderCredentialSealer) ports.ProviderCredentialVault {
@@ -84,4 +98,15 @@ func buildProviderCredentialVault(repository ports.ProviderCredentialRepository,
 		return nil
 	}
 	return credentials.NewDatabaseProviderCredentialVault(repository, sealer)
+}
+
+func buildImportJobSourceVault(repository ports.ImportJobSourceRepository, sealer ports.ProviderCredentialSealer) ports.ImportJobSourceVault {
+	if repository == nil || sealer == nil {
+		return nil
+	}
+	importSealer, ok := sealer.(credentials.ImportJobSourceSealer)
+	if !ok {
+		return nil
+	}
+	return credentials.NewDatabaseImportJobSourceVault(repository, importSealer)
 }

@@ -12,7 +12,7 @@ import (
 )
 
 type AuditRecordInput struct {
-	PrincipalID identity.PrincipalID
+	Principal   identity.Principal
 	TenantID    tenant.ID
 	InventoryID inventory.InventoryID
 	RequestID   string
@@ -42,7 +42,7 @@ func NewAuditRecord(ids ports.IDGenerator, clock ports.Clock, input AuditRecordI
 		id,
 		audit.TenantID(input.TenantID.String()),
 		audit.InventoryID(input.InventoryID.String()),
-		audit.PrincipalID(input.PrincipalID.String()),
+		audit.PrincipalID(input.Principal.ID.String()),
 		input.Action,
 		source,
 		input.TargetType,

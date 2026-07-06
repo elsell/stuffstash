@@ -305,6 +305,7 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		Observer:                  &fakeObserver{},
 		Auth:                      auth.NewLocalDevAuthenticator(),
 		Authorizer:                authorizer,
+		Users:                     store,
 		Tenants:                   store,
 		TenantUnitOfWork:          store,
 		Inventories:               store,

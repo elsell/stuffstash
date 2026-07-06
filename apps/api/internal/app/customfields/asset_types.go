@@ -160,7 +160,7 @@ func (s Service) getCustomAssetType(ctx context.Context, input GetCustomAssetTyp
 		return customfield.AssetType{}, apperrors.ErrNotFound
 	}
 	if err := s.saveReadAuditRecord(ctx, appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -262,7 +262,7 @@ func (s Service) createCustomAssetType(ctx context.Context, input CreateCustomAs
 	}
 
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -351,7 +351,7 @@ func (s Service) updateCustomAssetType(ctx context.Context, input UpdateCustomAs
 	}
 
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -418,7 +418,7 @@ func (s Service) archiveCustomAssetType(ctx context.Context, input ArchiveCustom
 	}
 
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -479,7 +479,7 @@ func (s Service) restoreCustomAssetType(ctx context.Context, input ArchiveCustom
 	restored := current
 	restored.LifecycleState = customfield.AssetTypeLifecycleActive
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -538,7 +538,7 @@ func (s Service) deleteCustomAssetType(ctx context.Context, input ArchiveCustomA
 		return apperrors.ErrInvalidInput
 	}
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -638,7 +638,7 @@ func (s Service) customAssetTypeListResult(ctx context.Context, input ListCustom
 		},
 	})
 	if err := s.saveReadAuditRecord(ctx, appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

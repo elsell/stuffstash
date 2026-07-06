@@ -1,5 +1,6 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { onMount } from 'svelte';
   import {
     detailAssetList,
@@ -29,6 +30,7 @@
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
   import {
     type AssetRouteAction,
+    type ImportSourceRoute,
     type SettingsSection,
     type WorkspaceRouteState
   } from '$lib/application/workspaceRoute';
@@ -74,11 +76,13 @@
   let {
     repository,
     initialData,
-    onSignOut
+    onSignOut,
+    onSessionExpired = onSignOut
   }: {
     repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
     initialData: WorkspaceData;
     onSignOut: () => void;
+    onSessionExpired?: () => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally -- initial route data seeds local workspace state.
@@ -109,7 +113,7 @@
   let customizationAction = $state<WorkspaceRouteState['customizationAction']>(null);
   let customAssetTypeId = $state<string | null>(null);
   let customFieldDefinitionId = $state<string | null>(null);
-  let importSourceType = $state<WorkspaceRouteState['importSourceType']>('legacy_homebox');
+  let importSource = $state<ImportSourceRoute>(null);
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
@@ -247,6 +251,11 @@
         replaceRoute(result.route);
       }
       return result.saveResult;
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return { saved: false };
+      }
+      throw caught;
     } finally {
       busy = false;
     }
@@ -274,6 +283,9 @@
       loadedAssetDetail = asset;
       message = `Saved ${asset.title}.`;
     } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
       error = caught instanceof Error ? caught.message : 'Action failed.';
       throw new Error(error);
     } finally {
@@ -316,6 +328,11 @@
       if (!result.query) {
         return;
       }
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
+      throw caught;
     } finally {
       busy = false;
     }
@@ -437,6 +454,9 @@
     try {
       await task();
     } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
       error = caught instanceof Error ? caught.message : 'Action failed.';
     } finally {
       busy = false;
@@ -512,7 +532,7 @@
       customizationAction = route.customizationAction;
       customAssetTypeId = route.customAssetTypeId;
       customFieldDefinitionId = route.customFieldDefinitionId;
-      importSourceType = route.importSourceType;
+      importSource = route.importSource;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
         const tenantId = findRouteTenant(data, route);
@@ -735,8 +755,43 @@
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
       settingsSection: nextMode === 'settings' ? settingsSection : 'overview',
-      importSourceType: 'legacy_homebox'
+      importSource: nextMode === 'import' ? importSource : null
     });
+  }
+
+  function openImportSource(source: ImportSourceRoute): void {
+    importSource = source;
+    navigateTo({
+      mode: 'import',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      importSource: source
+    });
+  }
+
+  async function refreshInventoryAfterImportJob(scope: { tenantId: string; inventoryId: string }): Promise<void> {
+    const lifecycleState = data.context.assetLifecycleState;
+    if (data.context.selectedTenantId !== scope.tenantId || data.context.selectedInventoryId !== scope.inventoryId) {
+      return;
+    }
+    let refreshed: WorkspaceData;
+    try {
+      refreshed = await repository.selectAssetLifecycle(scope.tenantId, scope.inventoryId, lifecycleState);
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
+      throw caught;
+    }
+    if (
+      data.context.selectedTenantId !== scope.tenantId ||
+      data.context.selectedInventoryId !== scope.inventoryId ||
+      data.context.assetLifecycleState !== lifecycleState
+    ) {
+      return;
+    }
+    data = refreshed;
+    invalidateAssetDetailLoad();
   }
 
   function openSettingsSection(section: SettingsSection): void {
@@ -827,16 +882,6 @@
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
       settingsSection: 'fields'
-    });
-  }
-
-  function openImportSource(nextImportSourceType: WorkspaceRouteState['importSourceType']): void {
-    importSourceType = nextImportSourceType;
-    navigateTo({
-      mode: 'import',
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId,
-      importSourceType: nextImportSourceType
     });
   }
 
@@ -1007,6 +1052,12 @@
       selectedAssetAttachments = detailState.selectedAssetAttachments;
       mode = detailState.mode;
       return true;
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return false;
+      }
+      error = caught instanceof Error ? caught.message : 'Unable to load asset.';
+      return false;
     } finally {
       busy = false;
     }
@@ -1023,31 +1074,23 @@
     );
   }
 
-  async function refreshAfterImport(): Promise<void> {
-    if (!selectedInventory) {
-      return;
+  async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+    try {
+      selectedAssetAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
+      throw caught;
     }
-    data = await repository.selectAssetLifecycle(data.context.selectedTenantId, selectedInventory.id, 'active');
-    invalidateAssetDetailLoad();
-    resetSearchState();
-    mode = 'home';
-    selectedLocationId = null;
-    selectedAssetId = null;
-    loadedAssetDetail = null;
-    selectedAssetAttachments = [];
-    attachmentId = null;
-    attachmentAction = null;
-    message = 'Import applied.';
-    replaceRoute({
-      mode: 'home',
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId,
-      lifecycleState: data.context.assetLifecycleState
-    });
   }
 
-  async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
-    selectedAssetAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+  function handleSessionExpired(caught: unknown): boolean {
+    if (!isAuthenticationRequiredError(caught)) {
+      return false;
+    }
+    onSessionExpired();
+    return true;
   }
 
   function closeDetailToHome(): void {
@@ -1155,7 +1198,7 @@
       customizationAction,
       customAssetTypeId,
       customFieldDefinitionId,
-      importSourceType
+      importSource
     }}
     hrefs={{ homeHref: homeHref(), assetDetailBackHref: assetDetailBackHref() }}
     bind:searchQuery
@@ -1184,7 +1227,7 @@
       onSearch: search,
       onOpenSearchAsset: openSearchAsset,
       onImportSourceChange: openImportSource,
-      onImported: refreshAfterImport,
+      onImportJobInventoryChanged: refreshInventoryAfterImportJob,
       onSettingsSectionChange: openSettingsSection,
       onInvitationStatusChange: openInvitationStatusFilter,
       onAccessInvitationActionOpen: openAccessInvitationAction,

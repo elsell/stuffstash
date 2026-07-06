@@ -22,6 +22,7 @@
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import type {
     AssetRouteAction,
+    ImportSourceRoute,
     SettingsSection,
     WorkspaceRouteState
   } from '$lib/application/workspaceRoute';
@@ -63,7 +64,7 @@
     customizationAction: WorkspaceRouteState['customizationAction'];
     customAssetTypeId: string | null;
     customFieldDefinitionId: string | null;
-    importSourceType: WorkspaceRouteState['importSourceType'];
+    importSource: WorkspaceRouteState['importSource'];
   };
 
   export type RouteContentHrefs = {
@@ -93,8 +94,8 @@
     onAssetDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
     onSearch: () => Promise<void>;
     onOpenSearchAsset: (asset: Asset) => void;
-    onImportSourceChange: (sourceType: WorkspaceRouteState['importSourceType']) => void;
-    onImported: () => Promise<void>;
+    onImportSourceChange: (source: ImportSourceRoute) => void;
+    onImportJobInventoryChanged: (scope: { tenantId: string; inventoryId: string }) => Promise<void>;
     onSettingsSectionChange: (section: SettingsSection) => void;
     onInvitationStatusChange: (status: WorkspaceRouteState['invitationStatus']) => void;
     onAccessInvitationActionOpen: (action: WorkspaceRouteState['accessInvitationAction'], invitationId: string) => void;
@@ -126,8 +127,8 @@
   } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
   import AssetDetail from './AssetDetail.svelte';
-  import HomeboxImportPanel from './HomeboxImportPanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
+  import InventoryImportWorkspace from './InventoryImportWorkspace.svelte';
   import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
   import SearchPanel from './SearchPanel.svelte';
@@ -223,13 +224,13 @@
     onOpenAsset={handlers.onOpenSearchAsset}
   />
 {:else if route.mode === 'import'}
-  <HomeboxImportPanel
+  <InventoryImportWorkspace
     tenantId={workspace.data.context.selectedTenantId}
     inventory={workspace.selectedInventory}
     repository={workspace.repository}
-    sourceType={route.importSourceType}
-    onSourceChange={handlers.onImportSourceChange}
-    onImported={handlers.onImported}
+    importSource={route.importSource}
+    onImportSourceChange={handlers.onImportSourceChange}
+    onImportJobInventoryChanged={handlers.onImportJobInventoryChanged}
   />
 {:else if route.mode === 'settings'}
   <InventorySettings

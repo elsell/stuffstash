@@ -64,6 +64,11 @@ The first local web client must be a public OIDC client:
 - Redirect URI: `http://localhost:5173/callback`.
 - No client secret in browser code.
 - PKCE required.
+- Local browser development may also expose the web dev server on a trusted LAN
+  host for phone, tablet, or another computer on the same network. This must be
+  opt-in through local environment variables or generated ignored local config;
+  personal LAN IPs must not be committed to tracked runtime config or Dex
+  fixture files.
 
 For local browser development, the API must be configured to trust the same issuer and client ID as the browser flow. The local development topology may run infrastructure in Docker while running the API and web dev server as host processes when that is the simplest way to make issuer discovery work for both browser and API verifier.
 

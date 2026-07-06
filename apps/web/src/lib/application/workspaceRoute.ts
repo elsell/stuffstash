@@ -2,7 +2,6 @@ import type {
   AssetKind,
   AssetLifecycleFilter,
   AuditScope,
-  ImportSourceType,
   InvitationStatusFilter,
   SearchLifecycleFilter,
   SearchMode,
@@ -15,6 +14,7 @@ export type AttachmentRouteAction = 'delete' | null;
 export type AccessInvitationRouteAction = 'expire' | 'cancel' | 'delete' | null;
 export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
 export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
+export type ImportSourceRoute = 'homebox' | 'homebox-csv' | null;
 
 export interface WorkspaceRouteState {
   mode: WorkspaceMode;
@@ -36,7 +36,7 @@ export interface WorkspaceRouteState {
   customizationAction: CustomizationRouteAction;
   customAssetTypeId: string | null;
   customFieldDefinitionId: string | null;
-  importSourceType: ImportSourceType;
+  importSource: ImportSourceRoute;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
@@ -63,7 +63,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   customizationAction: null,
   customAssetTypeId: null,
   customFieldDefinitionId: null,
-  importSourceType: 'legacy_homebox',
+  importSource: null,
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
@@ -77,10 +77,7 @@ const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
-const importSourceSlugs: Record<ImportSourceType, string> = {
-  legacy_homebox: 'legacy-homebox',
-  legacy_homebox_csv: 'legacy-homebox-csv'
-};
+const importSources = new Set<Exclude<ImportSourceRoute, null>>(['homebox', 'homebox-csv']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
@@ -224,12 +221,18 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     };
   }
   if (section === 'import') {
-    if (remaining === 1) {
-      return { ...route, mode: 'import' };
+    if (!route.tenantId) {
+      return route;
     }
-    if (remaining === 2) {
-      const importSourceType = parseImportSourceType(segments[inventoryOffset.nextIndex + 1]);
-      return importSourceType ? { ...route, mode: 'import', importSourceType } : route;
+    if (remaining === 1) {
+      return { ...route, mode: 'import', importSource: null };
+    }
+    if (remaining === 2 && importSources.has(segments[inventoryOffset.nextIndex + 1] as Exclude<ImportSourceRoute, null>)) {
+      return {
+        ...route,
+        mode: 'import',
+        importSource: segments[inventoryOffset.nextIndex + 1] as Exclude<ImportSourceRoute, null>
+      };
     }
     return route;
   }
@@ -291,7 +294,6 @@ export function workspaceRouteHref(
   selectedInventoryId: string | null
 ): string {
   const next = { ...defaultWorkspaceRoute, ...state };
-  const hasExplicitImportSource = Object.prototype.hasOwnProperty.call(state, 'importSourceType');
   const tenantId = next.tenantId ?? selectedTenantId;
   const inventoryId = next.inventoryId ?? selectedInventoryId;
   const search = new URLSearchParams();
@@ -363,8 +365,8 @@ export function workspaceRouteHref(
     }
   } else if (inventoryId && next.mode === 'import') {
     path += '/import';
-    if (hasExplicitImportSource) {
-      path += `/${importSourceSlugs[next.importSourceType]}`;
+    if (next.importSource) {
+      path += `/${next.importSource}`;
     }
   } else if (inventoryId && next.action === 'add' && next.addKind) {
     path += `/add/${next.addKind}`;
@@ -397,9 +399,4 @@ function parseInvitationStatus(value: string | null): InvitationStatusFilter {
 
 function parseAuditScope(value: string | null): AuditScope {
   return auditScopes.has(value as AuditScope) ? (value as AuditScope) : 'inventory';
-}
-
-function parseImportSourceType(value: string | undefined): ImportSourceType | null {
-  const match = Object.entries(importSourceSlugs).find(([, slug]) => slug === value);
-  return (match?.[0] as ImportSourceType | undefined) ?? null;
 }

@@ -1,0 +1,44 @@
+[
+  {
+    "kind": "npm",
+    "name": "expo-application",
+    "version": "55.0.16",
+    "reason": "Transitive Expo SDK 55 dependency introduced by expo-auth-session for mobile OIDC.",
+    "compensatingVerification": "Pinned lockfile review, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  },
+  {
+    "kind": "npm",
+    "name": "expo-auth-session",
+    "version": "55.0.17",
+    "reason": "Native authorization code with PKCE and token refresh for mobile OIDC.",
+    "compensatingVerification": "Pinned exact version, lockfile review, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  },
+  {
+    "kind": "npm",
+    "name": "expo-crypto",
+    "version": "55.0.16",
+    "reason": "Transitive Expo SDK 55 dependency introduced by expo-auth-session for mobile OIDC.",
+    "compensatingVerification": "Pinned lockfile review, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  },
+  {
+    "kind": "npm",
+    "name": "expo-linking",
+    "version": "55.0.16",
+    "reason": "Transitive Expo SDK 55 dependency introduced by expo-auth-session for mobile OIDC.",
+    "compensatingVerification": "Pinned lockfile review, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  },
+  {
+    "kind": "npm",
+    "name": "expo-secure-store",
+    "version": "55.0.15",
+    "reason": "Native secure token/session storage for mobile OIDC.",
+    "compensatingVerification": "Pinned exact version, fake-backed secure-store adapter tests, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  },
+  {
+    "kind": "npm",
+    "name": "expo-web-browser",
+    "version": "55.0.17",
+    "reason": "System-browser OIDC session completion for mobile OIDC.",
+    "compensatingVerification": "Pinned exact version, lockfile review, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  }
+]

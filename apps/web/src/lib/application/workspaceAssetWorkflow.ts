@@ -17,6 +17,7 @@ type AssetCreateRepository = Pick<InventoryRepository, 'createAsset' | 'selectAs
 interface PhotoUploadResult {
   uploaded: UploadedPhoto[];
   failures: number;
+  failureReasons: string[];
 }
 
 export interface CreateAssetWorkflowResult {
@@ -40,7 +41,7 @@ export async function createAssetWorkflow(
   let createdParent: Asset | null = null;
   let createdAsset: Asset | null = null;
   let savedAsset: Asset | null = null;
-  let uploadResult: PhotoUploadResult = { uploaded: [], failures: 0 };
+  let uploadResult: PhotoUploadResult = { uploaded: [], failures: 0, failureReasons: [] };
 
   try {
     createdParent = draft.parentQuickCreate
@@ -196,6 +197,7 @@ async function uploadPhotos(
   photos: SelectedPhoto[]
 ): Promise<PhotoUploadResult> {
   let failures = 0;
+  const failureReasons: string[] = [];
   const uploaded: UploadedPhoto[] = [];
   for (const photo of photos) {
     try {
@@ -203,11 +205,15 @@ async function uploadPhotos(
         attachment: await repository.uploadAssetPhoto(asset.tenantId, asset.inventoryId, asset.id, photo),
         photo
       });
-    } catch {
+    } catch (caught) {
       failures += 1;
+      const reason = safeUploadFailureReason(caught);
+      if (reason) {
+        failureReasons.push(reason);
+      }
     }
   }
-  return { uploaded, failures };
+  return { uploaded, failures, failureReasons: uniqueFailureReasons(failureReasons) };
 }
 
 function createAssetMessage(asset: Asset, uploadResult: PhotoUploadResult, createdParent: Asset | null): string {
@@ -216,11 +222,27 @@ function createAssetMessage(asset: Asset, uploadResult: PhotoUploadResult, creat
     uploadResult.uploaded.length > 0 ? ` with ${photoUploadCountLabel(uploadResult.uploaded.length)}` : '';
   const savedMessage = `Saved ${asset.title}${locationSuffix}${uploadSuffix}.`;
   if (uploadResult.failures > 0) {
-    return `${savedMessage} ${photoUploadCountLabel(uploadResult.failures)} failed.`;
+    const reasonSuffix = uploadResult.failureReasons.length > 0 ? ` ${uploadResult.failureReasons.join(' ')}` : '';
+    return `${savedMessage} ${photoUploadCountLabel(uploadResult.failures)} failed.${reasonSuffix}`;
   }
   return savedMessage;
 }
 
 function photoUploadCountLabel(count: number): string {
   return `${count} ${count === 1 ? 'photo upload' : 'photo uploads'}`;
+}
+
+function uniqueFailureReasons(reasons: string[]): string[] {
+  return Array.from(new Set(reasons));
+}
+
+function safeUploadFailureReason(caught: unknown): string {
+  if (!isSafeUserError(caught) || !(caught instanceof Error)) {
+    return '';
+  }
+  return caught.message.trim();
+}
+
+function isSafeUserError(caught: unknown): boolean {
+  return typeof caught === 'object' && caught !== null && (caught as { safeForUser?: unknown }).safeForUser === true;
 }

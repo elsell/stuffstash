@@ -19,6 +19,7 @@ import {
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { BrandMark } from '../components/BrandMark';
 import { IdentityLabel } from '../components/IdentityIcon';
+import { useAppFeedback } from '../feedback/AppFeedback';
 import { colors } from '../theme/tokens';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { styles } from './HomeScreen.styles';
@@ -33,6 +34,7 @@ type ScreenState =
   | { readonly status: 'error'; readonly message: string };
 
 export function HomeScreen({ dashboardQuery }: HomeScreenProps) {
+  const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const didInitialLoadRef = useRef(false);
@@ -79,8 +81,9 @@ export function HomeScreen({ dashboardQuery }: HomeScreenProps) {
         })
         .catch((error: unknown) => {
           if (isCurrent) {
-            setScreenState({
-              status: 'error',
+            feedback.showNotice({
+              tone: 'error',
+              title: 'Could not refresh Home',
               message: readableError(error, 'Stuff Stash could not refresh the mobile home screen.')
             });
           }
@@ -89,7 +92,7 @@ export function HomeScreen({ dashboardQuery }: HomeScreenProps) {
       return () => {
         isCurrent = false;
       };
-    }, [dashboardQuery])
+    }, [dashboardQuery, feedback])
   );
 
   async function refreshDashboard(): Promise<void> {
@@ -99,8 +102,9 @@ export function HomeScreen({ dashboardQuery }: HomeScreenProps) {
       const dashboard = await dashboardQuery.execute();
       setScreenState({ status: 'ready', dashboard });
     } catch (error) {
-      setScreenState({
-        status: 'error',
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not refresh Home',
         message: readableError(error, 'Stuff Stash could not refresh the mobile home screen.')
       });
     } finally {

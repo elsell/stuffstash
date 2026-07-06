@@ -103,7 +103,7 @@ function sideNavProps(overrides: Partial<SideNavProps> = {}): SideNavProps {
         id: 'inventory-one',
         tenantId: 'tenant-one',
         name: 'Garage',
-        access: { relationship: 'owner', permissions: ['view'] }
+        access: { relationship: 'owner', permissions: ['view', 'view_import_job', 'create_import_job'] }
       }
     ],
     selectedTenantId: 'tenant-one',

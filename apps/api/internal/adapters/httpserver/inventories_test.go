@@ -124,12 +124,14 @@ func TestInventoryResponsesIncludeEffectiveAccessMetadata(t *testing.T) {
 		authorization        string
 		expectedRelationship string
 		expectedPermission   string
+		expectedPermissions  []string
 		forbiddenPermission  string
+		forbiddenPermissions []string
 	}{
-		{name: "tenant owner", authorization: "Bearer dev:tenant-owner", expectedRelationship: "owner", expectedPermission: "share"},
-		{name: "inventory owner", authorization: "Bearer dev:inventory-owner", expectedRelationship: "owner", expectedPermission: "configure"},
-		{name: "editor", authorization: "Bearer dev:editor", expectedRelationship: "editor", expectedPermission: "edit_asset", forbiddenPermission: "share"},
-		{name: "viewer", authorization: "Bearer dev:viewer", expectedRelationship: "viewer", expectedPermission: "view", forbiddenPermission: "edit_asset"},
+		{name: "tenant owner", authorization: "Bearer dev:tenant-owner", expectedRelationship: "owner", expectedPermission: "share", expectedPermissions: []string{"view_import_job", "create_import_job"}},
+		{name: "inventory owner", authorization: "Bearer dev:inventory-owner", expectedRelationship: "owner", expectedPermission: "configure", expectedPermissions: []string{"view_import_job", "create_import_job"}},
+		{name: "editor", authorization: "Bearer dev:editor", expectedRelationship: "editor", expectedPermission: "edit_asset", expectedPermissions: []string{"view_import_job", "create_import_job"}, forbiddenPermission: "share"},
+		{name: "viewer", authorization: "Bearer dev:viewer", expectedRelationship: "viewer", expectedPermission: "view", forbiddenPermission: "edit_asset", forbiddenPermissions: []string{"view_import_job", "create_import_job"}},
 	}
 
 	for _, item := range cases {
@@ -146,8 +148,18 @@ func TestInventoryResponsesIncludeEffectiveAccessMetadata(t *testing.T) {
 			if !accessContainsPermission(body.Data.Access.Permissions, item.expectedPermission) {
 				t.Fatalf("expected permission %q in %+v", item.expectedPermission, body.Data.Access)
 			}
+			for _, permission := range item.expectedPermissions {
+				if !accessContainsPermission(body.Data.Access.Permissions, permission) {
+					t.Fatalf("expected permission %q in %+v", permission, body.Data.Access)
+				}
+			}
 			if item.forbiddenPermission != "" && accessContainsPermission(body.Data.Access.Permissions, item.forbiddenPermission) {
 				t.Fatalf("did not expect permission %q in %+v", item.forbiddenPermission, body.Data.Access)
+			}
+			for _, permission := range item.forbiddenPermissions {
+				if accessContainsPermission(body.Data.Access.Permissions, permission) {
+					t.Fatalf("did not expect permission %q in %+v", permission, body.Data.Access)
+				}
 			}
 		})
 	}

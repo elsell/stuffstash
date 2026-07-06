@@ -23,4 +23,6 @@ definition inventory {
   permission edit = owner + editor + tenant->configure
   permission edit_asset = edit
   permission create_asset = edit
+  permission view_import_job = edit
+  permission create_import_job = edit
 }

@@ -6,10 +6,7 @@ import type {
 } from '../../application/assets/AssetAuditHistoryQuery';
 import type { InventorySummaryRepository } from '../../application/home/InventorySummaryRepository';
 
-type AuditApiClient = Pick<StuffStashClient, 'listInventoryAuditRecords'>;
-
-const auditPageSize = 50;
-const maxInspectedAuditPages = 5;
+type AuditApiClient = Pick<StuffStashClient, 'listAssetAuditRecords'>;
 
 export class ApiAssetAuditHistoryRepository implements AssetAuditHistoryRepository {
   constructor(
@@ -22,32 +19,16 @@ export class ApiAssetAuditHistoryRepository implements AssetAuditHistoryReposito
     readonly limit: number;
   }): Promise<AssetAuditHistoryPage> {
     const inventory = await this.inventories.getDefaultInventorySummary();
-    const desiredMatches = input.limit;
-    const records: AuditRecord[] = [];
-    let cursor: string | undefined;
-    let inventoryHasMore = false;
-    let inspectedPages = 0;
-
-    do {
-      const page = await this.client.listInventoryAuditRecords(
-        inventory.tenantId,
-        inventory.id,
-        auditPageSize,
-        cursor
-      );
-      records.push(
-        ...page.items.filter((record) =>
-          record.targetType === 'asset' && record.targetId === input.assetId
-        )
-      );
-      cursor = page.pagination.nextCursor ?? undefined;
-      inventoryHasMore = page.pagination.hasMore;
-      inspectedPages += 1;
-    } while (records.length <= desiredMatches && inventoryHasMore && inspectedPages < maxInspectedAuditPages);
+    const page = await this.client.listAssetAuditRecords(
+      inventory.tenantId,
+      inventory.id,
+      input.assetId,
+      input.limit
+    );
 
     return {
-      records: records.slice(0, desiredMatches).map(mapAuditRecord),
-      hasMore: records.length > desiredMatches || inventoryHasMore
+      records: page.items.map(mapAuditRecord),
+      hasMore: page.pagination.hasMore
     };
   }
 }
@@ -58,6 +39,7 @@ function mapAuditRecord(record: AuditRecord): AssetAuditRecord {
     action: record.action,
     source: record.source,
     principalId: record.principalId,
+    principal: record.principal,
     targetType: record.targetType,
     targetId: record.targetId,
     occurredAt: record.occurredAt,

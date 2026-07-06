@@ -22,7 +22,7 @@ export const workspaceSeed: WorkspaceSeed = {
       name: 'Household',
       access: {
         relationship: 'owner',
-        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure']
+        permissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure', 'view_import_job', 'create_import_job']
       }
     }
   ],

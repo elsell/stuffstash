@@ -142,6 +142,9 @@ The conversational flow must eventually support at least these actions:
 - Create an asset when the user refers to an item that does not exist.
 - Create a location when the user refers to a location that does not exist.
 - Move an asset from one location to another.
+- Check out an asset when it is temporarily removed from its normal place.
+- Return a checked-out asset.
+- Query currently checked-out assets and checkout history.
 - Record that an asset was consumed, discarded, sold, donated, or otherwise removed.
 - Update asset details.
 - Query where an asset is located.
@@ -161,6 +164,7 @@ Domain specs must define the exact commands, entities, lifecycle states, and aut
 - The confirmation must describe the planned action in human language.
 - The confirmation must be backed by a structured action plan.
 - The system must support cancellation at confirmation points.
+- The first voice implementation must execute state-changing plans only after explicit client UI approval, such as a button or equivalent accessible control. Spoken "yes" must not be treated as execution approval for checkout, return, or other state-changing plans until a future spec defines a safe exception.
 
 ## Ambiguity Handling
 

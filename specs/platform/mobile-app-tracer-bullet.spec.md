@@ -27,26 +27,46 @@ This spec defines camera behavior only for attaching still photos during the Add
 - The app must not require an Expo account for the first local validation path.
 - Physical iPhone validation for Expo SDK 55 may use a local Expo development build when the App Store Expo Go client does not yet support the required SDK version.
 - The local development build must use `expo-dev-client` and must be installable from a connected Mac/iPhone through local Xcode signing before relying on EAS or TestFlight.
-- The app must not add native modules beyond Expo-compatible navigation, development-client dependencies, Expo FileSystem for durable non-secret onboarding profile storage, and Expo Audio for the specified realtime voice query slice in the first local validation path.
+- The app must not add native modules beyond Expo-compatible navigation, development-client dependencies, Expo FileSystem for durable non-secret onboarding profile storage, Expo Auth Session/Web Browser/Secure Store for mobile OIDC authentication, and Expo Audio for the specified realtime voice query slice in the first local validation path.
 - The mobile API adapter must use the generated `@stuff-stash/api-client` package rather than hand-written endpoint fetches.
-- Expo Go local development must receive mobile runtime configuration through Expo public environment variables:
+- Expo local development may seed mobile runtime configuration through Expo public environment variables:
   - `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL`
   - `EXPO_PUBLIC_STUFF_STASH_TENANT_ID`
-  - `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`
 - Optional mobile developer diagnostics must be configurable through `EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED`, and the Expo app config must mirror that value into `extra.stuffStash` so native development builds and dev-client reloads see the same runtime seed values as the JavaScript bundle.
-- The local-dev token value is a development-only credential for the API's local-dev auth mode. Production authentication must wait for the mobile authentication spec.
+- The local-dev token value is a development-only credential for the API's local-dev auth mode. Production mobile authentication is defined in `specs/identity-access/mobile-oidc-authentication.spec.md`.
 - Expo public environment variables are development defaults only. The app must not require them for first launch once onboarding exists.
 - On first launch without a saved connection profile, mobile must show an onboarding flow before the tab shell:
   - The first onboarding step asks for a Stuff Stash instance URL.
   - The URL must be normalized and saved in durable app-local storage so the user does not need to type it again on later launches.
   - Durable connection profile storage must contain only non-secret profile metadata, such as the instance URL and selected tenant ID. Development tokens and future production credentials must not be written to this profile file.
-  - The local-development token may be supplied from `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN` while production mobile authentication is unspecified. The onboarding UI must not present this development token as a production account model.
+  - After the instance URL is saved, onboarding must guide the user through the OIDC SSO flow specified in `specs/identity-access/mobile-oidc-authentication.spec.md`.
   - After the instance URL is saved, onboarding must guide the user to create a tenant if the authenticated principal has no usable tenant.
   - After tenant creation, onboarding must guide the user to create an initial inventory if that tenant has no usable inventory.
   - After initial inventory creation, the app must enter the regular Home/Browse/Add tab shell backed by the newly created tenant and inventory.
 - A saved connection profile may include the selected tenant ID. Until durable selected-inventory preferences are specified, inventory selection may remain session-scoped and default to the first visible inventory for the selected tenant.
 - Settings must expose a way to revisit or reset the saved instance connection profile. Changing the profile must rebuild mobile application services instead of requiring an app reinstall.
-- Until production mobile authentication is specified, onboarding may use the local-development auth token supplied by runtime configuration for local API validation.
+- Production mobile onboarding must use the OIDC flow defined in `specs/identity-access/mobile-oidc-authentication.spec.md`. The local-development auth token path may remain available only as an explicit development fallback.
+- Mobile must provide one shared feedback surface for transient status and error
+  messages. Screens and workflow components should use this shared notice surface
+  for action results, refresh failures when stale content remains usable,
+  background upload failures, save confirmations, and recoverable non-blocking
+  problems instead of inventing screen-local toast, alert, or status patterns.
+- Shared mobile notices must render as native-feeling compact top banners below
+  the safe-area/status-bar region so they remain visible while forms and the
+  keyboard are active. Users must be able to dismiss a notice by tapping it or
+  swiping it upward. Notices must animate in and out with short, native-feeling
+  motion, including auto-dismiss and gesture-dismiss paths. Notices must support
+  semantic tones for success, info, warning, and error; concise text; and at
+  most one action such as `Retry`, `Undo`, or `Sign in`.
+- Blocking native dialogs remain appropriate for destructive confirmations,
+  permission blockers, and authentication/session loss. Dialogs must use calm,
+  direct copy and one obvious primary action. They must not be used for ordinary
+  saved-state acknowledgement or recoverable background failures.
+- When a mounted authenticated surface receives an authentication-required
+  result, mobile must clear stale secure auth state, preserve the saved instance
+  URL and tenant hint, show a native session-expired dialog, and return to the
+  onboarding sign-in step. It must not leave the user on a generic `Could not
+  load` screen that requires manual app reset.
 - The first navigation shell must use the iOS and Android system tab bar through Expo Router Native Tabs.
 - React Navigation JavaScript bottom tabs are not sufficient for the first mobile shell because they do not render the iPhone-native tab bar.
 - The mobile app must use the current approved brand glyph asset from `docs/public/brand/stuff-stash-glyph.png` for local app identity and in-app brand marks until a mobile-specific app icon asset is specified.
@@ -59,9 +79,9 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Mobile product UI icons must use pinned icon packages rather than text initials or generic letter badges. Mobile surfaces that display tenant or inventory names must include the corresponding semantic icon next to that name so the tenant boundary remains visually distinct from inventory selection, except the compact Home inventory context control may show the tenant as muted inline prefix text before a slash and use the inventory icon only.
 - The first tab set must use the same primary navigation language as the web home-hub candidate while preserving enough native bottom-bar width for the persistent Voice accessory:
   - `Home` for inventory overview.
-  - `Browse` for search, filtering, and location-first inventory exploration inside the configured tenant.
+  - `Browse` for list browsing, search, filtering, location-first browsing, and full-inventory Map exploration inside the configured tenant.
   - `Add` for creating a base item, container, or location asset through the API.
-  - Location-first browsing must live inside `Browse` as the `Places` scope instead of consuming a separate top-level tab.
+  - Location-first browsing must live inside `Browse` as the `Places` scope instead of consuming a separate top-level tab. Full-inventory containment exploration must live inside Browse as the separate `Map` sub-surface.
 - `Settings` must remain available as a native stack route from the Home surface rather than consuming a bottom-tab slot, because the bottom bar should reserve primary workflow tabs for inventory activity and leave the far-right accessory eligible for native inline placement.
 - A persistent far-right `Voice` native bottom accessory must provide the first conversational inventory entry point using a microphone symbol.
 - Voice must not be modeled as a sixth native tab and must not use the `search` tab role. The search role is reserved for search semantics and may keep system-controlled Search labeling or overflow behavior.
@@ -80,7 +100,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - A small preview of top-level location cards with a `View all` action.
   - No account affordance until there is a specified account, profile, or authentication interaction.
 - Home must not show dashboard metric tiles. The inventory home workspace is a browse and recency surface, not an analytics dashboard.
-- The Home locations preview must intentionally show only a few top-level locations. The full location browser lives in the `Places` scope inside `Browse`.
+- The Home locations preview must intentionally show only a few top-level locations. The full location browser lives in the `Places` scope inside `Browse`; the full containment explorer lives in the separate `Map` sub-surface inside Browse.
 - The Home recent-assets ticker must open asset detail routes. Its `See all` action must open a native stack asset list for the selected inventory.
 - The Home recent-assets ticker must use the API asset recency contract, requesting assets in updated-descending order and deriving labels from API-provided timestamps. Mobile must not infer recency from asset IDs or page through an entire inventory only to sort locally.
 - The Home recent-assets ticker must include all asset kinds in API-provided recency order. After a successful Add flow, switching to Home or pulling to refresh must make the newly created item eligible to appear ahead of older locations and containers.
@@ -102,17 +122,25 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The workspace must show title, kind, optional custom type, location path, lifecycle state, and updated-at metadata without hiding the relevant next action below low-value chrome.
   - Item details must expose clear maintenance actions for `Edit`, `Move`, and `Add photos` without implying unsupported spatial behavior. The first implementation may render those as a compact utility toolbar rather than a filled primary button when no single maintenance action is universally primary.
   - Generic asset maintenance actions such as `Edit`, `Move`, and `Add photos` must not visually outrank spatial work on container and location details. For containers and locations, the filled system-blue primary action belongs to the most relevant spatial action, initially `Add item here`; generic maintenance actions should use quiet native-feeling utility controls or overflow placement.
+  - Checkout and return are primary asset availability actions once the API exposes `specs/assets/asset-checkout.spec.md`. An active asset that is not checked out must expose a direct `Check out` action. Any existing asset with an open checkout must expose a direct `Return` action, including archived assets when the detail surface can show them for recovery. Optional details must not block the fastest path; the UI may offer `Add details` as a secondary follow-up after checkout.
+  - A recently used, searched, scanned, or browsed asset must be check-outable from a fresh app launch in no more than three primary user actions after the app is ready.
+  - Asset cards, recent assets, search results, location lists, map rows, and asset detail must show a compact checked-out indicator when an asset has an open checkout, without implying that the asset moved out of its normal location.
   - Location paths must remain easy to scan on mobile. The current location should be presented as left-aligned breadcrumb-style context rather than a right-aligned table value when the detail page needs compact metadata.
   - Lifecycle, audit, destructive, and other less-frequent secondary actions must live behind an overflow/action-sheet style control instead of occupying the visible utility or spatial action rows.
   - The overflow must expose lifecycle actions when available and an `Audit history` action for read-authorized assets.
   - The same workspace component must be reusable across Home recent assets, selected-inventory asset lists, Search results, and Location asset lists.
 - Mobile asset detail audit history must be read-only and scoped to the current inventory and asset:
-  - The first implementation may call the generated inventory audit-record list endpoint and client-filter records whose target ID matches the current asset.
-  - The detail workspace must display safe audit metadata only: action label, source, principal ID, occurred-at label, request ID when present, and safe metadata values returned by the API.
+  - The mobile app must call the generated asset-scoped audit history endpoint for the current tenant, inventory, and asset instead of scanning broader inventory audit pages.
+  - The detail workspace must display safe audit metadata only: action label, source, actor display label resolved from the API's safe user profile when available, principal ID fallback, occurred-at label, request ID when present, and safe metadata values returned by the API.
+  - The audit sheet must prioritize the human action and actor/time context over raw target identifiers. Individual records should be compact timeline rows rather than large cards, with metadata collapsed into dense key/value rows only when safe metadata exists.
   - The mobile UI must not expose raw provider prompts, raw voice transcripts, credentials, storage keys, blob paths, authorization internals, or other sensitive implementation detail.
   - Mobile audit metadata rows must be allowlisted in the application query before rendering. The first allowlist may include user-facing movement, title/name, lifecycle/status, kind/type, attachment file name, content type, file size, and count summaries. Unknown metadata keys and values that look like prompts, transcripts, credentials, storage paths, blob keys, authorization internals, or provider internals must be omitted from the asset detail audit sheet.
   - The audit surface must be opened from the asset overflow as a platform-native stack sheet when the current Expo and platform stack support native sheet presentation. It must not use a custom transparent modal, fake scrim, or fake grabber when native `formSheet` presentation is available. It must show loading, empty, and safe error states.
-  - The first implementation may load enough inventory-audit pages to find a bounded number of records for the asset. Full cursor browsing and asset-scoped server filtering require a future audit API slice.
+  - The first implementation may load a bounded number of asset-scoped records. Full cursor browsing requires a future audit API slice.
+- Mobile asset detail checkout history must be read-only and scoped to the current inventory and asset:
+  - The mobile app must call the generated asset checkout history endpoint for the current tenant, inventory, and asset instead of scanning broader inventory audit pages.
+  - The checkout history surface must display checkout, return, safe actor labels, timestamps, and bounded details.
+  - Checkout history must not expose raw provider prompts, raw voice transcripts, credentials, authorization internals, hidden inventory data, or audit metadata not needed for the checkout history use case.
 - Mobile asset detail edit must be a platform-native stack sheet or pushed form backed by mobile application commands:
   - On Expo Router/native-stack builds that support `formSheet`, edit must use the route-level native sheet presentation, native grabber, and platform dismissal semantics rather than a custom transparent modal.
   - Edit sheets must not allow gesture dismissal to silently discard dirty edits. Until native prevent-remove confirmation is wired for form-sheet gestures, edit sheets may disable gesture dismissal and require the visible cancel action so the discard confirmation remains authoritative.
@@ -170,7 +198,10 @@ This spec defines camera behavior only for attaching still photos during the Add
   - `Add item here` must be available only for active containers or locations that the user may edit. It must navigate to Add with the current container or location preselected as the parent. This route-scoped parent prefill may update only the placement fields of the current Add draft so typed title, description, selected photos, and details state are not lost.
   - Add parent prefill route parameters must be encoded and decoded through one typed mobile route contract. The Add route must ignore incomplete, unsupported, item-kind, or otherwise inapplicable parent-prefill parameters instead of showing an unverified parent as selected.
   - Recursive tree editing and bulk move flows remain future work.
-- Browse must be a combined browse-and-search inventory surface for the selected inventory:
+- Browse must be a combined list, search, and map inventory surface for the selected inventory:
+  - Browse must contain separate `List` and `Map` sub-surfaces rather than treating Map as a visual layout toggle for list results.
+  - The `List` sub-surface owns search-first browsing, scopes, lifecycle filters, sort chips, paginated asset cards, and Places rows.
+  - The `Map` sub-surface owns full-inventory containment exploration for the selected inventory. It must always show the selected inventory's containment structure instead of inheriting the current list scope, sort, or search-result subset.
   - With an empty query it must browse selected-inventory assets through the API asset list endpoint.
   - With a non-empty query it must call the API search endpoint through the generated API client wrapper.
   - Activating the Browse tab may focus the search field when platform navigation makes the screen current, but the screen must still read as browse-first rather than an empty search form.
@@ -183,6 +214,56 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Browse mode must support lifecycle filtering (`Active`, `Archived`, `All`), scope filtering (`All`, `Places`, `Containers`, `Items`), and API-backed sorting (`Recently changed`, `Stable`). Alphabetical title sorting must wait until the API exposes that sort contract.
   - Search mode must support lifecycle and kind filters. Search result order remains API relevance order until the search API exposes explicit sort controls.
   - Sort controls may remain visible in search mode if clearly disabled or described by compact state language; the client must not fake sorted search by loading every result page locally.
+- Browse Map must be a native-feeling horizontal containment map for non-destructive inventory exploration:
+  - Map must be presented as its own `Map` tab or segmented sub-surface inside Browse, alongside the normal `List` browse surface.
+  - Map must use native platform components wherever they can provide the intended behavior, including native search fields, segmented or tab controls, sheets, action menus, pull-to-refresh where applicable, system typography, accessibility semantics, and platform scrolling physics. Custom UI is acceptable for the horizontal containment column mechanics when native components cannot express the interaction cleanly.
+  - Map must not be called a graph in product language because Stuff Stash containment is a tree: each asset has at most one parent, and containment cycles are forbidden by the domain model.
+  - Map must use the selected inventory as the root and expose the full active containment tree for that inventory, including locations, containers, and items. It must not show only locations or only assets returned by the current list page.
+  - Every visible Map row must belong to the selected inventory and must be loadable by the Map detail sheet. If the normal selected-inventory summary is lighter than the full Map tree, the detail query must fall back to the same selected active Map source before showing an unavailable state.
+  - Map must not inherit `List` scope filters such as `All`, `Places`, `Containers`, and `Items`, because those filters would make the structure incomplete and undermine orientation.
+  - Map search may help users jump to a matching asset and expand the path to that asset, but it must not replace the map with a filtered result list. Clearing search must leave the map structure intact.
+  - Map must use horizontally scrollable columns where each column represents one containment level. The previous and next columns may peek at the left and right edges so users understand that they can move across the open path.
+  - Horizontal movement between open columns must be smooth and gesture-friendly. Users must be able to move backward and forward through the open path by horizontal swipe or scroll, not only by tapping breadcrumbs.
+  - The horizontal column rail may use a custom controlled pager instead of a native horizontal scroll view when native scroll physics would compete with row-level branch gestures. The controlled pager must still preserve native-feeling tracking, snapping, reduced-motion behavior, native vertical list scrolling inside each column, and pull-to-refresh where applicable.
+  - When a horizontal swipe begins on the main body of a container or location
+    row and moves left, Map may treat that gesture as branch selection instead
+    of horizontal map scrolling. The row card should move left and reveal a
+    right-pointing chevron under the row's right side as immediate feedback.
+    Once the pull reveals enough of the chevron, the row should become the
+    selected branch immediately and the remaining pull should smoothly drive the
+    horizontal map toward that branch's next column. Releasing should settle the
+    map to the next column; it must not be the primary activation moment. The row
+    should spring back without selecting when the gesture never crosses the
+    reveal threshold. This row gesture must not replace normal horizontal
+    scrolling when the drag begins outside a containing row, when the row is a
+    leaf item, or when the user swipes right to move back up the tree.
+  - After a containing-row swipe crosses the reveal threshold and is committed
+    to branch navigation, vertical list scrolling in the map columns must be
+    temporarily locked until that swipe completes. This prevents slight diagonal
+    finger movement during the committed horizontal travel from moving the
+    source column vertically. Before the reveal threshold, normal vertical list
+    scrolling must remain available.
+  - Programmatic navigation, including selecting a row or tapping a breadcrumb, must animate smoothly to the relevant column unless the user has requested reduced motion.
+  - Deeper containment columns should enter and leave with subtle native-feeling motion instead of flashing in and out. The first implementation should use a small spatial slide plus fade for normal motion, inspired by platform navigation/shared-axis transitions, and reduce that to a fade or instant update when reduced motion is enabled.
+  - Breadcrumbs must remain visible, clickable, and synchronized with the active column. Tapping a breadcrumb must move to that level without collapsing unrelated history unless the destination is intentionally reset.
+  - The main body of a row must select that asset as the current branch and reveal its immediate children in the next column when the asset is a location or container.
+  - Rows that are part of the current expanded path must remain visually
+    distinguished from sibling rows so users can identify the active branch when
+    scrolling backward through earlier columns.
+  - The info affordance on every row must open a native sheet with full asset-detail workspace parity for that asset at any depth, without navigating away from the map or changing the open path. The sheet must use the same detail presentation, photo management, lifecycle actions, refresh behavior, and contained-asset/spatial actions as the normal asset detail route wherever those actions are supported by the current mobile application ports. Map detail must not degrade into a read-only intermediate summary.
+  - Map rows must use the available screen space efficiently. They should be compact enough to show several assets per viewport while still providing useful scan information such as title, kind, concise placement or note text, child count when relevant, and a clear info affordance.
+  - Map rows must not reserve large empty media or decorative areas when no user photo is available. Photo or kind placeholders should be stable and modest so row text remains useful.
+  - Map row density must remain readable and touchable on mobile. Compactness must not reduce primary row and info affordance hit targets below platform accessibility expectations.
+  - Leaf item rows must not navigate away from Map by default. They should open the same full-parity detail sheet used by the row info affordance so exploration remains non-destructive and low context-switch.
+  - Container and location detail sheets should expose spatial actions such as `Add item here` and `Move items here` when the current principal may edit that inventory and the asset is active.
+  - Map detail sheets may still navigate to existing native edit, move, move-here, add, and audit routes for workflows that are already implemented as route-level native sheets. Returning from those routes should refresh the map structure so Browse Map does not show stale information.
+  - Map state should remember the open path for the selected inventory during the current app session. It must not persist path state across tenants, inventories, principals, or rebuilt application service compositions until a durable preference spec exists.
+  - Map must render large inventories with virtualization or another measured strategy. It must not render an unbounded recursive tree with nested scroll views.
+  - If the current API cannot provide a complete containment summary efficiently, the first implementation may assemble the active map from the selected inventory summary already loaded by the mobile application query, but the UI must be structured so a future tree-aware or lazy child-loading port can replace that data source without rewriting row presentation.
+  - Empty containers and locations must still appear in Map so the full structure remains visible. Their next column should show a calm empty state and keep spatial actions available when permitted, including an `Add item here` action that opens the native add flow with that empty container or location preselected as the parent when the current principal may create and edit assets there.
+  - Archived assets are out of the first Map surface unless the API and product spec define a clear archived-structure visibility mode. Map must not silently mix archived nodes into the normal active containment map.
+  - Map interactions must remain read-only until the user chooses an explicit spatial action or full detail action. Expanding, scrolling, searching, breadcrumbs, and opening the full-parity detail sheet must not mutate inventory state.
+  - Map UI code must consume application view models assembled from mobile application ports. It must not depend on generated API DTOs or construct domain entities directly.
 - Search and browse results must render as image-first asset cards and open the same mobile asset detail view as other asset entry points.
 - Location cards must open a location-scoped asset list for the selected inventory. The first location list may be assembled from the selected inventory asset summary by selecting assets whose current location or immediate parent is the selected location.
 - Location-scoped asset lists must render image-first asset cards and open the same mobile asset workspace as search results.
@@ -223,7 +304,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - It must show the current authenticated principal from the API when available.
   - It must show About information for Stuff Stash, including the mobile app version.
   - It may show clearly labeled developer diagnostics such as the configured API base URL and local-development authentication mode.
-  - It must not show current inventory context, tenant switching state, unfinished account controls, sharing management, unavailable feature panels, or OIDC mobile authentication until those behaviors are specified.
+  - It must not show current inventory context, tenant switching state, unfinished account controls, sharing management, or unavailable feature panels.
 - Settings must expose a voice provider profile readiness surface before voice capture depends on tenant-managed profiles:
   - The surface must load safe tenant-scoped provider profile metadata through a mobile application port and generated API-client adapter.
   - It must show capability, provider kind, display name, lifecycle state, credential status, model name when present, last-tested state, and safe prompt-template presence for language inference profiles.

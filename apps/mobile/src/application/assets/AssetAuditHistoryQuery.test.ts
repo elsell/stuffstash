@@ -25,6 +25,7 @@ class FakeAssetAuditHistoryRepository implements AssetAuditHistoryRepository {
           action: 'asset.moved',
           source: 'api',
           principalId: 'principal-home',
+          principal: { id: 'principal-home', email: 'alex@example.test' },
           targetType: 'asset',
           targetId: input.assetId,
           occurredAt: '2026-06-25T12:30:00Z',
@@ -120,10 +121,10 @@ describe('AssetAuditHistoryQuery', () => {
         {
           id: 'audit-move',
           title: 'Asset Moved',
-          subtitle: 'Asset asset-water-bottle',
+          subtitle: expect.stringContaining('alex@example.test'),
           occurredAtLabel: expect.stringContaining('Recorded Jun 25, 2026'),
           sourceLabel: 'API',
-          principalLabel: 'Principal principal-home',
+          actorLabel: 'alex@example.test',
           requestLabel: 'Request request-one',
           metadataRows: [
             { label: 'From', value: 'Office' },
@@ -164,6 +165,18 @@ describe('AssetAuditHistoryQuery', () => {
 
     expect(titleRow?.value).toHaveLength(160);
     expect(titleRow?.value.endsWith('...')).toBe(true);
+  });
+
+  it('falls back to principal ID when no safe actor snapshot is available', async () => {
+    const query = new AssetAuditHistoryQuery(new FakeUnsafeMetadataRepository());
+
+    await expect(query.execute({ assetId: 'asset-water-bottle' })).resolves.toMatchObject({
+      records: [
+        {
+          actorLabel: 'Principal principal-home'
+        }
+      ]
+    });
   });
 
   it('does not claim there is no history when a bounded scan may have older records', async () => {

@@ -94,13 +94,13 @@ func (a App) ListMyTenants(ctx context.Context, input ListMyTenantsInput) (ListM
 	})
 	for _, item := range visible {
 		if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-			PrincipalID: input.Principal.ID,
-			TenantID:    item.Tenant.ID,
-			Source:      input.Source,
-			RequestID:   input.RequestID,
-			Action:      audit.ActionTenantListed,
-			TargetType:  audit.TargetTenant,
-			TargetID:    item.Tenant.ID.String(),
+			Principal:  input.Principal,
+			TenantID:   item.Tenant.ID,
+			Source:     input.Source,
+			RequestID:  input.RequestID,
+			Action:     audit.ActionTenantListed,
+			TargetType: audit.TargetTenant,
+			TargetID:   item.Tenant.ID.String(),
 			Metadata: map[string]string{
 				"limit": strconv.Itoa(limit),
 			},
@@ -171,13 +171,15 @@ func (a App) effectiveTenantAccess(ctx context.Context, principal identity.Princ
 }
 
 func (a App) effectiveInventoryAccess(ctx context.Context, principal identity.Principal, inventoryID inventory.InventoryID) (AccessSummary, bool, error) {
-	permissions := make([]string, 0, 5)
+	permissions := make([]string, 0, 7)
 	for _, permission := range []ports.InventoryPermission{
 		ports.InventoryPermissionView,
 		ports.InventoryPermissionCreateAsset,
 		ports.InventoryPermissionEditAsset,
 		ports.InventoryPermissionShare,
 		ports.InventoryPermissionConfigure,
+		ports.InventoryPermissionViewImportJob,
+		ports.InventoryPermissionCreateImportJob,
 	} {
 		allowed, err := a.inventoryPermissionAllowed(ctx, principal, inventoryID, permission)
 		if err != nil {

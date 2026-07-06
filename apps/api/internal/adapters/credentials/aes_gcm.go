@@ -87,6 +87,37 @@ func (s AESGCMSealer) UnsealProviderCredential(_ context.Context, scope ports.Pr
 	return raw, nil
 }
 
+func (s AESGCMSealer) SealImportJobSource(_ context.Context, scope ports.ImportJobSourceScope, raw []byte) (ports.SealedImportJobSource, error) {
+	if err := validateImportScopeAndRaw(scope, raw); err != nil {
+		return ports.SealedImportJobSource{}, err
+	}
+	nonce := make([]byte, s.aead.NonceSize())
+	if _, err := io.ReadFull(s.random, nonce); err != nil {
+		return ports.SealedImportJobSource{}, err
+	}
+	ciphertext := s.aead.Seal(nil, nonce, raw, importSourceAssociatedData(scope))
+	return ports.SealedImportJobSource{
+		KeyID:      s.keyID,
+		Algorithm:  AES256GCMAlgorithm,
+		Nonce:      nonce,
+		Ciphertext: ciphertext,
+	}, nil
+}
+
+func (s AESGCMSealer) UnsealImportJobSource(_ context.Context, scope ports.ImportJobSourceScope, sealed ports.SealedImportJobSource) ([]byte, error) {
+	if err := validateImportScope(scope); err != nil {
+		return nil, err
+	}
+	if sealed.KeyID != s.keyID || sealed.Algorithm != AES256GCMAlgorithm || len(sealed.Nonce) != s.aead.NonceSize() || len(sealed.Ciphertext) == 0 {
+		return nil, ports.ErrInvalidProviderCredential
+	}
+	raw, err := s.aead.Open(nil, sealed.Nonce, sealed.Ciphertext, importSourceAssociatedData(scope))
+	if err != nil {
+		return nil, ports.ErrInvalidProviderCredential
+	}
+	return raw, nil
+}
+
 func decodeBase64Key(encoded string) ([]byte, error) {
 	trimmed := strings.TrimSpace(encoded)
 	if trimmed == "" {
@@ -107,6 +138,27 @@ func validateScopeAndRaw(scope ports.ProviderCredentialScope, raw []byte) error 
 		return ports.ErrInvalidProviderCredential
 	}
 	return validateScope(scope)
+}
+
+func validateImportScopeAndRaw(scope ports.ImportJobSourceScope, raw []byte) error {
+	if len(raw) == 0 {
+		return ports.ErrInvalidProviderCredential
+	}
+	return validateImportScope(scope)
+}
+
+func validateImportScope(scope ports.ImportJobSourceScope) error {
+	if strings.TrimSpace(scope.TenantID.String()) == "" ||
+		strings.TrimSpace(scope.InventoryID.String()) == "" ||
+		strings.TrimSpace(scope.JobID.String()) == "" {
+		return ports.ErrInvalidProviderCredential
+	}
+	if containsControl(scope.TenantID.String()) ||
+		containsControl(scope.InventoryID.String()) ||
+		containsControl(scope.JobID.String()) {
+		return ports.ErrInvalidProviderCredential
+	}
+	return nil
 }
 
 func validateScope(scope ports.ProviderCredentialScope) error {
@@ -140,6 +192,19 @@ func credentialAssociatedData(scope ports.ProviderCredentialScope) []byte {
 		Capability:        string(scope.Capability),
 		ProviderKind:      string(scope.ProviderKind),
 		Purpose:           string(scope.Purpose),
+	})
+	return payload
+}
+
+func importSourceAssociatedData(scope ports.ImportJobSourceScope) []byte {
+	payload, _ := json.Marshal(struct {
+		TenantID    string `json:"tenantId"`
+		InventoryID string `json:"inventoryId"`
+		JobID       string `json:"jobId"`
+	}{
+		TenantID:    scope.TenantID.String(),
+		InventoryID: scope.InventoryID.String(),
+		JobID:       scope.JobID.String(),
 	})
 	return payload
 }

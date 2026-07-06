@@ -45,6 +45,20 @@ describe('AuthSignInScreen', () => {
     expect(document.body.textContent).toContain('Unable to load web runtime configuration.');
     expect(buttonContaining('Sign in').disabled).toBe(true);
   });
+
+  it('can show a session-expired sign-in prompt', () => {
+    component = mount(AuthSignInScreen, {
+      target: document.body,
+      props: {
+        title: 'Session expired.',
+        description: 'Sign in again to continue.',
+        onSignIn: vi.fn()
+      }
+    });
+
+    expect(document.body.textContent).toContain('Session expired.');
+    expect(document.body.textContent).toContain('Sign in again to continue.');
+  });
 });
 
 async function flush(): Promise<void> {

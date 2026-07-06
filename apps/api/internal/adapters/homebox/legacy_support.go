@@ -454,15 +454,22 @@ func normalizeBaseURL(value string) (string, error) {
 	if value == "" {
 		return "", ports.NewImportSourceUserError("Homebox URL is required")
 	}
-	if !strings.HasPrefix(value, "http://") && !strings.HasPrefix(value, "https://") {
+	schemeCandidate := strings.ToLower(value)
+	if !strings.HasPrefix(schemeCandidate, "http://") && !strings.HasPrefix(schemeCandidate, "https://") {
 		value = "https://" + value
 	}
 	parsed, err := url.Parse(value)
 	if err != nil || parsed.Host == "" {
 		return "", ports.NewImportSourceUserError("Homebox URL is invalid")
 	}
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	if parsed.User != nil {
+		return "", ports.NewImportSourceUserError("Homebox URL must not include credentials")
+	}
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
 	if strings.HasSuffix(parsed.Path, "/api/v1") {
-		return strings.TrimRight(value, "/"), nil
+		return strings.TrimRight(parsed.String(), "/"), nil
 	}
 	parsed.Path = strings.TrimRight(parsed.Path, "/") + "/api/v1"
 	return strings.TrimRight(parsed.String(), "/"), nil

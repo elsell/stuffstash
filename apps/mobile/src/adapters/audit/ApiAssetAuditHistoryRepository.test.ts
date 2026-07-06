@@ -26,37 +26,28 @@ class FakeAuditApiClient {
   requests: Array<{
     readonly tenantId: string;
     readonly inventoryId: string;
+    readonly assetId?: string;
     readonly limit?: number;
-    readonly cursor?: string;
   }> = [];
   pages: Array<Page<AuditRecord>> = [];
 
-  async listInventoryAuditRecords(
+  async listAssetAuditRecords(
     tenantIdValue: string,
     inventoryIdValue: string,
-    limit?: number,
-    cursor?: string
+    assetIdValue: string,
+    limit?: number
   ): Promise<Page<AuditRecord>> {
-    this.requests.push({ tenantId: tenantIdValue, inventoryId: inventoryIdValue, limit, cursor });
+    this.requests.push({ tenantId: tenantIdValue, inventoryId: inventoryIdValue, assetId: assetIdValue, limit });
     return this.pages.shift() ?? page([]);
   }
 }
 
 describe('ApiAssetAuditHistoryRepository', () => {
-  it('filters inventory audit records to the requested asset and follows inventory pages', async () => {
+  it('loads asset-scoped audit records from the current inventory', async () => {
     const client = new FakeAuditApiClient();
     client.pages = [
-      pageWithCursor([
-        auditRecord({ id: 'audit-filter-update', targetId: 'asset-filters', action: 'asset.updated' }),
-        auditRecord({
-          id: 'audit-colliding-attachment',
-          targetId: 'asset-filters',
-          targetType: 'attachment',
-          action: 'attachment.created'
-        }),
-        auditRecord({ id: 'audit-garage-update', targetId: 'asset-garage', action: 'asset.updated' })
-      ], 'next-audit-page'),
       page([
+        auditRecord({ id: 'audit-filter-update', targetId: 'asset-filters', action: 'asset.updated' }),
         auditRecord({
           id: 'audit-filter-move',
           targetId: 'asset-filters',
@@ -78,6 +69,7 @@ describe('ApiAssetAuditHistoryRepository', () => {
           action: 'asset.updated',
           source: 'api',
           principalId: 'principal-home',
+          principal: { id: 'principal-home', email: 'alex@example.test' },
           targetType: 'asset',
           targetId: 'asset-filters',
           occurredAt: '2026-06-25T12:00:00Z',
@@ -89,6 +81,7 @@ describe('ApiAssetAuditHistoryRepository', () => {
           action: 'asset.moved',
           source: 'api',
           principalId: 'principal-home',
+          principal: { id: 'principal-home', email: 'alex@example.test' },
           targetType: 'asset',
           targetId: 'asset-filters',
           occurredAt: '2026-06-25T12:00:00Z',
@@ -102,26 +95,19 @@ describe('ApiAssetAuditHistoryRepository', () => {
       {
         tenantId: 'tenant-home',
         inventoryId: 'inventory-home',
-        limit: 50,
-        cursor: undefined
-      },
-      {
-        tenantId: 'tenant-home',
-        inventoryId: 'inventory-home',
-        limit: 50,
-        cursor: 'next-audit-page'
+        assetId: 'asset-filters',
+        limit: 2
       }
     ]);
   });
 
-  it('does not expose lossy cursor pagination when one inventory page has more matching records than the preview limit', async () => {
+  it('preserves the server has-more signal for bounded asset history', async () => {
     const client = new FakeAuditApiClient();
     client.pages = [
-      page([
+      pageWithCursor([
         auditRecord({ id: 'audit-one', targetId: 'asset-filters', action: 'asset.updated' }),
-        auditRecord({ id: 'audit-two', targetId: 'asset-filters', action: 'asset.moved' }),
-        auditRecord({ id: 'audit-three', targetId: 'asset-filters', action: 'asset.viewed' })
-      ])
+        auditRecord({ id: 'audit-two', targetId: 'asset-filters', action: 'asset.moved' })
+      ], 'next-page')
     ];
     const repository = new ApiAssetAuditHistoryRepository(client, new FakeInventoryContext());
 
@@ -137,18 +123,10 @@ describe('ApiAssetAuditHistoryRepository', () => {
     });
   });
 
-  it('reports more history may exist when the bounded scan has no matching records yet', async () => {
+  it('returns an empty page when the asset endpoint has no records', async () => {
     const client = new FakeAuditApiClient();
     client.pages = [
-      pageWithCursor([
-        auditRecord({ id: 'audit-garage-one', targetId: 'asset-garage', action: 'asset.updated' })
-      ], 'next-audit-page'),
-      pageWithCursor([
-        auditRecord({ id: 'audit-garage-two', targetId: 'asset-garage', action: 'asset.moved' })
-      ], 'another-page'),
-      pageWithCursor([], 'third-page'),
-      pageWithCursor([], 'fourth-page'),
-      pageWithCursor([], 'fifth-page')
+      page([])
     ];
     const repository = new ApiAssetAuditHistoryRepository(client, new FakeInventoryContext());
 
@@ -157,9 +135,9 @@ describe('ApiAssetAuditHistoryRepository', () => {
       limit: 2
     })).resolves.toEqual({
       records: [],
-      hasMore: true
+      hasMore: false
     });
-    expect(client.requests).toHaveLength(5);
+    expect(client.requests).toHaveLength(1);
   });
 });
 
@@ -170,12 +148,14 @@ function auditRecord(input: {
   readonly targetType?: string;
   readonly metadata?: Record<string, string>;
   readonly requestId?: string;
+  readonly principal?: AuditRecord['principal'];
 }): AuditRecord {
   return {
     id: input.id,
     tenantId: 'tenant-home',
     inventoryId: 'inventory-home',
     principalId: 'principal-home',
+    principal: input.principal ?? { id: 'principal-home', email: 'alex@example.test' },
     action: input.action,
     source: 'api',
     targetType: input.targetType ?? 'asset',

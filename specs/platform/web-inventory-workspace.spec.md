@@ -78,6 +78,8 @@ The UI must not expose persistence, SpiceDB, OIDC, generated DTOs, storage keys,
 
 The authenticated web app must use a persistent product shell.
 
+When an API-backed workspace request fails with a reliable authenticated-boundary `401 Unauthorized`, the web app must treat the stored browser session as invalid, clear the local session, leave the protected workspace shell, and show a dedicated sign-in screen. If the rejected request follows a recently completed OIDC callback, the screen must explain that sign-in completed but the API rejected the new session, because that usually indicates an OIDC audience or API authentication configuration mismatch. Older authenticated request failures should use session-expired copy. The app must not present either case as a generic import, load, search, or workspace action failure, and it must not reuse stale workspace state after the session is cleared.
+
 ## URL And Deep-Link Model
 
 Every durable web workspace destination must be addressable through a stable URL path, not only in component-local state.
@@ -105,7 +107,7 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/fields/asset-types/{customAssetTypeId}/archive` for a custom asset type archive confirmation when archive is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/fields/field-definitions/{customFieldDefinitionId}/archive` for a custom field definition archive confirmation when archive is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/import` for import.
-- `/tenants/{tenantId}/inventories/{inventoryId}/import/{source}` for a focused import source, initially `legacy-homebox` or `legacy-homebox-csv`.
+- `/tenants/{tenantId}/inventories/{inventoryId}/import/{source}` for a focused import source, initially `homebox` or `homebox-csv`.
 - `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
 
 The web app may accept `/inventories/{inventoryId}` and descendant paths as compatibility aliases for an inventory that is visible in the current tenant context. When a compatibility alias can be resolved, the app should replace the browser URL with the canonical tenant-scoped path.
@@ -169,6 +171,9 @@ Desktop:
 - The switcher trigger row must show both the current inventory name and tenant name.
 - Opening the switcher should show a popover with the inventories inside the current tenant.
 - The popover must include a right-aligned `Switch Tenant` action.
+- The `Switch Tenant` action must remain visible whenever tenant context is
+  available, including single-tenant states, so users can always inspect tenant
+  context and discover tenant switching.
 - `Switch Tenant` must show a tenant list.
 - Selecting a tenant must keep the popover open and replace the tenant list with that tenant's inventories.
 - The switcher must not show one combined dropdown containing all inventories from all tenants.
@@ -609,6 +614,7 @@ Required implementation split:
 - Add form summary labels, section labels, description placeholders, and quick-parent labels must live in focused application helpers rather than component-local conditional copy.
 - Add surface quick-parent validation copy must live in focused application helpers rather than component-local conditional copy.
 - Add photo-picker action labels, input labels, selected-list labels, supported-image type derivation, and supported-format copy must live in focused application helpers rather than component-local conditional copy.
+- Add-asset photo upload warnings must preserve safe server validation reasons, such as unsupported file type or file-content mismatch, rather than collapsing every failed upload into an opaque count-only message.
 - Home and location browse href derivation must live in focused application helpers rather than component-local route string assembly.
 - Home workspace heading, lifecycle filter options, empty-state copy, and create-location denied copy must live in focused application helpers rather than component-local conditional copy.
 - Focused location empty-state copy, add-item action label, and create-item denied copy must live in focused application helpers rather than component-local conditional copy.

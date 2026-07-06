@@ -4,8 +4,10 @@ const verifierKey = 'stuffstash.oidc.verifier';
 const stateKey = 'stuffstash.oidc.state';
 const returnToKey = 'stuffstash.oidc.returnTo';
 const sessionKey = 'stuffstash.oidc.session';
+const completedAtKey = 'stuffstash.oidc.completedAt';
 const selectedTenantKey = 'stuffstash.selectedTenantId';
 const selectedInventoryKey = 'stuffstash.selectedInventoryId';
+const recentSignInWindowMs = 2 * 60 * 1000;
 
 export interface AuthSession {
   idToken: string;
@@ -39,6 +41,7 @@ export function signOut(storage: Storage = window.sessionStorage): void {
   storage.removeItem(verifierKey);
   storage.removeItem(stateKey);
   storage.removeItem(returnToKey);
+  storage.removeItem(completedAtKey);
   storage.removeItem(selectedTenantKey);
   storage.removeItem(selectedInventoryKey);
 }
@@ -106,12 +109,19 @@ export async function completeSignIn(
     },
     storage
   );
+  storage.setItem(completedAtKey, String(Date.now()));
 
   const returnTo = storage.getItem(returnToKey) ?? '/';
   storage.removeItem(verifierKey);
   storage.removeItem(stateKey);
   storage.removeItem(returnToKey);
   return returnTo;
+}
+
+export function hasRecentlyCompletedSignIn(storage: Storage = window.sessionStorage, now = Date.now()): boolean {
+  const value = storage.getItem(completedAtKey);
+  const completedAt = value ? Number(value) : NaN;
+  return Number.isFinite(completedAt) && now - completedAt >= 0 && now - completedAt <= recentSignInWindowMs;
 }
 
 function tokenExpiry(token: TokenResponse): number {

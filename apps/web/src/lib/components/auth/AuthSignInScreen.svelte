@@ -3,10 +3,14 @@
   import * as Button from '$lib/components/ui/button/index.js';
 
   let {
+    title = 'Sign in to continue.',
+    description = 'Use your configured identity provider.',
     error = '',
     canSignIn = true,
     onSignIn
   }: {
+    title?: string;
+    description?: string;
     error?: string;
     canSignIn?: boolean;
     onSignIn: () => Promise<void> | void;
@@ -37,8 +41,8 @@
     </div>
 
     <div class="signin-copy">
-      <h1 id="signin-title">Sign in to continue.</h1>
-      <p>Use your configured identity provider.</p>
+      <h1 id="signin-title">{title}</h1>
+      <p>{description}</p>
     </div>
 
     {#if error}
@@ -46,7 +50,7 @@
     {/if}
 
     <div class="signin-action">
-      <Button.Root size="lg" disabled={!canSignIn || signingIn} onclick={() => { void handleSignIn(); }}>
+      <Button.Root class="signin-button" size="lg" disabled={!canSignIn || signingIn} onclick={() => { void handleSignIn(); }}>
         <LogIn aria-hidden="true" />
         {signingIn ? 'Opening sign-in...' : 'Sign in'}
       </Button.Root>
@@ -138,6 +142,19 @@
 
   .signin-action :global([data-slot='button']) {
     width: 100%;
+  }
+
+  .signin-action :global(.signin-button) {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .signin-action :global(.signin-button svg) {
+    width: 16px;
+    height: 16px;
   }
 
   @media (max-width: 520px) {

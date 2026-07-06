@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { completeSignIn, getStoredSession, sha256URLSafe, signOut } from './auth';
+import { completeSignIn, getStoredSession, hasRecentlyCompletedSignIn, sha256URLSafe, signOut } from './auth';
 import type { RuntimeConfig } from './runtimeConfig';
 
 const config: RuntimeConfig = {
@@ -37,6 +37,15 @@ describe('auth helpers', () => {
 
     expect(returnTo).toBe('/');
     expect(getStoredSession(storage)?.idToken).toBe('id-token');
+    expect(hasRecentlyCompletedSignIn(storage)).toBe(true);
+  });
+
+  it('remembers only recent completed sign-ins', () => {
+    const storage = new MapStorage();
+    storage.setItem('stuffstash.oidc.completedAt', String(1000));
+
+    expect(hasRecentlyCompletedSignIn(storage, 1000 + 60_000)).toBe(true);
+    expect(hasRecentlyCompletedSignIn(storage, 1000 + 180_000)).toBe(false);
   });
 
   it('creates a PKCE challenge when Web Crypto digest is unavailable', async () => {

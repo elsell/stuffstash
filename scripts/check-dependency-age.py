@@ -17,6 +17,7 @@ from pathlib import Path
 UTC = dt.timezone.utc
 PSEUDO_VERSION_RE = re.compile(r"-(\d{14})-[0-9a-f]{12,}(?:\.\d+)?$")
 PNPM_PACKAGE_RE = re.compile(r"^  '?(?P<key>[^':]+@[^':]+)'?:$")
+ALLOWLIST_PATH = "dependency-age-allowlist.json"
 
 
 def parse_time(value):
@@ -118,10 +119,40 @@ def go_published_at(path, version, module_time):
     raise RuntimeError(f"Go metadata for {path}@{version} did not include a publish time")
 
 
-def check_age(kind, name, version, published_at, source, cutoff):
+def load_allowlist(root):
+    path = root / ALLOWLIST_PATH
+    if not path.exists():
+        return set(), []
+
+    try:
+        entries = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return set(), [f"{ALLOWLIST_PATH} is not valid JSON: {exc}"]
+
+    if not isinstance(entries, list):
+        return set(), [f"{ALLOWLIST_PATH} must contain a JSON array"]
+
+    allowed = set()
+    failures = []
+    required_fields = ("kind", "name", "version", "reason", "compensatingVerification")
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            failures.append(f"{ALLOWLIST_PATH} entry {index} must be an object")
+            continue
+        missing = [field for field in required_fields if not str(entry.get(field, "")).strip()]
+        if missing:
+            failures.append(f"{ALLOWLIST_PATH} entry {index} is missing required field(s): {', '.join(missing)}")
+            continue
+        allowed.add((entry["kind"].strip(), entry["name"].strip(), entry["version"].strip()))
+    return allowed, failures
+
+
+def check_age(kind, name, version, published_at, source, cutoff, allowlist):
     if published_at is None:
         return f"{kind} {name}@{version} from {source} has no known publish time"
     if published_at > cutoff:
+        if (kind, name, version) in allowlist:
+            return None
         return (
             f"{kind} {name}@{version} from {source} was published "
             f"{published_at.isoformat()} after cutoff {cutoff.isoformat()}"
@@ -141,6 +172,8 @@ def main():
     now = parse_time(args.now) if args.now else dt.datetime.now(UTC)
     cutoff = now - dt.timedelta(days=args.min_age_days)
     failures = []
+    allowlist, allowlist_failures = load_allowlist(root)
+    failures.extend(allowlist_failures)
 
     if not args.skip_npm:
         lockfiles = sorted(root.glob("**/pnpm-lock.yaml"))
@@ -152,7 +185,7 @@ def main():
             name, version, source = item
             try:
                 published_at = npm_published_at(name, version)
-                return check_age("npm", name, version, published_at, source, cutoff)
+                return check_age("npm", name, version, published_at, source, cutoff, allowlist)
             except (RuntimeError, urllib.error.URLError, TimeoutError, subprocess.CalledProcessError) as exc:
                 return f"npm {name}@{version} from {source} metadata check failed: {exc}"
 
@@ -173,7 +206,7 @@ def main():
             for path, version, module_time, source in modules:
                 try:
                     published_at = go_published_at(path, version, module_time)
-                    failure = check_age("go", path, version, published_at, source, cutoff)
+                    failure = check_age("go", path, version, published_at, source, cutoff, allowlist)
                 except RuntimeError as exc:
                     failure = str(exc)
                 if failure:

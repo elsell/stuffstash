@@ -111,6 +111,48 @@ describe('workspace asset workflow', () => {
     expect(result.data.assets.map((item) => item.id)).toEqual(['asset-one']);
   });
 
+  it('includes safe photo upload failure reasons when creating an asset', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('asset-one', 'Tape measure')],
+      uploadFailure: true,
+      uploadFailureError: safeUploadError('Attachment content does not match its file type.')
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      photos: [photo()]
+    });
+
+    expect(result.message).toBe(
+      'Saved Tape measure. 1 photo upload failed. Attachment content does not match its file type.'
+    );
+  });
+
+  it('deduplicates repeated safe photo upload failure reasons', async () => {
+    const repository = fakeRepository({
+      createdAssets: [asset('asset-one', 'Tape measure')],
+      uploadFailure: true,
+      uploadFailureError: safeUploadError('Attachment content does not match its file type.')
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      photos: [selectedPhoto('front.jpg', 'blob:front'), selectedPhoto('back.jpg', 'blob:back')]
+    });
+
+    expect(result.message).toBe(
+      'Saved Tape measure. 2 photo uploads failed. Attachment content does not match its file type.'
+    );
+  });
+
   it('routes created locations to the focused location surface', async () => {
     const repository = fakeRepository({
       createdAssets: [asset('location-one', 'Garage shelf', 'location')]
@@ -376,6 +418,7 @@ function fakeRepository({
   createdAssets,
   uploadedPhotos = [],
   uploadFailure = false,
+  uploadFailureError = new Error('Upload failed.'),
   failedUploadIndexes = [],
   createFailureAfter,
   selectedLifecycleData,
@@ -384,6 +427,7 @@ function fakeRepository({
   createdAssets: Asset[];
   uploadedPhotos?: AssetAttachment[];
   uploadFailure?: boolean;
+  uploadFailureError?: Error;
   failedUploadIndexes?: number[];
   createFailureAfter?: number;
   selectedLifecycleData?: WorkspaceData;
@@ -412,7 +456,7 @@ function fakeRepository({
     async uploadAssetPhoto(): Promise<AssetAttachment> {
       if (uploadFailure || failedUploadIndexes.includes(uploadCount)) {
         uploadCount += 1;
-        throw new Error('Upload failed.');
+        throw uploadFailureError;
       }
       const uploaded = uploadedPhotos.shift();
       uploadCount += 1;
@@ -422,4 +466,10 @@ function fakeRepository({
       return uploaded;
     }
   };
+}
+
+function safeUploadError(message: string): Error & { safeForUser: true } {
+  const error = new Error(message) as Error & { safeForUser: true };
+  error.safeForUser = true;
+  return error;
 }

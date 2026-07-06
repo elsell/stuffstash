@@ -56,6 +56,7 @@ import {
   applyPhotoUploadProgress,
   photoUploadRows
 } from './AssetPhotoUploadProgressPresentation';
+import { useAppFeedback } from '../feedback/AppFeedback';
 import { colors, spacing } from '../theme/tokens';
 
 type AssetDetailRouteScreenProps = {
@@ -84,6 +85,7 @@ export function AssetDetailRouteScreen({
   deleteAssetPhotoCommand,
   photoSelectionQuery
 }: AssetDetailRouteScreenProps) {
+  const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
@@ -136,8 +138,9 @@ export function AssetDetailRouteScreen({
     try {
       await reloadAsset();
     } catch (error) {
-      setScreenState({
-        status: 'error',
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not refresh asset',
         message: readableError(error, 'Could not refresh asset.')
       });
     } finally {
@@ -185,7 +188,11 @@ export function AssetDetailRouteScreen({
         setPhotoUploads([]);
       }
     } catch (error) {
-      Alert.alert('Could not add photos', readableError(error, 'Photo upload failed.'));
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not add photos',
+        message: readableError(error, 'Photo upload failed.')
+      });
     } finally {
       setPendingAction(undefined);
     }
@@ -212,7 +219,11 @@ export function AssetDetailRouteScreen({
         setPhotoUploads([]);
       }
     } catch (error) {
-      Alert.alert('Could not retry photos', readableError(error, 'Photo retry failed.'));
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not retry photos',
+        message: readableError(error, 'Photo retry failed.')
+      });
     } finally {
       setPendingAction(undefined);
     }
@@ -234,7 +245,11 @@ export function AssetDetailRouteScreen({
       setPhotoUploads([]);
       await reloadAsset();
     } catch (error) {
-      Alert.alert('Could not remove photo', readableError(error, 'Photo removal failed.'));
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not remove photo',
+        message: readableError(error, 'Photo removal failed.')
+      });
     } finally {
       setPendingAction(undefined);
     }
@@ -328,7 +343,11 @@ export function AssetDetailRouteScreen({
         asset,
         readableError(error, 'Lifecycle action failed.')
       );
-      Alert.alert(failure.title, failure.message);
+      feedback.showNotice({
+        tone: 'error',
+        title: failure.title,
+        message: failure.message
+      });
     } finally {
       setPendingAction(undefined);
     }

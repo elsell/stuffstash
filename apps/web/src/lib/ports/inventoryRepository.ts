@@ -11,9 +11,9 @@ import type {
   SearchResult,
   SelectedAttachment,
   SelectedPhoto,
-  LegacyHomeboxImportRequest,
-  ImportApplyResult,
-  ImportPreview,
+  ImportSourceRequest,
+  ImportJob,
+  ImportJobCancellationMode,
   Tenant,
   UpdateAssetDraft,
   WorkspaceData
@@ -44,8 +44,17 @@ export interface InventoryRepository {
   restoreAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<AssetAttachment>;
   deleteAssetAttachment(tenantId: string, inventoryId: string, assetId: string, attachmentId: string): Promise<void>;
   searchAssets(request: SearchRequest): Promise<SearchResult[]>;
-  previewLegacyHomeboxImport(tenantId: string, inventoryId: string, input: LegacyHomeboxImportRequest): Promise<ImportPreview>;
-  applyLegacyHomeboxImport(tenantId: string, inventoryId: string, input: LegacyHomeboxImportRequest): Promise<ImportApplyResult>;
+  listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]>;
+  previewImportJob(tenantId: string, inventoryId: string, input: ImportSourceRequest): Promise<ImportJob>;
+  getImportJob(tenantId: string, inventoryId: string, jobId: string): Promise<ImportJob>;
+  startImportJob(tenantId: string, inventoryId: string, jobId: string, input: ImportSourceRequest): Promise<ImportJob>;
+  cancelImportJob(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    mode: ImportJobCancellationMode
+  ): Promise<ImportJob>;
+  removeImportJobFromHistory(tenantId: string, inventoryId: string, jobId: string): Promise<void>;
 }
 
 export interface WorkspaceSeed {

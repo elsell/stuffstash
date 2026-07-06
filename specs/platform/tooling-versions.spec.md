@@ -36,6 +36,9 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo Audio for mobile voice recording and playback: `expo-audio 55.0.14`.
 - Expo FileSystem for mobile durable connection profile storage: `expo-file-system 55.0.22`.
 - Expo Image Picker for mobile create-form photo selection: `expo-image-picker 55.0.20`.
+- Expo Auth Session for mobile OIDC PKCE sign-in: `expo-auth-session 55.0.17`.
+- Expo Web Browser for system-browser OIDC session completion: `expo-web-browser 55.0.17`.
+- Expo Secure Store for native mobile token storage: `expo-secure-store 55.0.15`.
 - React Native Image Viewing for mobile draft photo preview carousel: `react-native-image-viewing 0.2.2`.
 - React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
 - React Native Worklets for Expo SDK 55 Reanimated: `react-native-worklets 0.7.4`.
@@ -126,8 +129,33 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - npm package versions and Go module versions must be at least fourteen days old before they are accepted into the committed dependency graph.
 - Dependency age checks must fail closed when package metadata cannot be retrieved or parsed, except for Go pseudo versions where the timestamp embedded in the version is available.
 - The dependency age threshold may only be lowered or bypassed by a spec update that names the package, version, reason, and compensating verification.
+- Reviewed dependency-age bypasses must live in `dependency-age-allowlist.json`.
+  Each entry must name the ecosystem, package, exact version, reason, and
+  compensating verification. The checker may bypass only those exact entries.
 - npm and pnpm installs must ignore package lifecycle scripts by default through committed package-manager configuration.
 - Any install-time lifecycle script exception must be introduced through a spec update that names the package, script need, reason, and compensating verification.
+
+## Reviewed Dependency Age Bypasses
+
+These packages are allowed before the normal fourteen-day age threshold because
+mobile OIDC support must align with the already-pinned Expo SDK 55 runtime:
+
+- `npm expo-auth-session 55.0.17`: required for native authorization code with
+  PKCE and token refresh in the Expo mobile app. Compensating verification:
+  pinned exact version, lockfile review, `pnpm --dir apps/mobile test`, and
+  `pnpm --dir apps/mobile check`.
+- `npm expo-web-browser 55.0.17`: required for system-browser OIDC session
+  completion in the Expo mobile app. Compensating verification: pinned exact
+  version, lockfile review, `pnpm --dir apps/mobile test`, and
+  `pnpm --dir apps/mobile check`.
+- `npm expo-secure-store 55.0.15`: required for native secure mobile token
+  storage. Compensating verification: pinned exact version, lockfile review,
+  fake-backed secure-store adapter tests, `pnpm --dir apps/mobile test`, and
+  `pnpm --dir apps/mobile check`.
+- `npm expo-application 55.0.16`, `npm expo-crypto 55.0.16`, and
+  `npm expo-linking 55.0.16`: transitive Expo SDK 55 dependencies introduced by
+  `expo-auth-session`. Compensating verification: lockfile review,
+  `pnpm --dir apps/mobile test`, and `pnpm --dir apps/mobile check`.
 
 ## Pinned GitHub Actions
 

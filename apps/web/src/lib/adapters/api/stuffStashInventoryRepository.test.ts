@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { StuffStashInventoryRepository } from './stuffStashInventoryRepository';
+import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
 import type { RuntimeConfig } from '$lib/runtimeConfig';
 
@@ -17,6 +18,17 @@ const config: RuntimeConfig = {
 describe('StuffStashInventoryRepository', () => {
   beforeEach(() => {
     sessionStorage.clear();
+  });
+
+  it('reports API 401 responses as an authentication-required error', async () => {
+    const repository = new StuffStashInventoryRepository(
+      config,
+      () => 'expired-token',
+      new InMemoryWorkspaceObserver(),
+      async () => Response.json({ error: { code: 'unauthenticated', message: 'Session expired.' } }, { status: 401 })
+    );
+
+    await expect(repository.loadWorkspace()).rejects.toBeInstanceOf(AuthenticationRequiredError);
   });
 
   it('restores the browser-session tenant and inventory selection before loading active assets', async () => {
@@ -433,6 +445,141 @@ describe('StuffStashInventoryRepository', () => {
     ]);
   });
 
+  it('normalizes live Homebox import requests before sending them through the generated client', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await repository.previewImportJob('tenant-home', 'inventory-household', {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'stuff.jsksell.com',
+      username: ' codex@jsksell.com ',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    });
+
+    const previewRequest = requests.find((request) => request.method === 'POST' && request.url.includes('/imports/jobs/preview'));
+    expect(previewRequest).toBeTruthy();
+    expect(await previewRequest?.json()).toMatchObject({
+      sourceType: 'legacy_homebox',
+      baseUrl: 'https://stuff.jsksell.com',
+      username: 'codex@jsksell.com'
+    });
+  });
+
+  it('preserves an explicitly entered http Homebox import URL', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await repository.previewImportJob('tenant-home', 'inventory-household', {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'http://homebox.local:3100',
+      username: 'codex@jsksell.com',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: true,
+      allowInsecureTLS: false
+    });
+
+    const previewRequest = requests.find((request) => request.method === 'POST' && request.url.includes('/imports/jobs/preview'));
+    expect(previewRequest).toBeTruthy();
+    expect(await previewRequest?.json()).toMatchObject({
+      sourceType: 'legacy_homebox',
+      baseUrl: 'http://homebox.local:3100'
+    });
+  });
+
+  it('records safe import job observability events at the API adapter boundary', async () => {
+    const { fetch } = fakeFetch();
+    const observer = new InMemoryWorkspaceObserver();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
+    const source = {
+      sourceType: 'legacy_homebox' as const,
+      baseUrl: 'stuff.jsksell.com',
+      username: 'codex@jsksell.com',
+      password: 'super-secret-password',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    };
+
+    await repository.listImportJobs('tenant-home', 'inventory-household');
+    const previewed = await repository.previewImportJob('tenant-home', 'inventory-household', source);
+    await repository.startImportJob('tenant-home', 'inventory-household', previewed.id, source);
+    await repository.cancelImportJob('tenant-home', 'inventory-household', previewed.id, 'discard_partial_progress');
+    await repository.removeImportJobFromHistory('tenant-home', 'inventory-household', previewed.id);
+
+    expect(observer.events).toEqual([
+      { eventName: 'workspace.import_jobs_load_started', attributes: {} },
+      { eventName: 'workspace.import_jobs_loaded', attributes: { jobCount: 1 } },
+      { eventName: 'workspace.import_job_preview_started', attributes: { sourceType: 'legacy_homebox' } },
+      {
+        eventName: 'workspace.import_job_preview_completed',
+        attributes: { sourceType: 'legacy_homebox', assetCount: 0, warningCount: 0, errorCount: 0 }
+      },
+      { eventName: 'workspace.import_job_start_started', attributes: { sourceType: 'legacy_homebox' } },
+      { eventName: 'workspace.import_job_started', attributes: { sourceType: 'legacy_homebox', jobId: 'import-job-one' } },
+      {
+        eventName: 'workspace.import_job_cancel_started',
+        attributes: { mode: 'discard_partial_progress', jobId: 'import-job-one' }
+      },
+      {
+        eventName: 'workspace.import_job_cancel_requested',
+        attributes: { mode: 'discard_partial_progress', jobId: 'import-job-one' }
+      },
+      { eventName: 'workspace.import_job_history_remove_started', attributes: { jobId: 'import-job-one' } },
+      { eventName: 'workspace.import_job_history_removed', attributes: { jobId: 'import-job-one' } }
+    ]);
+    for (const event of observer.events) {
+      expect(JSON.stringify(event.attributes)).not.toContain('super-secret-password');
+      expect(JSON.stringify(event.attributes)).not.toContain('codex@jsksell.com');
+      expect(JSON.stringify(event.attributes)).not.toContain('stuff.jsksell.com');
+    }
+  });
+
+  it('records safe import job failure observability events at the API adapter boundary', async () => {
+    const { fetch } = fakeFetch({ failedImportOperations: ['list', 'preview', 'start', 'cancel', 'remove'] });
+    const observer = new InMemoryWorkspaceObserver();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
+    const source = {
+      sourceType: 'legacy_homebox' as const,
+      baseUrl: 'stuff.jsksell.com',
+      username: 'codex@jsksell.com',
+      password: 'super-secret-password',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    };
+
+    await expect(repository.listImportJobs('tenant-home', 'inventory-household')).rejects.toThrow();
+    await expect(repository.previewImportJob('tenant-home', 'inventory-household', source)).rejects.toThrow();
+    await expect(repository.startImportJob('tenant-home', 'inventory-household', 'import-job-one', source)).rejects.toThrow();
+    await expect(
+      repository.cancelImportJob('tenant-home', 'inventory-household', 'import-job-one', 'keep_partial_progress')
+    ).rejects.toThrow();
+    await expect(repository.removeImportJobFromHistory('tenant-home', 'inventory-household', 'import-job-one')).rejects.toThrow();
+
+    expect(observer.events.map((event) => event.eventName)).toEqual([
+      'workspace.import_jobs_load_started',
+      'workspace.import_jobs_load_failed',
+      'workspace.import_job_preview_started',
+      'workspace.import_job_preview_failed',
+      'workspace.import_job_start_started',
+      'workspace.import_job_start_failed',
+      'workspace.import_job_cancel_started',
+      'workspace.import_job_cancel_failed',
+      'workspace.import_job_history_remove_started',
+      'workspace.import_job_history_remove_failed'
+    ]);
+    for (const event of observer.events) {
+      expect(JSON.stringify(event.attributes)).not.toContain('super-secret-password');
+      expect(JSON.stringify(event.attributes)).not.toContain('codex@jsksell.com');
+      expect(JSON.stringify(event.attributes)).not.toContain('stuff.jsksell.com');
+      expect(JSON.stringify(event.attributes)).not.toContain('provider-stacktrace');
+    }
+  });
+
   it('manages access grants through generated client-backed repository methods', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
@@ -527,6 +674,7 @@ function fakeFetch(
     rejectedThumbnailAssetIds?: string[];
     failedThumbnailStatusByAssetId?: Record<string, number>;
     includeUnphotographedContainerAndLocation?: boolean;
+    failedImportOperations?: Array<'list' | 'preview' | 'start' | 'cancel' | 'remove'>;
   } = {}
 ): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
@@ -707,6 +855,26 @@ function fakeFetch(
         }
         return envelope(results);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/imports/jobs') {
+        if (options.failedImportOperations?.includes('list')) return importFailure();
+        return envelope({ jobs: [importJob('import-job-one')] });
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/imports/jobs/preview') {
+        if (options.failedImportOperations?.includes('preview')) return importFailure();
+        return envelope(importJob('import-job-one'), 201);
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/imports/jobs/import-job-one/start') {
+        if (options.failedImportOperations?.includes('start')) return importFailure();
+        return envelope({ ...importJob('import-job-one'), status: 'running' });
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/imports/jobs/import-job-one/cancel') {
+        if (options.failedImportOperations?.includes('cancel')) return importFailure();
+        return envelope({ ...importJob('import-job-one'), status: 'cancel_requested', cancellationMode: 'discard_partial_progress' });
+      }
+      if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/imports/jobs/import-job-one') {
+        if (options.failedImportOperations?.includes('remove')) return importFailure();
+        return new Response(null, { status: 204 });
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/access-grants') {
         return envelope([
           {
@@ -797,6 +965,19 @@ function envelope(data: unknown, status = 200): Response {
   }, { status });
 }
 
+function importFailure(): Response {
+  return Response.json(
+    {
+      error: {
+        code: 'import_failed',
+        message: 'Import operation failed.',
+        detail: 'provider-stacktrace password=secret'
+      }
+    },
+    { status: 500 }
+  );
+}
+
 function tenant(id: string, name: string, permissions: string[]): object {
   return {
     id,
@@ -859,6 +1040,55 @@ function attachment(id: string, tenantId: string, inventoryId: string, assetId: 
     contentType: 'image/jpeg',
     sizeBytes: 10,
     lifecycleState: 'active'
+  };
+}
+
+function importJob(id: string): object {
+  return {
+    id,
+    status: 'previewed',
+    source: {
+      type: 'legacy_homebox',
+      name: 'Homebox',
+      baseUrl: 'https://stuff.jsksell.com',
+      imageImport: 'enabled',
+      fingerprint: 'fingerprint-one'
+    },
+    counts: {
+      fields: 0,
+      locations: 0,
+      assets: 0,
+      attachments: 0,
+      warnings: 0,
+      errors: 0,
+      fieldsCreated: 0,
+      fieldsExisting: 0,
+      locationsCreated: 0,
+      assetsCreated: 0,
+      assetsSkipped: 0,
+      attachmentsCreated: 0,
+      attachmentsSkipped: 0,
+      recordsDiscarded: 0,
+      sourceLinksDiscarded: 0
+    },
+    progress: {
+      phase: 'ready',
+      done: 0,
+      total: 0,
+      updatedAt: '2026-07-06T00:00:00Z'
+    },
+    progressHistory: [
+      {
+        phase: 'ready',
+        done: 0,
+        total: 0,
+        updatedAt: '2026-07-06T00:00:00Z'
+      }
+    ],
+    createdAt: '2026-07-06T00:00:00Z',
+    updatedAt: '2026-07-06T00:00:00Z',
+    resources: [],
+    messages: []
   };
 }
 

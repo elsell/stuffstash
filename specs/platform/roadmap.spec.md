@@ -98,7 +98,7 @@ The web goal remains important but is not the immediate starting point. It still
 - `a69d3f12 feat(api): support api-key Gemini profiles` added Google AI Gemini API-key support for speech-to-text and language-inference provider profiles using `x-goog-api-key`, while keeping Google Cloud Text-to-Speech OAuth-only.
 - Tenant-scoped language-inference provider profiles now support bounded prompt templates that round-trip through the management API, persist through GORM migrations, resolve with the selected provider set, and are passed into realtime language model calls while the API appends the mandatory agent contract.
 - Tenant-scoped provider-profile management now supports non-secret PATCH updates for display name, endpoint URL, model name, runtime options, capability metadata, and prompt template, with partial-update semantics, audit/observability, generated client coverage, and `lastTestedAt` reset when configuration changes.
-- Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, use the local-development token only from runtime configuration, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance from Settings.
+- Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, guide OIDC SSO sign-in, refresh secure mobile sessions, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance/session from Settings.
 - Realtime voice sessions now persist durable safe session metadata through a repository port with memory and GORM adapters, including session scope, selected provider profile IDs, lifecycle state, timestamps, and safe failure codes without storing raw audio, transcripts, prompts, model responses, generated speech, credentials, bearer tokens, or provider session IDs.
 - Mobile provider-profile management now exposes safe tenant-scoped provider profile metadata, recommended profile creation, credential replacement, prompt-template replacement, lifecycle actions, safe provider tests, readiness summaries, and a voice-sheet recovery action that opens Voice providers when readiness fails before recording.
 - Mobile individual asset detail now works as a production-shaped asset workspace: shared detail routes from home, inventory lists, search, and location lists; photo-first carousel/strip with add, local reorder preview, viewer, safe metadata, removal, direct-upload progress and retry; edit and move sheets backed by application commands and generated API adapters; lifecycle overflow with archive/restore/permanent delete confirmations; bounded safe audit history; and spatial container/location contents with Add item here and Move things here actions.
@@ -131,9 +131,10 @@ The web goal remains important but is not the immediate starting point. It still
 1. Deepen the production mobile voice session surface.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
-2. Expand approval-backed write action plans beyond the first create slice.
+2. Expand approval-backed write action plans with asset checkout and return.
    - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
-   - Continue adding additional command kinds only behind application services, tenant/inventory authorization, audit history, atomic execution, and explicit user confirmation.
+   - Add these command kinds only behind application services, tenant/inventory authorization, audit history, atomic execution, and explicit user confirmation.
+   - Add asset checkout and return using `specs/assets/asset-checkout.spec.md`, including mobile 2-3 tap access, button-backed voice confirmation, current checkout state, checkout history, checked-out filtering, and MCP-readable checkout history.
 3. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.

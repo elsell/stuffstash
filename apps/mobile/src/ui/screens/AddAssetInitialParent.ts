@@ -16,6 +16,24 @@ export type AddInitialParentRouteParams = {
 };
 
 export function addHereParams(asset: AssetDetailViewModel): AddInitialParentRouteParams {
+  return addHereRouteParams({
+    id: asset.id,
+    title: asset.title,
+    kind: asset.kind,
+    kindLabel: asset.kindLabel,
+    parentLocationTrailLabel: asset.parentLocationTrailLabel,
+    locationTrailLabel: asset.locationTrailLabel
+  });
+}
+
+export function addHereRouteParams(asset: {
+  readonly id: string;
+  readonly title: string;
+  readonly kind: AssetKind;
+  readonly kindLabel: string;
+  readonly parentLocationTrailLabel: string;
+  readonly locationTrailLabel: string;
+}): AddInitialParentRouteParams {
   if (asset.kind !== 'container' && asset.kind !== 'location') {
     throw new Error('Add-here parent must be a container or location.');
   }

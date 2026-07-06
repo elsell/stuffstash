@@ -168,7 +168,7 @@ func (s Service) createCustomFieldDefinition(ctx context.Context, input CreateCu
 	}
 
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -317,7 +317,7 @@ func (s Service) updateCustomFieldDefinition(ctx context.Context, input UpdateCu
 	}
 
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -425,7 +425,7 @@ func (s Service) customFieldDefinitionListResult(ctx context.Context, input List
 		},
 	})
 	if err := s.saveReadAuditRecord(ctx, appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

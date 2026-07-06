@@ -132,6 +132,35 @@ func auditRecord(id string, tenantID string, inventoryID string, action audit.Ac
 	return record
 }
 
+type fakeUserRepository struct {
+	users map[identity.PrincipalID]identity.User
+	err   error
+}
+
+func (f *fakeUserRepository) SaveUser(_ context.Context, user identity.User) error {
+	if f.err != nil {
+		return f.err
+	}
+	if f.users == nil {
+		f.users = map[identity.PrincipalID]identity.User{}
+	}
+	f.users[user.ID] = user
+	return nil
+}
+
+func (f *fakeUserRepository) UsersByID(_ context.Context, ids []identity.PrincipalID) (map[identity.PrincipalID]identity.User, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	users := map[identity.PrincipalID]identity.User{}
+	for _, id := range ids {
+		if user, ok := f.users[id]; ok {
+			users[id] = user
+		}
+	}
+	return users, nil
+}
+
 func (f *fakeOutbox) SaveTenantAndEnqueueOwnerGrant(_ context.Context, eventID string, item tenant.Tenant, principal identity.Principal, auditRecord audit.Record) error {
 	f.events = append(f.events, ports.AuthorizationOutboxEvent{
 		ID:          eventID,

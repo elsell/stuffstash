@@ -23,14 +23,14 @@ func (a App) GetTenant(ctx context.Context, input GetTenantInput) (tenant.Tenant
 		return tenant.Tenant{}, err
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
-		TenantID:    input.TenantID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionTenantViewed,
-		TargetType:  audit.TargetTenant,
-		TargetID:    item.ID.String(),
-		Metadata:    map[string]string{},
+		Principal:  input.Principal,
+		TenantID:   input.TenantID,
+		Source:     input.Source,
+		RequestID:  input.RequestID,
+		Action:     audit.ActionTenantViewed,
+		TargetType: audit.TargetTenant,
+		TargetID:   item.ID.String(),
+		Metadata:   map[string]string{},
 	}); err != nil {
 		return tenant.Tenant{}, err
 	}
@@ -70,13 +70,13 @@ func (a App) UpdateTenant(ctx context.Context, input UpdateTenantInput) (tenant.
 		return current, nil
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
-		TenantID:    input.TenantID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionTenantUpdated,
-		TargetType:  audit.TargetTenant,
-		TargetID:    updated.ID.String(),
+		Principal:  input.Principal,
+		TenantID:   input.TenantID,
+		Source:     input.Source,
+		RequestID:  input.RequestID,
+		Action:     audit.ActionTenantUpdated,
+		TargetType: audit.TargetTenant,
+		TargetID:   updated.ID.String(),
 		Metadata: map[string]string{
 			"name": updated.Name.String(),
 		},
@@ -124,13 +124,13 @@ func (a App) updateTenantLifecycle(ctx context.Context, input UpdateTenantLifecy
 	updated := current
 	updated.LifecycleState = to
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
-		TenantID:    input.TenantID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      action,
-		TargetType:  audit.TargetTenant,
-		TargetID:    updated.ID.String(),
+		Principal:  input.Principal,
+		TenantID:   input.TenantID,
+		Source:     input.Source,
+		RequestID:  input.RequestID,
+		Action:     action,
+		TargetType: audit.TargetTenant,
+		TargetID:   updated.ID.String(),
 		Metadata: map[string]string{
 			"previous_state":  current.LifecycleState.String(),
 			"lifecycle_state": updated.LifecycleState.String(),
@@ -167,13 +167,13 @@ func (a App) DeleteTenant(ctx context.Context, input UpdateTenantLifecycleInput)
 		return err
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
-		TenantID:    input.TenantID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionTenantDeleted,
-		TargetType:  audit.TargetTenant,
-		TargetID:    current.ID.String(),
+		Principal:  input.Principal,
+		TenantID:   input.TenantID,
+		Source:     input.Source,
+		RequestID:  input.RequestID,
+		Action:     audit.ActionTenantDeleted,
+		TargetType: audit.TargetTenant,
+		TargetID:   current.ID.String(),
 		Metadata: map[string]string{
 			"lifecycle_state": current.LifecycleState.String(),
 		},
@@ -210,7 +210,7 @@ func (a App) GetInventory(ctx context.Context, input GetInventoryInput) (invento
 		return inventory.Inventory{}, ErrNotFound
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -258,7 +258,7 @@ func (a App) UpdateInventory(ctx context.Context, input UpdateInventoryInput) (i
 		return current, nil
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -317,7 +317,7 @@ func (a App) updateInventoryLifecycle(ctx context.Context, input UpdateInventory
 	updated := item
 	updated.LifecycleState = to
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -361,7 +361,7 @@ func (a App) DeleteInventory(ctx context.Context, input UpdateInventoryLifecycle
 		return ErrNotFound
 	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

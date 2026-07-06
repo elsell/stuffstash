@@ -19,7 +19,7 @@ class FakeSettingsDiagnosticsProvider implements SettingsDiagnosticsProvider {
     return {
       apiBaseUrl: 'http://192.168.1.97:8090',
       appVersion: '0.0.0',
-      authenticationMode: 'local-development-token' as const
+      authenticationMode: 'oidc-sso' as const
     };
   }
 }
@@ -40,7 +40,7 @@ describe('SettingsQuery', () => {
       ],
       developerRows: [
         { label: 'API', value: 'http://192.168.1.97:8090' },
-        { label: 'Auth', value: 'Local development token' }
+        { label: 'Auth', value: 'OIDC SSO' }
       ]
     });
   });

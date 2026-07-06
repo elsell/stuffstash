@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
+	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -111,6 +114,79 @@ func TestDatabaseProviderCredentialVaultRejectsInvalidCredentialBoundary(t *test
 	}
 }
 
+func TestDatabaseImportJobSourceVaultTreatsExpiredSourceAsMissing(t *testing.T) {
+	t.Parallel()
+
+	scope := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		JobID:       importjob.ID("job-one"),
+	}
+	repository := &vaultImportSourceRepository{
+		record: ports.ImportJobSourceRecord{
+			Scope:     scope,
+			Sealed:    ports.SealedImportJobSource{KeyID: "key-one", Algorithm: ports.ProviderCredentialAlgorithmAES256GCM, Nonce: []byte("123456789012"), Ciphertext: []byte(`sealed:{"sourceType":"legacy_homebox","password":"secret"}`)},
+			ExpiresAt: time.Now().Add(-time.Minute),
+			CreatedAt: time.Now().Add(-2 * time.Minute),
+			UpdatedAt: time.Now().Add(-2 * time.Minute),
+		},
+		found: true,
+	}
+	vault := NewDatabaseImportJobSourceVault(repository, &vaultSealer{})
+
+	request, found, err := vault.ImportJobSourceRequest(context.Background(), scope)
+	if err != nil {
+		t.Fatalf("read expired import source: %v", err)
+	}
+	if found || request.Password != "" {
+		t.Fatalf("expected expired import source to be missing, found=%v request=%+v", found, request)
+	}
+	if !repository.deleted {
+		t.Fatalf("expected expired import source to be deleted")
+	}
+}
+
+func TestDatabaseImportJobSourceVaultPreservesApplyAttachmentByteFlag(t *testing.T) {
+	t.Parallel()
+
+	scope := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		JobID:       importjob.ID("job-one"),
+	}
+	now := time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC)
+	repository := &vaultImportSourceRepository{}
+	vault := NewDatabaseImportJobSourceVaultWithClock(repository, &vaultSealer{}, fixedClock{now: now})
+
+	err := vault.StoreImportJobSource(context.Background(), scope, ports.ImportSourceRequest{
+		SourceType:           importplan.SourceLegacyHomebox,
+		BaseURL:              "https://homebox.example.test/api/v1",
+		Username:             "owner@example.com",
+		Password:             "secret",
+		IncludeImages:        true,
+		FetchAttachmentBytes: true,
+		AllowPrivateNetwork:  true,
+		MaxAttachmentBytes:   1234,
+	}, now.Add(time.Minute), now)
+	if err != nil {
+		t.Fatalf("store import job source: %v", err)
+	}
+
+	request, found, err := vault.ImportJobSourceRequest(context.Background(), scope)
+	if err != nil {
+		t.Fatalf("read import job source: %v", err)
+	}
+	if !found {
+		t.Fatalf("expected stored import source")
+	}
+	if !request.IncludeImages || !request.FetchAttachmentBytes || !request.AllowPrivateNetwork {
+		t.Fatalf("expected import source flags to round trip, got %+v", request)
+	}
+	if request.SourceType != importplan.SourceLegacyHomebox || request.MaxAttachmentBytes != 1234 || request.Password != "secret" {
+		t.Fatalf("unexpected import source request: %+v", request)
+	}
+}
+
 func vaultScope() ports.ProviderCredentialScope {
 	return ports.ProviderCredentialScope{
 		TenantID:          tenant.ID("tenant-home"),
@@ -177,4 +253,65 @@ func (s *vaultSealer) UnsealProviderCredential(_ context.Context, _ ports.Provid
 		return nil, errors.New("invalid sealed material")
 	}
 	return append([]byte{}, raw...), nil
+}
+
+func (s *vaultSealer) SealImportJobSource(_ context.Context, _ ports.ImportJobSourceScope, raw []byte) (ports.SealedImportJobSource, error) {
+	if len(bytes.TrimSpace(raw)) == 0 {
+		return ports.SealedImportJobSource{}, ports.ErrInvalidProviderCredential
+	}
+	s.sealedRaw = append(s.sealedRaw, append([]byte{}, raw...))
+	return ports.SealedImportJobSource{
+		KeyID:      "key-one",
+		Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+		Nonce:      []byte("123456789012"),
+		Ciphertext: []byte("sealed:" + string(raw)),
+	}, nil
+}
+
+func (s *vaultSealer) UnsealImportJobSource(_ context.Context, _ ports.ImportJobSourceScope, sealed ports.SealedImportJobSource) ([]byte, error) {
+	if s.unsealErr != nil {
+		return nil, s.unsealErr
+	}
+	raw, ok := bytes.CutPrefix(sealed.Ciphertext, []byte("sealed:"))
+	if !ok {
+		return nil, errors.New("invalid sealed material")
+	}
+	return append([]byte{}, raw...), nil
+}
+
+type vaultImportSourceRepository struct {
+	record  ports.ImportJobSourceRecord
+	found   bool
+	deleted bool
+}
+
+func (r *vaultImportSourceRepository) ReplaceImportJobSource(_ context.Context, record ports.ImportJobSourceRecord) error {
+	r.record = record
+	r.found = true
+	return nil
+}
+
+func (r *vaultImportSourceRepository) ImportJobSource(context.Context, ports.ImportJobSourceScope) (ports.ImportJobSourceRecord, bool, error) {
+	return r.record, r.found, nil
+}
+
+func (r *vaultImportSourceRepository) DeleteImportJobSource(context.Context, ports.ImportJobSourceScope) (bool, error) {
+	r.deleted = true
+	return true, nil
+}
+
+func (r *vaultImportSourceRepository) DeleteExpiredImportJobSources(context.Context, time.Time) (int, error) {
+	return 0, nil
+}
+
+func (r *vaultImportSourceRepository) DeleteVacuumableImportJobSources(context.Context, []importjob.Status, time.Time) ([]ports.ImportJobSourceScope, error) {
+	return nil, nil
+}
+
+type fixedClock struct {
+	now time.Time
+}
+
+func (c fixedClock) Now() time.Time {
+	return c.now
 }

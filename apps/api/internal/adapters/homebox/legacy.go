@@ -256,16 +256,21 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 				if attachment.Type != "" && attachment.Type != "photo" {
 					continue
 				}
+				planned := importplan.Attachment{
+					SourceID:      attachment.ID,
+					AssetSourceID: "item:" + detail.ID,
+					FileName:      safeFileName(attachment.Title, defaultImageName(attachment.MIMEType)),
+					ContentType:   attachment.MIMEType,
+					Primary:       attachment.Primary,
+				}
+				if !request.FetchAttachmentBytes {
+					plan.Attachments = append(plan.Attachments, planned)
+					continue
+				}
 				content, contentType, err := importer.attachment(ctx, baseURL, token, detail.ID, attachment.ID)
 				if err != nil {
-					plan.Messages = append(plan.Messages, importplan.Message{
-						Code:       "attachment-unavailable",
-						Severity:   importplan.SeverityWarning,
-						Summary:    "Attachment could not be downloaded",
-						Detail:     safeHomeboxWarningDetail(err, "attachment could not be downloaded"),
-						SourceID:   attachment.ID,
-						SourceName: detail.Name,
-					})
+					planned.UnavailableReason = safeHomeboxWarningDetail(err, "attachment could not be downloaded")
+					plan.Attachments = append(plan.Attachments, planned)
 					continue
 				}
 				if !supportedImageType(contentType) {
@@ -279,15 +284,11 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 					})
 					continue
 				}
-				plan.Attachments = append(plan.Attachments, importplan.Attachment{
-					SourceID:      attachment.ID,
-					AssetSourceID: "item:" + detail.ID,
-					FileName:      safeFileName(attachment.Title, defaultImageName(contentType)),
-					ContentType:   contentType,
-					Content:       content,
-					SizeBytes:     len(content),
-					Primary:       attachment.Primary,
-				})
+				planned.FileName = safeFileName(attachment.Title, defaultImageName(contentType))
+				planned.ContentType = contentType
+				planned.Content = content
+				planned.SizeBytes = len(content)
+				plan.Attachments = append(plan.Attachments, planned)
 			}
 		}
 	}

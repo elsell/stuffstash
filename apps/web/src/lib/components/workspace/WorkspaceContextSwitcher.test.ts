@@ -142,6 +142,30 @@ describe('WorkspaceContextSwitcher', () => {
     expect(currentLinkContaining('Loft').getAttribute('aria-current')).toBe('page');
   });
 
+  it('keeps tenant switching discoverable for a single tenant', async () => {
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps()
+    });
+
+    buttonContaining('Garage').click();
+    await tick();
+
+    buttonContaining('Switch tenant').click();
+    await tick();
+
+    expect(document.body.textContent).toContain('Tenants');
+    expect(pressedButtonContaining('Household').getAttribute('aria-pressed')).toBe('true');
+    expect(document.body.textContent).toContain('1 inventory');
+
+    pressedButtonContaining('Household').click();
+    await tick();
+    await tick();
+
+    expect(document.body.textContent).toContain('Inventories');
+    expect(document.activeElement?.textContent).toContain('Garage');
+  });
+
   it('focuses the replacement inventory list after an async tenant switch', async () => {
     vi.useFakeTimers();
     component = mount(WorkspaceContextSwitcherHarness, {
@@ -249,6 +273,16 @@ function buttonContaining(text: string): HTMLButtonElement {
   );
   if (!button) {
     throw new Error(`Missing button containing ${text}`);
+  }
+  return button;
+}
+
+function pressedButtonContaining(text: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!button) {
+    throw new Error(`Missing pressed button containing ${text}`);
   }
   return button;
 }

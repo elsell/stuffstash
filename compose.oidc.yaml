@@ -1,5 +1,18 @@
 services:
   app:
+    environment:
+      STUFF_STASH_AUTH_MODE: ${STUFF_STASH_AUTH_MODE:-oidc}
+      STUFF_STASH_AUTHZ_MODE: ${STUFF_STASH_AUTHZ_MODE:-spicedb}
+      STUFF_STASH_CORS_ALLOWED_ORIGINS: ${STUFF_STASH_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      STUFF_STASH_SPICEDB_TLS_ENABLED: ${STUFF_STASH_SPICEDB_TLS_ENABLED:-false}
+      STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA: ${STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA:-true}
+      STUFF_STASH_SPICEDB_SCHEMA_PATH: ${STUFF_STASH_SPICEDB_SCHEMA_PATH:-/deploy/spicedb/schema.zed}
+      STUFF_STASH_OIDC_ISSUER: ${STUFF_STASH_OIDC_ISSUER:-http://dex:5556/dex}
+      STUFF_STASH_OIDC_CLIENT_ID: ${STUFF_STASH_OIDC_CLIENT_ID:-stuff-stash-local}
+      STUFF_STASH_OIDC_CLIENT_IDS: ${STUFF_STASH_OIDC_CLIENT_IDS:-stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local}
+      STUFF_STASH_OIDC_MOBILE_CLIENT_ID: ${STUFF_STASH_OIDC_MOBILE_CLIENT_ID:-stuff-stash-mobile-local}
+      STUFF_STASH_OIDC_MOBILE_REDIRECT_URI: ${STUFF_STASH_OIDC_MOBILE_REDIRECT_URI:-stuffstash://auth/callback}
+      STUFF_STASH_OIDC_MOBILE_SCOPES: ${STUFF_STASH_OIDC_MOBILE_SCOPES:-openid,email,profile,offline_access}
     depends_on:
       dex:
         condition: service_started
@@ -13,4 +26,4 @@ services:
     ports:
       - "${DEX_HTTP_PORT:-5556}:5556"
     volumes:
-      - ./deploy/local/dex/config.yaml:/etc/dex/config.yaml:ro
+      - ${DEX_CONFIG_PATH:-./deploy/local/dex/config.yaml}:/etc/dex/config.yaml:ro

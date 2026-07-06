@@ -7,10 +7,10 @@ import type {
   AssetAttachment,
   AssetLifecycleFilter,
   InventoryAccessRelationship,
-  ImportApplyResult,
-  ImportPreview,
+  ImportJob,
+  ImportJobCancellationMode,
   InvitationStatusFilter,
-  LegacyHomeboxImportRequest,
+  ImportSourceRequest,
   SearchRequest,
   SearchResult,
   SelectedAttachment,
@@ -22,6 +22,8 @@ import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import { fileToBase64 } from '$lib/application/fileEncoding';
+import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
+import { normalizeImportSourceRequest } from '$lib/application/workspaceImportRequest';
 import type {
   CustomAssetTypeDraft,
   CustomFieldDefinitionDraft,
@@ -363,43 +365,82 @@ export class StuffStashInventoryRepository
     }
   }
 
-  async previewLegacyHomeboxImport(
-    tenantId: string,
-    inventoryId: string,
-    input: LegacyHomeboxImportRequest
-  ): Promise<ImportPreview> {
-    this.observer.record('workspace.import_preview_started', { sourceType: input.sourceType });
+  async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
+    this.observer.record('workspace.import_jobs_load_started');
     try {
-      const preview = await this.client.previewLegacyHomeboxImport(tenantId, inventoryId, input);
-      this.observer.record('workspace.import_preview_completed', {
-        sourceType: input.sourceType,
-        assetCount: preview.counts.assets,
-        warningCount: preview.counts.warnings,
-        errorCount: preview.counts.errors
-      });
-      return preview;
+      const jobs = await this.client.listImportJobs(tenantId, inventoryId);
+      this.observer.record('workspace.import_jobs_loaded', { jobCount: jobs.length });
+      return jobs;
     } catch (error) {
-      this.observer.record('workspace.import_preview_failed', { sourceType: input.sourceType });
+      this.observer.record('workspace.import_jobs_load_failed');
       throw safeError(error);
     }
   }
 
-  async applyLegacyHomeboxImport(
+  async previewImportJob(tenantId: string, inventoryId: string, input: ImportSourceRequest): Promise<ImportJob> {
+    const request = normalizeImportSourceRequest(input);
+    this.observer.record('workspace.import_job_preview_started', { sourceType: request.sourceType });
+    try {
+      const job = await this.client.previewImportJob(tenantId, inventoryId, request);
+      this.observer.record('workspace.import_job_preview_completed', {
+        sourceType: request.sourceType,
+        assetCount: job.counts.assets,
+        warningCount: job.counts.warnings,
+        errorCount: job.counts.errors
+      });
+      return job;
+    } catch (error) {
+      this.observer.record('workspace.import_job_preview_failed', { sourceType: request.sourceType });
+      throw safeError(error);
+    }
+  }
+
+  async getImportJob(tenantId: string, inventoryId: string, jobId: string): Promise<ImportJob> {
+    return this.client.getImportJob(tenantId, inventoryId, jobId);
+  }
+
+  async startImportJob(
     tenantId: string,
     inventoryId: string,
-    input: LegacyHomeboxImportRequest
-  ): Promise<ImportApplyResult> {
-    this.observer.record('workspace.import_apply_started', { sourceType: input.sourceType });
+    jobId: string,
+    input: ImportSourceRequest
+  ): Promise<ImportJob> {
+    const request = normalizeImportSourceRequest(input);
+    this.observer.record('workspace.import_job_start_started', { sourceType: request.sourceType });
     try {
-      const result = await this.client.applyLegacyHomeboxImport(tenantId, inventoryId, input);
-      this.observer.record('workspace.import_apply_completed', {
-        sourceType: input.sourceType,
-        assetCount: result.counts.assetsCreated,
-        attachmentCount: result.counts.attachmentsCreated
-      });
-      return result;
+      const job = await this.client.startImportJob(tenantId, inventoryId, jobId, request);
+      this.observer.record('workspace.import_job_started', { sourceType: request.sourceType, jobId });
+      return job;
     } catch (error) {
-      this.observer.record('workspace.import_apply_failed', { sourceType: input.sourceType });
+      this.observer.record('workspace.import_job_start_failed', { sourceType: request.sourceType, jobId });
+      throw safeError(error);
+    }
+  }
+
+  async cancelImportJob(
+    tenantId: string,
+    inventoryId: string,
+    jobId: string,
+    mode: ImportJobCancellationMode
+  ): Promise<ImportJob> {
+    this.observer.record('workspace.import_job_cancel_started', { mode, jobId });
+    try {
+      const job = await this.client.cancelImportJob(tenantId, inventoryId, jobId, mode);
+      this.observer.record('workspace.import_job_cancel_requested', { mode, jobId });
+      return job;
+    } catch (error) {
+      this.observer.record('workspace.import_job_cancel_failed', { mode, jobId });
+      throw safeError(error);
+    }
+  }
+
+  async removeImportJobFromHistory(tenantId: string, inventoryId: string, jobId: string): Promise<void> {
+    this.observer.record('workspace.import_job_history_remove_started', { jobId });
+    try {
+      await this.client.removeImportJobFromHistory(tenantId, inventoryId, jobId);
+      this.observer.record('workspace.import_job_history_removed', { jobId });
+    } catch (error) {
+      this.observer.record('workspace.import_job_history_remove_failed', { jobId });
       throw safeError(error);
     }
   }
@@ -749,6 +790,9 @@ export class StuffStashInventoryRepository
 
 function safeError(error: unknown): Error {
   if (error instanceof StuffStashAPIError) {
+    if (error.status === 401) {
+      return new AuthenticationRequiredError(error.message);
+    }
     return new SafeAPIError(error.status, error.code, error.message);
   }
   if (error instanceof Error) {

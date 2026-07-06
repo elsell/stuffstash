@@ -84,6 +84,123 @@ describe('StuffStashClient', () => {
     expect(requests[1]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets?limit=5&lifecycleState=all&sort=updated_desc');
   });
 
+  it('maps durable import jobs and sends job actions through inventory scoped routes', async () => {
+    const requests: Request[] = [];
+    const jobEnvelope = {
+      data: {
+        id: 'job-one',
+        status: 'previewed',
+        actorId: 'owner',
+        source: {
+          type: 'legacy_homebox_csv',
+          name: 'Homebox CSV',
+          imageImport: 'unavailable',
+          fingerprint: 'sha256:test'
+        },
+        counts: {
+          fields: 1,
+          locations: 0,
+          assets: 1,
+          attachments: 0,
+          warnings: 1,
+          errors: 0,
+          fieldsCreated: 0,
+          fieldsExisting: 0,
+          locationsCreated: 0,
+          assetsCreated: 0,
+          assetsSkipped: 0,
+          attachmentsCreated: 0,
+          attachmentsSkipped: 0,
+          recordsDiscarded: 0,
+          sourceLinksDiscarded: 0
+        },
+        progress: {
+          phase: 'ready',
+          done: 2,
+          total: 2,
+          message: 'Preview ready',
+          updatedAt: '2026-07-06T12:00:00Z'
+        },
+        progressHistory: [
+          {
+            phase: 'ready',
+            done: 2,
+            total: 2,
+            message: 'Preview ready',
+            updatedAt: '2026-07-06T12:00:00Z'
+          }
+        ],
+        preview: {
+          fields: [{ key: 'homebox-source-id', displayName: 'Homebox Source ID', type: 'text' }],
+          locations: [{ sourceId: 'location:garage', kind: 'location', title: 'Garage', archived: false }],
+          assets: [{ sourceId: 'source:drill', kind: 'item', title: 'Drill', archived: false }],
+          attachments: [],
+          messages: [{ code: 'csv-images-unavailable', severity: 'warning', summary: 'Images are unavailable' }],
+          fieldsTruncated: false,
+          locationsTruncated: false,
+          assetsTruncated: false,
+          attachmentsTruncated: false,
+          messagesTruncated: false
+        },
+        createdAt: '2026-07-06T12:00:00Z',
+        updatedAt: '2026-07-06T12:00:00Z',
+        resources: [{ resourceType: 'asset', resourceId: 'asset-one', sourceEntityType: 'asset', sourceEntityId: 'source:drill', createdAt: '2026-07-06T12:00:01Z' }],
+        messages: [{ code: 'csv-images-unavailable', severity: 'warning', summary: 'Images are unavailable' }]
+      },
+      meta: {}
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'GET' && request.url.endsWith('/imports/jobs')) {
+          return Response.json({ data: { jobs: [jobEnvelope.data] }, meta: {} });
+        }
+        if (request.method === 'DELETE') {
+          return new Response(null, { status: 204 });
+        }
+        return Response.json(jobEnvelope);
+      }
+    });
+    const source = { sourceType: 'legacy_homebox_csv' as const, fileName: 'homebox.csv', contentBase64: 'SEIuCg==' };
+
+    await expect(client.previewImportJob('tenant-one', 'inventory-one', source, { requestId: 'preview-request' })).resolves.toMatchObject({
+      id: 'job-one',
+      status: 'previewed',
+      actorId: 'owner',
+      source: { fingerprint: 'sha256:test' },
+      counts: { assets: 1, recordsDiscarded: 0 },
+      preview: { fields: [{ key: 'homebox-source-id' }], locations: [{ title: 'Garage' }], assets: [{ title: 'Drill' }] },
+      resources: [{ resourceId: 'asset-one', sourceEntityId: 'source:drill' }],
+      progress: { phase: 'ready' },
+      progressHistory: [{ phase: 'ready' }],
+      messages: [{ code: 'csv-images-unavailable' }]
+    });
+    await expect(client.listImportJobs('tenant-one', 'inventory-one')).resolves.toHaveLength(1);
+    await client.getImportJob('tenant-one', 'inventory-one', 'job-one');
+    await client.startImportJob('tenant-one', 'inventory-one', 'job-one', source, { requestId: 'start-request' });
+    await client.cancelImportJob('tenant-one', 'inventory-one', 'job-one', 'discard_partial_progress', { requestId: 'cancel-request' });
+    await expect(
+      client.removeImportJobFromHistory('tenant-one', 'inventory-one', 'job-one', { requestId: 'remove-request' })
+    ).resolves.toBeUndefined();
+
+    expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
+      'POST /tenants/tenant-one/inventories/inventory-one/imports/jobs/preview',
+      'GET /tenants/tenant-one/inventories/inventory-one/imports/jobs',
+      'GET /tenants/tenant-one/inventories/inventory-one/imports/jobs/job-one',
+      'POST /tenants/tenant-one/inventories/inventory-one/imports/jobs/job-one/start',
+      'POST /tenants/tenant-one/inventories/inventory-one/imports/jobs/job-one/cancel',
+      'DELETE /tenants/tenant-one/inventories/inventory-one/imports/jobs/job-one'
+    ]);
+    expect(await requests[4]?.json()).toEqual({ mode: 'discard_partial_progress' });
+    expect(requests[0]?.headers.get('X-Request-ID')).toBe('preview-request');
+    expect(requests[3]?.headers.get('X-Request-ID')).toBe('start-request');
+    expect(requests[4]?.headers.get('X-Request-ID')).toBe('cancel-request');
+    expect(requests[5]?.headers.get('X-Request-ID')).toBe('remove-request');
+  });
+
   it('maps asset custom type and custom field values through create and update', async () => {
     const requests: Request[] = [];
     const assetEnvelope = {
@@ -784,13 +901,14 @@ describe('StuffStashClient', () => {
     expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
   });
 
-  it('lists tenant and inventory audit records through generated paths', async () => {
+  it('lists tenant, inventory, and asset audit records through generated paths', async () => {
     const requests: Request[] = [];
     const record = {
       id: 'audit-one',
       tenantId: 'tenant-one',
       inventoryId: 'inventory-one',
       principalId: 'principal-one',
+      principal: { id: 'principal-one', email: 'alex@example.test' },
       action: 'asset.created',
       source: 'api',
       targetType: 'asset',
@@ -820,10 +938,15 @@ describe('StuffStashClient', () => {
       items: [record],
       pagination: { limit: 1, nextCursor: 'next-page', hasMore: true }
     });
+    await expect(client.listAssetAuditRecords('tenant-one', 'inventory-one', 'asset-one', 2)).resolves.toEqual({
+      items: [record],
+      pagination: { limit: 1, nextCursor: 'next-page', hasMore: true }
+    });
 
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'GET http://api.local/tenants/tenant-one/audit-records?limit=1',
-      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/audit-records?limit=1&cursor=next-page'
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/audit-records?limit=1&cursor=next-page',
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/audit-records?limit=2'
     ]);
   });
 
@@ -946,6 +1069,39 @@ describe('StuffStashClient', () => {
     });
   });
 
+  it('awaits an async refreshed token before sending API requests', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: async () => 'refreshed-id-token',
+      fetch: async (input, init) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({ data: { id: 'principal-1' } });
+      }
+    });
+
+    await expect(client.me()).resolves.toMatchObject({ id: 'principal-1' });
+    expect(requests[0]?.headers.get('Authorization')).toBe('Bearer refreshed-id-token');
+  });
+
+  it('does not send API requests when mobile auth cannot provide a token', async () => {
+    let fetchCalled = false;
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: async () => {
+        throw new Error('Sign in to Stuff Stash.');
+      },
+      fetch: async () => {
+        fetchCalled = true;
+        return Response.json({ data: { id: 'principal-1' } });
+      }
+    });
+
+    await expect(client.me()).rejects.toThrow('Sign in to Stuff Stash.');
+    expect(fetchCalled).toBe(false);
+  });
+
   it('preserves safe validation details when API errors are generic', async () => {
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',
@@ -997,6 +1153,20 @@ describe('StuffStashClient', () => {
       status: 500,
       code: 'internal_error',
       message: 'Internal server error.'
+    });
+  });
+
+  it('includes status when API errors have no safe envelope message', async () => {
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async () => Response.json({}, { status: 404 })
+    });
+
+    await expect(client.listAssetAuditRecords('tenant-one', 'inventory-one', 'asset-one')).rejects.toMatchObject({
+      status: 404,
+      code: 'request_failed',
+      message: 'Request failed with status 404.'
     });
   });
 });

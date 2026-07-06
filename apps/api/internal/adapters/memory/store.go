@@ -5,6 +5,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -14,6 +16,7 @@ import (
 
 type Store struct {
 	mu               sync.RWMutex
+	users            map[identity.PrincipalID]identity.User
 	tenants          map[tenant.ID]tenant.Tenant
 	inventories      map[inventory.InventoryID]inventory.Inventory
 	accessGrants     map[string]ports.InventoryAccessGrant
@@ -28,6 +31,10 @@ type Store struct {
 	providerCreds    map[string]ports.ProviderCredentialRecord
 	realtimeSessions map[string]ports.RealtimeSessionRecord
 	actionPlans      map[string]ports.ActionPlanRecord
+	importJobs       map[string]importjob.Record
+	importJobSources map[string]ports.ImportJobSourceRecord
+	importLinks      map[string]ports.ImportSourceLink
+	importResources  map[string]ports.ImportJobResource
 	blobs            map[media.StorageKey][]byte
 	blobDeletions    map[string]ports.BlobDeletionEvent
 	auditRecords     map[audit.ID]audit.Record
@@ -36,6 +43,7 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
+		users:            map[identity.PrincipalID]identity.User{},
 		tenants:          map[tenant.ID]tenant.Tenant{},
 		inventories:      map[inventory.InventoryID]inventory.Inventory{},
 		accessGrants:     map[string]ports.InventoryAccessGrant{},
@@ -50,6 +58,10 @@ func NewStore() *Store {
 		providerCreds:    map[string]ports.ProviderCredentialRecord{},
 		realtimeSessions: map[string]ports.RealtimeSessionRecord{},
 		actionPlans:      map[string]ports.ActionPlanRecord{},
+		importJobs:       map[string]importjob.Record{},
+		importJobSources: map[string]ports.ImportJobSourceRecord{},
+		importLinks:      map[string]ports.ImportSourceLink{},
+		importResources:  map[string]ports.ImportJobResource{},
 		blobs:            map[media.StorageKey][]byte{},
 		blobDeletions:    map[string]ports.BlobDeletionEvent{},
 		auditRecords:     map[audit.ID]audit.Record{},

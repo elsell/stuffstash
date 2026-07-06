@@ -3,10 +3,11 @@
 	import { cn, type WithElementRef } from "$lib/utils.js";
 
 	type InputType = Exclude<HTMLInputTypeAttribute, "file">;
+	type BaseProps = Omit<HTMLInputAttributes, "type" | "value" | "files">;
 
 	type Props = WithElementRef<
-		Omit<HTMLInputAttributes, "type"> &
-			({ type: "file"; files?: FileList } | { type?: InputType; files?: undefined })
+		| (BaseProps & { type: "file"; files?: FileList; value?: never })
+		| (BaseProps & { type?: InputType; value?: HTMLInputAttributes["value"]; files?: never })
 	>;
 
 	let {
@@ -30,7 +31,6 @@
 		)}
 		type="file"
 		bind:files
-		bind:value
 		{...restProps}
 	/>
 {:else}

@@ -73,28 +73,24 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}", inventoryPath, "Bearer dev:owner", map[string]any{"name": "Updated Tools"}, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/archive", inventoryPath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/restore", inventoryPath+"/restore", "Bearer dev:owner", nil, http.StatusOK)
-	homeboxCSV := "HB.import_ref,HB.location,HB.tags,HB.asset_id,HB.archived,HB.url,HB.name,HB.quantity,HB.description,HB.insured,HB.notes,HB.purchase_price,HB.purchase_from,HB.purchase_time,HB.manufacturer,HB.model_number,HB.serial_number,HB.lifetime_warranty,HB.warranty_expires,HB.warranty_details,HB.sold_to,HB.sold_price,HB.sold_time,HB.sold_notes\n" +
-		"legacy-drill,Garage Shelf,tools; battery,HB-100,false,,Imported Drill,1,Cordless drill,true,Keep charger,79.99,Hardware Store,2024-01-02,DeWalt,DCD777,SN123,false,0001-11-08,Warranty card,,,,\n"
+	importInventoryCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories", tenantPath+"/inventories", "Bearer dev:owner", map[string]any{"name": "Imports"}, http.StatusCreated)
+	importInventoryID := decodeScenarioInventory(t, importInventoryCreate).Data.ID
+	importInventoryPath := tenantPath + "/inventories/" + importInventoryID
+	homeboxCSV := "HB.name\nImported Drill\n"
 	homeboxImportBody := map[string]any{"sourceType": "legacy_homebox_csv", "fileName": "homebox.csv", "contentBase64": base64.StdEncoding.EncodeToString([]byte(homeboxCSV))}
-	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/preview", inventoryPath+"/imports/legacy-homebox/preview", "Bearer dev:owner", homeboxImportBody, http.StatusOK)
-	homeboxApply := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply", inventoryPath+"/imports/legacy-homebox/apply", "Bearer dev:owner", homeboxImportBody, http.StatusOK)
-	importResult := decodeImportApply(t, homeboxApply)
-	if importResult.Data.Counts.LocationsCreated != 1 || importResult.Data.Counts.AssetsCreated != 1 {
-		t.Fatalf("expected Homebox CSV apply to create one location and one asset, got %+v", importResult.Data.Counts)
-	}
-	homeboxRepeat := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply", inventoryPath+"/imports/legacy-homebox/apply", "Bearer dev:owner", homeboxImportBody, http.StatusOK)
-	repeatResult := decodeImportApply(t, homeboxRepeat)
-	if repeatResult.Data.Counts.LocationsCreated != 0 || repeatResult.Data.Counts.AssetsCreated != 0 || repeatResult.Data.Counts.AssetsSkipped < 2 {
-		t.Fatalf("expected repeated Homebox CSV apply to skip duplicate location and item, got %+v", repeatResult.Data.Counts)
-	}
-	importedAssets := decodeAssetList(t, coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets", inventoryPath+"/assets?limit=20", "Bearer dev:owner", nil, http.StatusOK)).Data
-	importedItemID := scenarioAssetIDByTitle(importedAssets, "Imported Drill")
-	importedLocationID := scenarioAssetIDByTitle(importedAssets, "Garage Shelf")
-	if importedItemID == "" || importedLocationID == "" {
-		t.Fatalf("expected imported Homebox assets in list, got %+v", importedAssets)
-	}
-	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", inventoryPath+"/assets/"+importedItemID, "Bearer dev:owner", nil, http.StatusNoContent)
-	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", inventoryPath+"/assets/"+importedLocationID, "Bearer dev:owner", nil, http.StatusNoContent)
+	importJobPreview := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview", importInventoryPath+"/imports/jobs/preview", "Bearer dev:owner", homeboxImportBody, http.StatusOK)
+	importJobID := decodeImportJob(t, importJobPreview).Data.ID
+	importJobPath := importInventoryPath + "/imports/jobs/" + importJobID
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs", importInventoryPath+"/imports/jobs", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}", importJobPath, "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start", importJobPath+"/start", "Bearer dev:owner", homeboxImportBody, http.StatusOK)
+	_ = waitForImportJobStatus(t, server, importJobPath, "failed")
+	cancelImportJobPreview := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview", importInventoryPath+"/imports/jobs/preview", "Bearer dev:owner", homeboxImportBody, http.StatusOK)
+	cancelImportJobID := decodeImportJob(t, cancelImportJobPreview).Data.ID
+	cancelImportJobPath := importInventoryPath + "/imports/jobs/" + cancelImportJobID
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/cancel", cancelImportJobPath+"/cancel", "Bearer dev:owner", map[string]any{"mode": "keep_partial_progress"}, http.StatusOK)
+	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}", importJobPath, "Bearer dev:owner", nil, http.StatusNoContent)
+	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}", importInventoryPath, "Bearer dev:owner", nil, http.StatusNoContent)
 
 	tenantType := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/custom-asset-types", tenantPath+"/custom-asset-types", "Bearer dev:owner", map[string]any{"key": "medicine", "displayName": "Medicine"}, http.StatusCreated)
 	tenantTypeID := decodeCustomAssetType(t, tenantType).Data.ID
@@ -188,6 +184,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	undoAssetCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/assets", inventoryPath+"/assets", "Bearer dev:owner", map[string]any{"kind": "item", "title": "Undo Target"}, http.StatusCreated)
 	undoAssetID := decodeAsset(t, undoAssetCreate).Data.ID
 	auditInventory := coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", inventoryPath+"/audit-records?limit=200", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records", inventoryPath+"/assets/"+undoAssetID+"/audit-records?limit=20", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/audit-records", tenantPath+"/audit-records?limit=50", "Bearer dev:owner", nil, http.StatusOK)
 	operationID := operationIDForTarget(t, decodeAuditRecordList(t, auditInventory).Data, undoAssetID)
 	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo", inventoryPath+"/undoable-operations/"+operationID+"/undo", "Bearer dev:owner", nil, http.StatusOK)
@@ -233,40 +230,12 @@ type scenarioRequest struct {
 	body     any
 }
 
-type importApplyBody struct {
-	Data importApplyResponse `json:"data"`
-	Meta responseMeta        `json:"meta"`
-}
-
-type importApplyResponse struct {
-	Counts importApplyCounts `json:"counts"`
-}
-
-type importApplyCounts struct {
-	FieldsCreated      int `json:"fieldsCreated"`
-	FieldsExisting     int `json:"fieldsExisting"`
-	LocationsCreated   int `json:"locationsCreated"`
-	AssetsCreated      int `json:"assetsCreated"`
-	AssetsSkipped      int `json:"assetsSkipped"`
-	AttachmentsCreated int `json:"attachmentsCreated"`
-	AttachmentsSkipped int `json:"attachmentsSkipped"`
-}
-
-func decodeImportApply(t *testing.T, response *httptest.ResponseRecorder) importApplyBody {
+func decodeImportJob(t *testing.T, response *httptest.ResponseRecorder) importJobResponseEnvelope {
 	t.Helper()
 
-	var body importApplyBody
+	var body importJobResponseEnvelope
 	decodeBody(t, response, &body)
 	return body
-}
-
-func scenarioAssetIDByTitle(items []assetResponse, title string) string {
-	for _, item := range items {
-		if item.Title == title {
-			return item.ID
-		}
-	}
-	return ""
 }
 
 func realUseAdversarialFixture(t *testing.T) adversarialFixture {
@@ -370,8 +339,12 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/archive", path: inventoryPath + "/archive"},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/restore", path: inventoryPath + "/restore"},
 		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}", path: inventoryPath},
-		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/preview", path: inventoryPath + "/imports/legacy-homebox/preview", body: homeboxImportBody},
-		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/legacy-homebox/apply", path: inventoryPath + "/imports/legacy-homebox/apply", body: homeboxImportBody},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs", path: inventoryPath + "/imports/jobs"},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview", path: inventoryPath + "/imports/jobs/preview", body: homeboxImportBody},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}", path: inventoryPath + "/imports/jobs/job-one"},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start", path: inventoryPath + "/imports/jobs/job-one/start", body: homeboxImportBody},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/cancel", path: inventoryPath + "/imports/jobs/job-one/cancel", body: map[string]any{"mode": "discard_partial_progress"}},
+		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}", path: inventoryPath + "/imports/jobs/job-one"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets", path: inventoryPath + "/assets", body: map[string]any{"kind": "item", "title": "Blocked"}},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets", path: inventoryPath + "/assets?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", path: assetPath},
@@ -430,6 +403,7 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}", path: inventoryFieldPath},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/audit-records", path: tenantPath + "/audit-records?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", path: inventoryPath + "/audit-records?limit=10"},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records", path: assetPath + "/audit-records?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/search/assets", path: tenantPath + "/search/assets?q=Drill&limit=10"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo", path: inventoryPath + "/undoable-operations/" + operationID + "/undo"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo", path: inventoryPath + "/undoable-operations/" + operationID + "/redo"},

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
 import { MobileComposition } from '../../bootstrap/mobileComposition';
 import {
+  appServicesStateAfterAuthenticationRequired,
   appServicesStateAfterReset,
   appServicesStateAfterStartupError,
   appServicesStateFromOnboardingStart
@@ -20,7 +21,6 @@ describe('AppServicesGate', () => {
   it('builds app services when onboarding is complete', () => {
     const profile = {
       apiBaseUrl: 'http://localhost:8080',
-      devToken: 'dev:user-1',
       tenantId: 'tenant-home'
     };
 
@@ -44,6 +44,18 @@ describe('AppServicesGate', () => {
     expect(appServicesStateAfterReset()).toEqual({
       status: 'onboarding',
       onboardingState: { step: 'instance' }
+    });
+  });
+
+  it('returns to sign-in while preserving the connection profile after auth loss', () => {
+    const profile = {
+      apiBaseUrl: 'http://localhost:8080',
+      tenantId: 'tenant-home'
+    };
+
+    expect(appServicesStateAfterAuthenticationRequired(profile)).toEqual({
+      status: 'onboarding',
+      onboardingState: { step: 'signIn', profile }
     });
   });
 });

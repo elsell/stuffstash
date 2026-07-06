@@ -77,6 +77,7 @@ const (
 	EventBlobDeletionOutboxFailed             EventName = "blob_deletion_outbox.failed"
 	EventBlobDeletionOutboxDeadLettered       EventName = "blob_deletion_outbox.dead_lettered"
 	EventAuditRecordsListed                   EventName = "audit_record.listed"
+	EventAuditPrincipalResolutionFailed       EventName = "audit_principal.resolution_failed"
 	EventUndoableOperationUndone              EventName = "undoable_operation.undone"
 	EventUndoableOperationRedone              EventName = "undoable_operation.redone"
 	EventAuthorizationOutboxDrained           EventName = "authorization_outbox.drained"
@@ -94,6 +95,19 @@ const (
 	EventProviderProfileTested                EventName = "provider_profile.tested"
 	EventVoiceProviderConfigurationUpdated    EventName = "voice_provider_configuration.updated"
 	EventRealtimeVoiceFailed                  EventName = "realtime_voice.failed"
+	EventImportJobPreviewed                   EventName = "import_job.previewed"
+	EventImportJobStarted                     EventName = "import_job.started"
+	EventImportJobSourceFingerprintMismatch   EventName = "import_job.source_fingerprint_mismatch"
+	EventImportJobCancellationRequested       EventName = "import_job.cancellation_requested"
+	EventImportJobHistoryRemoved              EventName = "import_job.history_removed"
+	EventImportJobProgressUpdated             EventName = "import_job.progress_updated"
+	EventImportJobRecoveryClaimed             EventName = "import_job.recovery_claimed"
+	EventImportJobDiscardCleanupCompleted     EventName = "import_job.discard_cleanup_completed"
+	EventImportJobDiscardCleanupFailed        EventName = "import_job.discard_cleanup_failed"
+	EventImportJobSourceLinkDuplicateSkipped  EventName = "import_job.source_link_duplicate_skipped"
+	EventImportJobWorkerFailed                EventName = "import_job.worker_failed"
+	EventImportJobCredentialVacuumed          EventName = "import_job.credential_vacuumed"
+	EventImportJobCredentialVacuumFailed      EventName = "import_job.credential_vacuum_failed"
 )
 
 type Event struct {

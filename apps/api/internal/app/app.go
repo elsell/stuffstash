@@ -18,6 +18,7 @@ type App struct {
 	observer                    ports.Observer
 	auth                        ports.Authenticator
 	authorizer                  ports.Authorizer
+	users                       ports.UserRepository
 	tenants                     ports.TenantRepository
 	tenantUnitOfWork            ports.TenantUnitOfWork
 	inventories                 ports.InventoryRepository
@@ -48,6 +49,12 @@ type App struct {
 	realtimeSessions            ports.RealtimeSessionRepository
 	actionPlans                 ports.ActionPlanRepository
 	importSources               ports.ImportSourceReader
+	importJobs                  ports.ImportJobRepository
+	importSourceVault           ports.ImportJobSourceVault
+	importLinks                 ports.ImportLinkRepository
+	importAssetUnitOfWork       ports.ImportAssetUnitOfWork
+	importAttachmentUnitOfWork  ports.ImportAttachmentUnitOfWork
+	importWorker                ports.ImportWorker
 	ids                         ports.IDGenerator
 	clock                       ports.Clock
 	outboxDrainLimit            int
@@ -59,6 +66,7 @@ type App struct {
 	defaultPageLimit            int
 	maxPageLimit                int
 	maxAttachmentBytes          int
+	importJobTimeout            time.Duration
 	primaryThumbnailWarmLimit   int
 	primaryThumbnailWarmTimeout time.Duration
 	assetService                assetapp.Service
@@ -76,6 +84,7 @@ type Dependencies struct {
 	Observer                        ports.Observer
 	Auth                            ports.Authenticator
 	Authorizer                      ports.Authorizer
+	Users                           ports.UserRepository
 	Tenants                         ports.TenantRepository
 	TenantUnitOfWork                ports.TenantUnitOfWork
 	Inventories                     ports.InventoryRepository
@@ -106,6 +115,12 @@ type Dependencies struct {
 	RealtimeSessions                ports.RealtimeSessionRepository
 	ActionPlans                     ports.ActionPlanRepository
 	ImportSources                   ports.ImportSourceReader
+	ImportJobs                      ports.ImportJobRepository
+	ImportSourceVault               ports.ImportJobSourceVault
+	ImportLinks                     ports.ImportLinkRepository
+	ImportAssetUnitOfWork           ports.ImportAssetUnitOfWork
+	ImportAttachmentUnitOfWork      ports.ImportAttachmentUnitOfWork
+	ImportWorker                    ports.ImportWorker
 	IDs                             ports.IDGenerator
 	Clock                           ports.Clock
 	AuthorizationOutboxDrainLimit   int
@@ -117,6 +132,7 @@ type Dependencies struct {
 	DefaultPageLimit                int
 	MaxPageLimit                    int
 	MaxAttachmentBytes              int
+	ImportJobTimeout                time.Duration
 	PrimaryThumbnailWarmLimit       int
 	PrimaryThumbnailWarmConcurrency int
 	PrimaryThumbnailWarmTimeout     time.Duration
@@ -154,6 +170,7 @@ func New(deps Dependencies) App {
 		observer:                    observer,
 		auth:                        deps.Auth,
 		authorizer:                  deps.Authorizer,
+		users:                       deps.Users,
 		tenants:                     deps.Tenants,
 		tenantUnitOfWork:            deps.TenantUnitOfWork,
 		inventories:                 deps.Inventories,
@@ -184,6 +201,12 @@ func New(deps Dependencies) App {
 		realtimeSessions:            deps.RealtimeSessions,
 		actionPlans:                 deps.ActionPlans,
 		importSources:               deps.ImportSources,
+		importJobs:                  deps.ImportJobs,
+		importSourceVault:           deps.ImportSourceVault,
+		importLinks:                 deps.ImportLinks,
+		importAssetUnitOfWork:       deps.ImportAssetUnitOfWork,
+		importAttachmentUnitOfWork:  deps.ImportAttachmentUnitOfWork,
+		importWorker:                deps.ImportWorker,
 		ids:                         ids,
 		clock:                       clock,
 		outboxDrainLimit:            deps.AuthorizationOutboxDrainLimit,
@@ -195,6 +218,7 @@ func New(deps Dependencies) App {
 		defaultPageLimit:            defaultPageLimit,
 		maxPageLimit:                maxPageLimit,
 		maxAttachmentBytes:          normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
+		importJobTimeout:            normalizeImportJobTimeout(deps.ImportJobTimeout),
 		primaryThumbnailWarmLimit:   normalizePrimaryThumbnailWarmLimit(deps.PrimaryThumbnailWarmLimit),
 		primaryThumbnailWarmTimeout: normalizePrimaryThumbnailWarmTimeout(deps.PrimaryThumbnailWarmTimeout),
 		speechToText:                deps.SpeechToText,
@@ -250,6 +274,11 @@ func New(deps Dependencies) App {
 	return app
 }
 
+func (a App) WithImportWorker(worker ports.ImportWorker) App {
+	a.importWorker = worker
+	return a
+}
+
 type defaultIDGenerator struct{}
 
 func (defaultIDGenerator) NewID() string {
@@ -265,6 +294,13 @@ func normalizeMaxAttachmentBytes(maxBytes int) int {
 		return 25 * 1024 * 1024
 	}
 	return maxBytes
+}
+
+func normalizeImportJobTimeout(timeout time.Duration) time.Duration {
+	if timeout <= 0 {
+		return 15 * time.Minute
+	}
+	return timeout
 }
 
 func normalizePrimaryThumbnailWarmLimit(limit int) int {
@@ -333,8 +369,22 @@ func (a App) Authenticate(ctx context.Context, authorizationHeader string) (iden
 		})
 		return identity.Principal{}, err
 	}
+	if err := a.saveAuthenticatedUser(ctx, principal); err != nil {
+		return identity.Principal{}, err
+	}
 
 	return principal, nil
+}
+
+func (a App) saveAuthenticatedUser(ctx context.Context, principal identity.Principal) error {
+	if a.users == nil {
+		return nil
+	}
+	user, ok := identity.NewUser(principal.ID, principal.Email)
+	if !ok {
+		return nil
+	}
+	return a.users.SaveUser(ctx, user)
 }
 
 func (a App) Health(ctx context.Context) HealthStatus {

@@ -17,6 +17,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
+	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -696,10 +697,11 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		fakeDirectUploads.blobs = store
 	}
 
-	return app.New(app.Dependencies{
+	application := app.New(app.Dependencies{
 		Observer:                  &fakeObserver{},
 		Auth:                      auth.NewLocalDevAuthenticator(),
 		Authorizer:                authorizer,
+		Users:                     store,
 		Tenants:                   store,
 		TenantUnitOfWork:          store,
 		Inventories:               store,
@@ -729,8 +731,13 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		ProviderProfileTester:     httpTestProviderProfileTester{},
 		RealtimeSessions:          store,
 		ImportSources:             homebox.NewLegacyImporter(nil),
+		ImportJobs:                store,
+		ImportSourceVault:         newHTTPTestImportSourceVault(store),
+		ImportLinks:               store,
+		ImportAssetUnitOfWork:     store,
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})
+	return application.WithImportWorker(importworker.NewInProcess(application, nil))
 }
 
 type httpFakeImageProcessor struct {

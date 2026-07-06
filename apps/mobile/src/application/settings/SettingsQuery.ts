@@ -6,7 +6,7 @@ export type SettingsPrincipal = {
 export type SettingsDiagnostics = {
   readonly apiBaseUrl: string;
   readonly appVersion: string;
-  readonly authenticationMode: 'local-development-token' | 'unconfigured';
+  readonly authenticationMode: 'oidc-sso' | 'unconfigured';
 };
 
 export type SettingsRowViewModel = {
@@ -58,8 +58,8 @@ export class SettingsQuery {
 
 function labelAuthenticationMode(mode: SettingsDiagnostics['authenticationMode']): string {
   switch (mode) {
-    case 'local-development-token':
-      return 'Local development token';
+    case 'oidc-sso':
+      return 'OIDC SSO';
     case 'unconfigured':
       return 'Not configured';
   }

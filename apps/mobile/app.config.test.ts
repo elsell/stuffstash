@@ -7,7 +7,6 @@ describe('app config', () => {
   it('mirrors mobile runtime configuration into Expo extra', () => {
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_API_BASE_URL', 'http://192.168.1.117:8080');
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_TENANT_ID', 'tenant-home');
-    vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN', 'dev:owner');
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED', 'true');
     delete require.cache[require.resolve('./app.config.js')];
 
@@ -16,8 +15,9 @@ describe('app config', () => {
     expect(config.expo.extra.stuffStash).toEqual({
       apiBaseUrl: 'http://192.168.1.117:8080',
       tenantId: 'tenant-home',
-      devToken: 'dev:owner',
       voiceDeveloperDiagnosticsEnabled: 'true'
     });
+    expect(config.expo.plugins).toContain('expo-secure-store');
+    expect(config.expo.plugins).toContain('expo-web-browser');
   });
 });

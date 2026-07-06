@@ -1,4 +1,8 @@
 import { StuffStashClient } from '@stuff-stash/api-client';
+import * as SecureStore from 'expo-secure-store';
+import { ApiMobileAuthMetadataGateway } from '../adapters/auth/ApiMobileAuthMetadataGateway';
+import { ExpoOidcNativeClient } from '../adapters/auth/ExpoOidcNativeClient';
+import { ExpoSecureAuthSessionStore } from '../adapters/auth/ExpoSecureAuthSessionStore';
 import { ApiAssetAuditHistoryRepository } from '../adapters/audit/ApiAssetAuditHistoryRepository';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
@@ -20,6 +24,7 @@ import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
+import { InventoryMapQuery } from '../application/assets/InventoryMapQuery';
 import { MoveAssetCommand } from '../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../application/assets/UpdateAssetCommand';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
@@ -39,6 +44,10 @@ import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
 import { SettingsQuery } from '../application/settings/SettingsQuery';
 import { VoiceInteractionPreviewQuery } from '../application/voice/VoiceInteractionPreviewQuery';
 import { RealtimeVoiceSessionController } from '../application/voice/RealtimeVoiceSession';
+import {
+  MobileAuthenticationRequiredError,
+  MobileAuthSessionController
+} from '../application/auth/MobileAuthSession';
 import { loadMobileRuntimeConfigSeed } from '../config/mobileRuntimeConfig';
 import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
 
@@ -54,6 +63,7 @@ export type MobileComposition = {
   readonly moveAssetCommand: MoveAssetCommand;
   readonly updateAssetCommand: UpdateAssetCommand;
   readonly inventoryAssetsQuery: InventoryAssetsQuery;
+  readonly inventoryMapQuery: InventoryMapQuery;
   readonly createAssetCommand: CreateAssetCommand;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
   readonly addAssetDraftStore: InMemoryAddAssetDraftStore;
@@ -67,11 +77,21 @@ export type MobileComposition = {
   readonly testProviderProfileCommand: TestProviderProfileCommand;
   readonly voiceInteractionPreviewQuery: VoiceInteractionPreviewQuery;
   readonly realtimeVoiceSessionController: RealtimeVoiceSessionController;
+  readonly authSessionController: MobileAuthSessionController;
   readonly voiceDeveloperDiagnosticsEnabled: boolean;
+};
+
+export type MobileCompositionOptions = {
+  readonly onAuthenticationRequired?: () => void;
 };
 
 const connectionProfiles = new FileSystemConnectionProfileStore();
 const runtimeSeed = loadMobileRuntimeConfigSeed();
+const authSessionController = new MobileAuthSessionController(
+  new ExpoSecureAuthSessionStore(SecureStore),
+  new ApiMobileAuthMetadataGateway(),
+  new ExpoOidcNativeClient()
+);
 
 export function getConnectionProfileStore(): ConnectionProfileStore {
   return connectionProfiles;
@@ -81,44 +101,48 @@ export function createOnboardingCommand(): OnboardingCommand {
   return new OnboardingCommand(
     connectionProfiles,
     createOnboardingGateway,
-    runtimeSeed.devToken
+    authSessionController
   );
 }
 
 export function createSeedConnectionProfile(): ConnectionProfile | undefined {
-  if (!runtimeSeed.apiBaseUrl || !runtimeSeed.devToken) {
+  if (!runtimeSeed.apiBaseUrl) {
     return undefined;
   }
 
   return {
     apiBaseUrl: runtimeSeed.apiBaseUrl,
-    devToken: runtimeSeed.devToken,
     tenantId: runtimeSeed.tenantId
   };
 }
 
-export function createMobileComposition(profile: ConnectionProfile): MobileComposition {
-  const client = createStuffStashClient(profile);
-  const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '');
+export function createMobileComposition(
+  profile: ConnectionProfile,
+  options: MobileCompositionOptions = {}
+): MobileComposition {
+  const client = createStuffStashClient(profile, options);
+  const serviceScopeId = createServiceScopeId();
+  const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '', undefined, serviceScopeId);
   const assetAuditHistory = new ApiAssetAuditHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
   const config = toRuntimeConfig(profile);
-  const addAssetDraftStore = new InMemoryAddAssetDraftStore(createServiceScopeId());
+  const addAssetDraftStore = new InMemoryAddAssetDraftStore(serviceScopeId);
 
   return {
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetAuditHistoryQuery: new AssetAuditHistoryQuery(assetAuditHistory),
-    assetDetailQuery: new AssetDetailQuery(inventorySummaries),
+    assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),
     deleteAssetPhotoCommand: new DeleteAssetPhotoCommand(inventorySummaries),
     moveAssetCommand: new MoveAssetCommand(inventorySummaries),
     updateAssetCommand: new UpdateAssetCommand(inventorySummaries),
     inventoryAssetsQuery: new InventoryAssetsQuery(inventorySummaries),
+    inventoryMapQuery: new InventoryMapQuery(inventorySummaries),
     createAssetCommand: new CreateAssetCommand(inventorySummaries),
     addDraftScopeQuery: new AddDraftScopeQuery(principals),
     addAssetDraftStore,
@@ -139,7 +163,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
       new ExpoVoiceAudioRecorder(),
       new WebSocketRealtimeVoiceTransport({
         apiBaseUrl: config?.apiBaseUrl ?? 'http://127.0.0.1:8080',
-        tokenProvider: () => config?.devToken ?? '',
+        tokenProvider: () => validIdTokenForProfile(profile, options),
         diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
       }),
       new ExpoVoiceAudioPlayer(),
@@ -148,6 +172,7 @@ export function createMobileComposition(profile: ConnectionProfile): MobileCompo
         readinessChecker: new ProviderProfileVoiceReadinessCheck(providerProfileSettingsQuery)
       }
     ),
+    authSessionController,
     voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
   };
 }
@@ -160,12 +185,42 @@ function createOnboardingGateway(profile: ConnectionProfile): ApiOnboardingGatew
   return new ApiOnboardingGateway(createOnboardingApiClient(profile));
 }
 
-function createStuffStashClient(profile: ConnectionProfile): StuffStashClient {
+function createStuffStashClient(
+  profile: ConnectionProfile,
+  options: MobileCompositionOptions = {}
+): StuffStashClient {
   return new StuffStashClient({
     baseUrl: profile.apiBaseUrl,
-    fetch: createTimeoutFetch(8000),
-    tokenProvider: () => profile.devToken
+    fetch: createAuthenticatedFetch(createTimeoutFetch(8000), options),
+    tokenProvider: () => validIdTokenForProfile(profile, options)
   });
+}
+
+async function validIdTokenForProfile(
+  profile: ConnectionProfile,
+  options: MobileCompositionOptions
+): Promise<string> {
+  try {
+    return await authSessionController.validIdToken(profile.apiBaseUrl);
+  } catch (error) {
+    if (error instanceof MobileAuthenticationRequiredError) {
+      options.onAuthenticationRequired?.();
+    }
+    throw error;
+  }
+}
+
+function createAuthenticatedFetch(
+  fetchImpl: typeof fetch,
+  options: MobileCompositionOptions
+): typeof fetch {
+  return async (input, init) => {
+    const response = await fetchImpl(input, init);
+    if (response.status === 401) {
+      options.onAuthenticationRequired?.();
+    }
+    return response;
+  };
 }
 
 function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | undefined {
@@ -176,7 +231,6 @@ function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | unde
   return {
     apiBaseUrl: profile.apiBaseUrl,
     tenantId: profile.tenantId,
-    devToken: profile.devToken,
     voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
   };
 }

@@ -45,7 +45,7 @@ func (s Service) getCustomFieldDefinition(ctx context.Context, input GetCustomFi
 		return customfield.Definition{}, apperrors.ErrNotFound
 	}
 	if err := s.saveReadAuditRecord(ctx, appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -137,7 +137,7 @@ func (s Service) updateCustomFieldDefinitionLifecycle(ctx context.Context, input
 	updated := current
 	updated.LifecycleState = to
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -217,7 +217,7 @@ func (s Service) deleteCustomFieldDefinition(ctx context.Context, input UpdateCu
 		return apperrors.ErrInvalidInput
 	}
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

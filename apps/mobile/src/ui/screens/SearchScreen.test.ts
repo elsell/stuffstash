@@ -17,27 +17,44 @@ vi.mock('expo-router', () => ({
 }));
 
 vi.mock('lucide-react-native', () => ({
+  Camera: 'CameraIcon',
+  ChevronRight: 'ChevronRightIcon',
+  Info: 'InfoIcon',
+  Map: 'MapIcon',
+  MoreHorizontal: 'MoreHorizontalIcon',
+  MoveRight: 'MoveRightIcon',
+  Package: 'PackageIcon',
+  Pencil: 'PencilIcon',
+  Plus: 'PlusIcon',
   Search: 'SearchIcon',
   SlidersHorizontal: 'SlidersIcon',
   X: 'XIcon'
 }));
 
 vi.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: 'SafeAreaView'
+  SafeAreaView: 'SafeAreaView',
+  useSafeAreaInsets: () => ({ bottom: 34, left: 0, right: 0, top: 47 })
 }));
 
 vi.mock('react-native', () => ({
   ActivityIndicator: 'ActivityIndicator',
+  AccessibilityInfo: {
+    addEventListener: vi.fn(() => ({ remove: vi.fn() })),
+    isReduceMotionEnabled: vi.fn(() => Promise.resolve(false))
+  },
   FlatList: 'FlatList',
   Image: 'Image',
+  Modal: 'Modal',
   Pressable: 'Pressable',
+  RefreshControl: 'RefreshControl',
   ScrollView: 'ScrollView',
   StyleSheet: {
     create: (styles: unknown) => styles
   },
   Text: 'Text',
   TextInput: 'TextInput',
-  View: 'View'
+  View: 'View',
+  useWindowDimensions: () => ({ width: 390, height: 844 })
 }));
 
 type ElementNode = {
@@ -203,6 +220,8 @@ describe('SearchScreen presentation helpers', () => {
     expect(input?.props?.value).toBe('bike pump');
     expect(text).toEqual(expect.arrayContaining([
       'Browse',
+      'List',
+      'Map',
       'All',
       'Places',
       'Containers',
@@ -244,10 +263,12 @@ function renderHeader(
     query: '',
     resultCount: 0,
     scope: 'all',
+    selectedSurface: 'list',
     searchInputFocused: false,
     searchInputRef: { current: null } as RefObject<TextInput | null>,
     sort: 'updated_desc',
     submittedQuery: '',
+    onChangeSurface: vi.fn(),
     onChangeLifecycleState: vi.fn(),
     onChangeQuery: vi.fn(),
     onChangeScope: vi.fn(),

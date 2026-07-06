@@ -632,12 +632,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
     justifyContent: 'center',
-    minWidth: 300,
+    minWidth: 330,
     overflow: 'hidden'
   },
   emptyPhotoHero: {
     gap: spacing.xs,
-    minWidth: 260,
+    minWidth: 300,
     padding: spacing.lg
   },
   photoPlaceholder: {
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: spacing.xs,
     justifyContent: 'center',
-    minWidth: 132,
+    minWidth: 148,
     padding: spacing.md
   },
   photoThumb: {
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
     justifyContent: 'center',
-    minWidth: 180,
+    minWidth: 200,
     overflow: 'hidden'
   },
   addPhotoText: {

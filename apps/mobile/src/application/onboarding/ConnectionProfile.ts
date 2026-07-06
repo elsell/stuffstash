@@ -1,7 +1,6 @@
 export type ConnectionProfile = {
   readonly apiBaseUrl: string;
   readonly tenantId?: string;
-  readonly devToken: string;
 };
 
 export type SavedConnectionProfile = {

@@ -94,6 +94,8 @@ The first MCP and internal-agent tool slice should be read-only:
 - Get asset detail.
 - List assets in a location.
 - List root-level assets in an inventory.
+- List currently checked-out assets.
+- List checkout history for an authorized asset.
 - List accessible tenants and inventories for the authenticated principal.
 
 The first write-capable slice should come only after action-plan confirmation is implemented:
@@ -103,6 +105,7 @@ The first write-capable slice should come only after action-plan confirmation is
 - Move asset.
 - Update asset details.
 - Archive and restore asset.
+- Check out and return asset.
 
 Write tools must map to application commands, not persistence operations.
 

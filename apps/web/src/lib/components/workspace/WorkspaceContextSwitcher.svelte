@@ -97,8 +97,12 @@
   }
 
   function chooseTenant(tenantId: string): void {
+    const tenantAlreadySelected = tenantId === selectedTenantId;
     showingTenants = false;
     onSelectTenant(tenantId);
+    if (tenantAlreadySelected) {
+      void focusPanel();
+    }
   }
 
   function chooseInventory(event: MouseEvent, inventory: InventoryContextOption): void {
@@ -190,7 +194,7 @@
           <span class="identity-icon" data-kind="tenant" aria-hidden="true"><Building2 /></span>
           <span>{presentation.activeTenantLabel}</span>
         </span>
-        {#if tenants.length > 1}
+        {#if tenants.length > 0}
           <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
             {showingTenants ? 'Back' : 'Switch tenant'}
           </Button.Root>

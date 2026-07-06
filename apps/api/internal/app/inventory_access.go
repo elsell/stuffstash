@@ -85,7 +85,7 @@ func (a App) GrantInventoryAccess(ctx context.Context, input GrantInventoryAcces
 	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -147,7 +147,7 @@ func (a App) RevokeInventoryAccess(ctx context.Context, input RevokeInventoryAcc
 	}
 
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -230,7 +230,7 @@ func (a App) ListInventoryAccessGrants(ctx context.Context, input ListInventoryA
 		},
 	})
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,
@@ -273,7 +273,7 @@ func (a App) GetInventoryAccessGrant(ctx context.Context, input GetInventoryAcce
 		return ports.InventoryAccessGrant{}, ErrNotFound
 	}
 	if err := a.saveReadAuditRecord(ctx, auditRecordInput{
-		PrincipalID: input.Principal.ID,
+		Principal:   input.Principal,
 		TenantID:    input.TenantID,
 		InventoryID: input.InventoryID,
 		Source:      input.Source,

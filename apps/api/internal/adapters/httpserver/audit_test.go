@@ -30,12 +30,18 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 		},
 	}))
 
-	firstAsset := performRequestWithHeaders(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]string{"X-Request-ID": "request-audit-one"}, map[string]any{
+	firstAsset := performRequestWithHeaders(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner:owner@example.test", map[string]string{"X-Request-ID": "request-audit-one"}, map[string]any{
 		"kind":  "item",
 		"title": "Drill",
 	})
 	if firstAsset.Code != http.StatusCreated {
 		t.Fatalf("expected first asset status %d, got %d with body %s", http.StatusCreated, firstAsset.Code, firstAsset.Body.String())
+	}
+	updateFirstAsset := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/asset-one", "Bearer dev:owner", map[string]any{
+		"title": "Drill Kit",
+	})
+	if updateFirstAsset.Code != http.StatusOK {
+		t.Fatalf("expected first asset update status %d, got %d with body %s", http.StatusOK, updateFirstAsset.Code, updateFirstAsset.Body.String())
 	}
 	secondAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",
@@ -80,6 +86,24 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 	}
 	if firstPage.Data[0].RequestID != "request-audit-one" {
 		t.Fatalf("expected request ID on audit record, got %+v", firstPage.Data[0])
+	}
+	if firstPage.Data[0].Principal == nil || firstPage.Data[0].Principal.Email != "owner@example.test" {
+		t.Fatalf("expected resolved principal on audit record, got %+v", firstPage.Data[0])
+	}
+
+	assetAudit := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/asset-one/audit-records?limit=1", "Bearer dev:viewer-user", nil)
+	if assetAudit.Code != http.StatusOK {
+		t.Fatalf("expected asset audit status %d, got %d with body %s", http.StatusOK, assetAudit.Code, assetAudit.Body.String())
+	}
+	assetAuditBody := decodeAuditRecordList(t, assetAudit)
+	if len(assetAuditBody.Data) != 1 || assetAuditBody.Data[0].TargetID != "asset-one" {
+		t.Fatalf("expected asset-scoped audit records, got %+v", assetAuditBody.Data)
+	}
+	if assetAuditBody.Meta.Pagination == nil || !assetAuditBody.Meta.Pagination.HasMore {
+		t.Fatalf("expected asset audit page to report more history, got %+v", assetAuditBody.Meta.Pagination)
+	}
+	if assetAuditBody.Data[0].Principal == nil || assetAuditBody.Data[0].Principal.Email != "owner@example.test" {
+		t.Fatalf("expected resolved principal on asset audit record, got %+v", assetAuditBody.Data[0])
 	}
 
 	secondPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=1&cursor="+*firstPage.Meta.Pagination.NextCursor, "Bearer dev:viewer-user", nil)
