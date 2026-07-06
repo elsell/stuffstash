@@ -161,6 +161,8 @@ Preview response must include:
 Preview must not persist source passwords or Homebox bearer tokens.
 The first Homebox slice does not persist preview plans. Apply re-reads and revalidates the submitted source input immediately before writing. A signed preview plan token or durable import job is a future enhancement before broader import formats or long-running imports are exposed.
 
+Production-scale live imports require a future durable import-job API before large Homebox instances are treated as fully production-ready. That future API must include a job ID, status polling or progress events, cancellation semantics, retry or idempotency keys, persisted safe result messages, and a uniqueness guarantee for imported source links per tenant, inventory, source type, and source ID.
+
 ## Import Apply API
 
 Initial endpoint:
@@ -203,12 +205,16 @@ The web application must provide a polished import workflow for the first Homebo
 - Live Homebox connection may offer an explicit self-signed certificate option for local or personal Homebox instances. It must be off by default.
 - Live Homebox connection may offer an explicit private-network address option for local or personal Homebox instances. It must be off by default.
 - CSV upload accepts a Homebox CSV export and clearly states that images are not included.
+- The import surface must present the workflow as source setup, preview review, and apply result so users can tell whether anything has been saved.
+- The import surface must show active operation state for preview and apply separately. Long-running preview or apply requests may remain synchronous in this slice, but the UI must make the current operation and disabled controls clear.
 - Preview shows source version when available, counts, warnings, planned field definitions, locations, assets, and image readiness.
 - The web preview badge counts total planned records: planned field definitions, locations, assets, and attachments.
 - Preview gives users enough detail to understand tag, quantity, date, duplicate, and image warnings before applying.
+- Preview samples must be visually bounded and must state when only a subset of fields, assets, images, or messages is shown.
 - Apply must only be enabled for the current source input that was previewed. Changing the source URL, credentials, security options, image option, selected file, or file content after preview must require a new preview before apply.
 - Preview failures must be labeled as preview or source-connection failures, not as applied import failures.
 - If a browser or transport failure prevents the preview request from completing, the UI must replace raw fetch errors such as `Load failed` with actionable copy that explains the preview request could not complete and points users toward API reachability, Homebox reachability, and the explicit private-network option for local Homebox sources.
+- Browser CSV upload must enforce the same 10 MiB decoded CSV limit before reading file bytes and must not use the full base64 payload as a repeated reactive preview key.
 - Apply shows progress states and final results, including created field definitions, locations, assets, attachments, reused field definitions, skipped assets, and skipped attachments when those counts are nonzero.
 - After apply returns successfully, the web UI must present the import as applied even if a follow-up workspace refresh fails. Refresh failures may be shown as a non-fatal warning, but they must not overwrite the successful apply result with an import-failed state.
 - The UI must avoid showing passwords, tokens, Homebox internal storage paths, or raw attachment bytes.

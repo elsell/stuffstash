@@ -228,7 +228,7 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 				Code:       "item-detail-unavailable",
 				Severity:   importplan.SeverityWarning,
 				Summary:    "Item detail could not be read",
-				Detail:     err.Error(),
+				Detail:     safeHomeboxWarningDetail(err, "item detail could not be read"),
 				SourceID:   summary.ID,
 				SourceName: summary.Name,
 			})
@@ -262,7 +262,7 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 						Code:       "attachment-unavailable",
 						Severity:   importplan.SeverityWarning,
 						Summary:    "Attachment could not be downloaded",
-						Detail:     err.Error(),
+						Detail:     safeHomeboxWarningDetail(err, "attachment could not be downloaded"),
 						SourceID:   attachment.ID,
 						SourceName: detail.Name,
 					})

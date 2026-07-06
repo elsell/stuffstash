@@ -1304,7 +1304,7 @@ small {
 
 .import-stat-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(86px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 8px;
 }
 
@@ -1332,6 +1332,79 @@ small {
 .import-message-list {
   display: grid;
   gap: 8px;
+}
+
+.import-step-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.import-step-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.import-step-list li > span {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--muted-foreground);
+  border-radius: 999px;
+  background: var(--background);
+}
+
+.import-step-list li[data-state="complete"] > span {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.import-step-list li[data-state="current"] {
+  border-color: color-mix(in oklab, var(--primary) 50%, var(--border));
+  background: color-mix(in oklab, var(--primary) 6%, var(--background));
+}
+
+.import-step-list li[data-state="current"] > span {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 16%, transparent);
+}
+
+.import-step-list li[data-state="blocked"] > span {
+  border-color: var(--destructive);
+  background: var(--destructive);
+}
+
+.import-step-list strong,
+.import-step-list small {
+  overflow-wrap: anywhere;
+}
+
+.import-step-list small,
+.import-section-subhead small {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.import-section-subhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.import-section-subhead h2,
+.import-section-subhead h3 {
+  margin: 0;
 }
 
 .import-message-row {
@@ -1462,7 +1535,7 @@ small {
   .access-row,
   .invitation-row,
   .customization-grid,
-  .import-stat-grid,
+  .import-step-list,
   .schema-row,
   .audit-row {
     grid-template-columns: 1fr;

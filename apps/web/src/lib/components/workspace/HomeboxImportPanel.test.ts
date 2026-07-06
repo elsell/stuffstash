@@ -143,6 +143,118 @@ describe('HomeboxImportPanel', () => {
     });
   });
 
+  it('reads a selected Homebox CSV file and submits it for preview', async () => {
+    let previewRequest: LegacyHomeboxImportRequest | null = null;
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository((request) => {
+          previewRequest = request;
+        }),
+        sourceType: 'legacy_homebox_csv',
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    selectFile('#homebox-csv', new File(['HB.location,HB.asset_id,HB.name\nGarage,A-1,Drill\n'], 'homebox.csv', { type: 'text/csv' }));
+    await flush();
+    click('Preview');
+    await flush();
+
+    expect(previewRequest).toMatchObject({
+      sourceType: 'legacy_homebox_csv',
+      fileName: 'homebox.csv',
+      contentBase64: btoa('HB.location,HB.asset_id,HB.name\nGarage,A-1,Drill\n')
+    });
+  });
+
+  it('rejects oversized Homebox CSV files before preview', async () => {
+    let readAttempted = false;
+    const file = new File(['x'], 'huge-homebox.csv', { type: 'text/csv' });
+    Object.defineProperty(file, 'size', { value: 10 * 1024 * 1024 + 1 });
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: async () => {
+        readAttempted = true;
+        return new ArrayBuffer(0);
+      }
+    });
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        sourceType: 'legacy_homebox_csv',
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    selectFile('#homebox-csv', file);
+    await flush();
+
+    expect(readAttempted).toBe(false);
+    expect(document.body.textContent).toContain('CSV is too large');
+    expect(button('Preview').disabled).toBe(true);
+  });
+
+  it('clears stale CSV identity when a later selected file is too large', async () => {
+    const hugeFile = new File(['x'], 'huge-homebox.csv', { type: 'text/csv' });
+    Object.defineProperty(hugeFile, 'size', { value: 10 * 1024 * 1024 + 1 });
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        sourceType: 'legacy_homebox_csv',
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    selectFile('#homebox-csv', new File(['HB.location,HB.asset_id,HB.name\nGarage,A-1,Drill\n'], 'good.csv', { type: 'text/csv' }));
+    await flush();
+
+    expect(document.body.textContent).toContain('good.csv');
+
+    selectFile('#homebox-csv', hugeFile);
+    await flush();
+
+    expect(document.body.textContent).toContain('CSV is too large');
+    expect(document.body.textContent).not.toContain('good.csv');
+  });
+
+  it('clears CSV selection errors when switching back to live Homebox', async () => {
+    const hugeFile = new File(['x'], 'huge-homebox.csv', { type: 'text/csv' });
+    Object.defineProperty(hugeFile, 'size', { value: 10 * 1024 * 1024 + 1 });
+    component = mount(HomeboxImportPanel, {
+      target: document.body,
+      props: {
+        tenantId: 'tenant-one',
+        inventory: inventory(),
+        repository: fakeRepository(),
+        sourceType: 'legacy_homebox_csv',
+        onImported: async () => {}
+      }
+    });
+    await flush();
+
+    selectFile('#homebox-csv', hugeFile);
+    await flush();
+
+    expect(document.body.textContent).toContain('CSV is too large');
+
+    sourceControl('Connect').click();
+    await flush();
+
+    expect(document.body.textContent).toContain('Homebox URL');
+    expect(document.body.textContent).not.toContain('CSV is too large');
+  });
+
   it('explains why apply is disabled before previewing', async () => {
     component = mount(HomeboxImportPanel, {
       target: document.body,
@@ -411,7 +523,7 @@ describe('HomeboxImportPanel', () => {
         inventory: inventory(),
         repository: fakeRepository(undefined, importPreview(), importApplyResult()),
         onImported: async () => {
-          throw new Error('Workspace refresh failed.');
+          throw new Error('password=secret token=abc');
         }
       }
     });
@@ -429,7 +541,8 @@ describe('HomeboxImportPanel', () => {
     expect(document.body.textContent).toContain('Import applied');
     expect(document.body.textContent).toContain('Created 1 field definition, 2 locations, 3 items, and 4 attachments.');
     expect(document.body.textContent).toContain('Workspace refresh needed');
-    expect(document.body.textContent).toContain('Workspace refresh failed.');
+    expect(document.body.textContent).toContain('Reload the page to see the latest records.');
+    expect(document.body.textContent).not.toContain('password=secret');
     expect(document.body.textContent).not.toContain('Import failed');
     expect(button('Apply').disabled).toBe(true);
   });
@@ -583,6 +696,19 @@ function input(selector: string, value: string): void {
   }
   element.value = value;
   element.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function selectFile(selector: string, file: File): void {
+  const element = document.body.querySelector<HTMLInputElement>(selector);
+  if (!element) {
+    throw new Error(`Missing input ${selector}`);
+  }
+  Object.defineProperty(element, 'files', {
+    value: [file],
+    writable: true,
+    configurable: true
+  });
+  element.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function click(text: string): void {

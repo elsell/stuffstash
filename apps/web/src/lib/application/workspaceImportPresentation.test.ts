@@ -8,8 +8,10 @@ import {
   importDeniedPresentation,
   importEmptyPreviewPresentation,
   importFailurePresentation,
+  importHiddenLabel,
   importMessageDetail,
   importMessageTone,
+  importMessagesForDisplay,
   importMissingInventoryPresentation,
   importPreviewSourceSummary,
   importPlannedCountLabel,
@@ -84,17 +86,24 @@ describe('workspace import presentation helpers', () => {
   });
 
   it('builds clear apply status copy for each disabled or ready state', () => {
-    expect(importApplyStatus({ busy: true, hasPreview: false, blockingErrorCount: 0, canImport: true })).toBe('Import action is running.');
-    expect(importApplyStatus({ busy: false, hasPreview: false, blockingErrorCount: 0, canImport: true })).toBe(
+    expect(importApplyStatus({ activeOperation: 'preview', hasPreview: false, blockingErrorCount: 0, canImport: true })).toBe(
+      'Preview is reading the source.'
+    );
+    expect(importApplyStatus({ activeOperation: 'apply', hasPreview: true, blockingErrorCount: 0, canImport: true })).toBe(
+      'Import is applying. Keep this tab open.'
+    );
+    expect(importApplyStatus({ activeOperation: null, hasPreview: false, blockingErrorCount: 0, canImport: true })).toBe(
       'Preview the import before applying changes.'
     );
-    expect(importApplyStatus({ busy: false, hasPreview: true, blockingErrorCount: 1, canImport: true })).toBe(
+    expect(importApplyStatus({ activeOperation: null, hasPreview: true, blockingErrorCount: 1, canImport: true })).toBe(
       'Resolve preview errors before applying changes.'
     );
-    expect(importApplyStatus({ busy: false, hasPreview: true, blockingErrorCount: 0, canImport: false })).toBe(
+    expect(importApplyStatus({ activeOperation: null, hasPreview: true, blockingErrorCount: 0, canImport: false })).toBe(
       'Inventory configuration access is required.'
     );
-    expect(importApplyStatus({ busy: false, hasPreview: true, blockingErrorCount: 0, canImport: true })).toBe('Preview is ready to apply.');
+    expect(importApplyStatus({ activeOperation: null, hasPreview: true, blockingErrorCount: 0, canImport: true })).toBe(
+      'Preview is ready to apply.'
+    );
   });
 
   it('derives import panel fallback, count, and applied-result presentation', () => {
@@ -154,9 +163,13 @@ describe('workspace import presentation helpers', () => {
       title: 'Import failed',
       description: 'The apply request could not complete. Check that Stuff Stash is reachable and try again.'
     });
-    expect(importFailurePresentation('apply', 'legacy_homebox', new Error('Homebox returned 401 Unauthorized'))).toEqual({
+    expect(importFailurePresentation('apply', 'legacy_homebox', safeUserError('Homebox returned 401 Unauthorized'))).toEqual({
       title: 'Import failed',
       description: 'Homebox returned 401 Unauthorized'
+    });
+    expect(importFailurePresentation('apply', 'legacy_homebox', new Error('database password leaked'))).toEqual({
+      title: 'Import failed',
+      description: 'The import could not be completed. Review the preview and try again.'
     });
   });
 
@@ -176,6 +189,12 @@ describe('workspace import presentation helpers', () => {
     expect(importMessageTone(importMessage('error'))).toBe('destructive');
     expect(importMessageTone(importMessage('warning'))).toBe('secondary');
     expect(importMessageTone(importMessage('info'))).toBe('outline');
+    expect(importMessagesForDisplay([importMessage('info'), importMessage('warning'), importMessage('error')]).map((message) => message.severity)).toEqual([
+      'error',
+      'warning',
+      'info'
+    ]);
+    expect(importHiddenLabel(2, 'message')).toBe('2 more messages not shown.');
   });
 
   it('builds trimmed live Homebox requests and CSV upload requests', () => {
@@ -220,6 +239,12 @@ describe('workspace import presentation helpers', () => {
     });
   });
 });
+
+function safeUserError(message: string): Error & { safeForUser: true } {
+  const error = new Error(message) as Error & { safeForUser: true };
+  error.safeForUser = true;
+  return error;
+}
 
 function importSource(source: Partial<ImportPreview['source']>): ImportPreview['source'] {
   return {

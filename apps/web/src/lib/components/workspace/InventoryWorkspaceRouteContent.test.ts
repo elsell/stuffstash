@@ -22,7 +22,10 @@ type RouteContentOverrides = Partial<Omit<InventoryWorkspaceRouteContentProps, '
   route?: Partial<InventoryWorkspaceRouteContentProps['route']>;
   hrefs?: Partial<InventoryWorkspaceRouteContentProps['hrefs']>;
   handlers?: Partial<InventoryWorkspaceRouteContentProps['handlers']>;
+  inventoryPermissions?: InventoryPermissionFixture[];
 };
+
+type InventoryPermissionFixture = 'view' | 'create_asset' | 'edit_asset' | 'configure';
 
 afterEach(() => {
   if (component) {
@@ -232,7 +235,7 @@ describe('InventoryWorkspaceRouteContent', () => {
       })
     });
 
-    expect(document.body.textContent).toContain('Homebox');
+    expect(document.body.textContent).toContain('Homebox URL');
 
     unmount(component);
     component = null;
@@ -245,6 +248,19 @@ describe('InventoryWorkspaceRouteContent', () => {
 
     expect(document.body.textContent).toContain('Fields');
   });
+
+  it('denies the import form without inventory configuration access', async () => {
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({
+        route: { mode: 'import', importSourceType: 'legacy_homebox' },
+        inventoryPermissions: ['view', 'create_asset', 'edit_asset']
+      })
+    });
+
+    expect(document.body.textContent).toContain('Import unavailable');
+    expect(document.body.textContent).not.toContain('Homebox URL');
+  });
 });
 
 async function routeContentProps(overrides: RouteContentOverrides = {}): Promise<InventoryWorkspaceRouteContentProps> {
@@ -256,7 +272,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
         id: 'inventory-household',
         tenantId: 'tenant-home',
         name: 'Household',
-        access: { relationship: 'owner', permissions: ['view', 'create_asset', 'edit_asset'] }
+        access: { relationship: 'owner', permissions: overrides.inventoryPermissions ?? ['view', 'create_asset', 'edit_asset', 'configure'] }
       }
     ],
     customAssetTypes: [],

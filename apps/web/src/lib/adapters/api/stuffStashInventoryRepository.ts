@@ -21,6 +21,7 @@ import type {
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
+import { fileToBase64 } from '$lib/application/fileEncoding';
 import type {
   CustomAssetTypeDraft,
   CustomFieldDefinitionDraft,
@@ -748,12 +749,30 @@ export class StuffStashInventoryRepository
 
 function safeError(error: unknown): Error {
   if (error instanceof StuffStashAPIError) {
-    return new Error(error.message);
+    return new SafeAPIError(error.status, error.code, error.message);
   }
   if (error instanceof Error) {
     return error;
   }
   return new Error('Request failed.');
+}
+
+class SafeAPIError extends Error {
+  readonly safeForUser: boolean;
+
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string
+  ) {
+    super(message);
+    this.name = 'SafeAPIError';
+    this.safeForUser = isSafeAPIStatus(status);
+  }
+}
+
+function isSafeAPIStatus(status: number): boolean {
+  return status === 400 || status === 422;
 }
 
 class DirectUploadTargetUnavailableError extends Error {
@@ -764,17 +783,6 @@ class DirectUploadTargetUnavailableError extends Error {
 
 function isDirectUploadTargetUnavailable(error: unknown): boolean {
   return error instanceof DirectUploadTargetUnavailableError;
-}
-
-async function fileToBase64(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
-  }
-  return btoa(binary);
 }
 
 function isAbortError(error: unknown): boolean {

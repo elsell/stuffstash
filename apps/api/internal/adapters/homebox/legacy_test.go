@@ -93,6 +93,27 @@ func TestLegacyHomeboxAllowsPrivateNetworkWhenExplicit(t *testing.T) {
 	}
 }
 
+func TestLegacyHomeboxWarningDetailsAreSanitized(t *testing.T) {
+	server := newLegacyHomeboxTestServerWithItemDetailStatus(t, http.StatusInternalServerError)
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             server.URL,
+		Username:            "user@example.com",
+		Password:            "secret",
+		AllowPrivateNetwork: true,
+	})
+	if err != nil {
+		t.Fatalf("read Homebox source: %v", err)
+	}
+	if len(plan.Messages) != 1 {
+		t.Fatalf("messages = %#v", plan.Messages)
+	}
+	if plan.Messages[0].Detail != "item detail could not be read" {
+		t.Fatalf("warning detail leaked raw error: %#v", plan.Messages[0])
+	}
+}
+
 func TestLegacyHomeboxRejectsPrivateRedirectWithoutOptIn(t *testing.T) {
 	target := newLegacyHomeboxTestServer(t)
 	redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +133,10 @@ func TestLegacyHomeboxRejectsPrivateRedirectWithoutOptIn(t *testing.T) {
 }
 
 func newLegacyHomeboxTestServer(t *testing.T) *httptest.Server {
+	return newLegacyHomeboxTestServerWithItemDetailStatus(t, http.StatusOK)
+}
+
+func newLegacyHomeboxTestServerWithItemDetailStatus(t *testing.T, itemDetailStatus int) *httptest.Server {
 	t.Helper()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +153,10 @@ func newLegacyHomeboxTestServer(t *testing.T) *httptest.Server {
 		case "/api/v1/items":
 			_, _ = w.Write([]byte(`{"items":[{"id":"item-one","assetId":"HB-1","name":"Drill"}]}`))
 		case "/api/v1/items/item-one":
+			if itemDetailStatus != http.StatusOK {
+				http.Error(w, "database password leaked", itemDetailStatus)
+				return
+			}
 			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"attachments":[]}`))
 		default:
 			http.NotFound(w, r)

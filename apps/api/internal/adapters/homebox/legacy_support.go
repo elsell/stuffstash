@@ -102,6 +102,13 @@ func safeLiveSourceError(err error) error {
 	return err
 }
 
+func safeHomeboxWarningDetail(err error, fallback string) string {
+	if err == nil {
+		return fallback
+	}
+	return fallback
+}
+
 func validateOutboundURL(raw string) error {
 	parsed, err := url.Parse(raw)
 	if err != nil {
