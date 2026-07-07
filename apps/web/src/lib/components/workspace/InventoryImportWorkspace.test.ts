@@ -673,6 +673,14 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Choose import method');
     });
+    expect(stepButton('Connect')).toBeTruthy();
+    expect(stepButton('Preview')).toBeTruthy();
+
+    requiredStepButton('Preview').click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Preview import');
+      expect(buttonContaining('Start background import').disabled).toBe(false);
+    });
   });
 
   it('requires a fresh preview after the selected Homebox CSV changes', async () => {

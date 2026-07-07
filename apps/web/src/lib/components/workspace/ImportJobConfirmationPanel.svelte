@@ -17,6 +17,7 @@
 
   let { cancelJob, removeJob, busy, onCancelJob, onDismissCancel, onRemoveJob, onDismissRemove }: Props = $props();
   let cancelKeepChoiceElement = $state<HTMLButtonElement | null>(null);
+  let pendingAction = $state<'keep' | 'discard' | 'remove' | null>(null);
 
   $effect(() => {
     if (!cancelJob) return;
@@ -25,6 +26,12 @@
         cancelKeepChoiceElement?.focus();
       }
     });
+  });
+
+  $effect(() => {
+    if (!busy) {
+      pendingAction = null;
+    }
   });
 </script>
 
@@ -43,9 +50,15 @@
         class="confirmation-choice"
         type="button"
         disabled={busy}
-        onclick={() => onCancelJob(cancelJob, 'keep_partial_progress')}
+        onclick={() => {
+          pendingAction = 'keep';
+          onCancelJob(cancelJob, 'keep_partial_progress');
+        }}
       >
-        <strong>Keep imported items</strong>
+        <strong>{pendingAction === 'keep' && busy ? 'Cancelling import' : 'Keep imported items'}</strong>
+        {#if pendingAction === 'keep' && busy}
+          <Button.BusyContent {busy} label="Keep imported items" busyLabel="Keeping imported items" />
+        {/if}
         <span>Stop future work and leave anything already imported in the inventory.</span>
       </Button.Root>
       <Button.Root
@@ -53,9 +66,15 @@
         class="confirmation-choice danger"
         type="button"
         disabled={busy}
-        onclick={() => onCancelJob(cancelJob, 'discard_partial_progress')}
+        onclick={() => {
+          pendingAction = 'discard';
+          onCancelJob(cancelJob, 'discard_partial_progress');
+        }}
       >
-        <strong>Discard imported items</strong>
+        <strong>{pendingAction === 'discard' && busy ? 'Cancelling import' : 'Discard imported items'}</strong>
+        {#if pendingAction === 'discard' && busy}
+          <Button.BusyContent {busy} label="Discard imported items" busyLabel="Discarding imported items" />
+        {/if}
         <span>Stop future work and remove records created by this job. Audit history remains.</span>
       </Button.Root>
       <div class="action-row">
@@ -79,8 +98,15 @@
         </div>
       </div>
       <div class="action-row">
-        <Button.Root variant="destructive" onclick={() => onRemoveJob(removeJob)} disabled={busy}>
-          Remove from history
+        <Button.Root
+          variant="destructive"
+          onclick={() => {
+            pendingAction = 'remove';
+            onRemoveJob(removeJob);
+          }}
+          disabled={busy}
+        >
+          <Button.BusyContent busy={pendingAction === 'remove' && busy} label="Remove from history" busyLabel="Removing from history" />
         </Button.Root>
         <Button.Root variant="outline" onclick={onDismissRemove} disabled={busy}>Keep in history</Button.Root>
       </div>
@@ -137,6 +163,12 @@
     font-size: 0.85rem;
     font-weight: 400;
     line-height: 1.35;
+  }
+
+  :global(.confirmation-choice .busy-button-content) {
+    color: var(--foreground);
+    display: inline-flex;
+    font-weight: 650;
   }
 
   .confirmation-topline {

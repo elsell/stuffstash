@@ -350,18 +350,17 @@
             </a>
             {#if canCreateImports && canRequestCancellation}
               <Button.Root variant="outline" onclick={onCancel} disabled={busy}>
-                Cancel
+                <Button.BusyContent {busy} label="Cancel" busyLabel="Cancelling" />
               </Button.Root>
             {/if}
             {#if canCreateImports && job.status === 'previewed'}
               <Button.Root onclick={onContinue} disabled={busy}>
-                Continue import
+                <Button.BusyContent {busy} label="Continue import" busyLabel="Opening preview" />
               </Button.Root>
             {/if}
             {#if canCreateImports && canRemoveJobFromHistory(job)}
               <Button.Root variant="ghost" onclick={onRemove} disabled={busy}>
-                <Trash2 size={16} aria-hidden="true" />
-                Remove from history
+                <Button.BusyContent {busy} icon={Trash2} label="Remove from history" busyLabel="Removing from history" />
               </Button.Root>
             {/if}
           </section>

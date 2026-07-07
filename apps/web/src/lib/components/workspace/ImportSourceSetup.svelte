@@ -155,8 +155,12 @@
 
     <div class="action-row">
       <Button.Root onclick={onConfirmSource} disabled={!canConfirmSource || busy || !inventory}>
-        <CheckCircle2 size={16} aria-hidden="true" />
-        {sourceChoice === 'homebox_live' ? 'Confirm connection' : 'Prepare preview'}
+        <Button.BusyContent
+          {busy}
+          icon={CheckCircle2}
+          label={sourceChoice === 'homebox_live' ? 'Confirm connection' : 'Prepare preview'}
+          busyLabel={sourceChoice === 'homebox_live' ? 'Confirming connection' : 'Preparing preview'}
+        />
       </Button.Root>
       <Button.Root variant="outline" onclick={onBack} disabled={busy}>Back</Button.Root>
     </div>
@@ -208,7 +212,7 @@
 
   .action-row {
     flex-wrap: wrap;
-    scroll-margin-bottom: 8rem;
+    scroll-margin-bottom: var(--mobile-scroll-clearance, 10rem);
   }
 
   .connection-summary {

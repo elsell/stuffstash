@@ -269,6 +269,7 @@ Changing source inputs, source options, selected file metadata, selected file co
 Import source text inputs must avoid mobile auto-capitalization, autocorrection, and spellcheck where they collect URLs, emails, usernames, passwords, or source identifiers.
 The UI must present source snapshots, imported records, and audit links in user-facing language. Internal resource IDs, source fingerprints, and source entity IDs may be available as secondary diagnostic metadata where useful, but they must not be the primary label for records or trust signals.
 Removing an import job from visible history must require an explicit confirmation in the UI. The confirmation must state that imported records and audit history remain.
+State-changing import actions must show an in-progress affordance, such as an animated spinner and operation-specific label, while the operation is pending; disabling controls alone is not sufficient feedback.
 It must preserve inventory context throughout source setup, preview, running progress, result review, and history.
 The import surface must not look or behave like a marketing page or separate administration console.
 
@@ -287,6 +288,8 @@ History rows must use user-facing status language and must not require users to 
 Previewed jobs are drafts waiting for confirmation, not completed history; the UI must present them separately from terminal history and make them easy to resume.
 If an inventory has active import jobs, the UI must make those jobs easy to resume from the import surface before encouraging a new import.
 Active jobs and preview drafts must be grouped as current work ahead of completed history so users can resume, inspect, or cancel ongoing work before starting another import.
+Jobs promoted into current-work or needs-attention groups must not be duplicated in the default history ledger immediately below those groups.
+Users may explicitly switch the ledger to attention history when they want the full row-level context for jobs that need review.
 If an inventory has no import jobs, the import surface must show an empty state with one clear action to start an import.
 The import surface must not show the source setup form by default.
 

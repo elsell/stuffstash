@@ -18,13 +18,14 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await expect(page.getByText('Prepared by oidc_vZWJGXP...ltriM27O9').first()).toBeVisible();
   await expect(page.getByText('stuff.jsksell.com').first()).toBeVisible();
   await expect(page.getByText('/api/v1')).toHaveCount(0);
-  const completedRow = page.locator('.history-ledger .history-row').filter({ hasText: '1 field created' });
-  await expect(completedRow.getByText('1 field created')).toBeVisible();
-  await expect(completedRow.getByText('Completed', { exact: true })).toBeVisible();
-  await expect(completedRow.getByText('Started Jul 6, 2026')).toBeVisible();
-  expect(await hasHorizontalOverflow(completedRow)).toBe(false);
+  const attentionCard = page.locator('.attention-item').filter({ hasText: '2 warnings' });
+  await expect(attentionCard.getByText('1 field created')).toBeVisible();
+  await expect(attentionCard.getByText('Completed', { exact: true })).toBeVisible();
+  await expect(attentionCard.getByText('Started Jul 6, 2026')).toBeVisible();
+  await expect(page.locator('.history-ledger')).not.toContainText('Completed with warnings.');
+  expect(await hasHorizontalOverflow(attentionCard)).toBe(false);
 
-  await completedRow.getByRole('button', { name: /details/i }).click();
+  await attentionCard.getByRole('button', { name: /review details/i }).click();
   await expect(page.getByText('Asset appears to have already been imported')).toBeVisible();
   await expect(page.getByText('Already linked to an earlier import')).toBeVisible();
   await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
@@ -47,8 +48,8 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
 
   await expect(page.getByRole('heading', { name: 'Imports', exact: true })).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
-  const completedRow = page.locator('.history-ledger .history-row').filter({ hasText: '1 field created' });
-  await completedRow.getByRole('button', { name: /details/i }).click();
+  const attentionCard = page.locator('.attention-item').filter({ hasText: '2 warnings' });
+  await attentionCard.getByRole('button', { name: /review details/i }).click();
   await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-detail-content'))).toBe(false);
   await page.getByRole('button', { name: 'Back to history' }).click();

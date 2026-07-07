@@ -138,6 +138,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       expect(repository.cancellationModes).toEqual(['keep_partial_progress']);
       expect(document.body.textContent).toContain('Cancelling');
+      expect(document.body.textContent).not.toContain('Discarding imported items');
       expect(Array.from(document.body.querySelectorAll('button')).some((button) => button.textContent?.trim() === 'Cancel')).toBe(false);
     });
 
@@ -256,6 +257,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Started Jul 6, 2026');
       expect(document.body.textContent).toContain('Completed Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
+      expect(document.body.textContent).toContain('No other import runs to show.');
+      expect(historyLedgerText()).not.toContain('Completed with warnings.');
     });
   });
 
@@ -322,6 +325,9 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('1 import has warnings or failed work.');
       expect(document.body.textContent).toContain('2 warnings');
       expect(buttonContaining('Review')).toBeTruthy();
+      expect(historyLedgerText()).toContain('Clean Homebox');
+      expect(historyLedgerText()).not.toContain('Completed with warnings.');
+      expect(historyLedgerText()).not.toContain('Needs attention');
     });
 
     buttonContaining('Review').click();
@@ -739,3 +745,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     );
   });
 });
+
+function historyLedgerText(): string {
+  return document.body.querySelector('.history-ledger')?.textContent ?? '';
+}

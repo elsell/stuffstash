@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Check from '@lucide/svelte/icons/check';
+	import BusyButtonContent from './busy-button-content.svelte';
 	import Button from './button.svelte';
 
 	let {
@@ -30,4 +32,10 @@
 	}}
 >
 	Archive asset
+</Button>
+<Button data-testid="ready-button">
+	<BusyButtonContent busy={false} icon={Check} label="Confirm connection" busyLabel="Confirming connection" />
+</Button>
+<Button data-testid="busy-button" disabled>
+	<BusyButtonContent busy={true} icon={Check} label="Confirm connection" busyLabel="Confirming connection" />
 </Button>

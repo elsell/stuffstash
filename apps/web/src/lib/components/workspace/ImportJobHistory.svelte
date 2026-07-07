@@ -77,7 +77,7 @@
       ? terminalJobs.filter(jobNeedsAttention)
       : historyFilter === 'completed'
         ? terminalJobs.filter((job) => job.status === 'succeeded')
-        : terminalJobs
+        : terminalJobs.filter((job) => !jobNeedsAttention(job))
   );
   let attentionQueue = $derived(attentionJobs.slice(0, 4));
   let hiddenAttentionCount = $derived(Math.max(0, attentionJobs.length - attentionQueue.length));
@@ -255,12 +255,26 @@
                 <strong>{job.source.name}</strong>
                 <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
               </div>
+              <span>{statusSentence(job)}</span>
               <span>{attentionSummary(job)}</span>
-              <small>{historyCountSummary(job)}{job.completedAt ? ` · ${jobTimeLabel('Completed', job.completedAt)}` : job.startedAt ? ` · ${jobTimeLabel('Started', job.startedAt)}` : ''}</small>
+              <small>
+                {historyCountSummary(job)}
+                {actorSummary(job) ? ` · ${actorSummary(job)}` : ''}
+                {job.startedAt ? ` · ${jobTimeLabel('Started', job.startedAt)}` : ''}
+                {job.completedAt ? ` · ${jobTimeLabel('Completed', job.completedAt)}` : ''}
+              </small>
             </div>
-            <Button.Root variant="outline" size="sm" onclick={() => onOpenJob(job)} disabled={busy} aria-label={jobActionLabel('Review issues for', job)}>
-              Review
-            </Button.Root>
+            <div class="attention-actions">
+              <Button.Root variant="outline" size="sm" onclick={() => onOpenJob(job)} disabled={busy} aria-label={jobActionLabel('Review details for', job)}>
+                <Eye size={16} aria-hidden="true" />
+                Review Details
+              </Button.Root>
+              {#if canRemoveJobFromHistory(job)}
+                <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
+                  <Trash2 size={16} aria-hidden="true" />
+                </Button.Root>
+              {/if}
+            </div>
           </div>
         {/each}
       </div>
@@ -280,7 +294,7 @@
             {:else if historyFilter === 'completed'}
               Showing completed imports.
             {:else}
-              Completed, failed, and cancelled runs stay here until you remove them.
+              Other completed, failed, and cancelled runs stay here until you remove them.
             {/if}
           </p>
         </div>
@@ -352,7 +366,7 @@
       {#if filteredTerminalJobs.length === 0}
         <div class="quiet-row">
           <CheckCircle2 size={16} aria-hidden="true" />
-          No imports match this filter.
+          {historyFilter === 'all' && attentionJobs.length > 0 ? 'No other import runs to show.' : 'No imports match this filter.'}
         </div>
       {/if}
     </div>
@@ -453,6 +467,13 @@
     display: grid;
     gap: 0.16rem;
     min-width: 0;
+  }
+
+  .attention-actions {
+    align-items: center;
+    display: flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
   }
 
   .attention-body > span,
@@ -792,6 +813,10 @@
     }
 
     .row-actions {
+      justify-content: flex-start;
+    }
+
+    .attention-actions {
       justify-content: flex-start;
     }
   }

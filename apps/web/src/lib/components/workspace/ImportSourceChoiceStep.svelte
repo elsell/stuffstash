@@ -9,17 +9,17 @@
   type Props = {
     liveHref: string;
     csvHref: string;
+    availableSteps: Array<'source' | 'connect' | 'preview' | 'run'>;
     onChoose: (event: MouseEvent, choice: ImportSourceChoice) => void;
     onNavigateStep: (step: 'source' | 'connect' | 'preview' | 'run') => void;
-    onCancel: () => void;
   };
 
-  let { liveHref, csvHref, onChoose, onNavigateStep, onCancel }: Props = $props();
+  let { liveHref, csvHref, availableSteps, onChoose, onNavigateStep }: Props = $props();
 </script>
 
 <Card.Root>
   <Card.Header>
-    <ImportFlowStepper current="source" availableSteps={['source']} {onNavigateStep} />
+    <ImportFlowStepper current="source" {availableSteps} {onNavigateStep} />
     <Card.Title>Choose import method</Card.Title>
     <Card.Description>Pick the path that matches the data you have right now.</Card.Description>
   </Card.Header>
@@ -42,9 +42,6 @@
             <em>No photos in CSV · works without a live server</em>
           </span>
         </Button.Root>
-      </div>
-      <div class="action-row">
-        <Button.Root variant="outline" onclick={onCancel}>Cancel</Button.Root>
       </div>
     </div>
   </Card.Content>
@@ -105,17 +102,9 @@
     font-weight: 600;
   }
 
-  .action-row {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
   @media (max-width: 860px) {
-    .action-row {
-      align-items: flex-start;
-      flex-direction: column;
+    .import-source-choice-content {
+      padding-bottom: var(--mobile-bottom-chrome-height, 5rem);
     }
 
     .source-choice-grid {

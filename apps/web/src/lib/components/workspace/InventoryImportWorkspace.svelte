@@ -720,9 +720,9 @@
     <ImportSourceChoiceStep
       liveHref={importSourceHref('homebox_live')}
       csvHref={importSourceHref('homebox_csv')}
+      availableSteps={availableWizardSteps}
       onChoose={chooseSourceFromLink}
       onNavigateStep={navigateWizardStep}
-      onCancel={returnToHistory}
     />
   {:else if step === 'setup'}
     <ImportSourceSetup

@@ -89,8 +89,7 @@
 
     <div class="action-row">
       <Button.Root onclick={onStart} disabled={!previewReady || busy}>
-        <Play size={16} aria-hidden="true" />
-        Start background import
+        <Button.BusyContent {busy} icon={Play} label="Start background import" busyLabel="Starting import" />
       </Button.Root>
       <Button.Root variant="outline" onclick={onBack} disabled={busy}>Back</Button.Root>
     </div>
@@ -113,6 +112,7 @@
 
   .action-row {
     flex-wrap: wrap;
+    scroll-margin-bottom: var(--mobile-scroll-clearance, 10rem);
   }
 
   .source-summary,

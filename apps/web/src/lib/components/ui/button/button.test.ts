@@ -55,4 +55,22 @@ describe('Button', () => {
 
 		expect(onDisabledActivate).not.toHaveBeenCalled();
 	});
+
+	it('renders explicit busy button content with a spinner and operation label', () => {
+		component = mount(ButtonHarness, {
+			target: document.body
+		});
+
+		const ready = document.body.querySelector<HTMLButtonElement>('[data-testid="ready-button"]');
+		const busy = document.body.querySelector<HTMLButtonElement>('[data-testid="busy-button"]');
+
+		expect(ready?.textContent).toContain('Confirm connection');
+		expect(ready?.querySelector('.busy-button-spinner')).toBeNull();
+		expect(ready?.querySelector('.busy-button-content')).not.toBeNull();
+		expect(busy?.textContent).toContain('Confirming connection');
+		expect(busy?.querySelector('.busy-button-spinner')).not.toBeNull();
+		expect(busy?.querySelector('.busy-button-content')?.textContent?.trim()).toBe('Confirming connection');
+		expect(busy?.querySelector('.busy-button-content')?.children).toHaveLength(2);
+		expect(busy?.disabled).toBe(true);
+	});
 });
