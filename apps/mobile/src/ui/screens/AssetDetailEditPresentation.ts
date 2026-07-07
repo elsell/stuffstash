@@ -3,6 +3,7 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 export type EditDraft = {
   readonly title: string;
   readonly description: string;
+  readonly tagIds?: readonly string[];
 };
 
 export type AssetEditContext = {
@@ -14,17 +15,18 @@ export type AssetEditContext = {
 export type NormalizedEditDraft = {
   readonly title: string;
   readonly description: string;
+  readonly tagIds?: readonly string[];
 };
 
 export function canSaveEditAsset(
-  asset: Pick<AssetDetailViewModel, 'title' | 'description'>,
+  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags'>,
   draft: EditDraft | undefined
 ): boolean {
   return editDraftState(asset, draft).canSave;
 }
 
 export function hasDirtyEditAssetDraft(
-  asset: Pick<AssetDetailViewModel, 'title' | 'description'>,
+  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags'>,
   draft: EditDraft | undefined
 ): boolean {
   return editDraftState(asset, draft).isDirty;
@@ -33,12 +35,13 @@ export function hasDirtyEditAssetDraft(
 export function normalizedEditDraft(draft: EditDraft): NormalizedEditDraft {
   return {
     title: draft.title.trim(),
-    description: draft.description.trim()
+    description: draft.description.trim(),
+    tagIds: normalizeTagIds(draft.tagIds)
   };
 }
 
 function editDraftState(
-  asset: Pick<AssetDetailViewModel, 'title' | 'description'>,
+  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags'>,
   draft: EditDraft | undefined
 ): {
   readonly canSave: boolean;
@@ -49,12 +52,26 @@ function editDraftState(
   }
 
   const normalized = normalizedEditDraft(draft);
-  const isDirty = normalized.title !== asset.title || normalized.description !== asset.description;
+  const isDirty = normalized.title !== asset.title
+    || normalized.description !== asset.description
+    || !sameTagAssignments(normalized.tagIds ?? [], asset.tags?.map((tag) => tag.id) ?? []);
 
   return {
     canSave: normalized.title.length > 0 && isDirty,
     isDirty
   };
+}
+
+function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] {
+  return (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
+}
+
+function sameTagAssignments(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const rightSet = new Set(right);
+  return left.every((tagId) => rightSet.has(tagId));
 }
 
 export function assetEditContext(

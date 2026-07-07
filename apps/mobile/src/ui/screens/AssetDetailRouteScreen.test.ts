@@ -907,26 +907,28 @@ describe('asset lifecycle presentation helpers', () => {
 
 describe('asset edit presentation helpers', () => {
   it('saves only meaningful dirty edits with a non-empty title', () => {
-    const asset = { title: 'Water bottle', description: 'On the desk.' };
+    const asset = { title: 'Water bottle', description: 'On the desk.', tags: [{ id: 'tag-kitchen', label: 'Kitchen' }] };
 
     expect(canSaveEditAsset(asset, undefined)).toBe(false);
-    expect(canSaveEditAsset(asset, { title: '   ', description: 'On the desk.' })).toBe(false);
-    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the desk.' })).toBe(false);
-    expect(canSaveEditAsset(asset, { title: '  Water bottle  ', description: '  On the desk.  ' })).toBe(false);
-    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the shelf.' })).toBe(true);
-    expect(canSaveEditAsset(asset, { title: 'Big water bottle', description: 'On the desk.' })).toBe(true);
+    expect(canSaveEditAsset(asset, { title: '   ', description: 'On the desk.', tagIds: ['tag-kitchen'] })).toBe(false);
+    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the desk.', tagIds: ['tag-kitchen'] })).toBe(false);
+    expect(canSaveEditAsset(asset, { title: '  Water bottle  ', description: '  On the desk.  ', tagIds: ['tag-kitchen'] })).toBe(false);
+    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the shelf.', tagIds: ['tag-kitchen'] })).toBe(true);
+    expect(canSaveEditAsset(asset, { title: 'Big water bottle', description: 'On the desk.', tagIds: ['tag-kitchen'] })).toBe(true);
+    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the desk.', tagIds: [] })).toBe(true);
   });
 
   it('uses the same normalized edit state for discard warnings and save payloads', () => {
-    const asset = { title: 'Water bottle', description: 'On the desk.' };
-    const whitespaceOnly = { title: '  Water bottle  ', description: '  On the desk.  ' };
-    const changed = { title: '  Water bottle  ', description: '  On the shelf.  ' };
+    const asset = { title: 'Water bottle', description: 'On the desk.', tags: [{ id: 'tag-kitchen', label: 'Kitchen' }] };
+    const whitespaceOnly = { title: '  Water bottle  ', description: '  On the desk.  ', tagIds: ['tag-kitchen'] };
+    const changed = { title: '  Water bottle  ', description: '  On the shelf.  ', tagIds: [' tag-camping ', ''] };
 
     expect(hasDirtyEditAssetDraft(asset, whitespaceOnly)).toBe(false);
     expect(hasDirtyEditAssetDraft(asset, changed)).toBe(true);
     expect(normalizedEditDraft(changed)).toEqual({
       title: 'Water bottle',
-      description: 'On the shelf.'
+      description: 'On the shelf.',
+      tagIds: ['tag-camping']
     });
   });
 

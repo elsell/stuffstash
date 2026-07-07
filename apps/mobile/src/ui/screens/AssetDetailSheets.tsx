@@ -8,7 +8,9 @@ import {
   TextInput,
   View
 } from 'react-native';
+import { Check } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import type { HomeDashboardViewModel } from '../../application/home/HomeDashboardQuery';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
   assetEditContext,
@@ -49,6 +51,7 @@ export type MoveIntoDraft = {
 
 export function EditAssetSheet({
   asset,
+  assetTags,
   draft,
   isSaving,
   onChange,
@@ -56,6 +59,7 @@ export function EditAssetSheet({
   onSave
 }: {
   readonly asset: AssetDetailViewModel;
+  readonly assetTags: HomeDashboardViewModel['assetTags'];
   readonly draft: EditDraft | undefined;
   readonly isSaving: boolean;
   readonly onChange: (draft: EditDraft) => void;
@@ -80,7 +84,7 @@ export function EditAssetSheet({
       <TextInput
         autoCapitalize="sentences"
         editable={!isSaving}
-        onChangeText={(title) => onChange({ title, description: draft?.description ?? '' })}
+        onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [] })}
         style={styles.input}
         value={draft?.title ?? ''}
       />
@@ -88,9 +92,15 @@ export function EditAssetSheet({
       <TextInput
         editable={!isSaving}
         multiline
-        onChangeText={(description) => onChange({ title: draft?.title ?? '', description })}
+        onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [] })}
         style={[styles.input, styles.multilineInput]}
         value={draft?.description ?? ''}
+      />
+      <EditTagPicker
+        disabled={isSaving}
+        tags={assetTags}
+        selectedTagIds={draft?.tagIds ?? []}
+        onChange={(tagIds) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds })}
       />
       <SheetActions
         disabled={!canSave}
@@ -99,6 +109,62 @@ export function EditAssetSheet({
         onSave={onSave}
       />
     </KeyboardAvoidingView>
+  );
+}
+
+function EditTagPicker({
+  disabled,
+  onChange,
+  selectedTagIds,
+  tags
+}: {
+  readonly disabled: boolean;
+  readonly onChange: (tagIds: readonly string[]) => void;
+  readonly selectedTagIds: readonly string[];
+  readonly tags: HomeDashboardViewModel['assetTags'];
+}) {
+  if (tags.length === 0) {
+    return null;
+  }
+
+  const selected = new Set(selectedTagIds);
+
+  function toggleTag(tagId: string): void {
+    if (disabled) {
+      return;
+    }
+    if (selected.has(tagId)) {
+      onChange(selectedTagIds.filter((current) => current !== tagId));
+      return;
+    }
+    onChange([...selectedTagIds, tagId]);
+  }
+
+  return (
+    <View style={styles.tagPicker}>
+      <Text style={styles.inputLabel}>Tags</Text>
+      <View style={styles.tagOptions}>
+        {tags.map((tag) => {
+          const isSelected = selected.has(tag.id);
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled, selected: isSelected }}
+              disabled={disabled}
+              key={tag.id}
+              onPress={() => toggleTag(tag.id)}
+              style={[styles.tagOption, isSelected ? styles.tagOptionSelected : null, disabled ? styles.disabledAction : null]}
+            >
+              {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
+              <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
+                {tag.displayName}
+              </Text>
+              {isSelected ? <Check color={colors.action} size={14} strokeWidth={2.4} /> : null}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -452,6 +518,48 @@ const styles = StyleSheet.create({
   multilineInput: {
     minHeight: 104,
     textAlignVertical: 'top'
+  },
+  tagPicker: {
+    gap: spacing.xs
+  },
+  tagOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs
+  },
+  tagOption: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    maxWidth: '100%',
+    minHeight: 34,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6
+  },
+  tagOptionSelected: {
+    borderColor: colors.action
+  },
+  tagSwatch: {
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 10,
+    width: 10
+  },
+  tagOptionText: {
+    color: colors.textMuted,
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0,
+    maxWidth: 180
+  },
+  tagOptionTextSelected: {
+    color: colors.text
   },
   sheetActions: {
     flexDirection: 'row',

@@ -16,6 +16,7 @@ import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
+import { HomeDashboardQuery, type HomeDashboardViewModel } from '../../application/home/HomeDashboardQuery';
 import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
 import {
   AssetCheckoutHistorySheet,
@@ -46,16 +47,18 @@ import { colors, spacing } from '../theme/tokens';
 
 type LoadableAssetState =
   | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly asset: AssetDetailViewModel }
+  | { readonly status: 'ready'; readonly asset: AssetDetailViewModel; readonly assetTags?: HomeDashboardViewModel['assetTags'] }
   | { readonly status: 'error'; readonly message: string };
 
 export function AssetEditSheetRouteScreen({
   assetDetailQuery,
   assetId,
+  homeDashboardQuery,
   updateAssetCommand
 }: {
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetId: string;
+  readonly homeDashboardQuery: HomeDashboardQuery;
   readonly updateAssetCommand: UpdateAssetCommand;
 }) {
   const [state, setState] = useState<LoadableAssetState>({ status: 'loading' });
@@ -64,12 +67,15 @@ export function AssetEditSheetRouteScreen({
 
   useEffect(() => {
     let isCurrent = true;
-    assetDetailQuery
-      .execute(assetId)
-      .then((asset) => {
+    Promise.all([assetDetailQuery.execute(assetId), homeDashboardQuery.execute()])
+      .then(([asset, dashboard]) => {
         if (isCurrent) {
-          setState({ status: 'ready', asset });
-          setDraft({ title: asset.title, description: asset.description });
+          setState({ status: 'ready', asset, assetTags: dashboard.assetTags });
+          setDraft({
+            title: asset.title,
+            description: asset.description,
+            tagIds: asset.tags?.map((tag) => tag.id) ?? []
+          });
         }
       })
       .catch((error: unknown) => {
@@ -80,7 +86,7 @@ export function AssetEditSheetRouteScreen({
     return () => {
       isCurrent = false;
     };
-  }, [assetDetailQuery, assetId]);
+  }, [assetDetailQuery, assetId, homeDashboardQuery]);
 
   function close(): void {
     if (state.status !== 'ready' || !hasDirtyEditAssetDraft(state.asset, draft)) {
@@ -103,7 +109,8 @@ export function AssetEditSheetRouteScreen({
       const result = await updateAssetCommand.execute({
         assetId,
         title: normalized.title,
-        description: normalized.description
+        description: normalized.description,
+        tagIds: normalized.tagIds
       });
       recordAssetActionCompletion({ assetId, action: 'edit', message: result.message });
       router.back();
@@ -121,6 +128,7 @@ export function AssetEditSheetRouteScreen({
       {state.status === 'ready' ? (
         <EditAssetSheet
           asset={state.asset}
+          assetTags={state.assetTags ?? []}
           draft={draft}
           isSaving={isSaving}
           onChange={setDraft}
