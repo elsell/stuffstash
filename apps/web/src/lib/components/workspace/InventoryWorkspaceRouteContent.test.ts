@@ -235,7 +235,7 @@ describe('InventoryWorkspaceRouteContent', () => {
       })
     });
 
-    expect(document.body.textContent).toContain('Import history');
+    expect(document.body.textContent).toContain('Imports');
     expect(document.body.textContent).toContain('No import runs yet');
 
     unmount(component);

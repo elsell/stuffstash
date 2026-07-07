@@ -317,7 +317,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Remove from history').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Import history');
+      expect(document.body.textContent).toContain('No import runs yet');
       expect(document.body.textContent).not.toContain('Progress timeline');
       expect(document.body.textContent).not.toContain('Remove from history');
     });
@@ -330,8 +330,9 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('History');
       expect(document.body.textContent).toContain('Running');
       expect(document.body.textContent).toContain('Ready to review');
-      expect(document.body.textContent).toContain('Needs attention');
-      expect(document.body.textContent).toContain('1 import needs attention');
+      expect(document.body.textContent).toContain('Warnings');
+      expect(document.body.textContent).toContain('Action required');
+      expect(document.body.textContent).not.toContain('Action required 1');
       expect(document.body.textContent).toContain('Completed with warnings.');
       expect(document.body.textContent).toContain('Completed');
       expect(document.body.textContent).toContain('Homebox');
@@ -339,12 +340,13 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Started Jul 6, 2026');
       expect(document.body.textContent).toContain('Completed Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
-      expect(document.body.textContent).toContain('No other import runs to show.');
-      expect(historyLedgerText()).not.toContain('Completed with warnings.');
+      expect(document.body.textContent).not.toContain('No other import runs to show.');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Warnings');
     });
   });
 
-  it('lets attention summary filter directly to imports that need review', async () => {
+  it('keeps warning-only imports in history and filters them separately', async () => {
     class MixedTerminalImportJobRepository extends TerminalImportJobRepository {
       private readonly cleanJob = {
         ...this.job,
@@ -403,16 +405,17 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Clean Homebox');
-      expect(document.body.textContent).toContain('1 import needs attention');
-      expect(document.body.textContent).toContain('1 import has warnings or failed work.');
+      expect(document.body.textContent).toContain('Warnings');
+      expect(document.body.textContent).toContain('Action required');
       expect(document.body.textContent).toContain('2 warnings');
-      expect(buttonContaining('Review')).toBeTruthy();
+      expect(buttonContaining('Review Details')).toBeTruthy();
       expect(historyLedgerText()).toContain('Clean Homebox');
-      expect(historyLedgerText()).not.toContain('Completed with warnings.');
-      expect(historyLedgerText()).not.toContain('Needs attention');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Warnings');
+      expect(historyLedgerText()).not.toContain('Action required');
     });
 
-    buttonContaining('Review').click();
+    buttonContaining('Review Details').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Issues');
@@ -423,15 +426,15 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Back to history').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Show attention history');
+      expect(document.body.textContent).toContain('Warnings');
     });
 
-    buttonContaining('Show attention history').click();
+    buttonContaining('Warnings').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Showing imports with warnings, errors, or cleanup work.');
+      expect(document.body.textContent).toContain('Showing completed imports with warnings.');
       expect(document.body.textContent).toContain('Homebox');
-      expect(document.body.textContent).toContain('Needs attention');
+      expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).toContain('Details');
       expect(document.body.textContent).not.toContain('Clean Homebox');
     });
@@ -441,6 +444,136 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Issues');
       expect(document.body.textContent).toContain('2 affected records');
+    });
+  });
+
+  it('filters current work without showing an empty terminal ledger', async () => {
+    class MixedCurrentAndTerminalImportJobRepository extends CompletingImportJobRepository {
+      private readonly previewJob = {
+        ...this.job,
+        id: 'job-previewed',
+        status: 'previewed' as const,
+        source: {
+          ...this.job.source,
+          name: 'Preview Homebox',
+          fingerprint: 'fingerprint-previewed'
+        },
+        progress: { phase: 'ready', done: 1, total: 1, message: 'Preview ready', updatedAt: '2026-07-06T12:00:00Z' },
+        completedAt: undefined
+      };
+
+      private readonly completedJob = {
+        ...this.job,
+        id: 'job-completed',
+        status: 'succeeded' as const,
+        source: {
+          ...this.job.source,
+          name: 'Completed Homebox',
+          fingerprint: 'fingerprint-completed'
+        },
+        counts: {
+          ...this.job.counts,
+          warnings: 0,
+          errors: 0
+        },
+        progress: { phase: 'terminal', done: 1, total: 1, message: 'Import completed', updatedAt: '2026-07-06T12:05:00Z' },
+        completedAt: '2026-07-06T12:05:00Z'
+      };
+
+      async listImportJobs(tenantId: string, inventoryId: string) {
+        this.expectScope(tenantId, inventoryId);
+        return [this.job, this.previewJob, this.completedJob];
+      }
+    }
+
+    await mountImportWorkspace(new MixedCurrentAndTerminalImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Current work');
+      expect(document.body.textContent).toContain('Completed Homebox');
+    });
+
+    buttonContaining('Running').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Current work');
+      expect(document.body.textContent).toContain('Homebox');
+      expect(document.body.textContent).not.toContain('No imports match this filter.');
+      expect(document.body.textContent).not.toContain('Completed Homebox');
+    });
+
+    buttonContaining('Running').click();
+    buttonContaining('Ready to review').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Current work');
+      expect(document.body.textContent).toContain('Preview Homebox');
+      expect(document.body.textContent).not.toContain('No imports match this filter.');
+      expect(document.body.textContent).not.toContain('Completed Homebox');
+    });
+  });
+
+  it('elevates failed and blocking-error imports as action required instead of warnings', async () => {
+    class ActionRequiredImportJobRepository extends TerminalImportJobRepository {
+      private readonly failedJob = {
+        ...this.job,
+        id: 'job-failed',
+        status: 'failed' as const,
+        source: {
+          ...this.job.source,
+          name: 'Failed Homebox',
+          fingerprint: 'fingerprint-failed'
+        },
+        counts: {
+          ...this.job.counts,
+          warnings: 2,
+          errors: 0
+        },
+        progress: { phase: 'terminal', done: 0, total: 1, message: 'Import failed', updatedAt: '2026-07-06T12:05:00Z' },
+        completedAt: '2026-07-06T12:05:00Z'
+      };
+
+      private readonly blockingJob = {
+        ...this.job,
+        id: 'job-blocking',
+        status: 'succeeded' as const,
+        source: {
+          ...this.job.source,
+          name: 'Blocking Homebox',
+          fingerprint: 'fingerprint-blocking'
+        },
+        counts: {
+          ...this.job.counts,
+          warnings: 1,
+          errors: 1
+        },
+        progress: { phase: 'terminal', done: 1, total: 1, message: 'Import completed', updatedAt: '2026-07-06T12:06:00Z' },
+        completedAt: '2026-07-06T12:06:00Z'
+      };
+
+      async listImportJobs(tenantId: string, inventoryId: string) {
+        this.expectScope(tenantId, inventoryId);
+        return [this.failedJob, this.blockingJob];
+      }
+    }
+
+    await mountImportWorkspace(new ActionRequiredImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Action required');
+      expect(document.body.textContent).toContain('2 imports have blocking issues or failed cleanup.');
+      expect(document.body.textContent).toContain('Failed Homebox');
+      expect(document.body.textContent).toContain('Blocking Homebox');
+      expect(document.body.textContent).not.toContain('Warnings 2');
+    });
+
+    buttonContaining('Action required').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Showing imports that require action.');
+      expect(historyLedgerText()).toContain('Failed Homebox');
+      expect(historyLedgerText()).toContain('Blocking Homebox');
+      expect(historyLedgerText()).toContain('Action required');
     });
   });
 

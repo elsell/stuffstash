@@ -26,7 +26,11 @@ export function statusLabel(job: ImportJob): string {
 }
 
 export function jobNeedsAttention(job: ImportJob): boolean {
-  return job.status === 'failed' || job.status === 'discard_failed' || job.counts.errors > 0 || job.counts.warnings > 0;
+  return job.status === 'failed' || job.status === 'discard_failed' || job.counts.errors > 0;
+}
+
+export function jobHasWarnings(job: ImportJob): boolean {
+  return !jobNeedsAttention(job) && job.counts.warnings > 0;
 }
 
 export function attentionSummary(job: ImportJob): string {

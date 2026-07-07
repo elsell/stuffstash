@@ -479,7 +479,7 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     buttonContaining('View in history').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Import history');
+      expect(document.body.textContent).toContain('1 running now');
       expect(document.body.textContent).toContain('Current work');
       expect(document.body.textContent).not.toContain('Import could not be started.');
     });

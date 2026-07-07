@@ -1,8 +1,9 @@
 import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
+import { Toaster } from '$lib/components/ui/sonner/index.js';
 import type {
   Asset,
   AssetAttachment,
@@ -19,6 +20,7 @@ import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
 
 let component: ReturnType<typeof mount> | null = null;
+let toaster: ReturnType<typeof mount> | null = null;
 
 const seed: WorkspaceSeed = {
   principal: { id: 'principal-one', email: 'owner@example.test' },
@@ -137,6 +139,8 @@ async function mountWorkspace(
   options: { onSessionExpired?: () => void } = {}
 ): Promise<SeededInventoryRepository> {
   window.history.replaceState({}, '', path);
+  installMatchMedia();
+  toaster = mount(Toaster, { target: document.body });
   component = mount(InventoryWorkspaceApp, {
     target: document.body,
     props: {
@@ -147,6 +151,23 @@ async function mountWorkspace(
     }
   });
   return repository;
+}
+
+function installMatchMedia(): void {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  });
 }
 
 async function waitFor(assertion: () => void): Promise<void> {
@@ -168,6 +189,10 @@ afterEach(() => {
   if (component) {
     unmount(component);
     component = null;
+  }
+  if (toaster) {
+    unmount(toaster);
+    toaster = null;
   }
   document.body.innerHTML = '';
   window.history.replaceState({}, '', '/');
@@ -371,7 +396,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import');
-      expect(document.body.textContent).toContain('Import history');
+      expect(document.body.textContent).toContain('Imports');
       expect(document.body.textContent).toContain('No import runs yet');
     });
   });
@@ -392,7 +417,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import');
-      expect(document.body.textContent).toContain('Import history');
+      expect(document.body.textContent).toContain('Imports');
       expect(document.body.textContent).toContain('No import runs yet');
     });
   });
@@ -680,11 +705,12 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
       expect(document.body.textContent).toContain('Saved Camera bag.');
+      expect(document.body.textContent).toContain('View asset');
       expect(productShell ? isInert(productShell) : true).toBe(false);
       expect(productShell?.getAttribute('aria-hidden')).toBeNull();
     });
 
-    const toast = document.body.querySelector<HTMLElement>('.toast');
+    const toast = document.body.querySelector<HTMLElement>('.stuffstash-toast');
     expect(toast).toBeTruthy();
     expect(productShell?.contains(toast)).toBe(false);
   });

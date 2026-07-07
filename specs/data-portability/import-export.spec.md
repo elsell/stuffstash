@@ -284,13 +284,17 @@ The import workspace must include:
 - A way to open an individual import job detail.
 - A way to remove terminal jobs from import history without removing audit history or imported records.
 
-The import history screen must summarize the inventory's import state before the row ledger so users can quickly distinguish active work, previews waiting for confirmation, finished imports, and imports needing attention.
+The import history screen must summarize the inventory's import state before the row ledger so users can quickly distinguish active work, previews waiting for confirmation, finished imports, imports with warnings, and imports that require action.
+The import history screen must not repeat page-level headings such as `Imports` and `Import history` as competing primary hierarchy. The page title owns the surface; the history content below it should start with controls, status filters, current work, or the ledger.
+History status summaries must be aligned, compact controls when they filter or jump the page state. They must expose selected state instead of looking like decorative statistics.
 History rows must use user-facing status language and must not require users to know durable-job implementation statuses.
 Previewed jobs are drafts waiting for confirmation, not completed history; the UI must present them separately from terminal history and make them easy to resume.
 If an inventory has active import jobs, the UI must make those jobs easy to resume from the import surface before encouraging a new import.
 Active jobs and preview drafts must be grouped as current work ahead of completed history so users can resume, inspect, or cancel ongoing work before starting another import.
-Jobs promoted into current-work or needs-attention groups must not be duplicated in the default history ledger immediately below those groups.
-Users may explicitly switch the ledger to attention history when they want the full row-level context for jobs that need review.
+Jobs promoted into current-work or action-required groups must not be duplicated in the default history ledger immediately below those groups.
+Warnings and blocking errors must be visually separated. Warnings are non-blocking review signals and should be shown as amber indicators in the main history ledger. Blocking errors, failed imports, and discard-cleanup failures require action and may be elevated into a more prominent red action-required group.
+The history ledger should be compact enough that recent runs remain visible in the first screen on ordinary desktop viewports whenever there is no active blocking work.
+Users may explicitly switch the ledger to action-required or warning history when they want the full row-level context for jobs that need review.
 If an inventory has no import jobs, the import surface must show an empty state with one clear action to start an import.
 The import surface must not show the source setup form by default.
 

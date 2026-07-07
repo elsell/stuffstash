@@ -543,7 +543,7 @@
   function historySummaryDescription(): string {
     if (activeJobs.length > 0) return `${activeJobs.length} running now. You can leave this page and return later.`;
     if (draftJobs.length > 0) return `${draftJobs.length} preview waiting for confirmation.`;
-    if (attentionJobs.length > 0) return `${attentionJobs.length} import ${attentionJobs.length === 1 ? 'needs' : 'need'} attention.`;
+    if (attentionJobs.length > 0) return `${attentionJobs.length} import ${attentionJobs.length === 1 ? 'requires' : 'require'} action.`;
     if (completedJobs.length > 0) return `${completedJobs.length} completed import ${completedJobs.length === 1 ? 'run' : 'runs'} in this inventory.`;
     return 'No import runs yet.';
   }

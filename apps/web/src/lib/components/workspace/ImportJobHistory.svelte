@@ -19,6 +19,7 @@
     canRemoveJobFromHistory,
     historyCountSummary,
     isTerminal,
+    jobHasWarnings,
     jobNeedsAttention,
     jobTimeLabel,
     phaseLabel,
@@ -33,7 +34,7 @@
     statusVariant
   } from './importWorkspacePresentation';
 
-  type HistoryFilter = 'all' | 'attention' | 'completed';
+  type HistoryFilter = 'all' | 'current' | 'drafts' | 'attention' | 'warnings' | 'completed';
 
   type Props = {
     jobs: ImportJob[];
@@ -72,12 +73,17 @@
   }: Props = $props();
 
   let historyFilter = $state<HistoryFilter>('all');
+  let warningJobs = $derived(terminalJobs.filter(jobHasWarnings));
   let filteredTerminalJobs = $derived(
     historyFilter === 'attention'
       ? terminalJobs.filter(jobNeedsAttention)
+      : historyFilter === 'warnings'
+        ? terminalJobs.filter(jobHasWarnings)
       : historyFilter === 'completed'
         ? terminalJobs.filter((job) => job.status === 'succeeded')
-        : terminalJobs.filter((job) => !jobNeedsAttention(job))
+        : historyFilter === 'current' || historyFilter === 'drafts'
+          ? []
+          : terminalJobs.filter((job) => !jobNeedsAttention(job))
   );
   let attentionQueue = $derived(attentionJobs.slice(0, 4));
   let hiddenAttentionCount = $derived(Math.max(0, attentionJobs.length - attentionQueue.length));
@@ -91,10 +97,7 @@
 </script>
 
 <div class="history-header">
-  <div>
-    <h2>Import history</h2>
-    <p>{summaryDescription}</p>
-  </div>
+  <p>{summaryDescription}</p>
   {#if jobs.length > 0}
     <Button.Root onclick={onBeginImport} disabled={!canCreateImports} variant={currentWorkJobs.length > 0 ? 'outline' : 'default'}>
       <Plus size={16} aria-hidden="true" />
@@ -105,20 +108,33 @@
 
 {#if jobs.length > 0}
   <div class="history-status-strip" aria-label="Import history summary">
-    <div class={activeJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
+    <Button.Root
+      class={historyFilter === 'current' ? 'status-chip active selected' : activeJobs.length > 0 ? 'status-chip active' : 'status-chip'}
+      variant="ghost"
+      onclick={() => (historyFilter = historyFilter === 'current' ? 'all' : 'current')}
+      disabled={activeJobs.length === 0}
+      aria-pressed={historyFilter === 'current'}
+    >
       <LoaderCircle size={14} aria-hidden="true" />
       <span>Running</span>
       <strong>{activeJobs.length}</strong>
-    </div>
-    <div class={draftJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
+    </Button.Root>
+    <Button.Root
+      class={historyFilter === 'drafts' ? 'status-chip active selected' : draftJobs.length > 0 ? 'status-chip active' : 'status-chip'}
+      variant="ghost"
+      onclick={() => (historyFilter = historyFilter === 'drafts' ? 'all' : 'drafts')}
+      disabled={draftJobs.length === 0}
+      aria-pressed={historyFilter === 'drafts'}
+    >
       <Clock3 size={14} aria-hidden="true" />
       <span>Ready to review</span>
       <strong>{draftJobs.length}</strong>
-    </div>
+    </Button.Root>
     <Button.Root
       class={historyFilter === 'completed' ? 'status-chip active selected' : completedJobs.length > 0 ? 'status-chip active' : 'status-chip'}
       variant="ghost"
       onclick={() => (historyFilter = historyFilter === 'completed' ? 'all' : 'completed')}
+      disabled={completedJobs.length === 0}
       aria-pressed={historyFilter === 'completed'}
     >
       <CheckCircle2 size={14} aria-hidden="true" />
@@ -126,14 +142,25 @@
       <strong>{completedJobs.length}</strong>
     </Button.Root>
     <Button.Root
-      class={historyFilter === 'attention' ? 'status-chip warning selected' : attentionJobs.length > 0 ? 'status-chip warning' : 'status-chip'}
+      class={historyFilter === 'warnings' ? 'status-chip warning selected' : warningJobs.length > 0 ? 'status-chip warning' : 'status-chip'}
+      variant="ghost"
+      onclick={() => (historyFilter = historyFilter === 'warnings' ? 'all' : 'warnings')}
+      disabled={warningJobs.length === 0}
+      aria-pressed={historyFilter === 'warnings'}
+    >
+      <AlertTriangle size={14} aria-hidden="true" />
+      <span>Warnings</span>
+      <strong>{warningJobs.length}</strong>
+    </Button.Root>
+    <Button.Root
+      class={historyFilter === 'attention' ? 'status-chip danger selected' : attentionJobs.length > 0 ? 'status-chip danger' : 'status-chip'}
       variant="ghost"
       onclick={() => (historyFilter = historyFilter === 'attention' ? 'all' : 'attention')}
       disabled={attentionJobs.length === 0}
       aria-pressed={historyFilter === 'attention'}
     >
-      <AlertTriangle size={14} aria-hidden="true" />
-      <span>Needs attention</span>
+      <XCircle size={14} aria-hidden="true" />
+      <span>Action required</span>
       <strong>{attentionJobs.length}</strong>
     </Button.Root>
   </div>
@@ -158,7 +185,7 @@
     </Card.Content>
   </Card.Root>
 {:else}
-  {#if currentWorkJobs.length > 0}
+  {#if currentWorkJobs.length > 0 && (historyFilter === 'all' || historyFilter === 'current' || historyFilter === 'drafts')}
     <div class="job-section current-work-section">
       <div class="section-heading">
         <div>
@@ -166,6 +193,7 @@
           <p>Resume drafts, watch progress, or cancel running imports.</p>
         </div>
       </div>
+      {#if activeJobs.length > 0 && historyFilter !== 'drafts'}
       {#each activeJobs as job}
         <Card.Root>
           <Card.Content class="import-job-card">
@@ -214,6 +242,8 @@
           </Card.Content>
         </Card.Root>
       {/each}
+      {/if}
+      {#if draftJobs.length > 0 && historyFilter !== 'current'}
       {#each draftJobs as job}
         <div class="history-row draft-row">
           <span class="status-icon"><Clock3 size={18} aria-hidden="true" /></span>
@@ -233,16 +263,17 @@
           <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>Details</Button.Root>
         </div>
       {/each}
+      {/if}
     </div>
   {/if}
   {#if attentionJobs.length > 0}
     <div class="job-section attention-section" aria-label="Imports needing attention">
       <div class="section-heading">
         <div>
-          <h3>Needs attention</h3>
-          <p>{attentionJobs.length === 1 ? '1 import has warnings or failed work.' : `${attentionJobs.length} imports have warnings or failed work.`}</p>
+          <h3>Action required</h3>
+          <p>{attentionJobs.length === 1 ? '1 import has blocking issues or failed cleanup.' : `${attentionJobs.length} imports have blocking issues or failed cleanup.`}</p>
         </div>
-        <Button.Root variant="ghost" size="sm" onclick={() => (historyFilter = 'attention')}>Show attention history</Button.Root>
+        <Button.Root variant="ghost" size="sm" onclick={() => (historyFilter = 'attention')}>Show action history</Button.Root>
       </div>
       <div class="attention-list">
         {#each attentionQueue as job}
@@ -283,18 +314,20 @@
       {/if}
     </div>
   {/if}
-  {#if terminalJobs.length > 0}
+  {#if terminalJobs.length > 0 && historyFilter !== 'current' && historyFilter !== 'drafts'}
     <div class="job-section">
       <div class="section-heading">
         <div>
           <h3>History</h3>
           <p>
             {#if historyFilter === 'attention'}
-              Showing imports with warnings, errors, or cleanup work.
+              Showing imports that require action.
+            {:else if historyFilter === 'warnings'}
+              Showing completed imports with warnings.
             {:else if historyFilter === 'completed'}
               Showing completed imports.
             {:else}
-              Other completed, failed, and cancelled runs stay here until you remove them.
+              Completed, failed, and cancelled runs stay here until you remove them.
             {/if}
           </p>
         </div>
@@ -311,10 +344,12 @@
           <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
-          <div class={jobNeedsAttention(job) ? 'history-row attention-row' : 'history-row'} role="row">
+          <div class={jobNeedsAttention(job) ? 'history-row attention-row' : jobHasWarnings(job) ? 'history-row warning-row' : 'history-row'} role="row">
             <div class="status-cell" role="cell">
               <span class="status-icon">
                 {#if jobNeedsAttention(job)}
+                  <AlertTriangle size={18} aria-hidden="true" />
+                {:else if jobHasWarnings(job)}
                   <AlertTriangle size={18} aria-hidden="true" />
                 {:else if isTerminal(job) && job.status !== 'succeeded'}
                   <XCircle size={18} aria-hidden="true" />
@@ -326,12 +361,15 @@
                 <strong>{job.source.name}</strong>
                 <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
                 {#if jobNeedsAttention(job)}
-                  <Badge variant="destructive">Needs attention</Badge>
+                  <Badge variant="destructive">Action required</Badge>
+                {:else if jobHasWarnings(job)}
+                  <Badge variant="secondary">Warnings</Badge>
                 {/if}
               </div>
             </div>
             <div class="result-cell" role="cell">
               <span>{statusSentence(job)}</span>
+              {#if jobHasWarnings(job)}<span>{attentionSummary(job)}</span>{/if}
               <span>{historyCountSummary(job)}</span>
               {#if job.cancellationMode === 'keep_partial_progress'}<span>Partial progress kept</span>{/if}
               {#if job.cancellationMode === 'discard_partial_progress'}<span>Partial progress discarded</span>{/if}
@@ -349,10 +387,10 @@
                 variant={jobNeedsAttention(job) ? 'outline' : 'ghost'}
                 size="sm"
                 onclick={() => onOpenJob(job)}
-                aria-label={jobActionLabel(jobNeedsAttention(job) ? 'Review Details for' : 'View details for', job)}
+                aria-label={jobActionLabel(jobNeedsAttention(job) || jobHasWarnings(job) ? 'Review Details for' : 'View details for', job)}
               >
                 <Eye size={16} aria-hidden="true" />
-                {jobNeedsAttention(job) ? 'Review Details' : 'Details'}
+                {jobNeedsAttention(job) || jobHasWarnings(job) ? 'Review Details' : 'Details'}
               </Button.Root>
               {#if canRemoveJobFromHistory(job)}
                 <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
@@ -394,6 +432,10 @@
     justify-content: space-between;
   }
 
+  .history-header > p {
+    max-width: 44rem;
+  }
+
   h2,
   h3 {
     margin: 0;
@@ -414,7 +456,7 @@
 
   .job-section {
     display: grid;
-    gap: 1rem;
+    gap: 0.65rem;
   }
 
   .section-heading {
@@ -490,22 +532,25 @@
 
   .history-status-strip {
     align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     margin: 0;
   }
 
   :global(.status-chip) {
-    align-items: baseline;
+    align-items: center;
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: 8px;
     color: var(--muted-foreground);
-    display: flex;
+    display: grid;
     font-size: 0.82rem;
-    gap: 0.35rem;
+    gap: 0.12rem 0.4rem;
+    grid-template-columns: auto 1fr auto;
     min-width: 0;
-    padding: 0.35rem 0.6rem;
+    min-height: 2.65rem;
+    padding: 0.42rem 0.55rem;
+    text-align: left;
   }
 
   :global(.status-chip.active) {
@@ -515,8 +560,14 @@
   }
 
   :global(.status-chip.warning) {
+    background: color-mix(in oklab, var(--color-warning, #a15c00) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 30%, transparent);
+    color: var(--color-warning-foreground, #6b3a00);
+  }
+
+  :global(.status-chip.danger) {
     background: color-mix(in oklab, var(--destructive) 6%, transparent);
-    border-color: color-mix(in oklab, var(--destructive) 28%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 30%, transparent);
     color: var(--destructive);
   }
 
@@ -526,13 +577,16 @@
 
   :global(.status-chip span) {
     font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   :global(.status-chip strong) {
     color: var(--foreground);
     font-weight: 700;
+    font-size: 1rem;
     line-height: 1;
-    order: -1;
   }
 
   .job-main span {
@@ -627,21 +681,21 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     display: grid;
-    gap: 0.75rem;
+    gap: 0.55rem;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    padding: 0.8rem;
+    padding: 0.58rem 0.7rem;
   }
 
   .history-ledger {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.35rem;
   }
 
   .history-ledger-head,
   .history-ledger .history-row {
     display: grid;
-    gap: 0.75rem;
-    grid-template-columns: minmax(10rem, 0.9fr) minmax(14rem, 1.35fr) minmax(12rem, 1fr) minmax(10rem, 0.85fr) auto;
+    gap: 0.65rem;
+    grid-template-columns: minmax(9rem, 0.95fr) minmax(12rem, 1.35fr) minmax(10rem, 0.95fr) minmax(9rem, 0.8fr) auto;
   }
 
   .history-ledger-head {
@@ -694,6 +748,14 @@
 
   .attention-row .status-icon {
     color: var(--destructive);
+  }
+
+  .history-row.warning-row {
+    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 26%, var(--border));
+  }
+
+  .warning-row .status-icon {
+    color: var(--color-warning-foreground, #6b3a00);
   }
 
   .row-actions {
@@ -792,7 +854,6 @@
     }
 
     :global(.status-chip) {
-      border-radius: 8px;
       justify-content: flex-start;
       padding: 0.5rem 0.6rem;
     }
