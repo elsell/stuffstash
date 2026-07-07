@@ -442,6 +442,81 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(transport.canSendFollowUpAudio()).toBe(false);
   });
 
+  it('settles each repeated clarification follow-up while keeping the socket open', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+    const firstFollowUpEvents: unknown[] = [];
+    const secondFollowUpEvents: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['Zmlyc3Q=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'clarification', spokenResponse: 'Which item?', displayResponse: 'Which item?' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    await waitForEventType(events, 'session.completed');
+
+    const firstFollowUp = transport.sendFollowUpAudio(['c2Vjb25k'], async (event) => {
+      firstFollowUpEvents.push(event);
+    });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 4,
+      sessionId: 'session-1',
+      response: { kind: 'clarification', spokenResponse: 'Where should it go?', displayResponse: 'Where should it go?' }
+    });
+    socket.receive({ type: 'session.completed', seq: 5, sessionId: 'session-1' });
+
+    await expect(promiseSettled(firstFollowUp)).resolves.toBe(true);
+    expect(transport.canSendFollowUpAudio()).toBe(true);
+
+    const secondFollowUp = transport.sendFollowUpAudio(['dGhpcmQ='], async (event) => {
+      secondFollowUpEvents.push(event);
+    });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 6,
+      sessionId: 'session-1',
+      response: { kind: 'answer', spokenResponse: 'Moved it.', displayResponse: 'Moved it.' }
+    });
+    socket.receive({ type: 'session.completed', seq: 7, sessionId: 'session-1' });
+
+    await secondFollowUp;
+    await run;
+    expect(socket.closedByClient).toBe(true);
+    expect(socket.sent.map((message) => message.type)).toEqual([
+      'session.start',
+      'audio.chunk',
+      'audio.end',
+      'audio.chunk',
+      'audio.end',
+      'audio.chunk',
+      'audio.end'
+    ]);
+    expect(firstFollowUpEvents.map((event) => isEventType(event, 'assistant.response.completed') || isEventType(event, 'session.completed'))).toEqual([true, true]);
+    expect(secondFollowUpEvents.map((event) => isEventType(event, 'assistant.response.completed') || isEventType(event, 'session.completed'))).toEqual([true, true]);
+    expect(transport.canSendFollowUpAudio()).toBe(false);
+  });
+
   it('sends session cancel and rejects safely when cancelled after session start', async () => {
     const socket = new FakeWebSocket();
     const controller = new AbortController();
@@ -685,6 +760,19 @@ async function waitForEventType(events: readonly unknown[], type: string): Promi
   for (let attempts = 0; attempts < 20 && !events.some((event) => isEventType(event, type)); attempts++) {
     await Promise.resolve();
   }
+}
+
+async function promiseSettled(promise: Promise<unknown>): Promise<boolean> {
+  let settled = false;
+  void promise.then(() => {
+    settled = true;
+  }, () => {
+    settled = true;
+  });
+  for (let attempts = 0; attempts < 20 && !settled; attempts++) {
+    await Promise.resolve();
+  }
+  return settled;
 }
 
 function isEventType(event: unknown, type: string): boolean {

@@ -213,6 +213,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           if (message.type === 'session.completed' && !hasPendingActionPlan) {
             completed = true;
             if (lastResponseKind === 'clarification') {
+              followUpPending = false;
+              followUpResolve?.();
+              followUpResolve = null;
               this.activeFollowUpSession = {
                 sendAudio: (audioChunksBase64, followUpOnEvent) => {
                   currentOnEvent = followUpOnEvent ?? onEvent;
