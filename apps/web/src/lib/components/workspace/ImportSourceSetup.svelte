@@ -1,5 +1,9 @@
 <script lang="ts">
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+  import FileText from '@lucide/svelte/icons/file-text';
+  import Image from '@lucide/svelte/icons/image';
+  import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
+  import Server from '@lucide/svelte/icons/server';
   import type { Inventory } from '$lib/domain/inventory';
   import type { ImportCSVSelection, ImportSourceChoice } from '$lib/application/workspaceImportRequest';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -52,81 +56,96 @@
   </Card.Header>
   <Card.Content class="import-source-setup-content">
     {#if sourceChoice === 'homebox_live'}
-      <div class="field-stack">
-        <Label.Root for="homebox-url">Homebox URL</Label.Root>
-        <Input.Root
-          id="homebox-url"
-          bind:value={baseUrl}
-          placeholder="homebox.example.com or http://homebox.local:3100"
-          autocomplete="url"
-          autocapitalize="none"
-          autocorrect="off"
-          inputmode="url"
-          spellcheck={false}
-        />
-        <small class="field-note">Explicit http:// and https:// URLs are preserved. Schemeless hosts try https:// first.</small>
-      </div>
-      <div class="field-grid">
-        <div class="field-stack">
-          <Label.Root for="homebox-user">Email</Label.Root>
-          <Input.Root
-            id="homebox-user"
-            type="email"
-            bind:value={username}
-            autocomplete="username"
-            autocapitalize="none"
-            autocorrect="off"
-            inputmode="email"
-            spellcheck={false}
-          />
-        </div>
-        <div class="field-stack">
-          <Label.Root for="homebox-password">Password</Label.Root>
-          <Input.Root
-            id="homebox-password"
-            type="password"
-            bind:value={password}
-            autocomplete="current-password"
-            autocapitalize="none"
-            autocorrect="off"
-            spellcheck={false}
-          />
-        </div>
-      </div>
-      <Label.Root class="import-check-row">
-        <Checkbox.Root bind:checked={includeImages} />
-        <span>Import photos when Homebox provides them</span>
-      </Label.Root>
-      <details class="advanced-options">
-        <summary>Connection options</summary>
-        <div class="advanced-option-list">
+      <div class="setup-grid">
+        <div class="setup-fields">
+          <div class="field-stack">
+            <Label.Root for="homebox-url">Homebox URL</Label.Root>
+            <Input.Root
+              id="homebox-url"
+              bind:value={baseUrl}
+              placeholder="homebox.example.com or http://homebox.local:3100"
+              autocomplete="url"
+              autocapitalize="none"
+              autocorrect="off"
+              inputmode="url"
+              spellcheck={false}
+            />
+            <small class="field-note">Explicit http:// and https:// URLs are preserved. Schemeless hosts try https:// first.</small>
+          </div>
+          <div class="field-grid">
+            <div class="field-stack">
+              <Label.Root for="homebox-user">Email</Label.Root>
+              <Input.Root
+                id="homebox-user"
+                type="email"
+                bind:value={username}
+                autocomplete="username"
+                autocapitalize="none"
+                autocorrect="off"
+                inputmode="email"
+                spellcheck={false}
+              />
+            </div>
+            <div class="field-stack">
+              <Label.Root for="homebox-password">Password</Label.Root>
+              <Input.Root
+                id="homebox-password"
+                type="password"
+                bind:value={password}
+                autocomplete="current-password"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck={false}
+              />
+            </div>
+          </div>
           <Label.Root class="import-check-row">
-            <Checkbox.Root bind:checked={allowPrivateNetwork} />
-            <span>Allow private-network Homebox URL</span>
+            <Checkbox.Root bind:checked={includeImages} />
+            <span>Import photos when Homebox provides them</span>
           </Label.Root>
-          <Label.Root class="import-check-row">
-            <Checkbox.Root bind:checked={allowInsecureTLS} />
-            <span>Allow self-signed TLS certificate</span>
-          </Label.Root>
+          <details class="advanced-options">
+            <summary>Connection options</summary>
+            <div class="advanced-option-list">
+              <Label.Root class="import-check-row">
+                <Checkbox.Root bind:checked={allowPrivateNetwork} />
+                <span>Allow private-network Homebox URL</span>
+              </Label.Root>
+              <Label.Root class="import-check-row">
+                <Checkbox.Root bind:checked={allowInsecureTLS} />
+                <span>Allow self-signed TLS certificate</span>
+              </Label.Root>
+            </div>
+          </details>
         </div>
-      </details>
+        <div class="connection-summary" aria-label="Connection summary">
+          <span><Server size={16} aria-hidden="true" />Live Homebox API</span>
+          <span><LockKeyhole size={16} aria-hidden="true" />Credentials are used for this preview</span>
+          <span><Image size={16} aria-hidden="true" />Photos {includeImages ? 'on' : 'off'}</span>
+        </div>
+      </div>
     {:else}
-      <div class="field-stack">
-        <Label.Root for="homebox-csv">Homebox CSV export</Label.Root>
-        <Input.Root
-          id="homebox-csv"
-          type="file"
-          accept=".csv,text/csv"
-          autocapitalize="none"
-          autocorrect="off"
-          spellcheck={false}
-          onchange={onFileSelected}
-        />
-        {#if csvSelection}
-          <small class="field-note">{csvSelection.name} · {Math.max(1, Math.round(csvSelection.size / 1024))} KB · photos are not included in CSV exports</small>
-        {:else}
-          <small class="field-note">CSV files must be 10 MiB or smaller. Homebox CSV exports do not include photos.</small>
-        {/if}
+      <div class="setup-grid">
+        <div class="field-stack">
+          <Label.Root for="homebox-csv">Homebox CSV export</Label.Root>
+          <Input.Root
+            id="homebox-csv"
+            type="file"
+            accept=".csv,text/csv"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck={false}
+            onchange={onFileSelected}
+          />
+          {#if csvSelection}
+            <small class="field-note">{csvSelection.name} · {Math.max(1, Math.round(csvSelection.size / 1024))} KB · photos are not included in CSV exports</small>
+          {:else}
+            <small class="field-note">CSV files must be 10 MiB or smaller. Homebox CSV exports do not include photos.</small>
+          {/if}
+        </div>
+        <div class="connection-summary" aria-label="CSV import summary">
+          <span><FileText size={16} aria-hidden="true" />CSV snapshot</span>
+          <span><Image size={16} aria-hidden="true" />Photos unavailable</span>
+        </div>
       </div>
     {/if}
 
@@ -146,6 +165,19 @@
     gap: 1rem;
   }
 
+  .setup-grid {
+    align-items: start;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 0.34fr);
+  }
+
+  .setup-fields {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
   .field-grid {
     display: grid;
     gap: 0.75rem;
@@ -155,6 +187,7 @@
   .field-stack {
     display: grid;
     gap: 0.35rem;
+    min-width: 0;
   }
 
   .field-note {
@@ -172,6 +205,22 @@
   .action-row {
     flex-wrap: wrap;
     scroll-margin-bottom: 8rem;
+  }
+
+  .connection-summary {
+    border-left: 1px solid hsl(var(--border));
+    display: grid;
+    gap: 0.55rem;
+    padding-left: 0.75rem;
+  }
+
+  .connection-summary span {
+    align-items: center;
+    color: hsl(var(--muted-foreground));
+    display: flex;
+    font-size: 0.82rem;
+    gap: 0.5rem;
+    min-width: 0;
   }
 
   .advanced-options {
@@ -198,8 +247,19 @@
   }
 
   @media (max-width: 860px) {
+    .setup-grid {
+      grid-template-columns: 1fr;
+    }
+
     :global(.import-check-row) {
       align-items: flex-start;
+    }
+
+    .connection-summary {
+      border-left: 0;
+      border-top: 1px solid hsl(var(--border));
+      padding-left: 0;
+      padding-top: 0.75rem;
     }
 
     .field-grid {

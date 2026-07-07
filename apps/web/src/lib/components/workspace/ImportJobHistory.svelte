@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Database from '@lucide/svelte/icons/database';
@@ -88,24 +89,28 @@
 </div>
 
 {#if jobs.length > 0}
-  <div class="history-summary-grid" aria-label="Import history summary">
-    <div class={activeJobs.length > 0 ? 'summary-active' : ''}>
-      <span>Running</span>
-      <strong>{activeJobs.length}</strong>
+  <dl class="history-status-strip" aria-label="Import history summary">
+    <div class={activeJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
+      <LoaderCircle size={14} aria-hidden="true" />
+      <dt>Running</dt>
+      <dd>{activeJobs.length}</dd>
     </div>
-    <div class={draftJobs.length > 0 ? 'summary-active' : ''}>
-      <span>Ready to review</span>
-      <strong>{draftJobs.length}</strong>
+    <div class={draftJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
+      <Clock3 size={14} aria-hidden="true" />
+      <dt>Ready to review</dt>
+      <dd>{draftJobs.length}</dd>
     </div>
-    <div class={completedJobs.length > 0 ? 'summary-active' : ''}>
-      <span>Completed</span>
-      <strong>{completedJobs.length}</strong>
+    <div class={completedJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
+      <CheckCircle2 size={14} aria-hidden="true" />
+      <dt>Completed</dt>
+      <dd>{completedJobs.length}</dd>
     </div>
-    <div class={attentionJobs.length > 0 ? 'summary-warning' : ''}>
-      <span>Needs attention</span>
-      <strong>{attentionJobs.length}</strong>
+    <div class={attentionJobs.length > 0 ? 'status-chip warning' : 'status-chip'}>
+      <AlertTriangle size={14} aria-hidden="true" />
+      <dt>Needs attention</dt>
+      <dd>{attentionJobs.length}</dd>
     </div>
-  </div>
+  </dl>
 {/if}
 
 {#if jobs.length === 0}
@@ -139,8 +144,8 @@
         <Card.Root>
           <Card.Content class="import-job-card">
             <div class="job-main">
-              <LoaderCircle class="import-history-spin" size={18} aria-hidden="true" />
-              <div>
+              <span class="active-status-icon"><LoaderCircle class="import-history-spin" size={18} aria-hidden="true" /></span>
+              <div class="active-job-body">
                 <div class="history-title">
                   <strong>{job.source.name}</strong>
                   <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
@@ -184,7 +189,7 @@
         </Card.Root>
       {/each}
       {#each draftJobs as job}
-        <div class="history-row">
+        <div class="history-row draft-row">
           <span class="status-icon"><Clock3 size={18} aria-hidden="true" /></span>
           <div>
             <div class="history-title">
@@ -221,7 +226,7 @@
               <CheckCircle2 size={18} aria-hidden="true" />
             {/if}
           </span>
-          <div>
+          <div class="history-row-body">
             <div class="history-title">
               <strong>{job.source.name}</strong>
               <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
@@ -237,15 +242,17 @@
               {#if job.cancellationMode === 'discard_partial_progress'}<span>Partial progress discarded</span>{/if}
             </div>
           </div>
-          <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>
-            <Eye size={16} aria-hidden="true" />
-            Details
-          </Button.Root>
-          {#if canRemoveJobFromHistory(job)}
-            <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
-              <Trash2 size={16} aria-hidden="true" />
+          <div class="row-actions">
+            <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>
+              <Eye size={16} aria-hidden="true" />
+              Details
             </Button.Root>
-          {/if}
+            {#if canRemoveJobFromHistory(job)}
+              <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
+                <Trash2 size={16} aria-hidden="true" />
+              </Button.Root>
+            {/if}
+          </div>
         </div>
       {/each}
     </div>
@@ -313,48 +320,64 @@
     padding: 0.75rem;
   }
 
-  .history-summary-grid {
-    display: grid;
-    gap: 0.75rem;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .history-status-strip {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
   }
 
-  .history-summary-grid div {
+  .status-chip {
     align-items: baseline;
     border: 1px solid hsl(var(--border));
-    border-radius: 8px;
+    border-radius: 999px;
+    color: hsl(var(--muted-foreground));
     display: flex;
-    gap: 0.5rem;
-    justify-content: space-between;
+    font-size: 0.82rem;
+    gap: 0.35rem;
     min-width: 0;
-    padding: 0.75rem;
+    padding: 0.35rem 0.6rem;
   }
 
-  .history-summary-grid div.summary-active {
+  .status-chip.active {
     background: hsl(var(--primary) / 0.06);
     border-color: hsl(var(--primary) / 0.28);
+    color: hsl(var(--foreground));
   }
 
-  .history-summary-grid div.summary-warning {
+  .status-chip.warning {
     background: hsl(var(--destructive) / 0.06);
     border-color: hsl(var(--destructive) / 0.28);
+    color: hsl(var(--destructive));
   }
 
-  .history-summary-grid span {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.78rem;
-    min-width: 0;
+  .status-chip dt {
+    font-weight: 500;
   }
 
-  .history-summary-grid strong {
-    font-size: 1.45rem;
+  .status-chip dd {
+    color: hsl(var(--foreground));
+    font-weight: 700;
     line-height: 1;
+    margin: 0;
+    order: -1;
   }
 
   .job-main span {
     color: hsl(var(--muted-foreground));
     display: block;
     font-size: 0.82rem;
+  }
+
+  .active-status-icon {
+    color: hsl(var(--primary));
+    flex: 0 0 auto;
+  }
+
+  .active-job-body {
+    min-width: 0;
+    width: min(32rem, 100%);
   }
 
   .progress-track {
@@ -434,7 +457,7 @@
     border-radius: 8px;
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 0.8rem;
   }
 
@@ -444,6 +467,13 @@
 
   .history-row:hover {
     background: hsl(var(--muted) / 0.25);
+  }
+
+  .row-actions {
+    align-items: center;
+    display: flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
   }
 
   .status-icon {
@@ -516,16 +546,15 @@
       grid-template-columns: 1fr;
     }
 
-    .history-summary-grid {
+    .history-status-strip {
+      display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .history-summary-grid div {
-      padding: 0.65rem 0.7rem;
-    }
-
-    .history-summary-grid strong {
-      font-size: 1.15rem;
+    .status-chip {
+      border-radius: 8px;
+      justify-content: flex-start;
+      padding: 0.5rem 0.6rem;
     }
 
     .history-meta {
@@ -540,6 +569,10 @@
 
     .status-icon {
       display: none;
+    }
+
+    .row-actions {
+      justify-content: flex-start;
     }
   }
 </style>

@@ -721,7 +721,10 @@
   .import-workspace {
     display: grid;
     gap: 1rem;
+    margin: 0 auto;
+    max-width: 76rem;
     padding: 1.25rem;
+    width: 100%;
   }
 
   .import-toolbar,
@@ -733,7 +736,9 @@
   }
 
   .import-toolbar {
+    border-bottom: 1px solid hsl(var(--border));
     justify-content: space-between;
+    padding-bottom: 0.9rem;
   }
 
   .toolbar-actions {
@@ -746,7 +751,7 @@
   }
 
   h1 {
-    font-size: 1.8rem;
+    font-size: clamp(1.45rem, 2vw, 1.8rem);
     line-height: 1.2;
   }
 
@@ -756,6 +761,7 @@
 
   p {
     color: hsl(var(--muted-foreground));
+    font-size: 0.95rem;
     margin: 0.25rem 0 0;
   }
 
@@ -777,6 +783,8 @@
 
   @media (max-width: 860px) {
     .import-workspace {
+      gap: 0.9rem;
+      padding: 1rem;
       padding-bottom: 7rem;
     }
 
