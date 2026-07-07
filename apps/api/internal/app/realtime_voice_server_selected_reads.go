@@ -297,10 +297,26 @@ func (a App) executeRealtimeVoiceServerSelectedRead(ctx context.Context, session
 		}
 	}
 	*toolResults = append(*toolResults, result)
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "completed"}); err != nil {
+	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: realtimeVoiceToolCompletionStatus(result)}); err != nil {
 		return nil, err
 	}
 	return proposal, nil
+}
+
+func realtimeVoiceToolCompletionStatus(result ports.AgentToolResult) string {
+	switch result.Name {
+	case RealtimeVoiceToolSearchAuthorizedAssets, RealtimeVoiceToolListAuthorizedAssets:
+	default:
+		return "completed"
+	}
+	var output realtimeVoiceAssetToolOutput
+	if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
+		return "completed"
+	}
+	if output.Count == 0 {
+		return "no_visible_match"
+	}
+	return "completed"
 }
 
 func emitRealtimeVoiceProgress(session RealtimeVoiceSession, status string, message string, emit RealtimeVoiceEventSink) error {
