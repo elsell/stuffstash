@@ -285,6 +285,47 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('preserves action plan values that merely look like redaction terms', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'action.plan.proposed',
+          seq: 1,
+          sessionId: 'session-1',
+          actionPlan: {
+            planId: 'plan-raw-prompt-stack-trace',
+            status: 'proposed',
+            confirmationSummary: 'Create Stack Trace book?',
+            commands: [{
+              id: 'cmd-raw-query-notes',
+              kind: 'create_asset',
+              summary: 'Create Raw Query notes',
+              title: 'Stack Trace book'
+            }],
+            risks: ['Uses the title the user provided.']
+          }
+        }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)?.actionPlan).toMatchObject({
+      planId: 'plan-raw-prompt-stack-trace',
+      confirmationSummary: 'Create Stack Trace book?',
+      commands: [{
+        id: 'cmd-raw-query-notes',
+        summary: 'Create Raw Query notes',
+        title: 'Stack Trace book'
+      }]
+    });
+  });
+
+
   it('approves a proposed action plan through the active realtime transport', async () => {
     const transport = new ReviewDecisionTransport();
     const controller = new RealtimeVoiceSessionController(
@@ -1066,9 +1107,16 @@ describe('RealtimeVoiceSessionController', () => {
           seq: 1,
           sessionId: 'session-1',
           status: 'exploring',
-          message: 'raw prompt bearer abc123 stack trace provider session id: gemini-live-1'
+          message: 'raw prompt bearer abc/def== stack trace provider session id: gemini-live-1'
         },
-        { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+        {
+          type: 'agent.progress',
+          seq: 2,
+          sessionId: 'session-1',
+          status: 'answering',
+          message: 'Authorization: tok+en/with~punctuation bearer eyJhbGciOi.test.sig=='
+        },
+        { type: 'session.completed', seq: 3, sessionId: 'session-1' }
       ]),
       new FakePlayer()
     );
@@ -1079,7 +1127,9 @@ describe('RealtimeVoiceSessionController', () => {
 
     expect(visibleText).toContain('[redacted]');
     expect(visibleText).not.toContain('raw prompt');
-    expect(visibleText).not.toContain('bearer abc123');
+    expect(visibleText).not.toContain('abc/def');
+    expect(visibleText).not.toContain('tok+en');
+    expect(visibleText).not.toContain('eyJhbGciOi');
     expect(visibleText).not.toContain('stack trace');
     expect(visibleText).not.toContain('gemini-live-1');
   });

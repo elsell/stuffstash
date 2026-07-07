@@ -717,7 +717,7 @@ function withProgressStep(
   label: string,
   updates: Partial<VoiceRealtimeState>
 ): VoiceRealtimeState {
-  const safeLabel = safeBoundedText(label, 100) || 'Working';
+  const safeLabel = safeVisibleProgressText(label, 100) || 'Working';
   const currentSteps = state.progressSteps ?? [];
   const nextSteps = currentSteps.at(-1) === safeLabel
     ? currentSteps
@@ -946,6 +946,14 @@ function voiceFailureProgressLabel(code: string): string {
 }
 
 function safeBoundedText(value: string, maxLength: number): string {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return normalized.slice(0, maxLength).trim();
+}
+
+function safeVisibleProgressText(value: string, maxLength: number): string {
   const normalized = redactUnsafeVoiceText(value)
     .replace(/\s+/g, ' ')
     .trim();
@@ -971,6 +979,6 @@ function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
 function redactUnsafeVoiceText(value: string): string {
   return value
     .replace(/\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+/gi, '$1: [redacted]')
-    .replace(/bearer\s+[a-z0-9._-]+/gi, 'bearer [redacted]')
+    .replace(/bearer\s+[^"',\s}\]\)]+/gi, 'bearer [redacted]')
     .replace(/\b(raw prompt|stack trace|raw query|raw transcript|provider session id)\b/gi, '[redacted]');
 }
