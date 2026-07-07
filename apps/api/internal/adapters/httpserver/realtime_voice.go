@@ -248,7 +248,7 @@ type realtimeServerMessage struct {
 	Format                  *realtimeAudioFormatResponse      `json:"format,omitempty"`
 	ChunkID                 string                            `json:"chunkId,omitempty"`
 	AudioBase64             string                            `json:"audioBase64,omitempty"`
-	IsFinalChunk            bool                              `json:"isFinalChunk,omitempty"`
+	IsFinalChunk            *bool                             `json:"isFinalChunk,omitempty"`
 	AcceptedInputAudio      realtimeInputAudio                `json:"acceptedInputAudio,omitempty"`
 	AcceptedOutputAudio     realtimeOutputAudio               `json:"acceptedOutputAudio,omitempty"`
 	AcceptedCapabilities    []string                          `json:"acceptedCapabilities,omitempty"`
@@ -675,7 +675,7 @@ func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realt
 		message.Format = &realtimeAudioFormatResponse{MimeType: event.AudioMime}
 	case app.RealtimeVoiceEventTextToSpeechAudioChunk:
 		message.AudioBase64 = base64.StdEncoding.EncodeToString(event.Audio)
-		message.IsFinalChunk = event.FinalChunk
+		message.IsFinalChunk = &event.FinalChunk
 	}
 	return message
 }

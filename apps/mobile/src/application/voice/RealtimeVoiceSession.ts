@@ -112,7 +112,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       };
     }
   | { readonly type: 'tts.audio.started'; readonly mimeType: string }
-  | { readonly type: 'tts.audio.chunk'; readonly chunkId: string; readonly audioBase64: string; readonly isFinalChunk?: boolean }
+  | { readonly type: 'tts.audio.chunk'; readonly chunkId: string; readonly audioBase64: string; readonly isFinalChunk: boolean }
   | { readonly type: 'tts.audio.completed' }
   | { readonly type: 'session.completed' }
   | { readonly type: 'session.cancelled' }

@@ -446,7 +446,7 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         sessionId: stringField(message, 'sessionId'),
         chunkId: stringField(message, 'chunkId'),
         audioBase64: stringField(message, 'audioBase64'),
-        ...optionalBooleanObjectField(message, 'isFinalChunk')
+        isFinalChunk: booleanField(message, 'isFinalChunk')
       };
     case 'tts.audio.completed':
       return { ...metadata, type: 'tts.audio.completed', sessionId: stringField(message, 'sessionId') };
@@ -511,6 +511,14 @@ function stringField(message: Record<string, unknown>, field: string): string {
   return value;
 }
 
+function booleanField(message: Record<string, unknown>, field: string): boolean {
+  const value = message[field];
+  if (typeof value !== 'boolean') {
+    throw new Error(`Voice event field ${field} must be a boolean.`);
+  }
+  return value;
+}
+
 function optionalStringField(message: Record<string, unknown>, field: string): string | undefined {
   const value = message[field];
   return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
@@ -556,11 +564,6 @@ function actionPlanField(message: Record<string, unknown>) {
 
 function optionalObjectField<T extends string>(field: T, value: string | undefined): { readonly [key in T]?: string } {
   return value ? { [field]: value } as { readonly [key in T]?: string } : {};
-}
-
-function optionalBooleanObjectField<T extends string>(message: Record<string, unknown>, field: T): { readonly [key in T]?: boolean } {
-  const value = message[field];
-  return typeof value === 'boolean' ? { [field]: value } as { readonly [key in T]?: boolean } : {};
 }
 
 function optionalStringArrayObjectField<T extends string>(message: Record<string, unknown>, field: T): { readonly [key in T]?: readonly string[] } {

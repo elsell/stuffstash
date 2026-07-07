@@ -37,7 +37,7 @@ describe('RealtimeVoiceSessionController', () => {
         }
       },
       { type: 'tts.audio.started', seq: 6, sessionId: 'session-1', mimeType: 'audio/mpeg' },
-      { type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', audioBase64: 'YXVkaW8tMQ==', chunkId: 'tts-1' },
+      { type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', audioBase64: 'YXVkaW8tMQ==', chunkId: 'tts-1', isFinalChunk: true },
       { type: 'tts.audio.completed', seq: 8, sessionId: 'session-1' },
       { type: 'session.completed', seq: 9, sessionId: 'session-1' }
     ]);
@@ -1074,7 +1074,8 @@ describe('RealtimeVoiceSessionController', () => {
       seq: 1,
       sessionId: 'session-1',
       chunkId: 'late',
-      audioBase64: 'bGF0ZQ=='
+      audioBase64: 'bGF0ZQ==',
+      isFinalChunk: true
     });
 
     await expect(stop).rejects.toMatchObject({ code: 'voice_cancelled' });

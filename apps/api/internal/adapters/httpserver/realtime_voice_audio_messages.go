@@ -34,6 +34,11 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
 		}
 	}
+	if messageTypeName == "audio.chunk" {
+		if err := validateRealtimeAudioChunkFinalMarker(raw); err != nil {
+			return realtimeClientMessage{}, err
+		}
+	}
 	var message struct {
 		Type         string `json:"type"`
 		Seq          int    `json:"seq"`
@@ -76,4 +81,16 @@ func realtimeAudioMessageFieldAllowed(messageType string, field string) bool {
 		}
 	}
 	return false
+}
+
+func validateRealtimeAudioChunkFinalMarker(raw map[string]json.RawMessage) error {
+	value, ok := raw["isFinalChunk"]
+	if !ok {
+		return ports.ErrInvalidProviderInput
+	}
+	var marker bool
+	if err := json.Unmarshal(value, &marker); err != nil {
+		return ports.ErrInvalidProviderInput
+	}
+	return nil
 }

@@ -313,6 +313,37 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(events).toEqual([sessionStarted()]);
   });
 
+  it.each([
+    ['missing marker', {}],
+    ['wrong type marker', { isFinalChunk: 'true' }]
+  ])('rejects TTS audio chunks with %s', async (_name, markerFields) => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({ type: 'tts.audio.chunk', seq: 2, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo', ...markerFields });
+
+    await expect(run).rejects.toThrow('isFinalChunk');
+    expect(events).toEqual([sessionStarted()]);
+  });
+
   it('forwards verbose agent diagnostic and tool detail events', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
