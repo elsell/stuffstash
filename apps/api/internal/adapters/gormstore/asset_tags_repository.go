@@ -18,6 +18,15 @@ import (
 
 func (s Store) CreateAssetTag(ctx context.Context, tag assettag.Tag, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var count int64
+		if err := tx.Model(&inventoryModel{}).
+			Where(&inventoryModel{ID: tag.InventoryID.String(), TenantID: tag.TenantID.String()}).
+			Count(&count).Error; err != nil {
+			return err
+		}
+		if count != 1 {
+			return ports.ErrForbidden
+		}
 		model := assetTagModelFromDomain(tag)
 		if err := tx.Create(&model).Error; err != nil {
 			return err
