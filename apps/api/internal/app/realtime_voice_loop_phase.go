@@ -277,7 +277,7 @@ func realtimeVoiceLooksLikeCheckoutHistoryQuestion(transcript string) bool {
 	if !realtimeVoiceLooksLikeReadQuestion(transcript) {
 		return false
 	}
-	for _, token := range []string{" checked out ", " check out ", " checkout ", " returned ", " return ", " checked in ", " check in ", " who has "} {
+	for _, token := range []string{" checked out ", " check out ", " checkout ", " returned ", " return ", " checked in ", " check in ", " who has ", " who had ", " borrowed ", " borrow ", " loaned ", " lent "} {
 		if strings.Contains(text, token) {
 			return true
 		}

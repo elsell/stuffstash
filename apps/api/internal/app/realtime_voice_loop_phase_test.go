@@ -337,6 +337,22 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	if !realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn("Who checked out the drill?", checkoutHistoryResult) {
 		t.Fatalf("expected checkout history result to allow final answer")
 	}
+	if realtimeVoiceShouldRequireCheckoutHistory("Who checked out the drill?", checkoutHistoryResult) {
+		t.Fatalf("did not expect checkout history to be required after checkout history already ran")
+	}
+	for _, transcript := range []string{
+		"Who had the drill?",
+		"Who borrowed the drill?",
+		"Who had it? Follow-up answer: Drill.",
+	} {
+		if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript, checkoutSearchResult) {
+			t.Fatalf("expected %q to require checkout history before finalizing", transcript)
+		}
+		call, title := realtimeVoiceServerSelectedReadCall(transcript, 1, checkoutSearchResult, ports.AgentToolCall{ID: "checkout-history-natural"})
+		if title != "Server-selected checkout history" || call.Name != RealtimeVoiceToolListAssetCheckoutHistory || call.Arguments["assetId"] != "drill-1" {
+			t.Fatalf("expected server-selected checkout history for %q, title=%q call=%+v", transcript, title, call)
+		}
+	}
 	_, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("Add an Apple TV remote to the box under the TV in the living room.", 0, nil, "read-3")
 	if ok {
 		t.Fatalf("did not expect proactive read for nested create path")
