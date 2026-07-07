@@ -14,7 +14,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-const maxImportCSVBytes = 10 * 1024 * 1024
+const MaxImportCSVBytes = 10 * 1024 * 1024
 const maxImportJobResourceSummaries = 50
 const maxImportRequestIDLength = 128
 

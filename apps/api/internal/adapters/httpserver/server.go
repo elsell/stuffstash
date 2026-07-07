@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -12,6 +13,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+const importSourceJSONEnvelopeMaxBytes = 64 * 1024
 
 func init() {
 	huma.NewError = shared.NewErrorEnvelope
@@ -97,7 +100,12 @@ func applyJSONBodyLimit(api huma.API, maxBytes int64) {
 			path.Patch,
 			path.Trace,
 		} {
-			if operation != nil && !isAttachmentCreateRoute(routePath, operation) {
+			if operation == nil || isAttachmentCreateRoute(routePath, operation) {
+				continue
+			}
+			if isImportSourceBodyRoute(routePath, operation) {
+				operation.MaxBodyBytes = importSourceJSONBodyMaxBytes() + 1
+			} else {
 				operation.MaxBodyBytes = humaLimit
 			}
 		}
@@ -106,6 +114,15 @@ func applyJSONBodyLimit(api huma.API, maxBytes int64) {
 
 func isAttachmentCreateRoute(routePath string, operation *huma.Operation) bool {
 	return operation.Method == http.MethodPost && strings.HasSuffix(routePath, "/attachments")
+}
+
+func isImportSourceBodyRoute(routePath string, operation *huma.Operation) bool {
+	return operation.Method == http.MethodPost && strings.Contains(routePath, "/imports/jobs") && (strings.HasSuffix(routePath, "/preview") || strings.HasSuffix(routePath, "/start"))
+}
+
+func importSourceJSONBodyMaxBytes() int64 {
+	encodedCSVBytes := base64.StdEncoding.EncodedLen(app.MaxImportCSVBytes)
+	return int64(encodedCSVBytes + importSourceJSONEnvelopeMaxBytes)
 }
 
 func withSecurityHeaders(next http.Handler) http.Handler {

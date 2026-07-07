@@ -36,6 +36,7 @@ This spec does not define the final Stuff Stash-native CSV columns, final Stuff 
 - Import preview must report warnings and blocking errors separately.
 - Import warnings must be safe to show to users and must not include source passwords, bearer tokens, attachment storage paths, or provider internals.
 - Import source validation and connection failures may return a safe, actionable error detail, such as missing URL, unsupported URL scheme, blocked private-network source, TLS trust failure, or Homebox HTTP status, only when the source adapter marks the detail with the import-source user-error contract. Ordinary adapter errors must remain generic at the HTTP boundary. The web UI must prefer typed safe details over a generic invalid-request message.
+- CSV upload validation performed before source-adapter execution, such as invalid base64 upload content or files larger than the supported import limit, must use the same safe import-source detail path with user-actionable copy. These details must describe how to fix the upload without echoing file contents, raw payloads, credentials, provider paths, source-specific brands outside the selected adapter, or storage keys.
 - Import apply may reject stale or tampered preview plans. The client must not be trusted as the source of validation truth.
 - Production-scale imports must use durable import jobs rather than request-lifetime HTTP execution.
 - Durable import jobs are inventory-scoped. Import jobs must not create inventories in the durable Homebox import slice.
@@ -555,6 +556,8 @@ The request supports two mutually exclusive source shapes:
   - `sourceType`: `legacy_homebox_csv`.
   - `fileName`.
   - `contentBase64`.
+
+Uploaded CSV bytes are valid only for uploaded CSV source requests. Mixed source requests, such as a live Homebox request that also includes uploaded CSV bytes, must fail with a safe user-actionable import-source detail instead of being coerced into another source shape.
 
 Preview, start, cancel, and remove-from-history require authentication and import job create permission.
 List and detail require authentication and import job view permission.

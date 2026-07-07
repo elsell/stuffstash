@@ -40,7 +40,7 @@ func TestImportSourceInputErrorOnlySurfacesTypedUserErrors(t *testing.T) {
 }
 
 func TestImportSourceRequestAllowsCSVExactlyAtDecodedLimit(t *testing.T) {
-	content := strings.Repeat("a", maxImportCSVBytes)
+	content := strings.Repeat("a", MaxImportCSVBytes)
 	encoded := base64.StdEncoding.EncodeToString([]byte(content))
 	application := New(Dependencies{})
 
@@ -52,13 +52,13 @@ func TestImportSourceRequestAllowsCSVExactlyAtDecodedLimit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected CSV at decoded limit to be accepted, got %v", err)
 	}
-	if len(request.Content) != maxImportCSVBytes {
+	if len(request.Content) != MaxImportCSVBytes {
 		t.Fatalf("expected decoded CSV content at limit, got %d bytes", len(request.Content))
 	}
 }
 
 func TestImportSourceRequestRejectsCSVOverDecodedLimit(t *testing.T) {
-	content := strings.Repeat("a", maxImportCSVBytes+1)
+	content := strings.Repeat("a", MaxImportCSVBytes+1)
 	encoded := base64.StdEncoding.EncodeToString([]byte(content))
 	application := New(Dependencies{})
 
@@ -69,6 +69,55 @@ func TestImportSourceRequestRejectsCSVOverDecodedLimit(t *testing.T) {
 	})
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected over-limit CSV to be rejected, got %v", err)
+	}
+	var sourceDetail ImportSourceInvalidInputError
+	if !errors.As(err, &sourceDetail) {
+		t.Fatalf("expected safe CSV size detail, got %v", err)
+	}
+	if sourceDetail.Detail != "CSV import file is too large. Choose a CSV up to 10 MB." {
+		t.Fatalf("unexpected CSV size detail %q", sourceDetail.Detail)
+	}
+}
+
+func TestImportSourceRequestRejectsInvalidCSVBase64WithSafeDetail(t *testing.T) {
+	application := New(Dependencies{})
+
+	_, err := application.importSourceRequest(ImportSourceInput{
+		SourceType:    string(importplan.SourceLegacyHomeboxCSV),
+		FileName:      "homebox.csv",
+		ContentBase64: "not base64",
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid CSV payload to be rejected, got %v", err)
+	}
+	var sourceDetail ImportSourceInvalidInputError
+	if !errors.As(err, &sourceDetail) {
+		t.Fatalf("expected safe CSV decode detail, got %v", err)
+	}
+	if sourceDetail.Detail != "CSV import file could not be decoded. Choose a valid exported CSV file and try again." {
+		t.Fatalf("unexpected CSV decode detail %q", sourceDetail.Detail)
+	}
+}
+
+func TestImportSourceRequestRejectsCSVContentForLiveSource(t *testing.T) {
+	application := New(Dependencies{})
+
+	_, err := application.importSourceRequest(ImportSourceInput{
+		SourceType:    string(importplan.SourceLegacyHomebox),
+		BaseURL:       "https://homebox.example.test",
+		Username:      "owner@example.com",
+		Password:      "secret",
+		ContentBase64: base64.StdEncoding.EncodeToString([]byte("HB.location,HB.asset_id,HB.name\nGarage,HB-1,Drill\n")),
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected mixed live source and CSV content to be rejected, got %v", err)
+	}
+	var sourceDetail ImportSourceInvalidInputError
+	if !errors.As(err, &sourceDetail) {
+		t.Fatalf("expected safe mixed-source detail, got %v", err)
+	}
+	if sourceDetail.Detail != "Uploaded CSV content is only valid for CSV imports. Choose CSV upload or remove the file content." {
+		t.Fatalf("unexpected mixed-source detail %q", sourceDetail.Detail)
 	}
 }
 

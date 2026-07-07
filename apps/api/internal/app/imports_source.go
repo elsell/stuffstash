@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
@@ -29,23 +30,27 @@ func (a App) readImportSourceRequest(ctx context.Context, request ports.ImportSo
 }
 
 func (a App) importSourceRequest(input ImportSourceInput) (ports.ImportSourceRequest, error) {
+	sourceType := importplan.SourceType(input.SourceType)
 	var content []byte
 	if strings.TrimSpace(input.ContentBase64) != "" {
+		if sourceType != importplan.SourceLegacyHomeboxCSV {
+			return ports.ImportSourceRequest{}, NewImportSourceInvalidInputError("Uploaded CSV content is only valid for CSV imports. Choose CSV upload or remove the file content.")
+		}
 		encoded := strings.TrimSpace(input.ContentBase64)
-		if base64.StdEncoding.DecodedLen(len(encoded)) > maxImportCSVBytes+2 {
-			return ports.ImportSourceRequest{}, ErrInvalidInput
+		if base64.StdEncoding.DecodedLen(len(encoded)) > MaxImportCSVBytes+2 {
+			return ports.ImportSourceRequest{}, NewImportSourceInvalidInputError(importCSVTooLargeDetail())
 		}
 		decoded, err := base64.StdEncoding.DecodeString(encoded)
 		if err != nil {
-			return ports.ImportSourceRequest{}, ErrInvalidInput
+			return ports.ImportSourceRequest{}, NewImportSourceInvalidInputError("CSV import file could not be decoded. Choose a valid exported CSV file and try again.")
 		}
-		if len(decoded) > maxImportCSVBytes {
-			return ports.ImportSourceRequest{}, ErrInvalidInput
+		if len(decoded) > MaxImportCSVBytes {
+			return ports.ImportSourceRequest{}, NewImportSourceInvalidInputError(importCSVTooLargeDetail())
 		}
 		content = decoded
 	}
 	return ports.ImportSourceRequest{
-		SourceType:          importplan.SourceType(input.SourceType),
+		SourceType:          sourceType,
 		BaseURL:             input.BaseURL,
 		Username:            input.Username,
 		Password:            input.Password,
@@ -56,6 +61,10 @@ func (a App) importSourceRequest(input ImportSourceInput) (ports.ImportSourceReq
 		FileName:            input.FileName,
 		Content:             content,
 	}, nil
+}
+
+func importCSVTooLargeDetail() string {
+	return fmt.Sprintf("CSV import file is too large. Choose a CSV up to %d MB.", MaxImportCSVBytes/(1024*1024))
 }
 
 func (a App) importJobCommand(input StartImportJobInput) (ports.ImportJobCommand, error) {
