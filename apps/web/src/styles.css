@@ -1932,6 +1932,12 @@ dd {
   gap: 4px;
 }
 
+.tag-chip-list[data-overflow="true"] {
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .tag-chip,
 .tag-option {
   min-width: 0;
@@ -1967,6 +1973,12 @@ dd {
   border: 1px solid color-mix(in oklab, var(--tag-color, var(--border)) 70%, black);
   border-radius: 999px;
   background: var(--tag-color, var(--muted));
+}
+
+.tag-chip-overflow {
+  flex: 0 0 auto;
+  color: var(--muted-foreground);
+  font-weight: 700;
 }
 
 .tag-selector {

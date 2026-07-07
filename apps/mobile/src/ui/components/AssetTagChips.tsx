@@ -1,25 +1,34 @@
 import { StyleSheet, Text, View } from 'react-native';
 import type { AssetTagViewModel } from '../../application/assets/AssetViewModels';
 import { colors, radius, spacing } from '../theme/tokens';
+import { assetTagChipLayoutPresentation, assetTagChipPresentation } from './AssetTagChipsPresentation';
 
 type AssetTagChipsProps = {
   readonly tags?: readonly AssetTagViewModel[];
+  readonly compact?: boolean;
+  readonly overflowLimit?: number;
 };
 
-export function AssetTagChips({ tags }: AssetTagChipsProps) {
-  const visibleTags = tags ?? [];
-  if (visibleTags.length === 0) {
+export function AssetTagChips({ tags, compact = false, overflowLimit }: AssetTagChipsProps) {
+  const presentation = assetTagChipPresentation(tags, overflowLimit);
+  const layout = assetTagChipLayoutPresentation(compact);
+  if (presentation.visibleTags.length === 0) {
     return null;
   }
 
   return (
-    <View accessibilityLabel="Asset tags" style={styles.tagRow}>
-      {visibleTags.map((tag) => (
-        <View key={tag.id} style={styles.tagChip}>
+    <View accessibilityLabel="Asset tags" style={[styles.tagRow, layout.compactRow ? styles.compactTagRow : null]}>
+      {presentation.visibleTags.map((tag) => (
+        <View key={tag.id} style={[styles.tagChip, layout.shrinkVisibleChips ? styles.compactTagChip : null]}>
           {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color, borderColor: tag.color }]} /> : null}
           <Text numberOfLines={1} style={styles.tagLabel}>{tag.label}</Text>
         </View>
       ))}
+      {presentation.hiddenCount > 0 ? (
+        <View accessibilityLabel={`${presentation.hiddenCount} more tags`} style={[styles.tagChip, styles.overflowChip]}>
+          <Text numberOfLines={1} style={[styles.tagLabel, styles.overflowLabel]}>+{presentation.hiddenCount}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -30,6 +39,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.xs,
     minHeight: 0
+  },
+  compactTagRow: {
+    flexWrap: 'nowrap',
+    overflow: 'hidden'
   },
   tagChip: {
     alignItems: 'center',
@@ -44,6 +57,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: 3
   },
+  compactTagChip: {
+    flexShrink: 1,
+    minWidth: 0
+  },
   tagSwatch: {
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -56,5 +73,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0
+  },
+  overflowChip: {
+    flexShrink: 0
+  },
+  overflowLabel: {
+    color: colors.textMuted
   }
 });

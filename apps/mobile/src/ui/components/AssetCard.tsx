@@ -37,7 +37,7 @@ export function AssetCard({ asset, onPress }: AssetCardProps) {
         <Text numberOfLines={1} style={styles.meta}>
           {asset.locationTrailLabel}
         </Text>
-        <AssetTagChips tags={asset.tags} />
+        <AssetTagChips tags={asset.tags} compact overflowLimit={2} />
         <View style={styles.footer}>
           <Text style={asset.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
             {asset.photoLabel}

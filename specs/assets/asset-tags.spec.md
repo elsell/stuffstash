@@ -138,6 +138,7 @@ Tag chips must:
 - Use the tag color as a small swatch when a color is present.
 - Keep the asset title, photo, kind, parent/location, checkout state, and lifecycle state visually higher priority than tags.
 - Collapse gracefully on narrow screens without causing row height jumps or text overlap.
+- In compact list and card contexts, clients may show the first few assigned tags plus a `+N` overflow chip instead of rendering every tag.
 
 Asset create and edit flows must let users:
 

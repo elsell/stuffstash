@@ -116,7 +116,7 @@
             {#if asset.description}
               <small>{asset.description}</small>
             {/if}
-            <AssetTagChips tags={asset.tags ?? []} compact />
+            <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
             {#if asset.currentCheckout}
               <CheckoutBadge checkout={asset.currentCheckout} compact />
             {/if}

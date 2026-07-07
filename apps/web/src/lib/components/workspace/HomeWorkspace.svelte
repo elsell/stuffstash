@@ -149,7 +149,7 @@
                 <strong>{asset.title}</strong>
                 <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                 <small>{asset.containmentTrail}</small>
-                <AssetTagChips tags={asset.tags ?? []} compact />
+                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />
                 {/if}
@@ -171,7 +171,7 @@
               <span class="asset-row-main">
                 <strong>{asset.title}</strong>
                 <small>{asset.description || assetKindLabel(asset.kind)}</small>
-                <AssetTagChips tags={asset.tags ?? []} compact />
+                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />
                 {/if}
@@ -197,7 +197,7 @@
             <span class="asset-row-main">
               <strong>{asset.title}</strong>
               <small>{asset.description || assetKindLabel(asset.kind)}</small>
-              <AssetTagChips tags={asset.tags ?? []} compact />
+              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
               {#if asset.currentCheckout}
                 <CheckoutBadge checkout={asset.currentCheckout} compact />
               {/if}
