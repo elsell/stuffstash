@@ -9,7 +9,6 @@
   const COLLAPSED_GROUP_LIMIT = 5;
   const EXPANDED_GROUP_LIMIT = 15;
   const COLLAPSED_RECORD_LIMIT = 3;
-  const EXPANDED_RECORD_LIMIT = 5;
 
   type Props = {
     messages: ImportMessage[];
@@ -36,8 +35,8 @@
   let warningCount = $derived(Math.max(reportedWarnings ?? 0, visibleWarningCount));
   let errorCount = $derived(Math.max(reportedErrors ?? 0, visibleErrorCount));
   let expanded = $state(false);
+  let expandedGroupKeys = $state<string[]>([]);
   let visibleGroupLimit = $derived(expanded ? EXPANDED_GROUP_LIMIT : COLLAPSED_GROUP_LIMIT);
-  let visibleRecordLimit = $derived(expanded ? EXPANDED_RECORD_LIMIT : COLLAPSED_RECORD_LIMIT);
   let visibleGroups = $derived(groups.slice(0, visibleGroupLimit));
   let hiddenGroupCount = $derived(Math.max(0, groups.length - visibleGroups.length));
   let shouldBoundGroups = $derived(visibleMessages.length > 12 || groups.length > COLLAPSED_GROUP_LIMIT);
@@ -107,6 +106,16 @@
     if (message.sourceId) return `Source ID ${message.sourceId}`;
     return '';
   }
+
+  function groupExpanded(group: MessageGroup): boolean {
+    return expandedGroupKeys.includes(group.key);
+  }
+
+  function toggleGroup(group: MessageGroup): void {
+    expandedGroupKeys = groupExpanded(group)
+      ? expandedGroupKeys.filter((key) => key !== group.key)
+      : [...expandedGroupKeys, group.key];
+  }
 </script>
 
 <div class="message-list">
@@ -143,7 +152,8 @@
     tabindex={shouldBoundGroups ? 0 : undefined}
   >
     {#each visibleGroups as group (group.key)}
-      {@const visibleMessages = group.messages.slice(0, visibleRecordLimit)}
+      {@const isGroupExpanded = groupExpanded(group)}
+      {@const visibleMessages = isGroupExpanded ? group.messages : group.messages.slice(0, COLLAPSED_RECORD_LIMIT)}
       <div class="message-group">
         <div class="message-group-heading">
           <Badge variant={group.severity === 'error' ? 'destructive' : 'secondary'}>{severityLabel(group.severity)}</Badge>
@@ -163,7 +173,13 @@
             </div>
           {/each}
           {#if group.messages.length > visibleMessages.length}
-            <small class="message-overflow">{group.messages.length - visibleMessages.length} more in this group</small>
+            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}>
+              Show {group.messages.length - visibleMessages.length} more in this group
+            </Button.Root>
+          {:else if isGroupExpanded && group.messages.length > COLLAPSED_RECORD_LIMIT}
+            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}>
+              Show fewer in this group
+            </Button.Root>
           {/if}
         </div>
       </div>
@@ -259,10 +275,14 @@
     width: 1px;
   }
 
-  .message-overflow,
   .message-overflow-action span {
     color: var(--muted-foreground);
     font-size: 0.82rem;
+  }
+
+  :global(.message-group-toggle) {
+    justify-self: start;
+    padding-inline: 0;
   }
 
   .message-group {
@@ -326,10 +346,6 @@
     align-items: flex-start;
     display: flex;
     gap: 0.75rem;
-  }
-
-  .message-overflow {
-    display: block;
   }
 
   @media (max-width: 640px) {

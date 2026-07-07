@@ -137,13 +137,18 @@ describe('ImportMessagesList', () => {
     expect(document.body.textContent).not.toContain('attachment-4.tiff');
     expect(document.body.textContent).not.toContain('Import warning group 7');
 
-    document.body.querySelector<HTMLButtonElement>('button')?.click();
+    buttonContaining('Show 2 more in this group').click();
+    await tick();
+
+    expect(document.body.textContent).toContain('attachment-4.tiff');
+    expect(document.body.textContent).toContain('attachment-5.tiff');
+    expect(document.body.textContent).toContain('Show fewer in this group');
+
+    buttonContaining('Show more issues').click();
     await tick();
 
     expect(document.body.querySelectorAll('.message-group')).toHaveLength(15);
     expect(document.body.textContent).toContain('5 more issue groups hidden.');
-    expect(document.body.textContent).toContain('attachment-4.tiff');
-    expect(document.body.textContent).toContain('attachment-5.tiff');
     expect(document.body.textContent).toContain('Import warning group 15');
     expect(document.body.textContent).not.toContain('Import warning group 16');
   });
@@ -177,4 +182,14 @@ function sourceIDMessage(severity: ImportMessage['severity'], summary: string, d
     detail,
     sourceId
   };
+}
+
+function buttonContaining(text: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!button) {
+    throw new Error(`Missing button containing ${text}`);
+  }
+  return button;
 }

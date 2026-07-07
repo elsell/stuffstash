@@ -8,13 +8,17 @@
   };
 
   let { preview }: Props = $props();
+
+  function countLabel(count: number, singular: string, plural = `${singular}s`): string {
+    return `${count} ${count === 1 ? singular : plural}`;
+  }
 </script>
 
 <div class="preview-samples">
   <section>
     <div class="sample-heading">
       <h3>Fields</h3>
-      {#if preview.fieldsTruncated}<small>Showing a sample</small>{/if}
+      <small>{countLabel(preview.fields.length, 'field')}{preview.fieldsTruncated ? ' shown' : ''}</small>
     </div>
     <div class="sample-list">
       {#each preview.fields as field}
@@ -31,7 +35,7 @@
   <section>
     <div class="sample-heading">
       <h3>Locations</h3>
-      {#if preview.locationsTruncated}<small>Showing a sample</small>{/if}
+      <small>{countLabel(preview.locations.length, 'location')}{preview.locationsTruncated ? ' shown' : ''}</small>
     </div>
     <div class="sample-list">
       {#each preview.locations as item}
@@ -48,7 +52,7 @@
   <section>
     <div class="sample-heading">
       <h3>Assets</h3>
-      {#if preview.assetsTruncated}<small>Showing a sample</small>{/if}
+      <small>{countLabel(preview.assets.length, 'asset')}{preview.assetsTruncated ? ' shown' : ''}</small>
     </div>
     <div class="sample-list">
       {#each preview.assets as item}
@@ -65,7 +69,7 @@
   <section>
     <div class="sample-heading">
       <h3>Photos/files</h3>
-      {#if preview.attachmentsTruncated}<small>Showing a sample</small>{/if}
+      <small>{countLabel(preview.attachments.length, 'photo/file', 'photos/files')}{preview.attachmentsTruncated ? ' shown' : ''}</small>
     </div>
     <div class="sample-list">
       {#each preview.attachments as attachment}
@@ -85,7 +89,7 @@
   .preview-samples {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .preview-samples section {
@@ -96,7 +100,7 @@
     padding-top: 0.75rem;
   }
 
-  .preview-samples section:nth-child(-n + 3) {
+  .preview-samples section:nth-child(-n + 2) {
     border-top: 0;
     padding-top: 0;
   }
@@ -116,11 +120,15 @@
 
   .sample-list {
     display: grid;
-    gap: 0.45rem;
+    gap: 0.35rem;
   }
 
   .sample-row {
+    background: color-mix(in oklab, var(--muted) 24%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 72%, transparent);
+    border-radius: 8px;
     min-width: 0;
+    padding: 0.55rem 0.65rem;
   }
 
   .sample-row span,
