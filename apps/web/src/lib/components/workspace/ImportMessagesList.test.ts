@@ -133,6 +133,13 @@ describe('ImportMessagesList', () => {
     expect(dialog?.textContent).toContain('Source ID source-wardrobe');
     expect(dialog?.textContent).toContain('Source ID source-baby-hats');
 
+    dialog?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await tick();
+    expect(document.body.querySelector('[role="dialog"]')).toBeFalsy();
+
+    buttonContaining('Details').click();
+    await tick();
+
     buttonWithLabel('Close issue details').click();
     await tick();
     expect(document.body.querySelector('[role="dialog"]')).toBeFalsy();

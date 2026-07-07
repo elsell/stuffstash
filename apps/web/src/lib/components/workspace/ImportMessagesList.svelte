@@ -5,6 +5,7 @@
   import type { ImportMessage } from '$lib/domain/inventory';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
+  import * as Dialog from '$lib/components/ui/dialog/index.js';
   import { uniqueImportMessages } from './importWorkspacePresentation';
 
   const COLLAPSED_GROUP_LIMIT = 5;
@@ -263,60 +264,62 @@
   {#if truncated}
     <div class="quiet-row"><AlertCircle size={16} aria-hidden="true" /> {truncatedText}</div>
   {/if}
-  {#if selectedGroup}
-    {@const guidance = issueGuidance(selectedGroup)}
-    <div class="issue-detail-overlay" role="presentation">
-      <div class="issue-detail-backdrop" aria-hidden="true" onclick={() => (selectedGroupKey = null)}></div>
-      <div class="issue-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="issue-detail-title">
-        <div class="issue-detail-heading">
-          <div>
-            <Badge
-              variant={selectedGroup.severity === 'error' ? 'destructive' : 'secondary'}
-              class={selectedGroup.severity === 'warning' ? 'message-warning-badge' : ''}
-            >
-              {severityLabel(selectedGroup.severity)}
-            </Badge>
-            <h3 id="issue-detail-title">{selectedGroup.summary}</h3>
-            <p>{selectedGroup.cause || groupCountLabel(selectedGroup.messages.length)}</p>
-          </div>
-          <Button.Root variant="ghost" size="icon" aria-label="Close issue details" onclick={() => (selectedGroupKey = null)}>
-            <X size={16} aria-hidden="true" />
-          </Button.Root>
+  <Dialog.Root
+    open={Boolean(selectedGroup)}
+    ariaLabel="Import issue details"
+    class="issue-detail-dialog"
+    onDismiss={() => (selectedGroupKey = null)}
+  >
+    {#if selectedGroup}
+      {@const guidance = issueGuidance(selectedGroup)}
+      <div class="issue-detail-heading">
+        <div>
+          <Badge
+            variant={selectedGroup.severity === 'error' ? 'destructive' : 'secondary'}
+            class={selectedGroup.severity === 'warning' ? 'message-warning-badge' : ''}
+          >
+            {severityLabel(selectedGroup.severity)}
+          </Badge>
+          <h3 id="issue-detail-title">{selectedGroup.summary}</h3>
+          <p>{selectedGroup.cause || groupCountLabel(selectedGroup.messages.length)}</p>
         </div>
-        <div class="issue-detail-grid">
-          <div>
-            <span>Meaning</span>
-            <p>{guidance.meaning}</p>
-          </div>
-          <div>
-            <span>Impact</span>
-            <p>{guidance.impact}</p>
-          </div>
-          <div>
-            <span>Next action</span>
-            <p>{guidance.nextAction}</p>
-          </div>
+        <Button.Root variant="ghost" size="icon" aria-label="Close issue details" onclick={() => (selectedGroupKey = null)}>
+          <X size={16} aria-hidden="true" />
+        </Button.Root>
+      </div>
+      <div class="issue-detail-grid">
+        <div>
+          <span>Meaning</span>
+          <p>{guidance.meaning}</p>
         </div>
-        <div class="issue-detail-records">
-          <h4>Affected records</h4>
-          <div>
-            {#each selectedGroup.messages.slice(0, 8) as message}
-              {@const diagnostic = messageDiagnostic(message, selectedGroup)}
-              <div class="message-row compact">
-                <span>{messageRowLabel(message, selectedGroup)}</span>
-                {#if diagnostic}
-                  <small>{diagnostic}</small>
-                {/if}
-              </div>
-            {/each}
-          </div>
-          {#if selectedGroup.messages.length > 8}
-            <small>{selectedGroup.messages.length - 8} more affected {selectedGroup.messages.length - 8 === 1 ? 'record' : 'records'} in this group.</small>
-          {/if}
+        <div>
+          <span>Impact</span>
+          <p>{guidance.impact}</p>
+        </div>
+        <div>
+          <span>Next action</span>
+          <p>{guidance.nextAction}</p>
         </div>
       </div>
-    </div>
-  {/if}
+      <div class="issue-detail-records">
+        <h4>Affected records</h4>
+        <div>
+          {#each selectedGroup.messages.slice(0, 8) as message}
+            {@const diagnostic = messageDiagnostic(message, selectedGroup)}
+            <div class="message-row compact">
+              <span>{messageRowLabel(message, selectedGroup)}</span>
+              {#if diagnostic}
+                <small>{diagnostic}</small>
+              {/if}
+            </div>
+          {/each}
+        </div>
+        {#if selectedGroup.messages.length > 8}
+          <small>{selectedGroup.messages.length - 8} more affected {selectedGroup.messages.length - 8 === 1 ? 'record' : 'records'} in this group.</small>
+        {/if}
+      </div>
+    {/if}
+  </Dialog.Root>
 </div>
 
 <style>
@@ -486,26 +489,7 @@
     margin: 0;
   }
 
-  .issue-detail-overlay {
-    align-items: center;
-    display: grid;
-    inset: 0;
-    justify-items: center;
-    padding: 1rem;
-    position: fixed;
-    z-index: 70;
-  }
-
-  .issue-detail-backdrop {
-    background: color-mix(in oklab, var(--background) 68%, transparent);
-    border: 0;
-    cursor: default;
-    inset: 0;
-    padding: 0;
-    position: absolute;
-  }
-
-  .issue-detail-dialog {
+  :global(.issue-detail-dialog) {
     background: var(--background);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -514,10 +498,7 @@
     gap: 1rem;
     max-height: min(42rem, calc(100vh - 2rem));
     max-width: min(36rem, 100%);
-    overflow: auto;
     padding: 1rem;
-    position: relative;
-    width: 100%;
   }
 
   .issue-detail-heading {
@@ -600,9 +581,5 @@
       display: block;
     }
 
-    .issue-detail-overlay {
-      align-items: end;
-      padding: 0.75rem;
-    }
   }
 </style>
