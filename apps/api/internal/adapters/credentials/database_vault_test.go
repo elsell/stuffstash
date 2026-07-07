@@ -187,6 +187,67 @@ func TestDatabaseImportJobSourceVaultPreservesApplyAttachmentByteFlag(t *testing
 	}
 }
 
+func TestDatabaseImportJobSourceVaultReportsUnreadableStoredSourceMaterial(t *testing.T) {
+	t.Parallel()
+
+	scope := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		JobID:       importjob.ID("job-one"),
+	}
+	now := time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC)
+	tests := map[string]struct {
+		sealer vaultSealer
+		sealed ports.SealedImportJobSource
+	}{
+		"unseal failure": {
+			sealer: vaultSealer{unsealErr: errors.New("ciphertext could not be opened")},
+			sealed: ports.SealedImportJobSource{
+				KeyID:      "key-one",
+				Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+				Nonce:      []byte("123456789012"),
+				Ciphertext: []byte(`sealed:{"sourceType":"legacy_homebox","password":"secret"}`),
+			},
+		},
+		"invalid payload json": {
+			sealed: ports.SealedImportJobSource{
+				KeyID:      "key-one",
+				Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+				Nonce:      []byte("123456789012"),
+				Ciphertext: []byte(`sealed:not-json`),
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			repository := &vaultImportSourceRepository{
+				record: ports.ImportJobSourceRecord{
+					Scope:     scope,
+					Sealed:    tt.sealed,
+					ExpiresAt: now.Add(time.Minute),
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
+				found: true,
+			}
+			vault := NewDatabaseImportJobSourceVaultWithClock(repository, &tt.sealer, fixedClock{now: now})
+
+			request, found, err := vault.ImportJobSourceRequest(context.Background(), scope)
+			if !errors.Is(err, ports.ErrImportJobSourceUnreadable) {
+				t.Fatalf("expected unreadable import source error, got %v", err)
+			}
+			if found || request.Password != "" {
+				t.Fatalf("expected unreadable import source to be unavailable, found=%v request=%+v", found, request)
+			}
+			if repository.deleted {
+				t.Fatalf("did not expect unreadable source material to be deleted by read path")
+			}
+		})
+	}
+}
+
 func vaultScope() ports.ProviderCredentialScope {
 	return ports.ProviderCredentialScope{
 		TenantID:          tenant.ID("tenant-home"),

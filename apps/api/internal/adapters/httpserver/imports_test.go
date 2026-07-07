@@ -288,6 +288,16 @@ func TestDurableImportJobLifecycleHTTP(t *testing.T) {
 	if len(completed.Data.Resources) != 2 || completed.Data.Resources[0].ResourceType != "asset" || completed.Data.Resources[0].ResourceID == "" {
 		t.Fatalf("expected completed import to expose safe imported resources, got %+v", completed.Data.Resources)
 	}
+	var drillResourceFound bool
+	for _, resource := range completed.Data.Resources {
+		if resource.DisplayName == "Drill" {
+			drillResourceFound = true
+			break
+		}
+	}
+	if !drillResourceFound {
+		t.Fatalf("expected imported resources to include safe display names, got %+v", completed.Data.Resources)
+	}
 	if len(completed.Data.ProgressHistory) < 3 || completed.Data.ProgressHistory[len(completed.Data.ProgressHistory)-1].Phase != "terminal" {
 		t.Fatalf("expected completed import progress history through terminal, got %+v", completed.Data.ProgressHistory)
 	}
@@ -330,6 +340,90 @@ func TestDurableImportJobLifecycleHTTP(t *testing.T) {
 		if job.ID == previewedForCancel.Data.ID {
 			t.Fatalf("removed import job remained visible in history: %+v", listedAfterRemove.Data.Jobs)
 		}
+	}
+}
+
+func TestDurableImportJobStartReportsSourceChangedPrecondition(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestAppWithImportSource(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{"job-stale"},
+	}, &stalePreviewImportSource{}))
+	path := "/tenants/" + tenantID + "/inventories/" + inventoryID
+	source := map[string]any{
+		"sourceType":    "legacy_homebox",
+		"baseUrl":       "https://homebox.example.test",
+		"username":      "owner@example.test",
+		"password":      "secret",
+		"includeImages": false,
+	}
+
+	create := performRequest(server, http.MethodPost, path+"/imports/jobs/preview", "Bearer dev:owner", source)
+	if create.Code != http.StatusOK {
+		t.Fatalf("expected preview status %d, got %d with body %s", http.StatusOK, create.Code, create.Body.String())
+	}
+
+	start := performRequest(server, http.MethodPost, path+"/imports/jobs/job-stale/start", "Bearer dev:owner", source)
+	if start.Code != http.StatusPreconditionFailed {
+		t.Fatalf("expected stale source start status %d, got %d with body %s", http.StatusPreconditionFailed, start.Code, start.Body.String())
+	}
+	assertSafeError(t, start, "precondition_failed", "Import source changed after preview. Preview the source again before starting the import.")
+	if body := start.Body.String(); containsAny(body, "secret", "owner@example.test") {
+		t.Fatalf("source changed precondition leaked source input: %s", body)
+	}
+}
+
+func TestDurableImportJobStartRequiresNewPreviewWhenSecurityOptionsChange(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestAppWithImportSource(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{"job-options"},
+	}, &attachmentImportSource{}))
+	path := "/tenants/" + tenantID + "/inventories/" + inventoryID
+	source := map[string]any{
+		"sourceType":    "legacy_homebox",
+		"baseUrl":       "https://homebox.example.test",
+		"username":      "owner@example.test",
+		"password":      "secret",
+		"includeImages": true,
+	}
+
+	create := performRequest(server, http.MethodPost, path+"/imports/jobs/preview", "Bearer dev:owner", source)
+	if create.Code != http.StatusOK {
+		t.Fatalf("expected preview status %d, got %d with body %s", http.StatusOK, create.Code, create.Body.String())
+	}
+
+	changed := map[string]any{}
+	for key, value := range source {
+		changed[key] = value
+	}
+	changed["allowPrivateNetwork"] = true
+	start := performRequest(server, http.MethodPost, path+"/imports/jobs/job-options/start", "Bearer dev:owner", changed)
+	if start.Code != http.StatusPreconditionFailed {
+		t.Fatalf("expected security option start status %d, got %d with body %s", http.StatusPreconditionFailed, start.Code, start.Body.String())
+	}
+	assertSafeError(t, start, "precondition_failed", "Import source changed after preview. Preview the source again before starting the import.")
+
+	detail := performRequest(server, http.MethodGet, path+"/imports/jobs/job-options", "Bearer dev:owner", nil)
+	if detail.Code != http.StatusOK {
+		t.Fatalf("expected detail status %d, got %d with body %s", http.StatusOK, detail.Code, detail.Body.String())
+	}
+	var body importJobResponseEnvelope
+	decodeBody(t, detail, &body)
+	if body.Data.Status != "previewed" || body.Data.Source.AllowPrivateNetwork || body.Data.StartedAt != "" {
+		t.Fatalf("expected security option mismatch to leave job previewed with original source options, got %+v", body.Data)
 	}
 }
 
@@ -383,6 +477,7 @@ func TestDurableImportJobImportsAttachmentsThroughHTTPBoundary(t *testing.T) {
 	var attachmentResource *struct {
 		ResourceType     string `json:"resourceType"`
 		ResourceID       string `json:"resourceId"`
+		DisplayName      string `json:"displayName"`
 		ResourceOwnerID  string `json:"resourceOwnerId"`
 		SourceEntityType string `json:"sourceEntityType"`
 		SourceEntityID   string `json:"sourceEntityId"`
@@ -403,6 +498,42 @@ func TestDurableImportJobImportsAttachmentsThroughHTTPBoundary(t *testing.T) {
 	}
 	if download.Header().Get("Content-Type") != "image/png" || !bytes.Equal(download.Body.Bytes(), pngAttachmentContent()) {
 		t.Fatalf("expected imported PNG bytes, content type %q length %d", download.Header().Get("Content-Type"), download.Body.Len())
+	}
+	detail := performRequest(server, http.MethodGet, path+"/assets/"+attachmentResource.ResourceOwnerID, "Bearer dev:owner", nil)
+	if detail.Code != http.StatusOK {
+		t.Fatalf("expected imported asset detail status %d, got %d with body %s", http.StatusOK, detail.Code, detail.Body.String())
+	}
+	detailBody := decodeAsset(t, detail)
+	if detailBody.Data.PrimaryPhoto == nil || detailBody.Data.PrimaryPhoto.ID != attachmentResource.ResourceID || detailBody.Data.PrimaryPhoto.ContentType != "image/png" {
+		t.Fatalf("expected imported attachment to be asset detail primary photo, got %+v", detailBody.Data.PrimaryPhoto)
+	}
+	list := performRequest(server, http.MethodGet, path+"/assets", "Bearer dev:owner", nil)
+	if list.Code != http.StatusOK {
+		t.Fatalf("expected imported asset list status %d, got %d with body %s", http.StatusOK, list.Code, list.Body.String())
+	}
+	var listedPrimaryPhoto *assetPrimaryPhoto
+	for _, item := range decodeAssetList(t, list).Data {
+		if item.ID == attachmentResource.ResourceOwnerID {
+			listedPrimaryPhoto = item.PrimaryPhoto
+			break
+		}
+	}
+	if listedPrimaryPhoto == nil || listedPrimaryPhoto.ID != attachmentResource.ResourceID {
+		t.Fatalf("expected imported attachment to be asset list primary photo, got %+v", listedPrimaryPhoto)
+	}
+	search := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/search/assets?q=drill&inventoryId="+inventoryID, "Bearer dev:owner", nil)
+	if search.Code != http.StatusOK {
+		t.Fatalf("expected imported asset search status %d, got %d with body %s", http.StatusOK, search.Code, search.Body.String())
+	}
+	var searchPrimaryPhoto *assetPrimaryPhoto
+	for _, result := range decodeAssetSearch(t, search).Data {
+		if result.Asset.ID == attachmentResource.ResourceOwnerID {
+			searchPrimaryPhoto = result.Asset.PrimaryPhoto
+			break
+		}
+	}
+	if searchPrimaryPhoto == nil || searchPrimaryPhoto.ID != attachmentResource.ResourceID {
+		t.Fatalf("expected imported attachment to be search primary photo, got %+v", searchPrimaryPhoto)
 	}
 	if got := sourceReader.fetchAttachmentBytesCalls(); len(got) != 3 || got[0] || got[1] || !got[2] {
 		t.Fatalf("expected preview/start preflight without bytes and worker apply with bytes, got %+v", got)
@@ -492,8 +623,11 @@ type importJobResponse struct {
 	Status           string `json:"status"`
 	ActorID          string `json:"actorId"`
 	CancellationMode string `json:"cancellationMode"`
+	StartedAt        string `json:"startedAt"`
 	Source           struct {
-		Fingerprint string `json:"fingerprint"`
+		Fingerprint         string `json:"fingerprint"`
+		AllowPrivateNetwork bool   `json:"allowPrivateNetwork"`
+		AllowInsecureTLS    bool   `json:"allowInsecureTLS"`
 	} `json:"source"`
 	Counts struct {
 		Assets             int `json:"assets"`
@@ -530,6 +664,7 @@ type importJobResponse struct {
 	Resources []struct {
 		ResourceType     string `json:"resourceType"`
 		ResourceID       string `json:"resourceId"`
+		DisplayName      string `json:"displayName"`
 		ResourceOwnerID  string `json:"resourceOwnerId"`
 		SourceEntityType string `json:"sourceEntityType"`
 		SourceEntityID   string `json:"sourceEntityId"`
@@ -541,6 +676,50 @@ type attachmentImportSource struct {
 	mu                     sync.Mutex
 	fetchAttachmentBytes   []bool
 	unexpectedRequestError error
+}
+
+type stalePreviewImportSource struct {
+	mu    sync.Mutex
+	calls int
+}
+
+func (s *stalePreviewImportSource) ReadImportPlan(_ context.Context, request ports.ImportSourceRequest) (importplan.Plan, error) {
+	if request.SourceType != importplan.SourceLegacyHomebox ||
+		request.BaseURL != "https://homebox.example.test" ||
+		request.Username != "owner@example.test" ||
+		request.Password != "secret" ||
+		request.IncludeImages ||
+		request.AllowPrivateNetwork ||
+		request.AllowInsecureTLS ||
+		request.FileName != "" ||
+		len(request.Content) != 0 ||
+		request.FetchAttachmentBytes {
+		return importplan.Plan{}, errors.New("unexpected stale preview import source request")
+	}
+	s.mu.Lock()
+	s.calls++
+	call := s.calls
+	s.mu.Unlock()
+	sourceID := "asset:drill"
+	title := "Drill"
+	if call > 1 {
+		sourceID = "asset:changed"
+		title = "Changed drill"
+	}
+	return importplan.Plan{
+		Source: importplan.SourceSummary{
+			Type:        importplan.SourceLegacyHomebox,
+			Name:        "Homebox",
+			BaseURL:     request.BaseURL,
+			ImageImport: "disabled",
+		},
+		Fields: []importplan.FieldDefinition{
+			{Key: "homebox-source-id", DisplayName: "Homebox source ID", Type: "text"},
+		},
+		Assets: []importplan.Asset{
+			{SourceID: sourceID, Kind: "item", Title: title, CustomFields: map[string]any{"homebox-source-id": sourceID}},
+		},
+	}, nil
 }
 
 func (s *attachmentImportSource) ReadImportPlan(_ context.Context, request ports.ImportSourceRequest) (importplan.Plan, error) {

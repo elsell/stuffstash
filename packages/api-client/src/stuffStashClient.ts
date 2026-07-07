@@ -316,6 +316,8 @@ export type ImportJobStatus =
 export type ImportJobCancellationMode = 'keep_partial_progress' | 'discard_partial_progress';
 
 export interface ImportJobSourceSummary extends ImportSourceSummary {
+  allowInsecureTLS?: boolean;
+  allowPrivateNetwork?: boolean;
   fingerprint?: string;
 }
 
@@ -371,6 +373,7 @@ export interface ImportJobPreview {
 export interface ImportJobResourceSummary {
   resourceType: string;
   resourceId: string;
+  displayName?: string;
   resourceOwnerId?: string;
   sourceEntityType: string;
   sourceEntityId: string;
@@ -1802,6 +1805,8 @@ function mapImportJob(response: ImportJobResponse): ImportJob {
       baseUrl: response.source.baseUrl,
       version: response.source.version,
       imageImport: response.source.imageImport,
+      allowInsecureTLS: response.source.allowInsecureTLS,
+      allowPrivateNetwork: response.source.allowPrivateNetwork,
       fingerprint: response.source.fingerprint
     },
     counts: {
@@ -1855,6 +1860,7 @@ function mapImportJob(response: ImportJobResponse): ImportJob {
     resources: (response.resources ?? []).map((resource) => ({
       resourceType: resource.resourceType,
       resourceId: resource.resourceId,
+      displayName: resource.displayName,
       resourceOwnerId: resource.resourceOwnerId,
       sourceEntityType: resource.sourceEntityType,
       sourceEntityId: resource.sourceEntityId,

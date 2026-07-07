@@ -42,3 +42,13 @@ func NewImportSourceInvalidInputError(detail string) error {
 	}
 	return ImportSourceInvalidInputError{Detail: detail}
 }
+
+type ImportSourceChangedAfterPreviewError struct{}
+
+func (ImportSourceChangedAfterPreviewError) Error() string {
+	return "Import source changed after preview. Preview the source again before starting the import."
+}
+
+func (ImportSourceChangedAfterPreviewError) Unwrap() error {
+	return ErrPrecondition
+}

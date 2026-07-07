@@ -81,7 +81,7 @@ describe('workspace shell navigation helpers', () => {
           {
             mode: 'import',
             label: 'Import',
-            description: 'Bring in legacy data',
+            description: 'Bring in outside data',
             icon: 'import',
             href: '/tenants/tenant-one/inventories/inventory-one/import',
             current: false

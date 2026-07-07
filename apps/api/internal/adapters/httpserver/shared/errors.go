@@ -46,6 +46,7 @@ func NewErrorEnvelope(status int, msg string, errs ...error) huma.StatusError {
 
 func ToHumaError(err error) error {
 	var importSourceInvalidInput app.ImportSourceInvalidInputError
+	var importSourceChanged app.ImportSourceChangedAfterPreviewError
 	switch {
 	case errors.Is(err, app.ErrUnauthenticated):
 		return huma.Error401Unauthorized("Authentication required.")
@@ -67,6 +68,8 @@ func ToHumaError(err error) error {
 		return huma.Error400BadRequest("Invalid request.")
 	case errors.Is(err, app.ErrConflict):
 		return huma.Error409Conflict("Conflict.")
+	case errors.As(err, &importSourceChanged):
+		return huma.Error412PreconditionFailed(importSourceChanged.Error())
 	case errors.Is(err, app.ErrPrecondition):
 		return huma.Error412PreconditionFailed("Precondition failed.")
 	case errors.Is(err, app.ErrNotFound):
@@ -125,6 +128,9 @@ func safeErrorMessage(status int, fallback string) string {
 	case http.StatusConflict:
 		return "Conflict."
 	case http.StatusPreconditionFailed:
+		if fallback != "" {
+			return fallback
+		}
 		return "Precondition failed."
 	case http.StatusRequestEntityTooLarge:
 		return "Request body too large."

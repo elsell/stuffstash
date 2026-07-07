@@ -98,6 +98,7 @@ const (
 	EventImportJobPreviewed                   EventName = "import_job.previewed"
 	EventImportJobStarted                     EventName = "import_job.started"
 	EventImportJobSourceFingerprintMismatch   EventName = "import_job.source_fingerprint_mismatch"
+	EventImportJobSourceOptionsMismatch       EventName = "import_job.source_options_mismatch"
 	EventImportJobCancellationRequested       EventName = "import_job.cancellation_requested"
 	EventImportJobHistoryRemoved              EventName = "import_job.history_removed"
 	EventImportJobProgressUpdated             EventName = "import_job.progress_updated"

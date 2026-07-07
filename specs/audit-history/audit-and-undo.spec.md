@@ -123,6 +123,8 @@ Supported original actions:
 - `asset.moved`.
 - `asset.archived`.
 - `asset.restored`.
+- `asset.checked_out`.
+- `asset.returned`.
 
 The first slice does not support undo or redo for:
 
@@ -131,6 +133,7 @@ The first slice does not support undo or redo for:
 - Inventory operations.
 - Sharing, access grants, or invitations.
 - Attachment upload, archive, restore, download, or delete.
+- Asset checkout history reads.
 - Custom asset type changes.
 - Custom field definition changes.
 - Search.
@@ -143,6 +146,8 @@ Undo behavior:
 - Undoing `asset.moved` must restore the prior parent asset.
 - Undoing `asset.archived` must restore the asset.
 - Undoing `asset.restored` must archive the asset.
+- Undoing `asset.checked_out` must mark the original checkout record as undone without setting return fields.
+- Undoing `asset.returned` must reopen the same checkout record by clearing the return fields when the checkout history has not changed in a conflicting way.
 
 Redo behavior:
 
@@ -151,12 +156,14 @@ Redo behavior:
 - Redoing an undone `asset.moved` must reapply the original parent asset.
 - Redoing an undone `asset.archived` must archive the asset.
 - Redoing an undone `asset.restored` must restore the asset.
+- Redoing an undone `asset.checked_out` must reopen the original checkout record when normal checkout validation still passes.
+- Redoing an undone `asset.returned` must reapply the original return fields to the same checkout record.
 
 Validation and invalidation:
 
 - Undo or redo must fail if the target asset no longer exists.
 - Undo or redo must fail if the current asset state does not match the expected state for that operation direction.
-- Undo or redo must fail if normal asset validation would reject the compensating state, including containment, archived-parent, active-child archive, custom field, and authorization rules.
+- Undo or redo must fail if normal asset validation would reject the compensating state, including containment, archived-parent, active-child archive, custom field, checkout, and authorization rules.
 - Undo or redo must fail after hard delete because the target no longer exists.
 - Undo or redo must fail after later changes make the saved before/after state stale.
 

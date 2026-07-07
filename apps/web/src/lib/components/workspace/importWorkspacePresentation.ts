@@ -60,12 +60,16 @@ export function phaseLabel(job: ImportJob): string {
     case 'reading_source':
       return 'Reading source';
     case 'creating_fields':
+    case 'fields':
       return 'Creating fields';
     case 'creating_locations':
+    case 'locations':
       return 'Creating locations';
     case 'creating_assets':
+    case 'assets':
       return 'Creating assets';
     case 'importing_attachments':
+    case 'attachments':
       return 'Importing photos and files';
     case 'terminal':
       return statusLabel(job);
@@ -78,6 +82,10 @@ export function phaseLabel(job: ImportJob): string {
 
 export function isTerminal(job: ImportJob): boolean {
   return ['succeeded', 'failed', 'cancelled_kept', 'cancelled_discarded', 'discard_failed'].includes(job.status);
+}
+
+export function canRequestCancellation(job: ImportJob): boolean {
+  return job.status === 'running';
 }
 
 export function terminalJobMayHaveChangedInventory(job: ImportJob): boolean {
@@ -134,8 +142,27 @@ export function progressTimeline(job: ImportJob): ImportJob['progressHistory'] {
 export function sourceDescription(job: ImportJob): string {
   const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : job.source.baseUrl || 'Live connection'];
   if (job.source.version) parts.push(job.source.version);
-  if (job.source.imageImport) parts.push(`images ${job.source.imageImport}`);
+  if (job.source.imageImport === 'enabled') parts.push('photos on');
+  if (job.source.imageImport === 'disabled') parts.push('photos off');
+  if (job.source.imageImport === 'unavailable') parts.push('photos unavailable');
   return parts.join(' · ');
+}
+
+export function sourceOptionsSummary(job: ImportJob): string[] {
+  if (job.source.type === 'legacy_homebox_csv') {
+    return ['CSV import', 'Photos unavailable from CSV'];
+  }
+  const options = [job.source.imageImport === 'disabled' ? 'Photos off' : 'Photos on'];
+  if (job.source.allowPrivateNetwork) {
+    options.push('Private-network URLs allowed');
+  }
+  if (job.source.allowInsecureTLS) {
+    options.push('Self-signed TLS allowed');
+  }
+  if (!job.source.allowPrivateNetwork && !job.source.allowInsecureTLS) {
+    options.push('Standard network protections');
+  }
+  return options;
 }
 
 export function actorSummary(job: ImportJob): string {
@@ -219,6 +246,26 @@ export function visiblePreviewMessages(job: ImportJob): ImportJob['messages'] {
   return job.preview.messages.length > 0 ? job.preview.messages : job.messages.slice(0, 8);
 }
 
+export function previewReadinessTitle(job: ImportJob, previewStale: boolean): string {
+  if (previewStale) return 'Preview needs to be refreshed';
+  if (job.counts.errors > 0) return 'Fix blocking issues before importing';
+  return 'Ready to start';
+}
+
+export function previewReadinessDescription(job: ImportJob, previewStale: boolean): string {
+  if (previewStale) return 'The source settings changed after this preview. Confirm the source again before starting.';
+  if (job.counts.errors > 0) return 'Nothing has been saved. Review the blocking messages below and preview again after fixing the source.';
+  if (job.counts.warnings > 0) return 'Nothing has been saved. Warnings are shown below so you can decide whether to continue.';
+  return 'Nothing has been saved. Start the import when this plan looks right.';
+}
+
+export function previewReadinessBadge(job: ImportJob, previewStale: boolean): string {
+  if (previewStale) return 'Re-preview required';
+  if (job.counts.errors > 0) return `${job.counts.errors} blocking`;
+  if (job.counts.warnings > 0) return `${job.counts.warnings} warnings`;
+  return 'Ready';
+}
+
 export function jobTimeLabel(label: string, value?: string): string {
   if (!value) return '';
   return `${label} ${shortDateTime(value)}`;
@@ -243,6 +290,7 @@ export function statusVariant(job: ImportJob): 'default' | 'secondary' | 'destru
 }
 
 export function resourceLabel(resource: ImportJob['resources'][number]): string {
+  if (resource.displayName?.trim()) return resource.displayName.trim();
   if (resource.resourceType === 'attachment') return 'Imported photo/file';
   if (resource.sourceEntityType === 'asset' && resource.sourceEntityId.startsWith('location:')) return 'Imported location';
   return 'Imported asset';

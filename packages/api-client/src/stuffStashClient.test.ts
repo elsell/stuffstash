@@ -95,6 +95,8 @@ describe('StuffStashClient', () => {
           type: 'legacy_homebox_csv',
           name: 'Homebox CSV',
           imageImport: 'unavailable',
+          allowPrivateNetwork: true,
+          allowInsecureTLS: true,
           fingerprint: 'sha256:test'
         },
         counts: {
@@ -144,7 +146,14 @@ describe('StuffStashClient', () => {
         },
         createdAt: '2026-07-06T12:00:00Z',
         updatedAt: '2026-07-06T12:00:00Z',
-        resources: [{ resourceType: 'asset', resourceId: 'asset-one', sourceEntityType: 'asset', sourceEntityId: 'source:drill', createdAt: '2026-07-06T12:00:01Z' }],
+        resources: [{
+          resourceType: 'asset',
+          resourceId: 'asset-one',
+          displayName: 'Drill',
+          sourceEntityType: 'asset',
+          sourceEntityId: 'source:drill',
+          createdAt: '2026-07-06T12:00:01Z'
+        }],
         messages: [{ code: 'csv-images-unavailable', severity: 'warning', summary: 'Images are unavailable' }]
       },
       meta: {}
@@ -170,10 +179,10 @@ describe('StuffStashClient', () => {
       id: 'job-one',
       status: 'previewed',
       actorId: 'owner',
-      source: { fingerprint: 'sha256:test' },
+      source: { fingerprint: 'sha256:test', allowPrivateNetwork: true, allowInsecureTLS: true },
       counts: { assets: 1, recordsDiscarded: 0 },
       preview: { fields: [{ key: 'homebox-source-id' }], locations: [{ title: 'Garage' }], assets: [{ title: 'Drill' }] },
-      resources: [{ resourceId: 'asset-one', sourceEntityId: 'source:drill' }],
+      resources: [{ resourceId: 'asset-one', displayName: 'Drill', sourceEntityId: 'source:drill' }],
       progress: { phase: 'ready' },
       progressHistory: [{ phase: 'ready' }],
       messages: [{ code: 'csv-images-unavailable' }]

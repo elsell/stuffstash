@@ -23,8 +23,8 @@ func (a App) saveImportJobAuditRecord(ctx context.Context, principal identity.Pr
 	}
 	record, err := a.newAuditRecord(auditRecordInput{
 		Principal:   principal,
-		TenantID:    job.TenantID,
-		InventoryID: job.InventoryID,
+		TenantID:    importJobTenantID(job.TenantID),
+		InventoryID: importJobInventoryID(job.InventoryID),
 		RequestID:   requestID,
 		Source:      audit.SourceImport,
 		Action:      action,

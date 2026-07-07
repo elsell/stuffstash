@@ -137,8 +137,8 @@ Credential cleanup audit must identify only the import job scope and safe source
 Credential cleanup audit must not include encrypted source payloads, ciphertext, nonces, passwords, bearer tokens, raw URLs containing credentials, or provider internals.
 
 Durable import jobs must be observable through domain-oriented probes.
-Observability must include job lifecycle, worker claiming, worker retry, worker failure, credential cleanup, source-fingerprint mismatch, preview progress, apply progress, cancellation, discard cleanup, and source-link duplicate prevention.
-The first durable import probes include previewed, started, progress updated, recovery claimed, source fingerprint mismatch, cancellation requested, discard cleanup completed or failed, history removed, worker failed, credential vacuumed or failed, and source-link duplicate skipped events.
+Observability must include job lifecycle, worker claiming, worker retry, worker failure, credential cleanup, source-fingerprint mismatch, source-option mismatch, preview progress, apply progress, cancellation, discard cleanup, and source-link duplicate prevention.
+The first durable import probes include previewed, started, progress updated, recovery claimed, source fingerprint mismatch, source option mismatch, cancellation requested, discard cleanup completed or failed, history removed, worker failed, credential vacuumed or failed, and source-link duplicate skipped events.
 The in-process worker adapter must record worker execution failures from background jobs because those errors occur after the request that dispatched the job has already returned.
 Observability fields must not include source credentials, bearer tokens, raw provider paths, raw storage keys, or raw adapter internals.
 
@@ -298,7 +298,7 @@ The new-import flow must be step-by-step, with one primary task per screen:
 - Step 1 selects how to bring Homebox data in.
 - Step 2 configures and confirms the selected source connection or file.
 - Step 3 previews the normalized import plan and asks for explicit import confirmation.
-- Step 4 starts the durable job and returns the user to the import-history screen showing the in-progress job.
+- Step 4 starts the durable job, shows a brief handoff confirmation that the import is running in the background, and gives the user a direct path back to the import-history screen showing the in-progress job.
 
 Source selection must present live Homebox connection and Homebox CSV upload as two large, clearly differentiated choices with enough explanatory detail for the user to decide without opening either option.
 The source-selection screen must frame the choice as an import method choice, not as an adapter or endpoint choice.
@@ -362,6 +362,7 @@ Result review must:
 - Show created, modified, skipped, warned, failed, and discarded counts when applicable.
 - Distinguish import failure from non-fatal refresh or navigation failures.
 - Provide a path to inspect imported records when records remain in the inventory.
+- Label imported records with safe user-facing names, such as the asset title or attachment file name, when the records still exist. Internal source entity IDs and resource IDs may remain available as secondary diagnostic metadata, but they must not be the primary imported-record label.
 - Jobs that completed cancellation with partial progress discarded must not expose discarded resource summaries as openable imported records, even though audit history and internal cleanup tracking remain.
 - Provide a path to relevant audit history.
 - Preserve safe failure detail without exposing credentials, bearer tokens, provider internals, raw source paths, or raw storage keys.
@@ -392,7 +393,8 @@ Import job detail must include:
 When a job completed with partial progress discarded, job detail may acknowledge that records were created and discarded, but it must not render those discarded resources as normal openable inventory records.
 
 The import job API response may include a bounded safe imported-resource summary derived from import-owned resource records.
-Imported-resource summaries must include only tenant/inventory/job-scoped resource identifiers, resource type, resource owner identifier when applicable, source entity type, source entity ID, and creation time.
+Imported-resource summaries must include only tenant/inventory/job-scoped resource identifiers, resource type, resource owner identifier when applicable, optional safe display name, source entity type, source entity ID, and creation time.
+The optional display name must be derived from the current Stuff Stash record when that record still exists, such as an asset title or attachment file name, and must not be accepted from arbitrary provider metadata.
 Imported-resource summaries must not include source credentials, bearer tokens, provider paths, storage keys, attachment bytes, encrypted payloads, or arbitrary provider internals.
 The first resource summary limit is implementation-defined and must be enforced at the import-owned repository/query boundary before application mapping or JSON response construction.
 The web UI must also keep the resource summary visually bounded when shown in job detail.
@@ -414,6 +416,7 @@ The durable import UI must follow Stuff Stash brand guidance:
 - Familiar background-job and upload-history interaction patterns where they reduce cognitive load.
 
 The web API adapter must record durable import workflow observability events at the frontend boundary for history loading, preview, start, cancellation, and history removal. Frontend import observability attributes must be safe: they may include source type, job ID, cancellation mode, and counts, but they must not include Homebox passwords, bearer tokens, raw CSV content, source payloads, or provider internals.
+The web API adapter must attach safe request correlation IDs to import preview, start, cancellation, and history-removal mutations so API audit records can be correlated to browser-originated actions without exposing source credentials or payloads.
 
 Import web tests must mirror the workflow boundaries:
 

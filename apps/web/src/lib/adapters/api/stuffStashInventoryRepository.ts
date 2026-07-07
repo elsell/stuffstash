@@ -381,7 +381,7 @@ export class StuffStashInventoryRepository
     const request = normalizeImportSourceRequest(input);
     this.observer.record('workspace.import_job_preview_started', { sourceType: request.sourceType });
     try {
-      const job = await this.client.previewImportJob(tenantId, inventoryId, request);
+      const job = await this.client.previewImportJob(tenantId, inventoryId, request, { requestId: importJobRequestId('preview') });
       this.observer.record('workspace.import_job_preview_completed', {
         sourceType: request.sourceType,
         assetCount: job.counts.assets,
@@ -408,7 +408,7 @@ export class StuffStashInventoryRepository
     const request = normalizeImportSourceRequest(input);
     this.observer.record('workspace.import_job_start_started', { sourceType: request.sourceType });
     try {
-      const job = await this.client.startImportJob(tenantId, inventoryId, jobId, request);
+      const job = await this.client.startImportJob(tenantId, inventoryId, jobId, request, { requestId: importJobRequestId('start') });
       this.observer.record('workspace.import_job_started', { sourceType: request.sourceType, jobId });
       return job;
     } catch (error) {
@@ -425,7 +425,7 @@ export class StuffStashInventoryRepository
   ): Promise<ImportJob> {
     this.observer.record('workspace.import_job_cancel_started', { mode, jobId });
     try {
-      const job = await this.client.cancelImportJob(tenantId, inventoryId, jobId, mode);
+      const job = await this.client.cancelImportJob(tenantId, inventoryId, jobId, mode, { requestId: importJobRequestId('cancel') });
       this.observer.record('workspace.import_job_cancel_requested', { mode, jobId });
       return job;
     } catch (error) {
@@ -437,7 +437,7 @@ export class StuffStashInventoryRepository
   async removeImportJobFromHistory(tenantId: string, inventoryId: string, jobId: string): Promise<void> {
     this.observer.record('workspace.import_job_history_remove_started', { jobId });
     try {
-      await this.client.removeImportJobFromHistory(tenantId, inventoryId, jobId);
+      await this.client.removeImportJobFromHistory(tenantId, inventoryId, jobId, { requestId: importJobRequestId('remove') });
       this.observer.record('workspace.import_job_history_removed', { jobId });
     } catch (error) {
       this.observer.record('workspace.import_job_history_remove_failed', { jobId });
@@ -831,6 +831,14 @@ function isDirectUploadTargetUnavailable(error: unknown): boolean {
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
+}
+
+function importJobRequestId(action: 'preview' | 'start' | 'cancel' | 'remove'): string {
+  const suffix =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `web-import-${action}-${suffix}`.slice(0, 128);
 }
 
 function readSessionValue(key: string): string {

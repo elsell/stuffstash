@@ -378,7 +378,9 @@ export class SeededInventoryRepository
         type: input.sourceType,
         name: input.sourceType === 'legacy_homebox_csv' ? 'Homebox CSV' : 'Homebox',
         baseUrl: input.baseUrl,
-        imageImport: input.includeImages ? 'enabled' : 'disabled',
+        imageImport: input.sourceType === 'legacy_homebox_csv' ? 'unavailable' : input.includeImages ? 'enabled' : 'disabled',
+        allowPrivateNetwork: input.allowPrivateNetwork,
+        allowInsecureTLS: input.allowInsecureTLS,
         fingerprint: `local-preview-${this.nextImportJobSequence}`
       },
       counts: {
@@ -1099,6 +1101,7 @@ function importJobProgressHistoryWith(history: ImportJob['progressHistory'], pro
   const existing = [...history];
   const last = existing.at(-1);
   if (last?.phase === progress.phase && last.message === progress.message) {
+    existing[existing.length - 1] = progress;
     return existing;
   }
   return [...existing, progress];

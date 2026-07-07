@@ -2,11 +2,6 @@ package importjob
 
 import (
 	"time"
-
-	"github.com/stuffstash/stuff-stash/internal/domain/identity"
-	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
-	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
-	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
 type ID string
@@ -50,13 +45,22 @@ const (
 )
 
 type SourceRef struct {
-	Type        importplan.SourceType
-	Name        string
-	BaseURL     string
-	Version     string
-	ImageImport string
-	Fingerprint string
+	Type                SourceType
+	Name                string
+	BaseURL             string
+	Version             string
+	ImageImport         string
+	AllowPrivateNetwork bool
+	AllowInsecureTLS    bool
+	Fingerprint         string
 }
+
+type SourceType string
+
+const (
+	SourceTypeLegacyHomebox    SourceType = "legacy_homebox"
+	SourceTypeLegacyHomeboxCSV SourceType = "legacy_homebox_csv"
+)
 
 type Counts struct {
 	Fields               int
@@ -89,13 +93,29 @@ type PreviewSummary struct {
 	Locations            []PreviewAsset
 	Assets               []PreviewAsset
 	Attachments          []PreviewAttachment
-	Messages             []importplan.Message
+	Messages             []Message
 	FieldsTruncated      bool
 	LocationsTruncated   bool
 	AssetsTruncated      bool
 	AttachmentsTruncated bool
 	MessagesTruncated    bool
 }
+
+type Message struct {
+	Code       string
+	Severity   MessageSeverity
+	Summary    string
+	Detail     string
+	SourceID   string
+	SourceName string
+}
+
+type MessageSeverity string
+
+const (
+	MessageSeverityWarning MessageSeverity = "warning"
+	MessageSeverityError   MessageSeverity = "error"
+)
 
 type PreviewField struct {
 	Key         string
@@ -123,6 +143,7 @@ type PreviewAttachment struct {
 type ResourceSummary struct {
 	ResourceType     string
 	ResourceID       string
+	DisplayName      string
 	ResourceOwnerID  string
 	SourceEntityType string
 	SourceEntityID   string
@@ -131,15 +152,15 @@ type ResourceSummary struct {
 
 type Record struct {
 	ID                    ID
-	TenantID              tenant.ID
-	InventoryID           inventory.InventoryID
-	ActorID               identity.PrincipalID
+	TenantID              TenantID
+	InventoryID           InventoryID
+	ActorID               PrincipalID
 	Status                Status
 	Source                SourceRef
 	Counts                Counts
 	Preview               PreviewSummary
 	Resources             []ResourceSummary
-	Messages              []importplan.Message
+	Messages              []Message
 	Progress              Progress
 	ProgressHistory       []Progress
 	CancellationMode      CancellationMode
@@ -151,7 +172,25 @@ type Record struct {
 	UpdatedAt             time.Time
 }
 
-func NewPreviewedRecord(id ID, tenantID tenant.ID, inventoryID inventory.InventoryID, actorID identity.PrincipalID, source SourceRef, counts Counts, messages []importplan.Message, now time.Time) Record {
+type TenantID string
+
+func (id TenantID) String() string {
+	return string(id)
+}
+
+type InventoryID string
+
+func (id InventoryID) String() string {
+	return string(id)
+}
+
+type PrincipalID string
+
+func (id PrincipalID) String() string {
+	return string(id)
+}
+
+func NewPreviewedRecord(id ID, tenantID TenantID, inventoryID InventoryID, actorID PrincipalID, source SourceRef, counts Counts, messages []Message, now time.Time) Record {
 	if now.IsZero() {
 		now = time.Now().UTC()
 	}
@@ -170,7 +209,7 @@ func NewPreviewedRecord(id ID, tenantID tenant.ID, inventoryID inventory.Invento
 		Status:      StatusPreviewed,
 		Source:      source,
 		Counts:      counts,
-		Messages:    append([]importplan.Message{}, messages...),
+		Messages:    append([]Message{}, messages...),
 		Progress:    progress,
 		ProgressHistory: []Progress{
 			progress,
@@ -188,6 +227,7 @@ func AppendProgressHistory(history []Progress, progress Progress) []Progress {
 	if len(out) > 0 {
 		last := out[len(out)-1]
 		if last.Phase == progress.Phase && last.Message == progress.Message {
+			out[len(out)-1] = progress
 			return out
 		}
 	}
@@ -197,100 +237,4 @@ func AppendProgressHistory(history []Progress, progress Progress) []Progress {
 
 func cloneProgressHistory(history []Progress) []Progress {
 	return append([]Progress{}, history...)
-}
-
-func CountsFromPlan(plan importplan.Plan) Counts {
-	counts := plan.Counts()
-	return Counts{
-		Fields:      counts.Fields,
-		Locations:   counts.Locations,
-		Assets:      counts.Assets,
-		Attachments: counts.Attachments,
-		Warnings:    counts.Warnings,
-		Errors:      counts.Errors,
-	}
-}
-
-func PreviewSummaryFromPlan(plan importplan.Plan, limit int) PreviewSummary {
-	if limit <= 0 {
-		limit = 12
-	}
-	summary := PreviewSummary{
-		FieldsTruncated:      len(plan.Fields) > limit,
-		AttachmentsTruncated: len(plan.Attachments) > limit,
-		MessagesTruncated:    len(plan.Messages) > limit,
-	}
-	for _, field := range plan.Fields {
-		if len(summary.Fields) >= limit {
-			break
-		}
-		summary.Fields = append(summary.Fields, PreviewField{
-			Key:         field.Key,
-			DisplayName: field.DisplayName,
-			Type:        field.Type,
-		})
-	}
-	for _, item := range plan.Assets {
-		if item.Kind != "location" {
-			continue
-		}
-		if len(summary.Locations) >= limit {
-			summary.LocationsTruncated = true
-			continue
-		}
-		summary.Locations = append(summary.Locations, PreviewAsset{
-			SourceID:       item.SourceID,
-			Kind:           item.Kind,
-			Title:          item.Title,
-			ParentSourceID: item.ParentSourceID,
-			Archived:       item.Archived,
-		})
-	}
-	for _, item := range plan.Assets {
-		if item.Kind == "location" {
-			continue
-		}
-		if len(summary.Assets) >= limit {
-			summary.AssetsTruncated = true
-			continue
-		}
-		summary.Assets = append(summary.Assets, PreviewAsset{
-			SourceID:       item.SourceID,
-			Kind:           item.Kind,
-			Title:          item.Title,
-			ParentSourceID: item.ParentSourceID,
-			Archived:       item.Archived,
-		})
-	}
-	for _, attachment := range plan.Attachments {
-		if len(summary.Attachments) >= limit {
-			break
-		}
-		summary.Attachments = append(summary.Attachments, PreviewAttachment{
-			SourceID:      attachment.SourceID,
-			AssetSourceID: attachment.AssetSourceID,
-			FileName:      attachment.FileName,
-			ContentType:   attachment.ContentType,
-			SizeBytes:     attachment.SizeBytes,
-			Primary:       attachment.Primary,
-		})
-	}
-	for _, message := range plan.Messages {
-		if len(summary.Messages) >= limit {
-			break
-		}
-		summary.Messages = append(summary.Messages, message)
-	}
-	return summary
-}
-
-func SourceRefFromPlan(plan importplan.Plan, fingerprint string) SourceRef {
-	return SourceRef{
-		Type:        plan.Source.Type,
-		Name:        plan.Source.Name,
-		BaseURL:     plan.Source.BaseURL,
-		Version:     plan.Source.Version,
-		ImageImport: plan.Source.ImageImport,
-		Fingerprint: fingerprint,
-	}
 }

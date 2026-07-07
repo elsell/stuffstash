@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SeededInventoryRepository } from './seededInventoryRepository';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 
@@ -59,6 +59,10 @@ const seed: WorkspaceSeed = {
     }
   ]
 };
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('SeededInventoryRepository tenant selection', () => {
   it('loads the selected tenant inventories and scopes assets to its first inventory', async () => {
@@ -279,6 +283,83 @@ describe('SeededInventoryRepository tenant selection', () => {
     ).resolves.toMatchObject([
       { asset: { id: 'asset-home', lifecycleState: 'active' } },
       { asset: { id: 'asset-archived', lifecycleState: 'archived' } }
+    ]);
+  });
+
+  it('refreshes collapsed local import progress history with latest safe counts', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-06T12:00:00Z'));
+    const repository = new SeededInventoryRepository(seed);
+    const previewed = await repository.previewImportJob('tenant-home', 'inventory-household', {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'https://homebox.example.test',
+      username: 'owner@example.test',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    });
+
+    const firstStart = await repository.startImportJob('tenant-home', 'inventory-household', previewed.id, {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'https://homebox.example.test',
+      username: 'owner@example.test',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    });
+    const firstProgressUpdatedAt = firstStart.progress.updatedAt;
+    vi.setSystemTime(new Date('2026-07-06T12:01:00Z'));
+    const secondStart = await repository.startImportJob('tenant-home', 'inventory-household', previewed.id, {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'https://homebox.example.test',
+      username: 'owner@example.test',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    });
+
+    const last = secondStart.progressHistory.at(-1);
+    expect(secondStart.progressHistory.map((progress) => progress.phase)).toEqual(['ready', 'reading_source']);
+    expect(secondStart.progress.updatedAt).not.toBe(firstProgressUpdatedAt);
+    expect(last).toMatchObject({
+      phase: 'reading_source',
+      message: 'Queued locally',
+      done: secondStart.progress.done,
+      total: secondStart.progress.total,
+      updatedAt: secondStart.progress.updatedAt
+    });
+  });
+
+  it('keeps distinct local import progress messages in the same phase', async () => {
+    const repository = new SeededInventoryRepository(seed);
+    const previewed = await repository.previewImportJob('tenant-home', 'inventory-household', {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'https://homebox.example.test',
+      username: 'owner@example.test',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    });
+
+    await repository.startImportJob('tenant-home', 'inventory-household', previewed.id, {
+      sourceType: 'legacy_homebox',
+      baseUrl: 'https://homebox.example.test',
+      username: 'owner@example.test',
+      password: 'secret',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false
+    });
+    const cancelled = await repository.cancelImportJob('tenant-home', 'inventory-household', previewed.id, 'keep_partial_progress');
+
+    expect(cancelled.progressHistory.map((progress) => [progress.phase, progress.message])).toEqual([
+      ['ready', undefined],
+      ['reading_source', 'Queued locally'],
+      ['reading_source', 'Cancellation requested']
     ]);
   });
 

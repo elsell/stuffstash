@@ -14,9 +14,9 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await expect(page.getByRole('heading', { name: 'Imports', exact: true })).toBeVisible();
   await expect(page.getByText('In progress')).toBeVisible();
   await expect(page.getByText('Importing photos and files')).toBeVisible();
-  await expect(page.getByText('Completed', { exact: true })).toBeVisible();
   await expect(page.getByText('1 field created')).toBeVisible();
   const completedRow = page.locator('.history-row').filter({ hasText: '1 field created' });
+  await expect(completedRow.getByText('Completed', { exact: true })).toBeVisible();
   await expect(completedRow.getByText('Started Jul 6, 2026')).toBeVisible();
 
   const discardedRow = page.locator('.history-row').filter({ hasText: 'Partial progress discarded' });

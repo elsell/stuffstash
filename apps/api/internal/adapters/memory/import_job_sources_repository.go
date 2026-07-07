@@ -61,7 +61,7 @@ func (s *Store) DeleteVacuumableImportJobSources(_ context.Context, terminalStat
 	deleted := []ports.ImportJobSourceScope{}
 	for key, source := range s.importJobSources {
 		job, jobFound := s.importJobs[source.Scope.JobID.String()]
-		if !source.ExpiresAt.After(now) || (jobFound && job.TenantID == source.Scope.TenantID && job.InventoryID == source.Scope.InventoryID && statusInSet(job.Status, terminal)) {
+		if !source.ExpiresAt.After(now) || (jobFound && job.TenantID.String() == source.Scope.TenantID.String() && job.InventoryID.String() == source.Scope.InventoryID.String() && statusInSet(job.Status, terminal)) {
 			delete(s.importJobSources, key)
 			deleted = append(deleted, source.Scope)
 		}

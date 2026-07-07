@@ -10,7 +10,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
-	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -21,10 +20,10 @@ func TestInProcessWorkerRecordsBackgroundExecutionFailure(t *testing.T) {
 	store := memory.NewStore()
 	job := importjob.NewPreviewedRecord(
 		importjob.ID("job-one"),
-		tenant.ID("tenant-one"),
-		inventory.InventoryID("inventory-one"),
-		identity.PrincipalID("owner"),
-		importjob.SourceRef{Type: importplan.SourceLegacyHomebox, Name: "Homebox", Fingerprint: "sha256:test"},
+		importjob.TenantID("tenant-one"),
+		importjob.InventoryID("inventory-one"),
+		importjob.PrincipalID("owner"),
+		importjob.SourceRef{Type: importjob.SourceTypeLegacyHomebox, Name: "Homebox", Fingerprint: "sha256:test"},
 		importjob.Counts{},
 		nil,
 		time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC),

@@ -5,7 +5,6 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
-	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 )
 
 func JobListToResponse(jobs []importjob.Record) dto.ImportJobListResponse {
@@ -22,12 +21,14 @@ func JobToResponse(job importjob.Record) dto.ImportJobResponse {
 		Status:  string(job.Status),
 		ActorID: job.ActorID.String(),
 		Source: dto.ImportJobSourceResponse{
-			Type:        string(job.Source.Type),
-			Name:        job.Source.Name,
-			BaseURL:     job.Source.BaseURL,
-			Version:     job.Source.Version,
-			ImageImport: job.Source.ImageImport,
-			Fingerprint: job.Source.Fingerprint,
+			Type:                string(job.Source.Type),
+			Name:                job.Source.Name,
+			BaseURL:             job.Source.BaseURL,
+			Version:             job.Source.Version,
+			ImageImport:         job.Source.ImageImport,
+			AllowPrivateNetwork: job.Source.AllowPrivateNetwork,
+			AllowInsecureTLS:    job.Source.AllowInsecureTLS,
+			Fingerprint:         job.Source.Fingerprint,
 		},
 		Counts: dto.ImportJobCountsResponse{
 			Fields:               job.Counts.Fields,
@@ -141,6 +142,7 @@ func resourcesToResponse(resources []importjob.ResourceSummary) []dto.ImportJobR
 		out = append(out, dto.ImportJobResource{
 			ResourceType:     resource.ResourceType,
 			ResourceID:       resource.ResourceID,
+			DisplayName:      resource.DisplayName,
 			ResourceOwnerID:  resource.ResourceOwnerID,
 			SourceEntityType: resource.SourceEntityType,
 			SourceEntityID:   resource.SourceEntityID,
@@ -150,7 +152,7 @@ func resourcesToResponse(resources []importjob.ResourceSummary) []dto.ImportJobR
 	return out
 }
 
-func messagesToResponse(messages []importplan.Message) []dto.ImportMessageResponse {
+func messagesToResponse(messages []importjob.Message) []dto.ImportMessageResponse {
 	out := make([]dto.ImportMessageResponse, 0, len(messages))
 	for _, message := range messages {
 		out = append(out, dto.ImportMessageResponse{

@@ -75,7 +75,39 @@ describe('workspace import request helpers', () => {
     });
 
     expect(key).toContain('"contentLength":25');
+    expect(key).toContain('contentFingerprint');
     expect(key).not.toContain('very-large-base64-payload');
+  });
+
+  it('changes the preview key when CSV content changes with the same file metadata and length', () => {
+    const first = importSourceRequestKey({
+      sourceChoice: 'homebox_csv',
+      baseUrl: '',
+      username: '',
+      password: '',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false,
+      fileName: 'homebox.csv',
+      contentBase64: 'HB.name,Drill',
+      csvSelection: { name: 'homebox.csv', size: 128, lastModified: 1 }
+    });
+    const second = importSourceRequestKey({
+      sourceChoice: 'homebox_csv',
+      baseUrl: '',
+      username: '',
+      password: '',
+      includeImages: true,
+      allowPrivateNetwork: false,
+      allowInsecureTLS: false,
+      fileName: 'homebox.csv',
+      contentBase64: 'HB.name,Shelf',
+      csvSelection: { name: 'homebox.csv', size: 128, lastModified: 1 }
+    });
+
+    expect(first).not.toBe(second);
+    expect(first).not.toContain('HB.name,Drill');
+    expect(second).not.toContain('HB.name,Shelf');
   });
 
   it('does not include the live Homebox password in the preview key', () => {

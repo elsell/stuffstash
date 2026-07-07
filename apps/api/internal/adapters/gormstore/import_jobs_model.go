@@ -3,49 +3,51 @@ package gormstore
 import "time"
 
 type importJobModel struct {
-	ID                    string         `gorm:"primaryKey;size:26"`
-	TenantID              string         `gorm:"not null;size:26;index:idx_import_jobs_inventory_created,priority:1;index"`
-	Tenant                tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	InventoryID           string         `gorm:"not null;size:26;index:idx_import_jobs_inventory_created,priority:2;index"`
-	Inventory             inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
-	ActorID               string         `gorm:"not null;size:128;index"`
-	Status                string         `gorm:"not null;size:64;index"`
-	SourceType            string         `gorm:"not null;size:64"`
-	SourceName            string         `gorm:"not null;size:128"`
-	SourceBaseURL         string         `gorm:"not null;size:2048"`
-	SourceVersion         string         `gorm:"not null;size:128"`
-	SourceImageImport     string         `gorm:"not null;size:64"`
-	SourceFingerprint     string         `gorm:"not null;size:128"`
-	Fields                int            `gorm:"not null"`
-	Locations             int            `gorm:"not null"`
-	Assets                int            `gorm:"not null"`
-	Attachments           int            `gorm:"not null"`
-	Warnings              int            `gorm:"not null"`
-	Errors                int            `gorm:"not null"`
-	FieldsCreated         int            `gorm:"not null"`
-	FieldsExisting        int            `gorm:"not null"`
-	LocationsCreated      int            `gorm:"not null"`
-	AssetsCreated         int            `gorm:"not null"`
-	AssetsSkipped         int            `gorm:"not null"`
-	AttachmentsCreated    int            `gorm:"not null"`
-	AttachmentsSkipped    int            `gorm:"not null"`
-	RecordsDiscarded      int            `gorm:"not null"`
-	SourceLinksDiscarded  int            `gorm:"not null"`
-	PreviewJSON           []byte
-	ProgressPhase         string `gorm:"not null;size:64"`
-	ProgressDone          int    `gorm:"not null"`
-	ProgressTotal         int    `gorm:"not null"`
-	ProgressMessage       string `gorm:"not null;size:512"`
-	ProgressUpdatedAt     *time.Time
-	ProgressHistoryJSON   []byte
-	CancellationMode      string `gorm:"not null;size:64"`
-	CancellationRequestID string `gorm:"not null;size:128;default:''"`
-	MessagesJSON          []byte `gorm:"not null"`
-	HistoryRemovedAt      *time.Time
-	StartedAt             *time.Time
-	CompletedAt           *time.Time
-	CreatedAt             time.Time `gorm:"not null;index:idx_import_jobs_inventory_created,priority:3"`
-	UpdatedAt             time.Time `gorm:"not null"`
+	ID                        string         `gorm:"primaryKey;size:26"`
+	TenantID                  string         `gorm:"not null;size:26;index:idx_import_jobs_inventory_created,priority:1;index"`
+	Tenant                    tenantModel    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID               string         `gorm:"not null;size:26;index:idx_import_jobs_inventory_created,priority:2;index"`
+	Inventory                 inventoryModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
+	ActorID                   string         `gorm:"not null;size:128;index"`
+	Status                    string         `gorm:"not null;size:64;index"`
+	SourceType                string         `gorm:"not null;size:64"`
+	SourceName                string         `gorm:"not null;size:128"`
+	SourceBaseURL             string         `gorm:"not null;size:2048"`
+	SourceVersion             string         `gorm:"not null;size:128"`
+	SourceImageImport         string         `gorm:"not null;size:64"`
+	SourceAllowPrivateNetwork bool           `gorm:"not null;default:false"`
+	SourceAllowInsecureTLS    bool           `gorm:"not null;default:false"`
+	SourceFingerprint         string         `gorm:"not null;size:128"`
+	Fields                    int            `gorm:"not null"`
+	Locations                 int            `gorm:"not null"`
+	Assets                    int            `gorm:"not null"`
+	Attachments               int            `gorm:"not null"`
+	Warnings                  int            `gorm:"not null"`
+	Errors                    int            `gorm:"not null"`
+	FieldsCreated             int            `gorm:"not null"`
+	FieldsExisting            int            `gorm:"not null"`
+	LocationsCreated          int            `gorm:"not null"`
+	AssetsCreated             int            `gorm:"not null"`
+	AssetsSkipped             int            `gorm:"not null"`
+	AttachmentsCreated        int            `gorm:"not null"`
+	AttachmentsSkipped        int            `gorm:"not null"`
+	RecordsDiscarded          int            `gorm:"not null"`
+	SourceLinksDiscarded      int            `gorm:"not null"`
+	PreviewJSON               []byte
+	ProgressPhase             string `gorm:"not null;size:64"`
+	ProgressDone              int    `gorm:"not null"`
+	ProgressTotal             int    `gorm:"not null"`
+	ProgressMessage           string `gorm:"not null;size:512"`
+	ProgressUpdatedAt         *time.Time
+	ProgressHistoryJSON       []byte
+	CancellationMode          string `gorm:"not null;size:64"`
+	CancellationRequestID     string `gorm:"not null;size:128;default:''"`
+	MessagesJSON              []byte `gorm:"not null"`
+	HistoryRemovedAt          *time.Time
+	StartedAt                 *time.Time
+	CompletedAt               *time.Time
+	CreatedAt                 time.Time `gorm:"not null;index:idx_import_jobs_inventory_created,priority:3"`
+	UpdatedAt                 time.Time `gorm:"not null"`
 }
 
 func (importJobModel) TableName() string {

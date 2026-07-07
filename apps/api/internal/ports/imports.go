@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -13,6 +14,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
+
+var ErrImportJobSourceUnreadable = errors.New("import job source material unreadable")
 
 type ImportSourceRequest struct {
 	SourceType           importplan.SourceType

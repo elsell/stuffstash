@@ -98,12 +98,14 @@ type ImportJobResponse struct {
 }
 
 type ImportJobSourceResponse struct {
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	BaseURL     string `json:"baseUrl,omitempty"`
-	Version     string `json:"version,omitempty"`
-	ImageImport string `json:"imageImport"`
-	Fingerprint string `json:"fingerprint,omitempty"`
+	Type                string `json:"type"`
+	Name                string `json:"name"`
+	BaseURL             string `json:"baseUrl,omitempty"`
+	Version             string `json:"version,omitempty"`
+	ImageImport         string `json:"imageImport"`
+	AllowPrivateNetwork bool   `json:"allowPrivateNetwork"`
+	AllowInsecureTLS    bool   `json:"allowInsecureTLS"`
+	Fingerprint         string `json:"fingerprint,omitempty"`
 }
 
 type ImportJobCountsResponse struct {
@@ -171,6 +173,7 @@ type ImportJobProgress struct {
 type ImportJobResource struct {
 	ResourceType     string `json:"resourceType"`
 	ResourceID       string `json:"resourceId"`
+	DisplayName      string `json:"displayName,omitempty"`
 	ResourceOwnerID  string `json:"resourceOwnerId,omitempty"`
 	SourceEntityType string `json:"sourceEntityType"`
 	SourceEntityID   string `json:"sourceEntityId"`

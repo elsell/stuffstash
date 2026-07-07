@@ -1509,6 +1509,7 @@ export interface components {
         };
         ImportJobResource: {
             createdAt: string;
+            displayName?: string;
             resourceId: string;
             resourceOwnerId?: string;
             resourceType: string;
@@ -1533,6 +1534,8 @@ export interface components {
             updatedAt: string;
         };
         ImportJobSourceResponse: {
+            allowInsecureTLS: boolean;
+            allowPrivateNetwork: boolean;
             baseUrl?: string;
             fingerprint?: string;
             imageImport: string;

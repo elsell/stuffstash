@@ -51,6 +51,29 @@ func TestNewErrorEnvelopeUsesSafePayloadTooLargeVocabulary(t *testing.T) {
 	}
 }
 
+func TestToHumaErrorSurfacesSafeImportSourceChangedPrecondition(t *testing.T) {
+	previous := huma.NewError
+	huma.NewError = NewErrorEnvelope
+	t.Cleanup(func() {
+		huma.NewError = previous
+	})
+
+	response := ToHumaError(app.ImportSourceChangedAfterPreviewError{})
+	envelope, ok := response.(*ErrorEnvelope)
+	if !ok {
+		t.Fatalf("expected ErrorEnvelope, got %T", response)
+	}
+	if envelope.GetStatus() != http.StatusPreconditionFailed {
+		t.Fatalf("expected status %d, got %d", http.StatusPreconditionFailed, envelope.GetStatus())
+	}
+	if envelope.BodyError.Code != "precondition_failed" {
+		t.Fatalf("expected precondition_failed code, got %q", envelope.BodyError.Code)
+	}
+	if envelope.BodyError.Message != "Import source changed after preview. Preview the source again before starting the import." {
+		t.Fatalf("expected actionable source-changed message, got %q", envelope.BodyError.Message)
+	}
+}
+
 func TestToHumaErrorMapsSpecificApplicationErrorVocabulary(t *testing.T) {
 	previous := huma.NewError
 	huma.NewError = NewErrorEnvelope

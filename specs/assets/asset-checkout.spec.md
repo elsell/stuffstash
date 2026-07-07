@@ -42,6 +42,7 @@ Fields:
 - `tenantId`: tenant security boundary.
 - `inventoryId`: inventory scope.
 - `assetId`: checked-out asset.
+- `state`: checkout record state.
 - `checkedOutAt`: application time when the checkout was created.
 - `checkedOutByPrincipalId`: authenticated principal that performed checkout.
 - `checkoutDetails`: optional freeform user note.
@@ -51,10 +52,16 @@ Fields:
 
 `checkoutDetails` is intentionally broad. It may describe that the asset was loaned to someone, taken to a desk, moved temporarily into a work area, packed for a trip, or any other human context. The first slice must not create a separate holder model.
 
+The first checkout states are:
+
+- `open`: the asset is currently checked out.
+- `returned`: the checkout was closed by a return operation.
+- `undone`: the checkout operation was undone before a normal return.
+
 ## Invariants
 
 - An asset may have at most one open checkout.
-- An open checkout is one with no `returnedAt`.
+- An open checkout is one with state `open`.
 - Checkout requires the asset to exist in the requested tenant and inventory.
 - Checkout requires the asset to be active.
 - Checkout must fail when the asset already has an open checkout.
@@ -74,7 +81,7 @@ Archived assets:
 Hard delete:
 
 - Asset hard delete must fail for assets with open checkout records.
-- Asset hard delete may remove closed checkout records for the deleted asset only when the delete operation preserves audit records.
+- Asset hard delete may remove terminal checkout records for the deleted asset only when the delete operation preserves audit records.
 - The asset lifecycle spec must include these checkout constraints so hard-delete behavior has one source of truth.
 
 ## Application Operations
@@ -93,7 +100,7 @@ Required commands:
 Required queries:
 
 - `GetCurrentAssetCheckout`: returns the open checkout for one asset, if present.
-- `ListAssetCheckoutHistory`: returns open and closed checkout records for one asset.
+- `ListAssetCheckoutHistory`: returns `open`, `returned`, and `undone` checkout records for one asset.
 - `ListCheckedOutAssets`: returns assets in one inventory that currently have open checkout records.
 
 Asset detail, asset list, search result, location contents, root inventory contents, and mobile summary read models must include a compact current-checkout projection when an asset is checked out.
@@ -101,10 +108,11 @@ Asset detail, asset list, search result, location contents, root inventory conte
 The compact projection must include:
 
 - Checkout ID.
+- Checkout state.
 - Checked-out timestamp.
 - Checked-out principal ID and safe resolved profile when available.
 
-The compact projection must not include checkout details, return details, hidden tenant data, raw audit metadata, provider data, or fields from closed checkout records.
+The compact projection must not include checkout details, return details, hidden tenant data, raw audit metadata, provider data, or fields from terminal checkout records.
 
 Checkout details may be returned by asset detail and checkout history responses for principals with `inventory.view`. Asset list, search result, location contents, root inventory contents, and mobile summary projections must not include checkout details so broad browse responses do not leak freeform personal context.
 
@@ -287,14 +295,37 @@ Conversational audit records must reference the action plan and approval when av
 
 ## Undo And Redo
 
-Checkout and return are not part of the first undo/redo slice.
+Checkout and return must be undoable through the existing undoable-operation model.
 
-Before checkout undo is implemented, a future spec must define whether:
+Undoable operation creation must be atomic with checkout and return mutations.
 
-- Undoing checkout closes the open checkout as a return-like operation.
-- Undoing return reopens a closed checkout.
-- Later checkout or return operations invalidate undo/redo.
-- Checkout details and return details are restored or preserved.
+Undo behavior:
+
+- Undoing `asset.checked_out` must set the original checkout record state to `undone` without setting `returnedAt`, `returnedByPrincipalId`, or `returnDetails`.
+- Undoing `asset.checked_out` must fail if the checkout was already returned by a later return operation.
+- Undoing `asset.returned` must reopen the same checkout record by clearing `returnedAt`, `returnedByPrincipalId`, and `returnDetails`.
+- Undoing `asset.returned` must fail if the asset has another open checkout, if the checkout record no longer exists, or if later checkout history makes the saved operation stale.
+
+Redo behavior:
+
+- Redoing an undone `asset.checked_out` must reopen the original checkout record when normal checkout validation still passes.
+- Redoing an undone `asset.returned` must reapply the original return fields to the same checkout record.
+- Redo must fail if the target asset no longer exists, if the checkout record no longer exists, or if later checkout or return operations make the saved before/after state stale.
+
+Stale-operation predicates:
+
+- Undoing `asset.checked_out` requires the saved checkout ID to exist, to belong to the same tenant, inventory, and asset, and to still be in state `open` with the saved checkout fields.
+- Redoing `asset.checked_out` requires the saved checkout ID to exist, to still be in state `undone`, to have no return fields, and to have no later checkout record for the same asset.
+- Undoing `asset.returned` requires the saved checkout ID to exist, to still be in state `returned`, and to have the same `returnedAt`, `returnedByPrincipalId`, and `returnDetails` captured by the undoable operation.
+- Redoing `asset.returned` requires the saved checkout ID to exist, to still be in state `open`, and to have no later checkout record for the same asset.
+- Any checkout record for the same tenant, inventory, and asset with `checkedOutAt` after the saved checkout record's `checkedOutAt`, or with the same timestamp and a greater checkout ID, counts as later checkout history.
+
+Validation:
+
+- Undo and redo must require `inventory.edit_asset` for the operation inventory.
+- Undo and redo must not bypass checkout invariants, tenant isolation, inventory isolation, authorization, audit history, or observability.
+- Undo and redo must produce their own audit records through the existing undo/redo action types.
+- Undoable operation snapshots may include safe checkout fields needed for compensation: checkout ID, asset ID, timestamps, principal IDs, and bounded details. Snapshots must not include provider prompts, raw transcripts, credentials, bearer tokens, authorization internals, or hidden tenant data.
 
 ## Persistence
 
@@ -306,6 +337,7 @@ Required columns:
 - `tenant_id`
 - `inventory_id`
 - `asset_id`
+- `state`
 - `checked_out_at`
 - `checked_out_by_principal_id`
 - `checkout_details`
@@ -318,7 +350,7 @@ Persistence rules:
 
 - Rows must be scoped by tenant ID and inventory ID.
 - The asset reference must be in the same tenant and inventory.
-- The database shape must defensively prevent more than one open checkout per asset where the backend supports a partial unique index or equivalent constraint. For PostgreSQL, this should be a partial unique constraint on `(tenant_id, inventory_id, asset_id)` where `returned_at IS NULL`.
+- The database shape must defensively prevent more than one open checkout per asset where the backend supports a partial unique index or equivalent constraint. For PostgreSQL, this should be a partial unique constraint on `(tenant_id, inventory_id, asset_id)` where `state = 'open'`.
 - Repository adapters must also enforce the one-open-checkout invariant before commit so memory adapters and database adapters behave consistently.
 - Repository reads for checkout state must require tenant ID and inventory ID.
 - Repository reads for asset-specific checkout history must require tenant ID, inventory ID, and asset ID.
@@ -326,8 +358,8 @@ Persistence rules:
 
 Transactions:
 
-- Checkout must atomically create the checkout record, write audit history, write any future undo metadata when supported, and record the terminal application outcome.
-- Return must atomically close the checkout record, write audit history, write any future undo metadata when supported, and record the terminal application outcome.
+- Checkout must atomically create the checkout record, write audit history, write undoable-operation metadata, and record the terminal application outcome.
+- Return must atomically close the checkout record, write audit history, write undoable-operation metadata, and record the terminal application outcome.
 - Action-plan execution for checkout and return must atomically apply the checkout mutation and transition the action plan to its terminal state.
 
 ## Authorization
@@ -351,6 +383,10 @@ Security-sensitive tests must cover:
 - Cross-tenant asset ID attempts.
 - Attempts to return an asset checked out in another inventory.
 - Attempts to smuggle principal IDs, roles, checkout actor IDs, return actor IDs, or authorization hints through request bodies.
+- Unauthenticated checkout/return undo and redo rejection.
+- Viewer checkout/return undo and redo denial.
+- Wrong-tenant, wrong-inventory, hidden-operation, cross-tenant operation ID, and stale-operation ID undo and redo denial.
+- Authorized editor checkout/return undo and redo success.
 
 ## Observability
 
@@ -387,6 +423,8 @@ Domain and application tests must cover:
 - Checkout history ordering and pagination.
 - Checked-out asset listing ordering and pagination.
 - Audit history for checkout and return.
+- Undo and redo for checkout and return, including stale-operation rejection after later checkout history changes.
+- Checkout history presentation distinguishing `undone` from `returned`.
 - Safe observability outcomes.
 
 REST boundary tests must cover:
@@ -405,6 +443,7 @@ Persistence tests must cover:
 - Defensive tenant and inventory scoping.
 - Atomic checkout plus audit writes.
 - Atomic return plus audit writes.
+- Atomic checkout and return undoable-operation writes.
 - Cursor pagination for asset checkout history and checked-out asset listing.
 
 Conversational and MCP tests must cover:
@@ -420,7 +459,6 @@ Conversational and MCP tests must cover:
 
 ## Open Questions
 
-- Should checkout and return be undoable, and what invalidates undo after later checkout history changes?
 - Should future reminders be based on due dates, recurring prompts, or user-created follow-up tasks?
 - Should checkout support quantities once consumables or multi-count assets are specified?
 - Should an external borrower/contact model ever exist, or should checkout details remain the long-term holder mechanism?

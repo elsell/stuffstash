@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
-	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -25,7 +24,7 @@ func (s *Store) ImportJobByID(_ context.Context, tenantID tenant.ID, inventoryID
 	defer s.mu.RUnlock()
 
 	job, ok := s.importJobs[jobID.String()]
-	if !ok || job.TenantID != tenantID || job.InventoryID != inventoryID || !job.HistoryRemovedAt.IsZero() {
+	if !ok || tenant.ID(job.TenantID.String()) != tenantID || inventory.InventoryID(job.InventoryID.String()) != inventoryID || !job.HistoryRemovedAt.IsZero() {
 		return importjob.Record{}, false, nil
 	}
 	return cloneImportJob(job), true, nil
@@ -37,7 +36,7 @@ func (s *Store) ListImportJobs(_ context.Context, tenantID tenant.ID, inventoryI
 
 	jobs := make([]importjob.Record, 0, len(s.importJobs))
 	for _, job := range s.importJobs {
-		if job.TenantID != tenantID || job.InventoryID != inventoryID || !job.HistoryRemovedAt.IsZero() {
+		if tenant.ID(job.TenantID.String()) != tenantID || inventory.InventoryID(job.InventoryID.String()) != inventoryID || !job.HistoryRemovedAt.IsZero() {
 			continue
 		}
 		jobs = append(jobs, cloneImportJob(job))
@@ -89,7 +88,7 @@ func (s *Store) MarkImportJobHistoryRemoved(_ context.Context, tenantID tenant.I
 	defer s.mu.Unlock()
 
 	current, ok := s.importJobs[jobID.String()]
-	if !ok || current.TenantID != tenantID || current.InventoryID != inventoryID || !current.UpdatedAt.Equal(expectedUpdatedAt) || !current.HistoryRemovedAt.IsZero() {
+	if !ok || tenant.ID(current.TenantID.String()) != tenantID || inventory.InventoryID(current.InventoryID.String()) != inventoryID || !current.UpdatedAt.Equal(expectedUpdatedAt) || !current.HistoryRemovedAt.IsZero() {
 		return false, nil
 	}
 	current.HistoryRemovedAt = removedAt
@@ -115,7 +114,7 @@ func (s *Store) UpdateImportJobProgress(_ context.Context, tenantID tenant.ID, i
 	defer s.mu.Unlock()
 
 	current, ok := s.importJobs[jobID.String()]
-	if !ok || current.TenantID != tenantID || current.InventoryID != inventoryID || !current.UpdatedAt.Equal(expectedUpdatedAt) || !current.HistoryRemovedAt.IsZero() {
+	if !ok || tenant.ID(current.TenantID.String()) != tenantID || inventory.InventoryID(current.InventoryID.String()) != inventoryID || !current.UpdatedAt.Equal(expectedUpdatedAt) || !current.HistoryRemovedAt.IsZero() {
 		return false, nil
 	}
 	current.Progress = progress
@@ -138,7 +137,7 @@ func (s *Store) ClaimImportJob(_ context.Context, job importjob.Record, expected
 }
 
 func cloneImportJob(job importjob.Record) importjob.Record {
-	job.Messages = append([]importplan.Message{}, job.Messages...)
+	job.Messages = append([]importjob.Message{}, job.Messages...)
 	job.ProgressHistory = append([]importjob.Progress{}, job.ProgressHistory...)
 	return job
 }

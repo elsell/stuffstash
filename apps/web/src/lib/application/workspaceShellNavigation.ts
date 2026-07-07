@@ -42,7 +42,7 @@ const desktopPrimaryDestinations: ShellNavigationDefinition[] = [
 ];
 
 const desktopUtilityDestinations: ShellNavigationDefinition[] = [
-  { mode: 'import', label: 'Import', description: 'Bring in legacy data', icon: 'import' },
+  { mode: 'import', label: 'Import', description: 'Bring in outside data', icon: 'import' },
   { mode: 'settings', label: 'Settings', description: 'Access, fields, and audit', icon: 'settings' }
 ];
 

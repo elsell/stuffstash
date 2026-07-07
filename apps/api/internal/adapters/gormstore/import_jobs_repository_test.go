@@ -9,7 +9,6 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
-	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -31,7 +30,7 @@ func TestImportJobRepositoryPersistsScopedJobHistory(t *testing.T) {
 	if err := store.SaveImportJob(ctx, job); err != nil {
 		t.Fatalf("save import job: %v", err)
 	}
-	got, found, err := store.ImportJobByID(ctx, job.TenantID, job.InventoryID, job.ID)
+	got, found, err := store.ImportJobByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID)
 	if err != nil {
 		t.Fatalf("read import job: %v", err)
 	}
@@ -41,16 +40,37 @@ func TestImportJobRepositoryPersistsScopedJobHistory(t *testing.T) {
 	if got.Source.Fingerprint != job.Source.Fingerprint || got.Progress.Phase != importjob.PhaseReady || len(got.Messages) != 1 {
 		t.Fatalf("unexpected persisted job: %+v", got)
 	}
-	if _, found, err := store.ImportJobByID(ctx, tenant.ID("tenant-other"), job.InventoryID, job.ID); err != nil || found {
+	if got.Source.AllowPrivateNetwork || got.Source.AllowInsecureTLS {
+		t.Fatalf("expected CSV import job source options to default false, got %+v", got.Source)
+	}
+	if _, found, err := store.ImportJobByID(ctx, tenant.ID("tenant-other"), inventory.InventoryID(job.InventoryID.String()), job.ID); err != nil || found {
 		t.Fatalf("expected wrong tenant read to miss, found=%t err=%v", found, err)
 	}
 
-	jobs, err := store.ListImportJobs(ctx, job.TenantID, job.InventoryID, nilPage())
+	jobs, err := store.ListImportJobs(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), nilPage())
 	if err != nil {
 		t.Fatalf("list import jobs: %v", err)
 	}
 	if len(jobs) != 1 || jobs[0].ID != job.ID {
 		t.Fatalf("expected job in history, got %+v", jobs)
+	}
+
+	liveJob := gormImportJob("job-live", job.CreatedAt.Add(time.Minute))
+	liveJob.Source.Type = importjob.SourceTypeLegacyHomebox
+	liveJob.Source.Name = "Homebox"
+	liveJob.Source.BaseURL = "https://homebox.example.test"
+	liveJob.Source.ImageImport = "enabled"
+	liveJob.Source.AllowPrivateNetwork = true
+	liveJob.Source.AllowInsecureTLS = true
+	if err := store.SaveImportJob(ctx, liveJob); err != nil {
+		t.Fatalf("save live import job: %v", err)
+	}
+	liveGot, found, err := store.ImportJobByID(ctx, tenant.ID(liveJob.TenantID.String()), inventory.InventoryID(liveJob.InventoryID.String()), liveJob.ID)
+	if err != nil || !found {
+		t.Fatalf("read live import job found=%t err=%v", found, err)
+	}
+	if !liveGot.Source.AllowPrivateNetwork || !liveGot.Source.AllowInsecureTLS {
+		t.Fatalf("expected safe live source options to round trip, got %+v", liveGot.Source)
 	}
 }
 
@@ -74,7 +94,7 @@ func TestImportJobRepositoryUpdatesAndHidesRemovedHistory(t *testing.T) {
 	if err := store.UpdateImportJob(ctx, job); err != nil {
 		t.Fatalf("update import job: %v", err)
 	}
-	updated, found, err := store.ImportJobByID(ctx, job.TenantID, job.InventoryID, job.ID)
+	updated, found, err := store.ImportJobByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID)
 	if err != nil {
 		t.Fatalf("read updated import job: %v", err)
 	}
@@ -87,17 +107,17 @@ func TestImportJobRepositoryUpdatesAndHidesRemovedHistory(t *testing.T) {
 
 	job.Status = importjob.StatusCancelledDiscarded
 	removedAt := job.UpdatedAt.Add(time.Minute)
-	removed, err := store.MarkImportJobHistoryRemoved(ctx, job.TenantID, job.InventoryID, job.ID, removedAt, job.UpdatedAt)
+	removed, err := store.MarkImportJobHistoryRemoved(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, removedAt, job.UpdatedAt)
 	if err != nil {
 		t.Fatalf("remove import job from history: %v", err)
 	}
 	if !removed {
 		t.Fatalf("expected remove import job from history to update")
 	}
-	if _, found, err := store.ImportJobByID(ctx, job.TenantID, job.InventoryID, job.ID); err != nil || found {
+	if _, found, err := store.ImportJobByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID); err != nil || found {
 		t.Fatalf("expected removed job detail to miss, found=%t err=%v", found, err)
 	}
-	jobs, err := store.ListImportJobs(ctx, job.TenantID, job.InventoryID, nilPage())
+	jobs, err := store.ListImportJobs(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), nilPage())
 	if err != nil {
 		t.Fatalf("list after remove: %v", err)
 	}
@@ -110,7 +130,7 @@ func TestImportJobRepositoryUpdatesAndHidesRemovedHistory(t *testing.T) {
 	if err := store.UpdateImportJob(ctx, stale); err == nil {
 		t.Fatalf("expected stale generic update of removed job to fail")
 	}
-	if _, found, err := store.ImportJobByID(ctx, job.TenantID, job.InventoryID, job.ID); err != nil || found {
+	if _, found, err := store.ImportJobByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID); err != nil || found {
 		t.Fatalf("expected stale update not to resurrect removed job, found=%t err=%v", found, err)
 	}
 	recoverable, err := store.ListImportJobsByStatus(ctx, ports.ImportJobStatusPageRequest{Status: importjob.StatusCancelledDiscarded, Limit: 10})
@@ -188,7 +208,7 @@ func TestImportJobRepositoryConditionallyUpdatesProgress(t *testing.T) {
 	}
 
 	first := importjob.Progress{Phase: importjob.PhaseAssets, Done: 1, Total: 2, Message: "Creating assets", UpdatedAt: now.Add(time.Minute)}
-	updated, err := store.UpdateImportJobProgress(ctx, job.TenantID, job.InventoryID, job.ID, first, job.UpdatedAt)
+	updated, err := store.UpdateImportJobProgress(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, first, job.UpdatedAt)
 	if err != nil {
 		t.Fatalf("progress update: %v", err)
 	}
@@ -196,14 +216,14 @@ func TestImportJobRepositoryConditionallyUpdatesProgress(t *testing.T) {
 		t.Fatalf("expected progress update to apply")
 	}
 	stale := importjob.Progress{Phase: importjob.PhaseAssets, Done: 2, Total: 2, Message: "Creating assets", UpdatedAt: now.Add(2 * time.Minute)}
-	staleUpdated, err := store.UpdateImportJobProgress(ctx, job.TenantID, job.InventoryID, job.ID, stale, job.UpdatedAt)
+	staleUpdated, err := store.UpdateImportJobProgress(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, stale, job.UpdatedAt)
 	if err != nil {
 		t.Fatalf("stale progress update: %v", err)
 	}
 	if staleUpdated {
 		t.Fatalf("expected stale progress update to be rejected")
 	}
-	got, found, err := store.ImportJobByID(ctx, job.TenantID, job.InventoryID, job.ID)
+	got, found, err := store.ImportJobByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID)
 	if err != nil || !found {
 		t.Fatalf("read import job found=%t err=%v", found, err)
 	}
@@ -215,19 +235,19 @@ func TestImportJobRepositoryConditionallyUpdatesProgress(t *testing.T) {
 	}
 
 	nonAdvancing := importjob.Progress{Phase: importjob.PhaseAssets, Done: 2, Total: 2, Message: "Creating assets", UpdatedAt: first.UpdatedAt.Add(time.Nanosecond)}
-	if _, err := store.UpdateImportJobProgress(ctx, job.TenantID, job.InventoryID, job.ID, nonAdvancing, first.UpdatedAt); !errors.Is(err, ports.ErrInvalidProviderInput) {
+	if _, err := store.UpdateImportJobProgress(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, nonAdvancing, first.UpdatedAt); !errors.Is(err, ports.ErrInvalidProviderInput) {
 		t.Fatalf("expected non-advancing microsecond progress timestamp to be rejected, got %v", err)
 	}
 
 	second := importjob.Progress{Phase: importjob.PhaseAssets, Done: 2, Total: 2, Message: "Creating assets", UpdatedAt: now.Add(3 * time.Minute)}
-	updated, err = store.UpdateImportJobProgress(ctx, job.TenantID, job.InventoryID, job.ID, second, first.UpdatedAt)
+	updated, err = store.UpdateImportJobProgress(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, second, first.UpdatedAt)
 	if err != nil {
 		t.Fatalf("second progress update: %v", err)
 	}
 	if !updated {
 		t.Fatalf("expected second progress update to apply")
 	}
-	got, found, err = store.ImportJobByID(ctx, job.TenantID, job.InventoryID, job.ID)
+	got, found, err = store.ImportJobByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID)
 	if err != nil || !found {
 		t.Fatalf("read import job after second progress found=%t err=%v", found, err)
 	}
@@ -236,6 +256,9 @@ func TestImportJobRepositoryConditionallyUpdatesProgress(t *testing.T) {
 	}
 	if len(got.ProgressHistory) != 2 {
 		t.Fatalf("expected same-phase progress to keep bounded phase history, got %+v", got.ProgressHistory)
+	}
+	if got.ProgressHistory[1].Done != 2 || got.ProgressHistory[1].Total != 2 || !got.ProgressHistory[1].UpdatedAt.Equal(second.UpdatedAt) {
+		t.Fatalf("expected bounded phase history to refresh latest safe progress counts, got %+v", got.ProgressHistory[1])
 	}
 }
 
@@ -247,7 +270,7 @@ func TestImportLinkRepositoryEnforcesSourceUniqueness(t *testing.T) {
 	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
 	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
 	job := gormImportJob("job-one", time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC))
-	job.Source.Type = importplan.SourceLegacyHomebox
+	job.Source.Type = importjob.SourceTypeLegacyHomebox
 	job.Source.BaseURL = "https://homebox.example.test"
 	if err := store.SaveImportJob(ctx, job); err != nil {
 		t.Fatalf("save import job: %v", err)
@@ -255,8 +278,8 @@ func TestImportLinkRepositoryEnforcesSourceUniqueness(t *testing.T) {
 
 	link := ports.ImportSourceLink{
 		Key: ports.ImportSourceLinkKey{
-			TenantID:          job.TenantID,
-			InventoryID:       job.InventoryID,
+			TenantID:          tenant.ID(job.TenantID.String()),
+			InventoryID:       inventory.InventoryID(job.InventoryID.String()),
 			SourceType:        importplan.SourceLegacyHomebox,
 			SourceInstanceKey: "https://homebox.example.test",
 			SourceEntityType:  ports.ImportSourceEntityAsset,
@@ -295,15 +318,15 @@ func TestCreateImportedAttachmentRollsBackOnSourceLinkConflict(t *testing.T) {
 		t.Fatalf("save asset: %v", err)
 	}
 	job := gormImportJob("job-one", now)
-	job.Source.Type = importplan.SourceLegacyHomebox
+	job.Source.Type = importjob.SourceTypeLegacyHomebox
 	job.Source.BaseURL = "https://homebox.example.test"
 	if err := store.SaveImportJob(ctx, job); err != nil {
 		t.Fatalf("save import job: %v", err)
 	}
 	link := ports.ImportSourceLink{
 		Key: ports.ImportSourceLinkKey{
-			TenantID:          job.TenantID,
-			InventoryID:       job.InventoryID,
+			TenantID:          tenant.ID(job.TenantID.String()),
+			InventoryID:       inventory.InventoryID(job.InventoryID.String()),
 			SourceType:        importplan.SourceLegacyHomebox,
 			SourceInstanceKey: "https://homebox.example.test",
 			SourceEntityType:  ports.ImportSourceEntityAttachment,
@@ -319,8 +342,8 @@ func TestCreateImportedAttachmentRollsBackOnSourceLinkConflict(t *testing.T) {
 	}
 	attachment := gormImportedAttachment(t, now)
 	resource := ports.ImportJobResource{
-		TenantID:          job.TenantID,
-		InventoryID:       job.InventoryID,
+		TenantID:          tenant.ID(job.TenantID.String()),
+		InventoryID:       inventory.InventoryID(job.InventoryID.String()),
 		JobID:             job.ID,
 		ResourceType:      ports.ImportResourceAttachment,
 		ResourceID:        attachment.ID.String(),
@@ -331,14 +354,14 @@ func TestCreateImportedAttachmentRollsBackOnSourceLinkConflict(t *testing.T) {
 		SourceEntityID:    link.Key.SourceEntityID,
 		CreatedAt:         now,
 	}
-	err := store.CreateImportedAttachment(ctx, attachment, auditRecord(t, "audit-attachment", job.TenantID, job.InventoryID, audit.ActionAttachmentCreated), link, resource)
+	err := store.CreateImportedAttachment(ctx, attachment, auditRecord(t, "audit-attachment", tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), audit.ActionAttachmentCreated), link, resource)
 	if !errors.Is(err, ports.ErrConflict) {
 		t.Fatalf("expected source link conflict, got %v", err)
 	}
-	if _, found, err := store.AttachmentByID(ctx, job.TenantID, job.InventoryID, item.ID, attachment.ID); err != nil || found {
+	if _, found, err := store.AttachmentByID(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), item.ID, attachment.ID); err != nil || found {
 		t.Fatalf("expected attachment rollback, found=%t err=%v", found, err)
 	}
-	records, err := store.ListInventoryAuditRecords(ctx, job.TenantID, job.InventoryID, ports.AuditRecordPageRequest{Limit: 20})
+	records, err := store.ListInventoryAuditRecords(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), ports.AuditRecordPageRequest{Limit: 20})
 	if err != nil {
 		t.Fatalf("list audit records: %v", err)
 	}
@@ -347,7 +370,7 @@ func TestCreateImportedAttachmentRollsBackOnSourceLinkConflict(t *testing.T) {
 			t.Fatalf("expected attachment audit record rollback, got %+v", record)
 		}
 	}
-	resources, err := store.ListImportJobResources(ctx, job.TenantID, job.InventoryID, job.ID, ports.ImportJobResourcePageRequest{Limit: 10})
+	resources, err := store.ListImportJobResources(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, ports.ImportJobResourcePageRequest{Limit: 10})
 	if err != nil {
 		t.Fatalf("list import job resources: %v", err)
 	}
@@ -370,8 +393,8 @@ func TestImportJobResourceListIsBoundedAndOrdered(t *testing.T) {
 	}
 	for index := 0; index < 60; index++ {
 		record := ports.ImportJobResource{
-			TenantID:          job.TenantID,
-			InventoryID:       job.InventoryID,
+			TenantID:          tenant.ID(job.TenantID.String()),
+			InventoryID:       inventory.InventoryID(job.InventoryID.String()),
 			JobID:             job.ID,
 			ResourceType:      ports.ImportResourceAsset,
 			ResourceID:        fmt.Sprintf("asset-%02d", index),
@@ -386,7 +409,7 @@ func TestImportJobResourceListIsBoundedAndOrdered(t *testing.T) {
 		}
 	}
 
-	resources, err := store.ListImportJobResources(ctx, job.TenantID, job.InventoryID, job.ID, ports.ImportJobResourcePageRequest{Limit: 12})
+	resources, err := store.ListImportJobResources(ctx, tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), job.ID, ports.ImportJobResourcePageRequest{Limit: 12})
 	if err != nil {
 		t.Fatalf("list import job resources: %v", err)
 	}
@@ -413,8 +436,8 @@ func TestImportJobSourceVacuumDeletesTerminalJobSourcesBeforeExpiry(t *testing.T
 	}
 	if err := store.ReplaceImportJobSource(ctx, ports.ImportJobSourceRecord{
 		Scope: ports.ImportJobSourceScope{
-			TenantID:    job.TenantID,
-			InventoryID: job.InventoryID,
+			TenantID:    tenant.ID(job.TenantID.String()),
+			InventoryID: inventory.InventoryID(job.InventoryID.String()),
 			JobID:       job.ID,
 		},
 		Sealed: ports.SealedImportJobSource{
@@ -436,7 +459,7 @@ func TestImportJobSourceVacuumDeletesTerminalJobSourcesBeforeExpiry(t *testing.T
 	if len(deleted) != 1 || deleted[0].JobID != job.ID {
 		t.Fatalf("expected one deleted source scope, got %+v", deleted)
 	}
-	if _, found, err := store.ImportJobSource(ctx, ports.ImportJobSourceScope{TenantID: job.TenantID, InventoryID: job.InventoryID, JobID: job.ID}); err != nil || found {
+	if _, found, err := store.ImportJobSource(ctx, ports.ImportJobSourceScope{TenantID: tenant.ID(job.TenantID.String()), InventoryID: inventory.InventoryID(job.InventoryID.String()), JobID: job.ID}); err != nil || found {
 		t.Fatalf("expected source removed, found=%t err=%v", found, err)
 	}
 }
@@ -464,21 +487,21 @@ func gormImportedAttachment(t *testing.T, now time.Time) media.Attachment {
 func gormImportJob(id string, now time.Time) importjob.Record {
 	return importjob.Record{
 		ID:          importjob.ID(id),
-		TenantID:    tenant.ID("tenant-home"),
-		InventoryID: inventory.InventoryID("inventory-home"),
-		ActorID:     identity.PrincipalID("owner"),
+		TenantID:    importjob.TenantID("tenant-home"),
+		InventoryID: importjob.InventoryID("inventory-home"),
+		ActorID:     importjob.PrincipalID("owner"),
 		Status:      importjob.StatusPreviewed,
 		Source: importjob.SourceRef{
-			Type:        importplan.SourceLegacyHomeboxCSV,
+			Type:        importjob.SourceTypeLegacyHomeboxCSV,
 			Name:        "Homebox CSV",
 			Version:     "0.24.0",
 			ImageImport: "unavailable",
 			Fingerprint: "sha256:test",
 		},
 		Counts: importjob.Counts{Fields: 1, Assets: 1, Warnings: 1},
-		Messages: []importplan.Message{{
+		Messages: []importjob.Message{{
 			Code:     "csv-images-unavailable",
-			Severity: importplan.SeverityWarning,
+			Severity: importjob.MessageSeverityWarning,
 			Summary:  "Images are unavailable for CSV imports",
 		}},
 		Progress: importjob.Progress{

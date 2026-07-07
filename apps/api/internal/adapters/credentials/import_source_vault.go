@@ -67,11 +67,11 @@ func (v DatabaseImportJobSourceVault) ImportJobSourceRequest(ctx context.Context
 	}
 	raw, err := v.sealer.UnsealImportJobSource(ctx, scope, record.Sealed)
 	if err != nil {
-		return ports.ImportSourceRequest{}, false, ports.ErrInvalidProviderInput
+		return ports.ImportSourceRequest{}, false, ports.ErrImportJobSourceUnreadable
 	}
 	var payload importSourcePayload
 	if err := json.Unmarshal(raw, &payload); err != nil {
-		return ports.ImportSourceRequest{}, false, ports.ErrInvalidProviderInput
+		return ports.ImportSourceRequest{}, false, ports.ErrImportJobSourceUnreadable
 	}
 	return payload.toRequest(), true, nil
 }

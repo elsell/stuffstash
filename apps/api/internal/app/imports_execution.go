@@ -77,7 +77,11 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 	job.Counts.AssetsSkipped = result.Counts.AssetsSkipped
 	job.Counts.AttachmentsCreated = result.Counts.AttachmentsCreated
 	job.Counts.AttachmentsSkipped = result.Counts.AttachmentsSkipped
-	job.Messages = append(job.Messages, result.Messages...)
+	var sourceChangedErr ImportSourceChangedAfterPreviewError
+	sourceChangedAfterPreview := errors.As(applyErr, &sourceChangedErr)
+	if !sourceChangedAfterPreview {
+		job.Messages = append(job.Messages, importJobMessagesFromPlanMessages(result.Messages)...)
+	}
 	job.CompletedAt = now
 	job.UpdatedAt = now
 	terminalDone := job.Progress.Done
@@ -95,12 +99,12 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 			if discardErr != nil {
 				job.Status = importjob.StatusDiscardFailed
 				job.Progress.Message = "Import cancellation cleanup failed"
-				job.Messages = append(job.Messages, importplan.Message{
+				job.Messages = append(job.Messages, importJobMessageFromPlanMessage(importplan.Message{
 					Code:     "import-discard-failed",
 					Severity: importplan.SeverityError,
 					Summary:  "Import cancellation cleanup failed",
 					Detail:   safeImportError(discardErr),
-				})
+				}))
 			} else {
 				job.Status = importjob.StatusCancelledDiscarded
 				job.Progress.Message = "Import cancelled and partial progress discarded"
@@ -109,15 +113,24 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 			job.Status = importjob.StatusCancelledKept
 			job.Progress.Message = "Import cancelled and partial progress kept"
 		}
+	} else if sourceChangedAfterPreview {
+		job.Status = importjob.StatusFailed
+		job.Progress.Message = "Import source changed after preview"
+		job.Messages = []importjob.Message{importJobMessageFromPlanMessage(importplan.Message{
+			Code:     "import-source-changed",
+			Severity: importplan.SeverityError,
+			Summary:  "Import source changed after preview",
+			Detail:   sourceChangedErr.Error(),
+		})}
 	} else if applyErr != nil {
 		job.Status = importjob.StatusFailed
 		job.Progress.Message = "Import failed"
-		job.Messages = append(job.Messages, importplan.Message{
+		job.Messages = append(job.Messages, importJobMessageFromPlanMessage(importplan.Message{
 			Code:     "import-failed",
 			Severity: importplan.SeverityError,
 			Summary:  "Import failed",
 			Detail:   safeImportError(applyErr),
-		})
+		}))
 	} else {
 		job.Status = importjob.StatusSucceeded
 		job.Progress.Message = "Import completed"
@@ -159,12 +172,12 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 		scope := a.importJobSourceScope(command.TenantID, command.InventoryID, command.JobID)
 		deleted, err := a.importSourceVault.DeleteImportJobSource(ctx, scope)
 		if err != nil {
-			job.Messages = append(job.Messages, importplan.Message{
+			job.Messages = append(job.Messages, importJobMessageFromPlanMessage(importplan.Message{
 				Code:     "import-source-cleanup-failed",
 				Severity: importplan.SeverityWarning,
 				Summary:  "Temporary import credentials could not be cleaned up automatically",
 				Detail:   "credential cleanup will be retried by the import credential vacuum",
-			})
+			}))
 			job.UpdatedAt = a.clock.Now().UTC()
 			if updateErr := a.importJobs.UpdateImportJob(ctx, job); updateErr != nil {
 				return importjob.Record{}, updateErr
@@ -174,6 +187,9 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 				return importjob.Record{}, err
 			}
 		}
+	}
+	if sourceChangedAfterPreview {
+		return job, sourceChangedErr
 	}
 	return job, nil
 }
@@ -191,7 +207,10 @@ func (a App) applyImportPlan(ctx context.Context, command ports.ImportJobCommand
 		return ImportResult{}, importSourceInputError(err)
 	}
 	result := ImportResult{}
-	checkPlan := a.normalizedImportPlanForJob(ctx, command.TenantID, command.InventoryID, plan)
+	checkPlan, err := a.normalizedImportPlanForJob(ctx, command.TenantID, command.InventoryID, plan)
+	if err != nil {
+		return ImportResult{}, err
+	}
 	result.Messages = append(result.Messages, checkPlan.Messages...)
 	fingerprint, err := sourceFingerprint(checkPlan)
 	if err != nil {
@@ -203,7 +222,7 @@ func (a App) applyImportPlan(ctx context.Context, command ports.ImportJobCommand
 			Message: "Import source changed after preview.",
 			Fields:  importJobEventFields(*job),
 		})
-		return result, ErrPrecondition
+		return result, ImportSourceChangedAfterPreviewError{}
 	}
 	if plan.Counts().Errors > 0 {
 		return result, ErrInvalidInput
@@ -656,7 +675,10 @@ func (a App) discardImportedJobResources(ctx context.Context, command ports.Impo
 				InventoryID:  command.InventoryID,
 				AssetID:      assetID,
 				AttachmentID: attachmentID,
-			}); err != nil && !errors.Is(err, ErrNotFound) {
+			}); err != nil {
+				if errors.Is(err, ErrNotFound) {
+					continue
+				}
 				return discarded, 0, err
 			}
 			discarded++
@@ -672,7 +694,10 @@ func (a App) discardImportedJobResources(ctx context.Context, command ports.Impo
 				TenantID:    command.TenantID,
 				InventoryID: command.InventoryID,
 				AssetID:     assetID,
-			}); err != nil && !errors.Is(err, ErrNotFound) {
+			}); err != nil {
+				if errors.Is(err, ErrNotFound) {
+					continue
+				}
 				return discarded, 0, err
 			}
 			discarded++

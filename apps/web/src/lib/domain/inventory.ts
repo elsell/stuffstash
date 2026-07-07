@@ -252,6 +252,7 @@ export interface ImportJobPreview {
 export interface ImportJobResourceSummary {
   resourceType: string;
   resourceId: string;
+  displayName?: string;
   resourceOwnerId?: string;
   sourceEntityType: string;
   sourceEntityId: string;
@@ -276,6 +277,8 @@ export interface ImportJob {
     baseUrl?: string;
     version?: string;
     imageImport: string;
+    allowPrivateNetwork?: boolean;
+    allowInsecureTLS?: boolean;
     fingerprint?: string;
   };
   counts: ImportCounts & {

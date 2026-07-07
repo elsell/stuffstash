@@ -33,7 +33,8 @@ type importImportedResourceInput struct {
 
 func importSourceIdentityForJob(source importjob.SourceRef) (importSourceIdentity, error) {
 	instanceKey := strings.TrimSpace(source.BaseURL)
-	switch source.Type {
+	sourceType := importplan.SourceType(source.Type)
+	switch sourceType {
 	case importplan.SourceLegacyHomebox:
 		if instanceKey == "" {
 			return importSourceIdentity{}, ErrInvalidInput
@@ -46,7 +47,7 @@ func importSourceIdentityForJob(source importjob.SourceRef) (importSourceIdentit
 	default:
 		return importSourceIdentity{}, ErrInvalidInput
 	}
-	return importSourceIdentity{sourceType: source.Type, sourceInstanceKey: instanceKey}, nil
+	return importSourceIdentity{sourceType: sourceType, sourceInstanceKey: instanceKey}, nil
 }
 
 func importAssetSourceLinkKey(tenantID tenant.ID, inventoryID inventory.InventoryID, sourceIdentity importSourceIdentity, planned importplan.Asset) ports.ImportSourceLinkKey {
@@ -129,20 +130,28 @@ func (a App) importedResourceRecords(input importImportedResourceInput) (ports.I
 	return link, record, nil
 }
 
-func (a App) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, plan importplan.Plan) []importplan.Message {
+func (a App) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, source importjob.SourceRef, plan importplan.Plan) ([]importplan.Message, map[string]struct{}, error) {
+	linkedAssetSourceIDs := map[string]struct{}{}
 	if a.importLinks == nil {
-		return nil
+		return nil, linkedAssetSourceIDs, nil
 	}
-	source := importjob.SourceRefFromPlan(plan, "")
 	sourceIdentity, err := importSourceIdentityForJob(source)
 	if err != nil {
-		return nil
+		return nil, linkedAssetSourceIDs, nil
 	}
 	var messages []importplan.Message
 	for _, planned := range plan.Assets {
-		if _, found, err := a.importLinks.ImportSourceLinkByKey(ctx, importAssetSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned)); err != nil || !found {
+		link, found, err := a.importLinks.ImportSourceLinkByKey(ctx, importAssetSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned))
+		if err != nil {
+			return nil, linkedAssetSourceIDs, err
+		}
+		if !found {
 			continue
 		}
+		if link.ResourceType != ports.ImportResourceAsset || strings.TrimSpace(link.ResourceID) == "" {
+			continue
+		}
+		linkedAssetSourceIDs[planned.SourceID] = struct{}{}
 		messages = append(messages, importplan.Message{
 			Code:       "duplicate-source-asset",
 			Severity:   importplan.SeverityWarning,
@@ -152,5 +161,25 @@ func (a App) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID
 			SourceName: planned.Title,
 		})
 	}
-	return messages
+	for _, planned := range plan.Attachments {
+		link, found, err := a.importLinks.ImportSourceLinkByKey(ctx, importAttachmentSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned))
+		if err != nil {
+			return nil, linkedAssetSourceIDs, err
+		}
+		if !found {
+			continue
+		}
+		if link.ResourceType != ports.ImportResourceAttachment || strings.TrimSpace(link.ResourceID) == "" {
+			continue
+		}
+		messages = append(messages, importplan.Message{
+			Code:       "duplicate-source-attachment",
+			Severity:   importplan.SeverityWarning,
+			Summary:    "Attachment appears to have already been imported",
+			Detail:     "source link already exists",
+			SourceID:   planned.SourceID,
+			SourceName: planned.FileName,
+		})
+	}
+	return messages, linkedAssetSourceIDs, nil
 }
