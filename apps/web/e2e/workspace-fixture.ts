@@ -190,6 +190,14 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/tags') {
+    if (url.searchParams.get('limit') !== '100') {
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { code: 'unexpected_query', message: 'Expected tag list limit=100.' } })
+      });
+      return;
+    }
     await fulfill(route, [assetTag('tag-workshop', 'workshop', 'Workshop', '#2F80ED')]);
     return;
   }

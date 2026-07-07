@@ -20,7 +20,7 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await expect(page.getByText('/api/v1')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Warnings/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Action required/ })).toHaveCount(0);
-  const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: 'Warnings' });
+  const warningRow = warningImportRow(page);
   await expect(warningRow.getByText('Completed with warnings.')).toHaveCount(0);
   await expect(warningRow.getByText('Completed')).toBeVisible();
   await expect(warningRow.locator('[data-slot="badge"]').filter({ hasText: 'Warnings' })).toBeVisible();
@@ -78,7 +78,7 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
 
   await expect(page.getByRole('heading', { name: 'Imports', exact: true })).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
-  const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: 'Warnings' });
+  const warningRow = warningImportRow(page);
   await warningRow.getByRole('button', { name: /review details/i }).click();
   await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-detail-content'))).toBe(false);
@@ -122,38 +122,34 @@ async function importNavigationSentinel(page: import('@playwright/test').Page): 
   return page.evaluate(() => (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel);
 }
 
-async function expectImportStepperGeometry(page: import('@playwright/test').Page): Promise<void> {
-  await expect(page.locator('.step-progress')).toBeVisible();
-  const metrics = await page.locator('.step-progress').evaluate((progress) => {
-    const markers = Array.from(progress.querySelectorAll<HTMLElement>('.step-progress-marker')).map((marker) => {
-      const rect = marker.getBoundingClientRect();
-      return {
-        centerX: rect.left + rect.width / 2,
-        centerY: rect.top + rect.height / 2
-      };
-    });
-    const connectorCenterDeltas = Array.from(progress.querySelectorAll<HTMLElement>('.step-progress-item:not(:last-child)')).map(
-      (item, index) => {
-        const rect = item.getBoundingClientRect();
-        const styles = getComputedStyle(item, '::after');
-        const connectorTop = Number.parseFloat(styles.top);
-        const connectorHeight = Number.parseFloat(styles.height);
-        const connectorCenterY = rect.top + connectorTop + connectorHeight / 2;
-        return Math.abs(connectorCenterY - markers[index].centerY);
-      }
-    );
-    const markerCenterSpread = Math.max(...markers.map((marker) => marker.centerY)) - Math.min(...markers.map((marker) => marker.centerY));
-    const markerGaps = markers.slice(1).map((marker, index) => marker.centerX - markers[index].centerX);
-    return {
-      markerCount: markers.length,
-      markerCenterSpread,
-      maxConnectorDelta: Math.max(...connectorCenterDeltas),
-      minMarkerGap: Math.min(...markerGaps)
-    };
-  });
+function warningImportRow(page: import('@playwright/test').Page): import('@playwright/test').Locator {
+  return page
+    .locator('.history-ledger .history-row')
+    .filter({ hasText: 'Warnings' })
+    .filter({ hasText: '1 location saved · 2 assets saved · 1 photo/file saved' });
+}
 
-  expect(metrics.markerCount).toBe(4);
-  expect(metrics.markerCenterSpread).toBeLessThanOrEqual(1);
-  expect(metrics.maxConnectorDelta).toBeLessThanOrEqual(1);
-  expect(metrics.minMarkerGap).toBeGreaterThan(24);
+async function expectImportStepperGeometry(page: import('@playwright/test').Page): Promise<void> {
+  const stepper = page.getByRole('list', { name: 'Import progress' });
+  await expect(stepper).toBeVisible();
+  expect(await hasHorizontalOverflow(stepper)).toBe(false);
+
+  await expect(stepper.getByText('Source', { exact: true })).toBeVisible();
+  await expect(stepper.getByText('Connect', { exact: true })).toBeVisible();
+  await expect(stepper.getByText('Preview', { exact: true })).toBeVisible();
+  await expect(stepper.getByText('Run', { exact: true })).toBeVisible();
+  await expect(stepper.getByText('Current', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Source, current step/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Go to Preview/ })).toHaveCount(0);
+
+  const labelBoxes = await Promise.all(
+    ['Source', 'Connect', 'Preview', 'Run'].map(async (label) => {
+      const box = await stepper.getByText(label, { exact: true }).boundingBox();
+      expect(box).toBeTruthy();
+      return box!;
+    })
+  );
+  for (let index = 1; index < labelBoxes.length; index += 1) {
+    expect(labelBoxes[index].x).toBeGreaterThan(labelBoxes[index - 1].x + labelBoxes[index - 1].width);
+  }
 }
