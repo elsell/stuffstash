@@ -105,6 +105,7 @@ describe('ImportMessagesList', () => {
     expect(group?.textContent).toContain('Homebox record');
     expect(group?.textContent).toContain('Source ID source-wardrobe');
     expect(group?.textContent).toContain('Source ID source-baby-hats');
+    expect(buttonWithLabel('Explain Asset appears to have already been imported')).toBeTruthy();
     expect(group?.querySelectorAll('.message-row')[0]?.textContent).not.toBe('homebox-source-id duplicate');
   });
 
@@ -120,7 +121,7 @@ describe('ImportMessagesList', () => {
       }
     });
 
-    buttonContaining('Details').click();
+    buttonContaining('Explain').click();
     await tick();
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
@@ -139,7 +140,7 @@ describe('ImportMessagesList', () => {
     await tick();
     expect(document.body.querySelector('[role="dialog"]')).toBeFalsy();
 
-    buttonContaining('Details').click();
+    buttonContaining('Explain').click();
     await tick();
 
     buttonWithLabel('Close issue details').click();
@@ -156,7 +157,7 @@ describe('ImportMessagesList', () => {
       }
     });
 
-    buttonContaining('Details').click();
+    buttonContaining('Explain').click();
     await tick();
 
     const dialogText = document.body.querySelector<HTMLElement>('[role="dialog"]')?.textContent ?? '';
@@ -174,7 +175,7 @@ describe('ImportMessagesList', () => {
       }
     });
 
-    buttonContaining('Details').click();
+    buttonContaining('Explain').click();
     await tick();
 
     const dialogText = document.body.querySelector<HTMLElement>('[role="dialog"]')?.textContent ?? '';

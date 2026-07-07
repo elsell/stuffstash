@@ -216,8 +216,14 @@
             <strong>{group.summary}</strong>
             <span>{group.cause ? `${group.cause} · ${groupCountLabel(group.messages.length)}` : groupCountLabel(group.messages.length)}</span>
           </div>
-          <Button.Root variant="ghost" size="sm" class="message-detail-button" onclick={() => (selectedGroupKey = group.key)}>
-            Details
+          <Button.Root
+            variant="ghost"
+            size="sm"
+            class="message-detail-button"
+            aria-label={`Explain ${group.summary}`}
+            onclick={() => (selectedGroupKey = group.key)}
+          >
+            Explain
           </Button.Root>
         </div>
         <div class="message-group-items">
