@@ -52,6 +52,18 @@ describe('InventoryImportWorkspace import history and progress', () => {
     expect(importJobHistorySource).toContain('var(--destructive)');
   });
 
+  it('keeps import detail tabs as a scrollable mobile rail instead of clipped equal columns', () => {
+    const tabListRule = importJobDetailPanelSource.match(/:global\(\.detail-tab-list\)\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+    const tabTriggerRule =
+      importJobDetailPanelSource.match(/:global\(\.detail-tab-list \[data-slot='tabs-trigger'\]\)\s*{(?<body>[^}]*)}/)?.groups?.body ??
+      '';
+
+    expect(tabListRule).toContain('overflow-x: auto');
+    expect(tabListRule).toContain('scroll-snap-type: x proximity');
+    expect(tabTriggerRule).toContain('flex: 0 0 auto');
+    expect(tabTriggerRule).toContain('min-width: max-content');
+  });
+
   it('refreshes workspace data when a running import job finishes', async () => {
     const repository = new CompletingImportJobRepository(structuredClone(seed));
     let refreshes = 0;

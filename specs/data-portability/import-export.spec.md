@@ -278,6 +278,7 @@ The import surface must not look or behave like a marketing page or separate adm
 The import workspace must include:
 
 - A way to start a new import.
+- Import detail sections must remain readable on compact mobile widths. If the detail view uses tabs, tab labels must not clip or overlap; the row may use a horizontal rail, concise visible labels, and fuller accessible names where needed.
 - A way to view in-progress imports.
 - A way to view past successful imports.
 - A way to view past failed imports.

@@ -196,7 +196,7 @@
               <Tabs.Trigger value="issues">Issues{issueCount > 0 ? ` (${issueCount})` : ''}</Tabs.Trigger>
               <Tabs.Trigger value="plan">Plan</Tabs.Trigger>
               <Tabs.Trigger value="records">Records</Tabs.Trigger>
-              <Tabs.Trigger value="timeline">Timeline</Tabs.Trigger>
+              <Tabs.Trigger value="timeline" aria-label="Timeline">Log</Tabs.Trigger>
             </Tabs.List>
 
             <Tabs.Content value="overview">
@@ -526,7 +526,20 @@
   :global(.detail-tab-list) {
     max-width: 100%;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
     width: 100%;
+  }
+
+  :global(.detail-tab-list::-webkit-scrollbar) {
+    display: none;
+  }
+
+  :global(.detail-tab-list [data-slot='tabs-trigger']) {
+    flex: 0 0 auto;
+    min-width: max-content;
+    scroll-snap-align: start;
   }
 
   .detail-panel {
@@ -820,6 +833,11 @@
 
     .detail-side {
       position: static;
+    }
+
+    :global(.detail-tab-list) {
+      margin-inline: -0.35rem;
+      padding-inline: 0.35rem;
     }
 
     .resource-row {
