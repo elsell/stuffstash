@@ -62,8 +62,12 @@ function isLocalDevelopmentHost(hostname: string): boolean {
   if (value === '127.0.0.1' || value === '::1' || value === '[::1]') {
     return true;
   }
-  const octets = value.split('.').map((part) => Number.parseInt(part, 10));
-  if (octets.length !== 4 || octets.some((part) => Number.isNaN(part) || part < 0 || part > 255)) {
+  const rawOctets = value.split('.');
+  if (rawOctets.length !== 4 || rawOctets.some((part) => !/^\d+$/.test(part))) {
+    return false;
+  }
+  const octets = rawOctets.map((part) => Number.parseInt(part, 10));
+  if (octets.some((part) => part < 0 || part > 255)) {
     return false;
   }
   const [first, second] = octets;
