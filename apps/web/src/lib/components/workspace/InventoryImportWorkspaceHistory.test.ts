@@ -1591,7 +1591,7 @@ function ledgerSourceNames(): string[] {
 }
 
 function columnHeader(text: string): HTMLElement | null {
-  return Array.from(document.body.querySelectorAll<HTMLElement>('.history-ledger-head [role="columnheader"]')).find((node) =>
+  return Array.from(document.body.querySelectorAll<HTMLElement>('.history-ledger-head th')).find((node) =>
     node.textContent?.includes(text)
   ) ?? null;
 }

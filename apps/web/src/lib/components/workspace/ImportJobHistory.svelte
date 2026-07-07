@@ -13,6 +13,7 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
+  import * as Table from '$lib/components/ui/table/index.js';
   import {
     actorSummary,
     attentionSummary,
@@ -449,48 +450,50 @@
           <Button.Root variant="ghost" size="sm" onclick={() => (historyFilter = 'all')}>Show all</Button.Root>
         {/if}
       </div>
-      <div class="history-ledger" role="table" aria-label="Import history">
-        <div class="history-ledger-head" role="row">
-          <span role="columnheader" aria-sort={historySortKey === 'source' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('source')} aria-label={sortButtonLabel('source', 'source')}>
-              Source
-              <ArrowUpDown size={12} aria-hidden="true" />
-              {#if sortIndicator('source')}<small>{sortIndicator('source')}</small>{/if}
-            </Button.Root>
-          </span>
-          <span role="columnheader" aria-sort={historySortKey === 'status' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('status')} aria-label={sortButtonLabel('status', 'status')}>
-              Status
-              <ArrowUpDown size={12} aria-hidden="true" />
-              {#if sortIndicator('status')}<small>{sortIndicator('status')}</small>{/if}
-            </Button.Root>
-          </span>
-          <span role="columnheader" aria-sort={historySortKey === 'changed' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('changed')} aria-label={sortButtonLabel('changed', 'changed records')}>
-              Changed
-              <ArrowUpDown size={12} aria-hidden="true" />
-              {#if sortIndicator('changed')}<small>{sortIndicator('changed')}</small>{/if}
-            </Button.Root>
-          </span>
-          <span role="columnheader" aria-sort={historySortKey === 'finished' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('finished')} aria-label={sortButtonLabel('finished', 'finished time')}>
-              Finished
-              <ArrowUpDown size={12} aria-hidden="true" />
-              {#if sortIndicator('finished')}<small>{sortIndicator('finished')}</small>{/if}
-            </Button.Root>
-          </span>
-          <span role="columnheader">Actions</span>
-        </div>
+      <Table.Root class="history-ledger" aria-label="Import history">
+        <Table.Header class="history-ledger-head">
+          <Table.Row>
+            <Table.Head scope="col" aria-sort={historySortKey === 'source' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('source')} aria-label={sortButtonLabel('source', 'source')}>
+                Source
+                <ArrowUpDown size={12} aria-hidden="true" />
+                {#if sortIndicator('source')}<small>{sortIndicator('source')}</small>{/if}
+              </Button.Root>
+            </Table.Head>
+            <Table.Head scope="col" aria-sort={historySortKey === 'status' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('status')} aria-label={sortButtonLabel('status', 'status')}>
+                Status
+                <ArrowUpDown size={12} aria-hidden="true" />
+                {#if sortIndicator('status')}<small>{sortIndicator('status')}</small>{/if}
+              </Button.Root>
+            </Table.Head>
+            <Table.Head scope="col" aria-sort={historySortKey === 'changed' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('changed')} aria-label={sortButtonLabel('changed', 'changed records')}>
+                Changed
+                <ArrowUpDown size={12} aria-hidden="true" />
+                {#if sortIndicator('changed')}<small>{sortIndicator('changed')}</small>{/if}
+              </Button.Root>
+            </Table.Head>
+            <Table.Head scope="col" aria-sort={historySortKey === 'finished' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('finished')} aria-label={sortButtonLabel('finished', 'finished time')}>
+                Finished
+                <ArrowUpDown size={12} aria-hidden="true" />
+                {#if sortIndicator('finished')}<small>{sortIndicator('finished')}</small>{/if}
+              </Button.Root>
+            </Table.Head>
+            <Table.Head scope="col" class="w-px whitespace-nowrap">Actions</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
         {#each filteredTerminalJobs as job}
-          <div
+          <Table.Row
             class={jobRequiresAction(job) ? 'history-row attention-row clickable-row' : jobHasReviewWarnings(job) ? 'history-row warning-row clickable-row' : 'history-row clickable-row'}
-            role="row"
-            tabindex="0"
+            tabindex={0}
             aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'Review Details for' : 'View details for', job)}
             onclick={(event) => openHistoryRow(event, job)}
             onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
           >
-            <div class="status-cell" role="cell" data-cell-label="Source">
+            <Table.Cell class="status-cell" data-cell-label="Source">
               <span class="status-icon">
                 {#if jobRequiresAction(job)}
                   <XCircle size={18} aria-hidden="true" />
@@ -506,8 +509,8 @@
                 <strong>{job.source.name}</strong>
                 <span>{sourceDescription(job)}</span>
               </div>
-            </div>
-            <div class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} role="cell" data-cell-label="Status">
+            </Table.Cell>
+            <Table.Cell class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} data-cell-label="Status">
               {#if jobRequiresAction(job)}
                 <Badge variant="destructive">Action required</Badge>
               {:else if jobHasReviewWarnings(job)}
@@ -516,15 +519,15 @@
                 <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
               {/if}
               <span>{statusDetail(job)}</span>
-            </div>
-            <div class="result-cell" role="cell" data-cell-label="Records">
+            </Table.Cell>
+            <Table.Cell class="result-cell" data-cell-label="Changed">
               <span>
                 {ledgerChangeSummary(job)}
                 {#if job.cancellationMode === 'keep_partial_progress'} · partial progress kept{/if}
                 {#if job.cancellationMode === 'discard_partial_progress'} · partial progress discarded{/if}
               </span>
-            </div>
-            <div class="time-cell" role="cell" data-cell-label="Completed">
+            </Table.Cell>
+            <Table.Cell class="time-cell" data-cell-label="Finished">
               {#if job.completedAt}
                 <span>{jobTimeLabel('', job.completedAt).trim()}</span>
               {:else if job.startedAt}
@@ -532,8 +535,8 @@
               {:else}
                 <span>{jobTimeLabel('', job.createdAt).trim()}</span>
               {/if}
-            </div>
-            <div class="row-actions" role="cell" data-cell-label="Actions">
+            </Table.Cell>
+            <Table.Cell class="row-actions" data-cell-label="Actions">
               <Button.Root
                 variant={jobRequiresAction(job) ? 'outline' : 'ghost'}
                 size="sm"
@@ -548,10 +551,11 @@
                   <Trash2 size={16} aria-hidden="true" />
                 </Button.Root>
               {/if}
-            </div>
-          </div>
+            </Table.Cell>
+          </Table.Row>
         {/each}
-      </div>
+        </Table.Body>
+      </Table.Root>
       {#if filteredTerminalJobs.length === 0}
         <div class="quiet-row">
           <CheckCircle2 size={16} aria-hidden="true" />
@@ -829,7 +833,7 @@
     margin-left: 0.65rem;
   }
 
-  .history-row {
+  .draft-row.history-row {
     align-items: center;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -839,9 +843,8 @@
     padding: 0.58rem 0.7rem;
   }
 
-  .history-ledger {
-    display: grid;
-    gap: 0.35rem;
+  :global(.history-ledger) {
+    table-layout: auto;
   }
 
   .ledger-heading {
@@ -855,18 +858,30 @@
     font-size: 0.86rem;
   }
 
-  .history-ledger-head,
-  .history-ledger .history-row {
-    display: grid;
-    gap: 0.65rem;
-    grid-template-columns: minmax(12rem, 1.2fr) minmax(10rem, 0.82fr) minmax(15rem, 1.25fr) minmax(8rem, 0.66fr) auto;
+  :global(.history-ledger th:nth-child(1)),
+  :global(.history-ledger td:nth-child(1)) {
+    width: 31%;
   }
 
-  .history-ledger-head {
+  :global(.history-ledger th:nth-child(2)),
+  :global(.history-ledger td:nth-child(2)) {
+    width: 21%;
+  }
+
+  :global(.history-ledger th:nth-child(3)),
+  :global(.history-ledger td:nth-child(3)) {
+    width: 25%;
+  }
+
+  :global(.history-ledger th:nth-child(4)),
+  :global(.history-ledger td:nth-child(4)) {
+    width: 16%;
+  }
+
+  :global(.history-ledger-head) {
     color: var(--muted-foreground);
     font-size: 0.75rem;
     font-weight: 700;
-    padding: 0 0.4rem;
     text-transform: uppercase;
   }
 
@@ -890,52 +905,56 @@
     text-transform: none;
   }
 
-  .history-row > div {
+  .draft-row.history-row > div,
+  :global(.history-ledger .history-row > td) {
     min-width: 0;
   }
 
-  .status-cell {
+  :global(.status-cell) {
     align-items: flex-start;
     display: flex;
     gap: 0.6rem;
     min-width: 0;
   }
 
-  .issue-cell,
-  .result-cell,
-  .time-cell {
+  :global(.issue-cell),
+  :global(.result-cell),
+  :global(.time-cell) {
     color: var(--muted-foreground);
-    display: grid;
     font-size: 0.82rem;
     gap: 0.18rem;
     min-width: 0;
   }
 
-  .result-cell span:first-child,
-  .issue-cell span:first-child {
-    align-items: center;
-    color: var(--foreground);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-  }
-
-  .result-cell span,
-  .issue-cell span,
-  .time-cell span {
-    overflow-wrap: anywhere;
-  }
-
-  .issue-cell {
+  :global(.issue-cell) {
     align-content: start;
     justify-items: start;
   }
 
-  .result-cell span {
+  :global(.issue-cell > span) {
+    display: block;
+    margin-top: 0.25rem;
+  }
+
+  :global(.result-cell span:first-child),
+  :global(.issue-cell span:first-child) {
+    align-items: center;
+    color: var(--foreground);
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  :global(.result-cell span),
+  :global(.issue-cell span),
+  :global(.time-cell span) {
+    overflow-wrap: anywhere;
+  }
+
+  :global(.result-cell span) {
     color: var(--foreground);
   }
 
-  .issue-cell.warning span {
+  :global(.issue-cell.warning span) {
     color: var(--color-warning-foreground);
   }
 
@@ -944,11 +963,12 @@
     color: var(--color-warning-foreground);
   }
 
-  .issue-cell.action span {
+  :global(.issue-cell.action span) {
     color: var(--destructive);
   }
 
-  .history-row:hover {
+  .draft-row.history-row:hover,
+  :global(.history-ledger .history-row:hover) {
     background: color-mix(in oklab, var(--muted) 25%, transparent);
   }
 
@@ -956,35 +976,35 @@
     background: color-mix(in oklab, var(--muted) 20%, transparent);
   }
 
-  .clickable-row {
+  .clickable-row,
+  :global(.history-ledger .clickable-row) {
     cursor: pointer;
   }
 
   .clickable-row:focus-visible,
+  :global(.history-ledger .clickable-row:focus-visible),
   :global(.current-work-row.clickable-row:focus-visible) {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 
-  .history-row.attention-row {
+  :global(.history-ledger .history-row.attention-row) {
     background: color-mix(in oklab, var(--destructive) 2.6%, transparent);
-    border-color: color-mix(in oklab, var(--destructive) 30%, transparent);
   }
 
-  .attention-row .status-icon {
+  :global(.attention-row .status-icon) {
     color: var(--destructive);
   }
 
-  .history-row.warning-row {
+  :global(.history-ledger .history-row.warning-row) {
     background: color-mix(in oklab, var(--color-warning) 3.5%, transparent);
-    border-color: color-mix(in oklab, var(--color-warning) 26%, var(--border));
   }
 
-  .warning-row .status-icon {
+  :global(.warning-row .status-icon) {
     color: var(--color-warning-foreground);
   }
 
-  .row-actions {
+  :global(.row-actions) {
     align-items: center;
     display: flex;
     gap: 0.35rem;
@@ -1077,22 +1097,63 @@
       grid-template-columns: 1fr;
     }
 
-    .history-ledger-head {
+    :global(.history-ledger thead) {
       display: none;
     }
 
-    .history-ledger .history-row {
-      grid-template-columns: 1fr;
+    :global(.history-ledger),
+    :global(.history-ledger tbody),
+    :global(.history-ledger tr),
+    :global(.history-ledger td) {
+      display: block;
+      width: 100% !important;
     }
 
-    .status-cell {
+    :global(.history-ledger tbody) {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    :global(.history-ledger .history-row) {
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: 0.45rem;
+      padding: 0.65rem;
+    }
+
+    :global(.history-ledger .history-row:first-child) {
+      border-top: 0;
+    }
+
+    :global(.history-ledger td) {
+      border-top: 0;
+      display: grid;
+      gap: 0.18rem;
+      grid-template-columns: minmax(5.5rem, 0.34fr) minmax(0, 1fr);
+      padding: 0;
+    }
+
+    :global(.history-ledger td::before) {
+      color: var(--muted-foreground);
+      content: attr(data-cell-label);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    :global(.status-cell) {
       display: block;
     }
 
-    .result-cell,
-    .issue-cell,
-    .time-cell {
+    :global(.result-cell),
+    :global(.issue-cell),
+    :global(.time-cell) {
       gap: 0.12rem;
+    }
+
+    :global(.row-actions) {
+      justify-content: flex-start;
     }
 
     .history-status-strip {
@@ -1131,7 +1192,7 @@
       display: none;
     }
 
-    .row-actions {
+    :global(.row-actions) {
       justify-content: flex-start;
     }
 
