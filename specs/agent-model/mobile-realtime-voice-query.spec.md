@@ -235,6 +235,7 @@ Client message fields:
 - `session.start`: `seq`, `tenantId`, `inventoryId`, `source`, `requestedCapabilities`, `inputAudio`, `outputAudio`, optional `clientCorrelationId`.
 - `audio.chunk`: `seq`, `sessionId`, `chunkId`, `audioBase64`, `isFinalChunk`.
 - `audio.end`: `seq`, `sessionId`.
+- Follow-up audio after a same-session clarification uses the same `audio.chunk` and `audio.end` messages with the existing `sessionId`; it must not start a new realtime session unless the prior session reached a terminal non-clarification outcome.
 - `session.cancel`: `seq`, `sessionId`, optional safe `reason`.
 - `client.ack`: `seq`, `sessionId`, `ackSeq`.
 
@@ -396,13 +397,20 @@ The agent loop must:
 
 The Go application service owns the realtime voice agent loop. The loop should use a small graph-like state machine inspired by durable agent runtimes: explicit state, named steps, bounded turns, safe progress events, model-visible tool results, and terminal outcomes. The implementation must remain project-owned Go code behind Stuff Stash ports and must not depend on Python, JavaScript, provider-hosted agent runtimes, LangGraph, LangChain, or provider-specific agent SDKs for core control flow.
 
+The default realtime voice path must be this graph-like smart loop. The mobile voice experience must not maintain a separate one-shot query path that bypasses clarification handling, server-selected exploration, action-plan review, loop repair, or tool-result grounding for normal user requests.
+
 The first graph-like loop nodes are:
 
 - `transcribe`: convert audio into an ephemeral final transcript.
+- `understand`: classify the safe request shape and reject obvious unsafe or under-specified local requests before provider calls.
+- `explore`: run bounded read-only inventory lookup through project-owned tools before final answers or planner turns when inventory context is needed.
 - `agent`: request the next model turn from the configured language provider.
 - `tools`: validate and execute one or more requested project-owned tools.
+- `plan`: request a constrained action-plan object for supported write requests once enough context exists.
 - `finalize`: validate a structured final response, synthesize speech, and complete the session.
 - `recover`: produce a bounded safe final response when the loop cannot make more progress but can still explain the outcome without leaking internals.
+
+Safe `agent.progress` statuses must use a bounded product-owned vocabulary so mobile can render phase-aware UI without provider-specific details. The first statuses are `understanding`, `exploring`, `planning`, `reviewing`, `answering`, and `recovering`. The server may add safe message text, but it must not expose raw prompts, raw transcripts, raw tool arguments, raw model output, provider errors, credentials, internal IDs, or hidden inventory data in progress events.
 
 Recoverable tool-call failures must not fail the whole voice session by default. If a model asks for an unknown tool, malformed tool arguments, unsafe proposal arguments, a duplicate exact tool call, or another expected validation failure, the loop must emit a safe `tool.call.failed` event and append a structured error tool result back to the model. The model then gets another turn to repair the tool call, ask for clarification, or produce a safe unsupported-action response. If the model produces a final clarification asking whether to create a clear missing destination for a write request, such as "I can't find the second shelf in the big cabinet in the kitchen. Do you want me to create it?", after a prior authorized read result has already shown the requested source item, the loop must treat that as a recoverable agent-contract failure rather than a terminal final response. It should append safe repair feedback and give the model another bounded tool-capable turn so it can call `propose_action_plan`. If the source item itself is not visible in prior read results, the loop must not force an action plan. Fatal failures such as provider transport errors, authentication or authorization failures, context cancellation, text-to-speech failures, and persistence failures may still terminate the session with a safe failure code.
 
@@ -413,6 +421,10 @@ The structured error tool result must be provider-independent JSON and must incl
 The loop must maintain a bounded remaining-step budget. If the model continues asking for tools when no more tool execution budget remains, the loop should request one final-only model turn using the accumulated tool results and no tool catalog. If the model still does not produce a valid structured final response, the `recover` node must complete with a safe final response instead of returning a generic transport failure whenever text-to-speech is available.
 
 The loop should optimize for low-friction autonomy. For write-like requests, it should gather enough visible context through read tools to propose a complete approval plan in one session when practical, including multiple dependent commands. It should ask a clarification only when the requested object, destination, or command cannot be resolved safely or unambiguously from visible authorized data.
+
+Clarification is a continuation state, not a forced session reset. When a final structured response has kind `clarification`, the WebSocket handler may emit the response and speech, then keep the same session open for a bounded follow-up audio turn. The follow-up transcript must be evaluated by the same application loop with the same tenant, inventory, principal, provider profiles, and safe session context. The session must close after a non-clarification terminal response, action-plan review, cancellation, failure, timeout, or a bounded clarification turn limit. The first clarification continuation limit is three user audio turns per realtime session, after which the API must fail safely or produce a safe final response rather than continuing indefinitely.
+
+Server-selected exploration is part of the smart loop and must remain bounded. When the model's first read misses a specific singular object that appears to have been distorted by speech-to-text or provider query phrasing, the application may run one narrow read-only retry derived from meaningful transcript object words. It must not convert a plural category question or broad inventory question into repeated broad list/search calls, and it must not execute write proposals from this repair path.
 
 The first model turn in a realtime voice session should be a forced context-gathering turn when provider-native function-calling controls support it. On that first turn the application should expose only read tools and request that the provider choose one of them, so inventory requests do not bypass authorized lookup because a structured final-response schema was also present. Later turns may expose the approval-plan proposal tool and let the model either call another tool or produce a structured final response. Provider-independent ports should express this as a tool-choice requirement rather than leaking provider names such as Gemini `ANY` mode into the application layer.
 
