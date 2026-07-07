@@ -8,6 +8,7 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
+  import * as Tabs from '$lib/components/ui/tabs/index.js';
   import {
     actorSummary,
     canRemoveJobFromHistory,
@@ -17,7 +18,6 @@
     progressBarStyle,
     progressKnown,
     progressPercent,
-    progressSummary,
     progressTimeline,
     resourceDiagnosticLabel,
     resourceLabel,
@@ -63,6 +63,16 @@
     onRemove
   }: Props = $props();
 
+  let selectedTab = $state('overview');
+  let defaultedTabJobId = $state('');
+  let issueCount = $derived(detailMessages(job).length);
+
+  $effect(() => {
+    if (job.id === defaultedTabJobId) return;
+    selectedTab = detailMessages(job).length > 0 ? 'issues' : 'overview';
+    defaultedTabJobId = job.id;
+  });
+
   function hasPreviewPlan(job: ImportJob): boolean {
     if (job.status === 'previewed') {
       return true;
@@ -94,23 +104,25 @@
 </script>
 
 <Card.Root>
-  <Card.Header>
-    <Card.Title>{job.source.name}</Card.Title>
-    <Card.Description>{statusLabel(job)} · {sourceDescription(job)}{actorSummary(job) ? ` · ${actorSummary(job)}` : ''}</Card.Description>
-  </Card.Header>
   <Card.Content>
     <div class="import-detail-content">
       <div class="detail-hero">
-        <div class="detail-topline">
+        <div class="job-heading">
           <div>
-            <strong>{phaseLabel(job)}</strong>
-            <span>{statusSentence(job)}</span>
+            <strong>{job.source.name}</strong>
+            <span>{sourceDescription(job)}{actorSummary(job) ? ` · ${actorSummary(job)}` : ''}</span>
           </div>
           <Badge variant={job.status === 'failed' || job.status === 'discard_failed' ? 'destructive' : 'secondary'}>
             {statusLabel(job)}
           </Badge>
         </div>
-        {#if progressKnown(job) || !isTerminal(job)}
+        <div class="detail-topline">
+          <div>
+            <strong>{phaseLabel(job)}</strong>
+            <span>{statusSentence(job)}</span>
+          </div>
+        </div>
+        {#if !isTerminal(job)}
           <div
             class="progress-track large"
             class:indeterminate={!progressKnown(job)}
@@ -123,11 +135,6 @@
             <span style={progressBarStyle(job)}></span>
           </div>
         {/if}
-        <div class="hero-meta">
-          <span>{progressSummary(job)}</span>
-          <span>{sourceDescription(job)}</span>
-          {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
-        </div>
       </div>
 
       {#if detailLoading}
@@ -139,65 +146,108 @@
 
       <div class="detail-grid">
         <div class="detail-main">
-          <ImportCountGrid cells={job.status === 'previewed' ? visiblePreviewCountCells(job) : visibleCountCells(resultCountCells(job))} />
-          <section class="timeline-section">
-            <div class="sample-heading">
-              <h3>Progress timeline</h3>
-              <small>{progressTimeline(job).length} phases</small>
-            </div>
-            <div class="timeline-list">
-              {#each progressTimeline(job) as progress}
-                <div class="timeline-row">
-                  <span aria-hidden="true"></span>
-                  <div>
-                    <strong>{phaseLabel({ ...job, progress })}</strong>
-                    <small>
-                      {progress.total > 0 ? `${Math.min(progress.done, progress.total)} / ${progress.total}` : ''}
-                      {progress.total > 0 && progress.updatedAt ? ' · ' : ''}
-                      {progress.updatedAt ? new Date(progress.updatedAt).toLocaleString() : ''}
-                    </small>
-                  </div>
+          <Tabs.Root bind:value={selectedTab} class="detail-tabs">
+            <Tabs.List variant="line" aria-label="Import detail sections" class="detail-tab-list">
+              <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+              <Tabs.Trigger value="issues">Issues{issueCount > 0 ? ` (${issueCount})` : ''}</Tabs.Trigger>
+              <Tabs.Trigger value="plan">Plan</Tabs.Trigger>
+              <Tabs.Trigger value="records">Records</Tabs.Trigger>
+              <Tabs.Trigger value="timeline">Timeline</Tabs.Trigger>
+            </Tabs.List>
+
+            <Tabs.Content value="overview">
+              <section class="detail-panel" aria-label="Import result overview">
+                <div class="sample-heading">
+                  <h3>Result</h3>
+                  <small>{statusSentence(job)}</small>
                 </div>
-              {/each}
-            </div>
-          </section>
+                <ImportCountGrid cells={job.status === 'previewed' ? visiblePreviewCountCells(job) : visibleCountCells(resultCountCells(job))} />
+              </section>
+            </Tabs.Content>
 
-          {#if hasPreviewPlan(job)}
-            <section class="preview-plan-section" aria-label="Import preview plan">
-              <div class="sample-heading">
-                <h3>Preview plan</h3>
-                <small>{job.status === 'previewed' ? 'Before import' : 'Original plan'}</small>
-              </div>
-              <ImportPreviewSamples preview={job.preview} />
-            </section>
-          {/if}
+            <Tabs.Content value="issues">
+              <section class="detail-panel" aria-label="Import issues">
+                <div class="sample-heading">
+                  <h3>Issues</h3>
+                  <small>{issueCount === 0 ? 'No issues' : 'Grouped by cause'}</small>
+                </div>
+                <ImportMessagesList messages={detailMessages(job)} emptyText="No import messages." truncated={job.messages.length === 0 && job.preview.messagesTruncated} />
+              </section>
+            </Tabs.Content>
 
-          {#if job.status === 'cancelled_discarded' && job.resources.length > 0}
-            <div class="quiet-row">
-              <CheckCircle2 size={16} aria-hidden="true" />
-              Records created by this job were discarded. Audit history remains.
-            </div>
-          {:else if job.resources.length > 0}
-            <section class="resource-section">
-              <div class="sample-heading">
-                <h3>Imported records</h3>
-                {#if job.resources.length >= 50}<small>Showing a sample</small>{/if}
-              </div>
-              <div class="sample-list">
-                {#each job.resources as resource}
-                  <div class="sample-row resource-row">
-                    <span>{resourceLabel(resource)}</span>
-                    <small>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</small>
-                    {#if resourceCanOpen(job, resource)}
-                      <a class="resource-link" href={resourceHref(resource)}>Open</a>
-                    {/if}
+            <Tabs.Content value="plan">
+              {#if hasPreviewPlan(job)}
+                <section class="detail-panel" aria-label="Import preview plan">
+                  <div class="sample-heading">
+                    <h3>Preview plan</h3>
+                    <small>{job.status === 'previewed' ? 'Before import' : 'Original plan'}</small>
                   </div>
-                {/each}
-              </div>
-            </section>
-          {/if}
+                  <ImportPreviewSamples preview={job.preview} />
+                </section>
+              {:else}
+                <div class="quiet-row">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  No preview plan is available for this run.
+                </div>
+              {/if}
+            </Tabs.Content>
 
-          <ImportMessagesList messages={detailMessages(job)} emptyText="No import messages." truncated={job.messages.length === 0 && job.preview.messagesTruncated} />
+            <Tabs.Content value="records">
+              {#if job.status === 'cancelled_discarded' && job.resources.length > 0}
+                <div class="quiet-row">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  Records created by this job were discarded. Audit history remains.
+                </div>
+              {:else if job.resources.length > 0}
+                <section class="detail-panel">
+                  <div class="sample-heading">
+                    <h3>Imported records</h3>
+                    {#if job.resources.length >= 50}<small>Showing a sample</small>{/if}
+                  </div>
+                  <div class="sample-list">
+                    {#each job.resources as resource}
+                      <div class="sample-row resource-row">
+                        <span>{resourceLabel(resource)}</span>
+                        <small>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</small>
+                        {#if resourceCanOpen(job, resource)}
+                          <a class="resource-link" href={resourceHref(resource)}>Open</a>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                </section>
+              {:else}
+                <div class="quiet-row">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  No imported record summaries are available for this run.
+                </div>
+              {/if}
+            </Tabs.Content>
+
+            <Tabs.Content value="timeline">
+              <section class="detail-panel">
+                <div class="sample-heading">
+                  <h3>Progress timeline</h3>
+                  <small>{progressTimeline(job).length} phases</small>
+                </div>
+                <div class="timeline-list">
+                  {#each progressTimeline(job) as progress}
+                    <div class="timeline-row">
+                      <span aria-hidden="true"></span>
+                      <div>
+                        <strong>{phaseLabel({ ...job, progress })}</strong>
+                        <small>
+                          {progress.total > 0 ? `${Math.min(progress.done, progress.total)} / ${progress.total}` : ''}
+                          {progress.total > 0 && progress.updatedAt ? ' · ' : ''}
+                          {progress.updatedAt ? new Date(progress.updatedAt).toLocaleString() : ''}
+                        </small>
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              </section>
+            </Tabs.Content>
+          </Tabs.Root>
         </div>
 
         <div class="detail-side" aria-label="Import controls and source">
@@ -254,6 +304,7 @@
   }
 
   .quiet-row,
+  .job-heading,
   .detail-topline {
     align-items: center;
     display: flex;
@@ -265,31 +316,28 @@
     min-width: 0;
   }
 
+  .job-heading {
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  .job-heading > div {
+    min-width: 0;
+  }
+
+  .job-heading span {
+    color: hsl(var(--muted-foreground));
+    display: block;
+    font-size: 0.85rem;
+    margin-top: 0.15rem;
+    overflow-wrap: anywhere;
+  }
+
   .detail-hero {
     border-bottom: 1px solid hsl(var(--border));
     display: grid;
     gap: 0.75rem;
     padding-bottom: 1rem;
-  }
-
-  .hero-meta {
-    color: hsl(var(--muted-foreground));
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 0.65rem;
-    min-width: 0;
-  }
-
-  .hero-meta span {
-    font-size: 0.82rem;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .hero-meta span:not(:last-child)::after {
-    color: hsl(var(--border));
-    content: "·";
-    margin-left: 0.65rem;
   }
 
   .detail-grid {
@@ -305,6 +353,23 @@
     display: grid;
     gap: 1rem;
     min-width: 0;
+  }
+
+  .detail-main {
+    overflow: hidden;
+  }
+
+  :global(.detail-tab-list) {
+    max-width: 100%;
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .detail-panel {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+    padding-top: 0.75rem;
   }
 
   .detail-side {
@@ -379,7 +444,6 @@
     gap: 0.35rem;
   }
 
-  .preview-plan-section,
   .source-options-section {
     border-top: 1px solid hsl(var(--border));
     display: grid;
@@ -402,18 +466,6 @@
     min-width: 0;
     overflow-wrap: anywhere;
     padding: 0.2rem 0 0.2rem 0.55rem;
-  }
-
-  .timeline-section {
-    border-top: 1px solid hsl(var(--border));
-    display: grid;
-    gap: 0.6rem;
-    min-width: 0;
-    padding-top: 0.75rem;
-  }
-
-  .timeline-section {
-    gap: 0.65rem;
   }
 
   .sample-heading {
@@ -520,22 +572,24 @@
       flex-direction: column;
     }
 
+    .job-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .sample-heading {
+      align-items: flex-start;
+      display: grid;
+      gap: 0.2rem;
+      justify-content: start;
+    }
+
     .detail-grid {
       grid-template-columns: 1fr;
     }
 
     .detail-side {
       position: static;
-    }
-
-    .hero-meta {
-      display: grid;
-      gap: 0.2rem;
-    }
-
-    .hero-meta span:not(:last-child)::after {
-      content: "";
-      margin-left: 0;
     }
 
     .resource-row {

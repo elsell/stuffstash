@@ -89,12 +89,16 @@
   }
 
   .preview-samples section {
-    border: 1px solid hsl(var(--border));
-    border-radius: 8px;
+    border-top: 1px solid hsl(var(--border));
     display: grid;
     gap: 0.6rem;
     min-width: 0;
-    padding: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .preview-samples section:nth-child(-n + 3) {
+    border-top: 0;
+    padding-top: 0;
   }
 
   .sample-heading {
@@ -139,6 +143,17 @@
   @media (max-width: 860px) {
     .preview-samples {
       grid-template-columns: 1fr;
+    }
+
+    .preview-samples section,
+    .preview-samples section:nth-child(-n + 3) {
+      border-top: 1px solid hsl(var(--border));
+      padding-top: 0.75rem;
+    }
+
+    .preview-samples section:first-child {
+      border-top: 0;
+      padding-top: 0;
     }
   }
 </style>

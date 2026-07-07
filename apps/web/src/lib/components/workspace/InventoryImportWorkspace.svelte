@@ -1,7 +1,7 @@
 <script lang="ts">
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import {
     canCreateImportJob,
     canViewImportJobs,
@@ -86,6 +86,7 @@
   let visibleJobLoadSequence = 0;
   let detailLoadSequence = 0;
   let actionSequence = 0;
+  let importWorkspaceElement: HTMLElement | null = null;
 
   let activeJobs = $derived(jobs.filter((job) => ['running', 'cancel_requested'].includes(job.status)));
   let draftJobs = $derived(jobs.filter((job) => job.status === 'previewed'));
@@ -258,7 +259,24 @@
     error = '';
     notice = '';
     step = 'detail';
+    void scrollImportWorkspaceToTop();
     void loadJobDetail(job);
+  }
+
+  async function scrollImportWorkspaceToTop(): Promise<void> {
+    await tick();
+    if (typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom')) {
+      return;
+    }
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      return;
+    } catch {
+      // Some test environments expose scrollTo without implementing it.
+    }
+    if (typeof importWorkspaceElement?.scrollIntoView === 'function') {
+      importWorkspaceElement.scrollIntoView({ block: 'start', inline: 'nearest' });
+    }
   }
 
   function resumePreviewedJob(job: ImportJob): void {
@@ -579,7 +597,7 @@
 
 </script>
 
-<section class="import-workspace">
+<section class="import-workspace" bind:this={importWorkspaceElement}>
   <div class="import-toolbar">
     <div>
       <h1>{step === 'history' ? 'Imports' : step === 'detail' ? 'Import details' : step === 'run' ? 'Import running' : 'New import'}</h1>

@@ -34,6 +34,7 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   const discardedRow = page.locator('.history-row').filter({ hasText: 'Partial progress discarded' });
   await expect(discardedRow).toBeVisible();
   await discardedRow.getByRole('button', { name: 'Details' }).click();
+  await page.getByRole('tab', { name: 'Records' }).click();
   await expect(page.getByText('Records created by this job were discarded. Audit history remains.')).toBeVisible();
   await expect(page.locator('a.resource-link')).toHaveCount(0);
 });

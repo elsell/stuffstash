@@ -234,6 +234,14 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     await fulfill(route, { jobs: state.importJobs });
     return;
   }
+  if (method === 'GET' && path.match(/^\/tenants\/tenant-home\/inventories\/inventory-household\/imports\/jobs\/[^/]+$/)) {
+    const jobId = path.split('/').at(-1);
+    const job = state.importJobs.find((candidate) => hasID(candidate, jobId));
+    if (job) {
+      await fulfill(route, job);
+      return;
+    }
+  }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato') {
     await fulfill(route, tomatoAsset(state));
     return;
@@ -357,6 +365,10 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     contentType: 'application/json',
     body: JSON.stringify({ error: { code: 'not_found', message: `Unhandled ${method} ${path}` } })
   });
+}
+
+function hasID(value: object, id: string | undefined): boolean {
+  return Boolean(id && 'id' in value && value.id === id);
 }
 
 function activeAssets(state: WorkspaceApiState): object[] {

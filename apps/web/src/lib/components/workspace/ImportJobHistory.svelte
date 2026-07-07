@@ -18,6 +18,7 @@
     canRemoveJobFromHistory,
     historyCountSummary,
     isTerminal,
+    jobNeedsAttention,
     jobTimeLabel,
     phaseLabel,
     progressBarLabel,
@@ -30,6 +31,8 @@
     statusSentence,
     statusVariant
   } from './importWorkspacePresentation';
+
+  type HistoryFilter = 'all' | 'attention' | 'completed';
 
   type Props = {
     jobs: ImportJob[];
@@ -67,6 +70,15 @@
     onRequestRemove
   }: Props = $props();
 
+  let historyFilter = $state<HistoryFilter>('all');
+  let filteredTerminalJobs = $derived(
+    historyFilter === 'attention'
+      ? terminalJobs.filter(jobNeedsAttention)
+      : historyFilter === 'completed'
+        ? terminalJobs.filter((job) => job.status === 'succeeded')
+        : terminalJobs
+  );
+
   function jobActionLabel(action: string, job: ImportJob): string {
     const status = statusLabel(job);
     const time = job.completedAt ?? job.startedAt ?? job.createdAt;
@@ -89,28 +101,39 @@
 </div>
 
 {#if jobs.length > 0}
-  <dl class="history-status-strip" aria-label="Import history summary">
+  <div class="history-status-strip" aria-label="Import history summary">
     <div class={activeJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
       <LoaderCircle size={14} aria-hidden="true" />
-      <dt>Running</dt>
-      <dd>{activeJobs.length}</dd>
+      <span>Running</span>
+      <strong>{activeJobs.length}</strong>
     </div>
     <div class={draftJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
       <Clock3 size={14} aria-hidden="true" />
-      <dt>Ready to review</dt>
-      <dd>{draftJobs.length}</dd>
+      <span>Ready to review</span>
+      <strong>{draftJobs.length}</strong>
     </div>
-    <div class={completedJobs.length > 0 ? 'status-chip active' : 'status-chip'}>
+    <Button.Root
+      class={historyFilter === 'completed' ? 'status-chip active selected' : completedJobs.length > 0 ? 'status-chip active' : 'status-chip'}
+      variant="ghost"
+      onclick={() => (historyFilter = historyFilter === 'completed' ? 'all' : 'completed')}
+      aria-pressed={historyFilter === 'completed'}
+    >
       <CheckCircle2 size={14} aria-hidden="true" />
-      <dt>Completed</dt>
-      <dd>{completedJobs.length}</dd>
-    </div>
-    <div class={attentionJobs.length > 0 ? 'status-chip warning' : 'status-chip'}>
+      <span>Completed</span>
+      <strong>{completedJobs.length}</strong>
+    </Button.Root>
+    <Button.Root
+      class={historyFilter === 'attention' ? 'status-chip warning selected' : attentionJobs.length > 0 ? 'status-chip warning' : 'status-chip'}
+      variant="ghost"
+      onclick={() => (historyFilter = historyFilter === 'attention' ? 'all' : 'attention')}
+      disabled={attentionJobs.length === 0}
+      aria-pressed={historyFilter === 'attention'}
+    >
       <AlertTriangle size={14} aria-hidden="true" />
-      <dt>Needs attention</dt>
-      <dd>{attentionJobs.length}</dd>
-    </div>
-  </dl>
+      <span>Needs attention</span>
+      <strong>{attentionJobs.length}</strong>
+    </Button.Root>
+  </div>
 {/if}
 
 {#if jobs.length === 0}
@@ -214,47 +237,82 @@
       <div class="section-heading">
         <div>
           <h3>History</h3>
-          <p>Completed, failed, and cancelled runs stay here until you remove them.</p>
-        </div>
-      </div>
-      {#each terminalJobs as job}
-        <div class="history-row">
-          <span class="status-icon">
-            {#if isTerminal(job) && job.status !== 'succeeded'}
-              <XCircle size={18} aria-hidden="true" />
+          <p>
+            {#if historyFilter === 'attention'}
+              Showing imports with warnings, errors, or cleanup work.
+            {:else if historyFilter === 'completed'}
+              Showing completed imports.
             {:else}
-              <CheckCircle2 size={18} aria-hidden="true" />
+              Completed, failed, and cancelled runs stay here until you remove them.
             {/if}
-          </span>
-          <div class="history-row-body">
-            <div class="history-title">
-              <strong>{job.source.name}</strong>
-              <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
+          </p>
+        </div>
+        {#if historyFilter !== 'all'}
+          <Button.Root variant="ghost" size="sm" onclick={() => (historyFilter = 'all')}>Show all</Button.Root>
+        {/if}
+      </div>
+      <div class="history-ledger">
+        <div class="history-ledger-head" aria-hidden="true">
+          <span>Status</span>
+          <span>Result</span>
+          <span>Source</span>
+          <span>Time</span>
+          <span>Actions</span>
+        </div>
+        {#each filteredTerminalJobs as job}
+          <div class={jobNeedsAttention(job) ? 'history-row attention-row' : 'history-row'}>
+            <div class="status-cell">
+              <span class="status-icon">
+                {#if jobNeedsAttention(job)}
+                  <AlertTriangle size={18} aria-hidden="true" />
+                {:else if isTerminal(job) && job.status !== 'succeeded'}
+                  <XCircle size={18} aria-hidden="true" />
+                {:else}
+                  <CheckCircle2 size={18} aria-hidden="true" />
+                {/if}
+              </span>
+              <div class="history-title">
+                <strong>{job.source.name}</strong>
+                <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
+                {#if jobNeedsAttention(job)}
+                  <Badge variant="destructive">Needs attention</Badge>
+                {/if}
+              </div>
             </div>
-            <div class="history-meta">
+            <div class="result-cell">
               <span>{statusSentence(job)}</span>
               <span>{historyCountSummary(job)}</span>
-              <span>{sourceDescription(job)}</span>
-              {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
-              {#if job.startedAt}<span>{jobTimeLabel('Started', job.startedAt)}</span>{/if}
-              {#if job.completedAt}<span>{jobTimeLabel('Completed', job.completedAt)}</span>{/if}
               {#if job.cancellationMode === 'keep_partial_progress'}<span>Partial progress kept</span>{/if}
               {#if job.cancellationMode === 'discard_partial_progress'}<span>Partial progress discarded</span>{/if}
             </div>
-          </div>
-          <div class="row-actions">
-            <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>
-              <Eye size={16} aria-hidden="true" />
-              Details
-            </Button.Root>
-            {#if canRemoveJobFromHistory(job)}
-              <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
-                <Trash2 size={16} aria-hidden="true" />
+            <div class="source-cell">
+              <span>{sourceDescription(job)}</span>
+              {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
+            </div>
+            <div class="time-cell">
+              {#if job.startedAt}<span>{jobTimeLabel('Started', job.startedAt)}</span>{/if}
+              {#if job.completedAt}<span>{jobTimeLabel('Completed', job.completedAt)}</span>{/if}
+            </div>
+            <div class="row-actions">
+              <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>
+                <Eye size={16} aria-hidden="true" />
+                Details
               </Button.Root>
-            {/if}
+              {#if canRemoveJobFromHistory(job)}
+                <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
+                  <Trash2 size={16} aria-hidden="true" />
+                </Button.Root>
+              {/if}
+            </div>
           </div>
+        {/each}
+      </div>
+      {#if filteredTerminalJobs.length === 0}
+        <div class="quiet-row">
+          <CheckCircle2 size={16} aria-hidden="true" />
+          No imports match this filter.
         </div>
-      {/each}
+      {/if}
     </div>
   {:else if currentWorkJobs.length > 0}
     <div class="quiet-row">
@@ -328,7 +386,7 @@
     margin: 0;
   }
 
-  .status-chip {
+  :global(.status-chip) {
     align-items: baseline;
     border: 1px solid hsl(var(--border));
     border-radius: 999px;
@@ -340,27 +398,30 @@
     padding: 0.35rem 0.6rem;
   }
 
-  .status-chip.active {
+  :global(.status-chip.active) {
     background: hsl(var(--primary) / 0.06);
     border-color: hsl(var(--primary) / 0.28);
     color: hsl(var(--foreground));
   }
 
-  .status-chip.warning {
+  :global(.status-chip.warning) {
     background: hsl(var(--destructive) / 0.06);
     border-color: hsl(var(--destructive) / 0.28);
     color: hsl(var(--destructive));
   }
 
-  .status-chip dt {
+  :global(.status-chip.selected) {
+    box-shadow: 0 0 0 2px hsl(var(--ring) / 0.18);
+  }
+
+  :global(.status-chip span) {
     font-weight: 500;
   }
 
-  .status-chip dd {
+  :global(.status-chip strong) {
     color: hsl(var(--foreground));
     font-weight: 700;
     line-height: 1;
-    margin: 0;
     order: -1;
   }
 
@@ -461,12 +522,67 @@
     padding: 0.8rem;
   }
 
+  .history-ledger {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .history-ledger-head,
+  .history-ledger .history-row {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(10rem, 0.9fr) minmax(14rem, 1.35fr) minmax(12rem, 1fr) minmax(10rem, 0.85fr) auto;
+  }
+
+  .history-ledger-head {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0 0.8rem;
+    text-transform: uppercase;
+  }
+
   .history-row > div {
     min-width: 0;
   }
 
+  .status-cell {
+    align-items: flex-start;
+    display: flex;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .result-cell,
+  .source-cell,
+  .time-cell {
+    color: hsl(var(--muted-foreground));
+    display: grid;
+    font-size: 0.82rem;
+    gap: 0.18rem;
+    min-width: 0;
+  }
+
+  .result-cell span:first-child {
+    color: hsl(var(--foreground));
+  }
+
+  .result-cell span,
+  .source-cell span,
+  .time-cell span {
+    overflow-wrap: anywhere;
+  }
+
   .history-row:hover {
     background: hsl(var(--muted) / 0.25);
+  }
+
+  .history-row.attention-row {
+    border-color: hsl(var(--destructive) / 0.3);
+  }
+
+  .attention-row .status-icon {
+    color: hsl(var(--destructive));
   }
 
   .row-actions {
@@ -546,12 +662,24 @@
       grid-template-columns: 1fr;
     }
 
+    .history-ledger-head {
+      display: none;
+    }
+
+    .history-ledger .history-row {
+      grid-template-columns: 1fr;
+    }
+
+    .status-cell {
+      display: block;
+    }
+
     .history-status-strip {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .status-chip {
+    :global(.status-chip) {
       border-radius: 8px;
       justify-content: flex-start;
       padding: 0.5rem 0.6rem;

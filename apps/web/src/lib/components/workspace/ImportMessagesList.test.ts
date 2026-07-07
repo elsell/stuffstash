@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mount, unmount } from 'svelte';
+import { mount, tick, unmount } from 'svelte';
 import type { ImportMessage } from '$lib/domain/inventory';
 import ImportMessagesList from './ImportMessagesList.svelte';
 
@@ -62,6 +62,42 @@ describe('ImportMessagesList', () => {
     expect(group?.textContent).toContain('Source record source-wardrobe');
     expect(group?.textContent).toContain('Source record source-baby-hats');
     expect(group?.querySelectorAll('.message-row')[0]?.textContent).not.toBe('homebox-source-id duplicate');
+  });
+
+  it('bounds large warning sets behind grouped progressive disclosure', async () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [
+          ...Array.from({ length: 5 }, (_, index) =>
+            message('warning', 'Attachment could not be imported', 'unsupported file type', `attachment-${index + 1}.tiff`)
+          ),
+          ...Array.from({ length: 19 }, (_, index) =>
+            message('warning', `Import warning group ${index + 2}`, `group-${index + 2}`, `record-${index + 2}`)
+          )
+        ],
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    expect(document.body.textContent).toContain('20 issue groups');
+    expect(document.body.textContent).toContain('24 affected records');
+    expect(document.body.querySelectorAll('.message-group')).toHaveLength(5);
+    expect(document.body.textContent).toContain('2 more in this group');
+    expect(document.body.textContent).toContain('15 more issue groups hidden.');
+    expect(document.body.textContent).toContain('attachment-3.tiff');
+    expect(document.body.textContent).not.toContain('attachment-4.tiff');
+    expect(document.body.textContent).not.toContain('Import warning group 7');
+
+    document.body.querySelector<HTMLButtonElement>('button')?.click();
+    await tick();
+
+    expect(document.body.querySelectorAll('.message-group')).toHaveLength(15);
+    expect(document.body.textContent).toContain('5 more issue groups hidden.');
+    expect(document.body.textContent).toContain('attachment-4.tiff');
+    expect(document.body.textContent).toContain('attachment-5.tiff');
+    expect(document.body.textContent).toContain('Import warning group 15');
+    expect(document.body.textContent).not.toContain('Import warning group 16');
   });
 });
 

@@ -259,6 +259,86 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('lets attention summary filter directly to imports that need review', async () => {
+    class MixedTerminalImportJobRepository extends TerminalImportJobRepository {
+      private readonly cleanJob = {
+        ...this.job,
+        id: 'job-clean',
+        source: {
+          ...this.job.source,
+          name: 'Clean Homebox',
+          fingerprint: 'fingerprint-clean'
+        },
+        counts: {
+          ...this.job.counts,
+          warnings: 0,
+          errors: 0,
+          assetsSkipped: 0,
+          attachmentsSkipped: 0
+        },
+        messages: []
+      };
+
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          messages: [
+            {
+              code: 'duplicate-asset',
+              severity: 'warning',
+              summary: 'Asset appears to have already been imported',
+              detail: 'homebox-source-id duplicate',
+              sourceName: 'Sarah Winter Clothes'
+            },
+            {
+              code: 'duplicate-asset',
+              severity: 'warning',
+              summary: 'Asset appears to have already been imported',
+              detail: 'homebox-source-id duplicate',
+              sourceName: 'Baby Hats and Socks'
+            }
+          ]
+        };
+      }
+
+      async listImportJobs(tenantId: string, inventoryId: string) {
+        this.expectScope(tenantId, inventoryId);
+        return [this.job, this.cleanJob];
+      }
+
+      async getImportJob(tenantId: string, inventoryId: string, jobId: string) {
+        this.expectScope(tenantId, inventoryId);
+        return jobId === this.cleanJob.id ? this.cleanJob : this.job;
+      }
+    }
+
+    await mountImportWorkspace(new MixedTerminalImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Homebox');
+      expect(document.body.textContent).toContain('Clean Homebox');
+      expect(document.body.textContent).toContain('1 import needs attention');
+    });
+
+    buttonContaining('Needs attention').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Showing imports with warnings, errors, or cleanup work.');
+      expect(document.body.textContent).toContain('Homebox');
+      expect(document.body.textContent).toContain('Needs attention');
+      expect(document.body.textContent).toContain('Details');
+      expect(document.body.textContent).not.toContain('Clean Homebox');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Issues');
+      expect(document.body.textContent).toContain('2 affected records');
+    });
+  });
+
   it('keeps long actor identifiers compact but distinguishable', async () => {
     await mountImportWorkspace(new LongActorImportJobRepository(structuredClone(seed)));
 
