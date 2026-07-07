@@ -1086,6 +1086,31 @@ describe('RealtimeVoiceSessionController', () => {
     expect(transport.lastInput).toBeUndefined();
   });
 
+  it('does not start follow-up recording when provider profiles are not ready', async () => {
+    const recorder = new FakeRecorder();
+    const transport = new FakeTransport([], { followUpAvailable: true });
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      new FakePlayer(),
+      {
+        readinessChecker: {
+          assertReady: async () => {
+            throw new Error('Voice provider profiles are not ready: language_inference.');
+          }
+        }
+      }
+    );
+
+    await expect(controller.startFollowUp()).rejects.toThrow(
+      'Voice provider profiles are not ready: language_inference.'
+    );
+    await expect(controller.stopFollowUp()).rejects.toThrow('Voice recording has not started.');
+    expect(recorder.started).toBe(false);
+    expect(transport.followUpAudio).toEqual([]);
+  });
+
   it('sanitizes diagnostic tool events before they reach mobile UI state', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),

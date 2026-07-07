@@ -328,6 +328,7 @@ export class RealtimeVoiceSessionController {
       throw new Error('Voice follow-up session is not active.');
     }
     const context = this.currentContext ?? (await this.selectedInventoryContext());
+    await this.options.readinessChecker?.assertReady();
     await this.player.stop();
     await this.recorder.start();
     this.recordingStarted = true;
