@@ -93,7 +93,7 @@ Examples:
 
 Read-only workflows must not create, update, move, archive, restore, delete, import, export, share, or configure anything.
 
-Supported state-changing workflows must use action-plan review. If the user asks for a supported create, move, archive, or restore action, the system must gather enough safe inventory context, propose a reviewable action plan, pause for explicit approval or cancellation, and execute only the approved plan through application services. Unsupported, unsafe, or under-specified state-changing requests must produce a safe clarification or refusal rather than executing a change.
+Supported state-changing workflows must use action-plan review. If the user asks for a supported create, move, archive, restore, checkout, or return action, the system must gather enough safe inventory context, propose a reviewable action plan, pause for explicit approval or cancellation, and execute only the approved plan through application services. Unsupported, unsafe, or under-specified state-changing requests must produce a safe clarification or refusal rather than executing a change.
 
 ## Mobile Interaction
 

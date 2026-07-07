@@ -187,7 +187,11 @@ func realtimeVoiceLooksLikeWriteRequest(transcript string) bool {
 		return false
 	}
 	text := normalizedRealtimeVoiceVerbText(transcript)
-	for _, token := range []string{" move ", " put ", " place ", " add ", " create ", " store ", " stash ", " restore ", " archive ", " rename ", " update "} {
+	for _, token := range []string{
+		" move ", " put ", " place ", " add ", " create ", " store ", " stash ", " restore ", " archive ", " rename ", " update ",
+		" return ", " returned ", " check out ", " checked out ", " check in ", " checked in ", " borrow ", " borrowed ", " loan ", " loaned ",
+		" bring back ", " brought back ", " put back ", " back in ", " is back ",
+	} {
 		if strings.Contains(text, token) {
 			return true
 		}

@@ -75,6 +75,25 @@ func TestRealtimeVoiceReadQuestionsWithWriteVerbsAreNotWriteRequests(t *testing.
 	}
 }
 
+func TestRealtimeVoiceCheckoutAndReturnRequestsAreWriteRequests(t *testing.T) {
+	t.Parallel()
+
+	for _, transcript := range []string{
+		"Check out the drill.",
+		"I borrowed the label maker.",
+		"Return the drill.",
+		"The drill is back in the tool bin.",
+		"Check in the ladder.",
+	} {
+		if !realtimeVoiceLooksLikeWriteRequest(transcript) {
+			t.Fatalf("expected %q to look like a write request", transcript)
+		}
+		if !realtimeVoiceShouldUseConstrainedPlanner(transcript, 1, []ports.AgentToolResult{{Name: RealtimeVoiceToolSearchAuthorizedAssets}}) {
+			t.Fatalf("expected %q to enter planner mode after visible asset lookup", transcript)
+		}
+	}
+}
+
 func TestRealtimeVoiceDoesNotRepairCreateClarificationWhenRequestedSourceWasNotVisible(t *testing.T) {
 	t.Parallel()
 
