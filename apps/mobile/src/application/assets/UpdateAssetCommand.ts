@@ -39,6 +39,9 @@ export class UpdateAssetCommand {
 }
 
 function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] | undefined {
+  if (tagIds === undefined) {
+    return undefined;
+  }
   const normalized = (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
-  return normalized.length > 0 ? normalized : undefined;
+  return normalized;
 }

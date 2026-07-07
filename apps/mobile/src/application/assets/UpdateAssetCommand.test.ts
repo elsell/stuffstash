@@ -57,4 +57,18 @@ describe('UpdateAssetCommand', () => {
     })).rejects.toThrow('Name is required.');
     expect(repository.updateInput).toBeUndefined();
   });
+
+  it('preserves an explicit empty tag list so edits can clear all tags', async () => {
+    const repository = new FakeAssetUpdateRepository();
+    const command = new UpdateAssetCommand(repository);
+
+    await command.execute({
+      assetId: 'asset-water-bottle',
+      title: 'Water bottle',
+      description: '',
+      tagIds: []
+    });
+
+    expect(repository.updateInput?.tagIds).toEqual([]);
+  });
 });

@@ -99,7 +99,9 @@ class FakeInventoryApiClient {
     readonly tenantId: string;
     readonly inventoryId: string;
     readonly limit?: number;
+    readonly cursor?: string;
   }> = [];
+  paginatedAssetTags = false;
   thumbnailRequests: Array<{
     readonly assetId: string;
     readonly attachmentId: string;
@@ -218,11 +220,42 @@ class FakeInventoryApiClient {
   async listAssetTags(
     tenantId: string,
     inventoryId: string,
-    limit?: number
+    limit?: number,
+    cursor?: string
   ): Promise<Page<AssetTag>> {
-    this.listAssetTagRequests.push({ tenantId, inventoryId, limit });
+    this.listAssetTagRequests.push({ tenantId, inventoryId, limit, cursor });
     if (inventoryId !== this.inventory.id) {
       return page([]);
+    }
+    if (this.paginatedAssetTags && cursor === undefined) {
+      return pageWithCursor([
+        {
+          id: 'tag-workshop',
+          tenantId,
+          inventoryId,
+          key: 'workshop',
+          displayName: 'Workshop',
+          color: '#2F80ED',
+          lifecycleState: 'active',
+          createdAt: '2026-06-20T10:00:00Z',
+          updatedAt: '2026-06-20T10:00:00Z'
+        }
+      ], 'next-tags');
+    }
+    if (this.paginatedAssetTags && cursor === 'next-tags') {
+      return page([
+        {
+          id: 'tag-camping',
+          tenantId,
+          inventoryId,
+          key: 'camping',
+          displayName: 'Camping',
+          color: '#2E7D32',
+          lifecycleState: 'active',
+          createdAt: '2026-06-20T10:00:00Z',
+          updatedAt: '2026-06-20T10:00:00Z'
+        }
+      ]);
     }
     return page([
       {
@@ -732,7 +765,33 @@ describe('ApiInventorySummaryRepository', () => {
     expect(client.listAssetTagRequests).toContainEqual({
       tenantId: 'tenant-home',
       inventoryId: 'inventory-home',
-      limit: 100
+      limit: 100,
+      cursor: undefined
+    });
+  });
+
+  it('loads every active asset tag page for mobile selection', async () => {
+    const client = new FakeInventoryApiClient();
+    client.paginatedAssetTags = true;
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
+      assetTags: [
+        { id: 'tag-workshop', displayName: 'Workshop' },
+        { id: 'tag-camping', displayName: 'Camping' }
+      ]
+    });
+    expect(client.listAssetTagRequests).toContainEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      limit: 100,
+      cursor: undefined
+    });
+    expect(client.listAssetTagRequests).toContainEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      limit: 100,
+      cursor: 'next-tags'
     });
   });
 

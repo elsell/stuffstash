@@ -325,7 +325,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     inventory: Inventory
   ): Promise<InventorySummary> {
     const assets = await this.listRecentInventoryAssets(tenant.id, inventory.id);
-    const assetTagsPage = await this.client.listAssetTags(tenant.id, inventory.id, 100);
+    const assetTags = await this.listAllInventoryTags(tenant.id, inventory.id);
     const locations = await Promise.all(
       assets
         .filter((asset) => asset.kind === 'location')
@@ -347,7 +347,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       locationCount: locations.length,
       locations,
       assets: mappedAssets,
-      assetTags: assetTagsPage.items.map(mapAssetTag)
+      assetTags: assetTags.map(mapAssetTag)
     };
   }
 
@@ -364,6 +364,22 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       'updated_desc'
     );
     return page.items;
+  }
+
+  private async listAllInventoryTags(
+    tenantID: string,
+    inventoryID: string
+  ): Promise<readonly AssetTag[]> {
+    const tags: AssetTag[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const page = await this.client.listAssetTags(tenantID, inventoryID, 100, cursor);
+      tags.push(...page.items);
+      cursor = page.pagination.nextCursor ?? undefined;
+    } while (cursor);
+
+    return tags;
   }
 
   private async getDefaultInventoryForMap(): Promise<{
