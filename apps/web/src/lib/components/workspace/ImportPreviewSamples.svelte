@@ -9,7 +9,7 @@
 
   const PLAN_PAGE_SIZE = 8;
 
-  type PlanSectionId = 'fields' | 'locations' | 'assets' | 'attachments';
+  type PlanSectionId = 'fields' | 'tags' | 'locations' | 'assets' | 'attachments';
 
   type PlanColumn = {
     key: string;
@@ -19,6 +19,7 @@
   type PlanRow = {
     id: string;
     cells: Record<string, string>;
+    tagColor?: string;
   };
 
   type PlanSection = {
@@ -37,6 +38,7 @@
   let { preview }: Props = $props();
   let pageBySection = $state<Record<PlanSectionId, number>>({
     fields: 0,
+    tags: 0,
     locations: 0,
     assets: 0,
     attachments: 0
@@ -74,6 +76,26 @@
             name: field.displayName || field.key,
             key: field.key,
             type: field.type
+          }
+        }))
+      },
+      {
+        id: 'tags',
+        title: 'Tags',
+        emptyText: 'No tags planned.',
+        truncated: Boolean(preview.tagsTruncated),
+        columns: [
+          { key: 'name', label: 'Tag' },
+          { key: 'key', label: 'Key' },
+          { key: 'color', label: 'Color' }
+        ],
+        rows: (preview.tags ?? []).map((tag) => ({
+          id: tag.key,
+          tagColor: tag.color,
+          cells: {
+            name: tag.displayName || tag.key,
+            key: tag.key,
+            color: tag.color || 'No color'
           }
         }))
       },
@@ -199,7 +221,19 @@
               <Table.Row>
                 {#each section.columns as column}
                   <Table.Cell class={column.key === 'name' ? 'font-semibold text-foreground md:min-w-48' : ''}>
-                    {row.cells[column.key]}
+                    {#if section.id === 'tags' && column.key === 'color' && row.tagColor}
+                      <span class="tag-color-cell">
+                        <span
+                          class="tag-swatch"
+                          style={`--tag-color: ${row.tagColor}`}
+                          data-testid={`import-preview-tag-swatch-${row.cells.key}`}
+                          aria-hidden="true"
+                        ></span>
+                        {row.cells[column.key]}
+                      </span>
+                    {:else}
+                      {row.cells[column.key]}
+                    {/if}
                   </Table.Cell>
                 {/each}
               </Table.Row>
@@ -238,6 +272,23 @@
   .preview-plan-sections {
     display: grid;
     gap: 0.75rem;
+  }
+
+  .tag-color-cell {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .tag-swatch {
+    background: var(--tag-color);
+    border: 1px solid color-mix(in oklab, var(--tag-color) 80%, var(--border));
+    border-radius: 999px;
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 0.75rem;
+    width: 0.75rem;
   }
 
   .plan-section {

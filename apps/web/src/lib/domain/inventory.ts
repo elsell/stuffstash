@@ -61,6 +61,12 @@ export interface AssetTagDraft {
   color?: string;
 }
 
+export interface ImportJobPreviewTag {
+  key: string;
+  displayName: string;
+  color?: string;
+}
+
 export const assetTagDisplayNameMaxLength = 80;
 
 export function assetTagDisplayNameByteLength(value: string): number {
@@ -293,7 +299,7 @@ export interface ImportJobPreview {
     displayName: string;
     type: string;
   }>;
-  tags?: AssetTagDraft[];
+  tags?: ImportJobPreviewTag[];
   locations: Array<{
     sourceId?: string;
     kind: string;

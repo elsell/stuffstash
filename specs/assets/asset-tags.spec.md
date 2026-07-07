@@ -135,6 +135,8 @@ Live imports:
 
 Import planning must include reusable tag definitions and per-asset tag key assignments. Import execution must create or reuse tag definitions before creating assets, then assign imported assets to the created or reused tags.
 
+Import preview UI must show planned tag definitions, including normalized keys and color swatches when colors are present, so users can review Homebox tag preservation before starting an import.
+
 Import job counts must include:
 
 - `tags`

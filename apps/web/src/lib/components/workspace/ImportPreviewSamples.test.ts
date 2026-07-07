@@ -20,6 +20,7 @@ describe('ImportPreviewSamples', () => {
       props: {
         preview: {
           fields: [{ key: 'serial_number', displayName: 'Serial number', type: 'text' }],
+          tags: [{ key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
           locations: [{ title: 'Garage', kind: 'location', archived: false }],
           assets: [
             { title: 'Cordless drill', kind: 'item', archived: false },
@@ -37,13 +38,19 @@ describe('ImportPreviewSamples', () => {
     });
 
     expect(document.body.textContent).toContain('Fields');
+    expect(document.body.textContent).toContain('Tags');
+    expect(document.body.textContent).toContain('Workshop');
+    expect(document.body.textContent).toContain('#2F80ED');
+    const tagSwatch = document.body.querySelector<HTMLElement>('[data-testid="import-preview-tag-swatch-workshop"]');
+    expect(tagSwatch).toBeTruthy();
+    expect(tagSwatch?.getAttribute('style')).toContain('--tag-color: #2F80ED');
     expect(document.body.textContent).toContain('1 record');
     expect(document.body.textContent).toContain('1-2 of 2+');
     expect(document.body.textContent).toContain('Partial list');
     expect(document.body.textContent).toContain('Photos/files');
     expect(document.body.querySelector<HTMLTableElement>('table[aria-label="Assets plan preview"]')?.tagName).toBe('TABLE');
     expect(Array.from(document.body.querySelectorAll('th')).map((node) => node.textContent)).toEqual(
-      expect.arrayContaining(['Field', 'Key', 'Type', 'Location', 'Kind', 'Context', 'Asset', 'File', 'Size'])
+      expect.arrayContaining(['Field', 'Key', 'Type', 'Tag', 'Color', 'Location', 'Kind', 'Context', 'Asset', 'File', 'Size'])
     );
     expect(document.body.textContent).not.toContain('shown');
     expect(document.body.textContent).not.toContain('Sample');
