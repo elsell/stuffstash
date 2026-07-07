@@ -582,8 +582,8 @@ function actionPlanAttachmentUploadIntentsField(message: Record<string, unknown>
       directUpload: {
         uploadId: stringField(directUpload, 'uploadId'),
         attachmentId: stringField(directUpload, 'attachmentId'),
-        method: stringField(directUpload, 'method'),
-        url: stringField(directUpload, 'url'),
+        method: directUploadMethodField(directUpload, 'method'),
+        url: directUploadURLField(directUpload, 'url'),
         headers: stringRecordField(directUpload, 'headers'),
         formFields: stringRecordField(directUpload, 'formFields'),
         expiresAt: stringField(directUpload, 'expiresAt')
@@ -598,6 +598,63 @@ function photoContentTypeField(message: Record<string, unknown>, field: string):
     return value;
   }
   throw new Error(`Voice event field ${field} has unsupported photo content type.`);
+}
+
+function directUploadMethodField(message: Record<string, unknown>, field: string): 'POST' | 'PUT' | 'PATCH' {
+  const value = stringField(message, field).toUpperCase();
+  if (value === 'POST' || value === 'PUT' || value === 'PATCH') {
+    return value;
+  }
+  throw new Error(`Voice event field ${field} has unsupported direct upload method.`);
+}
+
+function directUploadURLField(message: Record<string, unknown>, field: string): string {
+  const value = stringField(message, field);
+  if (isSupportedDirectUploadURL(value)) {
+    return value;
+  }
+  throw new Error(`Voice event field ${field} has unsupported direct upload URL.`);
+}
+
+function isSupportedDirectUploadURL(value: string): boolean {
+  if (value.startsWith('stuffstash-local://direct-uploads/')) {
+    return true;
+  }
+  const parsed = parseHTTPURL(value);
+  if (!parsed) {
+    return false;
+  }
+  if (parsed.protocol === 'https:') {
+    return true;
+  }
+  return parsed.protocol === 'http:' && isLocalDevelopmentHost(parsed.hostname);
+}
+
+function parseHTTPURL(value: string): URL | undefined {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isLocalDevelopmentHost(hostname: string): boolean {
+  const value = hostname.toLowerCase();
+  if (value === 'localhost' || value.endsWith('.local')) {
+    return true;
+  }
+  if (value === '127.0.0.1' || value === '::1' || value === '[::1]') {
+    return true;
+  }
+  const octets = value.split('.').map((part) => Number.parseInt(part, 10));
+  if (octets.length !== 4 || octets.some((part) => Number.isNaN(part) || part < 0 || part > 255)) {
+    return false;
+  }
+  const [first, second] = octets;
+  return first === 10
+    || (first === 172 && second >= 16 && second <= 31)
+    || (first === 192 && second === 168);
 }
 
 function stringRecordField(message: Record<string, unknown>, field: string): Readonly<Record<string, string>> {
