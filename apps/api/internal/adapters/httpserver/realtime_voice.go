@@ -91,8 +91,9 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 
 		lastClientSeq := start.Seq
 		conversationTurns := []ports.AgentConversationTurn{}
+		seenAudioChunkIDs := map[string]struct{}{}
 		for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
-			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq)
+			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs)
 			lastClientSeq = nextClientSeq
 			if err != nil {
 				if errors.Is(err, errRealtimeVoiceCancelled) {
@@ -403,7 +404,7 @@ func writeRealtimeServerMessage(ctx context.Context, connection *websocket.Conn,
 	return connection.Write(ctx, websocket.MessageText, payload)
 }
 
-func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int) ([][]byte, int, error) {
+func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}) ([][]byte, int, error) {
 	chunks := [][]byte{}
 	seenChunks := map[string]struct{}{}
 	for {
@@ -427,7 +428,11 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 			if _, exists := seenChunks[chunkID]; exists {
 				return nil, lastClientSeq, ports.ErrInvalidProviderInput
 			}
+			if _, exists := seenSessionChunkIDs[chunkID]; exists {
+				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+			}
 			seenChunks[chunkID] = struct{}{}
+			seenSessionChunkIDs[chunkID] = struct{}{}
 			chunk, err := base64.StdEncoding.DecodeString(message.AudioBase64)
 			if err != nil || len(chunk) == 0 || len(chunk) > maxRealtimeAudioChunkBytes {
 				return nil, lastClientSeq, ports.ErrInvalidProviderInput
