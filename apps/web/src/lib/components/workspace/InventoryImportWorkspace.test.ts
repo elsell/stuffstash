@@ -382,7 +382,7 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     });
   });
 
-  it('keeps preview issues above plan samples so warnings are not buried', async () => {
+  it('keeps preview issues above the plan preview so warnings are not buried', async () => {
     await mountImportWorkspace(new PreviewMessageOnlyRepository(structuredClone(seed)));
 
     await openLiveHomeboxSetup();
@@ -398,7 +398,7 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Preview import');
       expect(document.body.textContent).toContain('Attachment will be skipped');
-      expect(document.body.textContent).toContain('Plan samples');
+      expect(document.body.textContent).toContain('Plan preview');
       expect(document.body.textContent).toContain('Previewed rows by section');
       expect(document.body.textContent).not.toContain('Showing representative records');
     });

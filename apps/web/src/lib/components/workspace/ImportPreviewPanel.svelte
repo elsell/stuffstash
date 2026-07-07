@@ -86,9 +86,9 @@
           reportedErrors={reportedErrorCount(previewJob)}
         />
       </section>
-      <section class="preview-samples-section" aria-label="Preview samples">
+      <section class="preview-samples-section" aria-label="Plan preview">
         <div class="preview-section-heading">
-          <h3>Plan samples</h3>
+          <h3>Plan preview</h3>
           <small>Previewed rows by section</small>
         </div>
         <ImportPreviewSamples preview={previewJob.preview} />
