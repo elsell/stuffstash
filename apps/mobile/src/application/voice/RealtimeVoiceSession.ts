@@ -820,7 +820,7 @@ function safeDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type:
 
 function safeAgentDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'agent.diagnostic' }>): VoiceSafeDiagnosticEvent {
   return {
-    label: safeBoundedText(event.message, 120) || 'Agent diagnostic',
+    label: safeVisibleProgressText(event.message, 120) || 'Agent diagnostic',
     status: 'Details',
     detail: event.detail ? safeBoundedDiagnosticDetail(event.detail, 4000) : undefined
   };

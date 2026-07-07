@@ -1129,7 +1129,7 @@ describe('RealtimeVoiceSessionController', () => {
           type: 'agent.diagnostic',
           seq: 2,
           sessionId: 'session-1',
-          message: 'Language prompt',
+          message: 'Language prompt bearer abc123 stack trace',
           detail: 'Transcript: move water bottle\nbearer abc123'
         },
         { type: 'session.completed', seq: 3, sessionId: 'session-1' }
@@ -1151,7 +1151,7 @@ describe('RealtimeVoiceSessionController', () => {
         detail: 'name: search_authorized_assets\napiKey: [redacted]\nquery: water bottle'
       },
       {
-        label: 'Language prompt',
+        label: 'Language prompt bearer [redacted] [redacted]',
         status: 'Details',
         detail: 'Transcript: move water bottle\nbearer [redacted]'
       }
