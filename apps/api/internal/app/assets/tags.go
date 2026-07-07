@@ -57,6 +57,13 @@ type AssetTagLifecycleInput struct {
 	TagID       assettag.ID
 }
 
+type GetAssetAssignedTagsInput struct {
+	Principal   identity.Principal
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+}
+
 type ListAssetTagsResult struct {
 	Items      []assettag.Tag
 	Limit      int
@@ -229,6 +236,29 @@ func (s Service) ListAssetTags(ctx context.Context, input ListAssetTagsInput) (L
 	return ListAssetTagsResult{Items: items, Limit: limit, NextCursor: nextCursor, HasMore: hasMore}, nil
 }
 
+func (s Service) GetAssetAssignedTags(ctx context.Context, input GetAssetAssignedTagsInput) ([]assettag.Tag, error) {
+	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+		return nil, err
+	}
+	if err := s.ensureAssetRepository(); err != nil {
+		return nil, err
+	}
+	if s.assetTags == nil {
+		return nil, nil
+	}
+	if input.AssetID.String() == "" {
+		return nil, apperrors.ErrInvalidInput
+	}
+	item, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, apperrors.ErrNotFound
+	}
+	return s.tagsForAsset(ctx, item)
+}
+
 func (s Service) ensureAssetTagDependencies() error {
 	if s.assetTags == nil || s.assetTagUnitOfWork == nil {
 		return apperrors.ErrInvalidInput
@@ -257,18 +287,9 @@ func (s Service) setAssetTagAssignments(ctx context.Context, principal identity.
 	if s.assetTagUnitOfWork == nil {
 		return apperrors.ErrInvalidInput
 	}
-	tagIDs := make([]assettag.ID, 0, len(rawTagIDs))
-	seen := map[assettag.ID]struct{}{}
-	for _, raw := range rawTagIDs {
-		tagID, ok := assettag.NewID(raw)
-		if !ok {
-			return apperrors.ErrInvalidInput
-		}
-		if _, exists := seen[tagID]; exists {
-			continue
-		}
-		seen[tagID] = struct{}{}
-		tagIDs = append(tagIDs, tagID)
+	tagIDs, err := s.validateAssignableAssetTagIDs(ctx, tenantID, inventoryID, rawTagIDs)
+	if err != nil {
+		return err
 	}
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
 		Principal:   principal,
@@ -298,4 +319,34 @@ func (s Service) setAssetTagAssignments(ctx context.Context, principal identity.
 
 func (s Service) SetAssetTagAssignmentsForImport(ctx context.Context, principal identity.Principal, requestID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, rawTagIDs []string) error {
 	return s.setAssetTagAssignments(ctx, principal, audit.SourceImport, requestID, tenantID, inventoryID, assetID, rawTagIDs)
+}
+
+func (s Service) validateAssignableAssetTagIDs(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, rawTagIDs []string) ([]assettag.ID, error) {
+	if len(rawTagIDs) == 0 {
+		return nil, nil
+	}
+	if s.assetTags == nil {
+		return nil, apperrors.ErrInvalidInput
+	}
+	tagIDs := make([]assettag.ID, 0, len(rawTagIDs))
+	seen := map[assettag.ID]struct{}{}
+	for _, raw := range rawTagIDs {
+		tagID, ok := assettag.NewID(raw)
+		if !ok {
+			return nil, apperrors.ErrInvalidInput
+		}
+		if _, exists := seen[tagID]; exists {
+			continue
+		}
+		tag, found, err := s.assetTags.AssetTagByID(ctx, tenantID, inventoryID, tagID)
+		if err != nil {
+			return nil, err
+		}
+		if !found || tag.LifecycleState != assettag.LifecycleStateActive {
+			return nil, apperrors.ErrInvalidInput
+		}
+		seen[tagID] = struct{}{}
+		tagIDs = append(tagIDs, tagID)
+	}
+	return tagIDs, nil
 }

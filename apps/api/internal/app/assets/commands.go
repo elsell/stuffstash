@@ -17,6 +17,11 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 	if err != nil {
 		return asset.Asset{}, err
 	}
+	if len(input.TagIDs) > 0 {
+		if _, err := s.validateAssignableAssetTagIDs(ctx, input.TenantID, input.InventoryID, input.TagIDs); err != nil {
+			return asset.Asset{}, err
+		}
+	}
 	if err := s.persistPreparedCreateAsset(ctx, prepared); err != nil {
 		return asset.Asset{}, err
 	}
@@ -222,6 +227,11 @@ func (s Service) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset
 	prepared, err := s.PrepareUpdateAsset(ctx, input)
 	if err != nil {
 		return asset.Asset{}, err
+	}
+	if input.TagIDs != nil {
+		if _, err := s.validateAssignableAssetTagIDs(ctx, input.TenantID, input.InventoryID, *input.TagIDs); err != nil {
+			return asset.Asset{}, err
+		}
 	}
 	if err := s.persistPreparedUpdateAsset(ctx, prepared); err != nil {
 		return asset.Asset{}, err

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
@@ -344,6 +345,14 @@ func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand
 		})
 		if err != nil {
 			if errors.Is(err, ErrInvalidInput) {
+				tagID, found, findErr := a.activeImportTagIDByKey(ctx, command.TenantID, command.InventoryID, tag.Key)
+				if findErr != nil {
+					return nil, findErr
+				}
+				if !found {
+					return nil, err
+				}
+				tagIDsByKey[tag.Key] = tagID
 				result.Counts.TagsExisting++
 				if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
 					return nil, err
@@ -360,6 +369,24 @@ func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand
 		}
 	}
 	return tagIDsByKey, nil
+}
+
+func (a App) activeImportTagIDByKey(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, key string) (string, bool, error) {
+	if a.assetTags == nil {
+		return "", false, nil
+	}
+	parsedKey, ok := assettag.NewKey(key)
+	if !ok {
+		return "", false, nil
+	}
+	tag, found, err := a.assetTags.AssetTagByKey(ctx, tenantID, inventoryID, parsedKey)
+	if err != nil || !found {
+		return "", false, err
+	}
+	if tag.LifecycleState != assettag.LifecycleStateActive {
+		return "", false, nil
+	}
+	return tag.ID.String(), true, nil
 }
 
 func (a App) existingImportTagIDs(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]string, error) {

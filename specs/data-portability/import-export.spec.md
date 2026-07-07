@@ -507,7 +507,7 @@ Legacy Homebox mapping:
 - Homebox `assetId`/`HB.asset_id` becomes a custom field named `homebox-asset-id`.
 - Homebox item IDs, location IDs, CSV location references, and import references become a custom field named `homebox-source-id` used for duplicate detection and audit metadata.
 - Homebox quantity becomes a number custom field named `homebox-quantity` until a first-class quantity/consumable model is specified.
-- Homebox tags become a text custom field named `homebox-tags` containing a stable semicolon-separated tag list until a first-class tag domain is specified.
+- Homebox tags become native inventory-scoped Stuff Stash tags and are assigned to imported assets by normalized tag key.
 - Homebox purchase, warranty, sale, manufacturer, model, serial, insured, and notes values become validated custom fields.
 - Empty Homebox values must not create noisy custom field values.
 - Homebox date values with year `0001`, such as `0001-11-08`, are partial or ambiguous dates for Stuff Stash purposes. They must be imported as text fields with a warning, not as validated date fields.
@@ -520,7 +520,6 @@ Initial Homebox custom fields:
 
 - `homebox-asset-id`: text.
 - `homebox-source-id`: text.
-- `homebox-tags`: text.
 - `homebox-quantity`: number.
 - `homebox-insured`: boolean.
 - `homebox-notes`: text.

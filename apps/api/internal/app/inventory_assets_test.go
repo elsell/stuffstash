@@ -180,6 +180,58 @@ func TestCreateUpdateAndReadAssetTags(t *testing.T) {
 	}
 }
 
+func TestAssetWritesValidateTagsBeforePersistence(t *testing.T) {
+	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
+		asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
+	}}
+	application := New(Dependencies{
+		Observer:           &fakeObserver{},
+		Authorizer:         &fakeAuthorizer{},
+		Tenants:            &fakeTenantRepository{exists: true},
+		Inventories:        &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		Assets:             assets,
+		AssetTags:          assets,
+		AssetUnitOfWork:    assets,
+		AssetTagUnitOfWork: assets,
+		Undoables:          assets,
+		Audit:              &fakeAuditRepository{},
+		Outbox:             &fakeOutbox{},
+		IDs:                &fakeIDGenerator{ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "op-update", "audit-update"}},
+	})
+
+	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "item",
+		Title:       "Saw",
+		TagIDs:      []string{"missing-tag"},
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid tag create rejection, got %v", err)
+	}
+	if _, exists := assets.items[asset.ID("asset-one")]; exists {
+		t.Fatalf("asset must not be created when tag validation fails")
+	}
+
+	title := "Renamed drill"
+	invalidTags := []string{"missing-tag"}
+	_, err = application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("drill"),
+		Title:       &title,
+		TagIDs:      &invalidTags,
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid tag update rejection, got %v", err)
+	}
+	if assets.items[asset.ID("drill")].Title.String() == title {
+		t.Fatalf("asset must not be updated when tag validation fails")
+	}
+}
+
 func TestCreateAssetPromotesItemParentToContainer(t *testing.T) {
 	itemParent := assetItem("asset-parent", "tenant-one", "inventory-one", asset.KindItem, "")
 	assets := &fakeAssetRepository{

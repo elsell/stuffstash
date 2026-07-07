@@ -41,29 +41,19 @@ func RegisterUpdate(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		tags := mapper.TagsToResponse(nil)
-		if input.Body.TagIDs != nil {
-			result, err := application.GetAssetDetail(ctx, app.GetAssetInput{
-				Principal:   principal,
-				Source:      audit.SourceAPI,
-				RequestID:   input.RequestID,
-				TenantID:    tenant.ID(input.TenantID),
-				InventoryID: inventory.InventoryID(input.InventoryID),
-				AssetID:     item.ID,
-			})
-			if err != nil {
-				return nil, shared.ToHumaError(err)
-			}
-			tags = mapper.TagsToResponse(result.Tags)
+		tags, err := application.GetAssetAssignedTags(ctx, app.GetAssetAssignedTagsInput{
+			Principal:   principal,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			AssetID:     item.ID,
+		})
+		if err != nil {
+			return nil, shared.ToHumaError(err)
 		}
 
 		return &dto.UpdateAssetOutput{
 			Body: shared.SuccessEnvelope[dto.AssetResponse]{
-				Data: func() dto.AssetResponse {
-					response := mapper.AssetToResponse(item, nil, nil, nil)
-					response.Tags = tags
-					return response
-				}(),
+				Data: mapper.AssetToResponseWithTags(item, tags, nil, nil, nil),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil

@@ -191,6 +191,16 @@ func TestAssetEndpointsAssignAndReturnTags(t *testing.T) {
 	}
 
 	clearTags := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+created.Data.ID, "Bearer dev:owner", map[string]any{
+		"title": "Tagged Drill",
+	})
+	if clearTags.Code != http.StatusOK {
+		t.Fatalf("expected title update status %d, got %d with body %s", http.StatusOK, clearTags.Code, clearTags.Body.String())
+	}
+	if tags := decodeAsset(t, clearTags).Data.Tags; len(tags) != 1 || tags[0].ID != tag.Data.ID {
+		t.Fatalf("expected title-only update to preserve response tags, got %+v", tags)
+	}
+
+	clearTags = performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+created.Data.ID, "Bearer dev:owner", map[string]any{
 		"tagIds": []string{},
 	})
 	if clearTags.Code != http.StatusOK {
