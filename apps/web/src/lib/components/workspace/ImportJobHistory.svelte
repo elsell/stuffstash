@@ -910,51 +910,51 @@
     min-width: 0;
   }
 
-  :global(.status-cell) {
+  :global(.history-ledger .status-cell) {
     align-items: flex-start;
     display: flex;
     gap: 0.6rem;
     min-width: 0;
   }
 
-  :global(.issue-cell),
-  :global(.result-cell),
-  :global(.time-cell) {
+  :global(.history-ledger .issue-cell),
+  :global(.history-ledger .result-cell),
+  :global(.history-ledger .time-cell) {
     color: var(--muted-foreground);
     font-size: 0.82rem;
     gap: 0.18rem;
     min-width: 0;
   }
 
-  :global(.issue-cell) {
+  :global(.history-ledger .issue-cell) {
     align-content: start;
     justify-items: start;
   }
 
-  :global(.issue-cell > span) {
+  :global(.history-ledger .issue-cell > span) {
     display: block;
     margin-top: 0.25rem;
   }
 
-  :global(.result-cell span:first-child),
-  :global(.issue-cell span:first-child) {
+  :global(.history-ledger .result-cell span:first-child),
+  :global(.history-ledger .issue-cell span:first-child) {
     align-items: center;
     color: var(--foreground);
     flex-wrap: wrap;
     gap: 0.35rem;
   }
 
-  :global(.result-cell span),
-  :global(.issue-cell span),
-  :global(.time-cell span) {
+  :global(.history-ledger .result-cell span),
+  :global(.history-ledger .issue-cell span),
+  :global(.history-ledger .time-cell span) {
     overflow-wrap: anywhere;
   }
 
-  :global(.result-cell span) {
+  :global(.history-ledger .result-cell span) {
     color: var(--foreground);
   }
 
-  :global(.issue-cell.warning span) {
+  :global(.history-ledger .issue-cell.warning span) {
     color: var(--color-warning-foreground);
   }
 
@@ -963,7 +963,7 @@
     color: var(--color-warning-foreground);
   }
 
-  :global(.issue-cell.action span) {
+  :global(.history-ledger .issue-cell.action span) {
     color: var(--destructive);
   }
 
@@ -992,7 +992,7 @@
     background: color-mix(in oklab, var(--destructive) 2.6%, transparent);
   }
 
-  :global(.attention-row .status-icon) {
+  :global(.history-ledger .attention-row .status-icon) {
     color: var(--destructive);
   }
 
@@ -1000,11 +1000,11 @@
     background: color-mix(in oklab, var(--color-warning) 3.5%, transparent);
   }
 
-  :global(.warning-row .status-icon) {
+  :global(.history-ledger .warning-row .status-icon) {
     color: var(--color-warning-foreground);
   }
 
-  :global(.row-actions) {
+  :global(.history-ledger .row-actions) {
     align-items: center;
     display: flex;
     gap: 0.35rem;
@@ -1142,17 +1142,17 @@
       text-transform: uppercase;
     }
 
-    :global(.status-cell) {
+    :global(.history-ledger .status-cell) {
       display: block;
     }
 
-    :global(.result-cell),
-    :global(.issue-cell),
-    :global(.time-cell) {
+    :global(.history-ledger .result-cell),
+    :global(.history-ledger .issue-cell),
+    :global(.history-ledger .time-cell) {
       gap: 0.12rem;
     }
 
-    :global(.row-actions) {
+    :global(.history-ledger .row-actions) {
       justify-content: flex-start;
     }
 
@@ -1190,10 +1190,6 @@
     .status-icon,
     .attention-marker {
       display: none;
-    }
-
-    :global(.row-actions) {
-      justify-content: flex-start;
     }
 
     .ledger-heading {
