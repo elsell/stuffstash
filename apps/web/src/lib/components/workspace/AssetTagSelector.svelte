@@ -4,7 +4,13 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { assetTagKeyFromDisplayName, type AssetTag, type AssetTagDraft } from '$lib/domain/inventory';
+  import {
+    assetTagDisplayNameByteLength,
+    assetTagDisplayNameMaxLength,
+    assetTagKeyFromDisplayName,
+    type AssetTag,
+    type AssetTagDraft
+  } from '$lib/domain/inventory';
   import AssetTagChips from './AssetTagChips.svelte';
 
   let {
@@ -28,14 +34,15 @@
   let hasSelection = $derived(selectedExistingTags.length > 0 || newTags.length > 0);
   let normalizedNewTagColor = $derived(normalizeColor(newTagColor));
   let newTagKey = $derived(assetTagKeyFromDisplayName(newTagName));
+  let newTagDisplayNameByteLength = $derived(assetTagDisplayNameByteLength(newTagName));
   let matchingExistingTag = $derived(tags.find((tag) => tag.key === newTagKey));
   let matchingPendingTag = $derived(newTags.find((tag) => assetTagKeyFromDisplayName(tag.displayName) === newTagKey));
   let canAddTag = $derived(
     newTagKey.length > 0 &&
       (matchingExistingTag !== undefined ||
         matchingPendingTag !== undefined ||
-        newTagColor.trim().length === 0 ||
-        normalizedNewTagColor !== undefined)
+        (newTagDisplayNameByteLength <= assetTagDisplayNameMaxLength &&
+          (newTagColor.trim().length === 0 || normalizedNewTagColor !== undefined)))
   );
 
   $effect(() => {
@@ -81,6 +88,9 @@
     if (matchingPendingTag) {
       newTagName = '';
       newTagColor = '';
+      return;
+    }
+    if (assetTagDisplayNameByteLength(displayName) > assetTagDisplayNameMaxLength) {
       return;
     }
     if (newTagColor.trim().length > 0 && !normalizedNewTagColor) {

@@ -136,6 +136,97 @@ describe('AssetTagSelector', () => {
 
     expect(newTags).toEqual([{ displayName: 'Workshop', color: '#2F80ED' }]);
   });
+
+  it('keeps new tag names within the backend display-name limit', async () => {
+    let newTags: AssetTagDraft[] = [];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', 'a'.repeat(81));
+    await tick();
+
+    expect(button('Add').disabled).toBe(true);
+
+    input('new-tag-name', 'a'.repeat(80));
+    await tick();
+    button('Add').click();
+    await tick();
+
+    expect(newTags).toEqual([{ displayName: 'a'.repeat(80) }]);
+  });
+
+  it('uses UTF-8 byte length for the backend display-name limit', async () => {
+    let newTags: AssetTagDraft[] = [];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', `${'é'.repeat(40)}a`);
+    await tick();
+
+    expect(button('Add').disabled).toBe(true);
+    expect(newTags).toEqual([]);
+  });
+
+  it('still selects existing tags when over-limit text resolves to their key', async () => {
+    let selectedIds: string[] = [];
+    let newTags: AssetTagDraft[] = [];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        tags: [{ id: 'tag-a', key: 'a', displayName: 'A' }],
+        onSelectedIdsChange: (ids) => {
+          selectedIds = ids;
+        },
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', `${'é'.repeat(81)}a`);
+    await tick();
+
+    expect(button('Add').disabled).toBe(false);
+    button('Add').click();
+    await tick();
+
+    expect(selectedIds).toEqual(['tag-a']);
+    expect(newTags).toEqual([]);
+  });
+
+  it('still clears pending duplicate tags when over-limit text resolves to their key', async () => {
+    let newTags: AssetTagDraft[] = [{ displayName: 'A' }];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        newTags,
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', `${'é'.repeat(81)}a`);
+    await tick();
+
+    expect(button('Add').disabled).toBe(false);
+    button('Add').click();
+    await tick();
+
+    expect(newTags).toEqual([{ displayName: 'A' }]);
+  });
 });
 
 function props(

@@ -61,6 +61,12 @@ export interface AssetTagDraft {
   color?: string;
 }
 
+export const assetTagDisplayNameMaxLength = 80;
+
+export function assetTagDisplayNameByteLength(value: string): number {
+  return new TextEncoder().encode(value.trim()).length;
+}
+
 export function assetTagKeyFromDisplayName(value: string): string {
   let key = '';
   let lastHyphen = false;
