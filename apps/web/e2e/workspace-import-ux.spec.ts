@@ -64,6 +64,11 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await page.getByRole('tab', { name: 'Records' }).click();
   await expect(page.getByText('Records created by this job were discarded. Audit history remains.')).toBeVisible();
   await expect(page.locator('a.resource-link')).toHaveCount(0);
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import');
+  await page.getByRole('button', { name: 'New import' }).first().click();
+  await expect(page.getByText('Choose import method')).toBeVisible();
+  await expectImportStepperGeometry(page);
 });
 
 test('mobile import setup keeps one-column flow and subordinate connection options', async ({ page }, testInfo) => {
@@ -81,6 +86,7 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
 
   await page.getByRole('button', { name: 'New import' }).first().click();
   await expect(page.getByText('Choose import method')).toBeVisible();
+  await expectImportStepperGeometry(page);
   await expect(page.getByRole('link', { name: /Connect to Homebox/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Upload Homebox CSV/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
@@ -114,4 +120,40 @@ async function hasHorizontalOverflow(locator: import('@playwright/test').Locator
 
 async function importNavigationSentinel(page: import('@playwright/test').Page): Promise<string | undefined> {
   return page.evaluate(() => (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel);
+}
+
+async function expectImportStepperGeometry(page: import('@playwright/test').Page): Promise<void> {
+  await expect(page.locator('.step-progress')).toBeVisible();
+  const metrics = await page.locator('.step-progress').evaluate((progress) => {
+    const markers = Array.from(progress.querySelectorAll<HTMLElement>('.step-progress-marker')).map((marker) => {
+      const rect = marker.getBoundingClientRect();
+      return {
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2
+      };
+    });
+    const connectorCenterDeltas = Array.from(progress.querySelectorAll<HTMLElement>('.step-progress-item:not(:last-child)')).map(
+      (item, index) => {
+        const rect = item.getBoundingClientRect();
+        const styles = getComputedStyle(item, '::after');
+        const connectorTop = Number.parseFloat(styles.top);
+        const connectorHeight = Number.parseFloat(styles.height);
+        const connectorCenterY = rect.top + connectorTop + connectorHeight / 2;
+        return Math.abs(connectorCenterY - markers[index].centerY);
+      }
+    );
+    const markerCenterSpread = Math.max(...markers.map((marker) => marker.centerY)) - Math.min(...markers.map((marker) => marker.centerY));
+    const markerGaps = markers.slice(1).map((marker, index) => marker.centerX - markers[index].centerX);
+    return {
+      markerCount: markers.length,
+      markerCenterSpread,
+      maxConnectorDelta: Math.max(...connectorCenterDeltas),
+      minMarkerGap: Math.min(...markerGaps)
+    };
+  });
+
+  expect(metrics.markerCount).toBe(4);
+  expect(metrics.markerCenterSpread).toBeLessThanOrEqual(1);
+  expect(metrics.maxConnectorDelta).toBeLessThanOrEqual(1);
+  expect(metrics.minMarkerGap).toBeGreaterThan(24);
 }

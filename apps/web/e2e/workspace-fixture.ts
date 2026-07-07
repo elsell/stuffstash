@@ -189,6 +189,10 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     await fulfill(route, []);
     return;
   }
+  if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/tags') {
+    await fulfill(route, [assetTag('tag-workshop', 'workshop', 'Workshop', '#2F80ED')]);
+    return;
+  }
   if (method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
     await fulfill(route, [asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
     return;
@@ -480,6 +484,20 @@ function inventory(id: string, tenantId: string, name: string, permissions: stri
     tenantId,
     name,
     access: { relationship: permissions.includes('create_asset') ? 'editor' : 'viewer', permissions }
+  };
+}
+
+function assetTag(id: string, key: string, displayName: string, color?: string): object {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    key,
+    displayName,
+    color,
+    lifecycleState: 'active',
+    createdAt: '2026-07-07T12:00:00Z',
+    updatedAt: '2026-07-07T12:00:00Z'
   };
 }
 
