@@ -88,8 +88,11 @@ func validateRealtimeAudioChunkFinalMarker(raw map[string]json.RawMessage) error
 	if !ok {
 		return ports.ErrInvalidProviderInput
 	}
-	var marker bool
+	var marker *bool
 	if err := json.Unmarshal(value, &marker); err != nil {
+		return ports.ErrInvalidProviderInput
+	}
+	if marker == nil {
 		return ports.ErrInvalidProviderInput
 	}
 	return nil

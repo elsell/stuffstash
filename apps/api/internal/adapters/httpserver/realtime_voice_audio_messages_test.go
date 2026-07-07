@@ -75,6 +75,7 @@ func TestRealtimeVoiceQueryRejectsMalformedAudioFinalChunkMarkers(t *testing.T) 
 	}{
 		{name: "missing", omit: true},
 		{name: "wrong type", marker: "true"},
+		{name: "null", marker: nil},
 	}
 
 	for _, tt := range tests {
