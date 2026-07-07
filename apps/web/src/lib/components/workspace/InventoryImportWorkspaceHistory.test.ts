@@ -855,6 +855,42 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('uses overview metric tiles as shortcuts to issues and records', async () => {
+    await mountImportWorkspace(new ResourcefulImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(activeDetailTabText()).toContain('Issues');
+    });
+
+    buttonContaining('Overview').click();
+
+    await waitFor(() => {
+      expect(activeDetailTabText()).toContain('Overview');
+      expect(document.body.querySelector<HTMLButtonElement>('button[aria-label^="Open issues for"]')).toBeTruthy();
+      expect(document.body.querySelector<HTMLButtonElement>('button[aria-label^="Open imported records for"]')).toBeTruthy();
+    });
+
+    document.body.querySelector<HTMLButtonElement>('button[aria-label^="Open issues for"]')?.click();
+
+    await waitFor(() => {
+      expect(activeDetailTabText()).toContain('Issues');
+    });
+
+    buttonContaining('Overview').click();
+    document.body.querySelector<HTMLButtonElement>('button[aria-label^="Open imported records for"]')?.click();
+
+    await waitFor(() => {
+      expect(activeDetailTabText()).toContain('Records');
+      expect(document.body.textContent).toContain('Imported records');
+    });
+  });
+
   it('pages many imported record summaries in job detail', async () => {
     class ManyResourcefulImportJobRepository extends ResourcefulImportJobRepository {
       constructor(seedData: typeof seed) {

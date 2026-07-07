@@ -15,6 +15,7 @@
     actorSummary,
     canRemoveJobFromHistory,
     changedRecordSummary,
+    type CountCell,
     importIssueTone,
     isTerminal,
     issueCountSummary,
@@ -92,6 +93,7 @@
   let visibleResourceEnd = $derived(Math.min(job.resources.length, visibleResourceStart + visibleResources.length));
   let actor = $derived(actorSummary(job, currentPrincipal));
   let visibleSourceOptions = $derived(sourceOptionsSummary(job));
+  let overviewCells = $derived(detailOverviewCells(job));
 
   $effect(() => {
     job.id;
@@ -133,6 +135,46 @@
       return 'Partial progress discard was requested. Audit history remains.';
     }
     return 'Partial progress was kept.';
+  }
+
+  function detailOverviewCells(job: ImportJob): CountCell[] {
+    const cells = job.status === 'previewed' ? visiblePreviewCountCells(job) : visibleCountCells(resultCountCells(job));
+    return cells.map((cell) => {
+      const label = cell.label.toLowerCase();
+      if (label.includes('blocking')) {
+        return {
+          ...cell,
+          tone: cell.value > 0 ? 'action' : 'muted',
+          actionLabel: cell.value > 0 ? `Open issues for ${cell.value} ${cell.label}` : undefined
+        };
+      }
+      if (label.includes('warning')) {
+        return {
+          ...cell,
+          tone: 'warning',
+          actionLabel: cell.value > 0 ? `Open issues for ${cell.value} ${cell.label}` : undefined
+        };
+      }
+      if ((label.includes('created') || label.includes('imported') || label.includes('saved')) && !label.includes('field')) {
+        return {
+          ...cell,
+          tone: cell.value > 0 ? 'success' : 'muted',
+          actionLabel: job.resources.length > 0 && cell.value > 0 ? `Open imported records for ${cell.value} ${cell.label}` : undefined
+        };
+      }
+      return { ...cell, tone: cell.muted ? 'muted' : 'default' };
+    });
+  }
+
+  function handleOverviewCellAction(cell: CountCell): void {
+    const label = cell.label.toLowerCase();
+    if (label.includes('warning') || label.includes('blocking')) {
+      selectedTab = 'issues';
+      return;
+    }
+    if (cell.actionLabel?.includes('imported records')) {
+      selectedTab = 'records';
+    }
   }
 </script>
 
@@ -216,7 +258,7 @@
                   <h3>Result</h3>
                   <small>{statusSentence(job)}</small>
                 </div>
-                <ImportCountGrid cells={job.status === 'previewed' ? visiblePreviewCountCells(job) : visibleCountCells(resultCountCells(job))} />
+                <ImportCountGrid cells={overviewCells} actionForCell={handleOverviewCellAction} />
               </section>
             </Tabs.Content>
 

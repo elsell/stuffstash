@@ -1,6 +1,12 @@
 import type { ImportJob, ImportMessage, Principal } from '$lib/domain/inventory';
 
-export type CountCell = { value: number; label: string; muted?: boolean };
+export type CountCell = {
+  value: number;
+  label: string;
+  muted?: boolean;
+  tone?: 'default' | 'success' | 'warning' | 'action' | 'muted';
+  actionLabel?: string;
+};
 export type ImportIssueTone = 'none' | 'warning' | 'action';
 
 export function statusLabel(job: ImportJob): string {
