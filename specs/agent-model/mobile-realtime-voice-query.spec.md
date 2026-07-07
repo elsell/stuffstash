@@ -105,6 +105,8 @@ When a realtime session is active or has a terminal result, the collapsed voice 
 
 When a session completes with a clarification response and the same-session follow-up window is still available, mobile must present that state as needing detail rather than as a completed answer. The collapsed accessory, expanded sheet title, bottom hint, and microphone accessibility label should make the next expected action clear: answer the follow-up in the same conversation.
 
+When the API ends a clarification chain with `session.failed` code `clarification_turn_limit`, mobile must present a safe conversation-specific failure state rather than a generic provider failure. The user-facing copy should explain that Stuff Stash needs a fresh voice request, and it must not direct the user to provider setup or diagnostics unless another provider-specific failure code is present.
+
 The expanded session surface must:
 
 - Visually read as an expansion of the bottom voice accessory.
