@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
@@ -21,19 +22,54 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 	default:
 		return ports.ErrInvalidProviderInput
 	}
-	if !boundedRealtimeVoiceText(response.SpokenResponse, 500) {
+	if !safeRealtimeVoiceFinalText(response.SpokenResponse, 500) {
 		return ports.ErrInvalidProviderInput
 	}
-	if strings.TrimSpace(response.DisplayResponse) != "" && !boundedRealtimeVoiceText(response.DisplayResponse, 1000) {
+	if strings.TrimSpace(response.DisplayResponse) != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
 		return ports.ErrInvalidProviderInput
 	}
 	return nil
 }
 
-func boundedRealtimeVoiceText(value string, limit int) bool {
+func safeRealtimeVoiceFinalText(value string, limit int) bool {
 	value = strings.TrimSpace(value)
-	return value != "" && len(value) <= limit
+	return value != "" && len(value) <= limit && !realtimeVoiceFinalTextLooksUnsafe(value)
 }
+
+func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	if strings.HasPrefix(normalized, "{") || strings.HasPrefix(normalized, "[") {
+		return true
+	}
+	for _, token := range []string{
+		"```",
+		"search_authorized_assets(",
+		"list_authorized_assets(",
+		"get_asset_detail(",
+		"list_asset_audit_history(",
+		"list_asset_checkout_history(",
+		"list_checked_out_assets(",
+		"propose_action_plan(",
+		"chain of thought",
+		"reasoning:",
+		"raw prompt",
+		"provider response",
+		"provider session",
+		"stack trace",
+		"raw transcript",
+		"raw audio",
+		"assetid",
+		"tool_call",
+		"functioncall",
+	} {
+		if strings.Contains(normalized, token) {
+			return true
+		}
+	}
+	return realtimeVoiceFinalSecretPattern.MatchString(value)
+}
+
+var realtimeVoiceFinalSecretPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+|bearer\s+[^"',\s}\]\)]+`)
 
 func realtimeVoiceErrorCode(err error) string {
 	var providerErr realtimeVoiceProviderStageError

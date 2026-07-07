@@ -641,7 +641,7 @@ The model must be instructed that `spokenResponse` is what the user will hear. I
 
 `displayResponse` may be the same as `spokenResponse` in the first slice.
 
-The final response must not include raw chain-of-thought, raw model reasoning, raw prompts, raw provider responses, raw transcripts, raw audio, credentials, bearer tokens, hidden resource data, or stack traces.
+The final response must not include raw chain-of-thought, raw model reasoning, raw prompts, raw provider responses, raw transcripts, raw audio, credentials, bearer tokens, hidden resource data, stack traces, tool-call syntax, raw JSON envelopes, or internal resource-key names such as `assetId`. The application final-response validator must reject unsafe `spokenResponse` and `displayResponse` content before any text is sent to text-to-speech or mobile response-completed events.
 
 ## Prompt Templates
 
