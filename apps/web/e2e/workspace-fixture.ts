@@ -656,7 +656,7 @@ function importJob(input: {
   return {
     id: input.id,
     status: input.status,
-    actorId: 'oidc_vZWJGXPHf8OYYeSghzupLo9vyyywfxu9DKltriM27O9',
+    actorId: 'principal-owner',
     source: {
       type: 'legacy_homebox',
       name: 'Homebox',

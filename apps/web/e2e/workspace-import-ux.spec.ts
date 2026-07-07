@@ -15,7 +15,7 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
   await expect(page.getByText('In progress')).toBeVisible();
   await expect(page.getByText('Importing photos and files')).toBeVisible();
-  await expect(page.getByText('Prepared by oidc_vZWJGXP...ltriM27O9').first()).toBeVisible();
+  await expect(page.getByText('Prepared by owner@example.com').first()).toBeVisible();
   await expect(page.getByText('stuff.jsksell.com').first()).toBeVisible();
   await expect(page.getByText('/api/v1')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Warnings/ })).toBeVisible();
@@ -28,6 +28,7 @@ test('desktop import surface scans like durable job history', async ({ page }, t
 
   await warningRow.getByRole('button', { name: /review details/i }).click();
   await expect(page.getByText('Asset appears to have already been imported')).toBeVisible();
+  await expect(page.getByText('Prepared by owner@example.com')).toBeVisible();
   await expect(page.getByText('Already linked to an earlier import')).toBeVisible();
   await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
   await expect(page.getByText('Source ID source-baby-hats')).toBeVisible();
