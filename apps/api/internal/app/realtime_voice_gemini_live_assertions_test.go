@@ -241,7 +241,7 @@ func assertLiveGeminiVoiceMoveToMissingNestedTitlesPlan(titles ...string) func(*
 	}
 }
 
-func assertLiveGeminiVoiceSingleExistingAssetPlan(kind actionplan.CommandKind, operation string, title string) func(*testing.T, RealtimeVoiceActionPlanProposal, []RealtimeVoiceEvent) {
+func assertLiveGeminiVoiceSingleExistingAssetPlan(kind actionplan.CommandKind, operation string, title string, assetKind string) func(*testing.T, RealtimeVoiceActionPlanProposal, []RealtimeVoiceEvent) {
 	return func(t *testing.T, proposed RealtimeVoiceActionPlanProposal, events []RealtimeVoiceEvent) {
 		t.Helper()
 
@@ -249,8 +249,8 @@ func assertLiveGeminiVoiceSingleExistingAssetPlan(kind actionplan.CommandKind, o
 			t.Fatalf("expected one %s command for %q, got %+v\n%s", operation, title, proposed, liveGeminiVoiceDiagnostics(events))
 		}
 		command := proposed.Commands[0]
-		if command.Kind != string(kind) || command.Operation != operation || !liveGeminiVoiceTitleContains(command.Title, title) {
-			t.Fatalf("expected %s %q command, got %+v\n%s", operation, title, command, liveGeminiVoiceDiagnostics(events))
+		if command.Kind != string(kind) || command.Operation != operation || !liveGeminiVoiceTitleContains(command.Title, title) || command.AssetKind != assetKind {
+			t.Fatalf("expected %s %q %s command, got %+v\n%s", operation, title, assetKind, command, liveGeminiVoiceDiagnostics(events))
 		}
 	}
 }
