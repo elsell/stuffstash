@@ -89,7 +89,7 @@
   }
 
   .preview-samples section {
-    border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid var(--border);
     display: grid;
     gap: 0.6rem;
     min-width: 0;
@@ -110,7 +110,7 @@
 
   .sample-heading small,
   .sample-row small {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.78rem;
   }
 
@@ -147,7 +147,7 @@
 
     .preview-samples section,
     .preview-samples section:nth-child(-n + 3) {
-      border-top: 1px solid hsl(var(--border));
+      border-top: 1px solid var(--border);
       padding-top: 0.75rem;
     }
 

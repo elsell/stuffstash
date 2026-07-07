@@ -22,13 +22,13 @@
   }
 
   .summary-grid div {
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.75rem;
   }
 
   .summary-grid div.muted-count {
-    background: hsl(var(--muted) / 0.25);
+    background: color-mix(in oklab, var(--muted) 25%, transparent);
   }
 
   .summary-grid strong {
@@ -37,7 +37,7 @@
   }
 
   .summary-grid span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.82rem;
   }
@@ -51,7 +51,7 @@
     .summary-grid div {
       align-items: baseline;
       border: 0;
-      border-top: 1px solid hsl(var(--border));
+      border-top: 1px solid var(--border);
       border-radius: 0;
       display: grid;
       gap: 0.75rem;

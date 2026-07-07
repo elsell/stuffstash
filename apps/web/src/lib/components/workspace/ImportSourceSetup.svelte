@@ -195,7 +195,7 @@
   }
 
   .field-note {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.82rem;
   }
 
@@ -212,7 +212,7 @@
   }
 
   .connection-summary {
-    border-left: 1px solid hsl(var(--border));
+    border-left: 1px solid var(--border);
     display: grid;
     gap: 0.55rem;
     padding-left: 0.75rem;
@@ -220,7 +220,7 @@
 
   .connection-summary span {
     align-items: center;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: flex;
     font-size: 0.82rem;
     gap: 0.5rem;
@@ -228,20 +228,20 @@
   }
 
   .advanced-options {
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.75rem;
   }
 
   .advanced-options summary {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     cursor: pointer;
     font-size: 0.88rem;
     font-weight: 600;
   }
 
   .advanced-options[open] summary {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     margin-bottom: 0.7rem;
   }
 
@@ -261,7 +261,7 @@
 
     .connection-summary {
       border-left: 0;
-      border-top: 1px solid hsl(var(--border));
+      border-top: 1px solid var(--border);
       padding-left: 0;
       padding-top: 0.75rem;
     }

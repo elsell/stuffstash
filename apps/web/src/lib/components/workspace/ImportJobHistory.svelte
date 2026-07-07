@@ -394,7 +394,7 @@
   }
 
   p {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin: 0.25rem 0 0;
   }
 
@@ -415,14 +415,14 @@
   }
 
   .current-work-section {
-    border: 1px solid hsl(var(--primary) / 0.18);
+    border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
     border-radius: 8px;
     padding: 0.75rem;
   }
 
   .attention-section {
-    background: hsl(var(--destructive) / 0.035);
-    border: 1px solid hsl(var(--destructive) / 0.22);
+    background: color-mix(in oklab, var(--destructive) 3.5%, transparent);
+    border: 1px solid color-mix(in oklab, var(--destructive) 22%, transparent);
     border-radius: 8px;
     padding: 0.75rem;
   }
@@ -434,8 +434,8 @@
 
   .attention-item {
     align-items: center;
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
+    background: var(--background);
+    border: 1px solid var(--border);
     border-radius: 8px;
     display: grid;
     gap: 0.75rem;
@@ -444,7 +444,7 @@
   }
 
   .attention-marker {
-    color: hsl(var(--destructive));
+    color: var(--destructive);
     display: grid;
     place-items: center;
   }
@@ -458,13 +458,13 @@
   .attention-body > span,
   .attention-body > small,
   .attention-overflow {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.82rem;
     overflow-wrap: anywhere;
   }
 
   .attention-body > span {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
 
   .history-status-strip {
@@ -477,9 +477,9 @@
 
   :global(.status-chip) {
     align-items: baseline;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 999px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: flex;
     font-size: 0.82rem;
     gap: 0.35rem;
@@ -488,19 +488,19 @@
   }
 
   :global(.status-chip.active) {
-    background: hsl(var(--primary) / 0.06);
-    border-color: hsl(var(--primary) / 0.28);
-    color: hsl(var(--foreground));
+    background: color-mix(in oklab, var(--primary) 6%, transparent);
+    border-color: color-mix(in oklab, var(--primary) 28%, transparent);
+    color: var(--foreground);
   }
 
   :global(.status-chip.warning) {
-    background: hsl(var(--destructive) / 0.06);
-    border-color: hsl(var(--destructive) / 0.28);
-    color: hsl(var(--destructive));
+    background: color-mix(in oklab, var(--destructive) 6%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 28%, transparent);
+    color: var(--destructive);
   }
 
   :global(.status-chip.selected) {
-    box-shadow: 0 0 0 2px hsl(var(--ring) / 0.18);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 18%, transparent);
   }
 
   :global(.status-chip span) {
@@ -508,20 +508,20 @@
   }
 
   :global(.status-chip strong) {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-weight: 700;
     line-height: 1;
     order: -1;
   }
 
   .job-main span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.82rem;
   }
 
   .active-status-icon {
-    color: hsl(var(--primary));
+    color: var(--primary);
     flex: 0 0 auto;
   }
 
@@ -531,7 +531,7 @@
   }
 
   .progress-track {
-    background: hsl(var(--muted));
+    background: var(--muted);
     border-radius: 999px;
     height: 0.45rem;
     margin-top: 0.45rem;
@@ -540,7 +540,7 @@
   }
 
   .progress-track span {
-    background: hsl(var(--primary));
+    background: var(--primary);
     display: block;
     height: 100%;
     transition: width 180ms ease;
@@ -563,13 +563,13 @@
 
   .progress-header span,
   .progress-header strong {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.76rem;
     line-height: 1.2;
   }
 
   .progress-header strong {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-weight: 650;
     white-space: nowrap;
   }
@@ -582,7 +582,7 @@
   }
 
   .history-meta {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem 0.65rem;
@@ -596,14 +596,14 @@
   }
 
   .history-meta span:not(:last-child)::after {
-    color: hsl(var(--border));
+    color: var(--border);
     content: "·";
     margin-left: 0.65rem;
   }
 
   .history-row {
     align-items: center;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 8px;
     display: grid;
     gap: 0.75rem;
@@ -624,7 +624,7 @@
   }
 
   .history-ledger-head {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0 0.8rem;
@@ -645,7 +645,7 @@
   .result-cell,
   .source-cell,
   .time-cell {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: grid;
     font-size: 0.82rem;
     gap: 0.18rem;
@@ -653,7 +653,7 @@
   }
 
   .result-cell span:first-child {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
 
   .result-cell span,
@@ -663,16 +663,16 @@
   }
 
   .history-row:hover {
-    background: hsl(var(--muted) / 0.25);
+    background: color-mix(in oklab, var(--muted) 25%, transparent);
   }
 
   .history-row.attention-row {
-    background: hsl(var(--destructive) / 0.026);
-    border-color: hsl(var(--destructive) / 0.3);
+    background: color-mix(in oklab, var(--destructive) 2.6%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 30%, transparent);
   }
 
   .attention-row .status-icon {
-    color: hsl(var(--destructive));
+    color: var(--destructive);
   }
 
   .row-actions {
@@ -683,7 +683,7 @@
   }
 
   .status-icon {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: grid;
     place-items: center;
   }
@@ -696,7 +696,7 @@
   }
 
   .empty-state-access-note {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.9rem;
     margin: 0;
   }

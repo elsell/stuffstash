@@ -124,27 +124,27 @@
   }
 
   .readiness-panel {
-    background: hsl(var(--primary) / 0.06);
-    border: 1px solid hsl(var(--primary) / 0.28);
+    background: color-mix(in oklab, var(--primary) 6%, transparent);
+    border: 1px solid color-mix(in oklab, var(--primary) 28%, transparent);
     border-radius: 8px;
     padding: 0.85rem;
   }
 
   .readiness-panel.needs-attention {
-    background: hsl(var(--destructive) / 0.06);
-    border-color: hsl(var(--destructive) / 0.3);
+    background: color-mix(in oklab, var(--destructive) 6%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 30%, transparent);
   }
 
   .readiness-panel span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.86rem;
     margin-top: 0.2rem;
   }
 
   .source-summary {
-    background: hsl(var(--muted) / 0.45);
-    border: 1px solid hsl(var(--border));
+    background: color-mix(in oklab, var(--muted) 45%, transparent);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.75rem;
   }
@@ -164,15 +164,15 @@
   }
 
   .source-option-list li {
-    border-left: 2px solid hsl(var(--border));
-    color: hsl(var(--foreground));
+    border-left: 2px solid var(--border);
+    color: var(--foreground);
     font-size: 0.78rem;
     line-height: 1.3;
     padding-left: 0.5rem;
   }
 
   .source-summary small {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.78rem;
   }
 
@@ -185,7 +185,7 @@
 
   .preview-section-heading {
     align-items: baseline;
-    border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid var(--border);
     display: flex;
     gap: 0.5rem;
     justify-content: space-between;
@@ -198,7 +198,7 @@
   }
 
   .preview-section-heading small {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.78rem;
   }
 

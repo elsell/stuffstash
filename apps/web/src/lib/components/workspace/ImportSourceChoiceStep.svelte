@@ -91,7 +91,7 @@
 
   .source-choice-grid small,
   .source-choice-grid em {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.85rem;
     font-weight: 400;
     line-height: 1.35;
@@ -99,7 +99,7 @@
   }
 
   .source-choice-grid em {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-size: 0.78rem;
     font-style: normal;
     font-weight: 600;

@@ -200,8 +200,8 @@
   }
 
   .issue-stat {
-    background: hsl(var(--muted) / 0.38);
-    border: 1px solid hsl(var(--border));
+    background: color-mix(in oklab, var(--muted) 38%, transparent);
+    border: 1px solid var(--border);
     border-radius: 8px;
     display: grid;
     gap: 0.15rem;
@@ -209,17 +209,17 @@
   }
 
   .issue-stat.warning {
-    background: hsl(var(--destructive) / 0.055);
-    border-color: hsl(var(--destructive) / 0.22);
+    background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 22%, transparent);
   }
 
   .issue-stat.blocking {
-    background: hsl(var(--destructive) / 0.09);
-    border-color: hsl(var(--destructive) / 0.32);
+    background: color-mix(in oklab, var(--destructive) 9%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 32%, transparent);
   }
 
   .issue-stat span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -244,12 +244,12 @@
 
   .message-overflow,
   .message-overflow-action span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.82rem;
   }
 
   .message-group {
-    border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid var(--border);
     display: grid;
     gap: 0.55rem;
     padding-top: 0.75rem;
@@ -261,7 +261,7 @@
   }
 
   .bounded-message-groups {
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 8px;
     display: grid;
     gap: 0.75rem;
@@ -295,7 +295,7 @@
 
   .message-group-heading span,
   .message-row small {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.78rem;
   }
 

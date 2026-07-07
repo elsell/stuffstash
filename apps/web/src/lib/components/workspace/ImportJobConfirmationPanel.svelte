@@ -118,13 +118,13 @@
   }
 
   :global(.confirmation-choice.danger) {
-    border-color: hsl(var(--destructive) / 0.45);
+    border-color: color-mix(in oklab, var(--destructive) 45%, transparent);
   }
 
   :global(.confirmation-choice.danger:hover),
   :global(.confirmation-choice.danger:focus-visible) {
-    background: hsl(var(--destructive) / 0.08);
-    color: hsl(var(--foreground));
+    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    color: var(--foreground);
   }
 
   :global(.confirmation-choice strong),
@@ -133,7 +133,7 @@
   }
 
   :global(.confirmation-choice span) {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.85rem;
     font-weight: 400;
     line-height: 1.35;
@@ -147,7 +147,7 @@
   }
 
   .confirmation-topline span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.85rem;
     margin-top: 0.15rem;

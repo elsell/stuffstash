@@ -798,7 +798,7 @@
   }
 
   .import-toolbar {
-    border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 1px solid var(--border);
     justify-content: space-between;
     padding-bottom: 0.9rem;
   }
@@ -822,24 +822,24 @@
   }
 
   p {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.95rem;
     margin: 0.25rem 0 0;
   }
 
   .import-alert {
-    background: hsl(var(--destructive) / 0.08);
-    border: 1px dashed hsl(var(--destructive) / 0.35);
+    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    border: 1px dashed color-mix(in oklab, var(--destructive) 35%, transparent);
     border-radius: 8px;
-    color: hsl(var(--destructive));
+    color: var(--destructive);
     padding: 1rem;
   }
 
   .import-notice {
-    background: hsl(var(--muted) / 0.55);
-    border: 1px solid hsl(var(--border));
+    background: color-mix(in oklab, var(--muted) 55%, transparent);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     padding: 1rem;
   }
 

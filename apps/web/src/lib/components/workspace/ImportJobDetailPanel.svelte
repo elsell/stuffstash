@@ -401,7 +401,7 @@
   }
 
   .job-heading span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.85rem;
     margin-top: 0.15rem;
@@ -409,7 +409,7 @@
   }
 
   .detail-hero {
-    border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 1px solid var(--border);
     display: grid;
     gap: 0.75rem;
     padding-bottom: 1rem;
@@ -422,8 +422,8 @@
   }
 
   .summary-tile {
-    background: hsl(var(--muted) / 0.38);
-    border: 1px solid hsl(var(--border));
+    background: color-mix(in oklab, var(--muted) 38%, transparent);
+    border: 1px solid var(--border);
     border-radius: 8px;
     display: grid;
     gap: 0.2rem;
@@ -432,12 +432,12 @@
   }
 
   .summary-tile.attention {
-    background: hsl(var(--destructive) / 0.055);
-    border-color: hsl(var(--destructive) / 0.22);
+    background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 22%, transparent);
   }
 
   .summary-tile span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0;
@@ -452,8 +452,8 @@
 
   .detail-attention-callout {
     align-items: center;
-    background: hsl(var(--destructive) / 0.055);
-    border: 1px solid hsl(var(--destructive) / 0.22);
+    background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
+    border: 1px solid color-mix(in oklab, var(--destructive) 22%, transparent);
     border-radius: 8px;
     display: grid;
     gap: 0.75rem;
@@ -462,7 +462,7 @@
   }
 
   :global(.attention-callout-icon) {
-    color: hsl(var(--destructive));
+    color: var(--destructive);
   }
 
   .detail-attention-callout div {
@@ -472,7 +472,7 @@
   }
 
   .detail-attention-callout span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.82rem;
   }
 
@@ -514,12 +514,12 @@
   }
 
   .detail-actions {
-    border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid var(--border);
     padding-top: 0.75rem;
   }
 
   .detail-topline span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.85rem;
     margin-top: 0.15rem;
@@ -527,7 +527,7 @@
   }
 
   .progress-track {
-    background: hsl(var(--muted));
+    background: var(--muted);
     border-radius: 999px;
     height: 0.45rem;
     margin-top: 0.45rem;
@@ -541,7 +541,7 @@
   }
 
   .progress-track span {
-    background: hsl(var(--primary));
+    background: var(--primary);
     display: block;
     height: 100%;
     transition: width 180ms ease;
@@ -591,7 +591,7 @@
   }
 
   .resource-overflow-action span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.82rem;
   }
 
@@ -600,7 +600,7 @@
   }
 
   .source-options-section {
-    border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid var(--border);
     display: grid;
     gap: 0.65rem;
     padding-top: 0.75rem;
@@ -615,8 +615,8 @@
   }
 
   .source-option-list li {
-    border-left: 2px solid hsl(var(--border));
-    color: hsl(var(--foreground));
+    border-left: 2px solid var(--border);
+    color: var(--foreground);
     font-size: 0.82rem;
     min-width: 0;
     overflow-wrap: anywhere;
@@ -639,7 +639,7 @@
 
   .sample-heading small,
   .sample-row small {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 0.78rem;
   }
 
@@ -651,7 +651,7 @@
   }
 
   .timeline-row > span {
-    background: hsl(var(--primary));
+    background: var(--primary);
     border-radius: 999px;
     height: 0.5rem;
     margin-top: 0.35rem;
@@ -664,7 +664,7 @@
   }
 
   .timeline-row small {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     overflow-wrap: anywhere;
   }
 
@@ -674,7 +674,7 @@
 
   .resource-row {
     align-items: center;
-    border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid var(--border);
     display: grid;
     gap: 0.5rem;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
@@ -695,7 +695,7 @@
   .resource-link,
   .detail-link {
     align-items: center;
-    color: hsl(var(--primary));
+    color: var(--primary);
     display: inline-flex;
     font-size: 0.85rem;
     font-weight: 600;
@@ -763,7 +763,7 @@
       align-items: baseline;
       background: transparent;
       border: 0;
-      border-top: 1px solid hsl(var(--border));
+      border-top: 1px solid var(--border);
       border-radius: 0;
       gap: 0.75rem;
       grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
@@ -776,11 +776,11 @@
 
     .summary-tile.attention {
       background: transparent;
-      border-color: hsl(var(--border));
+      border-color: var(--border);
     }
 
     .summary-tile.attention strong {
-      color: hsl(var(--destructive));
+      color: var(--destructive);
     }
 
     .summary-tile strong {

@@ -48,8 +48,8 @@
 
   .handoff-panel {
     align-items: center;
-    background: hsl(var(--primary) / 0.06);
-    border: 1px solid hsl(var(--primary) / 0.28);
+    background: color-mix(in oklab, var(--primary) 6%, transparent);
+    border: 1px solid color-mix(in oklab, var(--primary) 28%, transparent);
     border-radius: 8px;
     display: flex;
     gap: 0.75rem;
@@ -57,7 +57,7 @@
   }
 
   .handoff-panel span {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: block;
     font-size: 0.85rem;
     margin-top: 0.15rem;
