@@ -182,6 +182,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       responseKind: 'clarification',
+      clarificationFollowUpAvailable: true,
       progressLabel: 'Needs detail'
     });
 
@@ -190,6 +191,38 @@ describe('RealtimeVoiceSessionController', () => {
     const followUpStates = await controller.stopFollowUp();
     expect(transport.followUpAudio).toEqual([['ZmFrZS1hdWRpbw==']]);
     expect(followUpStates.at(-1)).toMatchObject({ status: 'completed' });
+  });
+
+  it('does not advertise same-session clarification follow-up when the transport cannot send it', async () => {
+    const transport = new FakeTransport([
+      {
+        type: 'assistant.response.completed',
+        seq: 1,
+        sessionId: 'session-1',
+        response: {
+          spokenResponse: 'Which item should I update?',
+          displayResponse: 'Which item should I update?',
+          kind: 'clarification'
+        }
+      },
+      { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+    ], { followUpAvailable: false });
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      responseKind: 'clarification',
+      clarificationFollowUpAvailable: false
+    });
+    expect(controller.canSendFollowUpAudio()).toBe(false);
   });
 
   it('bounds progress steps and collapses adjacent duplicate labels', async () => {
@@ -1167,7 +1200,10 @@ class FakeTransport implements RealtimeVoiceTransport {
   lastInput: unknown;
   followUpAudio: readonly string[][] = [];
 
-  constructor(private readonly events: readonly VoiceRealtimeEvent[]) {}
+  constructor(
+    private readonly events: readonly VoiceRealtimeEvent[],
+    private readonly options: { readonly followUpAvailable?: boolean } = {}
+  ) {}
 
   async run(input: Parameters<RealtimeVoiceTransport['run']>[0], onEvent: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void> {
     this.lastInput = input;
@@ -1177,7 +1213,7 @@ class FakeTransport implements RealtimeVoiceTransport {
   }
 
   canSendFollowUpAudio(): boolean {
-    return true;
+    return this.options.followUpAvailable ?? true;
   }
 
   async sendFollowUpAudio(audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void> {

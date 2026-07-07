@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { VoiceProviderReadinessError } from '../../application/providerProfiles/ProviderProfileVoiceReadinessCheck';
-import { applyRecordingLevelToRealtime, buildFailedVoiceRealtimeState } from './VoiceInteractionStateContext';
+import {
+  applyRecordingLevelToRealtime,
+  buildFailedVoiceRealtimeState,
+  refreshClarificationFollowUpAvailability
+} from './VoiceInteractionStateContext';
 
 describe('buildFailedVoiceRealtimeState', () => {
   it('keeps provider-readiness failures typed and safely summarized', () => {
@@ -58,5 +62,31 @@ describe('buildFailedVoiceRealtimeState', () => {
     }, 0.8)).not.toHaveProperty('recordingLevel');
 
     expect(applyRecordingLevelToRealtime(null, 0.8)).toBeNull();
+  });
+
+  it('removes completed clarification follow-up availability when the live transport is gone', () => {
+    expect(refreshClarificationFollowUpAvailability({
+      status: 'completed',
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Needs detail',
+      responseKind: 'clarification',
+      clarificationFollowUpAvailable: true,
+      debugEvents: []
+    }, false)).toMatchObject({
+      status: 'completed',
+      responseKind: 'clarification',
+      clarificationFollowUpAvailable: false
+    });
+
+    const answerState = {
+      status: 'completed' as const,
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Done',
+      responseKind: 'answer',
+      debugEvents: []
+    };
+    expect(refreshClarificationFollowUpAvailability(answerState, false)).toBe(answerState);
   });
 });

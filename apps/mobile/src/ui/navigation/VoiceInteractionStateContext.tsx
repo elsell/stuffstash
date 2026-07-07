@@ -99,6 +99,27 @@ export function VoiceInteractionStateProvider({
     };
   }, [realtimeController, stage]);
 
+  useEffect(() => {
+    if (
+      stage !== 'completed' ||
+      realtime?.responseKind !== 'clarification' ||
+      realtime.clarificationFollowUpAvailable !== true
+    ) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setRealtime((current) => refreshClarificationFollowUpAvailability(
+        current,
+        realtimeController.canSendFollowUpAudio()
+      ));
+    }, 500);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [realtime?.clarificationFollowUpAvailable, realtime?.responseKind, realtimeController, stage]);
+
   const value = useMemo<VoiceInteractionStateContextValue>(() => {
     const state: VoiceInteractionState =
       previewState.status === 'ready'
@@ -115,7 +136,10 @@ export function VoiceInteractionStateProvider({
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
         try {
-          const next = realtime?.status === 'completed' && realtime.responseKind === 'clarification' && realtimeController.canSendFollowUpAudio()
+          const next = realtime?.status === 'completed' &&
+            realtime.responseKind === 'clarification' &&
+            realtime.clarificationFollowUpAvailable === true &&
+            realtimeController.canSendFollowUpAudio()
             ? await realtimeController.startFollowUp()
             : await realtimeController.start();
           if (sessionGeneration.current !== generation) {
@@ -135,7 +159,9 @@ export function VoiceInteractionStateProvider({
         const generation = sessionGeneration.current;
         setStage('processing');
         try {
-          const shouldSendFollowUp = realtime?.responseKind === 'clarification' && realtimeController.canSendFollowUpAudio();
+          const shouldSendFollowUp = realtime?.responseKind === 'clarification' &&
+            realtime.clarificationFollowUpAvailable === true &&
+            realtimeController.canSendFollowUpAudio();
           const states = await (shouldSendFollowUp ? realtimeController.stopFollowUp : realtimeController.stop).call(realtimeController, (nextState: VoiceRealtimeState) => {
             if (sessionGeneration.current !== generation) {
               return;
@@ -259,6 +285,25 @@ export function applyRecordingLevelToRealtime(
   return current?.status === 'listening'
     ? { ...current, recordingLevel }
     : current;
+}
+
+export function refreshClarificationFollowUpAvailability(
+  current: VoiceRealtimeState | null,
+  canSendFollowUpAudio: boolean
+): VoiceRealtimeState | null {
+  if (
+    current?.status !== 'completed' ||
+    current.responseKind !== 'clarification' ||
+    current.clarificationFollowUpAvailable !== true ||
+    canSendFollowUpAudio
+  ) {
+    return current;
+  }
+
+  return {
+    ...current,
+    clarificationFollowUpAvailable: false
+  };
 }
 
 function readableError(error: unknown, fallback: string): string {

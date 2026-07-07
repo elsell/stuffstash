@@ -81,11 +81,11 @@ export function buildVoiceAccessoryPresentation({
   }
 
   if (stage === 'completed') {
-    if (realtime?.responseKind === 'clarification') {
+    if (hasAvailableClarificationFollowUp(realtime)) {
       return {
         accessibilityLabel: 'Open voice follow-up',
         primaryAction: 'expand',
-        subtitle: safeAccessorySubtitle(realtime.spokenResponse) ?? context,
+        subtitle: safeAccessorySubtitle(realtime?.spokenResponse) ?? context,
         title: 'Needs detail',
         tone: 'attention'
       };
@@ -452,7 +452,7 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
           ? 'Send voice request'
           : stage === 'ready' && !realtime
             ? 'Start voice interaction'
-            : stage === 'completed' && realtime?.responseKind === 'clarification'
+            : stage === 'completed' && hasAvailableClarificationFollowUp(realtime)
               ? 'Answer follow-up'
             : isWorking
               ? 'Voice request in progress'
@@ -468,14 +468,14 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
 }
 
 function titleForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): string {
-  if (stage === 'completed' && realtime?.responseKind === 'clarification') {
+  if (stage === 'completed' && hasAvailableClarificationFollowUp(realtime)) {
     return 'Needs detail';
   }
   return titleForStage(stage);
 }
 
 function bottomHintForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): string {
-  if (stage === 'completed' && realtime?.responseKind === 'clarification') {
+  if (stage === 'completed' && hasAvailableClarificationFollowUp(realtime)) {
     return 'Answer the follow-up to keep this conversation going.';
   }
   switch (stage) {
@@ -490,6 +490,10 @@ function bottomHintForState(stage: VoiceInteractionStage, realtime: VoiceRealtim
     default:
       return 'Keep this open while Stuff Stash works.';
   }
+}
+
+function hasAvailableClarificationFollowUp(realtime: VoiceRealtimeState | null | undefined): boolean {
+  return realtime?.responseKind === 'clarification' && realtime.clarificationFollowUpAvailable === true;
 }
 
 export function formatSafeDiagnosticEvent(event: VoiceSafeDiagnosticEvent): string {

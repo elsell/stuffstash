@@ -119,6 +119,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         progressLabel: 'Needs detail',
         responseKind: 'clarification',
+        clarificationFollowUpAvailable: true,
         spokenResponse: 'Which item should I update?',
         debugEvents: []
       },
@@ -197,6 +198,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         progressLabel: 'Needs detail',
         responseKind: 'clarification',
+        clarificationFollowUpAvailable: true,
         spokenResponse: 'Which item should I update?',
         debugEvents: []
       },
@@ -209,6 +211,45 @@ describe('VoiceSessionPresentation', () => {
     expect(session.bottomAction).toMatchObject({
       kind: 'session_controls',
       mic: { accessibilityLabel: 'Answer follow-up' }
+    });
+  });
+
+  it('does not advertise same-session follow-up after clarification availability is gone', () => {
+    const realtime = {
+      status: 'completed' as const,
+      tenantName: 'Main tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Needs detail',
+      responseKind: 'clarification',
+      clarificationFollowUpAvailable: false,
+      spokenResponse: 'Which item should I update?',
+      debugEvents: []
+    };
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime,
+      stage: 'completed',
+      status: 'ready'
+    })).toMatchObject({
+      accessibilityLabel: 'Open voice answer',
+      title: 'Answer ready'
+    });
+
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime,
+      stage: 'completed',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.title).toBe('Answer ready');
+    expect(session.bottomHint).toBe('You can ask another question or close this.');
+    expect(session.bottomAction).toMatchObject({
+      kind: 'session_controls',
+      mic: { accessibilityLabel: 'Start another voice interaction' }
     });
   });
 

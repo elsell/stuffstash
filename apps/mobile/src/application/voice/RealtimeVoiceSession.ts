@@ -176,6 +176,7 @@ export type VoiceRealtimeState = {
   readonly transcript?: string;
   readonly spokenResponse?: string;
   readonly responseKind?: string;
+  readonly clarificationFollowUpAvailable?: boolean;
   readonly conversationPhase?: VoiceConversationPhase;
   readonly progressLabel?: string;
   readonly debugEvents: readonly VoiceSafeDiagnosticEvent[];
@@ -313,6 +314,7 @@ export class RealtimeVoiceSessionController {
         this.activeRunAbortController = null;
       }
     }
+    this.syncFinalClarificationFollowUpAvailability(states, onState);
 
     return states;
   }
@@ -366,6 +368,7 @@ export class RealtimeVoiceSessionController {
       states.push(withProgressStep(states[0], 'Done', { status: 'completed' }));
       onState?.(states[1]);
     }
+    this.syncFinalClarificationFollowUpAvailability(states, onState);
     return states;
   }
 
@@ -518,7 +521,12 @@ export class RealtimeVoiceSessionController {
         await this.player.stop();
         return state.actionPlan
           ? withProgressStep(state, 'Review needed', { status: 'review' })
-          : withProgressStep(state, state.responseKind === 'clarification' ? 'Needs detail' : 'Done', { status: 'completed' });
+          : withProgressStep(state, state.responseKind === 'clarification' ? 'Needs detail' : 'Done', {
+              status: 'completed',
+              clarificationFollowUpAvailable: state.responseKind === 'clarification'
+                ? this.transport.canSendFollowUpAudio()
+                : undefined
+            });
       case 'session.cancelled':
         await this.player.stop();
         return withProgressStep(state, 'Cancelled', { status: 'cancelled', partialTranscript: undefined });
@@ -531,6 +539,25 @@ export class RealtimeVoiceSessionController {
           errorMessage: voiceFailureMessage(event.code, event.message, this.options.diagnosticsEnabled === true)
         });
     }
+  }
+
+  private syncFinalClarificationFollowUpAvailability(
+    states: VoiceRealtimeState[],
+    onState: VoiceRealtimeStateHandler | undefined
+  ): void {
+    const current = states[states.length - 1];
+    if (!current || current.status !== 'completed' || current.responseKind !== 'clarification') {
+      return;
+    }
+    const next = {
+      ...current,
+      clarificationFollowUpAvailable: this.transport.canSendFollowUpAudio()
+    };
+    if (next.clarificationFollowUpAvailable === current.clarificationFollowUpAvailable) {
+      return;
+    }
+    states.push(next);
+    onState?.(next);
   }
 
   private async selectedInventoryContext() {
