@@ -103,6 +103,7 @@ Asset search results:
 - Must include assets when the search query matches an assigned active tag display name or tag key.
 - Must not match archived tags.
 - Must preserve the existing tenant, inventory, lifecycle, checkout, and authorization filters before evaluating tag matches.
+- Web and mobile clients must present tag-backed search matches with user-facing labels such as `Tag`, not raw transport field names like `tag_display_name` or `tag_key`.
 
 Authorization:
 

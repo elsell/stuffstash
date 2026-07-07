@@ -7,6 +7,7 @@ import {
 	  searchCheckoutFilterOptions,
 	  searchFilterHref,
   searchLifecycleFilterOptions,
+  searchMatchFieldLabel,
   searchModeFilterOptions,
   searchPanelStatus
 } from './workspaceSearch';
@@ -187,6 +188,14 @@ describe('workspace search helpers', () => {
       message: 'No authorized assets matched this query.'
     });
     expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: 'box', resultCount: 1, lifecycleState: 'all' }).kind).toBe('none');
+  });
+
+  it('labels tag-backed search match fields for users', () => {
+    expect(searchMatchFieldLabel('tag_display_name')).toBe('Tag');
+    expect(searchMatchFieldLabel('tag_key')).toBe('Tag');
+    expect(searchMatchFieldLabel('title')).toBe('Title');
+    expect(searchMatchFieldLabel('attachment_file_name')).toBe('Attachment');
+    expect(searchMatchFieldLabel(undefined)).toBe('Match');
   });
 
   it('normalizes blank searches without calling the repository', async () => {

@@ -294,6 +294,23 @@ describe('SearchPanel', () => {
     expect(openedAssetIds).toEqual(['passport']);
   });
 
+  it('renders tag search matches with user-facing labels', () => {
+    const resultAsset = asset('tent', 'Family tent');
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: resultAsset,
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'tag_display_name', value: 'Camping' }]
+      }
+    ];
+    mountSearchPanel({ query: 'camping', results, suggestions: [], submitted: true });
+
+    expect(document.body.querySelector('.asset-row-meta')?.textContent).toContain('Tag');
+    expect(document.body.querySelector('.asset-row-meta')?.textContent).toContain('Camping');
+    expect(document.body.querySelector('.asset-row-meta')?.textContent).not.toContain('tag_display_name');
+  });
+
   it('routes location suggestions and results to the focused location surface', async () => {
     const locationAsset = asset('garage', 'Garage', 'location');
     const results: SearchResult[] = [

@@ -8,6 +8,7 @@
     searchAssetHref,
     searchCheckoutFilterOptions,
     searchLifecycleFilterOptions,
+    searchMatchFieldLabel,
     searchModeFilterOptions,
     searchPanelStatus
   } from '$lib/application/workspaceSearch';
@@ -286,7 +287,7 @@
             {/if}
           </span>
           <span class="asset-row-meta">
-            <small>{result.matches[0]?.field ?? 'match'}</small>
+            <small>{searchMatchFieldLabel(result.matches[0]?.field)}</small>
             <small>{result.matches[0]?.value ?? ''}</small>
           </span>
         </Button.Root>

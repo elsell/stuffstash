@@ -150,6 +150,36 @@ export function searchPanelStatus(input: {
   return { kind: 'none', title: '', message: '' };
 }
 
+export function searchMatchFieldLabel(field: string | undefined): string {
+  switch (field) {
+    case 'tag_display_name':
+    case 'tag_key':
+      return 'Tag';
+    case 'title':
+      return 'Title';
+    case 'description':
+      return 'Description';
+    case 'custom_field':
+      return 'Custom field';
+    case 'custom_asset_type_key':
+    case 'custom_asset_type_name':
+      return 'Asset type';
+    case 'attachment_file_name':
+      return 'Attachment';
+    case 'attachment_content_type':
+      return 'Attachment type';
+    case undefined:
+    case '':
+      return 'Match';
+    default:
+      return field
+        .split('_')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ') || 'Match';
+  }
+}
+
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {
   const query = input.query.trim();
   if (!query || !input.tenantId || !input.inventoryId) {
