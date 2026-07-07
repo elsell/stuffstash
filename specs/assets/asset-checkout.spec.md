@@ -175,6 +175,21 @@ Search results must include current checkout state when present.
 
 Search filtering must preserve tenant and inventory authorization rules. The search repository must receive authorized inventory candidates from the application service and must not decide authorization itself.
 
+## Web UX
+
+Checkout and return are primary web asset maintenance actions and must use the same domain semantics as mobile, REST, conversational flows, and MCP.
+
+Web requirements:
+
+- Checkout from asset detail must be one visible action when the asset is active and not currently checked out.
+- Return from asset detail must be one visible action when the asset is currently checked out.
+- Checkout and return details must be optional and must not block the fastest checkout or return path.
+- Asset cards, recent assets, search results, location contents, checked-out browsing surfaces, archived asset rows, and asset detail must show a compact checked-out indicator when an asset has an open checkout.
+- The checked-out indicator must not hide the asset's normal location or imply that the asset moved.
+- The selected-inventory browsing experience must provide a checked-out surface or filter that includes assets with open checkout records regardless of lifecycle.
+- The asset detail workspace must expose checkout history through the same safe-history design principles used for audit history: compact rows, safe actor labels, timestamps, and bounded details.
+- Checkout-aware search filters must be available from the web search experience without requiring users to know API query parameters.
+
 ## Mobile UX
 
 Checkout and return are primary mobile asset maintenance actions.

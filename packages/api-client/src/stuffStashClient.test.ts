@@ -167,6 +167,89 @@ describe('StuffStashClient', () => {
     expect(await requests[1]?.json()).toEqual({});
   });
 
+  it('lists checkout history and checked-out assets through inventory scoped routes', async () => {
+    const requests: Request[] = [];
+    const checkout = {
+      id: 'checkout-one',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      assetId: 'asset-one',
+      state: 'returned',
+      checkedOutAt: '2026-06-24T11:00:00Z',
+      checkedOutByPrincipalId: 'user-one',
+      checkoutDetails: 'using at bench',
+      returnedAt: '2026-06-24T12:00:00Z',
+      returnedByPrincipalId: 'user-two',
+      returnDetails: 'back in the bin',
+      createdAt: '2026-06-24T11:00:00Z',
+      updatedAt: '2026-06-24T12:00:00Z'
+    };
+    const checkedOutAsset = {
+      asset: {
+        id: 'asset-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        kind: 'item',
+        title: 'Socket set',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'archived',
+        customFields: {},
+        createdAt: '2026-06-20T10:00:00Z',
+        updatedAt: '2026-06-24T11:00:00Z',
+        currentCheckout: {
+          id: 'checkout-open',
+          state: 'open',
+          checkedOutAt: '2026-06-24T11:00:00Z',
+          checkedOutByPrincipalId: 'user-one'
+        }
+      },
+      checkout: {
+        id: 'checkout-open',
+        state: 'open',
+        checkedOutAt: '2026-06-24T11:00:00Z',
+        checkedOutByPrincipalId: 'user-one'
+      }
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.url.includes('/checkouts')) {
+          return Response.json({
+            data: [checkout],
+            meta: { pagination: { limit: 10, nextCursor: 'next-history', hasMore: true } }
+          });
+        }
+        return Response.json({
+          data: [checkedOutAsset],
+          meta: { pagination: { limit: 5, nextCursor: null, hasMore: false } }
+        });
+      }
+    });
+
+    await expect(client.listAssetCheckoutHistory('tenant-one', 'inventory-one', 'asset-one', 10, 'after-one')).resolves.toMatchObject({
+      items: [{ id: 'checkout-one', state: 'returned', checkoutDetails: 'using at bench', returnDetails: 'back in the bin' }],
+      pagination: { limit: 10, nextCursor: 'next-history', hasMore: true }
+    });
+    await expect(client.listCheckedOutAssets('tenant-one', 'inventory-one', 5)).resolves.toMatchObject({
+      items: [
+        {
+          asset: { id: 'asset-one', lifecycleState: 'archived', currentCheckout: { id: 'checkout-open', state: 'open' } },
+          checkout: { id: 'checkout-open', state: 'open' }
+        }
+      ],
+      pagination: { limit: 5, nextCursor: null, hasMore: false }
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/checkouts?limit=10&cursor=after-one',
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/checked-out-assets?limit=5'
+    ]);
+  });
+
   it('maps durable import jobs and sends job actions through inventory scoped routes', async () => {
     const requests: Request[] = [];
     const jobEnvelope = {

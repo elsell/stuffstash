@@ -125,6 +125,11 @@ export interface AssetCheckoutInput {
   details?: string;
 }
 
+export interface CheckedOutAsset {
+  asset: Asset;
+  checkout: CurrentCheckout;
+}
+
 export interface AssetPrimaryPhoto {
   id: string;
   fileName: string;
@@ -718,6 +723,38 @@ export class StuffStashClient {
       })
     );
     return mapAssetCheckout(envelope.data);
+  }
+
+  async listAssetCheckoutHistory(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<Page<AssetCheckout>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId, assetId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapAssetCheckout);
+  }
+
+  async listCheckedOutAssets(tenantId: string, inventoryId: string, limit = 50, cursor?: string): Promise<Page<CheckedOutAsset>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/checked-out-assets', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapCheckedOutAsset);
   }
 
   async searchAssets(tenantId: string, query: string, options: SearchAssetsOptions = {}): Promise<Page<AssetSearchResult>> {
@@ -1748,6 +1785,17 @@ function mapAssetCheckout(response: components['schemas']['AssetCheckoutResponse
     returnDetails: response.returnDetails,
     createdAt: response.createdAt,
     updatedAt: response.updatedAt
+  };
+}
+
+function mapCheckedOutAsset(response: components['schemas']['CheckedOutAssetResponse']): CheckedOutAsset {
+  const checkout = mapCurrentCheckout(response.checkout);
+  if (!checkout) {
+    throw new Error('Checked-out asset response is missing checkout state');
+  }
+  return {
+    asset: mapAsset(response.asset),
+    checkout
   };
 }
 
