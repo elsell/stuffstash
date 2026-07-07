@@ -57,6 +57,42 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('uses safe graph-loop phase labels in the collapsed accessory', () => {
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        conversationPhase: 'planning',
+        progressLabel: 'Preparing a safe plan.',
+        debugEvents: []
+      },
+      stage: 'processing',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Preparing plan',
+      subtitle: 'Current inventory',
+      tone: 'attention'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        conversationPhase: 'recovering',
+        progressLabel: 'Recovering safely.',
+        debugEvents: []
+      },
+      stage: 'processing',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Recovering safely'
+    });
+  });
+
   it('summarizes terminal realtime answers and failures in the collapsed accessory', () => {
     expect(buildVoiceAccessoryPresentation({
       pathname: '/locations/location-1',

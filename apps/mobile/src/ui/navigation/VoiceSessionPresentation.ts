@@ -153,9 +153,28 @@ function accessoryProgressTitle(realtime: VoiceRealtimeState | null | undefined)
     case 'speaking':
       return 'Speaking';
     case 'processing':
-      return 'Checking inventory';
+      return accessoryPhaseTitle(realtime.conversationPhase);
     case 'listening':
       return 'Listening';
+    default:
+      return 'Checking inventory';
+  }
+}
+
+function accessoryPhaseTitle(phase: VoiceRealtimeState['conversationPhase']): string {
+  switch (phase) {
+    case 'understanding':
+      return 'Understanding request';
+    case 'exploring':
+      return 'Checking inventory';
+    case 'planning':
+      return 'Preparing plan';
+    case 'reviewing':
+      return 'Preparing review';
+    case 'answering':
+      return 'Preparing answer';
+    case 'recovering':
+      return 'Recovering safely';
     default:
       return 'Checking inventory';
   }
