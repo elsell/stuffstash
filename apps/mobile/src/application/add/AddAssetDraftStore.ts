@@ -17,6 +17,7 @@ export type AddAssetDraft = {
   readonly parentAssetId?: string;
   readonly parentQuery: string;
   readonly selectedPhotos: readonly SelectedAssetPhoto[];
+  readonly selectedTagIds?: readonly string[];
   readonly showDetails: boolean;
   readonly lastParent?: AddAssetDraftParent;
 };

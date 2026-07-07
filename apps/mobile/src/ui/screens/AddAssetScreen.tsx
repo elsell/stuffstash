@@ -22,6 +22,7 @@ import {
   AddAssetDraftContext,
   AddAssetDraftStore
 } from '../../application/add/AddAssetDraftStore';
+import type { AssetTagSummary } from '../../domain/assets/AssetSummary';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import {
   ParentLookupQuery,
@@ -77,6 +78,7 @@ const emptyDraft: AddAssetDraft = {
   parentAssetId: undefined,
   parentQuery: '',
   selectedPhotos: [],
+  selectedTagIds: [],
   showDetails: false,
   lastParent: undefined
 };
@@ -105,6 +107,7 @@ export function AddAssetScreen({
   const [selectedPhotos, setSelectedPhotos] = useState<readonly SelectedAssetPhoto[]>(
     emptyDraft.selectedPhotos
   );
+  const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(emptyDraft.selectedTagIds ?? []);
   const [showDetails, setShowDetails] = useState(emptyDraft.showDetails);
   const [lastParent, setLastParent] = useState<ParentSelection | undefined>(emptyDraft.lastParent);
   const [isParentMenuOpen, setIsParentMenuOpen] = useState(false);
@@ -180,6 +183,7 @@ export function AddAssetScreen({
       parentAssetId,
       parentQuery,
       selectedPhotos,
+      selectedTagIds,
       showDetails,
       lastParent
     });
@@ -191,6 +195,7 @@ export function AddAssetScreen({
     parentAssetId,
     parentQuery,
     selectedPhotos,
+    selectedTagIds,
     showDetails,
     title
   ]);
@@ -246,6 +251,7 @@ export function AddAssetScreen({
         title,
         description,
         parentAssetId: resolvedParentAssetId,
+        tagIds: selectedTagIds,
         photos: selectedPhotos.map((photo) => ({
           fileName: photo.fileName,
           contentType: photo.contentType,
@@ -265,6 +271,7 @@ export function AddAssetScreen({
       setParentAssetId(nextParent?.id);
       setParentQuery(nextParent?.title ?? '');
       setSelectedPhotos([]);
+      setSelectedTagIds([]);
       setShowDetails(false);
       setLastParent(nextParent);
       if (draftContext) {
@@ -422,6 +429,7 @@ export function AddAssetScreen({
     setParentAssetId(draft.parentAssetId);
     setParentQuery(draft.parentQuery);
     setSelectedPhotos(draft.selectedPhotos);
+    setSelectedTagIds(draft.selectedTagIds ?? []);
     setShowDetails(draft.showDetails);
     setLastParent(draft.lastParent);
   }
@@ -545,6 +553,11 @@ export function AddAssetScreen({
                       placeholderTextColor={colors.textMuted}
                       style={[styles.input, styles.textArea]}
                       value={description}
+                    />
+                    <AssetTagPicker
+                      tags={loadState.dashboard.assetTags}
+                      selectedTagIds={selectedTagIds}
+                      onChange={setSelectedTagIds}
                     />
                     <Pressable
                       accessibilityRole="button"
@@ -945,6 +958,56 @@ function ParentPicker({
           Stuff Stash will turn {selectedParent.title} into a container for this item.
         </Text>
       ) : null}
+    </View>
+  );
+}
+
+function AssetTagPicker({
+  tags,
+  selectedTagIds,
+  onChange
+}: {
+  readonly tags: readonly AssetTagSummary[];
+  readonly selectedTagIds: readonly string[];
+  readonly onChange: (tagIds: readonly string[]) => void;
+}) {
+  if (tags.length === 0) {
+    return null;
+  }
+
+  const selected = new Set(selectedTagIds);
+
+  function toggleTag(tagId: string): void {
+    if (selected.has(tagId)) {
+      onChange(selectedTagIds.filter((current) => current !== tagId));
+      return;
+    }
+    onChange([...selectedTagIds, tagId]);
+  }
+
+  return (
+    <View style={styles.tagPicker}>
+      <Text style={styles.tagPickerTitle}>Tags</Text>
+      <View style={styles.tagOptions}>
+        {tags.map((tag) => {
+          const isSelected = selected.has(tag.id);
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              key={tag.id}
+              onPress={() => toggleTag(tag.id)}
+              style={[styles.tagOption, isSelected ? styles.tagOptionSelected : null]}
+            >
+              {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
+              <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
+                {tag.displayName}
+              </Text>
+              {isSelected ? <Check color={colors.action} size={14} strokeWidth={2.4} /> : null}
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -1350,6 +1413,56 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0
+  },
+  tagPicker: {
+    marginTop: spacing.sm
+  },
+  tagPickerTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0,
+    marginBottom: spacing.xs
+  },
+  tagOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.sm
+  },
+  tagOption: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 34,
+    maxWidth: '100%',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6
+  },
+  tagOptionSelected: {
+    borderColor: colors.action
+  },
+  tagSwatch: {
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 10,
+    width: 10
+  },
+  tagOptionText: {
+    color: colors.textMuted,
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0,
+    maxWidth: 180
+  },
+  tagOptionTextSelected: {
+    color: colors.text
   },
   clearDraftButton: {
     alignItems: 'center',
