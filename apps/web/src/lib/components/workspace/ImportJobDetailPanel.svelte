@@ -41,7 +41,7 @@
   import ImportMessagesList from './ImportMessagesList.svelte';
   import ImportPreviewSamples from './ImportPreviewSamples.svelte';
 
-  const COLLAPSED_RESOURCE_LIMIT = 12;
+  const RESOURCE_PAGE_SIZE = 25;
 
   type ImportResource = ImportJob['resources'][number];
 
@@ -81,16 +81,25 @@
     onRemove
   }: Props = $props();
 
-  let resourcesExpanded = $state(false);
+  let resourcePage = $state(0);
   let issueCount = $derived(issueTotalCount(job));
   let issueTone = $derived(importIssueTone(job));
-  let resourcesBounded = $derived(job.resources.length > COLLAPSED_RESOURCE_LIMIT);
-  let visibleResources = $derived(resourcesExpanded ? job.resources : job.resources.slice(0, COLLAPSED_RESOURCE_LIMIT));
-  let hiddenResourceCount = $derived(Math.max(0, job.resources.length - visibleResources.length));
+  let resourcePageCount = $derived(Math.max(1, Math.ceil(job.resources.length / RESOURCE_PAGE_SIZE)));
+  let visibleResourceStart = $derived(Math.min(resourcePage * RESOURCE_PAGE_SIZE, Math.max(0, job.resources.length - 1)));
+  let visibleResources = $derived(job.resources.slice(visibleResourceStart, visibleResourceStart + RESOURCE_PAGE_SIZE));
+  let visibleResourceEnd = $derived(Math.min(job.resources.length, visibleResourceStart + visibleResources.length));
+  let actor = $derived(actorSummary(job, currentPrincipal));
+  let visibleSourceOptions = $derived(sourceOptionsSummary(job).filter((option) => option !== 'Live Homebox connection'));
 
   $effect(() => {
     job.id;
-    resourcesExpanded = false;
+    resourcePage = 0;
+  });
+
+  $effect(() => {
+    if (resourcePage >= resourcePageCount) {
+      resourcePage = Math.max(0, resourcePageCount - 1);
+    }
   });
 
   function hasPreviewPlan(job: ImportJob): boolean {
@@ -131,18 +140,20 @@
         <div class="job-heading">
           <div>
             <strong>{job.source.name}</strong>
-            <span>{sourceDescription(job)}{actorSummary(job, currentPrincipal) ? ` · ${actorSummary(job, currentPrincipal)}` : ''}</span>
+            <span>{sourceDescription(job)}</span>
           </div>
           <Badge variant={job.status === 'failed' || job.status === 'discard_failed' ? 'destructive' : 'secondary'}>
             {statusLabel(job)}
           </Badge>
         </div>
-        <div class="detail-topline">
-          <div>
-            <strong>{phaseLabel(job)}</strong>
-            <span>{statusSentence(job)}</span>
+        {#if !isTerminal(job)}
+          <div class="detail-topline">
+            <div>
+              <strong>{phaseLabel(job)}</strong>
+              <span>{statusSentence(job)}</span>
+            </div>
           </div>
-        </div>
+        {/if}
         {#if !isTerminal(job)}
           <div
             class="progress-track large"
@@ -166,16 +177,14 @@
             <strong>{issueCount === 0 ? 'No issues' : issueTone === 'action' ? 'Action required' : issueCountSummary(job)}</strong>
           </div>
         </div>
-        {#if issueCount > 0}
+        {#if issueCount > 0 && selectedTab !== 'issues'}
           <div class={`detail-issue-callout ${issueTone}`}>
             <AlertCircle class="issue-callout-icon" size={18} aria-hidden="true" />
             <div>
               <strong>{issueCountSummary(job)}</strong>
-              <span>{issueTone === 'action' ? 'Open Issues to review what needs action.' : 'Open Issues to review warning groups before treating this import as clean.'}</span>
+              <span>{issueTone === 'action' ? 'Review the blocking items before relying on this run.' : 'Warnings do not block the import, but they should be reviewed.'}</span>
             </div>
-            {#if selectedTab !== 'issues'}
-              <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
-            {/if}
+            <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
           </div>
         {/if}
       </div>
@@ -251,52 +260,46 @@
                 <section class="detail-panel">
                   <div class="sample-heading">
                     <h3>Imported records</h3>
-                    {#if job.resources.length > COLLAPSED_RESOURCE_LIMIT}
-                      <small>{resourcesExpanded ? `${job.resources.length} records` : `Showing ${visibleResources.length} of ${job.resources.length}`}</small>
+                    {#if job.resources.length > RESOURCE_PAGE_SIZE}
+                      <small>{visibleResourceStart + 1}-{visibleResourceEnd} of {job.resources.length}</small>
                     {/if}
                   </div>
-                  <!-- svelte-ignore a11y_no_noninteractive_tabindex (bounded overflow regions need a keyboard focus target) -->
-                  <div
-                    id="imported-record-summaries"
-                    class={resourcesBounded ? 'sample-list resource-list bounded' : 'sample-list resource-list'}
-                    role={resourcesBounded ? 'region' : undefined}
-                    aria-label={resourcesBounded ? 'Imported record summaries' : undefined}
-                    tabindex={resourcesBounded ? 0 : undefined}
-                  >
+                  <div class="sample-list resource-list" role="table" aria-label="Imported records">
+                    <div class="resource-head" role="row">
+                      <span role="columnheader">Record</span>
+                      <span role="columnheader">Source</span>
+                      <span role="columnheader">Opened</span>
+                    </div>
                     {#each visibleResources as resource}
-                      <div class="sample-row resource-row">
+                      <div class="sample-row resource-row" role="row">
                         <span>{resourceLabel(resource)}</span>
                         <small>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</small>
                         {#if resourceCanOpen(job, resource)}
                           <a class="resource-link" href={resourceHref(resource)} onclick={(event) => onOpenResource(event, resource)}>Open</a>
+                        {:else}
+                          <span class="resource-empty-action">-</span>
                         {/if}
                       </div>
                     {/each}
                   </div>
-                  {#if hiddenResourceCount > 0}
+                  {#if job.resources.length > RESOURCE_PAGE_SIZE}
                     <div class="resource-overflow-action">
-                      <span>{hiddenResourceCount} more imported {hiddenResourceCount === 1 ? 'record' : 'records'} hidden.</span>
+                      <span>Page {resourcePage + 1} of {resourcePageCount}</span>
                       <Button.Root
                         variant="outline"
                         size="sm"
-                        aria-controls="imported-record-summaries"
-                        aria-expanded={resourcesExpanded}
-                        onclick={() => (resourcesExpanded = true)}
+                        disabled={resourcePage === 0}
+                        onclick={() => (resourcePage = Math.max(0, resourcePage - 1))}
                       >
-                        Show more records
+                        Previous
                       </Button.Root>
-                    </div>
-                  {:else if resourcesExpanded && job.resources.length > COLLAPSED_RESOURCE_LIMIT}
-                    <div class="resource-overflow-action">
-                      <span>All returned record summaries are shown.</span>
                       <Button.Root
                         variant="outline"
                         size="sm"
-                        aria-controls="imported-record-summaries"
-                        aria-expanded={resourcesExpanded}
-                        onclick={() => (resourcesExpanded = false)}
+                        disabled={resourcePage >= resourcePageCount - 1}
+                        onclick={() => (resourcePage = Math.min(resourcePageCount - 1, resourcePage + 1))}
                       >
-                        Show fewer
+                        Next
                       </Button.Root>
                     </div>
                   {/if}
@@ -336,16 +339,21 @@
         </div>
 
         <div class="detail-side" aria-label="Import controls and source">
-          <section class="source-options-section" aria-label="Import source options">
+          <section class="source-options-section" aria-label="Import run details">
             <div class="sample-heading">
-              <h3>Method</h3>
-              <small>{job.source.name}</small>
+              <h3>Source</h3>
+              <small>{sourceDescription(job)}</small>
             </div>
-            <ul class="source-option-list" aria-label="Selected source options">
-              {#each sourceOptionsSummary(job) as option}
-                <li>{option}</li>
-              {/each}
-            </ul>
+            {#if actor}
+              <p class="source-note">{actor}</p>
+            {/if}
+            {#if visibleSourceOptions.length > 0}
+              <ul class="source-option-list" aria-label="Selected source options">
+                {#each visibleSourceOptions as option}
+                  <li>{option}</li>
+                {/each}
+              </ul>
+            {/if}
           </section>
           {#if job.cancellationMode}
             <div class="quiet-row">
@@ -616,23 +624,18 @@
     gap: 0.45rem;
   }
 
-  .resource-list.bounded {
-    max-height: min(20rem, 45vh);
-    overflow-y: auto;
-    padding-right: 0.35rem;
-  }
-
   .resource-overflow-action {
     align-items: center;
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    justify-content: space-between;
+    justify-content: flex-end;
   }
 
   .resource-overflow-action span {
     color: var(--muted-foreground);
     font-size: 0.82rem;
+    margin-right: auto;
   }
 
   .timeline-list {
@@ -661,6 +664,13 @@
     min-width: 0;
     overflow-wrap: anywhere;
     padding: 0.2rem 0 0.2rem 0.55rem;
+  }
+
+  .source-note {
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    margin: 0;
+    overflow-wrap: anywhere;
   }
 
   .sample-heading {
@@ -721,7 +731,18 @@
     padding-top: 0.55rem;
   }
 
-  .resource-row:first-child {
+  .resource-head {
+    color: var(--muted-foreground);
+    display: grid;
+    font-size: 0.72rem;
+    font-weight: 700;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    padding-bottom: 0.15rem;
+    text-transform: uppercase;
+  }
+
+  .resource-row:nth-child(2) {
     border-top: 0;
     padding-top: 0;
   }
@@ -744,6 +765,11 @@
   }
 
   .resource-link {
+    justify-self: start;
+  }
+
+  .resource-empty-action {
+    color: var(--muted-foreground);
     justify-self: start;
   }
 

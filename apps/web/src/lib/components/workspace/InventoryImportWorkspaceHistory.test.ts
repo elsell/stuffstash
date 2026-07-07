@@ -308,7 +308,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
-      expect(document.body.textContent).toContain('Prepared by owner');
+      expect(historyLedgerText()).not.toContain('Prepared by owner');
     });
 
     buttonContaining('Details').click();
@@ -321,9 +321,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('2 assets skipped');
       expect(document.body.textContent).toContain('1 photo/file skipped');
       expect(document.body.textContent).toContain('2 warnings');
-      expect(document.body.textContent).toContain('Method');
-      expect(document.body.textContent).toContain('Live Homebox connection');
+      expect(document.body.textContent).toContain('Source');
+      expect(document.body.textContent).toContain('Prepared by owner');
       expect(document.body.textContent).not.toContain('Photos on');
+      expect(document.body.textContent).not.toContain('Live Homebox connection');
       expect(document.body.textContent).toContain('Private-network URLs allowed');
       expect(document.body.textContent).toContain('Self-signed TLS allowed');
       expect(document.body.textContent).toContain('Preview plan');
@@ -359,7 +360,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Prepared by owner@example.test');
+      expect(historyLedgerText()).not.toContain('Prepared by owner@example.test');
       expect(document.body.textContent).not.toContain('Prepared by owner ·');
     });
 
@@ -383,6 +384,12 @@ describe('InventoryImportWorkspace import history and progress', () => {
     }
 
     await mountImportWorkspace(new ResolvedActorImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Details').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Prepared by importer@example.test');
@@ -432,7 +439,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Completed with warnings.');
       expect(document.body.textContent).toContain('Completed');
       expect(document.body.textContent).toContain('Homebox');
-      expect(document.body.textContent).toContain('Prepared by owner');
+      expect(historyLedgerText()).not.toContain('Prepared by owner');
       expect(document.body.textContent).toContain('Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
       expect(document.body.textContent).not.toContain('No other import runs to show.');
@@ -502,7 +509,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Clean Homebox');
       expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).toContain('Action required');
-      expect(historyLedgerText()).toContain('Review before treating as clean');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('2 warnings');
       expect(buttonContaining('Review Details')).toBeTruthy();
       expect(historyLedgerText()).toContain('Clean Homebox');
       expect(historyLedgerText()).toContain('Completed with warnings.');
@@ -679,6 +687,12 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new LongActorImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
       expect(document.body.textContent).toContain('Prepared by oidc_vZWJGXP...ltriM27O9');
       expect(document.body.textContent).not.toContain('Prepared by signed-in user');
     });
@@ -689,7 +703,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Discarded');
+      expect(historyLedgerText()).toContain('Cancelled. Partial progress was discarded.');
     });
 
     buttonContaining('Details').click();
@@ -716,7 +730,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('This only removes the run from the import history list.');
       expect(document.body.textContent).toContain('Keep in history');
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
     });
 
     confirmationButton('Keep in history').click();
@@ -834,13 +848,13 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
-  it('keeps many imported record summaries visually bounded in job detail', async () => {
+  it('pages many imported record summaries in job detail', async () => {
     class ManyResourcefulImportJobRepository extends ResourcefulImportJobRepository {
       constructor(seedData: typeof seed) {
         super(seedData);
         this.job = {
           ...this.job,
-          resources: Array.from({ length: 18 }, (_, index) => ({
+          resources: Array.from({ length: 28 }, (_, index) => ({
             resourceType: 'asset' as const,
             resourceId: `asset-imported-${index + 1}`,
             displayName: `Imported record ${index + 1}`,
@@ -865,28 +879,25 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Records').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Showing 12 of 18');
-      expect(document.body.textContent).toContain('Imported record 12');
-      expect(document.body.textContent).not.toContain('Imported record 13');
-      expect(document.body.textContent).toContain('6 more imported records hidden.');
+      expect(document.body.textContent).toContain('1-25 of 28');
+      expect(document.body.textContent).toContain('Imported record 25');
+      expect(document.body.textContent).not.toContain('Imported record 26');
+      expect(document.body.textContent).toContain('Page 1 of 2');
     });
-    const recordRegion = document.body.querySelector<HTMLElement>('#imported-record-summaries');
-    expect(recordRegion?.getAttribute('role')).toBe('region');
-    expect(recordRegion?.getAttribute('aria-label')).toBe('Imported record summaries');
-    expect(recordRegion?.getAttribute('tabindex')).toBe('0');
-    expect(buttonContaining('Show more records').getAttribute('aria-controls')).toBe('imported-record-summaries');
-    expect(buttonContaining('Show more records').getAttribute('aria-expanded')).toBe('false');
+    expect(document.body.querySelector<HTMLElement>('.resource-list')?.getAttribute('role')).toBe('table');
+    expect(buttonContaining('Previous').disabled).toBe(true);
+    expect(buttonContaining('Next').disabled).toBe(false);
 
-    buttonContaining('Show more records').click();
+    buttonContaining('Next').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('18 records');
-      expect(document.body.textContent).toContain('Imported record 18');
-      expect(document.body.textContent).toContain('All returned record summaries are shown.');
+      expect(document.body.textContent).toContain('26-28 of 28');
+      expect(document.body.textContent).toContain('Imported record 28');
+      expect(document.body.textContent).not.toContain('Imported record 25');
+      expect(document.body.textContent).toContain('Page 2 of 2');
     });
-    expect(buttonContaining('Show fewer').getAttribute('aria-controls')).toBe('imported-record-summaries');
-    expect(buttonContaining('Show fewer').getAttribute('aria-expanded')).toBe('true');
-    expect(document.body.querySelector('.resource-list.bounded')).toBeTruthy();
+    expect(buttonContaining('Previous').disabled).toBe(false);
+    expect(buttonContaining('Next').disabled).toBe(true);
   });
 
   it('shows preview-preserved warnings in terminal import job detail', async () => {
@@ -903,8 +914,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Attachment could not be imported');
       expect(document.body.textContent).toContain('Homebox reported a file without downloadable bytes.');
       expect(document.body.textContent).toContain('receipt.png');
-      expect(document.body.textContent).toContain('Open Issues to review warning groups before treating this import as clean.');
-      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Open Issues to review warning groups before treating this import as clean.');
+      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
       expect(document.body.querySelector('.summary-tile.warning')).toBeTruthy();
       expect(document.body.textContent).not.toContain('No import messages.');
@@ -956,8 +967,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Attachment could not be imported');
-      expect(document.body.textContent).toContain('Open Issues to review warning groups before treating this import as clean.');
-      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Open Issues to review warning groups before treating this import as clean.');
+      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
     });
   });
@@ -1297,8 +1308,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('cleanup will retry');
-      expect(document.body.textContent).toContain('Open Issues to review what needs action.');
-      expect(document.body.querySelector('.detail-issue-callout.action')).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Open Issues to review what needs action.');
+      expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
       expect(document.body.querySelector('.summary-tile.action')).toBeTruthy();
       expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
     });

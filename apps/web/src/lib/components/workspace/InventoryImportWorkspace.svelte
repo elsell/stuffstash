@@ -386,8 +386,9 @@
     try {
       const detail = await repository.getImportJob(scope.tenantId, scope.inventoryId, job.id);
       if (sequence !== detailLoadSequence || !isCurrentScope(scope) || selectedJob?.id !== job.id) return;
-      selectedJob = detail;
-      jobs = jobs.map((candidate) => (candidate.id === detail.id ? detail : candidate));
+      const mergedDetail = { ...detail, actor: detail.actor ?? selectedJob.actor };
+      selectedJob = mergedDetail;
+      jobs = jobs.map((candidate) => (candidate.id === detail.id ? mergeImportJobDetailSnapshot(mergedDetail, candidate) : candidate));
     } catch {
       if (sequence !== detailLoadSequence || !isCurrentScope(scope) || selectedJob?.id !== job.id) return;
       notice = 'Import details could not be refreshed.';
@@ -616,6 +617,7 @@
     return {
       ...detail,
       ...summary,
+      actor: summary.actor ?? detail.actor,
       resources: summary.resources.length > 0 || summary.status === 'cancelled_discarded' ? summary.resources : detail.resources,
       messages: summary.messages.length > 0 ? summary.messages : detail.messages
     };

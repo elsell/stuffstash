@@ -19,6 +19,7 @@
     canRemoveJobFromHistory,
     historyCountSummary,
     importIssueTone,
+    issueCountSummary,
     isTerminal,
     jobTimeLabel,
     phaseLabel,
@@ -129,6 +130,12 @@
 
   function jobHasReviewWarnings(job: ImportJob): boolean {
     return importIssueTone(job) === 'warning';
+  }
+
+  function statusDetail(job: ImportJob): string {
+    if (jobRequiresAction(job)) return `${statusLabel(job)} · ${attentionSummary(job)}`;
+    if (jobHasReviewWarnings(job)) return `${statusSentence(job)} ${issueCountSummary(job)}`;
+    return statusSentence(job);
   }
 
   function openHistoryRow(event: MouseEvent, job: ImportJob): void {
@@ -352,9 +359,9 @@
       <div class="history-ledger" role="table" aria-label="Import history">
         <div class="history-ledger-head" role="row">
           <span role="columnheader">Source</span>
-          <span role="columnheader">Result</span>
-          <span role="columnheader">Issues</span>
-          <span role="columnheader">When</span>
+          <span role="columnheader">Status</span>
+          <span role="columnheader">Records</span>
+          <span role="columnheader">Completed</span>
           <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
@@ -383,32 +390,31 @@
                 <span>{sourceDescription(job)}</span>
               </div>
             </div>
-            <div class="result-cell" role="cell" data-cell-label="Result">
-              <span><Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge> {statusSentence(job)}</span>
-              <span>
-                {historyCountSummary(job)}
-                {#if job.cancellationMode === 'keep_partial_progress'} · Partial progress kept{/if}
-                {#if job.cancellationMode === 'discard_partial_progress'} · Partial progress discarded{/if}
-              </span>
-            </div>
-            <div class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} role="cell" data-cell-label="Issues">
+            <div class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} role="cell" data-cell-label="Status">
               {#if jobRequiresAction(job)}
                 <Badge variant="destructive">Action required</Badge>
-                <span>{attentionSummary(job)}</span>
               {:else if jobHasReviewWarnings(job)}
                 <Badge variant="secondary" class="warning-badge">Warnings</Badge>
-                <span>Review before treating as clean</span>
               {:else}
-                <span>No issues</span>
+                <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
               {/if}
+              <span>{statusDetail(job)}</span>
             </div>
-            <div class="time-cell" role="cell" data-cell-label="When">
+            <div class="result-cell" role="cell" data-cell-label="Records">
+              <span>
+                {historyCountSummary(job)}
+                {#if job.cancellationMode === 'keep_partial_progress'} · partial progress kept{/if}
+                {#if job.cancellationMode === 'discard_partial_progress'} · partial progress discarded{/if}
+              </span>
+            </div>
+            <div class="time-cell" role="cell" data-cell-label="Completed">
               {#if job.completedAt}
                 <span>{jobTimeLabel('', job.completedAt).trim()}</span>
               {:else if job.startedAt}
                 <span>{jobTimeLabel('', job.startedAt).trim()}</span>
+              {:else}
+                <span>{jobTimeLabel('', job.createdAt).trim()}</span>
               {/if}
-              {#if actorSummary(job, currentPrincipal)}<span>{actorSummary(job, currentPrincipal)}</span>{/if}
             </div>
             <div class="row-actions" role="cell" data-cell-label="Actions">
               <Button.Root
@@ -735,7 +741,7 @@
   .history-ledger .history-row {
     display: grid;
     gap: 0.65rem;
-    grid-template-columns: minmax(12rem, 1.12fr) minmax(14rem, 1.2fr) minmax(8.5rem, 0.72fr) minmax(8rem, 0.64fr) auto;
+    grid-template-columns: minmax(12rem, 1.2fr) minmax(10rem, 0.82fr) minmax(15rem, 1.25fr) minmax(8rem, 0.66fr) auto;
   }
 
   .history-ledger-head {
@@ -785,6 +791,10 @@
   .issue-cell {
     align-content: start;
     justify-items: start;
+  }
+
+  .result-cell span {
+    color: var(--foreground);
   }
 
   .issue-cell.warning span {

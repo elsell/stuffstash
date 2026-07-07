@@ -431,10 +431,10 @@ Imported-resource summaries must include only tenant/inventory/job-scoped resour
 The optional display name must be derived from the current Stuff Stash record when that record still exists, such as an asset title or attachment file name, and must not be accepted from arbitrary provider metadata.
 Imported-resource summaries must not include source credentials, bearer tokens, provider paths, storage keys, attachment bytes, encrypted payloads, or arbitrary provider internals.
 The first resource summary limit is implementation-defined and must be enforced at the import-owned repository/query boundary before application mapping or JSON response construction.
-The web UI must also keep the resource summary visually bounded when shown in job detail.
+The web UI must keep the resource summary visually bounded when shown in job detail. Large imported-record summaries should use pagination or an equivalent bounded table pattern rather than an expanding wall of rows.
 The import job API response must include the safe actor principal identifier when the job has an actor so import history can identify who started or prepared the job without exposing provider credentials or source internals.
 When the API can resolve the actor through the existing user profile repository, it must also include a safe actor summary with the principal ID and email so import history can show a user-facing label.
-The web UI must prefer a known user-facing actor label from the API actor summary or the signed-in user's email when the actor matches the current principal, before falling back to a compact opaque principal identifier.
+The web UI must prefer a known user-facing actor label from the API actor summary or the signed-in user's email when the actor matches the current principal, before falling back to a compact opaque principal identifier. Compact history rows may omit actor attribution when it would compete with source, status, record, and completion-time scanning; job detail, current work, or confirmation surfaces should still expose the actor when available.
 
 The import job API response must include a safe progress history for job detail.
 Progress history records must include only the phase, done count, total count, safe user-facing message, and update time.
