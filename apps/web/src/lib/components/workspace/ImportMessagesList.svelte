@@ -209,8 +209,12 @@
   }
 
   .issue-stat.warning {
-    background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
-    border-color: color-mix(in oklab, var(--destructive) 22%, transparent);
+    background: color-mix(in oklab, var(--color-warning) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning) 26%, transparent);
+  }
+
+  .issue-stat.warning strong {
+    color: var(--color-warning-foreground);
   }
 
   .issue-stat.blocking {

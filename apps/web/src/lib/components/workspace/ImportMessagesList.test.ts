@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import type { ImportMessage } from '$lib/domain/inventory';
 import ImportMessagesList from './ImportMessagesList.svelte';
+import importMessagesListSource from './ImportMessagesList.svelte?raw';
 
 let component: ReturnType<typeof mount> | null = null;
 
@@ -30,6 +31,8 @@ describe('ImportMessagesList', () => {
     });
 
     const groups = Array.from(document.body.querySelectorAll<HTMLElement>('.message-group'));
+    expect(document.body.querySelector('.issue-stat.warning')?.textContent).toContain('Warnings 4');
+    expect(document.body.querySelector('.issue-stat.blocking')?.textContent).toContain('Blocking 1');
     expect(groups).toHaveLength(4);
     expect(groups[0]?.textContent).toContain('Warning');
     expect(groups[0]?.textContent).toContain('Attachment could not be imported');
@@ -103,6 +106,16 @@ describe('ImportMessagesList', () => {
     expect(document.body.textContent).toContain('attachment-5.tiff');
     expect(document.body.textContent).toContain('Import warning group 15');
     expect(document.body.textContent).not.toContain('Import warning group 16');
+  });
+
+  it('keeps warning stats on warning tokens instead of destructive alarm tokens', () => {
+    const warningRule = importMessagesListSource.match(/\.issue-stat\.warning\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+    const warningStrongRule = importMessagesListSource.match(/\.issue-stat\.warning strong\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+
+    expect(warningRule).toContain('var(--color-warning)');
+    expect(warningRule).not.toContain('destructive');
+    expect(warningStrongRule).toContain('var(--color-warning-foreground)');
+    expect(warningStrongRule).not.toContain('destructive');
   });
 });
 
