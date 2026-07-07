@@ -523,6 +523,22 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(historyLedgerText()).toContain('Clean Homebox');
       expect(historyLedgerText()).toContain('Warnings');
       expect(historyLedgerText()).not.toContain('Action required');
+      expect(ledgerSourceNames()).toEqual(['Homebox', 'Clean Homebox']);
+      expect(columnHeader('Source')?.getAttribute('aria-sort')).toBe('none');
+    });
+
+    sortButton('source').click();
+
+    await waitFor(() => {
+      expect(columnHeader('Source')?.getAttribute('aria-sort')).toBe('ascending');
+      expect(ledgerSourceNames()).toEqual(['Clean Homebox', 'Homebox']);
+    });
+
+    sortButton('source').click();
+
+    await waitFor(() => {
+      expect(columnHeader('Source')?.getAttribute('aria-sort')).toBe('descending');
+      expect(ledgerSourceNames()).toEqual(['Homebox', 'Clean Homebox']);
     });
 
     buttonContaining('Review Details').click();
@@ -1487,6 +1503,28 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
 function historyLedgerText(): string {
   return document.body.querySelector('.history-ledger')?.textContent ?? '';
+}
+
+function ledgerSourceNames(): string[] {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('.history-ledger .history-row .history-title strong')).map((node) =>
+    node.textContent?.trim() ?? ''
+  );
+}
+
+function columnHeader(text: string): HTMLElement | null {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('.history-ledger-head [role="columnheader"]')).find((node) =>
+    node.textContent?.includes(text)
+  ) ?? null;
+}
+
+function sortButton(label: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('.history-ledger-head button')).find((candidate) =>
+    candidate.getAttribute('aria-label')?.includes(label)
+  );
+  if (!button) {
+    throw new Error(`Missing sort button containing ${label}`);
+  }
+  return button;
 }
 
 function confirmationButton(text: string): HTMLButtonElement {

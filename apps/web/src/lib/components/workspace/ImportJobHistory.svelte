@@ -6,6 +6,7 @@
   import Eye from '@lucide/svelte/icons/eye';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import Plus from '@lucide/svelte/icons/plus';
+  import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import XCircle from '@lucide/svelte/icons/x-circle';
   import type { ImportJob, Principal } from '$lib/domain/inventory';
@@ -35,6 +36,8 @@
   } from './importWorkspacePresentation';
 
   type HistoryFilter = 'all' | 'current' | 'drafts' | 'attention' | 'warnings' | 'completed';
+  type HistorySortKey = 'priority' | 'source' | 'status' | 'changed' | 'finished';
+  type HistorySortDirection = 'asc' | 'desc';
 
   type Props = {
     jobs: ImportJob[];
@@ -75,8 +78,10 @@
   }: Props = $props();
 
   let historyFilter = $state<HistoryFilter>('all');
+  let historySortKey = $state<HistorySortKey>('priority');
+  let historySortDirection = $state<HistorySortDirection>('desc');
   let warningJobs = $derived(terminalJobs.filter(jobHasReviewWarnings));
-  let sortedTerminalJobs = $derived([...terminalJobs].sort(compareTerminalJobs));
+  let sortedTerminalJobs = $derived(sortTerminalJobs(terminalJobs));
   let filteredTerminalJobs = $derived(
     historyFilter === 'attention'
       ? sortedTerminalJobs.filter(jobRequiresAction)
@@ -89,10 +94,67 @@
           : sortedTerminalJobs
   );
 
+  function sortTerminalJobs(jobs: ImportJob[]): ImportJob[] {
+    return [...jobs].sort(compareTerminalJobs);
+  }
+
   function compareTerminalJobs(left: ImportJob, right: ImportJob): number {
+    if (historySortKey !== 'priority') {
+      const sorted = compareBySelectedSort(left, right);
+      if (sorted !== 0) return historySortDirection === 'asc' ? sorted : -sorted;
+    }
     const severityDelta = severityRank(right) - severityRank(left);
     if (severityDelta !== 0) return severityDelta;
     return jobSortTime(right) - jobSortTime(left);
+  }
+
+  function compareBySelectedSort(left: ImportJob, right: ImportJob): number {
+    if (historySortKey === 'source') return sourceSortValue(left).localeCompare(sourceSortValue(right));
+    if (historySortKey === 'status') return statusSortValue(left).localeCompare(statusSortValue(right));
+    if (historySortKey === 'changed') return changedRecordCount(left) - changedRecordCount(right);
+    if (historySortKey === 'finished') return jobSortTime(left) - jobSortTime(right);
+    return 0;
+  }
+
+  function sourceSortValue(job: ImportJob): string {
+    return `${job.source.name} ${sourceDescription(job)}`.toLocaleLowerCase();
+  }
+
+  function statusSortValue(job: ImportJob): string {
+    return `${severityRank(job)} ${statusLabel(job)} ${statusDetail(job)}`.toLocaleLowerCase();
+  }
+
+  function changedRecordCount(job: ImportJob): number {
+    if (job.status === 'cancelled_discarded') {
+      return job.counts.recordsDiscarded + job.counts.sourceLinksDiscarded;
+    }
+    return (
+      job.counts.fieldsCreated +
+      job.counts.locationsCreated +
+      job.counts.assetsCreated +
+      job.counts.attachmentsCreated +
+      job.counts.assetsSkipped +
+      job.counts.attachmentsSkipped
+    );
+  }
+
+  function setHistorySort(key: Exclude<HistorySortKey, 'priority'>): void {
+    if (historySortKey === key) {
+      historySortDirection = historySortDirection === 'asc' ? 'desc' : 'asc';
+      return;
+    }
+    historySortKey = key;
+    historySortDirection = key === 'finished' || key === 'changed' ? 'desc' : 'asc';
+  }
+
+  function sortButtonLabel(key: Exclude<HistorySortKey, 'priority'>, label: string): string {
+    if (historySortKey !== key) return `Sort by ${label}`;
+    return `Sort by ${label}, ${historySortDirection === 'asc' ? 'ascending' : 'descending'}`;
+  }
+
+  function sortIndicator(key: Exclude<HistorySortKey, 'priority'>): string {
+    if (historySortKey !== key) return '';
+    return historySortDirection === 'asc' ? 'Ascending' : 'Descending';
   }
 
   function severityRank(job: ImportJob): number {
@@ -364,10 +426,34 @@
       </div>
       <div class="history-ledger" role="table" aria-label="Import history">
         <div class="history-ledger-head" role="row">
-          <span role="columnheader">Source</span>
-          <span role="columnheader">Status</span>
-          <span role="columnheader">Changed</span>
-          <span role="columnheader">Finished</span>
+          <span role="columnheader" aria-sort={historySortKey === 'source' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('source')} aria-label={sortButtonLabel('source', 'source')}>
+              Source
+              <ArrowUpDown size={12} aria-hidden="true" />
+              {#if sortIndicator('source')}<small>{sortIndicator('source')}</small>{/if}
+            </Button.Root>
+          </span>
+          <span role="columnheader" aria-sort={historySortKey === 'status' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('status')} aria-label={sortButtonLabel('status', 'status')}>
+              Status
+              <ArrowUpDown size={12} aria-hidden="true" />
+              {#if sortIndicator('status')}<small>{sortIndicator('status')}</small>{/if}
+            </Button.Root>
+          </span>
+          <span role="columnheader" aria-sort={historySortKey === 'changed' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('changed')} aria-label={sortButtonLabel('changed', 'changed records')}>
+              Changed
+              <ArrowUpDown size={12} aria-hidden="true" />
+              {#if sortIndicator('changed')}<small>{sortIndicator('changed')}</small>{/if}
+            </Button.Root>
+          </span>
+          <span role="columnheader" aria-sort={historySortKey === 'finished' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('finished')} aria-label={sortButtonLabel('finished', 'finished time')}>
+              Finished
+              <ArrowUpDown size={12} aria-hidden="true" />
+              {#if sortIndicator('finished')}<small>{sortIndicator('finished')}</small>{/if}
+            </Button.Root>
+          </span>
           <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
@@ -755,8 +841,28 @@
     color: var(--muted-foreground);
     font-size: 0.75rem;
     font-weight: 700;
-    padding: 0 0.72rem;
+    padding: 0 0.4rem;
     text-transform: uppercase;
+  }
+
+  :global(.ledger-sort-button) {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    gap: 0.25rem;
+    height: 1.65rem;
+    justify-content: flex-start;
+    letter-spacing: inherit;
+    padding: 0 0.32rem;
+    text-transform: inherit;
+  }
+
+  :global(.ledger-sort-button small) {
+    color: var(--foreground);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .history-row > div {
