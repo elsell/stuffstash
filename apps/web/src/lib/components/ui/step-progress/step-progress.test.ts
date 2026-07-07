@@ -20,6 +20,8 @@ describe('StepProgress', () => {
 
     const progress = document.body.querySelector<HTMLOListElement>('ol[aria-label="Onboarding progress"]');
     expect(progress).not.toBeNull();
+    expect(progress?.dataset.orientation).toBe('horizontal');
+    expect(progress?.dataset.density).toBe('compact');
     expect(progress?.style.getPropertyValue('--step-count')).toBe('4');
     expect(progress?.querySelectorAll('.step-progress-marker')).toHaveLength(4);
     expect(progress?.querySelectorAll('.step-progress-item.complete')).toHaveLength(2);
@@ -35,16 +37,33 @@ describe('StepProgress', () => {
       props: { onNavigateStep }
     });
 
-    expect(buttonsNamed('Account')).toHaveLength(1);
-    expect(buttonsNamed('Home')).toHaveLength(1);
-    expect(buttonsNamed('Invite')).toHaveLength(1);
-    expect(buttonsNamed('Done')).toHaveLength(0);
+    expect(buttonsNamed(/Go to Account, completed step/)).toHaveLength(1);
+    expect(buttonsNamed(/Go to Account, completed step\. Create your profile/)).toHaveLength(1);
+    expect(buttonsNamed(/Go to Home, completed step/)).toHaveLength(1);
+    expect(buttonsNamed(/Invite, current step\. Invite trusted people/)).toHaveLength(1);
+    expect(buttonsNamed(/Done/)).toHaveLength(0);
 
-    buttonsNamed('Home')[0]?.click();
+    buttonsNamed(/Go to Home, completed step/)[0]?.click();
     expect(onNavigateStep).toHaveBeenCalledWith('home');
+  });
+
+  it('supports a comfortable vertical layout for longer setup flows', () => {
+    component = mount(StepProgressHarness, {
+      target: document.body,
+      props: { orientation: 'vertical', density: 'comfortable' }
+    });
+
+    const progress = document.body.querySelector<HTMLOListElement>('ol[aria-label="Onboarding progress"]');
+    expect(progress?.dataset.orientation).toBe('vertical');
+    expect(progress?.dataset.density).toBe('comfortable');
+    expect(progress?.querySelector('[data-step-id="account"] .step-progress-description')?.textContent).toContain(
+      'Create your profile'
+    );
   });
 });
 
-function buttonsNamed(label: string): HTMLButtonElement[] {
-  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).filter((button) => button.textContent?.trim() === label);
+function buttonsNamed(label: RegExp): HTMLButtonElement[] {
+  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).filter((button) =>
+    label.test(button.getAttribute('aria-label') ?? '')
+  );
 }

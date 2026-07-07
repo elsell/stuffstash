@@ -644,17 +644,17 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     await waitFor(() => {
       expect(buttonContaining('Confirm connection').disabled).toBe(false);
     });
-    expect(buttonsNamed('Preview')).toHaveLength(0);
+    expect(stepButton('Preview')).toBeUndefined();
 
     buttonContaining('Confirm connection').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Preview import');
       expect(buttonContaining('Start background import').disabled).toBe(false);
-      expect(buttonsNamed('Preview')).toHaveLength(1);
+      expect(stepButton('Preview')).toBeTruthy();
     });
 
-    exactButton('Connect').click();
+    requiredStepButton('Connect').click();
     await waitFor(() => {
       expect(document.body.textContent).toContain('Connect to Homebox');
       expect(document.body.querySelector<HTMLInputElement>('#homebox-url')?.value).toBe('http://homebox.local:7744');
@@ -662,14 +662,14 @@ describe('InventoryImportWorkspace import setup and preview', () => {
       expect(document.body.querySelector<HTMLInputElement>('#homebox-password')?.value).toBe('asldfj3290f!');
     });
 
-    exactButton('Preview').click();
+    requiredStepButton('Preview').click();
     await waitFor(() => {
       expect(document.body.textContent).toContain('Preview import');
       expect(buttonContaining('Start background import').disabled).toBe(false);
     });
     expect(repository.previewInputs).toHaveLength(1);
 
-    exactButton('Source').click();
+    requiredStepButton('Source').click();
     await waitFor(() => {
       expect(document.body.textContent).toContain('Choose import method');
     });
@@ -729,4 +729,19 @@ function buttonsNamed(label: string): HTMLButtonElement[] {
 
 function buttonsNamedWithin(container: ParentNode, label: string): HTMLButtonElement[] {
   return Array.from(container.querySelectorAll<HTMLButtonElement>('button')).filter((button) => button.textContent?.trim() === label);
+}
+
+function stepButton(label: string): HTMLButtonElement | undefined {
+  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('.step-progress button')).find((button) => {
+    const accessibleLabel = button.getAttribute('aria-label') ?? '';
+    return accessibleLabel.startsWith(`${label}, `) || accessibleLabel.startsWith(`Go to ${label}, `);
+  });
+}
+
+function requiredStepButton(label: string): HTMLButtonElement {
+  const button = stepButton(label);
+  if (!button) {
+    throw new Error(`Missing reachable step ${label}`);
+  }
+  return button;
 }

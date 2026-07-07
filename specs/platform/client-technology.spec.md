@@ -44,6 +44,7 @@ For the SvelteKit app, this means:
 - Keep Stuff Stash brand tokens, accessibility expectations, and performance budgets above component-library defaults.
 - Prefer shadcn primitives for common controls such as buttons, inputs, dialogs, tabs, menus, badges, tables, toasts, and form controls once the library is introduced.
 - Custom UI remains appropriate for product-specific surfaces such as the conversational command affordance, asset photo treatment, action previews, and inventory-specific empty states.
+- Multi-step task progress must be implemented as reusable workflow primitives rather than one-off page styling when the pattern applies across product flows such as import, onboarding, or setup. These primitives must expose domain-neutral step models, preserve accessible current-step and navigation semantics, support compact and comfortable density, and keep connector/marker geometry structurally aligned instead of relying on page-specific visual offsets.
 
 The current hand-written tracer-bullet product components may remain only when they represent product-specific composition, not reusable UI primitives. Generic controls such as buttons, inputs, text areas, selects, tabs, badges, and panel/card surfaces must use the shadcn-style primitives after the foundation exists.
 

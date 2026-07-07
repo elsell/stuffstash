@@ -785,7 +785,7 @@ export function buttonContaining(text: string): HTMLButtonElement {
 
 export function exactButton(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
-    (candidate) => candidate.textContent?.trim() === text
+    (candidate) => candidate.textContent?.trim() === text || candidate.getAttribute('aria-label') === text
   );
   if (!button) {
     throw new Error(`Missing button exactly matching ${text}`);

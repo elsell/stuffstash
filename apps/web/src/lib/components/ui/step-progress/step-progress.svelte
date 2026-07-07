@@ -2,9 +2,12 @@
   export type StepProgressStep = {
     id: string;
     label: string;
+    description?: string;
   };
 
   export type StepProgressState = 'complete' | 'current' | 'upcoming';
+  export type StepProgressOrientation = 'horizontal' | 'vertical';
+  export type StepProgressDensity = 'compact' | 'comfortable';
 </script>
 
 <script lang="ts">
@@ -16,10 +19,20 @@
     current: string;
     reachableStepIds?: string[];
     ariaLabel?: string;
+    orientation?: StepProgressOrientation;
+    density?: StepProgressDensity;
     onNavigateStep?: (stepId: string) => void;
   };
 
-  let { steps, current, reachableStepIds = [], ariaLabel = 'Progress', onNavigateStep }: Props = $props();
+  let {
+    steps,
+    current,
+    reachableStepIds = [],
+    ariaLabel = 'Progress',
+    orientation = 'horizontal',
+    density = 'compact',
+    onNavigateStep
+  }: Props = $props();
   let currentIndex = $derived(Math.max(0, steps.findIndex((step) => step.id === current)));
   let reachableSet = $derived(new Set(reachableStepIds));
 
@@ -32,9 +45,26 @@
   function canNavigate(step: StepProgressStep): boolean {
     return Boolean(onNavigateStep && reachableSet.has(step.id));
   }
+
+  function stateLabel(state: StepProgressState): string {
+    if (state === 'complete') return 'Completed';
+    if (state === 'current') return 'Current';
+    return 'Not started';
+  }
+
+  function navigationLabel(step: StepProgressStep, state: StepProgressState): string {
+    const prefix = state === 'current' ? `${step.label}, current step` : `Go to ${step.label}, ${stateLabel(state).toLowerCase()} step`;
+    return step.description ? `${prefix}. ${step.description}` : prefix;
+  }
 </script>
 
-<ol class="step-progress" style:--step-count={Math.max(steps.length, 1)} aria-label={ariaLabel}>
+<ol
+  class="step-progress"
+  style:--step-count={Math.max(steps.length, 1)}
+  aria-label={ariaLabel}
+  data-orientation={orientation}
+  data-density={density}
+>
   {#each steps as step, index}
     {@const state = stepState(index)}
     {@const navigable = canNavigate(step)}
@@ -42,6 +72,7 @@
       class={`step-progress-item ${state} ${navigable ? 'navigable' : 'locked'}`}
       data-state={state}
       data-reachable={navigable}
+      data-step-id={step.id}
       aria-current={state === 'current' ? 'step' : undefined}
     >
       {#if navigable}
@@ -49,7 +80,7 @@
           type="button"
           variant="ghost"
           class="step-progress-control"
-          aria-label={state === 'current' ? `${step.label}, current step` : step.label}
+          aria-label={navigationLabel(step, state)}
           onclick={() => onNavigateStep?.(step.id)}
         >
           <span class="step-progress-marker" aria-hidden="true">
@@ -59,7 +90,13 @@
               <span class="step-progress-current-dot"></span>
             {/if}
           </span>
-          <span class="step-progress-label">{step.label}</span>
+          <span class="step-progress-copy">
+            <span class="step-progress-label">{step.label}</span>
+            {#if step.description}
+              <span class="step-progress-description">{step.description}</span>
+            {/if}
+            <span class="step-progress-state">{stateLabel(state)}</span>
+          </span>
         </Button.Root>
       {:else}
         <span class="step-progress-control locked-control" aria-disabled="true">
@@ -70,7 +107,13 @@
               <span class="step-progress-current-dot"></span>
             {/if}
           </span>
-          <span class="step-progress-label">{step.label}</span>
+          <span class="step-progress-copy">
+            <span class="step-progress-label">{step.label}</span>
+            {#if step.description}
+              <span class="step-progress-description">{step.description}</span>
+            {/if}
+            <span class="step-progress-state">{stateLabel(state)}</span>
+          </span>
         </span>
       {/if}
     </li>
@@ -79,6 +122,10 @@
 
 <style>
   .step-progress {
+    --step-progress-marker-size: 1.35rem;
+    --step-progress-marker-ring: 0.25rem;
+    --step-progress-rail-size: 2px;
+    --step-progress-rail-offset: calc(var(--step-progress-marker-size) / 2 - var(--step-progress-rail-size) / 2);
     align-items: start;
     color: var(--muted-foreground);
     display: grid;
@@ -89,20 +136,40 @@
     padding: 0;
   }
 
+  .step-progress[data-density='comfortable'] {
+    --step-progress-marker-size: 1.55rem;
+    --step-progress-marker-ring: 0.3rem;
+  }
+
+  .step-progress[data-orientation='vertical'] {
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .step-progress-item {
     display: grid;
     min-width: 0;
     position: relative;
   }
 
-  .step-progress-item:not(:last-child)::after {
+  .step-progress[data-orientation='horizontal'] .step-progress-item:not(:last-child)::after {
     background: var(--border);
     content: "";
-    height: 2px;
-    left: calc(50% + 0.675rem);
+    height: var(--step-progress-rail-size);
+    left: calc(50% + var(--step-progress-marker-size) / 2);
     position: absolute;
-    right: calc(-50% + 0.675rem);
-    top: 0.66rem;
+    right: calc(-50% + var(--step-progress-marker-size) / 2);
+    top: var(--step-progress-rail-offset);
+  }
+
+  .step-progress[data-orientation='vertical'] .step-progress-item:not(:last-child)::after {
+    background: var(--border);
+    bottom: calc(-0.75rem - var(--step-progress-marker-ring));
+    content: "";
+    left: var(--step-progress-rail-offset);
+    position: absolute;
+    top: var(--step-progress-marker-size);
+    width: var(--step-progress-rail-size);
   }
 
   .step-progress-item.complete:not(:last-child)::after {
@@ -129,6 +196,16 @@
     z-index: 1;
   }
 
+  .step-progress[data-orientation='vertical'] :global(.step-progress-control),
+  .step-progress[data-orientation='vertical'] .step-progress-control {
+    align-items: start;
+    gap: 0.65rem;
+    grid-template-columns: var(--step-progress-marker-size) minmax(0, 1fr);
+    justify-content: start;
+    justify-items: start;
+    text-align: left;
+  }
+
   :global(button.step-progress-control) {
     cursor: pointer;
     height: auto;
@@ -144,12 +221,12 @@
     background: var(--background);
     border: 2px solid var(--border);
     border-radius: 999px;
-    box-shadow: 0 0 0 4px var(--step-progress-surface, var(--card));
+    box-shadow: 0 0 0 var(--step-progress-marker-ring) var(--step-progress-surface, var(--card));
     color: var(--primary-foreground);
     display: grid;
-    height: 1.35rem;
+    height: var(--step-progress-marker-size);
     place-items: center;
-    width: 1.35rem;
+    width: var(--step-progress-marker-size);
     z-index: 1;
   }
 
@@ -161,14 +238,14 @@
   .current .step-progress-marker {
     border-color: var(--primary);
     box-shadow:
-      0 0 0 4px var(--step-progress-surface, var(--card)),
-      0 0 0 8px color-mix(in oklab, var(--primary) 14%, transparent);
+      0 0 0 var(--step-progress-marker-ring) var(--step-progress-surface, var(--card)),
+      0 0 0 calc(var(--step-progress-marker-ring) * 2) color-mix(in oklab, var(--primary) 14%, transparent);
   }
 
   .navigable:not(.current) :global(button.step-progress-control:hover .step-progress-marker) {
     box-shadow:
-      0 0 0 4px var(--step-progress-surface, var(--card)),
-      0 0 0 8px color-mix(in oklab, var(--primary) 12%, transparent);
+      0 0 0 var(--step-progress-marker-ring) var(--step-progress-surface, var(--card)),
+      0 0 0 calc(var(--step-progress-marker-ring) * 2) color-mix(in oklab, var(--primary) 12%, transparent);
   }
 
   .step-progress-current-dot {
@@ -177,6 +254,12 @@
     display: block;
     height: 0.42rem;
     width: 0.42rem;
+  }
+
+  .step-progress-copy {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
   }
 
   .step-progress-label {
@@ -189,6 +272,37 @@
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .step-progress-description {
+    color: var(--muted-foreground);
+    display: none;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .step-progress[data-orientation='vertical'] .step-progress-description {
+    display: block;
+  }
+
+  .step-progress[data-orientation='vertical'] .step-progress-label,
+  .step-progress[data-orientation='vertical'] .step-progress-description {
+    overflow: visible;
+    text-align: left;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .step-progress-state {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
   }
 
   .complete .step-progress-label,
