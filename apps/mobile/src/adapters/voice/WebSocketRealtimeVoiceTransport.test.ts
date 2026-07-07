@@ -24,7 +24,14 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
     await waitForSocketReady(socket);
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'session.started',
+      seq: 1,
+      sessionId: 'session-1',
+      acceptedInputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      acceptedOutputAudio: { mimeTypes: ['audio/mpeg'] },
+      acceptedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
+    });
     socket.receive({ type: 'session.completed', seq: 2, sessionId: 'session-1' });
 
     await run;
@@ -101,7 +108,14 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'session.started',
+      seq: 1,
+      sessionId: 'session-1',
+      acceptedInputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      acceptedOutputAudio: { mimeTypes: ['audio/mpeg'] },
+      acceptedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
+    });
     socket.receive({ type: 'transcript.delta', seq: 2, sessionId: 'session-1', text: 'Where are' });
     socket.receive({ type: 'transcript.final', seq: 3, sessionId: 'session-1', text: 'Where are my tools?' });
     socket.receive({ type: 'assistant.response.started', seq: 4, sessionId: 'session-1', responseId: 'response-1' });
@@ -125,7 +139,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       }
     });
     socket.receive({ type: 'tts.audio.started', seq: 6, sessionId: 'session-1', format: { mimeType: 'audio/mpeg' } });
-    socket.receive({ type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' });
+    socket.receive({ type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo', isFinalChunk: true });
     socket.receive({ type: 'session.completed', seq: 8, sessionId: 'session-1' });
     await waitForSentMessageCount(socket, 3);
     await waitForEventType(events, 'action.plan.proposed');
@@ -200,7 +214,14 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       }]
     });
     expect(events).toEqual([
-      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      {
+        type: 'session.started',
+        seq: 1,
+        sessionId: 'session-1',
+        acceptedInputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+        acceptedOutputAudio: { mimeTypes: ['audio/mpeg'] },
+        acceptedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
+      },
       { type: 'transcript.delta', seq: 2, sessionId: 'session-1', text: 'Where are' },
       { type: 'transcript.final', seq: 3, sessionId: 'session-1', text: 'Where are my tools?' },
       { type: 'assistant.response.started', seq: 4, sessionId: 'session-1', responseId: 'response-1' },
@@ -225,7 +246,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         }
       },
       { type: 'tts.audio.started', seq: 6, sessionId: 'session-1', mimeType: 'audio/mpeg' },
-      { type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo' },
+      { type: 'tts.audio.chunk', seq: 7, sessionId: 'session-1', chunkId: 'tts-1', audioBase64: 'c3BlZWNo', isFinalChunk: true },
       { type: 'session.completed', seq: 8, sessionId: 'session-1' },
       { type: 'action.plan.approved', seq: 9, sessionId: 'session-1', planId: 'plan-1', status: 'approved', message: undefined },
       {

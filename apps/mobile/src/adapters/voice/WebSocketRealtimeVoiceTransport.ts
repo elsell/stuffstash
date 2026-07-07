@@ -347,7 +347,14 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
   const metadata = eventMetadata(message);
   switch (message.type) {
     case 'session.started':
-      return { ...metadata, type: 'session.started', sessionId: stringField(message, 'sessionId') };
+      return {
+        ...metadata,
+        type: 'session.started',
+        sessionId: stringField(message, 'sessionId'),
+        ...optionalAcceptedInputAudioField(message),
+        ...optionalAcceptedOutputAudioField(message),
+        ...optionalStringArrayObjectField(message, 'acceptedCapabilities')
+      };
     case 'session.failed':
       return {
         ...metadata,
@@ -438,7 +445,8 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         type: 'tts.audio.chunk',
         sessionId: stringField(message, 'sessionId'),
         chunkId: stringField(message, 'chunkId'),
-        audioBase64: stringField(message, 'audioBase64')
+        audioBase64: stringField(message, 'audioBase64'),
+        ...optionalBooleanObjectField(message, 'isFinalChunk')
       };
     case 'tts.audio.completed':
       return { ...metadata, type: 'tts.audio.completed', sessionId: stringField(message, 'sessionId') };
@@ -548,6 +556,45 @@ function actionPlanField(message: Record<string, unknown>) {
 
 function optionalObjectField<T extends string>(field: T, value: string | undefined): { readonly [key in T]?: string } {
   return value ? { [field]: value } as { readonly [key in T]?: string } : {};
+}
+
+function optionalBooleanObjectField<T extends string>(message: Record<string, unknown>, field: T): { readonly [key in T]?: boolean } {
+  const value = message[field];
+  return typeof value === 'boolean' ? { [field]: value } as { readonly [key in T]?: boolean } : {};
+}
+
+function optionalStringArrayObjectField<T extends string>(message: Record<string, unknown>, field: T): { readonly [key in T]?: readonly string[] } {
+  const raw = message[field];
+  if (raw === undefined) {
+    return {};
+  }
+  return { [field]: stringArrayField(message, field) } as { readonly [key in T]?: readonly string[] };
+}
+
+function optionalAcceptedInputAudioField(message: Record<string, unknown>) {
+  if (message.acceptedInputAudio === undefined) {
+    return {};
+  }
+  const acceptedInputAudio = objectField(message, 'acceptedInputAudio');
+  return {
+    acceptedInputAudio: {
+      mimeType: stringField(acceptedInputAudio, 'mimeType'),
+      sampleRate: numberField(acceptedInputAudio, 'sampleRate'),
+      channels: numberField(acceptedInputAudio, 'channels')
+    }
+  };
+}
+
+function optionalAcceptedOutputAudioField(message: Record<string, unknown>) {
+  if (message.acceptedOutputAudio === undefined) {
+    return {};
+  }
+  const acceptedOutputAudio = objectField(message, 'acceptedOutputAudio');
+  return {
+    acceptedOutputAudio: {
+      mimeTypes: stringArrayField(acceptedOutputAudio, 'mimeTypes')
+    }
+  };
 }
 
 function actionPlanCommandResultsField(message: Record<string, unknown>) {
@@ -672,6 +719,14 @@ function arrayField(message: Record<string, unknown>, field: string): readonly u
     throw new Error(`Voice event field ${field} must be an array.`);
   }
   return value;
+}
+
+function stringArrayField(message: Record<string, unknown>, field: string): readonly string[] {
+  const value = arrayField(message, field);
+  if (value.some((item) => typeof item !== 'string' || item.trim().length === 0)) {
+    throw new Error(`Voice event field ${field} must be a string array.`);
+  }
+  return value as readonly string[];
 }
 
 function objectValue(value: unknown, label: string): Record<string, unknown> {
