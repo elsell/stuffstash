@@ -112,6 +112,7 @@ The web goal remains important but is not the immediate starting point. It still
 - `.codex/skills/stuffstash-voice-evaluation` now provides a repo-local Codex skill and harness for live voice corpus trace capture, Codex-judge-assisted review, and primary-agent product-quality evaluation.
 - The live Gemini realistic voice corpus passed all 19 scenarios with `gemini-2.5-flash-lite` and ADC after server-selected read optimization, full failure trace logging, bounded language retry handling, and planner repair-path tolerance.
 - `.codex/skills/stuffstash-self-host-audit` now provides a repo-local Codex skill for ruthless outside-in self-hosting documentation audits on user-provided SSH targets, covering public docs, Docker Compose SQLite/Postgres, Dex OIDC verification, browser onboarding, image upload, production-readiness friction, redaction, cleanup, and reproducibility.
+- Asset checkout and return are implemented as first-class asset availability behavior across the API, generated client contract, web workspace, mobile app, button-confirmed voice action plans, undo/redo, audit history, checkout-aware search/listing, and internal agent read tools for checked-out assets and checkout history.
 
 ## Known Gaps
 
@@ -124,21 +125,17 @@ The web goal remains important but is not the immediate starting point. It still
 - Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- API-key-backed speech synthesis adapters and the external MCP server are not yet complete.
+- API-key-backed speech synthesis adapters and the external MCP server are not yet complete. Checkout history is available to the internal agent tool catalog, but the public MCP transport still depends on the external MCP server work.
 
 ## Next Work
 
 1. Deepen the production mobile voice session surface.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
-2. Expand approval-backed write action plans with asset checkout and return.
-   - Use `specs/agent-model/realtime-interaction.spec.md` and `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
-   - Add these command kinds only behind application services, tenant/inventory authorization, audit history, atomic execution, and explicit user confirmation.
-   - Add asset checkout and return using `specs/assets/asset-checkout.spec.md`, including mobile 2-3 tap access, button-backed voice confirmation, current checkout state, checkout history, checked-out filtering, and MCP-readable checkout history.
-3. Implement the external Stuff Stash MCP server.
+2. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-4. Resume promoted web workspace work after the mobile voice path is testable from the app.
+3. Resume promoted web workspace work after the mobile voice path is testable from the app.
    - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Prioritize media attachment management, browser-level coverage, tenant-first switching, search, inventory settings, and sharing/access management.
 
