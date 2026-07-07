@@ -37,7 +37,7 @@
   function groupMessages(items: ImportMessage[]): MessageGroup[] {
     const grouped = new Map<string, MessageGroup>();
     for (const message of items) {
-      const cause = message.detail || '';
+      const cause = friendlyCause(message);
       const key = `${message.severity}:${message.summary}:${cause}`;
       const group = grouped.get(key);
       if (group) {
@@ -63,10 +63,33 @@
     return count === 1 ? '1 item' : `${count} items`;
   }
 
+  function friendlyCause(message: ImportMessage): string {
+    const detail = message.detail || '';
+    if (message.code === 'duplicate-asset' || detail.toLowerCase().includes('homebox-source-id')) {
+      return 'Already linked to an earlier import';
+    }
+    if (message.code === 'source-link-duplicate') {
+      return 'Already imported from this source';
+    }
+    if (message.code === 'attachment-unavailable') {
+      return 'Could not download from the source';
+    }
+    if (detail.toLowerCase().includes('import validation failed')) {
+      return 'File did not pass attachment validation';
+    }
+    return detail;
+  }
+
   function messageRowLabel(message: ImportMessage, group: MessageGroup): string {
     if (message.sourceName) return message.sourceName;
-    if (message.sourceId) return `Source record ${message.sourceId}`;
+    if (message.sourceId) return 'Homebox record';
     return message.detail || group.summary;
+  }
+
+  function messageDiagnostic(message: ImportMessage, group: MessageGroup): string {
+    if (message.sourceName && message.detail && friendlyCause(message) !== group.cause) return friendlyCause(message);
+    if (message.sourceId) return `Source ID ${message.sourceId}`;
+    return '';
   }
 </script>
 
@@ -89,10 +112,11 @@
       </div>
       <div class="message-group-items">
         {#each visibleMessages as message}
+          {@const diagnostic = messageDiagnostic(message, group)}
           <div class="message-row">
             <span>{messageRowLabel(message, group)}</span>
-            {#if message.sourceName && message.detail && message.detail !== group.cause}
-              <small>{message.detail}</small>
+            {#if diagnostic}
+              <small>{diagnostic}</small>
             {/if}
           </div>
         {/each}

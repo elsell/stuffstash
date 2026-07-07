@@ -12,7 +12,9 @@
   import {
     actorSummary,
     canRemoveJobFromHistory,
+    changedRecordSummary,
     isTerminal,
+    issueCountSummary,
     phaseLabel,
     progressBarLabel,
     progressBarStyle,
@@ -140,6 +142,34 @@
             aria-valuenow={progressKnown(job) ? progressPercent(job) : undefined}
           >
             <span style={progressBarStyle(job)}></span>
+          </div>
+        {/if}
+        <div class="detail-summary-strip" aria-label="Import run summary">
+          <div class="summary-tile">
+            <span>Status</span>
+            <strong>{statusLabel(job)}</strong>
+          </div>
+          <div class={job.counts.errors > 0 || job.counts.warnings > 0 ? 'summary-tile attention' : 'summary-tile'}>
+            <span>Issues</span>
+            <strong>{issueCountSummary(job)}</strong>
+          </div>
+          <div class="summary-tile">
+            <span>Changed</span>
+            <strong>{changedRecordSummary(job)}</strong>
+          </div>
+          <div class="summary-tile">
+            <span>Source</span>
+            <strong>{job.source.type === 'legacy_homebox_csv' ? 'CSV' : 'Homebox'}</strong>
+          </div>
+        </div>
+        {#if issueCount > 0}
+          <div class="detail-attention-callout">
+            <AlertCircle class="attention-callout-icon" size={18} aria-hidden="true" />
+            <div>
+              <strong>{issueCountSummary(job)}</strong>
+              <span>Review grouped issues before treating this import as clean.</span>
+            </div>
+            <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
           </div>
         {/if}
       </div>
@@ -381,6 +411,67 @@
     display: grid;
     gap: 0.75rem;
     padding-bottom: 1rem;
+  }
+
+  .detail-summary-strip {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .summary-tile {
+    background: hsl(var(--muted) / 0.38);
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+    padding: 0.7rem;
+  }
+
+  .summary-tile.attention {
+    background: hsl(var(--destructive) / 0.055);
+    border-color: hsl(var(--destructive) / 0.22);
+  }
+
+  .summary-tile span {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .summary-tile strong {
+    font-size: 0.95rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .detail-attention-callout {
+    align-items: center;
+    background: hsl(var(--destructive) / 0.055);
+    border: 1px solid hsl(var(--destructive) / 0.22);
+    border-radius: 8px;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0.75rem;
+  }
+
+  :global(.attention-callout-icon) {
+    color: hsl(var(--destructive));
+  }
+
+  .detail-attention-callout div {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .detail-attention-callout span {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.82rem;
   }
 
   .detail-grid {
@@ -658,6 +749,15 @@
     }
 
     .detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-summary-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .detail-attention-callout {
+      align-items: flex-start;
       grid-template-columns: 1fr;
     }
 

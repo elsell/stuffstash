@@ -29,6 +29,16 @@ export function jobNeedsAttention(job: ImportJob): boolean {
   return job.status === 'failed' || job.status === 'discard_failed' || job.counts.errors > 0 || job.counts.warnings > 0;
 }
 
+export function attentionSummary(job: ImportJob): string {
+  if (job.status === 'discard_failed') return 'Cancellation cleanup needs review';
+  if (job.status === 'failed') return 'Import failed before it finished';
+  if (job.counts.errors === 0 && job.counts.warnings === 0) return 'No issues';
+  return countParts([
+    [job.counts.errors, 'blocking issue', 'blocking issues'],
+    [job.counts.warnings, 'warning', 'warnings']
+  ]);
+}
+
 export function statusSentence(job: ImportJob): string {
   switch (job.status) {
     case 'previewed':
@@ -212,9 +222,44 @@ export function historyCountSummary(job: ImportJob): string {
   ]);
 }
 
+export function issueCountSummary(job: ImportJob): string {
+  const errorCount = job.counts.errors || allJobMessages(job).filter((message) => message.severity === 'error').length;
+  const warningCount = job.counts.warnings || allJobMessages(job).filter((message) => message.severity === 'warning').length;
+  if (errorCount === 0 && warningCount === 0) return 'No issues';
+  return countParts([
+    [errorCount, 'blocking issue', 'blocking issues'],
+    [warningCount, 'warning', 'warnings']
+  ]);
+}
+
+export function changedRecordSummary(job: ImportJob): string {
+  if (job.status === 'previewed') {
+    return countParts([
+      [job.counts.locations, 'planned location', 'planned locations'],
+      [job.counts.assets, 'planned asset', 'planned assets'],
+      [job.counts.attachments, 'planned photo/file', 'planned photos/files']
+    ]);
+  }
+  if (job.status === 'cancelled_discarded') {
+    return countParts([
+      [job.counts.recordsDiscarded, 'record discarded', 'records discarded'],
+      [job.counts.sourceLinksDiscarded, 'source link removed', 'source links removed']
+    ]);
+  }
+  return countParts([
+    [job.counts.locationsCreated, 'location saved', 'locations saved'],
+    [job.counts.assetsCreated, 'asset saved', 'assets saved'],
+    [job.counts.attachmentsCreated, 'photo/file saved', 'photos/files saved']
+  ]);
+}
+
 export function countParts(parts: Array<[number, string, string]>): string {
   const labels = parts.filter(([count]) => count > 0).map(([count, singular, plural]) => `${count} ${count === 1 ? singular : plural}`);
   return labels.length > 0 ? labels.join(' · ') : 'No records changed';
+}
+
+function allJobMessages(job: ImportJob): ImportJob['messages'] {
+  return job.messages.length > 0 ? job.messages : job.preview.messages;
 }
 
 export function previewCountCells(job: ImportJob): CountCell[] {

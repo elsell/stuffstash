@@ -44,7 +44,7 @@ describe('ImportMessagesList', () => {
     expect(groups[3]?.textContent).toContain('Duplicate asset found');
   });
 
-  it('uses source IDs for grouped rows when source names are unavailable', () => {
+  it('keeps source IDs secondary when source names are unavailable', () => {
     component = mount(ImportMessagesList, {
       target: document.body,
       props: {
@@ -57,10 +57,11 @@ describe('ImportMessagesList', () => {
     });
 
     const group = document.body.querySelector<HTMLElement>('.message-group');
-    expect(group?.querySelector('.message-group-heading')?.textContent).toContain('homebox-source-id duplicate');
+    expect(group?.querySelector('.message-group-heading')?.textContent).toContain('Already linked to an earlier import');
     expect(group?.textContent).toContain('2 items');
-    expect(group?.textContent).toContain('Source record source-wardrobe');
-    expect(group?.textContent).toContain('Source record source-baby-hats');
+    expect(group?.textContent).toContain('Homebox record');
+    expect(group?.textContent).toContain('Source ID source-wardrobe');
+    expect(group?.textContent).toContain('Source ID source-baby-hats');
     expect(group?.querySelectorAll('.message-row')[0]?.textContent).not.toBe('homebox-source-id duplicate');
   });
 

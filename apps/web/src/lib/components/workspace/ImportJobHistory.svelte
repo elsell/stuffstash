@@ -14,6 +14,7 @@
   import * as Card from '$lib/components/ui/card/index.js';
   import {
     actorSummary,
+    attentionSummary,
     canRequestCancellation,
     canRemoveJobFromHistory,
     historyCountSummary,
@@ -78,6 +79,8 @@
         ? terminalJobs.filter((job) => job.status === 'succeeded')
         : terminalJobs
   );
+  let attentionQueue = $derived(attentionJobs.slice(0, 4));
+  let hiddenAttentionCount = $derived(Math.max(0, attentionJobs.length - attentionQueue.length));
 
   function jobActionLabel(action: string, job: ImportJob): string {
     const status = statusLabel(job);
@@ -232,6 +235,40 @@
       {/each}
     </div>
   {/if}
+  {#if attentionJobs.length > 0}
+    <div class="job-section attention-section" aria-label="Imports needing attention">
+      <div class="section-heading">
+        <div>
+          <h3>Needs attention</h3>
+          <p>{attentionJobs.length === 1 ? '1 import has warnings or failed work.' : `${attentionJobs.length} imports have warnings or failed work.`}</p>
+        </div>
+        <Button.Root variant="ghost" size="sm" onclick={() => (historyFilter = 'attention')}>Show attention history</Button.Root>
+      </div>
+      <div class="attention-list">
+        {#each attentionQueue as job}
+          <div class="attention-item">
+            <div class="attention-marker" aria-hidden="true">
+              <AlertTriangle size={18} />
+            </div>
+            <div class="attention-body">
+              <div class="history-title">
+                <strong>{job.source.name}</strong>
+                <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
+              </div>
+              <span>{attentionSummary(job)}</span>
+              <small>{historyCountSummary(job)}{job.completedAt ? ` · ${jobTimeLabel('Completed', job.completedAt)}` : job.startedAt ? ` · ${jobTimeLabel('Started', job.startedAt)}` : ''}</small>
+            </div>
+            <Button.Root variant="outline" size="sm" onclick={() => onOpenJob(job)} disabled={busy} aria-label={jobActionLabel('Review issues for', job)}>
+              Review
+            </Button.Root>
+          </div>
+        {/each}
+      </div>
+      {#if hiddenAttentionCount > 0}
+        <p class="attention-overflow">{hiddenAttentionCount} more import {hiddenAttentionCount === 1 ? 'run needs' : 'runs need'} attention.</p>
+      {/if}
+    </div>
+  {/if}
   {#if terminalJobs.length > 0}
     <div class="job-section">
       <div class="section-heading">
@@ -376,6 +413,53 @@
     border: 1px solid hsl(var(--primary) / 0.18);
     border-radius: 8px;
     padding: 0.75rem;
+  }
+
+  .attention-section {
+    background: hsl(var(--destructive) / 0.035);
+    border: 1px solid hsl(var(--destructive) / 0.22);
+    border-radius: 8px;
+    padding: 0.75rem;
+  }
+
+  .attention-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .attention-item {
+    align-items: center;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0.75rem;
+  }
+
+  .attention-marker {
+    color: hsl(var(--destructive));
+    display: grid;
+    place-items: center;
+  }
+
+  .attention-body {
+    display: grid;
+    gap: 0.16rem;
+    min-width: 0;
+  }
+
+  .attention-body > span,
+  .attention-body > small,
+  .attention-overflow {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
+  }
+
+  .attention-body > span {
+    color: hsl(var(--foreground));
   }
 
   .history-status-strip {
@@ -658,7 +742,8 @@
     }
 
     .history-row,
-    :global(.import-history-empty-state) {
+    :global(.import-history-empty-state),
+    .attention-item {
       grid-template-columns: 1fr;
     }
 
@@ -695,7 +780,8 @@
       margin-left: 0;
     }
 
-    .status-icon {
+    .status-icon,
+    .attention-marker {
       display: none;
     }
 

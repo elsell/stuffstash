@@ -185,8 +185,16 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     await fulfill(route, activeAssets(state));
     return;
   }
+  if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/checked-out-assets') {
+    await fulfill(route, []);
+    return;
+  }
   if (method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
     await fulfill(route, [asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
+    return;
+  }
+  if (method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets') {
+    await fulfill(route, []);
     return;
   }
   if (method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {

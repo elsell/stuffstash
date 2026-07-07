@@ -319,9 +319,26 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Clean Homebox');
       expect(document.body.textContent).toContain('1 import needs attention');
+      expect(document.body.textContent).toContain('1 import has warnings or failed work.');
+      expect(document.body.textContent).toContain('2 warnings');
+      expect(buttonContaining('Review')).toBeTruthy();
     });
 
-    buttonContaining('Needs attention').click();
+    buttonContaining('Review').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Issues');
+      expect(document.body.textContent).toContain('2 affected records');
+      expect(document.body.textContent).toContain('Already linked to an earlier import');
+    });
+
+    buttonContaining('Back to history').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Show attention history');
+    });
+
+    buttonContaining('Show attention history').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Showing imports with warnings, errors, or cleanup work.');

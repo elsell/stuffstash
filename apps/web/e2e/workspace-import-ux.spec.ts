@@ -15,19 +15,20 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
   await expect(page.getByText('In progress')).toBeVisible();
   await expect(page.getByText('Importing photos and files')).toBeVisible();
-  await expect(page.getByText('1 field created')).toBeVisible();
   await expect(page.getByText('Prepared by oidc_vZWJGXP...ltriM27O9').first()).toBeVisible();
   await expect(page.getByText('stuff.jsksell.com').first()).toBeVisible();
   await expect(page.getByText('/api/v1')).toHaveCount(0);
   const completedRow = page.locator('.history-row').filter({ hasText: '1 field created' });
+  await expect(completedRow.getByText('1 field created')).toBeVisible();
   await expect(completedRow.getByText('Completed', { exact: true })).toBeVisible();
   await expect(completedRow.getByText('Started Jul 6, 2026')).toBeVisible();
   expect(await hasHorizontalOverflow(completedRow)).toBe(false);
 
   await completedRow.getByRole('button', { name: 'Details' }).click();
   await expect(page.getByText('Asset appears to have already been imported')).toBeVisible();
-  await expect(page.getByText('Source record source-wardrobe')).toBeVisible();
-  await expect(page.getByText('Source record source-baby-hats')).toBeVisible();
+  await expect(page.getByText('Already linked to an earlier import')).toBeVisible();
+  await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
+  await expect(page.getByText('Source ID source-baby-hats')).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-detail-content'))).toBe(false);
   await page.getByRole('button', { name: 'Back to history' }).click();
 
@@ -48,7 +49,7 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
   expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
   const completedRow = page.locator('.history-row').filter({ hasText: '1 field created' });
   await completedRow.getByRole('button', { name: 'Details' }).click();
-  await expect(page.getByText('Source record source-wardrobe')).toBeVisible();
+  await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-detail-content'))).toBe(false);
   await page.getByRole('button', { name: 'Back to history' }).click();
 
