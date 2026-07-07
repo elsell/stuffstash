@@ -320,12 +320,12 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('2 assets skipped');
       expect(document.body.textContent).toContain('1 photo/file skipped');
       expect(document.body.textContent).toContain('2 warnings');
-      expect(document.body.textContent).toContain('Source');
+      expect(document.body.textContent).toContain('Run details');
       expect(document.body.textContent).toContain('Prepared by owner');
       expect(document.body.textContent).not.toContain('Photos on');
       expect(document.body.textContent).not.toContain('Live Homebox connection');
-      expect(document.body.textContent).toContain('Private-network URLs allowed');
-      expect(document.body.textContent).toContain('Self-signed TLS allowed');
+      expect(document.body.textContent).toContain('Private-network access allowed');
+      expect(document.body.textContent).toContain('Self-signed certificates allowed');
       expect(document.body.textContent).toContain('Preview plan');
       expect(document.body.textContent).toContain('Serial number');
       expect(document.body.textContent).toContain('Garage');
@@ -443,19 +443,16 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Running');
-      expect(document.body.textContent).toContain('Ready to review');
       expect(document.body.textContent).toContain('Warnings');
-      expect(document.body.textContent).toContain('Action required');
+      expect(document.body.textContent).not.toContain('Action required');
       expect(document.body.textContent).not.toContain('Action required 1');
-      expect(document.body.textContent).toContain('Completed with warnings.');
       expect(document.body.textContent).toContain('Completed');
       expect(document.body.textContent).toContain('Homebox');
       expect(historyLedgerText()).not.toContain('Prepared by owner');
       expect(document.body.textContent).toContain('Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
       expect(document.body.textContent).not.toContain('No other import runs to show.');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Review warnings before treating this import as clean.');
       expect(historyLedgerText()).toContain('Warnings');
     });
   });
@@ -520,12 +517,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Clean Homebox');
       expect(document.body.textContent).toContain('Warnings');
-      expect(document.body.textContent).toContain('Action required');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
-      expect(historyLedgerText()).toContain('2 warnings');
+      expect(document.body.textContent).not.toContain('Action required');
+      expect(historyLedgerText()).toContain('Review warnings before treating this import as clean.');
       expect(buttonContaining('Review Details')).toBeTruthy();
       expect(historyLedgerText()).toContain('Clean Homebox');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
       expect(historyLedgerText()).toContain('Warnings');
       expect(historyLedgerText()).not.toContain('Action required');
     });
@@ -547,7 +542,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Warnings').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Completed imports with warnings.');
+      expect(document.body.textContent).toContain('Warning-only imports.');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).toContain('Details');
@@ -742,7 +737,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('This only removes the run from the import history list.');
       expect(document.body.textContent).toContain('Keep in history');
       expect(document.body.textContent).toContain('Runs');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Review warnings before treating this import as clean.');
     });
 
     confirmationButton('Keep in history').click();
@@ -917,7 +912,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Completed with warnings.');
+      expect(document.body.textContent).toContain('Warnings');
     });
 
     buttonContaining('Details').click();
@@ -1122,7 +1117,6 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new StaleErrorCountImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(statusStripText()).toContain('Completed 0');
       expect(statusStripText()).toContain('Action required 1');
       expect(historyLedgerText()).toContain('Action required');
       expect(historyLedgerText()).not.toContain('Warnings');
@@ -1142,7 +1136,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Completed with warnings.');
+      expect(document.body.textContent).toContain('Warnings');
     });
 
     buttonContaining('Details').click();
@@ -1160,7 +1154,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Completed with warnings.');
+      expect(document.body.textContent).toContain('Warnings');
     });
 
     buttonContaining('Details').click();
@@ -1293,7 +1287,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
-      expect(document.body.textContent).toContain('Completed with warnings.');
+      expect(document.body.textContent).toContain('Warnings');
     });
 
     buttonContaining('Details').click();

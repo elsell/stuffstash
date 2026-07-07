@@ -173,17 +173,17 @@ export function sourceDescription(job: ImportJob): string {
 
 export function sourceOptionsSummary(job: ImportJob): string[] {
   if (job.source.type === 'legacy_homebox_csv') {
-    return ['CSV upload', 'Photos are not included in Homebox CSV exports'];
+    return ['CSV file', 'Photos are not included in Homebox CSV exports'];
   }
-  const options = ['Live Homebox connection'];
+  const options = ['Direct connection'];
   if (job.source.imageImport === 'disabled') {
     options.push('Photo import disabled');
   }
   if (job.source.allowPrivateNetwork) {
-    options.push('Private-network URLs allowed');
+    options.push('Private-network access allowed');
   }
   if (job.source.allowInsecureTLS) {
-    options.push('Self-signed TLS allowed');
+    options.push('Self-signed certificates allowed');
   }
   return options;
 }

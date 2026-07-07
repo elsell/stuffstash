@@ -168,9 +168,9 @@ describe('InventoryImportWorkspace import setup and preview', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Preview import');
-      expect(document.body.textContent).toContain('Private-network URLs allowed');
-      expect(document.body.textContent).toContain('Self-signed TLS allowed');
-      expect(document.body.textContent).toContain('Live Homebox connection');
+      expect(document.body.textContent).toContain('Private-network access allowed');
+      expect(document.body.textContent).toContain('Self-signed certificates allowed');
+      expect(document.body.textContent).toContain('Direct connection');
       expect(document.body.textContent).not.toContain('Photos on');
       expect(buttonContaining('Start background import').disabled).toBe(false);
     });

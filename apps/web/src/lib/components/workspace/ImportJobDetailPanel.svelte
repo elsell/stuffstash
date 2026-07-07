@@ -91,7 +91,7 @@
   let visibleResources = $derived(job.resources.slice(visibleResourceStart, visibleResourceStart + RESOURCE_PAGE_SIZE));
   let visibleResourceEnd = $derived(Math.min(job.resources.length, visibleResourceStart + visibleResources.length));
   let actor = $derived(actorSummary(job, currentPrincipal));
-  let visibleSourceOptions = $derived(sourceOptionsSummary(job).filter((option) => option !== 'Live Homebox connection'));
+  let visibleSourceOptions = $derived(sourceOptionsSummary(job));
 
   $effect(() => {
     job.id;
@@ -344,8 +344,8 @@
         <div class="detail-side" aria-label="Import controls and source">
           <section class="source-options-section" aria-label="Import run details">
             <div class="sample-heading">
-              <h3>Source</h3>
-              <small>{sourceDescription(job)}</small>
+              <h3>Run details</h3>
+              <small>Method and options</small>
             </div>
             {#if actor}
               <p class="source-note">{actor}</p>

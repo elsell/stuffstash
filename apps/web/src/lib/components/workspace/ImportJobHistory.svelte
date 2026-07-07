@@ -115,9 +115,9 @@
 
   function ledgerDescription(): string {
     if (historyFilter === 'attention') return 'Imports that need action.';
-    if (historyFilter === 'warnings') return 'Completed imports with warnings.';
+    if (historyFilter === 'warnings') return 'Warning-only imports.';
     if (historyFilter === 'completed') return 'Completed imports.';
-    return 'Important and recent runs first.';
+    return 'Needs-action and recent runs first.';
   }
 
   function allRunCount(): number {
@@ -134,7 +134,8 @@
 
   function statusDetail(job: ImportJob): string {
     if (jobRequiresAction(job)) return `${statusLabel(job)} · ${attentionSummary(job)}`;
-    if (jobHasReviewWarnings(job)) return `${statusSentence(job)} ${issueCountSummary(job)}`;
+    if (job.status === 'cancelled_kept' || job.status === 'cancelled_discarded') return statusSentence(job);
+    if (jobHasReviewWarnings(job)) return 'Review warnings before treating this import as clean.';
     return statusSentence(job);
   }
 
@@ -175,61 +176,66 @@
       <span>All runs</span>
       <strong>{allRunCount()}</strong>
     </Button.Root>
-    <Button.Root
-      class={historyFilter === 'current' ? 'status-chip active selected' : activeJobs.length > 0 ? 'status-chip active' : 'status-chip'}
-      variant="ghost"
-      onclick={() => (historyFilter = historyFilter === 'current' ? 'all' : 'current')}
-      disabled={activeJobs.length === 0}
-      aria-pressed={historyFilter === 'current'}
-    >
-      <LoaderCircle size={14} aria-hidden="true" />
-      <span>Running</span>
-      <strong>{activeJobs.length}</strong>
-    </Button.Root>
-    <Button.Root
-      class={historyFilter === 'drafts' ? 'status-chip active selected' : draftJobs.length > 0 ? 'status-chip active' : 'status-chip'}
-      variant="ghost"
-      onclick={() => (historyFilter = historyFilter === 'drafts' ? 'all' : 'drafts')}
-      disabled={draftJobs.length === 0}
-      aria-pressed={historyFilter === 'drafts'}
-    >
-      <Clock3 size={14} aria-hidden="true" />
-      <span>Ready to review</span>
-      <strong>{draftJobs.length}</strong>
-    </Button.Root>
-    <Button.Root
-      class={historyFilter === 'completed' ? 'status-chip active selected' : completedJobs.length > 0 ? 'status-chip active' : 'status-chip'}
-      variant="ghost"
-      onclick={() => (historyFilter = historyFilter === 'completed' ? 'all' : 'completed')}
-      disabled={completedJobs.length === 0}
-      aria-pressed={historyFilter === 'completed'}
-    >
-      <CheckCircle2 size={14} aria-hidden="true" />
-      <span>Completed</span>
-      <strong>{completedJobs.length}</strong>
-    </Button.Root>
-    <Button.Root
-      class={historyFilter === 'warnings' ? 'status-chip warning selected' : warningJobs.length > 0 ? 'status-chip warning' : 'status-chip'}
-      variant="ghost"
-      onclick={() => (historyFilter = historyFilter === 'warnings' ? 'all' : 'warnings')}
-      disabled={warningJobs.length === 0}
-      aria-pressed={historyFilter === 'warnings'}
-    >
-      <AlertTriangle size={14} aria-hidden="true" />
-      <span>Warnings</span>
-      <strong>{warningJobs.length}</strong>
-    </Button.Root>
-    <Button.Root
-      class={historyFilter === 'attention' ? 'status-chip danger selected' : attentionJobs.length > 0 ? 'status-chip danger' : 'status-chip'}
-      variant="ghost"
-      onclick={() => (historyFilter = historyFilter === 'attention' ? 'all' : 'attention')}
-      disabled={attentionJobs.length === 0}
-      aria-pressed={historyFilter === 'attention'}
-    >
-      <XCircle size={14} aria-hidden="true" />
-      <span>Action required</span>
-      <strong>{attentionJobs.length}</strong>
-    </Button.Root>
+    {#if activeJobs.length > 0 || historyFilter === 'current'}
+      <Button.Root
+        class={historyFilter === 'current' ? 'status-chip active selected' : 'status-chip active'}
+        variant="ghost"
+        onclick={() => (historyFilter = historyFilter === 'current' ? 'all' : 'current')}
+        aria-pressed={historyFilter === 'current'}
+      >
+        <LoaderCircle size={14} aria-hidden="true" />
+        <span>Running</span>
+        <strong>{activeJobs.length}</strong>
+      </Button.Root>
+    {/if}
+    {#if draftJobs.length > 0 || historyFilter === 'drafts'}
+      <Button.Root
+        class={historyFilter === 'drafts' ? 'status-chip active selected' : 'status-chip active'}
+        variant="ghost"
+        onclick={() => (historyFilter = historyFilter === 'drafts' ? 'all' : 'drafts')}
+        aria-pressed={historyFilter === 'drafts'}
+      >
+        <Clock3 size={14} aria-hidden="true" />
+        <span>Ready to review</span>
+        <strong>{draftJobs.length}</strong>
+      </Button.Root>
+    {/if}
+    {#if attentionJobs.length > 0 || historyFilter === 'attention'}
+      <Button.Root
+        class={historyFilter === 'attention' ? 'status-chip danger selected' : 'status-chip danger'}
+        variant="ghost"
+        onclick={() => (historyFilter = historyFilter === 'attention' ? 'all' : 'attention')}
+        aria-pressed={historyFilter === 'attention'}
+      >
+        <XCircle size={14} aria-hidden="true" />
+        <span>Action required</span>
+        <strong>{attentionJobs.length}</strong>
+      </Button.Root>
+    {/if}
+    {#if warningJobs.length > 0 || historyFilter === 'warnings'}
+      <Button.Root
+        class={historyFilter === 'warnings' ? 'status-chip warning selected' : 'status-chip warning'}
+        variant="ghost"
+        onclick={() => (historyFilter = historyFilter === 'warnings' ? 'all' : 'warnings')}
+        aria-pressed={historyFilter === 'warnings'}
+      >
+        <AlertTriangle size={14} aria-hidden="true" />
+        <span>Warnings</span>
+        <strong>{warningJobs.length}</strong>
+      </Button.Root>
+    {/if}
+    {#if completedJobs.length > 0 || historyFilter === 'completed'}
+      <Button.Root
+        class={historyFilter === 'completed' ? 'status-chip active selected' : 'status-chip active'}
+        variant="ghost"
+        onclick={() => (historyFilter = historyFilter === 'completed' ? 'all' : 'completed')}
+        aria-pressed={historyFilter === 'completed'}
+      >
+        <CheckCircle2 size={14} aria-hidden="true" />
+        <span>Completed</span>
+        <strong>{completedJobs.length}</strong>
+      </Button.Root>
+    {/if}
   </div>
 {/if}
 
@@ -360,8 +366,8 @@
         <div class="history-ledger-head" role="row">
           <span role="columnheader">Source</span>
           <span role="columnheader">Status</span>
-          <span role="columnheader">Records</span>
-          <span role="columnheader">Completed</span>
+          <span role="columnheader">Changed</span>
+          <span role="columnheader">Finished</span>
           <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
@@ -552,7 +558,8 @@
     align-items: center;
     display: grid;
     gap: 0.45rem;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, max-content));
+    justify-content: start;
     margin: 0;
   }
 
@@ -955,6 +962,7 @@
     .history-status-strip {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-content: stretch;
     }
 
     :global(.status-chip) {
