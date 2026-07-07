@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
+import type { ImportJob } from '$lib/domain/inventory';
 import {
   CountingImportJobRepository,
   CompletingStartedImportRepository,
@@ -538,6 +539,56 @@ describe('InventoryImportWorkspace import setup and preview', () => {
       expect(document.body.textContent).toContain('Import finished');
       expect(document.body.textContent).toContain('Completed successfully.');
       expect(document.body.textContent).not.toContain('Import is running');
+    });
+  });
+
+  it('shows visible refresh progress while the run handoff reloads', async () => {
+    let releaseRefresh: () => void = () => {};
+    const refreshGate = new Promise<void>((resolve) => {
+      releaseRefresh = resolve;
+    });
+    class SlowRunRefreshRepository extends ImportStartRecordingRepository {
+      async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
+        const jobs = await super.listImportJobs(tenantId, inventoryId);
+        if (jobs.some((job) => job.status === 'running')) {
+          await refreshGate;
+        }
+        return jobs;
+      }
+    }
+    const repository = new SlowRunRefreshRepository(structuredClone(seed));
+    await mountImportWorkspace(repository);
+
+    await openLiveHomeboxSetup();
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-url')!, 'http://homebox.local:7744');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-user')!, 'codex@jsksell.com');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-password')!, 'asldfj3290f!');
+
+    await waitFor(() => {
+      expect(buttonContaining('Confirm connection').disabled).toBe(false);
+    });
+    buttonContaining('Confirm connection').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Start background import').disabled).toBe(false);
+    });
+    buttonContaining('Start background import').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Import is running');
+    });
+
+    exactButton('Refresh').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Refreshing').disabled).toBe(true);
+      expect(document.body.querySelector('.busy-button-spinner')).toBeTruthy();
+    });
+
+    releaseRefresh();
+
+    await waitFor(() => {
+      expect(buttonContaining('Refresh').disabled).toBe(false);
     });
   });
 

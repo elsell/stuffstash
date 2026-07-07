@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
+import type { ImportJob, ImportJobCancellationMode } from '$lib/domain/inventory';
 import {
   CancellableImportJobRepository,
   CompletingImportJobRepository,
@@ -57,6 +58,41 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('History');
       expect(document.body.textContent).not.toContain('Current work');
       expect(refreshes).toBe(1);
+    });
+  });
+
+  it('shows visible refresh progress while import history reloads', async () => {
+    let releaseRefresh: () => void = () => {};
+    const refreshGate = new Promise<void>((resolve) => {
+      releaseRefresh = resolve;
+    });
+    class SlowRefreshImportJobRepository extends CompletingImportJobRepository {
+      async listImportJobs(tenantId: string, inventoryId: string) {
+        if (this.listCalls >= 1) {
+          await refreshGate;
+        }
+        return super.listImportJobs(tenantId, inventoryId);
+      }
+    }
+    const repository = new SlowRefreshImportJobRepository(structuredClone(seed));
+    await mountImportWorkspace(repository);
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Current work');
+    });
+
+    buttonContaining('Refresh').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Refreshing').disabled).toBe(true);
+      expect(document.body.querySelector('.busy-button-spinner')).toBeTruthy();
+    });
+
+    releaseRefresh();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Import finished');
+      expect(buttonContaining('Refresh').disabled).toBe(false);
     });
   });
 
@@ -147,6 +183,52 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Cancellation is waiting for a safe stopping point.');
       expect(Array.from(document.body.querySelectorAll('button')).some((button) => button.textContent?.trim() === 'Cancel')).toBe(false);
+    });
+  });
+
+  it('shows one visible cancellation progress label while cancellation is requested', async () => {
+    let releaseCancellation: () => void = () => {};
+    const cancellationGate = new Promise<void>((resolve) => {
+      releaseCancellation = resolve;
+    });
+    class SlowCancellableImportJobRepository extends CancellableImportJobRepository {
+      async cancelImportJob(
+        tenantId: string,
+        inventoryId: string,
+        jobId: string,
+        mode: ImportJobCancellationMode
+      ): Promise<ImportJob> {
+        await cancellationGate;
+        return super.cancelImportJob(tenantId, inventoryId, jobId, mode);
+      }
+    }
+    const repository = new SlowCancellableImportJobRepository(structuredClone(seed));
+    await mountImportWorkspace(repository);
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Current work');
+      expect(exactButton('Cancel')).toBeTruthy();
+    });
+
+    exactButton('Cancel').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Cancel Homebox?');
+    });
+
+    buttonContaining('Keep imported items').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Cancelling import').disabled).toBe(true);
+      expect(document.body.textContent?.match(/Cancelling import/g)).toHaveLength(1);
+      expect(document.body.querySelector('.busy-button-spinner')).toBeTruthy();
+    });
+
+    releaseCancellation();
+
+    await waitFor(() => {
+      expect(repository.cancellationModes).toEqual(['keep_partial_progress']);
+      expect(document.body.textContent).toContain('Cancellation is waiting for a safe stopping point.');
     });
   });
 
@@ -426,6 +508,44 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('shows visible removal progress while hiding an import from history', async () => {
+    let releaseRemoval: () => void = () => {};
+    const removalGate = new Promise<void>((resolve) => {
+      releaseRemoval = resolve;
+    });
+    class SlowRemoveImportJobRepository extends TerminalImportJobRepository {
+      async removeImportJobFromHistory(tenantId: string, inventoryId: string, jobId: string): Promise<void> {
+        await removalGate;
+        await super.removeImportJobFromHistory(tenantId, inventoryId, jobId);
+      }
+    }
+    await mountImportWorkspace(new SlowRemoveImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Homebox');
+    });
+
+    document.body.querySelector<HTMLButtonElement>('button[aria-label^="Remove from history Homebox import"]')?.click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Remove Homebox from history?');
+    });
+
+    buttonContaining('Remove from history').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Removing from history').disabled).toBe(true);
+      expect(document.body.querySelector('.busy-button-spinner')).toBeTruthy();
+    });
+
+    releaseRemoval();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('No import runs yet');
+    });
+  });
+
   it('uses user-facing imported record labels with source IDs as secondary metadata', async () => {
     await mountImportWorkspace(new ResourcefulImportJobRepository(structuredClone(seed)));
 
@@ -584,6 +704,50 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Source asset: homebox-detail-refresh-asset');
       expect(document.body.textContent).toContain('Detail warning from job detail');
       expect(document.body.textContent).toContain('Detail warning after refresh');
+    });
+  });
+
+  it('shows visible refresh progress while import details reload', async () => {
+    let releaseRefresh: () => void = () => {};
+    const refreshGate = new Promise<void>((resolve) => {
+      releaseRefresh = resolve;
+    });
+    class SlowDetailRefreshImportJobRepository extends DetailOnlyResourcefulImportJobRepository {
+      async getImportJob(tenantId: string, inventoryId: string, jobId: string) {
+        if (this.detailCalls >= 1) {
+          await refreshGate;
+        }
+        return super.getImportJob(tenantId, inventoryId, jobId);
+      }
+    }
+    const repository = new SlowDetailRefreshImportJobRepository(structuredClone(seed));
+    await mountImportWorkspace(repository);
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Homebox');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(repository.detailCalls).toBe(1);
+      expect(document.body.textContent).toContain('Imported records');
+    });
+
+    exactButton('Refresh').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Refreshing').disabled).toBe(true);
+      expect(document.body.querySelector('.busy-button-spinner')).toBeTruthy();
+    });
+
+    releaseRefresh();
+
+    await waitFor(() => {
+      expect(repository.detailCalls).toBe(2);
+      expect(document.body.textContent).toContain('Detail warning after refresh');
+      expect(buttonContaining('Refresh').disabled).toBe(false);
     });
   });
 

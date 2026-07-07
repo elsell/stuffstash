@@ -80,6 +80,7 @@
   let loading = $state(false);
   let busy = $state(false);
   let detailLoading = $state(false);
+  let manualRefreshLoading = $state(false);
   let error = $state('');
   let notice = $state('');
   let fileSelectionToken = 0;
@@ -629,7 +630,16 @@
       await loadJobDetail(selectedJob);
       return;
     }
-    await loadJobs({ quiet: true });
+    const scope = currentImportScope();
+    if (!scope || manualRefreshLoading) return;
+    manualRefreshLoading = true;
+    try {
+      await loadJobs({ quiet: true });
+    } finally {
+      if (isCurrentScope(scope)) {
+        manualRefreshLoading = false;
+      }
+    }
   }
 
 </script>
@@ -652,15 +662,13 @@
     </div>
     {#if step === 'history'}
       <Button.Root variant="outline" size="sm" onclick={() => { void loadJobs(); }} disabled={loading || !canViewImports}>
-        <RefreshCw size={16} aria-hidden="true" />
-        Refresh
+        <Button.BusyContent busy={loading} icon={RefreshCw} label="Refresh" busyLabel="Refreshing" />
       </Button.Root>
     {:else}
       <div class="toolbar-actions">
         {#if step === 'detail' || step === 'run'}
-          <Button.Root variant="outline" size="sm" onclick={() => { void refreshVisibleImportView(); }} disabled={loading || detailLoading || !canViewImports}>
-            <RefreshCw size={16} aria-hidden="true" />
-            Refresh
+          <Button.Root variant="outline" size="sm" onclick={() => { void refreshVisibleImportView(); }} disabled={loading || detailLoading || manualRefreshLoading || !canViewImports}>
+            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label="Refresh" busyLabel="Refreshing" />
           </Button.Root>
         {/if}
         <Button.Root variant="outline" size="sm" onclick={returnToHistory} disabled={busy}>Back to history</Button.Root>

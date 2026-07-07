@@ -270,6 +270,7 @@ Import source text inputs must avoid mobile auto-capitalization, autocorrection,
 The UI must present source snapshots, imported records, and audit links in user-facing language. Internal resource IDs, source fingerprints, and source entity IDs may be available as secondary diagnostic metadata where useful, but they must not be the primary label for records or trust signals.
 Removing an import job from visible history must require an explicit confirmation in the UI. The confirmation must state that imported records and audit history remain.
 State-changing import actions must show an in-progress affordance, such as an animated spinner and operation-specific label, while the operation is pending; disabling controls alone is not sufficient feedback.
+Import refresh and detail-loading actions must also show a visible loading affordance while the read operation is pending so users can distinguish a delayed response from an inert control.
 It must preserve inventory context throughout source setup, preview, running progress, result review, and history.
 The import surface must not look or behave like a marketing page or separate administration console.
 

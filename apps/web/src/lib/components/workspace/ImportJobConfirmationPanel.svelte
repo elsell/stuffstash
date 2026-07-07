@@ -55,10 +55,9 @@
           onCancelJob(cancelJob, 'keep_partial_progress');
         }}
       >
-        <strong>{pendingAction === 'keep' && busy ? 'Cancelling import' : 'Keep imported items'}</strong>
-        {#if pendingAction === 'keep' && busy}
-          <Button.BusyContent {busy} label="Keep imported items" busyLabel="Keeping imported items" />
-        {/if}
+        <strong>
+          <Button.BusyContent busy={pendingAction === 'keep' && busy} label="Keep imported items" busyLabel="Cancelling import" />
+        </strong>
         <span>Stop future work and leave anything already imported in the inventory.</span>
       </Button.Root>
       <Button.Root
@@ -71,10 +70,9 @@
           onCancelJob(cancelJob, 'discard_partial_progress');
         }}
       >
-        <strong>{pendingAction === 'discard' && busy ? 'Cancelling import' : 'Discard imported items'}</strong>
-        {#if pendingAction === 'discard' && busy}
-          <Button.BusyContent {busy} label="Discard imported items" busyLabel="Discarding imported items" />
-        {/if}
+        <strong>
+          <Button.BusyContent busy={pendingAction === 'discard' && busy} label="Discard imported items" busyLabel="Cancelling import" />
+        </strong>
         <span>Stop future work and remove records created by this job. Audit history remains.</span>
       </Button.Root>
       <div class="action-row">
