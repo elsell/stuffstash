@@ -299,6 +299,7 @@ History row timestamps should favor the user-actionable temporal state, such as 
 Previewed jobs are drafts waiting for confirmation, not completed history; the UI must present them separately from terminal history and make them easy to resume.
 If an inventory has active import jobs, the UI must make those jobs easy to resume from the import surface before encouraging a new import.
 Active jobs and preview drafts must be grouped as current work ahead of completed history so users can resume, inspect, or cancel ongoing work before starting another import.
+Current-work rows must have the same row-level affordance as terminal history rows: users should be able to open a running or previewed import by clicking or focusing the row body, while nested actions such as cancel or continue remain independent controls.
 Jobs promoted into current-work groups must not be duplicated in the default history ledger immediately below those groups.
 Warnings and blocking errors must be visually separated. Warnings are non-blocking review signals and should be shown as amber indicators in the main history ledger. Blocking errors, failed imports, and discard-cleanup failures require action and must use red action-required row emphasis in the main history ledger.
 The history page may show a compact action-required alert before the ledger, but it must not render a second row list that pushes the actual history ledger below the first viewport.

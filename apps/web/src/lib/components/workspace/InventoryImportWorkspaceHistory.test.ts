@@ -149,7 +149,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Reading source');
     });
 
-    buttonContaining('Details').click();
+    currentWorkRows()[0].click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Preview plan');
@@ -639,6 +639,13 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Preview Homebox');
       expect(document.body.textContent).not.toContain('No imports match this filter.');
       expect(document.body.textContent).not.toContain('Completed Homebox');
+    });
+
+    currentWorkRows()[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Continue import');
     });
   });
 
@@ -1389,9 +1396,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).not.toContain('Started by owner');
     });
 
-    buttonContaining('Details').click();
+    currentWorkRows()[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
 
     await waitFor(() => {
+      expect(document.body.textContent).toContain('Import details');
       expect(document.body.textContent).toContain('Continue import');
     });
 
@@ -1503,6 +1511,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
 function historyLedgerText(): string {
   return document.body.querySelector('.history-ledger')?.textContent ?? '';
+}
+
+function currentWorkRows(): HTMLElement[] {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('.current-work-section .clickable-row'));
 }
 
 function ledgerSourceNames(): string[] {

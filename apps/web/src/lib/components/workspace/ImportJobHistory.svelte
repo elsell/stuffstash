@@ -331,7 +331,14 @@
       {#if activeJobs.length > 0 && historyFilter !== 'drafts'}
       {#each activeJobs as job}
         <Card.Root>
-          <Card.Content class="import-job-card">
+          <Card.Content
+            class="import-job-card current-work-row clickable-row"
+            role="button"
+            tabindex={0}
+            aria-label={jobActionLabel('View details for', job)}
+            onclick={(event) => openHistoryRow(event, job)}
+            onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
+          >
             <div class="job-main">
               <span class="active-status-icon"><LoaderCircle class="import-history-spin" size={18} aria-hidden="true" /></span>
               <div class="active-job-body">
@@ -380,7 +387,14 @@
       {/if}
       {#if draftJobs.length > 0 && historyFilter !== 'current'}
       {#each draftJobs as job}
-        <div class="history-row draft-row">
+        <div
+          class="history-row draft-row clickable-row"
+          role="button"
+          tabindex={0}
+          aria-label={jobActionLabel('View details for', job)}
+          onclick={(event) => openHistoryRow(event, job)}
+          onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
+        >
           <span class="status-icon"><Clock3 size={18} aria-hidden="true" /></span>
           <div>
             <div class="history-title">
@@ -927,11 +941,16 @@
     background: color-mix(in oklab, var(--muted) 25%, transparent);
   }
 
+  :global(.current-work-row.clickable-row:hover) {
+    background: color-mix(in oklab, var(--muted) 20%, transparent);
+  }
+
   .clickable-row {
     cursor: pointer;
   }
 
-  .clickable-row:focus-visible {
+  .clickable-row:focus-visible,
+  :global(.current-work-row.clickable-row:focus-visible) {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
