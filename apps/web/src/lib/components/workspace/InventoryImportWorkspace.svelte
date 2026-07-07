@@ -907,7 +907,7 @@
 
   <Dialog.Root
     open={canViewImports && Boolean(cancelIntent || removeIntent)}
-    ariaLabel={cancelIntent ? 'Cancel import' : 'Remove import from history'}
+    ariaLabelledBy={cancelIntent ? 'cancel-import-heading' : 'remove-import-heading'}
     dismissDisabled={busy}
     onDismiss={() => {
       cancelIntent = null;

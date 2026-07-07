@@ -6,7 +6,8 @@
 
   type Props = HTMLAttributes<HTMLDivElement> & {
     open: boolean;
-    ariaLabel: string;
+    ariaLabel?: string;
+    ariaLabelledBy?: string;
     dismissDisabled?: boolean;
     onDismiss: () => void;
     children?: Snippet;
@@ -15,6 +16,7 @@
   let {
     open,
     ariaLabel,
+    ariaLabelledBy,
     dismissDisabled = false,
     onDismiss,
     children,
@@ -76,7 +78,8 @@
       class={cn('dialog-content', className)}
       role="dialog"
       aria-modal="true"
-      aria-label={ariaLabel}
+      aria-label={ariaLabelledBy ? undefined : ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       tabindex="-1"
       onkeydown={handleDialogKeydown}
       {...restProps}

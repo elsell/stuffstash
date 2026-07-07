@@ -125,6 +125,8 @@ describe('ImportMessagesList', () => {
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
     expect(dialog).toBeTruthy();
+    expect(dialog?.getAttribute('aria-labelledby')).toBe('issue-detail-title');
+    expect(dialog?.hasAttribute('aria-label')).toBe(false);
     expect(dialog?.textContent).toContain('Meaning');
     expect(dialog?.textContent).toContain('connected to an earlier import');
     expect(dialog?.textContent).toContain('Those records were skipped');

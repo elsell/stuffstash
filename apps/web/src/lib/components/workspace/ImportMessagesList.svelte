@@ -266,7 +266,7 @@
   {/if}
   <Dialog.Root
     open={Boolean(selectedGroup)}
-    ariaLabel="Import issue details"
+    ariaLabelledBy="issue-detail-title"
     class="issue-detail-dialog"
     onDismiss={() => (selectedGroupKey = null)}
   >

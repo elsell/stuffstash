@@ -763,6 +763,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Runs');
       expect(historyLedgerText()).toContain('Completed with warnings.');
     });
+    expect(document.body.querySelector<HTMLElement>('[role="dialog"]')?.getAttribute('aria-labelledby')).toBe('remove-import-heading');
 
     confirmationButton('Keep in history').click();
 
