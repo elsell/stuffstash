@@ -46,6 +46,13 @@ func TestTagEndpointsAuthorizeAndScopeInventory(t *testing.T) {
 	tag := decodeScenarioTag(t, tagCreate).Data
 	tagPath := inventoryPath + "/tags/" + tag.ID
 
+	duplicateTagCreate := performRequest(server, http.MethodPost, inventoryPath+"/tags", "Bearer dev:owner", map[string]any{"displayName": "workshop", "color": "#00aa88"})
+	requireStatus(t, duplicateTagCreate, http.StatusCreated)
+	duplicateTag := decodeScenarioTag(t, duplicateTagCreate).Data
+	if duplicateTag.ID != tag.ID || duplicateTag.DisplayName != tag.DisplayName || duplicateTag.Color != tag.Color {
+		t.Fatalf("expected duplicate create to return existing active tag, got first=%+v duplicate=%+v", tag, duplicateTag)
+	}
+
 	ownerOnlyTagCreate := performRequest(server, http.MethodPost, inventoryPath+"/tags", "Bearer dev:owner", map[string]any{"displayName": "Owner Only"})
 	requireStatus(t, ownerOnlyTagCreate, http.StatusCreated)
 	ownerOnlyTagID := decodeScenarioTag(t, ownerOnlyTagCreate).Data.ID

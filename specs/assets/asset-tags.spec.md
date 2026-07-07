@@ -61,7 +61,7 @@ Required commands:
 
 - `CreateAssetTag`
   - Inputs: tenant ID, inventory ID, authenticated principal, display name, optional key, optional color, source, request ID.
-  - Output: created tag.
+  - Output: created tag, or the existing active tag when the normalized key already exists in the inventory.
 - `UpdateAssetTag`
   - Inputs: tenant ID, inventory ID, tag ID, authenticated principal, optional display name, optional color, source, request ID.
   - Output: updated tag.
@@ -87,6 +87,8 @@ The first REST endpoints are:
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/tags`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}`
+
+Creating a tag with a normalized key that already belongs to an active tag in the inventory must return that existing tag instead of failing. This keeps inline tag creation safe for stale clients and concurrent saves. Archived tags keep their keys reserved; creating a new tag with an archived tag key must fail until a future merge or restore workflow is specified.
 
 Asset create and update requests must accept:
 

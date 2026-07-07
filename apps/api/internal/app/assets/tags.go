@@ -92,9 +92,12 @@ func (s Service) CreateAssetTag(ctx context.Context, input CreateAssetTagInput) 
 	if !ok {
 		return assettag.Tag{}, apperrors.ErrInvalidInput
 	}
-	if _, found, err := s.assetTags.AssetTagByKey(ctx, input.TenantID, input.InventoryID, key); err != nil {
+	if existing, found, err := s.assetTags.AssetTagByKey(ctx, input.TenantID, input.InventoryID, key); err != nil {
 		return assettag.Tag{}, err
 	} else if found {
+		if existing.LifecycleState == assettag.LifecycleStateActive {
+			return existing, nil
+		}
 		return assettag.Tag{}, apperrors.ErrInvalidInput
 	}
 	id, ok := assettag.NewID(s.newID())
@@ -111,7 +114,15 @@ func (s Service) CreateAssetTag(ctx context.Context, input CreateAssetTagInput) 
 		return assettag.Tag{}, err
 	}
 	if err := s.assetTagUnitOfWork.CreateAssetTag(ctx, tag, auditRecord); err != nil {
-		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
+		if errors.Is(err, ports.ErrConflict) {
+			if existing, found, lookupErr := s.assetTags.AssetTagByKey(ctx, input.TenantID, input.InventoryID, key); lookupErr != nil {
+				return assettag.Tag{}, lookupErr
+			} else if found && existing.LifecycleState == assettag.LifecycleStateActive {
+				return existing, nil
+			}
+			return assettag.Tag{}, apperrors.ErrInvalidInput
+		}
+		if errors.Is(err, ports.ErrForbidden) {
 			return assettag.Tag{}, apperrors.ErrInvalidInput
 		}
 		return assettag.Tag{}, err
