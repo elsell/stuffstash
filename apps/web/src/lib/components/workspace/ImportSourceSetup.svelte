@@ -123,8 +123,8 @@
         </div>
         <div class="connection-summary" aria-label="Connection summary">
           <span><Server size={16} aria-hidden="true" />Live Homebox API</span>
-          <span><LockKeyhole size={16} aria-hidden="true" />Credentials are used for this preview</span>
-          <span><Image size={16} aria-hidden="true" />Photos {includeImages ? 'on' : 'off'}</span>
+          <span><LockKeyhole size={16} aria-hidden="true" />Credentials are encrypted for preview and import</span>
+          <span><Image size={16} aria-hidden="true" />{includeImages ? 'Photos will be imported' : 'Photos will be skipped'}</span>
         </div>
       </div>
     {:else}

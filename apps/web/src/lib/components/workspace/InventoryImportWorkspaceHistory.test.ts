@@ -1494,10 +1494,19 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.querySelector<HTMLInputElement>('#homebox-url')).toBeTruthy();
+      expect(document.body.querySelector('[aria-label="Connection summary"]')?.textContent).toContain('Credentials are encrypted for preview and import');
+      expect(document.body.querySelector('[aria-label="Connection summary"]')?.textContent).toContain('Photos will be imported');
+      expect(document.body.querySelector('[aria-label="Connection summary"]')?.textContent).not.toContain('Photos on');
     });
     setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-url')!, 'http://stale-homebox.local:7744');
     setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-user')!, 'stale@example.test');
     setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-password')!, 'stale-password');
+    labelContaining('Import photos when Homebox provides them').click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[aria-label="Connection summary"]')?.textContent).toContain('Photos will be skipped');
+      expect(document.body.querySelector('[aria-label="Connection summary"]')?.textContent).not.toContain('Photos off');
+    });
 
     buttonContaining('Back to history').click();
     await waitFor(() => {
@@ -1604,6 +1613,16 @@ function sortButton(label: string): HTMLButtonElement {
     throw new Error(`Missing sort button containing ${label}`);
   }
   return button;
+}
+
+function labelContaining(text: string): HTMLLabelElement {
+  const label = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!label) {
+    throw new Error(`Missing label containing ${text}`);
+  }
+  return label;
 }
 
 function confirmationButton(text: string): HTMLButtonElement {
