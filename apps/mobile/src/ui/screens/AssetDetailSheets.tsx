@@ -15,6 +15,11 @@ import type { AssetTagOptionViewModel } from '../../application/assets/Inventory
 import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
+  applyInlineAssetTagResolution,
+  canResolveInlineAssetTag,
+  resolveInlineAssetTag
+} from '../../application/assets/AssetTagDraftResolution';
+import {
   assetEditContext,
   canSaveEditAsset,
   EditDraft
@@ -153,31 +158,31 @@ function EditTagPicker({
     if (disabled || displayName.length === 0) {
       return;
     }
-    const color = normalizeTagColor(newTagColor);
-    if (color === undefined && newTagColor.trim().length > 0) {
-      return;
-    }
-    const existing = tags.find((tag) => sameTagName(tag.label, displayName));
-    if (existing) {
-      if (!selected.has(existing.id)) {
-        onChange([...selectedTagIds, existing.id]);
-      }
+    const resolution = resolveInlineAssetTag({
+      displayName,
+      color: newTagColor,
+      activeTags: tags,
+      pendingTags: newTags
+    });
+    const transition = applyInlineAssetTagResolution({
+      resolution,
+      selectedTagIds,
+      pendingTags: newTags
+    });
+    onChange(transition.selectedTagIds);
+    onNewTagsChange(transition.pendingTags);
+    if (transition.shouldClearInputs) {
       setNewTagName('');
       setNewTagColor('');
-      return;
     }
-    if (newTags.some((tag) => sameTagName(tag.displayName, displayName))) {
-      setNewTagName('');
-      setNewTagColor('');
-      return;
-    }
-    onNewTagsChange([...newTags, color ? { displayName, color } : { displayName }]);
-    setNewTagName('');
-    setNewTagColor('');
   }
 
-  const canAddNewTag = newTagName.trim().length > 0
-    && (newTagColor.trim().length === 0 || normalizeTagColor(newTagColor) !== undefined);
+  const canAddNewTag = canResolveInlineAssetTag({
+    displayName: newTagName,
+    color: newTagColor,
+    activeTags: tags,
+    pendingTags: newTags
+  });
 
   return (
     <View style={styles.tagPicker}>
@@ -249,23 +254,6 @@ function EditTagPicker({
       </View>
     </View>
   );
-}
-
-function normalizeTagColor(value: string): string | undefined {
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return undefined;
-  }
-  const match = /^#?([0-9a-fA-F]{6})$/.exec(trimmed);
-  return match ? `#${match[1].toUpperCase()}` : undefined;
-}
-
-function sameTagName(left: string, right: string): boolean {
-  return tagNameKey(left) === tagNameKey(right);
-}
-
-function tagNameKey(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 export function MoveAssetSheet({

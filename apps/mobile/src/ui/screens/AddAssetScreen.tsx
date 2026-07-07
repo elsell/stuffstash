@@ -23,6 +23,12 @@ import {
   AddAssetDraftStore
 } from '../../application/add/AddAssetDraftStore';
 import type { AssetTagSummary } from '../../domain/assets/AssetSummary';
+import {
+  applyInlineAssetTagResolution,
+  canResolveInlineAssetTag,
+  reconcileCreatedAssetTags,
+  resolveInlineAssetTag
+} from '../../application/assets/AssetTagDraftResolution';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import {
   ParentLookupQuery,
@@ -312,7 +318,7 @@ export function AddAssetScreen({
     try {
       const dashboard = await dashboardQuery.execute();
       setLoadState({ status: 'ready', dashboard });
-      const reconciled = reconcileStagedTags(stagedTags, dashboard.assetTags);
+      const reconciled = reconcileCreatedAssetTags(stagedTags, dashboard.assetTags);
       if (reconciled.createdTagIds.length > 0) {
         setSelectedTagIds((current) => uniqueStrings([...current, ...reconciled.createdTagIds]));
         setNewTags(reconciled.remainingTags);
@@ -1003,7 +1009,6 @@ function AssetTagPicker({
 }) {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('');
-
   const selected = new Set(selectedTagIds);
 
   function toggleTag(tagId: string): void {
@@ -1019,31 +1024,31 @@ function AssetTagPicker({
     if (displayName.length === 0) {
       return;
     }
-    const color = normalizeTagColor(newTagColor);
-    if (color === undefined && newTagColor.trim().length > 0) {
-      return;
-    }
-    const existing = tags.find((tag) => sameTagName(tag.displayName, displayName));
-    if (existing) {
-      if (!selected.has(existing.id)) {
-        onChange([...selectedTagIds, existing.id]);
-      }
+    const resolution = resolveInlineAssetTag({
+      displayName,
+      color: newTagColor,
+      activeTags: tags,
+      pendingTags: newTags
+    });
+    const transition = applyInlineAssetTagResolution({
+      resolution,
+      selectedTagIds,
+      pendingTags: newTags
+    });
+    onChange(transition.selectedTagIds);
+    onNewTagsChange(transition.pendingTags);
+    if (transition.shouldClearInputs) {
       setNewTagName('');
       setNewTagColor('');
-      return;
     }
-    if (newTags.some((tag) => sameTagName(tag.displayName, displayName))) {
-      setNewTagName('');
-      setNewTagColor('');
-      return;
-    }
-    onNewTagsChange([...newTags, color ? { displayName, color } : { displayName }]);
-    setNewTagName('');
-    setNewTagColor('');
   }
 
-  const canAddNewTag = newTagName.trim().length > 0
-    && (newTagColor.trim().length === 0 || normalizeTagColor(newTagColor) !== undefined);
+  const canAddNewTag = canResolveInlineAssetTag({
+    displayName: newTagName,
+    color: newTagColor,
+    activeTags: tags,
+    pendingTags: newTags
+  });
 
   return (
     <View style={styles.tagPicker}>
@@ -1111,44 +1116,6 @@ function AssetTagPicker({
       </View>
     </View>
   );
-}
-
-function normalizeTagColor(value: string): string | undefined {
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return undefined;
-  }
-  const match = /^#?([0-9a-fA-F]{6})$/.exec(trimmed);
-  return match ? `#${match[1].toUpperCase()}` : undefined;
-}
-
-function sameTagName(left: string, right: string): boolean {
-  return tagNameKey(left) === tagNameKey(right);
-}
-
-function tagNameKey(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
-function reconcileStagedTags(
-  stagedTags: readonly CreateInventoryAssetTagInput[],
-  activeTags: readonly AssetTagSummary[]
-): {
-  readonly createdTagIds: readonly string[];
-  readonly remainingTags: readonly CreateInventoryAssetTagInput[];
-} {
-  const activeByName = new Map(activeTags.map((tag) => [tagNameKey(tag.displayName), tag.id]));
-  const createdTagIds: string[] = [];
-  const remainingTags: CreateInventoryAssetTagInput[] = [];
-  for (const tag of stagedTags) {
-    const createdTagId = activeByName.get(tagNameKey(tag.displayName));
-    if (createdTagId) {
-      createdTagIds.push(createdTagId);
-    } else {
-      remainingTags.push(tag);
-    }
-  }
-  return { createdTagIds, remainingTags };
 }
 
 function uniqueStrings(values: readonly string[]): readonly string[] {

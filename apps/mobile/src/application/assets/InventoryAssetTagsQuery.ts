@@ -3,6 +3,7 @@ import type { InventorySummaryRepository } from '../home/InventorySummaryReposit
 
 export type AssetTagOptionViewModel = {
   readonly id: string;
+  readonly key: string;
   readonly label: string;
   readonly color?: string;
 };
@@ -19,6 +20,7 @@ export class InventoryAssetTagsQuery {
 function toTagOption(tag: AssetTagSummary): AssetTagOptionViewModel {
   return {
     id: tag.id,
+    key: tag.key,
     label: tag.displayName,
     color: tag.color
   };

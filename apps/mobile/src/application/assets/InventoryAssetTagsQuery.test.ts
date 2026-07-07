@@ -90,6 +90,7 @@ describe('InventoryAssetTagsQuery', () => {
     await expect(query.execute()).resolves.toEqual([
       {
         id: 'tag-workshop',
+        key: 'workshop',
         label: 'Workshop',
         color: '#2F80ED'
       }

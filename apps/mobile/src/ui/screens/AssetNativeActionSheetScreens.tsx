@@ -18,6 +18,7 @@ import { InventoryAssetTagsQuery, type AssetTagOptionViewModel } from '../../app
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
+import { reconcileCreatedAssetTags } from '../../application/assets/AssetTagDraftResolution';
 import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
 import {
   AssetCheckoutHistorySheet,
@@ -137,7 +138,7 @@ export function AssetEditSheetRouteScreen({
   async function refreshEditAssetTags(stagedTags: readonly CreateInventoryAssetTagInput[]): Promise<void> {
     try {
       const assetTags = await inventoryAssetTagsQuery.execute();
-      const reconciled = reconcileStagedTags(stagedTags, assetTags);
+      const reconciled = reconcileCreatedAssetTags(stagedTags, assetTags);
       setState((current) => current.status === 'ready' ? { ...current, assetTags } : current);
       if (reconciled.createdTagIds.length > 0) {
         setDraft((current) => current
@@ -170,31 +171,6 @@ export function AssetEditSheetRouteScreen({
       ) : null}
     </NativeSheetFrame>
   );
-}
-
-function reconcileStagedTags(
-  stagedTags: readonly CreateInventoryAssetTagInput[],
-  activeTags: readonly AssetTagOptionViewModel[]
-): {
-  readonly createdTagIds: readonly string[];
-  readonly remainingTags: readonly CreateInventoryAssetTagInput[];
-} {
-  const activeByName = new Map(activeTags.map((tag) => [tagNameKey(tag.label), tag.id]));
-  const createdTagIds: string[] = [];
-  const remainingTags: CreateInventoryAssetTagInput[] = [];
-  for (const tag of stagedTags) {
-    const createdTagId = activeByName.get(tagNameKey(tag.displayName));
-    if (createdTagId) {
-      createdTagIds.push(createdTagId);
-    } else {
-      remainingTags.push(tag);
-    }
-  }
-  return { createdTagIds, remainingTags };
-}
-
-function tagNameKey(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 function uniqueStrings(values: readonly string[]): readonly string[] {
