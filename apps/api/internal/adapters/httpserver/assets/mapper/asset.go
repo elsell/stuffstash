@@ -83,6 +83,7 @@ func AssetsToResponse(items []asset.Asset, primaryPhotos map[ports.AttachmentAss
 func CurrentCheckoutToResponse(checkout asset.Checkout) *dto.CurrentCheckout {
 	return &dto.CurrentCheckout{
 		ID:                      checkout.ID.String(),
+		State:                   checkout.State.String(),
 		CheckedOutAt:            checkout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
 		CheckedOutByPrincipalID: checkout.CheckedOutByPrincipal,
 	}

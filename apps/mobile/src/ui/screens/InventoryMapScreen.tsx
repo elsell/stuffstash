@@ -1210,7 +1210,7 @@ function InventoryMapRow({
                 <Text numberOfLines={1} style={styles.rowTitle}>{asset.title}</Text>
               </View>
               <Text numberOfLines={1} style={styles.rowMeta}>
-                {asset.kindLabel}{asset.customTypeLabel ? ` · ${asset.customTypeLabel}` : ''}
+                {asset.kindLabel}{asset.customTypeLabel ? ` · ${asset.customTypeLabel}` : ''}{asset.checkedOutLabel ? ` · ${asset.checkedOutLabel}` : ''}
               </Text>
               <Text numberOfLines={1} style={styles.rowTrail}>{asset.placementLabel}</Text>
             </View>

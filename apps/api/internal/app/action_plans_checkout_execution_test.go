@@ -110,3 +110,37 @@ func TestExecuteActionPlanReturnsCheckedOutAssetAndMarksExecuted(t *testing.T) {
 		t.Fatalf("unexpected return execution result: %+v", result)
 	}
 }
+
+func TestExecuteActionPlanMarksCheckoutPlanFailedWhenExecutionRejectsStaleState(t *testing.T) {
+	t.Parallel()
+
+	repository := &fakeActionPlanRepository{
+		records: map[string]ports.ActionPlanRecord{
+			"plan-1": actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindCheckoutAsset, `{"assetId":"asset-1"}`),
+		},
+	}
+	item := assetItem("asset-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	assets := &fakeAssetRepository{
+		items: map[asset.ID]asset.Asset{
+			item.ID: item,
+		},
+		checkOutAssetErr: ports.ErrForbidden,
+	}
+	application := newActionPlanExecutionTestApp(repository, assets, &fakeIDGenerator{ids: []string{"checkout-1", "undo-1", "audit-1"}})
+
+	result, err := application.ExecuteActionPlanDetailed(context.Background(), ActionPlanDecisionInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		PlanID:      "plan-1",
+	})
+	if err == nil {
+		t.Fatalf("expected stale checkout execution error")
+	}
+	if result.Record.State != actionplan.StateFailed || result.Record.FailedAt.IsZero() {
+		t.Fatalf("expected failed plan after execution rejection, got %+v", result.Record)
+	}
+	if repository.records["plan-1"].State != actionplan.StateFailed {
+		t.Fatalf("expected repository plan to be failed, got %+v", repository.records["plan-1"])
+	}
+}

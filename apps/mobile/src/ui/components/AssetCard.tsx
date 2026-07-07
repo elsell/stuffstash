@@ -25,6 +25,7 @@ export function AssetCard({ asset, onPress }: AssetCardProps) {
         <View style={styles.badgeRow}>
           <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
           {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
+          {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
         </View>
         <Text numberOfLines={2} style={styles.title}>
           {asset.title}
@@ -99,6 +100,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
     color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 4
+  },
+  checkoutBadge: {
+    backgroundColor: colors.warningSurface,
+    borderRadius: radius.sm,
+    color: colors.warning,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0,

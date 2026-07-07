@@ -53,6 +53,7 @@ type AssetPhotoThumbnails = shared.AssetPhotoThumbnails
 
 type SearchCurrentCheckout struct {
 	ID                      string `json:"id"`
+	State                   string `json:"state"`
 	CheckedOutAt            string `json:"checkedOutAt"`
 	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
 }

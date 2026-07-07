@@ -445,23 +445,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tenants/{tenantId}/inventories/{inventoryId}/assets/checked-out": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get tenants by tenant ID inventories by inventory ID assets checked out */
-        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-checked-out"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}": {
         parameters: {
             query?: never;
@@ -730,6 +713,23 @@ export interface paths {
         };
         /** Get tenants by tenant ID inventories by inventory ID audit records */
         get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-audit-records"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/checked-out-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID checked out assets */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-checked-out-assets"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1455,6 +1455,7 @@ export interface components {
             checkedOutAt: string;
             checkedOutByPrincipalId: string;
             id: string;
+            state: string;
         };
         DefinitionResponse: {
             applicability: string;
@@ -1843,6 +1844,7 @@ export interface components {
             checkedOutAt: string;
             checkedOutByPrincipalId: string;
             id: string;
+            state: string;
         };
         SearchMatch: {
             field: string;
@@ -3978,50 +3980,6 @@ export interface operations {
             };
         };
     };
-    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-checked-out": {
-        parameters: {
-            query?: {
-                /** @description Requested page size */
-                limit?: number;
-                /** @description Opaque cursor from the previous page */
-                cursor?: string;
-            };
-            header?: {
-                /** @description Bearer dev:<principal-id> */
-                Authorization?: string;
-                /** @description Optional request correlation ID */
-                "X-Request-ID"?: string;
-            };
-            path: {
-                /** @description Tenant ID */
-                tenantId: string;
-                /** @description Inventory ID */
-                inventoryId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessEnvelopeListCheckedOutAssetResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
         parameters: {
             query?: never;
@@ -4877,6 +4835,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListRecordResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-checked-out-assets": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListCheckedOutAssetResponse"];
                 };
             };
             /** @description Error */

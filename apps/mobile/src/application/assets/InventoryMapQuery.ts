@@ -19,6 +19,7 @@ export type InventoryMapAssetViewModel = {
   readonly canAddContainedAssets: boolean;
   readonly imagePlaceholderLabel: string;
   readonly photoLabel: string;
+  readonly checkedOutLabel?: string;
   readonly photo?: {
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
@@ -100,6 +101,7 @@ function toInventoryMapAssetViewModel(
     canAddContainedAssets: canContainAssets && options.canCreateAsset && options.canEditAsset,
     imagePlaceholderLabel: card.imagePlaceholderLabel,
     photoLabel: card.photoLabel,
+    checkedOutLabel: card.checkedOutLabel,
     photo: card.photo
   };
 }

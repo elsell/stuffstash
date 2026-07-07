@@ -14,10 +14,12 @@ import (
 )
 
 type fakeAssetRepository struct {
-	items        map[asset.ID]asset.Asset
-	checkouts    map[asset.CheckoutID]asset.Checkout
-	undoables    map[string]ports.UndoableOperation
-	auditRecords []audit.Record
+	items            map[asset.ID]asset.Asset
+	checkouts        map[asset.CheckoutID]asset.Checkout
+	undoables        map[string]ports.UndoableOperation
+	auditRecords     []audit.Record
+	checkOutAssetErr error
+	returnAssetErr   error
 }
 
 func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
@@ -50,6 +52,9 @@ func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset, a
 }
 
 func (f *fakeAssetRepository) CheckOutAsset(_ context.Context, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	if f.checkOutAssetErr != nil {
+		return f.checkOutAssetErr
+	}
 	if f.items == nil {
 		f.items = map[asset.ID]asset.Asset{}
 	}
@@ -83,6 +88,9 @@ func (f *fakeAssetRepository) CheckOutAsset(_ context.Context, checkout asset.Ch
 }
 
 func (f *fakeAssetRepository) ReturnAsset(_ context.Context, expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	if f.returnAssetErr != nil {
+		return f.returnAssetErr
+	}
 	if f.checkouts == nil {
 		return ports.ErrForbidden
 	}

@@ -21,6 +21,7 @@ export type AssetSummary = {
 
 export type CurrentCheckoutSummary = {
   readonly id: string;
+  readonly state: string;
   readonly checkedOutAt: string;
   readonly checkedOutByPrincipalId: string;
 };

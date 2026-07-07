@@ -91,7 +91,7 @@ func RegisterCheckoutHistory(api huma.API, application app.App) {
 }
 
 func RegisterCheckedOutAssets(api huma.API, application app.App) {
-	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets/checked-out", func(ctx context.Context, input *dto.ListCheckedOutAssetsInput) (*dto.ListCheckedOutAssetsOutput, error) {
+	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/checked-out-assets", func(ctx context.Context, input *dto.ListCheckedOutAssetsInput) (*dto.ListCheckedOutAssetsOutput, error) {
 		principal, err := shared.Authenticate(ctx, application, input.Authorization)
 		if err != nil {
 			return nil, err

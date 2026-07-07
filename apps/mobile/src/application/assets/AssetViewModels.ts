@@ -9,6 +9,7 @@ export type AssetCardViewModel = {
   readonly locationTrailLabel: string;
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
+  readonly checkedOutLabel?: string;
   readonly imagePlaceholderLabel: string;
   readonly photo?: {
     readonly uri: string;
@@ -77,6 +78,7 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     locationTrailLabel: labelLocationTrail(asset.locationTrail),
     updatedAtLabel: asset.updatedAtLabel,
     photoLabel: asset.hasPhoto ? 'Photo ready' : 'Needs photo',
+    checkedOutLabel: asset.currentCheckout ? 'Checked out' : undefined,
     imagePlaceholderLabel: placeholderForKind(asset.kind),
     photo: asset.photo
   };

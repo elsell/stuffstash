@@ -102,6 +102,7 @@ describe('StuffStashClient', () => {
           updatedAt: '2026-06-24T10:00:00Z',
           currentCheckout: {
             id: 'checkout-one',
+            state: 'open',
             checkedOutAt: '2026-06-24T11:00:00Z',
             checkedOutByPrincipalId: 'user-one'
           }
@@ -114,6 +115,7 @@ describe('StuffStashClient', () => {
       id: 'asset-one',
       currentCheckout: {
         id: 'checkout-one',
+        state: 'open',
         checkedOutByPrincipalId: 'user-one'
       }
     });

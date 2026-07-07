@@ -309,6 +309,7 @@ function RecentAssetCard({
         <View style={styles.badgeRow}>
           <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
           {asset.customTypeLabel ? <Text style={styles.customTypeBadge}>{asset.customTypeLabel}</Text> : null}
+          {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
         </View>
         <Text numberOfLines={2} style={styles.assetTitle}>
           {asset.title}

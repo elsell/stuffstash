@@ -77,7 +77,7 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 		t.Fatalf("expected list current checkout projection, got %+v", listBody.Data)
 	}
 
-	checkedOutList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/checked-out?limit=10", "Bearer dev:viewer-user", nil)
+	checkedOutList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/checked-out-assets?limit=10", "Bearer dev:viewer-user", nil)
 	if checkedOutList.Code != http.StatusOK {
 		t.Fatalf("expected checked-out list status %d, got %d with body %s", http.StatusOK, checkedOutList.Code, checkedOutList.Body.String())
 	}
@@ -109,7 +109,7 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 		t.Fatalf("unexpected return response: %+v", returnedBody.Data)
 	}
 
-	emptyCheckedOutList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/checked-out?limit=10", "Bearer dev:owner", nil)
+	emptyCheckedOutList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/checked-out-assets?limit=10", "Bearer dev:owner", nil)
 	if emptyCheckedOutList.Code != http.StatusOK {
 		t.Fatalf("expected empty checked-out list status %d, got %d with body %s", http.StatusOK, emptyCheckedOutList.Code, emptyCheckedOutList.Body.String())
 	}

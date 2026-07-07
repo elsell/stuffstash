@@ -86,6 +86,12 @@ export function containedAssetRows(
 }
 
 function containedAssetSupportingLabel(asset: AssetCardViewModel): string {
+  if (asset.checkedOutLabel) {
+    return asset.description.trim().length > 0
+      ? `${asset.checkedOutLabel} · ${asset.description.trim()}`
+      : asset.checkedOutLabel;
+  }
+
   const description = asset.description.trim();
   if (description.length > 0) {
     return description;

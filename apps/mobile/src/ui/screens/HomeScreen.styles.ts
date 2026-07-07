@@ -384,6 +384,17 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
   },
+  checkoutBadge: {
+    backgroundColor: colors.warningSurface,
+    borderRadius: radius.sm,
+    color: colors.warning,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
   assetTitle: {
     color: colors.text,
     fontSize: 17,

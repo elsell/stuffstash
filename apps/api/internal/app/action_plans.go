@@ -138,9 +138,6 @@ func (a App) ExecuteActionPlanDetailed(ctx context.Context, input ActionPlanDeci
 
 	executed, err := a.executeApprovedActionPlanCommands(ctx, input, record)
 	if err != nil {
-		if errors.Is(err, ports.ErrForbidden) {
-			return ActionPlanExecutionResult{}, err
-		}
 		failed, failErr := a.transitionActionPlan(ctx, input, actionplan.StateFailed)
 		if failErr != nil {
 			return ActionPlanExecutionResult{}, failErr
