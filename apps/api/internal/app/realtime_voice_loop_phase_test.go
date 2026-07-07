@@ -340,6 +340,21 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	if realtimeVoiceShouldRequireCheckoutHistory("Who checked out the drill?", checkoutHistoryResult) {
 		t.Fatalf("did not expect checkout history to be required after checkout history already ran")
 	}
+	failedCheckoutHistoryResult := append(checkoutSearchResult, ports.AgentToolResult{
+		Name:    RealtimeVoiceToolListAssetCheckoutHistory,
+		Content: `{"tool":"list_asset_checkout_history","status":"error","code":"invalid_tool_request","retryable":true}`,
+	})
+	if !realtimeVoiceShouldRequireCheckoutHistory("Who checked out the drill?", failedCheckoutHistoryResult) {
+		t.Fatalf("expected failed checkout history result not to satisfy required history read")
+	}
+	checkedOutListResult := []ports.AgentToolResult{{
+		Name:    RealtimeVoiceToolListCheckedOutAssets,
+		Content: `{"tool":"list_checked_out_assets","items":[{"assetId":"drill-1","title":"Drill","kind":"item"}]}`,
+	}}
+	call, title = realtimeVoiceServerSelectedReadCall("Who has the drill?", 1, checkedOutListResult, ports.AgentToolCall{ID: "checkout-history-from-list"})
+	if title != "Server-selected checkout history" || call.Name != RealtimeVoiceToolListAssetCheckoutHistory || call.Arguments["assetId"] != "drill-1" {
+		t.Fatalf("expected checked-out list result to drive checkout history, title=%q call=%+v", title, call)
+	}
 	for _, transcript := range []string{
 		"Who had the drill?",
 		"Who borrowed the drill?",

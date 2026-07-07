@@ -56,6 +56,54 @@ func TestRealtimeVoiceListCheckedOutAssetsToolReturnsCurrentCheckoutState(t *tes
 	}
 }
 
+func TestRealtimeVoiceListCheckedOutAssetsToolMakesAssetsVisibleForCheckoutHistory(t *testing.T) {
+	t.Parallel()
+
+	drill := assetItem("drill-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	now := time.Date(2026, 6, 26, 17, 30, 0, 0, time.UTC)
+	application := newActionPlanExecutionTestApp(&fakeActionPlanRepository{}, &fakeAssetRepository{
+		items: map[asset.ID]asset.Asset{
+			drill.ID: drill,
+		},
+		checkouts: map[asset.CheckoutID]asset.Checkout{
+			asset.CheckoutID("checkout-drill"): {
+				ID:                    asset.CheckoutID("checkout-drill"),
+				TenantID:              asset.TenantID("tenant-home"),
+				InventoryID:           asset.InventoryID("inventory-home"),
+				AssetID:               drill.ID,
+				State:                 asset.CheckoutStateOpen,
+				CheckedOutAt:          now,
+				CheckedOutByPrincipal: "user-1",
+			},
+		},
+	}, &fakeIDGenerator{})
+
+	visibleAssetIDs := map[string]struct{}{}
+	result, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+		ID:        "tool-call-checked-out",
+		Name:      RealtimeVoiceToolListCheckedOutAssets,
+		Arguments: map[string]any{"limit": 5},
+	}, visibleAssetIDs)
+	if err != nil {
+		t.Fatalf("execute checked-out list tool: %v", err)
+	}
+	if err := collectRealtimeVoiceVisibleAssetIDs(result, visibleAssetIDs); err != nil {
+		t.Fatalf("collect visible asset IDs: %v", err)
+	}
+	if _, ok := visibleAssetIDs["drill-1"]; !ok {
+		t.Fatalf("expected checked-out list result to mark drill visible, got %+v", visibleAssetIDs)
+	}
+
+	_, _, err = application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+		ID:        "tool-call-history",
+		Name:      RealtimeVoiceToolListAssetCheckoutHistory,
+		Arguments: map[string]any{"assetId": "drill-1", "limit": 5},
+	}, visibleAssetIDs)
+	if err != nil {
+		t.Fatalf("expected checkout history to accept asset made visible by checked-out list: %v", err)
+	}
+}
+
 func TestRealtimeVoiceListAssetCheckoutHistoryToolRequiresVisibleAsset(t *testing.T) {
 	t.Parallel()
 

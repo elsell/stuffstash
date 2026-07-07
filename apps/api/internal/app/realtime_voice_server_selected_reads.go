@@ -286,7 +286,7 @@ func (a App) executeRealtimeVoiceServerSelectedRead(ctx context.Context, session
 		return nil, nil
 	}
 	executedToolCalls[signature] = struct{}{}
-	if call.Name == RealtimeVoiceToolSearchAuthorizedAssets || call.Name == RealtimeVoiceToolListAuthorizedAssets {
+	if realtimeVoiceToolReturnsVisibleAssetItems(call.Name) {
 		if err := collectRealtimeVoiceVisibleAssetIDs(result, visibleAssetIDs); err != nil {
 			return nil, err
 		}

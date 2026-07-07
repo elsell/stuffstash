@@ -314,7 +314,7 @@ func realtimeVoiceBestMentionedVisibleItem(transcript string, items []realtimeVo
 
 func realtimeVoiceHasAssetCheckoutHistoryResult(toolResults []ports.AgentToolResult) bool {
 	for _, result := range toolResults {
-		if result.Name == RealtimeVoiceToolListAssetCheckoutHistory {
+		if result.Name == RealtimeVoiceToolListAssetCheckoutHistory && realtimeVoiceToolResultSucceeded(result) {
 			return true
 		}
 	}
@@ -343,7 +343,7 @@ func realtimeVoiceHasListResult(toolResults []ports.AgentToolResult) bool {
 func realtimeVoiceVisibleReadItems(toolResults []ports.AgentToolResult) []realtimeVoiceAssetToolItem {
 	items := []realtimeVoiceAssetToolItem{}
 	for _, result := range toolResults {
-		if result.Name != RealtimeVoiceToolSearchAuthorizedAssets && result.Name != RealtimeVoiceToolListAuthorizedAssets {
+		if !realtimeVoiceToolReturnsVisibleAssetItems(result.Name) {
 			continue
 		}
 		var output realtimeVoiceAssetToolOutput
@@ -353,4 +353,20 @@ func realtimeVoiceVisibleReadItems(toolResults []ports.AgentToolResult) []realti
 		items = append(items, output.Items...)
 	}
 	return items
+}
+
+func realtimeVoiceToolReturnsVisibleAssetItems(name string) bool {
+	return name == RealtimeVoiceToolSearchAuthorizedAssets ||
+		name == RealtimeVoiceToolListAuthorizedAssets ||
+		name == RealtimeVoiceToolListCheckedOutAssets
+}
+
+func realtimeVoiceToolResultSucceeded(result ports.AgentToolResult) bool {
+	var envelope struct {
+		Status string `json:"status"`
+	}
+	if err := json.Unmarshal([]byte(result.Content), &envelope); err != nil {
+		return false
+	}
+	return envelope.Status != "error"
 }

@@ -487,7 +487,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				continue
 			}
 			executedToolCalls[signature] = struct{}{}
-			if call.Name == RealtimeVoiceToolSearchAuthorizedAssets || call.Name == RealtimeVoiceToolListAuthorizedAssets {
+			if realtimeVoiceToolReturnsVisibleAssetItems(call.Name) {
 				if err := collectRealtimeVoiceVisibleAssetIDs(result, visibleAssetIDs); err != nil {
 					return err
 				}
