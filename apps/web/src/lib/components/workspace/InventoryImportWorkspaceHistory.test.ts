@@ -419,6 +419,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Homebox · homebox.local:7744');
     });
 
     buttonContaining('More').click();

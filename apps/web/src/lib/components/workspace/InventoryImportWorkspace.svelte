@@ -29,6 +29,7 @@
     canRequestCancellation,
     importIssueTone,
     progressSummary,
+    sourceDescription,
     terminalJobMayHaveChangedInventory
   } from './importWorkspacePresentation';
   import ImportJobDetailPanel from './ImportJobDetailPanel.svelte';
@@ -774,7 +775,7 @@
         {#if step === 'history'}
           {`View current and past data imports for ${inventory?.name ?? 'this inventory'}.`}
         {:else if step === 'detail'}
-          {`Import run for ${inventory?.name ?? 'this inventory'}.`}
+          {selectedJob ? `${selectedJob.source.name} · ${sourceDescription(selectedJob)}` : `Import run for ${inventory?.name ?? 'this inventory'}.`}
         {:else if step === 'run'}
           The job is running in the background.
         {:else}
