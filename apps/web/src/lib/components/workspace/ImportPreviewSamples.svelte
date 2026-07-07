@@ -4,6 +4,7 @@
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import type { ImportJobPreview } from '$lib/domain/inventory';
   import * as Button from '$lib/components/ui/button/index.js';
+  import * as Table from '$lib/components/ui/table/index.js';
   import { fileSizeLabel, previewAssetContext, previewLocationContext } from './importWorkspacePresentation';
 
   const PLAN_PAGE_SIZE = 8;
@@ -185,26 +186,26 @@
       {#if section.rows.length === 0}
         <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {section.emptyText}</div>
       {:else}
-        <div class="plan-table-wrap">
-          <table class="plan-table" aria-label={`${section.title} plan preview`}>
-            <thead>
-              <tr>
-                {#each section.columns as column}
-                  <th scope="col">{column.label}</th>
-                {/each}
-              </tr>
-            </thead>
-            <tbody>
-              {#each visibleRows(section) as row}
-                <tr>
-                  {#each section.columns as column, index}
-                    <td class:primary-cell={index === 0}>{row.cells[column.key]}</td>
-                  {/each}
-                </tr>
+        <Table.Root aria-label={`${section.title} plan preview`}>
+          <Table.Header>
+            <Table.Row>
+              {#each section.columns as column}
+                <Table.Head scope="col">{column.label}</Table.Head>
               {/each}
-            </tbody>
-          </table>
-        </div>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {#each visibleRows(section) as row}
+              <Table.Row>
+                {#each section.columns as column}
+                  <Table.Cell class={column.key === 'name' ? 'font-semibold text-foreground md:min-w-48' : ''}>
+                    {row.cells[column.key]}
+                  </Table.Cell>
+                {/each}
+              </Table.Row>
+            {/each}
+          </Table.Body>
+        </Table.Root>
         {#if section.rows.length > PLAN_PAGE_SIZE}
           <div class="plan-pagination">
             <span>Page {pageBySection[section.id] + 1} of {planPageCount(section)}</span>
@@ -286,53 +287,6 @@
     white-space: nowrap;
   }
 
-  .plan-table-wrap {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    min-width: 0;
-    overflow-x: auto;
-  }
-
-  .plan-table {
-    border-collapse: collapse;
-    min-width: 0;
-    width: 100%;
-  }
-
-  .plan-table th,
-  .plan-table td {
-    border-top: 1px solid var(--border);
-    font-size: 0.82rem;
-    min-width: 7rem;
-    overflow-wrap: anywhere;
-    padding: 0.48rem 0.6rem;
-    text-align: left;
-    vertical-align: top;
-  }
-
-  .plan-table th {
-    background: color-mix(in oklab, var(--muted) 32%, transparent);
-    border-top: 0;
-    color: var(--muted-foreground);
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  .plan-table td {
-    color: var(--muted-foreground);
-  }
-
-  .plan-table th:first-child,
-  .plan-table td:first-child {
-    min-width: 12rem;
-  }
-
-  .plan-table .primary-cell {
-    color: var(--foreground);
-    font-weight: 600;
-  }
-
   .plan-pagination {
     justify-content: flex-end;
   }
@@ -351,12 +305,5 @@
   h3 {
     font-size: 1rem;
     margin: 0;
-  }
-
-  @media (max-width: 860px) {
-    .plan-table th,
-    .plan-table td {
-      min-width: 10rem;
-    }
   }
 </style>

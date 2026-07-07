@@ -980,7 +980,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).not.toContain('Imported record 26');
       expect(document.body.textContent).toContain('Page 1 of 2');
     });
-    expect(document.body.querySelector<HTMLElement>('.resource-list')?.tagName).toBe('TABLE');
+    expect(document.body.querySelector<HTMLElement>('table[aria-label="Imported records"]')?.dataset.slot).toBe('table');
     expect(Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a.resource-link')).slice(0, 3).map((link) => link.getAttribute('aria-label'))).toEqual([
       'Open Imported record 1',
       'Open Imported record 2',

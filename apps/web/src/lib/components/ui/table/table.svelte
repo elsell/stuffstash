@@ -5,6 +5,7 @@
   let {
     ref = $bindable(null),
     class: className,
+    'aria-label': ariaLabel,
     children,
     ...restProps
   }: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
@@ -16,7 +17,7 @@
   class={cn('border-border min-w-0 overflow-x-auto rounded-lg border', className)}
   {...restProps}
 >
-  <table data-slot="table" class="w-full border-collapse text-sm">
+  <table data-slot="table" class="w-full border-collapse text-sm" aria-label={ariaLabel}>
     {@render children?.()}
   </table>
 </div>

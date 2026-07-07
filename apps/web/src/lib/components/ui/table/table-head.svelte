@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { HTMLAttributes } from 'svelte/elements';
+  import type { HTMLThAttributes } from 'svelte/elements';
   import { cn, type WithElementRef } from '$lib/utils.js';
 
   let {
@@ -7,7 +7,7 @@
     class: className,
     children,
     ...restProps
-  }: WithElementRef<HTMLAttributes<HTMLTableCellElement>> = $props();
+  }: WithElementRef<HTMLThAttributes> = $props();
 </script>
 
 <th
