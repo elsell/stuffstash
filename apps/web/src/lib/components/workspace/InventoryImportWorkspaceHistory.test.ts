@@ -55,7 +55,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Import finished. Workspace data has been refreshed.');
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).not.toContain('Current work');
       expect(refreshes).toBe(1);
     });
@@ -137,7 +137,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new TerminalUnknownProgressImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Completed');
     });
 
@@ -278,7 +278,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Prepared by owner');
     });
@@ -327,7 +327,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Running');
       expect(document.body.textContent).toContain('Ready to review');
       expect(document.body.textContent).toContain('Warnings');
@@ -432,7 +432,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Warnings').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Showing completed imports with warnings.');
+      expect(document.body.textContent).toContain('Completed imports with warnings.');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).toContain('Details');
@@ -560,8 +560,9 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new ActionRequiredImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
+      expect(document.body.textContent).toContain('2 imports require action.');
       expect(document.body.textContent).toContain('Action required');
-      expect(document.body.textContent).toContain('2 imports have blocking issues or failed cleanup.');
+      expect(document.body.textContent).toContain('2 imports require action');
       expect(document.body.textContent).toContain('Failed Homebox');
       expect(document.body.textContent).toContain('Blocking Homebox');
       expect(document.body.textContent).not.toContain('Warnings 2');
@@ -570,7 +571,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Action required').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Showing imports that require action.');
+      expect(document.body.textContent).toContain('Imports that need action.');
       expect(historyLedgerText()).toContain('Failed Homebox');
       expect(historyLedgerText()).toContain('Blocking Homebox');
       expect(historyLedgerText()).toContain('Action required');
@@ -590,7 +591,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new DiscardedImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Discarded');
     });
 
@@ -607,7 +608,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
     });
 
@@ -622,7 +623,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Keep in history').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).not.toContain('Remove Homebox from history?');
     });
@@ -655,7 +656,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new SlowRemoveImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
     });
 
@@ -683,7 +684,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new ResourcefulImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
     });
 
     buttonContaining('Details').click();
@@ -720,7 +721,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new ManyResourcefulImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
     });
 
     buttonContaining('Details').click();
@@ -758,7 +759,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new TerminalPreviewMessageImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Completed with warnings.');
     });
 
@@ -803,8 +804,18 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new StaleWarningCountImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
+      expect(statusStripText()).toContain('Warnings 1');
+      expect(historyLedgerText()).toContain('Warnings');
+    });
+
+    buttonContaining('Warnings').click();
+
+    await waitFor(() => {
+      expect(statusButton('Warnings')?.getAttribute('aria-pressed')).toBe('true');
+      expect(historyLedgerText()).toContain('Homebox');
+      expect(historyLedgerText()).toContain('Warnings');
     });
 
     buttonContaining('Details').click();
@@ -817,11 +828,53 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('uses returned error messages for history severity when error counts are stale', async () => {
+    class StaleErrorCountImportJobRepository extends TerminalImportJobRepository {
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          counts: {
+            ...this.job.counts,
+            warnings: 0,
+            errors: 0
+          },
+          messages: [
+            {
+              code: 'error-count-stale',
+              severity: 'error',
+              summary: 'Source changed after preview',
+              detail: 'Re-preview is required before this import can be trusted.',
+              sourceName: 'Homebox'
+            }
+          ]
+        };
+      }
+    }
+
+    await mountImportWorkspace(new StaleErrorCountImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(statusStripText()).toContain('Completed 0');
+      expect(statusStripText()).toContain('Action required 1');
+      expect(historyLedgerText()).toContain('Action required');
+      expect(historyLedgerText()).not.toContain('Warnings');
+    });
+
+    buttonContaining('Action required').click();
+
+    await waitFor(() => {
+      expect(statusButton('Action required')?.getAttribute('aria-pressed')).toBe('true');
+      expect(historyLedgerText()).toContain('Homebox');
+      expect(historyLedgerText()).toContain('Action required');
+    });
+  });
+
   it('does not duplicate the review issues action when warning details already open on the issues tab', async () => {
     await mountImportWorkspace(new TerminalPreviewMessageImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Completed with warnings.');
     });
 
@@ -839,7 +892,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new TerminalJobAndPreviewMessageImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Completed with warnings.');
     });
 
@@ -859,7 +912,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(repository);
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).not.toContain('Imported records');
     });
@@ -902,7 +955,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(repository);
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Homebox');
     });
 
@@ -933,7 +986,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new DetailRefreshFailureImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Runs');
       expect(document.body.textContent).toContain('Completed with warnings.');
     });
 
@@ -1094,4 +1147,14 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
 function historyLedgerText(): string {
   return document.body.querySelector('.history-ledger')?.textContent ?? '';
+}
+
+function statusStripText(): string {
+  return document.body.querySelector('.history-status-strip')?.textContent ?? '';
+}
+
+function statusButton(label: string): HTMLButtonElement | null {
+  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('.history-status-strip button')).find((button) =>
+    button.textContent?.includes(label)
+  ) ?? null;
 }

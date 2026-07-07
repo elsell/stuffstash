@@ -26,7 +26,7 @@
   import {
     canRemoveJobFromHistory,
     canRequestCancellation,
-    jobNeedsAttention,
+    importIssueTone,
     progressSummary,
     terminalJobMayHaveChangedInventory
   } from './importWorkspacePresentation';
@@ -94,8 +94,8 @@
   let draftJobs = $derived(jobs.filter((job) => job.status === 'previewed'));
   let currentWorkJobs = $derived([...activeJobs, ...draftJobs]);
   let terminalJobs = $derived(jobs.filter((job) => !['running', 'cancel_requested', 'previewed'].includes(job.status)));
-  let completedJobs = $derived(jobs.filter((job) => job.status === 'succeeded'));
-  let attentionJobs = $derived(jobs.filter(jobNeedsAttention));
+  let completedJobs = $derived(jobs.filter((job) => job.status === 'succeeded' && importIssueTone(job) !== 'action'));
+  let attentionJobs = $derived(jobs.filter((job) => importIssueTone(job) === 'action'));
   let canViewImports = $derived(canViewImportJobs(inventory));
   let canCreateImports = $derived(canCreateImportJob(inventory));
   let currentRequestKey = $derived(requestKey());
@@ -543,7 +543,7 @@
   function historySummaryDescription(): string {
     if (activeJobs.length > 0) return `${activeJobs.length} running now. You can leave this page and return later.`;
     if (draftJobs.length > 0) return `${draftJobs.length} preview waiting for confirmation.`;
-    if (attentionJobs.length > 0) return `${attentionJobs.length} import ${attentionJobs.length === 1 ? 'requires' : 'require'} action.`;
+    if (attentionJobs.length > 0) return `${attentionJobs.length} ${attentionJobs.length === 1 ? 'import requires' : 'imports require'} action.`;
     if (completedJobs.length > 0) return `${completedJobs.length} completed import ${completedJobs.length === 1 ? 'run' : 'runs'} in this inventory.`;
     return 'No import runs yet.';
   }
