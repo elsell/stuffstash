@@ -173,7 +173,7 @@ func TestDurableImportJobLifecycleHTTP(t *testing.T) {
 		"password":      "must-not-echo",
 	}
 
-	create := performRequest(server, http.MethodPost, path+"/imports/jobs/preview", "Bearer dev:owner", source)
+	create := performRequest(server, http.MethodPost, path+"/imports/jobs/preview", "Bearer dev:owner:owner@example.test", source)
 	if create.Code != http.StatusOK {
 		t.Fatalf("expected create preview status %d, got %d with body %s", http.StatusOK, create.Code, create.Body.String())
 	}
@@ -187,6 +187,9 @@ func TestDurableImportJobLifecycleHTTP(t *testing.T) {
 	}
 	if created.Data.ActorID != "owner" {
 		t.Fatalf("expected import job actor owner, got %q", created.Data.ActorID)
+	}
+	if created.Data.Actor == nil || created.Data.Actor.ID != "owner" || created.Data.Actor.Email != "owner@example.test" {
+		t.Fatalf("expected import job actor summary, got %+v", created.Data.Actor)
 	}
 	if created.Data.Counts.Assets != 1 || created.Data.Source.Fingerprint == "" {
 		t.Fatalf("unexpected preview response: %+v", created.Data)
@@ -209,6 +212,9 @@ func TestDurableImportJobLifecycleHTTP(t *testing.T) {
 	decodeBody(t, list, &listed)
 	if len(listed.Data.Jobs) != 1 || listed.Data.Jobs[0].ID != "job-one" {
 		t.Fatalf("expected job in import history, got %+v", listed.Data.Jobs)
+	}
+	if listed.Data.Jobs[0].Actor == nil || listed.Data.Jobs[0].Actor.Email != "owner@example.test" {
+		t.Fatalf("expected listed import job actor summary, got %+v", listed.Data.Jobs[0].Actor)
 	}
 
 	start := performRequest(server, http.MethodPost, path+"/imports/jobs/job-one/start", "Bearer dev:owner", source)
@@ -561,9 +567,13 @@ type importJobListResponseEnvelope struct {
 }
 
 type importJobResponse struct {
-	ID               string `json:"id"`
-	Status           string `json:"status"`
-	ActorID          string `json:"actorId"`
+	ID      string `json:"id"`
+	Status  string `json:"status"`
+	ActorID string `json:"actorId"`
+	Actor   *struct {
+		ID    string `json:"id"`
+		Email string `json:"email"`
+	} `json:"actor"`
 	CancellationMode string `json:"cancellationMode"`
 	StartedAt        string `json:"startedAt"`
 	Source           struct {

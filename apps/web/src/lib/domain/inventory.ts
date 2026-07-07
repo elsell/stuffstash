@@ -304,6 +304,7 @@ export interface ImportJob {
   id: string;
   status: ImportJobStatus;
   actorId?: string;
+  actor?: Principal;
   source: {
     type: string;
     name: string;

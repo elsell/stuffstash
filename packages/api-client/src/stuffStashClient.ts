@@ -421,6 +421,7 @@ export interface ImportJob {
   id: string;
   status: ImportJobStatus;
   actorId?: string;
+  actor?: Principal;
   source: ImportJobSourceSummary;
   counts: ImportJobCounts;
   preview: ImportJobPreview;
@@ -1935,6 +1936,7 @@ function mapImportJob(response: ImportJobResponse): ImportJob {
     id: response.id,
     status: mapImportJobStatus(response.status),
     actorId: response.actorId,
+    actor: response.actor,
     source: {
       type: response.source.type,
       name: response.source.name,

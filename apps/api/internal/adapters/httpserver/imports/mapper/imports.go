@@ -4,19 +4,20 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/dto"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 )
 
-func JobListToResponse(jobs []importjob.Record) dto.ImportJobListResponse {
+func JobListToResponse(jobs []importjob.Record, users map[identity.PrincipalID]identity.User) dto.ImportJobListResponse {
 	out := make([]dto.ImportJobResponse, 0, len(jobs))
 	for _, job := range jobs {
-		out = append(out, JobToResponse(job))
+		out = append(out, JobToResponse(job, users))
 	}
 	return dto.ImportJobListResponse{Jobs: out}
 }
 
-func JobToResponse(job importjob.Record) dto.ImportJobResponse {
-	return dto.ImportJobResponse{
+func JobToResponse(job importjob.Record, users map[identity.PrincipalID]identity.User) dto.ImportJobResponse {
+	response := dto.ImportJobResponse{
 		ID:      job.ID.String(),
 		Status:  string(job.Status),
 		ActorID: job.ActorID.String(),
@@ -64,6 +65,13 @@ func JobToResponse(job importjob.Record) dto.ImportJobResponse {
 		Resources:        resourcesToResponse(job.Resources),
 		Messages:         messagesToResponse(job.Messages),
 	}
+	if user, ok := users[identity.PrincipalID(job.ActorID.String())]; ok {
+		response.Actor = &dto.ImportJobActorResponse{
+			ID:    user.ID.String(),
+			Email: user.Email.String(),
+		}
+	}
+	return response
 }
 
 func progressHistoryToResponse(history []importjob.Progress) []dto.ImportJobProgress {

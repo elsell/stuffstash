@@ -1527,6 +1527,10 @@ export interface components {
             relationship: string;
             tenantId: string;
         };
+        ImportJobActorResponse: {
+            email?: string;
+            id: string;
+        };
         ImportJobCancelRequest: {
             /**
              * Format: uri
@@ -1627,6 +1631,7 @@ export interface components {
             sourceEntityType: string;
         };
         ImportJobResponse: {
+            actor?: components["schemas"]["ImportJobActorResponse"];
             actorId?: string;
             cancellationMode?: string;
             completedAt?: string;

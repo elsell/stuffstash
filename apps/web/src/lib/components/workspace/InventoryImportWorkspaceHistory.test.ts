@@ -370,6 +370,25 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('uses the resolved import actor email before falling back to opaque principal IDs', async () => {
+    class ResolvedActorImportJobRepository extends LongActorImportJobRepository {
+      async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
+        const jobs = await super.listImportJobs(tenantId, inventoryId);
+        return jobs.map((job) => ({
+          ...job,
+          actor: { id: job.actorId ?? '', email: 'importer@example.test' }
+        }));
+      }
+    }
+
+    await mountImportWorkspace(new ResolvedActorImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Prepared by importer@example.test');
+      expect(document.body.textContent).not.toContain('oidc_vZWJGXPHf8');
+    });
+  });
+
   it('opens audit history from import detail through the workspace router callback', async () => {
     let auditOpenCount = 0;
     await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)), {

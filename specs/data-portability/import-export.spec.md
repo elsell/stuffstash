@@ -423,7 +423,8 @@ Imported-resource summaries must not include source credentials, bearer tokens, 
 The first resource summary limit is implementation-defined and must be enforced at the import-owned repository/query boundary before application mapping or JSON response construction.
 The web UI must also keep the resource summary visually bounded when shown in job detail.
 The import job API response must include the safe actor principal identifier when the job has an actor so import history can identify who started or prepared the job without exposing provider credentials or source internals.
-The web UI must prefer a known user-facing actor label, such as the signed-in user's email when the actor matches the current principal, before falling back to a compact opaque principal identifier.
+When the API can resolve the actor through the existing user profile repository, it must also include a safe actor summary with the principal ID and email so import history can show a user-facing label.
+The web UI must prefer a known user-facing actor label from the API actor summary or the signed-in user's email when the actor matches the current principal, before falling back to a compact opaque principal identifier.
 
 The import job API response must include a safe progress history for job detail.
 Progress history records must include only the phase, done count, total count, safe user-facing message, and update time.

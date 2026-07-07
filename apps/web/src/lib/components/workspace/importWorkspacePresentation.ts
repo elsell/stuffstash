@@ -193,6 +193,7 @@ export function sourceOptionsSummary(job: ImportJob): string[] {
 
 export function actorSummary(job: ImportJob, currentPrincipal?: Principal): string {
   if (!job.actorId) return '';
+  if (job.actor?.email) return `Prepared by ${job.actor.email}`;
   if (currentPrincipal?.id === job.actorId && currentPrincipal.email) return `Prepared by ${currentPrincipal.email}`;
   if (!job.actorId.includes('@') && job.actorId.length > 24) return `Prepared by ${compactIdentifier(job.actorId)}`;
   return `Prepared by ${job.actorId}`;

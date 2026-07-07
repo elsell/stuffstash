@@ -83,6 +83,7 @@ type ImportJobResponse struct {
 	ID               string                  `json:"id"`
 	Status           string                  `json:"status"`
 	ActorID          string                  `json:"actorId,omitempty"`
+	Actor            *ImportJobActorResponse `json:"actor,omitempty"`
 	Source           ImportJobSourceResponse `json:"source"`
 	Counts           ImportJobCountsResponse `json:"counts"`
 	Preview          ImportJobPreview        `json:"preview"`
@@ -95,6 +96,11 @@ type ImportJobResponse struct {
 	UpdatedAt        string                  `json:"updatedAt"`
 	Resources        []ImportJobResource     `json:"resources"`
 	Messages         []ImportMessageResponse `json:"messages"`
+}
+
+type ImportJobActorResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email,omitempty"`
 }
 
 type ImportJobSourceResponse struct {

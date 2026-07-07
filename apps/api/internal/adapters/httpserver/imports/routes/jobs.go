@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -29,7 +30,7 @@ func Register(api huma.API, application app.App) {
 		}
 		return &dto.ImportJobListOutput{
 			Body: shared.SuccessEnvelope[dto.ImportJobListResponse]{
-				Data: mapper.JobListToResponse(jobs),
+				Data: mapper.JobListToResponse(jobs, importJobUsers(ctx, application, jobs...)),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
@@ -52,7 +53,7 @@ func Register(api huma.API, application app.App) {
 		}
 		return &dto.ImportJobOutput{
 			Body: shared.SuccessEnvelope[dto.ImportJobResponse]{
-				Data: mapper.JobToResponse(job),
+				Data: mapper.JobToResponse(job, importJobUsers(ctx, application, job)),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
@@ -74,7 +75,7 @@ func Register(api huma.API, application app.App) {
 		}
 		return &dto.ImportJobOutput{
 			Body: shared.SuccessEnvelope[dto.ImportJobResponse]{
-				Data: mapper.JobToResponse(job),
+				Data: mapper.JobToResponse(job, importJobUsers(ctx, application, job)),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
@@ -98,7 +99,7 @@ func Register(api huma.API, application app.App) {
 		}
 		return &dto.ImportJobOutput{
 			Body: shared.SuccessEnvelope[dto.ImportJobResponse]{
-				Data: mapper.JobToResponse(job),
+				Data: mapper.JobToResponse(job, importJobUsers(ctx, application, job)),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
@@ -122,7 +123,7 @@ func Register(api huma.API, application app.App) {
 		}
 		return &dto.ImportJobOutput{
 			Body: shared.SuccessEnvelope[dto.ImportJobResponse]{
-				Data: mapper.JobToResponse(job),
+				Data: mapper.JobToResponse(job, importJobUsers(ctx, application, job)),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
@@ -144,6 +145,16 @@ func Register(api huma.API, application app.App) {
 		}
 		return &dto.RemoveImportJobOutput{}, nil
 	}, huma.OperationTags("imports"), shared.NoContentOperation, shared.SecuredOperation)
+}
+
+func importJobUsers(ctx context.Context, application app.App, jobs ...importjob.Record) map[identity.PrincipalID]identity.User {
+	ids := make([]identity.PrincipalID, 0, len(jobs))
+	for _, job := range jobs {
+		if job.ActorID.String() != "" {
+			ids = append(ids, identity.PrincipalID(job.ActorID.String()))
+		}
+	}
+	return application.ResolveUsersByID(ctx, ids)
 }
 
 func sourceInput(body dto.ImportSourceRequest) app.ImportSourceInput {
