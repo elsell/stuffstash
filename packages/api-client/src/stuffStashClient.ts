@@ -95,10 +95,26 @@ export interface Asset {
   lifecycleState: AssetLifecycleState;
   customAssetTypeId?: string;
   customFields: Record<string, unknown>;
+  tags: CompactAssetTag[];
   createdAt: string;
   updatedAt: string;
   primaryPhoto?: AssetPrimaryPhoto;
   currentCheckout?: CurrentCheckout;
+}
+
+export interface CompactAssetTag {
+  id: string;
+  key: string;
+  displayName: string;
+  color?: string;
+}
+
+export interface AssetTag extends CompactAssetTag {
+  tenantId: string;
+  inventoryId: string;
+  lifecycleState: AssetLifecycleState;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CurrentCheckout {
@@ -195,6 +211,7 @@ export interface CreateAssetInput {
   parentAssetId?: string | null;
   customAssetTypeId?: string;
   customFields?: Record<string, unknown>;
+  tagIds?: string[];
 }
 
 export interface UpdateAssetInput {
@@ -202,6 +219,18 @@ export interface UpdateAssetInput {
   description?: string;
   parentAssetId?: string | null;
   customFields?: Record<string, unknown>;
+  tagIds?: string[];
+}
+
+export interface CreateAssetTagInput {
+  key?: string;
+  displayName: string;
+  color?: string;
+}
+
+export interface UpdateAssetTagInput {
+  displayName?: string;
+  color?: string;
 }
 
 export interface AssetSearchResult {
@@ -314,6 +343,7 @@ export interface ImportSourceSummary {
 
 export interface ImportCounts {
   fields: number;
+  tags: number;
   locations: number;
   assets: number;
   attachments: number;
@@ -333,6 +363,8 @@ export interface ImportMessage {
 export interface ImportAppliedCounts {
   fieldsCreated: number;
   fieldsExisting: number;
+  tagsCreated: number;
+  tagsExisting: number;
   locationsCreated: number;
   assetsCreated: number;
   assetsSkipped: number;
@@ -377,6 +409,12 @@ export interface ImportJobPreviewField {
   type: string;
 }
 
+export interface ImportJobPreviewTag {
+  key: string;
+  displayName: string;
+  color?: string;
+}
+
 export interface ImportJobPreviewAsset {
   sourceId?: string;
   kind: string;
@@ -396,11 +434,13 @@ export interface ImportJobPreviewAttachment {
 
 export interface ImportJobPreview {
   fields: ImportJobPreviewField[];
+  tags: ImportJobPreviewTag[];
   locations: ImportJobPreviewAsset[];
   assets: ImportJobPreviewAsset[];
   attachments: ImportJobPreviewAttachment[];
   messages: ImportMessage[];
   fieldsTruncated: boolean;
+  tagsTruncated: boolean;
   locationsTruncated: boolean;
   assetsTruncated: boolean;
   attachmentsTruncated: boolean;
@@ -548,6 +588,7 @@ type PrincipalResponse = components['schemas']['PrincipalResponse'];
 type TenantResponse = components['schemas']['TenantResponse'];
 type InventoryResponse = components['schemas']['InventoryResponse'];
 type AssetResponse = components['schemas']['AssetResponse'];
+type AssetTagResponse = components['schemas']['AssetTagResponse'];
 type AttachmentResponse = components['schemas']['AttachmentResponse'];
 type DirectUploadResponse = components['schemas']['DirectUploadResponse'];
 type GrantResponse = components['schemas']['GrantResponse'];
@@ -708,6 +749,51 @@ export class StuffStashClient {
       })
     );
     return mapAsset(envelope.data);
+  }
+
+  async listAssetTags(tenantId: string, inventoryId: string, limit = 50, cursor?: string): Promise<Page<AssetTag>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/tags', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId },
+          query: { limit, cursor }
+        }
+      })
+    );
+    return mapPage(envelope, mapAssetTag);
+  }
+
+  async createAssetTag(tenantId: string, inventoryId: string, input: CreateAssetTagInput): Promise<AssetTag> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/tags', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId } },
+        body: input
+      })
+    );
+    return mapAssetTag(envelope.data);
+  }
+
+  async updateAssetTag(tenantId: string, inventoryId: string, tagId: string, input: UpdateAssetTagInput): Promise<AssetTag> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, tagId } },
+        body: input
+      })
+    );
+    return mapAssetTag(envelope.data);
+  }
+
+  async archiveAssetTag(tenantId: string, inventoryId: string, tagId: string): Promise<AssetTag> {
+    const envelope = await this.unwrap(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, tagId } }
+      })
+    );
+    return mapAssetTag(envelope.data);
   }
 
   async checkoutAsset(tenantId: string, inventoryId: string, assetId: string, input: AssetCheckoutInput = {}): Promise<AssetCheckout> {
@@ -1733,10 +1819,34 @@ function mapAsset(response: AssetResponse): Asset {
     lifecycleState: mapAssetLifecycleState(response.lifecycleState),
     customAssetTypeId: response.customAssetTypeId,
     customFields: response.customFields ?? {},
+    tags: (response.tags ?? []).map(mapCompactAssetTag),
     createdAt: response.createdAt,
     updatedAt: response.updatedAt,
     primaryPhoto: mapAssetPrimaryPhoto(response.primaryPhoto),
     currentCheckout: mapCurrentCheckout(response.currentCheckout)
+  };
+}
+
+function mapCompactAssetTag(response: components['schemas']['CompactTag']): CompactAssetTag {
+  return {
+    id: response.id,
+    key: response.key,
+    displayName: response.displayName,
+    color: response.color
+  };
+}
+
+function mapAssetTag(response: AssetTagResponse): AssetTag {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId,
+    key: response.key,
+    displayName: response.displayName,
+    color: response.color,
+    lifecycleState: mapAssetLifecycleState(response.lifecycleState),
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt
   };
 }
 
@@ -1756,6 +1866,7 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
       lifecycleState: mapAssetLifecycleState(response.asset.lifecycleState),
       customAssetTypeId: response.asset.customAssetTypeId,
       customFields: response.asset.customFields ?? {},
+      tags: [],
       createdAt: response.asset.createdAt,
       updatedAt: response.asset.updatedAt,
       primaryPhoto: mapAssetPrimaryPhoto(response.asset.primaryPhoto),
@@ -1949,6 +2060,7 @@ function mapImportJob(response: ImportJobResponse): ImportJob {
     },
     counts: {
       fields: response.counts.fields,
+      tags: response.counts.tags,
       locations: response.counts.locations,
       assets: response.counts.assets,
       attachments: response.counts.attachments,
@@ -1956,6 +2068,8 @@ function mapImportJob(response: ImportJobResponse): ImportJob {
       errors: response.counts.errors,
       fieldsCreated: response.counts.fieldsCreated,
       fieldsExisting: response.counts.fieldsExisting,
+      tagsCreated: response.counts.tagsCreated,
+      tagsExisting: response.counts.tagsExisting,
       locationsCreated: response.counts.locationsCreated,
       assetsCreated: response.counts.assetsCreated,
       assetsSkipped: response.counts.assetsSkipped,
@@ -1966,11 +2080,13 @@ function mapImportJob(response: ImportJobResponse): ImportJob {
     },
     preview: {
       fields: preview?.fields ?? [],
+      tags: preview?.tags ?? [],
       locations: preview?.locations ?? [],
       assets: preview?.assets ?? [],
       attachments: preview?.attachments ?? [],
       messages: preview?.messages ?? [],
       fieldsTruncated: preview?.fieldsTruncated ?? false,
+      tagsTruncated: preview?.tagsTruncated ?? false,
       locationsTruncated: preview?.locationsTruncated ?? false,
       assetsTruncated: preview?.assetsTruncated ?? false,
       attachmentsTruncated: preview?.attachmentsTruncated ?? false,

@@ -593,9 +593,9 @@ Preview response must include:
 
 - Source summary.
 - Counts of source locations, assets, tags, custom field definitions, attachments, warnings, and blocking errors.
-- A bounded sample of planned locations.
-- A bounded sample of planned assets, excluding location records.
-- A bounded sample of planned images when available.
+- A bounded preview list of planned locations.
+- A bounded preview list of planned assets, excluding location records.
+- A bounded preview list of planned images when available.
 - Safe warnings and blocking errors.
 
 Preview must not persist source passwords or Homebox bearer tokens.

@@ -178,7 +178,7 @@
           <small>{sectionCountLabel(section)}</small>
         </div>
         {#if section.truncated}
-          <span class="sample-badge">Partial list</span>
+          <span class="partial-list-badge">Partial list</span>
         {/if}
       </div>
 
@@ -275,7 +275,7 @@
     margin-top: 0.1rem;
   }
 
-  .sample-badge {
+  .partial-list-badge {
     background: color-mix(in oklab, var(--muted) 54%, transparent);
     border: 1px solid var(--border);
     border-radius: 999px;

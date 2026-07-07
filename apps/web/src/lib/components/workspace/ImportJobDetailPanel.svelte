@@ -249,12 +249,12 @@
               <Tabs.Trigger value="issues">Issues{issueCount > 0 ? ` (${issueCount})` : ''}</Tabs.Trigger>
               <Tabs.Trigger value="plan">Plan</Tabs.Trigger>
               <Tabs.Trigger value="records">Records</Tabs.Trigger>
-              <Tabs.Trigger value="timeline" aria-label="Timeline">Log</Tabs.Trigger>
+              <Tabs.Trigger value="timeline">Timeline</Tabs.Trigger>
             </Tabs.List>
 
             <Tabs.Content value="overview">
               <section class="detail-panel" aria-label="Import result overview">
-                <div class="sample-heading">
+                <div class="section-heading">
                   <h3>Result</h3>
                   <small>{statusSentence(job)}</small>
                 </div>
@@ -264,7 +264,7 @@
 
             <Tabs.Content value="issues">
               <section class="detail-panel" aria-label="Import issues">
-                <div class="sample-heading">
+                <div class="section-heading">
                   <h3>Issues</h3>
                   <small>{issueCount === 0 ? 'No issues' : 'Grouped by cause'}</small>
                 </div>
@@ -281,7 +281,7 @@
             <Tabs.Content value="plan">
               {#if hasPreviewPlan(job)}
                 <section class="detail-panel" aria-label="Import preview plan">
-                  <div class="sample-heading">
+                  <div class="section-heading">
                     <h3>Preview plan</h3>
                     <small>{job.status === 'previewed' ? 'Before import' : 'Original plan'}</small>
                   </div>
@@ -303,7 +303,7 @@
                 </div>
               {:else if job.resources.length > 0}
                 <section class="detail-panel">
-                  <div class="sample-heading">
+                  <div class="section-heading">
                     <h3>Imported records</h3>
                     {#if job.resources.length > RESOURCE_PAGE_SIZE}
                       <small>{visibleResourceStart + 1}-{visibleResourceEnd} of {job.resources.length}</small>
@@ -374,7 +374,7 @@
 
             <Tabs.Content value="timeline">
               <section class="detail-panel">
-                <div class="sample-heading">
+                <div class="section-heading">
                   <h3>Progress timeline</h3>
                   <small>{progressTimeline(job).length} phases</small>
                 </div>
@@ -400,7 +400,7 @@
 
         <div class="detail-side" aria-label="Import controls and source">
           <section class="source-options-section" aria-label="Import run details">
-            <div class="sample-heading">
+            <div class="section-heading">
               <h3>Method</h3>
               <small>How Stuff Stash read the source</small>
             </div>
@@ -814,7 +814,7 @@
     overflow-wrap: anywhere;
   }
 
-  .sample-heading {
+  .section-heading {
     align-items: baseline;
     display: flex;
     gap: 0.5rem;
@@ -822,13 +822,13 @@
     min-width: 0;
   }
 
-  .sample-heading h3,
+  .section-heading h3,
   .detail-topline strong {
     min-width: 0;
     overflow-wrap: anywhere;
   }
 
-  .sample-heading small {
+  .section-heading small {
     color: var(--muted-foreground);
     font-size: 0.78rem;
   }
@@ -974,7 +974,7 @@
       flex-direction: column;
     }
 
-    .sample-heading {
+    .section-heading {
       align-items: flex-start;
       display: grid;
       gap: 0.2rem;

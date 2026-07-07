@@ -283,6 +283,7 @@ describe('StuffStashClient', () => {
         },
         counts: {
           fields: 1,
+          tags: 1,
           locations: 0,
           assets: 1,
           attachments: 0,
@@ -290,6 +291,8 @@ describe('StuffStashClient', () => {
           errors: 0,
           fieldsCreated: 0,
           fieldsExisting: 0,
+          tagsCreated: 0,
+          tagsExisting: 1,
           locationsCreated: 0,
           assetsCreated: 0,
           assetsSkipped: 0,
@@ -316,11 +319,13 @@ describe('StuffStashClient', () => {
         ],
         preview: {
           fields: [{ key: 'homebox-source-id', displayName: 'Homebox Source ID', type: 'text' }],
+          tags: [{ key: 'workshop', displayName: 'Workshop' }],
           locations: [{ sourceId: 'location:garage', kind: 'location', title: 'Garage', archived: false }],
           assets: [{ sourceId: 'source:drill', kind: 'item', title: 'Drill', archived: false }],
           attachments: [],
           messages: [{ code: 'csv-images-unavailable', severity: 'warning', summary: 'Images are unavailable' }],
           fieldsTruncated: false,
+          tagsTruncated: false,
           locationsTruncated: false,
           assetsTruncated: false,
           attachmentsTruncated: false,
@@ -404,7 +409,8 @@ describe('StuffStashClient', () => {
         description: '',
         lifecycleState: 'active',
         customAssetTypeId: 'type-medicine',
-        customFields: { 'expiration-date': '2027-01-01', count: 2 }
+        customFields: { 'expiration-date': '2027-01-01', count: 2 },
+        tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
       },
       meta: {}
     };
@@ -423,16 +429,19 @@ describe('StuffStashClient', () => {
         kind: 'item',
         title: 'Ibuprofen',
         customAssetTypeId: 'type-medicine',
-        customFields: { 'expiration-date': '2027-01-01', count: 2 }
+        customFields: { 'expiration-date': '2027-01-01', count: 2 },
+        tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
       customAssetTypeId: 'type-medicine',
-      customFields: { 'expiration-date': '2027-01-01', count: 2 }
+      customFields: { 'expiration-date': '2027-01-01', count: 2 },
+      tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
     });
     await expect(
       client.updateAsset('tenant-one', 'inventory-one', 'asset-one', {
         title: 'Ibuprofen',
-        customFields: { count: 3 }
+        customFields: { count: 3 },
+        tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
       customAssetTypeId: 'type-medicine',
@@ -444,12 +453,63 @@ describe('StuffStashClient', () => {
       title: 'Ibuprofen',
       parentAssetId: undefined,
       customAssetTypeId: 'type-medicine',
-      customFields: { 'expiration-date': '2027-01-01', count: 2 }
+      customFields: { 'expiration-date': '2027-01-01', count: 2 },
+      tagIds: ['tag-one']
     });
     expect(await requests[1]?.json()).toEqual({
       title: 'Ibuprofen',
-      customFields: { count: 3 }
+      customFields: { count: 3 },
+      tagIds: ['tag-one']
     });
+  });
+
+  it('manages inventory tags through tag routes', async () => {
+    const requests: Request[] = [];
+    const tagEnvelope = {
+      data: {
+        id: 'tag-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        key: 'workshop',
+        displayName: 'Workshop',
+        color: '#2F80ED',
+        lifecycleState: 'active',
+        createdAt: '2026-07-06T12:00:00Z',
+        updatedAt: '2026-07-06T12:00:00Z'
+      },
+      meta: { pagination: { limit: 10, nextCursor: null, hasMore: false } }
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'GET') {
+          return Response.json({ data: [tagEnvelope.data], meta: tagEnvelope.meta });
+        }
+        return Response.json(tagEnvelope);
+      }
+    });
+
+    await expect(client.listAssetTags('tenant-one', 'inventory-one', 10)).resolves.toMatchObject({
+      items: [{ id: 'tag-one', key: 'workshop', color: '#2F80ED' }]
+    });
+    await expect(client.createAssetTag('tenant-one', 'inventory-one', { displayName: 'Workshop', color: '#2f80ed' })).resolves.toMatchObject({
+      id: 'tag-one',
+      displayName: 'Workshop'
+    });
+    await client.updateAssetTag('tenant-one', 'inventory-one', 'tag-one', { displayName: 'Shop' });
+    await client.archiveAssetTag('tenant-one', 'inventory-one', 'tag-one');
+
+    expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
+      'GET /tenants/tenant-one/inventories/inventory-one/tags',
+      'POST /tenants/tenant-one/inventories/inventory-one/tags',
+      'PATCH /tenants/tenant-one/inventories/inventory-one/tags/tag-one',
+      'DELETE /tenants/tenant-one/inventories/inventory-one/tags/tag-one'
+    ]);
+    expect(await requests[1]?.json()).toEqual({ displayName: 'Workshop', color: '#2f80ed' });
+    expect(await requests[2]?.json()).toEqual({ displayName: 'Shop' });
   });
 
   it('fetches tenants by ID', async () => {
