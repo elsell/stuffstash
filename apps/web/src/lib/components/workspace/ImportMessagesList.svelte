@@ -20,11 +20,14 @@
   let { messages, emptyText, truncated = false, truncatedText = 'Showing a sample of import messages.' }: Props = $props();
 
   let groups = $derived(groupMessages(messages));
+  let warningCount = $derived(messages.filter((message) => message.severity === 'warning').length);
+  let errorCount = $derived(messages.filter((message) => message.severity === 'error').length);
   let expanded = $state(false);
   let visibleGroupLimit = $derived(expanded ? EXPANDED_GROUP_LIMIT : COLLAPSED_GROUP_LIMIT);
   let visibleRecordLimit = $derived(expanded ? EXPANDED_RECORD_LIMIT : COLLAPSED_RECORD_LIMIT);
   let visibleGroups = $derived(groups.slice(0, visibleGroupLimit));
   let hiddenGroupCount = $derived(Math.max(0, groups.length - visibleGroups.length));
+  let shouldBoundGroups = $derived(messages.length > 12 || groups.length > COLLAPSED_GROUP_LIMIT);
 
   type MessageGroup = {
     key: string;
@@ -96,36 +99,63 @@
 <div class="message-list">
   {#if groups.length > 0}
     <div class="message-list-summary">
-      <strong>{groups.length === 1 ? '1 issue group' : `${groups.length} issue groups`}</strong>
-      <span>{messages.length === 1 ? '1 affected record' : `${messages.length} affected records`}</span>
+      <div class="issue-stat">
+        <span>Groups</span>
+        <strong>{groups.length}</strong>
+      </div>
+      <div class="issue-stat">
+        <span>Affected</span>
+        <strong>{messages.length}</strong>
+      </div>
+      {#if errorCount > 0}
+        <div class="issue-stat blocking">
+          <span>Blocking</span>
+          <strong>{errorCount}</strong>
+        </div>
+      {/if}
+      {#if warningCount > 0}
+        <div class="issue-stat warning">
+          <span>Warnings</span>
+          <strong>{warningCount}</strong>
+        </div>
+      {/if}
+      <span class="sr-only">{messages.length === 1 ? '1 affected record' : `${messages.length} affected records`}</span>
     </div>
   {/if}
-  {#each visibleGroups as group (group.key)}
-    {@const visibleMessages = group.messages.slice(0, visibleRecordLimit)}
-    <div class="message-group">
-      <div class="message-group-heading">
-        <Badge variant={group.severity === 'error' ? 'destructive' : 'secondary'}>{severityLabel(group.severity)}</Badge>
-        <div>
-          <strong>{group.summary}</strong>
-          <span>{group.cause ? `${group.cause} · ${groupCountLabel(group.messages.length)}` : groupCountLabel(group.messages.length)}</span>
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex (bounded overflow regions need a keyboard focus target) -->
+  <div
+    class:bounded-message-groups={shouldBoundGroups}
+    role={shouldBoundGroups ? 'region' : undefined}
+    aria-label={shouldBoundGroups ? 'Grouped import issues' : undefined}
+    tabindex={shouldBoundGroups ? 0 : undefined}
+  >
+    {#each visibleGroups as group (group.key)}
+      {@const visibleMessages = group.messages.slice(0, visibleRecordLimit)}
+      <div class="message-group">
+        <div class="message-group-heading">
+          <Badge variant={group.severity === 'error' ? 'destructive' : 'secondary'}>{severityLabel(group.severity)}</Badge>
+          <div>
+            <strong>{group.summary}</strong>
+            <span>{group.cause ? `${group.cause} · ${groupCountLabel(group.messages.length)}` : groupCountLabel(group.messages.length)}</span>
+          </div>
+        </div>
+        <div class="message-group-items">
+          {#each visibleMessages as message}
+            {@const diagnostic = messageDiagnostic(message, group)}
+            <div class="message-row">
+              <span>{messageRowLabel(message, group)}</span>
+              {#if diagnostic}
+                <small>{diagnostic}</small>
+              {/if}
+            </div>
+          {/each}
+          {#if group.messages.length > visibleMessages.length}
+            <small class="message-overflow">{group.messages.length - visibleMessages.length} more in this group</small>
+          {/if}
         </div>
       </div>
-      <div class="message-group-items">
-        {#each visibleMessages as message}
-          {@const diagnostic = messageDiagnostic(message, group)}
-          <div class="message-row">
-            <span>{messageRowLabel(message, group)}</span>
-            {#if diagnostic}
-              <small>{diagnostic}</small>
-            {/if}
-          </div>
-        {/each}
-        {#if group.messages.length > visibleMessages.length}
-          <small class="message-overflow">{group.messages.length - visibleMessages.length} more in this group</small>
-        {/if}
-      </div>
-    </div>
-  {/each}
+    {/each}
+  </div>
   {#if hiddenGroupCount > 0}
     <div class="message-overflow-action">
       <span>{hiddenGroupCount} more issue {hiddenGroupCount === 1 ? 'group' : 'groups'} hidden.</span>
@@ -155,7 +185,12 @@
     gap: 0.75rem;
   }
 
-  .message-list-summary,
+  .message-list-summary {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  }
+
   .message-overflow-action {
     align-items: center;
     display: flex;
@@ -164,7 +199,49 @@
     justify-content: space-between;
   }
 
-  .message-list-summary span,
+  .issue-stat {
+    background: hsl(var(--muted) / 0.38);
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .issue-stat.warning {
+    background: hsl(var(--destructive) / 0.055);
+    border-color: hsl(var(--destructive) / 0.22);
+  }
+
+  .issue-stat.blocking {
+    background: hsl(var(--destructive) / 0.09);
+    border-color: hsl(var(--destructive) / 0.32);
+  }
+
+  .issue-stat span {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .issue-stat strong {
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+
+  .sr-only {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
   .message-overflow,
   .message-overflow-action span {
     color: hsl(var(--muted-foreground));
@@ -180,6 +257,20 @@
 
   .message-group:first-child {
     border-top: 0;
+    padding-top: 0;
+  }
+
+  .bounded-message-groups {
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    display: grid;
+    gap: 0.75rem;
+    max-height: min(26rem, 56vh);
+    overflow-y: auto;
+    padding: 0.75rem;
+  }
+
+  .bounded-message-groups .message-group:first-child {
     padding-top: 0;
   }
 
@@ -225,11 +316,18 @@
   }
 
   @media (max-width: 640px) {
-    .message-list-summary,
     .message-overflow-action {
       align-items: flex-start;
       display: grid;
       justify-content: stretch;
+    }
+
+    .message-list-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bounded-message-groups {
+      max-height: min(22rem, 48vh);
     }
 
     .message-group-heading {

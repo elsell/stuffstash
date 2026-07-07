@@ -513,6 +513,24 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('does not duplicate the review issues action when warning details already open on the issues tab', async () => {
+    await mountImportWorkspace(new TerminalPreviewMessageImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Completed with warnings.');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Issues');
+      expect(document.body.textContent).toContain('Attachment could not be imported');
+    });
+
+    expect(Array.from(document.body.querySelectorAll('button')).some((button) => button.textContent?.trim() === 'Review issues')).toBe(false);
+  });
+
   it('prefers terminal import messages over preview-preserved messages in job detail', async () => {
     await mountImportWorkspace(new TerminalJobAndPreviewMessageImportJobRepository(structuredClone(seed)));
 

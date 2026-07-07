@@ -169,7 +169,9 @@
               <strong>{issueCountSummary(job)}</strong>
               <span>Review grouped issues before treating this import as clean.</span>
             </div>
-            <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
+            {#if selectedTab !== 'issues'}
+              <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
+            {/if}
           </div>
         {/if}
       </div>
@@ -753,12 +755,43 @@
     }
 
     .detail-summary-strip {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0;
+      grid-template-columns: 1fr;
+    }
+
+    .summary-tile {
+      align-items: baseline;
+      background: transparent;
+      border: 0;
+      border-top: 1px solid hsl(var(--border));
+      border-radius: 0;
+      gap: 0.75rem;
+      grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
+      padding: 0.65rem 0;
+    }
+
+    .summary-tile:first-child {
+      border-top: 0;
+    }
+
+    .summary-tile.attention {
+      background: transparent;
+      border-color: hsl(var(--border));
+    }
+
+    .summary-tile.attention strong {
+      color: hsl(var(--destructive));
+    }
+
+    .summary-tile strong {
+      font-size: 0.95rem;
+      font-weight: 650;
     }
 
     .detail-attention-callout {
       align-items: flex-start;
       grid-template-columns: 1fr;
+      scroll-margin-bottom: var(--mobile-scroll-clearance, 9rem);
     }
 
     .detail-side {

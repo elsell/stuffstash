@@ -81,9 +81,13 @@ describe('ImportMessagesList', () => {
       }
     });
 
-    expect(document.body.textContent).toContain('20 issue groups');
-    expect(document.body.textContent).toContain('24 affected records');
+    const stats = Array.from(document.body.querySelectorAll<HTMLElement>('.issue-stat'));
+    expect(stats.map((stat) => stat.textContent)).toEqual(expect.arrayContaining(['Groups 20', 'Affected 24', 'Warnings 24']));
     expect(document.body.querySelectorAll('.message-group')).toHaveLength(5);
+    const boundedRegion = document.body.querySelector<HTMLElement>('.bounded-message-groups');
+    expect(boundedRegion?.getAttribute('role')).toBe('region');
+    expect(boundedRegion?.getAttribute('aria-label')).toBe('Grouped import issues');
+    expect(boundedRegion?.getAttribute('tabindex')).toBe('0');
     expect(document.body.textContent).toContain('2 more in this group');
     expect(document.body.textContent).toContain('15 more issue groups hidden.');
     expect(document.body.textContent).toContain('attachment-3.tiff');

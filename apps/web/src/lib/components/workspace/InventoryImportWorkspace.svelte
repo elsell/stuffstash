@@ -803,7 +803,7 @@
     .import-workspace {
       gap: 0.9rem;
       padding: 1rem;
-      padding-bottom: 7rem;
+      padding-bottom: var(--mobile-scroll-clearance, 7rem);
     }
 
     .import-toolbar,

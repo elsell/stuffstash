@@ -288,17 +288,17 @@
           <Button.Root variant="ghost" size="sm" onclick={() => (historyFilter = 'all')}>Show all</Button.Root>
         {/if}
       </div>
-      <div class="history-ledger">
-        <div class="history-ledger-head" aria-hidden="true">
-          <span>Status</span>
-          <span>Result</span>
-          <span>Source</span>
-          <span>Time</span>
-          <span>Actions</span>
+      <div class="history-ledger" role="table" aria-label="Import history">
+        <div class="history-ledger-head" role="row">
+          <span role="columnheader">Status</span>
+          <span role="columnheader">Result</span>
+          <span role="columnheader">Source</span>
+          <span role="columnheader">Time</span>
+          <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
-          <div class={jobNeedsAttention(job) ? 'history-row attention-row' : 'history-row'}>
-            <div class="status-cell">
+          <div class={jobNeedsAttention(job) ? 'history-row attention-row' : 'history-row'} role="row">
+            <div class="status-cell" role="cell">
               <span class="status-icon">
                 {#if jobNeedsAttention(job)}
                   <AlertTriangle size={18} aria-hidden="true" />
@@ -316,24 +316,29 @@
                 {/if}
               </div>
             </div>
-            <div class="result-cell">
+            <div class="result-cell" role="cell">
               <span>{statusSentence(job)}</span>
               <span>{historyCountSummary(job)}</span>
               {#if job.cancellationMode === 'keep_partial_progress'}<span>Partial progress kept</span>{/if}
               {#if job.cancellationMode === 'discard_partial_progress'}<span>Partial progress discarded</span>{/if}
             </div>
-            <div class="source-cell">
+            <div class="source-cell" role="cell">
               <span>{sourceDescription(job)}</span>
               {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
             </div>
-            <div class="time-cell">
+            <div class="time-cell" role="cell">
               {#if job.startedAt}<span>{jobTimeLabel('Started', job.startedAt)}</span>{/if}
               {#if job.completedAt}<span>{jobTimeLabel('Completed', job.completedAt)}</span>{/if}
             </div>
-            <div class="row-actions">
-              <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>
+            <div class="row-actions" role="cell">
+              <Button.Root
+                variant={jobNeedsAttention(job) ? 'outline' : 'ghost'}
+                size="sm"
+                onclick={() => onOpenJob(job)}
+                aria-label={jobActionLabel(jobNeedsAttention(job) ? 'Review Details for' : 'View details for', job)}
+              >
                 <Eye size={16} aria-hidden="true" />
-                Details
+                {jobNeedsAttention(job) ? 'Review Details' : 'Details'}
               </Button.Root>
               {#if canRemoveJobFromHistory(job)}
                 <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
@@ -662,6 +667,7 @@
   }
 
   .history-row.attention-row {
+    background: hsl(var(--destructive) / 0.026);
     border-color: hsl(var(--destructive) / 0.3);
   }
 
