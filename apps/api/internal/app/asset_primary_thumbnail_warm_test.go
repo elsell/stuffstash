@@ -346,6 +346,7 @@ func TestSearchAssetsWarmsPrimarySmallThumbnails(t *testing.T) {
 		Attachments:      &recordingAttachmentRepository{attachment: attachment, found: true},
 		Blobs:            blobStore,
 		ImageProcessor:   processor,
+		Audit:            &fakeAuditRepository{},
 		DefaultPageLimit: 50,
 		MaxPageLimit:     100,
 	})

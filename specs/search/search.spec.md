@@ -31,6 +31,7 @@ This spec does not define final indexes, ranking, advanced query syntax, highlig
 - Search must support pagination.
 - Search must expose stable result types so clients can render assets, locations, inventories, and future result types safely.
 - Search implementation must live behind ports and adapters.
+- REST asset search and conversational search tools are audited read surfaces. Successful searches from those surfaces must write a safe read audit record after authorization and before returning results. Internal validation lookups that do not return search results to a user, client, model provider, or tool result do not create separate read history. The audit record must identify only the tenant or inventory search scope, source, request correlation ID when supplied, mode, lifecycle filter, checkout-state filter, custom-asset-type filter presence, limit, authorized inventory count, and result count. It must not store the raw search query, match values, result payloads, provider prompts, transcripts, tool arguments, tool results, authorization decisions, credentials, bearer material, or hidden resource details.
 
 ## First API Slice
 
@@ -68,12 +69,14 @@ The first API slice is asset search:
 
 - Conversational inventory flows may use search to resolve asset and location references.
 - Search results used by conversational flows must respect the initiating user's authorization.
+- Search used by conversational flows must use `conversation` audit source and must keep audit metadata query-free and prompt-free.
 - Fuzzy matches must not cause unsafe actions without clarification or confirmation when ambiguity exists.
 
 ## Testing
 
 - Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, checkout-state filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
+- Tests must verify search read audit records are written with safe metadata and without raw queries or result payloads, including conversational search use.
 - Web inventory search must pass the selected inventory ID to the REST search endpoint so inventory-scoped UI routes do not receive cross-inventory result payloads and then filter them in the browser.
 - PostgreSQL-backed tests are required for PostgreSQL-specific search behavior.
 

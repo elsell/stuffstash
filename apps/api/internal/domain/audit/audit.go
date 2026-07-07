@@ -83,6 +83,7 @@ const (
 	ActionAssetCreated                         Action = "asset.created"
 	ActionAssetViewed                          Action = "asset.viewed"
 	ActionAssetListed                          Action = "asset.listed"
+	ActionAssetSearched                        Action = "asset.searched"
 	ActionAssetUpdated                         Action = "asset.updated"
 	ActionAssetMoved                           Action = "asset.moved"
 	ActionAssetArchived                        Action = "asset.archived"
@@ -170,6 +171,7 @@ func NewAction(value string) (Action, bool) {
 		ActionAssetCreated,
 		ActionAssetViewed,
 		ActionAssetListed,
+		ActionAssetSearched,
 		ActionAssetUpdated,
 		ActionAssetMoved,
 		ActionAssetArchived,

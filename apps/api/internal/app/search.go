@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -20,6 +22,8 @@ type SearchAssetsInput struct {
 	Principal         identity.Principal
 	TenantID          tenant.ID
 	InventoryIDs      []inventory.InventoryID
+	Source            audit.Source
+	RequestID         string
 	Query             string
 	Mode              string
 	CustomAssetTypeID string
@@ -90,6 +94,9 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		return SearchAssetsResult{}, err
 	}
 	if len(inventoryIDs) == 0 {
+		if err := a.saveSearchAssetsReadAudit(ctx, input, inventoryIDs, limit, mode.String(), string(lifecycleFilter), string(checkoutFilter), customAssetTypeID.String(), 0); err != nil {
+			return SearchAssetsResult{}, err
+		}
 		return SearchAssetsResult{Items: []ports.AssetSearchResult{}, Limit: limit}, nil
 	}
 	if a.search == nil {
@@ -131,6 +138,9 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 			"inventory_ids": strconv.Itoa(len(inventoryIDs)),
 		},
 	})
+	if err := a.saveSearchAssetsReadAudit(ctx, input, inventoryIDs, limit, mode.String(), string(lifecycleFilter), string(checkoutFilter), customAssetTypeID.String(), len(items)); err != nil {
+		return SearchAssetsResult{}, err
+	}
 	a.warmPrimarySmallThumbnails(ctx, primaryPhotosForSearchResults(items, primaryPhotos))
 
 	return SearchAssetsResult{
@@ -140,6 +150,42 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		NextCursor:    nextCursor,
 		HasMore:       hasMore,
 	}, nil
+}
+
+func (a App) saveSearchAssetsReadAudit(ctx context.Context, input SearchAssetsInput, authorizedInventoryIDs []inventory.InventoryID, limit int, mode string, lifecycle string, checkout string, customAssetTypeID string, resultCount int) error {
+	if input.Source.String() == "" {
+		return nil
+	}
+	targetType := audit.TargetTenant
+	targetID := input.TenantID.String()
+	inventoryID := inventory.InventoryID("")
+	scope := "tenant"
+	if len(input.InventoryIDs) == 1 {
+		targetType = audit.TargetInventory
+		targetID = input.InventoryIDs[0].String()
+		inventoryID = input.InventoryIDs[0]
+		scope = "inventory"
+	}
+	return appsupport.SaveReadAuditRecord(ctx, a.audit, a.ids, a.clock, appsupport.AuditRecordInput{
+		Principal:   input.Principal,
+		TenantID:    input.TenantID,
+		InventoryID: inventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAssetSearched,
+		TargetType:  targetType,
+		TargetID:    targetID,
+		Metadata: map[string]string{
+			"scope":                    scope,
+			"limit":                    strconv.Itoa(limit),
+			"mode":                     mode,
+			"lifecycle":                lifecycle,
+			"checkout":                 checkout,
+			"custom_asset_type_filter": strconv.FormatBool(strings.TrimSpace(customAssetTypeID) != ""),
+			"authorized_inventories":   strconv.Itoa(len(authorizedInventoryIDs)),
+			"result_count":             strconv.Itoa(resultCount),
+		},
+	})
 }
 
 func primaryPhotosForSearchResults(items []ports.AssetSearchResult, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment) []media.Attachment {

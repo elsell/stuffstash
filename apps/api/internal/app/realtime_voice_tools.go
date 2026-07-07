@@ -393,6 +393,7 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 		Principal:      session.Principal,
 		TenantID:       session.TenantID,
 		InventoryIDs:   []inventory.InventoryID{session.InventoryID},
+		Source:         audit.SourceConversation,
 		Query:          args.Query,
 		Mode:           "fuzzy",
 		LifecycleState: "active",

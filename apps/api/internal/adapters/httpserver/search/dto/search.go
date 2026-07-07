@@ -4,6 +4,7 @@ import "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 
 type SearchAssetsInput struct {
 	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID          string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID       string `query:"inventoryId" doc:"Optional inventory ID scope"`
 	Query             string `query:"q" required:"true" minLength:"1" maxLength:"120" doc:"Search query"`

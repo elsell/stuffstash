@@ -19,7 +19,7 @@ func TestRealtimeVoiceActionPlanApprovalPromotesItemParentForCreate(t *testing.T
 	var application app.App
 	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, createUnderItemActionPlanProposalLanguageModel{}, []string{
 		"baby-id", "baby-undo-id", "baby-audit-id",
-		"voice-session-id", "read-tool-id", "plan-id", "command-id",
+		"voice-session-id", "read-tool-id", "voice-search-audit-id", "plan-id", "command-id",
 		"milk-id", "audit-baby-promotion", "milk-undo-id", "milk-audit-id",
 	}, "Add milk to Baby.", func(seedApplication app.App) {
 		application = seedApplication

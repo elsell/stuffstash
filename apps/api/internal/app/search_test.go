@@ -2,10 +2,12 @@ package app
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -31,6 +33,7 @@ func TestSearchAssetsUsesAuthorizationVisibilityPort(t *testing.T) {
 			inventoryItem("inventory-other", "tenant-two", "Other Tenant"),
 		}},
 		Search:           search,
+		Audit:            &fakeAuditRepository{},
 		DefaultPageLimit: 1,
 		MaxPageLimit:     10,
 	})
@@ -102,6 +105,7 @@ func TestSearchAssetsIncludesPrimaryImageAttachments(t *testing.T) {
 			Asset:     item,
 		}}},
 		Attachments:      attachments,
+		Audit:            &fakeAuditRepository{},
 		DefaultPageLimit: 10,
 		MaxPageLimit:     20,
 	})
@@ -120,6 +124,128 @@ func TestSearchAssetsIncludesPrimaryImageAttachments(t *testing.T) {
 	}
 	if result.PrimaryPhotos[ref].ID != media.ID("attachment-one") {
 		t.Fatalf("expected primary photo in search result, got %+v", result.PrimaryPhotos)
+	}
+}
+
+func TestSearchAssetsWritesSafeReadAudit(t *testing.T) {
+	t.Parallel()
+
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	auditRepo := &fakeAuditRepository{}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &visibilityAuthorizer{t: t, tenantID: tenantID, visible: []inventory.InventoryID{inventoryID}},
+		Tenants:    &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
+		}},
+		Search:           &recordingAssetSearchRepository{},
+		Audit:            auditRepo,
+		IDs:              &fakeIDGenerator{ids: []string{"audit-search-one"}},
+		DefaultPageLimit: 10,
+		MaxPageLimit:     20,
+	})
+
+	_, err := application.SearchAssets(context.Background(), SearchAssetsInput{
+		Principal:         identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:          tenantID,
+		InventoryIDs:      []inventory.InventoryID{inventoryID},
+		Source:            audit.SourceAPI,
+		RequestID:         "request-search-one",
+		Query:             "water bottle bearer secret",
+		Mode:              "exact",
+		CustomAssetTypeID: "type-tools",
+		LifecycleState:    "active",
+		CheckoutState:     "available",
+		Limit:             7,
+	})
+	if err != nil {
+		t.Fatalf("search assets: %v", err)
+	}
+
+	record, ok := auditRepo.recordForAction(audit.ActionAssetSearched)
+	if !ok {
+		t.Fatalf("expected search read audit record, got %+v", auditRepo.items)
+	}
+	if record.Source != audit.SourceAPI || record.RequestID != "request-search-one" || record.TargetType != audit.TargetInventory || record.TargetID != inventoryID.String() || record.InventoryID.String() != inventoryID.String() {
+		t.Fatalf("unexpected search audit record: %+v", record)
+	}
+	expectedMetadata := map[string]string{
+		"scope":                    "inventory",
+		"limit":                    "7",
+		"mode":                     "exact",
+		"lifecycle":                "active",
+		"checkout":                 "available",
+		"custom_asset_type_filter": "true",
+		"authorized_inventories":   "1",
+		"result_count":             "0",
+	}
+	for key, value := range expectedMetadata {
+		if record.Metadata[key] != value {
+			t.Fatalf("expected audit metadata %s=%q, got %+v", key, value, record.Metadata)
+		}
+	}
+	searchAuditMustNotContain(t, record, "water", "bottle", "bearer", "secret", "type-tools")
+}
+
+func TestRealtimeVoiceSearchToolWritesConversationReadAudit(t *testing.T) {
+	t.Parallel()
+
+	tenantID := tenant.ID("tenant-home")
+	inventoryID := inventory.InventoryID("inventory-home")
+	auditRepo := &fakeAuditRepository{}
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &visibilityAuthorizer{t: t, tenantID: tenantID, visible: []inventory.InventoryID{inventoryID}},
+		Tenants:    &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
+		}},
+		Search:           &recordingAssetSearchRepository{},
+		Audit:            auditRepo,
+		IDs:              &fakeIDGenerator{ids: []string{"audit-voice-search"}},
+		DefaultPageLimit: 10,
+		MaxPageLimit:     20,
+	})
+
+	_, _, err := application.executeRealtimeVoiceTool(context.Background(), RealtimeVoiceSession{
+		TenantID:    tenantID,
+		InventoryID: inventoryID,
+		Principal:   identity.Principal{ID: identity.PrincipalID("speaker")},
+	}, "", nil, ports.AgentToolCall{
+		ID:   "tool-search",
+		Name: RealtimeVoiceToolSearchAuthorizedAssets,
+		Arguments: map[string]any{
+			"query": "passport prompt token",
+			"limit": float64(3),
+		},
+	}, map[string]struct{}{})
+	if err != nil {
+		t.Fatalf("execute realtime voice search tool: %v", err)
+	}
+
+	record, ok := auditRepo.recordForAction(audit.ActionAssetSearched)
+	if !ok {
+		t.Fatalf("expected voice search read audit record, got %+v", auditRepo.items)
+	}
+	if record.Source != audit.SourceConversation || record.TargetType != audit.TargetInventory || record.TargetID != inventoryID.String() {
+		t.Fatalf("unexpected voice search audit record: %+v", record)
+	}
+	searchAuditMustNotContain(t, record, "passport", "prompt", "token", "tool-search", RealtimeVoiceToolSearchAuthorizedAssets)
+}
+
+func searchAuditMustNotContain(t *testing.T, record audit.Record, unsafe ...string) {
+	t.Helper()
+
+	combined := record.TargetID + " " + record.RequestID
+	for key, value := range record.Metadata {
+		combined += " " + key + " " + value
+	}
+	for _, value := range unsafe {
+		if strings.Contains(combined, value) {
+			t.Fatalf("search audit leaked %q in %+v", value, record)
+		}
 	}
 }
 
