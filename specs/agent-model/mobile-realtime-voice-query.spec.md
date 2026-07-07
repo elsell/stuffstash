@@ -501,6 +501,10 @@ The corpus must cover at least these behaviors:
 - Moving an existing item with casual location language, such as "out to the garage", while still using only visible destination IDs.
 - Moving an existing item into a missing single destination that should be created.
 - Moving an existing item into a missing nested destination path that should be created.
+- Archiving an existing visible item.
+- Restoring an existing visible archived item.
+- Checking out an existing visible item.
+- Returning an existing visible checked-out item.
 - Asking for a change where the source item is not visible.
 - Asking for a change where speech-to-text produced an unclear or unlikely destination.
 - Asking for a dangerous, destructive, provider-configuration, credential, or unrelated system action.
