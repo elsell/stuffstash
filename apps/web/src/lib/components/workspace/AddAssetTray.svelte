@@ -21,6 +21,8 @@
     AddAssetSubmission,
     AddAssetSaveResult,
     AssetKind,
+    AssetTag,
+    AssetTagDraft,
     CustomAssetType,
     CustomFieldDefinition,
     MediaUploadPolicy,
@@ -30,6 +32,7 @@
   import { applicableCustomFieldDefinitions } from '$lib/domain/inventory';
   import AddAssetCustomFieldsSection from './AddAssetCustomFieldsSection.svelte';
   import AddAssetPhotosSection from './AddAssetPhotosSection.svelte';
+  import AssetTagSelector from './AssetTagSelector.svelte';
   import BinaryOption from './BinaryOption.svelte';
   import { formatBytes } from './formatBytes';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
@@ -44,6 +47,7 @@
     mediaPolicy,
     customAssetTypes,
     customFieldDefinitions,
+    assetTags = [],
     saving,
     onClose,
     onSave
@@ -56,6 +60,7 @@
     mediaPolicy: MediaUploadPolicy;
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];
+    assetTags?: AssetTag[];
     saving: boolean;
     onClose: () => void;
     onSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
@@ -71,6 +76,8 @@
   let quickParentKind = $state<'location' | 'container'>('location');
   let customAssetTypeId = $state('');
   let customFieldValues = $state<Record<string, string>>({});
+  let selectedTagIds = $state<string[]>([]);
+  let newTags = $state<AssetTagDraft[]>([]);
   let selectedPhotos = $state<SelectedPhoto[]>([]);
   let photoError = $state('');
   let fileInputKey = $state(0);
@@ -141,6 +148,8 @@
         : undefined,
       customAssetTypeId: customAssetTypeId || undefined,
       customFields: buildCustomFields(),
+      tagIds: selectedTagIds,
+      newTags,
       photos: selectedPhotos
     });
     if (!result.saved) {
@@ -161,6 +170,8 @@
     quickParentKind = 'location';
     customAssetTypeId = '';
     customFieldValues = {};
+    selectedTagIds = [];
+    newTags = [];
     revokePhotoPreviews(selectedPhotos);
     selectedPhotos = [];
     photoError = '';
@@ -179,6 +190,8 @@
     quickParentKind = 'location';
     customAssetTypeId = '';
     customFieldValues = {};
+    selectedTagIds = [];
+    newTags = [];
     selectedPhotos = [];
     photoError = '';
     fileInputKey += 1;
@@ -289,6 +302,14 @@
 
   function setCustomFieldValue(key: string, value: string): void {
     customFieldValues = { ...customFieldValues, [key]: value };
+  }
+
+  function setSelectedTagIds(ids: string[]): void {
+    selectedTagIds = ids;
+  }
+
+  function setNewTags(tags: AssetTagDraft[]): void {
+    newTags = tags;
   }
 
   function buildCustomFields(): Record<string, unknown> {
@@ -427,6 +448,14 @@
         {customFieldValues}
         onCustomAssetTypeSelect={setCustomAssetType}
         onCustomFieldValueChange={setCustomFieldValue}
+      />
+
+      <AssetTagSelector
+        tags={assetTags}
+        selectedIds={selectedTagIds}
+        {newTags}
+        onSelectedIdsChange={setSelectedTagIds}
+        onNewTagsChange={setNewTags}
       />
 
       <AddAssetPhotosSection

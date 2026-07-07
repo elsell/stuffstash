@@ -17,6 +17,7 @@
   } from '$lib/application/workspaceBrowseNavigation';
   import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
+  import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
@@ -148,6 +149,7 @@
                 <strong>{asset.title}</strong>
                 <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                 <small>{asset.containmentTrail}</small>
+                <AssetTagChips tags={asset.tags ?? []} compact />
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />
                 {/if}
@@ -169,6 +171,7 @@
               <span class="asset-row-main">
                 <strong>{asset.title}</strong>
                 <small>{asset.description || assetKindLabel(asset.kind)}</small>
+                <AssetTagChips tags={asset.tags ?? []} compact />
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />
                 {/if}
@@ -194,6 +197,7 @@
             <span class="asset-row-main">
               <strong>{asset.title}</strong>
               <small>{asset.description || assetKindLabel(asset.kind)}</small>
+              <AssetTagChips tags={asset.tags ?? []} compact />
               {#if asset.currentCheckout}
                 <CheckoutBadge checkout={asset.currentCheckout} compact />
               {/if}

@@ -76,6 +76,11 @@ export const workspaceSeed: WorkspaceSeed = {
       lifecycleState: 'active'
     }
   ],
+  assetTags: [
+    { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' },
+    { id: 'tag-garden', key: 'garden', displayName: 'Garden', color: '#2E7D32' },
+    { id: 'tag-documents', key: 'documents', displayName: 'Documents', color: '#7C3AED' }
+  ],
   assets: [
     {
       id: 'asset-garage',
@@ -87,6 +92,7 @@ export const workspaceSeed: WorkspaceSeed = {
       parentAssetId: null,
       lifecycleState: 'active',
       customFields: {},
+      tags: [{ id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' }],
       photo: {
         id: 'photo-garage',
         assetId: 'asset-garage',
@@ -103,7 +109,8 @@ export const workspaceSeed: WorkspaceSeed = {
       description: 'Medicine, documents, and household backups.',
       parentAssetId: null,
       lifecycleState: 'active',
-      customFields: {}
+      customFields: {},
+      tags: [{ id: 'tag-documents', key: 'documents', displayName: 'Documents', color: '#7C3AED' }]
     },
     {
       id: 'asset-toolbox',
@@ -115,7 +122,8 @@ export const workspaceSeed: WorkspaceSeed = {
       parentAssetId: 'asset-garage',
       lifecycleState: 'active',
       customFields: { 'storage-note': 'Middle shelf' },
-      customAssetTypeLabel: 'Tool storage'
+      customAssetTypeLabel: 'Tool storage',
+      tags: [{ id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' }]
     },
     {
       id: 'asset-fertilizer',
@@ -128,7 +136,8 @@ export const workspaceSeed: WorkspaceSeed = {
       lifecycleState: 'active',
       customAssetTypeId: 'type-garden-supply',
       customFields: { 'expiration-date': '2026-09-01' },
-      customAssetTypeLabel: 'Garden supply'
+      customAssetTypeLabel: 'Garden supply',
+      tags: [{ id: 'tag-garden', key: 'garden', displayName: 'Garden', color: '#2E7D32' }]
     },
     {
       id: 'asset-passports',
@@ -141,7 +150,8 @@ export const workspaceSeed: WorkspaceSeed = {
       lifecycleState: 'active',
       customAssetTypeId: 'type-document',
       customFields: { 'storage-note': 'Blue folder' },
-      customAssetTypeLabel: 'Document'
+      customAssetTypeLabel: 'Document',
+      tags: [{ id: 'tag-documents', key: 'documents', displayName: 'Documents', color: '#7C3AED' }]
     }
   ]
 };

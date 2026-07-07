@@ -822,6 +822,10 @@ small {
   gap: 3px;
 }
 
+.recent-card .tag-chip-list {
+  margin-top: 3px;
+}
+
 .recent-card strong,
 .recent-card small {
   display: block;
@@ -1913,6 +1917,98 @@ dd {
 .field-stack {
   display: grid;
   gap: 6px;
+}
+
+.tag-chip-list,
+.selected-tag-summary,
+.tag-options {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-chip-list[data-compact="true"] {
+  gap: 4px;
+}
+
+.tag-chip,
+.tag-option {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--secondary) 82%, white);
+  color: var(--foreground);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.tag-chip span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-swatch {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in oklab, var(--tag-color, var(--border)) 70%, black);
+  border-radius: 999px;
+  background: var(--tag-color, var(--muted));
+}
+
+.tag-selector {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.tag-selector legend {
+  margin-bottom: 2px;
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.tag-option {
+  height: 30px;
+  padding-inline: 9px;
+  gap: 6px;
+}
+
+.pending-tag {
+  padding-right: 3px;
+}
+
+.pending-tag [data-slot="button"] {
+  width: 20px;
+  height: 20px;
+}
+
+.new-tag-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(96px, 0.7fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.color-field input {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  text-transform: uppercase;
 }
 
 .access-form > [data-slot="button"]:disabled,

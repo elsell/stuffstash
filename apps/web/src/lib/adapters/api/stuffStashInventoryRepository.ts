@@ -7,6 +7,8 @@ import type {
   AssetAttachment,
   AssetCheckout,
   AssetCheckoutDraft,
+  AssetTag,
+  AssetTagDraft,
   AssetLifecycleFilter,
   CheckedOutAsset,
   InventoryAccessRelationship,
@@ -36,6 +38,7 @@ import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import {
   mapAsset,
   mapAssetCheckout,
+  mapAssetTag,
   mapAttachment,
   mapAuditRecord,
   mapCapability,
@@ -93,6 +96,7 @@ export class StuffStashInventoryRepository
             mediaUploadPolicy: this.config.mediaUploadPolicy,
             customAssetTypes: [],
             customFieldDefinitions: [],
+            assetTags: [],
             capability: 'viewer'
           },
           assets: [],
@@ -123,6 +127,7 @@ export class StuffStashInventoryRepository
         mediaUploadPolicy: this.config.mediaUploadPolicy,
         customAssetTypes: [],
         customFieldDefinitions: [],
+        assetTags: [],
         capability: mapCapability(inventory)
       },
       assets: [],
@@ -169,13 +174,26 @@ export class StuffStashInventoryRepository
           description: draft.description,
           parentAssetId: draft.parentAssetId,
           customAssetTypeId: draft.customAssetTypeId,
-          customFields: draft.customFields
+          customFields: draft.customFields,
+          tagIds: draft.tagIds
         })
       );
       this.observer.record('workspace.asset_created', { kind: asset.kind });
       return asset;
     } catch (error) {
       this.observer.record('workspace.asset_create_failed', { kind: draft.kind });
+      throw safeError(error);
+    }
+  }
+
+  async createAssetTag(tenantId: string, inventoryId: string, draft: AssetTagDraft): Promise<AssetTag> {
+    this.observer.record('workspace.asset_tag_create_started');
+    try {
+      const tag = mapAssetTag(await this.client.createAssetTag(tenantId, inventoryId, draft));
+      this.observer.record('workspace.asset_tag_created');
+      return tag;
+    } catch (error) {
+      this.observer.record('workspace.asset_tag_create_failed');
       throw safeError(error);
     }
   }
@@ -200,7 +218,8 @@ export class StuffStashInventoryRepository
           title: draft.title,
           description: draft.description,
           parentAssetId: draft.parentAssetId,
-          customFields: draft.customFields
+          customFields: draft.customFields,
+          tagIds: draft.tagIds
         })
       );
       this.observer.record('workspace.asset_updated', { kind: asset.kind });
@@ -738,6 +757,9 @@ export class StuffStashInventoryRepository
     const customFieldDefinitions = selectedInventory
       ? (await this.client.listInventoryCustomFieldDefinitions(tenantId, selectedInventory.id, 100)).items.map(mapCustomFieldDefinition)
       : [];
+    const assetTags = selectedInventory
+      ? (await this.client.listAssetTags(tenantId, selectedInventory.id, 100)).items.map(mapAssetTag)
+      : [];
     const assets = selectedInventory
       ? await Promise.all(
           (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, lifecycleState)).items.map((asset) =>
@@ -763,6 +785,7 @@ export class StuffStashInventoryRepository
         mediaUploadPolicy: this.config.mediaUploadPolicy,
         customAssetTypes,
         customFieldDefinitions,
+        assetTags,
         capability: mapCapability(selectedInventory)
       },
       assets,

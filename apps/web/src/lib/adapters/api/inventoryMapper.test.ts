@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapAsset, mapAssetCheckout, mapCapability, mapCheckedOutAsset, mapInventory, mapSearchResult, mapTenant } from './inventoryMapper';
+import { mapAsset, mapAssetCheckout, mapAssetTag, mapCapability, mapCheckedOutAsset, mapInventory, mapSearchResult, mapTenant } from './inventoryMapper';
 
 describe('inventory API mapper', () => {
   it('maps generated asset DTOs into frontend domain assets', () => {
@@ -14,6 +14,7 @@ describe('inventory API mapper', () => {
         parentAssetId: null,
         lifecycleState: 'active',
         customFields: {},
+        tags: [{ id: 'tag-one', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
         currentCheckout: {
           id: 'checkout-one',
           state: 'open',
@@ -31,6 +32,7 @@ describe('inventory API mapper', () => {
       parentAssetId: null,
       lifecycleState: 'active',
       customFields: {},
+      tags: [{ id: 'tag-one', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
       currentCheckout: {
         id: 'checkout-one',
         state: 'open',
@@ -39,6 +41,22 @@ describe('inventory API mapper', () => {
       },
       updatedAt: undefined
     });
+  });
+
+  it('maps generated tag DTOs into frontend domain tags', () => {
+    expect(
+      mapAssetTag({
+        id: 'tag-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        key: 'workshop',
+        displayName: 'Workshop',
+        color: '#2F80ED',
+        lifecycleState: 'active',
+        createdAt: '2026-07-07T12:00:00Z',
+        updatedAt: '2026-07-07T12:00:00Z'
+      })
+    ).toEqual({ id: 'tag-one', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' });
   });
 
   it('maps checkout history and checked-out asset DTOs', () => {
@@ -75,7 +93,8 @@ describe('inventory API mapper', () => {
           description: '',
           parentAssetId: null,
           lifecycleState: 'archived',
-          customFields: {}
+          customFields: {},
+          tags: []
         },
         checkout: {
           id: 'checkout-open',
@@ -104,6 +123,7 @@ describe('inventory API mapper', () => {
         description: 'Blue folder',
         lifecycleState: 'active',
         customFields: {},
+        tags: [],
         parentAssetId: 'hall-closet'
       } as any,
       matches: [{ field: 'title', value: 'Passport' }]

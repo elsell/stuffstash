@@ -14,6 +14,7 @@
   } from '$lib/application/workspaceBrowseNavigation';
   import type { Asset, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
+  import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
 
@@ -115,6 +116,7 @@
             {#if asset.description}
               <small>{asset.description}</small>
             {/if}
+            <AssetTagChips tags={asset.tags ?? []} compact />
             {#if asset.currentCheckout}
               <CheckoutBadge checkout={asset.currentCheckout} compact />
             {/if}

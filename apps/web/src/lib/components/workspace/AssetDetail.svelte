@@ -32,6 +32,8 @@
 	    AssetAttachment,
 	    AssetCheckout,
 	    AssetViewModel,
+    AssetTag,
+    AssetTagDraft,
     CustomFieldDefinition,
     MediaUploadPolicy,
     ParentTargetViewModel,
@@ -41,6 +43,7 @@
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
   import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID } from './AssetDetailHero.svelte';
+  import AssetTagChips from './AssetTagChips.svelte';
   import AssetFilesSection from './AssetFilesSection.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
   import { formatBytes } from './formatBytes';
@@ -53,6 +56,7 @@
     attachmentAction = null,
     parentTargets,
     customFieldDefinitions,
+    assetTags = [],
     saving,
     attachments,
     checkoutHistory,
@@ -80,6 +84,7 @@
     attachmentAction?: AttachmentRouteAction;
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
+    assetTags?: AssetTag[];
     saving: boolean;
     attachments: AssetAttachment[];
     checkoutHistory: AssetCheckout[];
@@ -108,6 +113,8 @@
   let moveParentSearch = $state('');
   let checkoutDetails = $state('');
   let customFieldValues = $state<Record<string, string>>({});
+  let selectedTagIds = $state<string[]>([]);
+  let newTags = $state<AssetTagDraft[]>([]);
   let saveError = $state('');
   let uploadError = $state('');
   let photoInput = $state<HTMLInputElement | null>(null);
@@ -227,6 +234,8 @@
     customFieldValues = Object.fromEntries(
       applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
     );
+    selectedTagIds = asset.tags?.map((tag) => tag.id) ?? [];
+    newTags = [];
     panel = 'edit';
     if (notify) {
       onActionOpen('edit');
@@ -313,7 +322,9 @@
         title: title.trim(),
         description: description.trim(),
         parentAssetId,
-        customFields: buildCustomFields()
+        customFields: buildCustomFields(),
+        tagIds: selectedTagIds,
+        newTags
       });
       closePanel();
     } catch (caught) {
@@ -485,6 +496,14 @@
     customFieldValues = { ...customFieldValues, [key]: value };
   }
 
+  function setSelectedTagIds(ids: string[]): void {
+    selectedTagIds = ids;
+  }
+
+  function setNewTags(tags: AssetTagDraft[]): void {
+    newTags = tags;
+  }
+
   function selectMoveParent(id: string | null): void {
     parentAssetId = id;
     moveParentSearch = id ? parentTargets.find((target) => target.id === id)?.title ?? moveParentSearch : '';
@@ -557,6 +576,7 @@
           <div>
             <h1 id="asset-title">{asset.title}</h1>
             <p>{asset.containmentTrail}</p>
+            <AssetTagChips tags={asset.tags ?? []} />
           </div>
 	          <span class="detail-title-badges">
 	            {#if asset.currentCheckout}
@@ -636,6 +656,9 @@
         {saveError}
         detailHref={detailHref()}
         {applicableFields}
+        assetTags={assetTags}
+        selectedTagIds={selectedTagIds}
+        {newTags}
         bind:title
         bind:description
         bind:parentAssetId
@@ -652,6 +675,8 @@
         onDeleteAttachment={removeAttachment}
         onParentSelect={selectMoveParent}
         onCustomFieldValueChange={setCustomFieldValue}
+        onSelectedTagIdsChange={setSelectedTagIds}
+        onNewTagsChange={setNewTags}
       />
     <section class="detail-section" aria-labelledby="asset-description-title">
       <h2 id="asset-description-title">Details</h2>

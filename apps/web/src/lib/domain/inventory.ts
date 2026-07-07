@@ -49,6 +49,18 @@ export interface AssetPhoto {
   alt: string;
 }
 
+export interface AssetTag {
+  id: string;
+  key: string;
+  displayName: string;
+  color?: string;
+}
+
+export interface AssetTagDraft {
+  displayName: string;
+  color?: string;
+}
+
 export interface AssetAttachment {
   id: string;
   tenantId: string;
@@ -145,6 +157,7 @@ export interface Asset {
   customAssetTypeId?: string;
   customFields?: Record<string, unknown>;
   customAssetTypeLabel?: string;
+  tags?: AssetTag[];
   photo?: AssetPhoto;
   photoUnavailable?: boolean;
   currentCheckout?: CurrentCheckout;
@@ -218,6 +231,7 @@ export interface ImportSourceRequest {
 
 export interface ImportCounts {
   fields: number;
+  tags?: number;
   locations: number;
   assets: number;
   attachments: number;
@@ -252,6 +266,7 @@ export interface ImportJobPreview {
     displayName: string;
     type: string;
   }>;
+  tags?: AssetTagDraft[];
   locations: Array<{
     sourceId?: string;
     kind: string;
@@ -280,6 +295,7 @@ export interface ImportJobPreview {
   assetsTruncated: boolean;
   attachmentsTruncated: boolean;
   messagesTruncated: boolean;
+  tagsTruncated?: boolean;
 }
 
 export interface ImportJobResourceSummary {
@@ -318,6 +334,8 @@ export interface ImportJob {
   counts: ImportCounts & {
     fieldsCreated: number;
     fieldsExisting: number;
+    tagsCreated?: number;
+    tagsExisting?: number;
     locationsCreated: number;
     assetsCreated: number;
     assetsSkipped: number;
@@ -345,6 +363,8 @@ export interface AddAssetDraft {
   parentAssetId: string | null;
   customAssetTypeId?: string;
   customFields?: Record<string, unknown>;
+  tagIds?: string[];
+  newTags?: AssetTagDraft[];
   photos: SelectedPhoto[];
 }
 
@@ -367,6 +387,8 @@ export interface UpdateAssetDraft {
   description: string;
   parentAssetId: string | null;
   customFields?: Record<string, unknown>;
+  tagIds?: string[];
+  newTags?: AssetTagDraft[];
 }
 
 export interface SelectedPhoto {
@@ -397,6 +419,7 @@ export interface WorkspaceContext {
   mediaUploadPolicy: MediaUploadPolicy;
   customAssetTypes: CustomAssetType[];
   customFieldDefinitions: CustomFieldDefinition[];
+  assetTags?: AssetTag[];
   capability: Capability;
 }
 

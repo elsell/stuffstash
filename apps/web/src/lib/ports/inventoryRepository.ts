@@ -5,6 +5,8 @@ import type {
   AssetCheckout,
   AssetCheckoutDraft,
   AssetLifecycleFilter,
+  AssetTag,
+  AssetTagDraft,
   CheckedOutAsset,
   CustomAssetType,
   CustomFieldDefinition,
@@ -32,6 +34,7 @@ export interface InventoryRepository {
   getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset>;
   createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset>;
+  createAssetTag(tenantId: string, inventoryId: string, draft: AssetTagDraft): Promise<AssetTag>;
   archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void>;
@@ -71,4 +74,5 @@ export interface WorkspaceSeed {
   assets: Asset[];
   customAssetTypes: CustomAssetType[];
   customFieldDefinitions: CustomFieldDefinition[];
+  assetTags?: AssetTag[];
 }

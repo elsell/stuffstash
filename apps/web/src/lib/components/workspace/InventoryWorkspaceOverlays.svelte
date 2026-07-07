@@ -3,6 +3,7 @@
     AddAssetSaveResult,
     AddAssetSubmission,
     AssetKind,
+    AssetTag,
     CustomAssetType,
     CustomFieldDefinition,
     MediaUploadPolicy,
@@ -20,6 +21,7 @@
     mediaPolicy: MediaUploadPolicy;
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];
+    assetTags?: AssetTag[];
     saving: boolean;
     notification: WorkspaceNotification | null;
     error: string;
@@ -42,6 +44,7 @@
     mediaPolicy,
     customAssetTypes,
     customFieldDefinitions,
+    assetTags = [],
     saving,
     notification,
     error,
@@ -79,6 +82,7 @@
   {mediaPolicy}
   {customAssetTypes}
   {customFieldDefinitions}
+  {assetTags}
   {saving}
   onClose={onAddClose}
   onSave={onAddSave}

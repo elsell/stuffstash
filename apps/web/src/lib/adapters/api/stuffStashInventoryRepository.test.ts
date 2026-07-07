@@ -37,6 +37,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-cabin/inventories?limit=50',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-field-definitions?limit=100',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/tags?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets?limit=50'
     ]);
@@ -74,6 +75,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       url: expect.stringContaining('blob:'),
       alt: 'Archived Passport'
     });
+    expect(data.context.assetTags).toEqual([{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }]);
+    expect(data.assets[0]?.tags).toEqual([{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }]);
     const thumbnailRequest = requests.find((request) =>
       request.url.includes('/assets/asset-archived/attachments/attachment-one/thumbnail?variant=small')
     );
@@ -156,6 +159,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-empty/inventories?limit=50',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-field-definitions?limit=100',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/tags?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/checked-out-assets?limit=50'
     ]);
@@ -230,7 +234,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     const asset = await repository.updateAsset('tenant-home', 'inventory-household', 'asset-passport', {
       title: 'Updated Passport',
       description: 'Fire safe',
-      parentAssetId: 'asset-safe'
+      parentAssetId: 'asset-safe',
+      tagIds: ['tag-workshop']
     });
 
     expect(asset).toMatchObject({
@@ -245,8 +250,25 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     expect(await requests[0]?.json()).toEqual({
       title: 'Updated Passport',
       description: 'Fire safe',
-      parentAssetId: 'asset-safe'
+      parentAssetId: 'asset-safe',
+      tagIds: ['tag-workshop']
     });
+  });
+
+  it('creates inventory tags through the generated client boundary', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const tag = await repository.createAssetTag('tenant-home', 'inventory-household', {
+      displayName: 'Fragile',
+      color: '#C2410C'
+    });
+
+    expect(tag).toEqual({ id: 'tag-created', key: 'fragile', displayName: 'Fragile', color: '#C2410C' });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/tags'
+    ]);
+    expect(await requests[0]?.json()).toEqual({ displayName: 'Fragile', color: '#C2410C' });
   });
 
   it('loads archived assets through the generated client lifecycle query', async () => {
@@ -263,6 +285,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-home/inventories?limit=50',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-field-definitions?limit=100',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/tags?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/checked-out-assets?limit=50'
     ]);

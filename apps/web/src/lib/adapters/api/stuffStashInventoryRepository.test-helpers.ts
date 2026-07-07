@@ -63,6 +63,9 @@ export function fakeFetch(
       if (request.method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets') {
         return envelope([]);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/tags') {
+        return envelope([]);
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
         const assets = [
           asset(
@@ -83,6 +86,13 @@ export function fakeFetch(
         }
         return envelope(assets);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/tags') {
+        return envelope([assetTag('tag-workshop', 'workshop', 'Workshop', '#2F80ED')]);
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/tags') {
+        const body = (await request.clone().json()) as { displayName: string; color?: string };
+        return envelope(assetTag('tag-created', 'fragile', body.displayName, body.color), 201);
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/checked-out-assets') {
         const checkout = currentCheckout('checkout-open');
         return envelope([
@@ -99,6 +109,9 @@ export function fakeFetch(
         return envelope([]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/checked-out-assets') {
+        return envelope([]);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/tags') {
         return envelope([]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
@@ -395,6 +408,7 @@ function asset(
     description: '',
     parentAssetId,
     lifecycleState,
+    tags: id === 'asset-passport' || id === 'asset-archived' ? [assetTag('tag-workshop', 'workshop', 'Workshop', '#2F80ED')] : [],
     primaryPhoto: withPrimaryPhoto
       ? {
           id: 'attachment-one',
@@ -408,6 +422,20 @@ function asset(
           }
         }
       : undefined
+  };
+}
+
+function assetTag(id: string, key: string, displayName: string, color?: string): object {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    key,
+    displayName,
+    color,
+    lifecycleState: 'active',
+    createdAt: '2026-07-07T12:00:00Z',
+    updatedAt: '2026-07-07T12:00:00Z'
   };
 }
 

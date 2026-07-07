@@ -201,6 +201,7 @@
     canEdit={status.editAssetAllowed}
     parentTargets={moveParentTargets(workspace.detailAssets, workspace.selectedAsset.id)}
     customFieldDefinitions={workspace.data.context.customFieldDefinitions}
+    assetTags={workspace.data.context.assetTags ?? []}
     saving={status.busy}
     attachments={workspace.selectedAssetAttachments}
     checkoutHistory={workspace.selectedAssetCheckoutHistory}

@@ -7,6 +7,8 @@ import {
   type AssetAttachment,
   type AssetCheckout,
   type AssetCheckoutDraft,
+  type AssetTag,
+  type AssetTagDraft,
   type CheckedOutAsset,
   type AuditRecord,
   type CreatedInventoryAccessInvitation,
@@ -58,6 +60,7 @@ export class SeededInventoryRepository
   private selectedInventoryId: string;
   private selectedLifecycleState: AssetLifecycleFilter = 'active';
   private nextAssetSequence = 1;
+  private nextTagSequence = 1;
   private nextImportJobSequence = 1;
 
   constructor(seed: WorkspaceSeed) {
@@ -182,6 +185,7 @@ export class SeededInventoryRepository
       customAssetTypeId: draft.customAssetTypeId,
       customFields: draft.customFields ?? {},
       customAssetTypeLabel: this.customAssetTypeLabel(draft.customAssetTypeId),
+      tags: this.assetTagsByIDs(tenantId, inventoryId, draft.tagIds ?? []),
       photo: draft.photos[0]
         ? {
             id: draft.photos[0].id,
@@ -195,6 +199,30 @@ export class SeededInventoryRepository
     this.seed = { ...this.seed, assets: [asset, ...this.seed.assets] };
     this.recordAssetAudit(asset, 'asset.created');
     return asset;
+  }
+
+  async createAssetTag(tenantId: string, inventoryId: string, draft: AssetTagDraft): Promise<AssetTag> {
+    this.validateInventoryScope(tenantId, inventoryId);
+    const displayName = draft.displayName.trim();
+    if (!displayName) {
+      throw new Error('Tag name is required.');
+    }
+    const key = tagKey(displayName);
+    const existing = (this.seed.assetTags ?? []).find((tag) => tag.key === key);
+    if (existing) {
+      return existing;
+    }
+    const tag: AssetTag = {
+      id: `tag-local-${this.nextTagSequence++}`,
+      key,
+      displayName,
+      color: normalizeTagColor(draft.color)
+    };
+    this.seed = {
+      ...this.seed,
+      assetTags: [tag, ...(this.seed.assetTags ?? [])]
+    };
+    return tag;
   }
 
   async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
@@ -216,6 +244,7 @@ export class SeededInventoryRepository
       description: draft.description,
       parentAssetId: draft.parentAssetId,
       customFields: draft.customFields ?? asset.customFields ?? {},
+      tags: this.assetTagsByIDs(tenantId, inventoryId, draft.tagIds ?? asset.tags?.map((tag) => tag.id) ?? []),
       updatedAt: new Date().toISOString()
     };
     this.seed = {
@@ -881,6 +910,7 @@ export class SeededInventoryRepository
         mediaUploadPolicy: defaultMediaUploadPolicy,
         customAssetTypes: this.effectiveCustomAssetTypes(this.selectedTenantId, this.selectedInventoryId),
         customFieldDefinitions: this.effectiveCustomFieldDefinitions(this.selectedTenantId, this.selectedInventoryId),
+        assetTags: this.effectiveAssetTags(this.selectedTenantId, this.selectedInventoryId),
         capability: capabilityForInventory(selectedInventory)
       },
       assets: this.workspaceAssets(),
@@ -1037,6 +1067,19 @@ export class SeededInventoryRepository
         definition.lifecycleState === 'active' &&
         (definition.scope === 'tenant' || definition.inventoryId === inventoryId)
     );
+  }
+
+  private effectiveAssetTags(tenantId: string, inventoryId: string): AssetTag[] {
+    if (!tenantId || !inventoryId) {
+      return [];
+    }
+    return (this.seed.assetTags ?? []).slice().sort((left, right) => left.displayName.localeCompare(right.displayName));
+  }
+
+  private assetTagsByIDs(tenantId: string, inventoryId: string, tagIds: string[]): AssetTag[] {
+    const allowed = this.effectiveAssetTags(tenantId, inventoryId);
+    const byID = new Map(allowed.map((tag) => [tag.id, tag]));
+    return tagIds.map((tagID) => byID.get(tagID)).filter((tag): tag is AssetTag => tag !== undefined);
   }
 
   private customAssetTypeLabel(customAssetTypeId: string | undefined): string | undefined {
@@ -1200,6 +1243,24 @@ function exactAssets(assets: Asset[], query: string): Asset[] {
       asset.description.toLowerCase() === normalized ||
       asset.customAssetTypeLabel?.toLowerCase() === normalized
   );
+}
+
+function tagKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function normalizeTagColor(value: string | undefined): string | undefined {
+  const raw = value?.trim();
+  if (!raw) {
+    return undefined;
+  }
+  const color = raw.startsWith('#') ? raw : `#${raw}`;
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toUpperCase() : undefined;
 }
 
 function importJobProgressHistoryWith(history: ImportJob['progressHistory'], progress: ImportJob['progress']): ImportJob['progressHistory'] {

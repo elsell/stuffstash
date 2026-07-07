@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
+  import type { AssetAttachment, AssetTag, AssetTagDraft, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
 
   export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | 'attachment-delete';
 
@@ -13,6 +13,9 @@
     saveError: string;
     detailHref: string;
     applicableFields: CustomFieldDefinition[];
+    assetTags?: AssetTag[];
+    selectedTagIds?: string[];
+    newTags?: AssetTagDraft[];
     title: string;
     description: string;
     parentAssetId: string | null;
@@ -29,6 +32,8 @@
     onDeleteAttachment: () => Promise<void>;
     onParentSelect: (id: string | null) => void;
     onCustomFieldValueChange: (key: string, value: string) => void;
+    onSelectedTagIdsChange?: (ids: string[]) => void;
+    onNewTagsChange?: (tags: AssetTagDraft[]) => void;
   };
 </script>
 
@@ -37,6 +42,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import AssetTagSelector from './AssetTagSelector.svelte';
   import CustomFieldControls from './CustomFieldControls.svelte';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
 
@@ -50,6 +56,9 @@
     saveError,
     detailHref,
     applicableFields,
+    assetTags = [],
+    selectedTagIds = [],
+    newTags = [],
     title = $bindable(),
     description = $bindable(),
     parentAssetId = $bindable(),
@@ -65,7 +74,9 @@
     onReturn,
     onDeleteAttachment,
     onParentSelect,
-    onCustomFieldValueChange
+    onCustomFieldValueChange,
+    onSelectedTagIdsChange = () => {},
+    onNewTagsChange = () => {}
   }: AssetDetailActionPanelProps = $props();
 </script>
 
@@ -91,6 +102,13 @@
       idPrefix="edit-custom-field"
       label="Edit custom fields"
       onValueChange={onCustomFieldValueChange}
+    />
+    <AssetTagSelector
+      tags={assetTags}
+      selectedIds={selectedTagIds}
+      {newTags}
+      onSelectedIdsChange={onSelectedTagIdsChange}
+      onNewTagsChange={onNewTagsChange}
     />
     <div class="tray-actions">
       <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>

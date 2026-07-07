@@ -300,13 +300,26 @@
     notification = null;
     try {
       const previousParentId = selectedAsset.parentAssetId;
+      const createdTags = [];
+      for (const tag of draft.newTags ?? []) {
+        createdTags.push(await repository.createAssetTag(selectedAsset.tenantId, selectedAsset.inventoryId, tag));
+      }
       const asset = await repository.updateAsset(
         selectedAsset.tenantId,
         selectedAsset.inventoryId,
         selectedAsset.id,
-        draft
+        {
+          ...draft,
+          tagIds: [...(draft.tagIds ?? []), ...createdTags.map((tag) => tag.id)]
+        }
       );
-      data = replaceWorkspaceAsset(data, asset);
+      data = {
+        ...replaceWorkspaceAsset(data, asset),
+        context: {
+          ...data.context,
+          assetTags: mergeAssetTags(data.context.assetTags ?? [], createdTags)
+        }
+      };
       loadedAssetDetail = asset;
       setSuccessNotification(`Saved ${asset.title}.`, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
@@ -318,6 +331,17 @@
     } finally {
       busy = false;
     }
+  }
+
+  function mergeAssetTags(existingTags: NonNullable<WorkspaceData['context']['assetTags']>, nextTags: NonNullable<WorkspaceData['context']['assetTags']>): NonNullable<WorkspaceData['context']['assetTags']> {
+    if (nextTags.length === 0) {
+      return existingTags;
+    }
+    const byId = new Map(existingTags.map((tag) => [tag.id, tag]));
+    for (const tag of nextTags) {
+      byId.set(tag.id, tag);
+    }
+    return Array.from(byId.values()).sort((left, right) => left.displayName.localeCompare(right.displayName));
   }
 
   async function search(): Promise<void> {
@@ -1488,6 +1512,7 @@
   mediaPolicy={data.context.mediaUploadPolicy}
   customAssetTypes={data.context.customAssetTypes}
   customFieldDefinitions={data.context.customFieldDefinitions}
+  assetTags={data.context.assetTags ?? []}
   saving={busy}
   {notification}
   {error}

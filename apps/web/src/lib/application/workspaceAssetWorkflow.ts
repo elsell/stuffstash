@@ -4,6 +4,7 @@ import type {
   AddAssetSubmission,
   Asset,
   AssetAttachment,
+  AssetTag,
   Inventory,
   SelectedPhoto,
   WorkspaceData,
@@ -12,7 +13,8 @@ import type {
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { WorkspaceRouteState } from './workspaceRoute';
 
-type AssetCreateRepository = Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto'>;
+type AssetCreateRepository = Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto'> &
+  Partial<Pick<InventoryRepository, 'createAssetTag'>>;
 
 interface PhotoUploadResult {
   uploaded: UploadedPhoto[];
@@ -41,9 +43,12 @@ export async function createAssetWorkflow(
   let createdParent: Asset | null = null;
   let createdAsset: Asset | null = null;
   let savedAsset: Asset | null = null;
+  let createdTags: AssetTag[] = [];
   let uploadResult: PhotoUploadResult = { uploaded: [], failures: 0, failureReasons: [] };
 
   try {
+    createdTags = await createPendingTags(repository, data, inventory, draft);
+    const tagIds = [...(draft.tagIds ?? []), ...createdTags.map((tag) => tag.id)];
     createdParent = draft.parentQuickCreate
       ? await repository.createAsset(data.context.selectedTenantId, inventory.id, {
           kind: draft.parentQuickCreate.kind,
@@ -51,14 +56,16 @@ export async function createAssetWorkflow(
           description: '',
           parentAssetId: draft.parentAssetId,
           customFields: {},
+          tagIds: [],
           photos: []
         })
       : null;
 
-    const { parentQuickCreate: _parentQuickCreate, ...assetDraft } = draft;
+    const { parentQuickCreate: _parentQuickCreate, newTags: _newTags, ...assetDraft } = draft;
     const childDraft: AddAssetDraft = {
       ...assetDraft,
-      parentAssetId: createdParent?.id ?? draft.parentAssetId
+      parentAssetId: createdParent?.id ?? draft.parentAssetId,
+      tagIds
     };
     createdAsset = await repository.createAsset(data.context.selectedTenantId, inventory.id, childDraft);
     uploadResult = await uploadPhotos(repository, createdAsset, draft.photos);
@@ -76,7 +83,7 @@ export async function createAssetWorkflow(
       };
     }
 
-    const nextData = prependCreatedAssets(data, savedAsset, createdParent);
+    const nextData = prependCreatedAssets(dataWithTags(data, createdTags), savedAsset, createdParent);
     const message = createAssetMessage(createdAsset, uploadResult, createdParent);
 
     if (uploadResult.failures > 0) {
@@ -105,7 +112,7 @@ export async function createAssetWorkflow(
       const selectedAsset = savedAsset ?? createdAsset;
       const failure = caught instanceof Error ? caught.message : 'Action failed.';
       return {
-        data,
+        data: dataWithTags(data, createdTags),
         saveResult: { saved: true },
         message: createAssetMessage(createdAsset, uploadResult, createdParent),
         error: `Saved ${createdAsset.title}, but could not refresh the active view. ${failure}`,
@@ -117,8 +124,8 @@ export async function createAssetWorkflow(
     }
     const nextData =
       createdParent && data.context.assetLifecycleState === 'active' && !data.assets.some((asset) => asset.id === createdParent?.id)
-        ? { ...data, assets: [createdParent, ...data.assets] }
-        : data;
+        ? { ...dataWithTags(data, createdTags), assets: [createdParent, ...data.assets] }
+        : dataWithTags(data, createdTags);
     const failure = caught instanceof Error ? caught.message : 'Action failed.';
     return {
       data: nextData,
@@ -127,6 +134,40 @@ export async function createAssetWorkflow(
       closeAdd: false
     };
   }
+}
+
+async function createPendingTags(
+  repository: AssetCreateRepository,
+  data: WorkspaceData,
+  inventory: Inventory,
+  draft: AddAssetSubmission
+): Promise<AssetTag[]> {
+  const created: AssetTag[] = [];
+  if ((draft.newTags?.length ?? 0) > 0 && !repository.createAssetTag) {
+    throw new Error('Tag creation is unavailable.');
+  }
+  for (const tag of draft.newTags ?? []) {
+    created.push(await repository.createAssetTag!(data.context.selectedTenantId, inventory.id, tag));
+  }
+  return created;
+}
+
+function dataWithTags(data: WorkspaceData, tags: AssetTag[]): WorkspaceData {
+  if (tags.length === 0) {
+    return data;
+  }
+  const existing = data.context.assetTags ?? [];
+  const byID = new Map(existing.map((tag) => [tag.id, tag]));
+  for (const tag of tags) {
+    byID.set(tag.id, tag);
+  }
+  return {
+    ...data,
+    context: {
+      ...data.context,
+      assetTags: Array.from(byID.values()).sort((left, right) => left.displayName.localeCompare(right.displayName))
+    }
+  };
 }
 
 export function replaceWorkspaceAsset(data: WorkspaceData, asset: Asset): WorkspaceData {

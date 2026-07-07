@@ -2,6 +2,7 @@ import type {
   AccessSummary as ApiAccessSummary,
   AuditRecord as ApiAuditRecord,
   Asset as ApiAsset,
+  AssetTag as ApiAssetTag,
   AssetCheckout as ApiAssetCheckout,
   Attachment as ApiAttachment,
   CheckedOutAsset as ApiCheckedOutAsset,
@@ -23,6 +24,7 @@ import {
   type AssetAttachment,
   type AssetCheckout,
   type AssetCheckoutState,
+  type AssetTag,
   type AuditRecord,
   type AttachmentContentType,
   type AssetKind,
@@ -83,8 +85,22 @@ export function mapAsset(asset: ApiAsset): Asset {
     lifecycleState: asset.lifecycleState,
     customAssetTypeId: asset.customAssetTypeId,
     customFields: asset.customFields,
+    tags: asset.tags.map(mapAssetTagSummary),
     currentCheckout: mapCurrentCheckout(asset.currentCheckout),
     updatedAt: undefined
+  };
+}
+
+export function mapAssetTag(tag: ApiAssetTag): AssetTag {
+  return mapAssetTagSummary(tag);
+}
+
+function mapAssetTagSummary(tag: { id: string; key: string; displayName: string; color?: string }): AssetTag {
+  return {
+    id: tag.id,
+    key: tag.key,
+    displayName: tag.displayName,
+    color: tag.color || undefined
   };
 }
 
