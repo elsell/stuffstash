@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Check } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
-import type { HomeDashboardViewModel } from '../../application/home/HomeDashboardQuery';
+import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
   assetEditContext,
@@ -59,7 +59,7 @@ export function EditAssetSheet({
   onSave
 }: {
   readonly asset: AssetDetailViewModel;
-  readonly assetTags: HomeDashboardViewModel['assetTags'];
+  readonly assetTags: readonly AssetTagOptionViewModel[];
   readonly draft: EditDraft | undefined;
   readonly isSaving: boolean;
   readonly onChange: (draft: EditDraft) => void;
@@ -71,37 +71,39 @@ export function EditAssetSheet({
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <Text style={styles.sheetTitle}>Edit asset</Text>
-      <View style={styles.readOnlyContextPanel}>
-        <Text style={styles.readOnlyContextLabel}>Kind</Text>
-        <Text style={styles.readOnlyContextValue}>
-          {editContext.customTypeLabel
-            ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
-            : editContext.kindLabel}
-        </Text>
-        <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
-      </View>
-      <Text style={styles.inputLabel}>Name</Text>
-      <TextInput
-        autoCapitalize="sentences"
-        editable={!isSaving}
-        onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [] })}
-        style={styles.input}
-        value={draft?.title ?? ''}
-      />
-      <Text style={styles.inputLabel}>Description</Text>
-      <TextInput
-        editable={!isSaving}
-        multiline
-        onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [] })}
-        style={[styles.input, styles.multilineInput]}
-        value={draft?.description ?? ''}
-      />
-      <EditTagPicker
-        disabled={isSaving}
-        tags={assetTags}
-        selectedTagIds={draft?.tagIds ?? []}
-        onChange={(tagIds) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds })}
-      />
+      <ScrollView contentContainerStyle={styles.editScrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.readOnlyContextPanel}>
+          <Text style={styles.readOnlyContextLabel}>Kind</Text>
+          <Text style={styles.readOnlyContextValue}>
+            {editContext.customTypeLabel
+              ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
+              : editContext.kindLabel}
+          </Text>
+          <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
+        </View>
+        <Text style={styles.inputLabel}>Name</Text>
+        <TextInput
+          autoCapitalize="sentences"
+          editable={!isSaving}
+          onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [] })}
+          style={styles.input}
+          value={draft?.title ?? ''}
+        />
+        <Text style={styles.inputLabel}>Description</Text>
+        <TextInput
+          editable={!isSaving}
+          multiline
+          onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [] })}
+          style={[styles.input, styles.multilineInput]}
+          value={draft?.description ?? ''}
+        />
+        <EditTagPicker
+          disabled={isSaving}
+          tags={assetTags}
+          selectedTagIds={draft?.tagIds ?? []}
+          onChange={(tagIds) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds })}
+        />
+      </ScrollView>
       <SheetActions
         disabled={!canSave}
         primaryLabel={isSaving ? 'Saving' : 'Save'}
@@ -121,7 +123,7 @@ function EditTagPicker({
   readonly disabled: boolean;
   readonly onChange: (tagIds: readonly string[]) => void;
   readonly selectedTagIds: readonly string[];
-  readonly tags: HomeDashboardViewModel['assetTags'];
+  readonly tags: readonly AssetTagOptionViewModel[];
 }) {
   if (tags.length === 0) {
     return null;
@@ -157,7 +159,7 @@ function EditTagPicker({
             >
               {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
               <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
-                {tag.displayName}
+                {tag.label}
               </Text>
               {isSelected ? <Check color={colors.action} size={14} strokeWidth={2.4} /> : null}
             </Pressable>
@@ -472,6 +474,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20
+  },
+  editScrollContent: {
+    gap: spacing.sm,
+    paddingBottom: spacing.sm
   },
   readOnlyContextPanel: {
     backgroundColor: colors.surfaceMuted,

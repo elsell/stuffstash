@@ -14,9 +14,9 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
 import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand';
+import { InventoryAssetTagsQuery, type AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
-import { HomeDashboardQuery, type HomeDashboardViewModel } from '../../application/home/HomeDashboardQuery';
 import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
 import {
   AssetCheckoutHistorySheet,
@@ -47,18 +47,18 @@ import { colors, spacing } from '../theme/tokens';
 
 type LoadableAssetState =
   | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly asset: AssetDetailViewModel; readonly assetTags?: HomeDashboardViewModel['assetTags'] }
+  | { readonly status: 'ready'; readonly asset: AssetDetailViewModel; readonly assetTags?: readonly AssetTagOptionViewModel[] }
   | { readonly status: 'error'; readonly message: string };
 
 export function AssetEditSheetRouteScreen({
   assetDetailQuery,
   assetId,
-  homeDashboardQuery,
+  inventoryAssetTagsQuery,
   updateAssetCommand
 }: {
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetId: string;
-  readonly homeDashboardQuery: HomeDashboardQuery;
+  readonly inventoryAssetTagsQuery: InventoryAssetTagsQuery;
   readonly updateAssetCommand: UpdateAssetCommand;
 }) {
   const [state, setState] = useState<LoadableAssetState>({ status: 'loading' });
@@ -67,26 +67,35 @@ export function AssetEditSheetRouteScreen({
 
   useEffect(() => {
     let isCurrent = true;
-    Promise.all([assetDetailQuery.execute(assetId), homeDashboardQuery.execute()])
-      .then(([asset, dashboard]) => {
+    assetDetailQuery
+      .execute(assetId)
+      .then((asset) => {
         if (isCurrent) {
-          setState({ status: 'ready', asset, assetTags: dashboard.assetTags });
+          setState({ status: 'ready', asset, assetTags: [] });
           setDraft({
             title: asset.title,
             description: asset.description,
             tagIds: asset.tags?.map((tag) => tag.id) ?? []
           });
         }
+        return inventoryAssetTagsQuery.execute();
+      })
+      .then((assetTags) => {
+        if (isCurrent) {
+          setState((current) => current.status === 'ready' ? { ...current, assetTags } : current);
+        }
       })
       .catch((error: unknown) => {
         if (isCurrent) {
-          setState({ status: 'error', message: readableError(error, 'Could not load asset.') });
+          setState((current) => current.status === 'ready'
+            ? current
+            : { status: 'error', message: readableError(error, 'Could not load asset.') });
         }
       });
     return () => {
       isCurrent = false;
     };
-  }, [assetDetailQuery, assetId, homeDashboardQuery]);
+  }, [assetDetailQuery, assetId, inventoryAssetTagsQuery]);
 
   function close(): void {
     if (state.status !== 'ready' || !hasDirtyEditAssetDraft(state.asset, draft)) {

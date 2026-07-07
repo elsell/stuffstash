@@ -27,6 +27,7 @@ import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
+import { InventoryAssetTagsQuery } from '../application/assets/InventoryAssetTagsQuery';
 import { InventoryMapQuery } from '../application/assets/InventoryMapQuery';
 import { MoveAssetCommand } from '../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../application/assets/UpdateAssetCommand';
@@ -68,6 +69,7 @@ export type MobileComposition = {
   readonly moveAssetCommand: MoveAssetCommand;
   readonly updateAssetCommand: UpdateAssetCommand;
   readonly inventoryAssetsQuery: InventoryAssetsQuery;
+  readonly inventoryAssetTagsQuery: InventoryAssetTagsQuery;
   readonly inventoryMapQuery: InventoryMapQuery;
   readonly createAssetCommand: CreateAssetCommand;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
@@ -150,6 +152,7 @@ export function createMobileComposition(
     moveAssetCommand: new MoveAssetCommand(inventorySummaries),
     updateAssetCommand: new UpdateAssetCommand(inventorySummaries),
     inventoryAssetsQuery: new InventoryAssetsQuery(inventorySummaries),
+    inventoryAssetTagsQuery: new InventoryAssetTagsQuery(inventorySummaries),
     inventoryMapQuery: new InventoryMapQuery(inventorySummaries),
     createAssetCommand: new CreateAssetCommand(inventorySummaries),
     addDraftScopeQuery: new AddDraftScopeQuery(principals),
