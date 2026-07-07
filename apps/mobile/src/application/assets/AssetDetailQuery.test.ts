@@ -129,6 +129,11 @@ describe('AssetDetailQuery', () => {
       canArchive: true,
       canRestore: false,
       canDeletePermanently: false,
+      isCheckedOut: false,
+      checkoutLabel: 'Available',
+      checkoutActorLabel: undefined,
+      canCheckout: true,
+      canReturn: false,
       canContainAssets: true,
       canAddContainedAssets: true,
       containedAssetsLabel: '1 thing inside',
@@ -193,6 +198,31 @@ describe('AssetDetailQuery', () => {
       canArchive: false,
       canRestore: false,
       canDeletePermanently: false
+    });
+  });
+
+  it('exposes return action instead of checkout for checked-out assets', () => {
+    expect(toAssetDetailViewModel({
+      id: assetId('asset-drill'),
+      title: 'Cordless drill',
+      kind: 'item',
+      lifecycleState: 'active',
+      locationLabel: 'Tool bin',
+      locationTrail: ['Home', 'Garage', 'Tool bin', 'Cordless drill'],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false,
+      currentCheckout: {
+        id: 'checkout-one',
+        checkedOutAt: '2026-06-24T11:00:00Z',
+        checkedOutByPrincipalId: 'user-one'
+      }
+    })).toMatchObject({
+      isCheckedOut: true,
+      checkoutLabel: 'Checked out Jun 24, 2026',
+      checkoutActorLabel: 'Checked out by user-one',
+      canCheckout: false,
+      canReturn: true
     });
   });
 

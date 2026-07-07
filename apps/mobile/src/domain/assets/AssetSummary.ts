@@ -16,6 +16,13 @@ export type AssetSummary = {
   readonly hasPhoto: boolean;
   readonly photos?: readonly AssetPhoto[];
   readonly photo?: AssetPhoto;
+  readonly currentCheckout?: CurrentCheckoutSummary;
+};
+
+export type CurrentCheckoutSummary = {
+  readonly id: string;
+  readonly checkedOutAt: string;
+  readonly checkedOutByPrincipalId: string;
 };
 
 export type AssetPhoto = {

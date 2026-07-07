@@ -48,6 +48,11 @@ export type AssetDetailViewModel = {
   readonly canArchive: boolean;
   readonly canRestore: boolean;
   readonly canDeletePermanently: boolean;
+  readonly isCheckedOut: boolean;
+  readonly checkoutLabel: string;
+  readonly checkoutActorLabel?: string;
+  readonly canCheckout: boolean;
+  readonly canReturn: boolean;
   readonly containedAssets: readonly AssetCardViewModel[];
   readonly containedAssetsLabel: string;
   readonly canContainAssets: boolean;
@@ -121,11 +126,31 @@ export function toAssetDetailViewModel(
     canArchive: canManageLifecycle && asset.lifecycleState === 'active',
     canRestore: canManageLifecycle && asset.lifecycleState === 'archived',
     canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived',
+    isCheckedOut: asset.currentCheckout !== undefined,
+    checkoutLabel: checkoutLabel(asset),
+    checkoutActorLabel: asset.currentCheckout ? `Checked out by ${asset.currentCheckout.checkedOutByPrincipalId}` : undefined,
+    canCheckout: canEditAsset && asset.lifecycleState === 'active' && asset.currentCheckout === undefined,
+    canReturn: canEditAsset && asset.currentCheckout !== undefined,
     containedAssets,
     containedAssetsLabel: containedAssets.length === 1 ? '1 thing inside' : `${containedAssets.length.toString()} things inside`,
     canContainAssets: asset.kind === 'container' || asset.kind === 'location',
     canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
+}
+
+function checkoutLabel(asset: AssetSummary): string {
+  if (!asset.currentCheckout) {
+    return 'Available';
+  }
+  const date = new Date(asset.currentCheckout.checkedOutAt);
+  if (Number.isNaN(date.getTime())) {
+    return 'Checked out';
+  }
+  return `Checked out ${date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })}`;
 }
 
 function compareContainedAssetSummaries(left: AssetSummary, right: AssetSummary): number {

@@ -6,6 +6,7 @@ import { parseBrowseScope } from '../../ui/screens/SearchScreenPresentation';
 export default function SearchRoute() {
   const {
     addAssetPhotosCommand,
+    assetCheckoutCommand,
     assetDetailQuery,
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
@@ -20,6 +21,7 @@ export default function SearchRoute() {
     <SearchScreen
       initialScope={parseBrowseScope(params.scope)}
       addAssetPhotosCommand={addAssetPhotosCommand}
+      assetCheckoutCommand={assetCheckoutCommand}
       assetDetailQuery={assetDetailQuery}
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}

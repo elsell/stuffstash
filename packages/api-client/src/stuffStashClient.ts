@@ -98,6 +98,30 @@ export interface Asset {
   createdAt: string;
   updatedAt: string;
   primaryPhoto?: AssetPrimaryPhoto;
+  currentCheckout?: CurrentCheckout;
+}
+
+export interface CurrentCheckout {
+  id: string;
+  checkedOutAt: string;
+  checkedOutByPrincipalId: string;
+}
+
+export interface AssetCheckout extends CurrentCheckout {
+  tenantId: string;
+  inventoryId: string;
+  assetId: string;
+  state: string;
+  checkoutDetails?: string;
+  returnedAt?: string;
+  returnedByPrincipalId?: string;
+  returnDetails?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AssetCheckoutInput {
+  details?: string;
 }
 
 export interface AssetPrimaryPhoto {
@@ -190,6 +214,7 @@ export interface SearchAssetsOptions {
   inventoryId?: string;
   lifecycleState?: AssetLifecycleFilter;
   mode?: SearchMode;
+  checkoutState?: 'any' | 'checked_out' | 'available';
 }
 
 export type CustomDefinitionScope = 'tenant' | 'inventory';
@@ -672,6 +697,28 @@ export class StuffStashClient {
     return mapAsset(envelope.data);
   }
 
+  async checkoutAsset(tenantId: string, inventoryId: string, assetId: string, input: AssetCheckoutInput = {}): Promise<AssetCheckout> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkout', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } },
+        body: input
+      })
+    );
+    return mapAssetCheckout(envelope.data);
+  }
+
+  async returnAsset(tenantId: string, inventoryId: string, assetId: string, input: AssetCheckoutInput = {}): Promise<AssetCheckout> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/return', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId } },
+        body: input
+      })
+    );
+    return mapAssetCheckout(envelope.data);
+  }
+
   async searchAssets(tenantId: string, query: string, options: SearchAssetsOptions = {}): Promise<Page<AssetSearchResult>> {
     const limit = options.limit ?? 20;
     const envelope = await this.unwrap(
@@ -685,7 +732,8 @@ export class StuffStashClient {
             cursor: options.cursor,
             inventoryId: options.inventoryId,
             lifecycleState: options.lifecycleState ?? 'active',
-            mode: options.mode ?? 'fuzzy'
+            mode: options.mode ?? 'fuzzy',
+            checkoutState: options.checkoutState
           }
         }
       })
@@ -1642,7 +1690,8 @@ function mapAsset(response: AssetResponse): Asset {
     customFields: response.customFields ?? {},
     createdAt: response.createdAt,
     updatedAt: response.updatedAt,
-    primaryPhoto: mapAssetPrimaryPhoto(response.primaryPhoto)
+    primaryPhoto: mapAssetPrimaryPhoto(response.primaryPhoto),
+    currentCheckout: mapCurrentCheckout(response.currentCheckout)
   };
 }
 
@@ -1664,9 +1713,39 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
       customFields: response.asset.customFields ?? {},
       createdAt: response.asset.createdAt,
       updatedAt: response.asset.updatedAt,
-      primaryPhoto: mapAssetPrimaryPhoto(response.asset.primaryPhoto)
+      primaryPhoto: mapAssetPrimaryPhoto(response.asset.primaryPhoto),
+      currentCheckout: mapCurrentCheckout(response.asset.currentCheckout)
     },
     matches: response.matches ?? []
+  };
+}
+
+function mapCurrentCheckout(response: components['schemas']['CurrentCheckout'] | components['schemas']['SearchCurrentCheckout'] | undefined): CurrentCheckout | undefined {
+  if (!response) {
+    return undefined;
+  }
+  return {
+    id: response.id,
+    checkedOutAt: response.checkedOutAt,
+    checkedOutByPrincipalId: response.checkedOutByPrincipalId
+  };
+}
+
+function mapAssetCheckout(response: components['schemas']['AssetCheckoutResponse']): AssetCheckout {
+  return {
+    id: response.id,
+    tenantId: response.tenantId,
+    inventoryId: response.inventoryId,
+    assetId: response.assetId,
+    state: response.state,
+    checkedOutAt: response.checkedOutAt,
+    checkedOutByPrincipalId: response.checkedOutByPrincipalId,
+    checkoutDetails: response.checkoutDetails,
+    returnedAt: response.returnedAt,
+    returnedByPrincipalId: response.returnedByPrincipalId,
+    returnDetails: response.returnDetails,
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt
   };
 }
 

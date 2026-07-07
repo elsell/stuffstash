@@ -35,6 +35,8 @@ type InventoryApiClient = Pick<
   | 'listAssets'
   | 'createAsset'
   | 'updateAsset'
+  | 'checkoutAsset'
+  | 'returnAsset'
   | 'archiveAsset'
   | 'restoreAsset'
   | 'deleteAsset'
@@ -214,6 +216,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async deleteAsset(assetIdValue: AssetSummary['id']): Promise<void> {
     const inventory = await this.getDefaultInventorySummary();
     await this.client.deleteAsset(inventory.tenantId, inventory.id, assetIdValue);
+  }
+
+  async checkoutAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.checkoutAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+  }
+
+  async returnAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.returnAsset(inventory.tenantId, inventory.id, assetIdValue, input);
   }
 
   async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
@@ -821,7 +833,8 @@ function mapAsset(
     updatedAtLabel: updatedAtLabel(asset),
     hasPhoto: photo !== undefined,
     photos,
-    photo
+    photo,
+    currentCheckout: asset.currentCheckout
   };
 }
 
@@ -880,7 +893,8 @@ function summaryToApiAsset(
     lifecycleState: asset.lifecycleState,
     customFields: {},
     createdAt: '',
-    updatedAt: ''
+    updatedAt: '',
+    currentCheckout: asset.currentCheckout
   };
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type {
   Asset,
+  AssetCheckout,
   AssetPhotoReference,
   AssetSearchResult,
   Attachment,
@@ -149,6 +150,13 @@ class FakeInventoryApiClient {
     readonly tenantId: string;
     readonly inventoryId: string;
     readonly assetId: string;
+  }> = [];
+  checkoutInputs: Array<{
+    readonly action: 'checkout' | 'return';
+    readonly tenantId: string;
+    readonly inventoryId: string;
+    readonly assetId: string;
+    readonly details?: string;
   }> = [];
   searchedQuery: string | undefined;
   shouldFailAttachmentLookup = false;
@@ -439,6 +447,38 @@ class FakeInventoryApiClient {
       inventoryId,
       assetId: assetIdValue
     });
+  }
+
+  async checkoutAsset(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    input: { readonly details?: string } = {}
+  ): Promise<AssetCheckout> {
+    this.checkoutInputs.push({
+      action: 'checkout',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      details: input.details
+    });
+    return checkoutRecord(assetIdValue, 'open', input.details);
+  }
+
+  async returnAsset(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    input: { readonly details?: string } = {}
+  ): Promise<AssetCheckout> {
+    this.checkoutInputs.push({
+      action: 'return',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      details: input.details
+    });
+    return checkoutRecord(assetIdValue, 'returned', input.details);
   }
 
   async searchAssets(
@@ -1143,6 +1183,31 @@ describe('ApiInventorySummaryRepository', () => {
     ]);
   });
 
+  it('checks out and returns assets through the generated client wrapper', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.checkoutAsset(assetId('asset-filters'), { details: 'using at desk' });
+    await repository.returnAsset(assetId('asset-filters'));
+
+    expect(client.checkoutInputs).toEqual([
+      {
+        action: 'checkout',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-filters',
+        details: 'using at desk'
+      },
+      {
+        action: 'return',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-filters',
+        details: undefined
+      }
+    ]);
+  });
+
   it('continues paged tenant search until selected-inventory asset results are found', async () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
@@ -1340,14 +1405,39 @@ function lifecycleAsset(
   assetIdValue: string,
   lifecycleState: Asset['lifecycleState']
 ): Asset {
+  return {
+    ...assetById(assets, assetIdValue),
+    lifecycleState
+  };
+}
+
+function assetById(assets: readonly Asset[], assetIdValue: string): Asset {
   const asset = assets.find((candidate) => candidate.id === assetIdValue);
 
   if (!asset) {
     throw new Error('Asset not found.');
   }
 
+  return asset;
+}
+
+function checkoutRecord(
+  assetIdValue: string,
+  state: AssetCheckout['state'],
+  details?: string
+): AssetCheckout {
   return {
-    ...asset,
-    lifecycleState
+    id: 'checkout-fake',
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-home',
+    assetId: assetIdValue,
+    state,
+    checkoutDetails: details,
+    checkedOutAt: '2026-06-24T10:00:00Z',
+    checkedOutByPrincipalId: 'principal-mobile',
+    returnedAt: state === 'returned' ? '2026-06-24T10:05:00Z' : undefined,
+    returnedByPrincipalId: state === 'returned' ? 'principal-mobile' : undefined,
+    createdAt: '2026-06-24T10:00:00Z',
+    updatedAt: '2026-06-24T10:05:00Z'
   };
 }

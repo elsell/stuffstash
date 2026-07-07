@@ -16,6 +16,7 @@ import {
   AddAssetPhotoProgressEvent,
   AddAssetPhotosCommandResult
 } from '../../application/assets/AddAssetPhotosCommand';
+import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
@@ -62,6 +63,7 @@ import { colors, spacing } from '../theme/tokens';
 type AssetDetailRouteScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly photoSelectionQuery: PhotoSelectionQuery;
@@ -73,12 +75,13 @@ type ScreenState =
   | { readonly status: 'ready'; readonly asset: AssetDetailViewModel }
   | { readonly status: 'error'; readonly message: string };
 
-type PendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos';
+type PendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos' | 'checkout' | 'return';
 
 type PhotoUploadRow = AssetPhotoUploadProgressViewModel;
 
 export function AssetDetailRouteScreen({
   addAssetPhotosCommand,
+  assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
   assetId,
@@ -353,6 +356,25 @@ export function AssetDetailRouteScreen({
     }
   }
 
+  async function runCheckoutAction(action: 'checkout' | 'return', asset: AssetDetailViewModel): Promise<void> {
+    setPendingAction(action);
+    setWorkspaceStatus(undefined);
+
+    try {
+      await assetCheckoutCommand.execute({ action, assetId });
+      await reloadAsset();
+      setWorkspaceStatus(assetWorkspaceSuccessStatus(action, asset));
+    } catch (error) {
+      feedback.showNotice({
+        tone: 'error',
+        title: action === 'checkout' ? 'Could not checkout asset' : 'Could not return asset',
+        message: readableError(error, 'Checkout action failed.')
+      });
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
   const presentedWorkspaceStatus = visibleAssetWorkspaceStatus(pendingAction, workspaceStatus);
 
   return (
@@ -384,12 +406,14 @@ export function AssetDetailRouteScreen({
               params: addHereParams(screenState.asset)
             }) : undefined}
             onAddPhotos={() => choosePhotos(screenState.asset.photos.length)}
+            onCheckout={() => void runCheckoutAction('checkout', screenState.asset)}
             onChildPress={openChildAsset}
             onEdit={() => router.push(`/assets/${screenState.asset.id}/edit`)}
             onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => router.push(`/assets/${screenState.asset.id}/move`)}
             onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => router.push(`/assets/${screenState.asset.id}/move-here`) : undefined}
             onPhotoPress={(photoId) => selectAssetPhoto(screenState.asset, photoId)}
+            onReturn={() => void runCheckoutAction('return', screenState.asset)}
             onRetryPhotos={() => void retryPhotos()}
             photoUploads={photoUploads}
             photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}

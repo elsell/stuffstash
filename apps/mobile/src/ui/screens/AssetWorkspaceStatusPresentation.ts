@@ -2,7 +2,7 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import type { AssetLifecycleActionKind } from './AssetLifecyclePresentation';
 
 export type AssetWorkspaceStatusKind = 'success' | 'working';
-export type AssetWorkspacePendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos';
+export type AssetWorkspacePendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos' | 'checkout' | 'return';
 
 export type AssetWorkspaceStatus = {
   readonly kind: AssetWorkspaceStatusKind;
@@ -19,6 +19,10 @@ export function assetWorkspaceWorkingStatus(action: Exclude<AssetWorkspacePendin
       return { kind: 'working', message: 'Saving changes...' };
     case 'move':
       return { kind: 'working', message: 'Moving asset...' };
+    case 'checkout':
+      return { kind: 'working', message: 'Checking out asset...' };
+    case 'return':
+      return { kind: 'working', message: 'Returning asset...' };
     case 'restore':
       return { kind: 'working', message: 'Restoring asset...' };
   }
@@ -29,11 +33,15 @@ export function assetWorkspaceSuccessStatus(
   result: { readonly message: string }
 ): AssetWorkspaceStatus;
 export function assetWorkspaceSuccessStatus(
+  action: 'checkout' | 'return',
+  asset: AssetDetailViewModel
+): AssetWorkspaceStatus;
+export function assetWorkspaceSuccessStatus(
   action: Exclude<AssetLifecycleActionKind, 'delete'>,
   asset: AssetDetailViewModel
 ): AssetWorkspaceStatus;
 export function assetWorkspaceSuccessStatus(
-  action: 'edit' | 'move' | Exclude<AssetLifecycleActionKind, 'delete'>,
+  action: 'edit' | 'move' | 'checkout' | 'return' | Exclude<AssetLifecycleActionKind, 'delete'>,
   source: { readonly message: string } | AssetDetailViewModel
 ): AssetWorkspaceStatus {
   const title = 'title' in source ? source.title : 'asset';
@@ -41,6 +49,10 @@ export function assetWorkspaceSuccessStatus(
     case 'edit':
     case 'move':
       return { kind: 'success', message: 'message' in source ? source.message : `Updated ${source.title}.` };
+    case 'checkout':
+      return { kind: 'success', message: 'message' in source ? source.message : `Checked out ${source.title}.` };
+    case 'return':
+      return { kind: 'success', message: 'message' in source ? source.message : `Returned ${source.title}.` };
     case 'archive':
       return { kind: 'success', message: `Archived ${title}.` };
     case 'restore':

@@ -18,6 +18,7 @@ vi.mock('expo-router', () => ({
 
 vi.mock('lucide-react-native', () => ({
   Camera: 'CameraIcon',
+  CheckCircle2: 'CheckCircle2Icon',
   ChevronRight: 'ChevronRightIcon',
   Info: 'InfoIcon',
   Map: 'MapIcon',
@@ -29,6 +30,10 @@ vi.mock('lucide-react-native', () => ({
   Search: 'SearchIcon',
   SlidersHorizontal: 'SlidersIcon',
   X: 'XIcon'
+}));
+
+vi.mock('react-native-image-viewing', () => ({
+  default: 'ImageViewing'
 }));
 
 vi.mock('react-native-safe-area-context', () => ({

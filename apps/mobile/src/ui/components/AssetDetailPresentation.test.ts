@@ -71,10 +71,12 @@ describe('AssetDetailPresentation', () => {
 
   it('builds stable metadata rows for the detail page section', () => {
     expect(assetDetailMetadataRows({
+      checkoutLabel: 'Available',
       lifecycleLabel: 'Active',
       updatedAtLabel: 'Updated today'
     })).toEqual([
       { label: 'Status', value: 'Active' },
+      { label: 'Checkout', value: 'Available' },
       { label: 'Updated', value: 'Updated today' }
     ]);
   });

@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
+import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type {
@@ -46,6 +47,7 @@ import type { InventoryMapSurface } from './InventoryMapPresentation';
 type SearchScreenProps = {
   readonly initialScope?: BrowseScope;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
@@ -86,6 +88,7 @@ const emptyResults: BrowseResults = {
 export function SearchScreen({
   initialScope = 'all',
   addAssetPhotosCommand,
+  assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
   deleteAssetPhotoCommand,
@@ -333,6 +336,7 @@ export function SearchScreen({
       <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
         <InventoryMapScreen
           addAssetPhotosCommand={addAssetPhotosCommand}
+          assetCheckoutCommand={assetCheckoutCommand}
           assetDetailQuery={assetDetailQuery}
           assetLifecycleCommand={assetLifecycleCommand}
           deleteAssetPhotoCommand={deleteAssetPhotoCommand}

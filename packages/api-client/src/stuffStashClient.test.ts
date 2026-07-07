@@ -84,6 +84,87 @@ describe('StuffStashClient', () => {
     expect(requests[1]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets?limit=5&lifecycleState=all&sort=updated_desc');
   });
 
+  it('maps compact current checkout state on asset reads', async () => {
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async () => Response.json({
+        data: {
+          id: 'asset-one',
+          tenantId: 'tenant-one',
+          inventoryId: 'inventory-one',
+          kind: 'item',
+          title: 'Cordless drill',
+          description: '',
+          lifecycleState: 'active',
+          customFields: {},
+          createdAt: '2026-06-23T10:00:00Z',
+          updatedAt: '2026-06-24T10:00:00Z',
+          currentCheckout: {
+            id: 'checkout-one',
+            checkedOutAt: '2026-06-24T11:00:00Z',
+            checkedOutByPrincipalId: 'user-one'
+          }
+        },
+        meta: {}
+      })
+    });
+
+    await expect(client.getAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
+      id: 'asset-one',
+      currentCheckout: {
+        id: 'checkout-one',
+        checkedOutByPrincipalId: 'user-one'
+      }
+    });
+  });
+
+  it('checks out and returns assets through inventory scoped routes', async () => {
+    const requests: Request[] = [];
+    const checkoutEnvelope = {
+      data: {
+        id: 'checkout-one',
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        assetId: 'asset-one',
+        state: 'open',
+        checkedOutAt: '2026-06-24T11:00:00Z',
+        checkedOutByPrincipalId: 'user-one',
+        checkoutDetails: 'using at bench',
+        createdAt: '2026-06-24T11:00:00Z',
+        updatedAt: '2026-06-24T11:00:00Z'
+      },
+      meta: {}
+    };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json(checkoutEnvelope);
+      }
+    });
+
+    await expect(
+      client.checkoutAsset('tenant-one', 'inventory-one', 'asset-one', { details: 'using at bench' })
+    ).resolves.toMatchObject({
+      id: 'checkout-one',
+      assetId: 'asset-one',
+      checkoutDetails: 'using at bench'
+    });
+    await expect(client.returnAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
+      id: 'checkout-one'
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/checkout',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/return'
+    ]);
+    expect(await requests[0]?.json()).toEqual({ details: 'using at bench' });
+    expect(await requests[1]?.json()).toEqual({});
+  });
+
   it('maps durable import jobs and sends job actions through inventory scoped routes', async () => {
     const requests: Request[] = [];
     const jobEnvelope = {

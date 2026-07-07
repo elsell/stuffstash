@@ -27,6 +27,8 @@ export interface InventorySummaryRepository {
   archiveAsset(assetId: AssetId): Promise<void>;
   restoreAsset(assetId: AssetId): Promise<void>;
   deleteAsset(assetId: AssetId): Promise<void>;
+  checkoutAsset?(assetId: AssetId, input?: AssetCheckoutInput): Promise<void>;
+  returnAsset?(assetId: AssetId, input?: AssetCheckoutInput): Promise<void>;
   browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage>;
   searchAssets(query: string): Promise<readonly AssetSummary[]>;
   searchLocations(query: string): Promise<readonly LocationSummary[]>;
@@ -77,6 +79,10 @@ export type UpdateInventoryAssetInput = {
   readonly title?: string;
   readonly description?: string;
   readonly parentAssetId?: AssetId | null;
+};
+
+export type AssetCheckoutInput = {
+  readonly details?: string;
 };
 
 export type CreateInventoryAssetPhotoInput = {

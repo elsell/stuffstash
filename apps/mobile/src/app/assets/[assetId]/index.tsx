@@ -5,6 +5,7 @@ import { AssetDetailRouteScreen } from '../../../ui/screens/AssetDetailRouteScre
 export default function AssetDetailRoute() {
   const {
     addAssetPhotosCommand,
+    assetCheckoutCommand,
     assetDetailQuery,
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
@@ -15,6 +16,7 @@ export default function AssetDetailRoute() {
   return (
     <AssetDetailRouteScreen
       addAssetPhotosCommand={addAssetPhotosCommand}
+      assetCheckoutCommand={assetCheckoutCommand}
       assetDetailQuery={assetDetailQuery}
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}

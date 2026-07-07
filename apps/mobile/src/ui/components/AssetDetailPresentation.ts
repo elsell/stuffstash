@@ -57,10 +57,11 @@ export function assetDetailBadges(
 }
 
 export function assetDetailMetadataRows(
-  asset: Pick<AssetDetailViewModel, 'lifecycleLabel' | 'updatedAtLabel'>
+  asset: Pick<AssetDetailViewModel, 'lifecycleLabel' | 'updatedAtLabel' | 'checkoutLabel' | 'checkoutActorLabel'>
 ): readonly AssetDetailMetadataRow[] {
   return [
     { label: 'Status', value: asset.lifecycleLabel },
+    { label: 'Checkout', value: asset.checkoutActorLabel ? `${asset.checkoutLabel}. ${asset.checkoutActorLabel}` : asset.checkoutLabel },
     { label: 'Updated', value: asset.updatedAtLabel }
   ];
 }

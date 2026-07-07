@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
-import { Camera, ChevronRight, MoreHorizontal, MoveRight, Pencil, Plus } from 'lucide-react-native';
+import { Camera, CheckCircle2, ChevronRight, MoreHorizontal, MoveRight, Pencil, Plus } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import {
   assetPhotoStatusLabel
@@ -49,6 +49,8 @@ type AssetDetailViewProps = {
   readonly onBack?: () => void;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
+  readonly onCheckout?: () => void;
+  readonly onReturn?: () => void;
   readonly onAddPhotos?: () => void;
   readonly onPhotoPress?: (photoId: string) => void;
   readonly onRetryPhotos?: () => void;
@@ -70,6 +72,8 @@ export function AssetDetailView({
   onEdit,
   onMoreActions,
   onMove,
+  onCheckout,
+  onReturn,
   onPhotoPress,
   onMoveThingsHere,
   onRetryPhotos,
@@ -145,8 +149,10 @@ export function AssetDetailView({
                   asset={asset}
                   isActionPending={isActionPending}
                   onAddPhotos={onAddPhotos}
+                  onCheckout={onCheckout}
                   onEdit={onEdit}
                   onMove={onMove}
+                  onReturn={onReturn}
                 />
               );
           }
@@ -271,17 +277,35 @@ function MaintenanceActionsSection({
   asset,
   isActionPending,
   onAddPhotos,
+  onCheckout,
   onEdit,
-  onMove
+  onMove,
+  onReturn
 }: {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending: boolean;
   readonly onAddPhotos?: () => void;
+  readonly onCheckout?: () => void;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
+  readonly onReturn?: () => void;
 }) {
   return (
     <View style={styles.maintenanceActions}>
+      <ActionControl
+        disabled={isActionPending || !asset.canCheckout || !onCheckout}
+        icon={<MoveRight color={colors.text} size={17} />}
+        label="Checkout"
+        onPress={onCheckout}
+        variant="utility"
+      />
+      <ActionControl
+        disabled={isActionPending || !asset.canReturn || !onReturn}
+        icon={<CheckCircle2 color={colors.text} size={17} />}
+        label="Return"
+        onPress={onReturn}
+        variant="utility"
+      />
       <ActionControl
         disabled={isActionPending || !asset.canEdit || !onEdit}
         icon={<Pencil color={colors.text} size={17} />}

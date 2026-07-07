@@ -20,6 +20,7 @@ import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
 import { AssetAuditHistoryQuery } from '../application/assets/AssetAuditHistoryQuery';
+import { AssetCheckoutCommand } from '../application/assets/AssetCheckoutCommand';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
@@ -57,6 +58,7 @@ export type MobileComposition = {
   readonly searchAssetsQuery: SearchAssetsQuery;
   readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
@@ -136,6 +138,7 @@ export function createMobileComposition(
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetAuditHistoryQuery: new AssetAuditHistoryQuery(assetAuditHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries),
+    assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),
     deleteAssetPhotoCommand: new DeleteAssetPhotoCommand(inventorySummaries),

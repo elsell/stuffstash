@@ -28,6 +28,7 @@ import type {
   AddAssetPhotosCommand,
   AddAssetPhotosCommandResult
 } from '../../application/assets/AddAssetPhotosCommand';
+import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import type { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
 import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
@@ -94,6 +95,7 @@ import { useAppFeedback } from '../feedback/AppFeedback';
 
 type InventoryMapScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
@@ -142,6 +144,7 @@ const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 
 export function InventoryMapScreen({
   addAssetPhotosCommand,
+  assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
   deleteAssetPhotoCommand,
@@ -731,6 +734,7 @@ export function InventoryMapScreen({
       ) : null}
       <InventoryMapInfoSheet
         addAssetPhotosCommand={addAssetPhotosCommand}
+        assetCheckoutCommand={assetCheckoutCommand}
         asset={selectedAsset}
         assetDetailQuery={assetDetailQuery}
         assetLifecycleCommand={assetLifecycleCommand}
@@ -1229,6 +1233,7 @@ function InventoryMapRow({
 function InventoryMapInfoSheet({
   addAssetPhotosCommand,
   asset,
+  assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
   deleteAssetPhotoCommand,
@@ -1237,6 +1242,7 @@ function InventoryMapInfoSheet({
   onMapChanged
 }: {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly asset?: InventoryMapAssetViewModel;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
@@ -1536,6 +1542,28 @@ function InventoryMapInfoSheet({
     }
   }
 
+  async function runCheckoutAction(action: 'checkout' | 'return', detail: AssetDetailViewModel): Promise<void> {
+    setPendingAction(action);
+    setWorkspaceStatus(undefined);
+
+    try {
+      await assetCheckoutCommand.execute({ action, assetId: detail.id });
+      await reloadDetail();
+      onMapChanged();
+      setWorkspaceStatus(assetWorkspaceSuccessStatus(action, detail));
+    } catch (error) {
+      feedback.showNotice({
+        tone: 'error',
+        title: action === 'checkout' ? 'Checkout failed' : 'Return failed',
+        message: readableError(error, action === 'checkout'
+          ? 'Could not check out this asset.'
+          : 'Could not return this asset.')
+      });
+    } finally {
+      setPendingAction(undefined);
+    }
+  }
+
   return (
     <Modal
       animationType="slide"
@@ -1607,6 +1635,7 @@ function InventoryMapInfoSheet({
                   onClose();
                   router.push(`/assets/${detailState.asset.id}/edit`);
                 }}
+                onCheckout={() => void runCheckoutAction('checkout', detailState.asset)}
                 onMoreActions={() => showMoreActions(detailState.asset)}
                 onMove={() => {
                   onClose();
@@ -1618,6 +1647,7 @@ function InventoryMapInfoSheet({
                 } : undefined}
                 onPhotoPress={(photoId) => selectAssetPhoto(detailState.asset, photoId)}
                 onRetryPhotos={() => void retryPhotos()}
+                onReturn={() => void runCheckoutAction('return', detailState.asset)}
                 photoUploads={photoUploads}
                 photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
                 refreshControl={
@@ -1638,7 +1668,7 @@ function InventoryMapInfoSheet({
   );
 }
 
-type PendingMapSheetAction = 'archive' | 'restore' | 'delete' | 'photos';
+type PendingMapSheetAction = 'archive' | 'restore' | 'delete' | 'photos' | 'checkout' | 'return';
 
 function mapStorageKey(map: InventoryMapViewModel): string {
   return `${map.sessionScopeId}:${map.tenantId}:${map.inventoryId}`;
