@@ -197,7 +197,7 @@
   function statusDetail(job: ImportJob): string {
     if (jobRequiresAction(job)) return `${statusLabel(job)} · ${attentionSummary(job)}`;
     if (job.status === 'cancelled_kept' || job.status === 'cancelled_discarded') return statusSentence(job);
-    if (jobHasReviewWarnings(job)) return 'Review warnings before treating this import as clean.';
+    if (jobHasReviewWarnings(job)) return statusSentence(job);
     return statusSentence(job);
   }
 

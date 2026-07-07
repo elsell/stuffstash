@@ -21,7 +21,7 @@ describe('importWorkspacePresentation', () => {
     job.source.allowInsecureTLS = false;
 
     expect(sourceDescription(job)).toBe('stuff.jsksell.com · v0.24.2');
-    expect(sourceOptionsSummary(job)).toEqual(['Direct connection']);
+    expect(sourceOptionsSummary(job)).toEqual(['Connected directly to Homebox']);
   });
 });
 

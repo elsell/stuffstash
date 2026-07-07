@@ -386,8 +386,8 @@
         <div class="detail-side" aria-label="Import controls and source">
           <section class="source-options-section" aria-label="Import run details">
             <div class="sample-heading">
-              <h3>Run details</h3>
-              <small>Method and options</small>
+              <h3>Method</h3>
+              <small>How Stuff Stash read the source</small>
             </div>
             {#if actor}
               <p class="source-note">{actor}</p>

@@ -320,12 +320,12 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('2 assets skipped');
       expect(document.body.textContent).toContain('1 photo/file skipped');
       expect(document.body.textContent).toContain('2 warnings');
-      expect(document.body.textContent).toContain('Run details');
+      expect(document.body.textContent).toContain('Method');
       expect(document.body.textContent).toContain('Prepared by owner');
       expect(document.body.textContent).not.toContain('Photos on');
       expect(document.body.textContent).not.toContain('Live Homebox connection');
-      expect(document.body.textContent).toContain('Private-network access allowed');
-      expect(document.body.textContent).toContain('Self-signed certificates allowed');
+      expect(document.body.textContent).toContain('Allowed local/private network address');
+      expect(document.body.textContent).toContain('Allowed self-signed certificate');
       expect(document.body.textContent).toContain('Preview plan');
       expect(document.body.textContent).toContain('Serial number');
       expect(document.body.textContent).toContain('Garage');
@@ -452,7 +452,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
       expect(document.body.textContent).not.toContain('No other import runs to show.');
-      expect(historyLedgerText()).toContain('Review warnings before treating this import as clean.');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
       expect(historyLedgerText()).toContain('Warnings');
     });
   });
@@ -518,7 +518,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Clean Homebox');
       expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).not.toContain('Action required');
-      expect(historyLedgerText()).toContain('Review warnings before treating this import as clean.');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
       expect(buttonContaining('Review Details')).toBeTruthy();
       expect(historyLedgerText()).toContain('Clean Homebox');
       expect(historyLedgerText()).toContain('Warnings');
@@ -760,7 +760,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('This only removes the run from the import history list.');
       expect(document.body.textContent).toContain('Keep in history');
       expect(document.body.textContent).toContain('Runs');
-      expect(historyLedgerText()).toContain('Review warnings before treating this import as clean.');
+      expect(historyLedgerText()).toContain('Completed with warnings.');
     });
 
     confirmationButton('Keep in history').click();

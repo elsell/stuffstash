@@ -181,15 +181,15 @@ export function sourceOptionsSummary(job: ImportJob): string[] {
   if (job.source.type === 'legacy_homebox_csv') {
     return ['CSV file', 'Photos are not included in Homebox CSV exports'];
   }
-  const options = ['Direct connection'];
+  const options = ['Connected directly to Homebox'];
   if (job.source.imageImport === 'disabled') {
     options.push('Photo import disabled');
   }
   if (job.source.allowPrivateNetwork) {
-    options.push('Private-network access allowed');
+    options.push('Allowed local/private network address');
   }
   if (job.source.allowInsecureTLS) {
-    options.push('Self-signed certificates allowed');
+    options.push('Allowed self-signed certificate');
   }
   return options;
 }
