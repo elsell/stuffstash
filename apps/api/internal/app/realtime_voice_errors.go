@@ -38,18 +38,18 @@ func safeRealtimeVoiceFinalText(value string, limit int) bool {
 
 func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
 	normalized := strings.ToLower(strings.TrimSpace(value))
-	if strings.HasPrefix(normalized, "{") || strings.HasPrefix(normalized, "[") {
+	if strings.HasPrefix(normalized, "{") || strings.HasPrefix(normalized, "[") || realtimeVoiceFinalJSONFragmentPattern.MatchString(value) {
 		return true
 	}
 	for _, token := range []string{
 		"```",
-		"search_authorized_assets(",
-		"list_authorized_assets(",
-		"get_asset_detail(",
-		"list_asset_audit_history(",
-		"list_asset_checkout_history(",
-		"list_checked_out_assets(",
-		"propose_action_plan(",
+		"search_authorized_assets",
+		"list_authorized_assets",
+		"get_asset_detail",
+		"list_asset_audit_history",
+		"list_asset_checkout_history",
+		"list_checked_out_assets",
+		"propose_action_plan",
 		"chain of thought",
 		"reasoning:",
 		"raw prompt",
@@ -69,7 +69,10 @@ func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
 	return realtimeVoiceFinalSecretPattern.MatchString(value)
 }
 
-var realtimeVoiceFinalSecretPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+|bearer\s+[^"',\s}\]\)]+`)
+var (
+	realtimeVoiceFinalJSONFragmentPattern = regexp.MustCompile(`["']?[a-zA-Z][a-zA-Z0-9_-]*["']?\s*:\s*["'{\[]`)
+	realtimeVoiceFinalSecretPattern       = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?(bearer\s+)?[a-z0-9._~+/=-]{16,}|bearer\s+[^"',\s}\]\)]+`)
+)
 
 func realtimeVoiceErrorCode(err error) string {
 	var providerErr realtimeVoiceProviderStageError
