@@ -100,6 +100,24 @@ func TestRealtimeVoiceStreamsVerboseAgentDiagnostics(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceDiagnosticRedactionCoversHeaderBearerTokens(t *testing.T) {
+	t.Parallel()
+
+	for _, input := range []string{
+		"Authorization: bearer abc/def==",
+		"token: bearer abc/def==",
+		"authorization=bearer abc/def==",
+	} {
+		redacted := safeRealtimeVoiceDiagnosticText(input, 500)
+		if strings.Contains(redacted, "abc/def") || strings.Contains(strings.ToLower(redacted), "bearer ") {
+			t.Fatalf("expected header bearer token to be redacted, input %q became %q", input, redacted)
+		}
+		if !strings.Contains(redacted, "[redacted") {
+			t.Fatalf("expected redaction marker, input %q became %q", input, redacted)
+		}
+	}
+}
+
 func TestRealtimeVoiceOmitsVerboseDiagnosticsByDefault(t *testing.T) {
 	t.Parallel()
 

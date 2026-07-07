@@ -666,8 +666,8 @@ func safeRealtimeVoiceDiagnosticText(value string, maxLength int) string {
 }
 
 func redactRealtimeVoiceDiagnosticString(value string) string {
-	value = realtimeVoiceDiagnosticAssignmentPattern.ReplaceAllString(value, "$1[redacted]")
 	value = realtimeVoiceDiagnosticBearerPattern.ReplaceAllString(value, "[redacted-bearer] [redacted]")
+	value = realtimeVoiceDiagnosticAssignmentPattern.ReplaceAllString(value, "$1[redacted]")
 	replacer := strings.NewReplacer(
 		"apiKey", "[redacted-key]",
 		"api_key", "[redacted-key]",
