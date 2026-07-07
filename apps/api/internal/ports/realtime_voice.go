@@ -45,6 +45,7 @@ type LanguageInferenceInput struct {
 	InventoryID        inventory.InventoryID
 	Principal          identity.Principal
 	Transcript         string
+	ConversationTurns  []AgentConversationTurn
 	PromptTemplate     string
 	Tools              []AgentToolDescriptor
 	ToolResults        []AgentToolResult
@@ -53,6 +54,19 @@ type LanguageInferenceInput struct {
 	PlanOnly           bool
 	RequireToolCall    bool
 	IncludeDiagnostics bool
+}
+
+type AgentConversationRole string
+
+const (
+	AgentConversationRoleUser      AgentConversationRole = "user"
+	AgentConversationRoleAssistant AgentConversationRole = "assistant"
+)
+
+type AgentConversationTurn struct {
+	Role AgentConversationRole
+	Kind string
+	Text string
 }
 
 type AgentToolDescriptor struct {

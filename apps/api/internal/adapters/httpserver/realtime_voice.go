@@ -90,6 +90,7 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		serverSeq++
 
 		lastClientSeq := start.Seq
+		conversationTurns := []ports.AgentConversationTurn{}
 		for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
 			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq)
 			lastClientSeq = nextClientSeq
@@ -109,16 +110,24 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 
 			reviewPlanID := ""
 			completedResponseKind := ""
+			turnTranscript := ""
+			var completedResponse *ports.StructuredAgentResponse
 			err = application.RunRealtimeVoiceQuery(ctx, app.RealtimeVoiceQueryInput{
 				Session:                    session,
 				AudioChunks:                audioChunks,
 				ContinueAfterClarification: true,
+				ConversationTurns:          conversationTurns,
 			}, func(event app.RealtimeVoiceEvent) error {
 				if event.Type == app.RealtimeVoiceEventActionPlanProposed && event.ActionPlan != nil {
 					reviewPlanID = strings.TrimSpace(event.ActionPlan.PlanID)
 				}
+				if event.Type == app.RealtimeVoiceEventTranscriptFinal {
+					turnTranscript = strings.TrimSpace(event.Text)
+				}
 				if event.Type == app.RealtimeVoiceEventAssistantResponseCompleted && event.Response != nil {
 					completedResponseKind = string(event.Response.Kind)
+					responseCopy := *event.Response
+					completedResponse = &responseCopy
 				}
 				message := realtimeServerMessageFromEvent(event, serverSeq)
 				serverSeq++
@@ -151,6 +160,7 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 				_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
 				return
 			}
+			conversationTurns = appendRealtimeVoiceConversationTurns(conversationTurns, turnTranscript, completedResponse)
 			if completedResponseKind != string(ports.StructuredAgentResponseKindClarification) {
 				_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
 				return
@@ -160,6 +170,31 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: "clarification_turn_limit", Message: "The voice session needs a fresh start."})
 		_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
 	}
+}
+
+func appendRealtimeVoiceConversationTurns(turns []ports.AgentConversationTurn, transcript string, response *ports.StructuredAgentResponse) []ports.AgentConversationTurn {
+	transcript = strings.TrimSpace(transcript)
+	if transcript != "" {
+		turns = append(turns, ports.AgentConversationTurn{Role: ports.AgentConversationRoleUser, Text: transcript})
+	}
+	if response != nil {
+		text := strings.TrimSpace(response.DisplayResponse)
+		if text == "" {
+			text = strings.TrimSpace(response.SpokenResponse)
+		}
+		if text != "" {
+			turns = append(turns, ports.AgentConversationTurn{
+				Role: ports.AgentConversationRoleAssistant,
+				Kind: string(response.Kind),
+				Text: text,
+			})
+		}
+	}
+	const maxTurns = 6
+	if len(turns) > maxTurns {
+		return append([]ports.AgentConversationTurn{}, turns[len(turns)-maxTurns:]...)
+	}
+	return append([]ports.AgentConversationTurn{}, turns...)
 }
 
 type realtimeClientMessage struct {

@@ -243,6 +243,10 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 				"For add, create, move, put, place, store, or stash requests, search the named destination, outer room, place, or container now. Do not repeat the source-item search unless the source was not found.",
 				"Use short search keywords copied from the destination phrase, such as living room, garage, kitchen, cabinet, box, shelf, drawer, or counter.",
 				"Do not answer yet and do not propose changes on this turn.",
+			}...)
+			lines = append(lines, languageConversationContextLines(input)...)
+			lines = append(lines, []string{
+				"Current transcript: " + input.Transcript,
 				"Transcript: " + input.Transcript,
 			}...)
 			return strings.Join(lines, "\n")
@@ -255,6 +259,10 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 			"For move/archive/restore requests involving an existing item, this first read turn must search the source item first, not the destination.",
 			"Use list_authorized_assets for broad inventory lists or questions about what is inside a known place.",
 			"Use short search keywords copied from the transcript. Do not answer yet and do not propose changes on this turn.",
+		}...)
+		lines = append(lines, languageConversationContextLines(input)...)
+		lines = append(lines, []string{
+			"Current transcript: " + input.Transcript,
 			"Transcript: " + input.Transcript,
 		}...)
 		return strings.Join(lines, "\n")
@@ -270,6 +278,10 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 			"Use create_asset with kind container for household containers or surfaces. Use create_location only for true rooms or places.",
 			"Use create_asset with kind item for new items. Put the item directly in its existing parent with parentAssetId, or in a newly-created parent with parentCommandId.",
 			"Never include assetId in create_asset arguments. Never add a move_asset command for an item created earlier in the same plan.",
+		}...)
+		lines = append(lines, languageConversationContextLines(input)...)
+		lines = append(lines, []string{
+			"Current transcript: " + input.Transcript,
 			"Transcript: " + input.Transcript,
 		}...)
 		return strings.Join(lines, "\n")
@@ -317,9 +329,73 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
 		"If a search has no matches, say you could not find a visible match and give a concise next step, such as asking for a more specific item name or adding the missing thing. Do not say the whole inventory is empty unless a broad list tool result proves it.",
 		"Do not include reasoning, IDs, markdown, or extra fields.",
+	}...)
+	lines = append(lines, languageConversationContextLines(input)...)
+	lines = append(lines, []string{
+		"Current transcript: " + input.Transcript,
 		"Transcript: " + input.Transcript,
 	}...)
 	return strings.Join(lines, "\n")
+}
+
+func languageConversationContextLines(input ports.LanguageInferenceInput) []string {
+	if len(input.ConversationTurns) == 0 {
+		return nil
+	}
+	lines := []string{
+		"Same-session safe conversation context:",
+		"Use this only to resolve the current follow-up. Tool results remain the source of truth for inventory data.",
+	}
+	for _, turn := range input.ConversationTurns {
+		text := safeGoogleConversationPromptText(turn.Text, 500)
+		if text == "" {
+			continue
+		}
+		switch turn.Role {
+		case ports.AgentConversationRoleUser:
+			lines = append(lines, "user: "+text)
+		case ports.AgentConversationRoleAssistant:
+			kind := safeGoogleConversationPromptText(turn.Kind, 80)
+			if kind != "" {
+				lines = append(lines, "assistant "+kind+": "+text)
+			} else {
+				lines = append(lines, "assistant: "+text)
+			}
+		}
+	}
+	if len(lines) == 2 {
+		return nil
+	}
+	return lines
+}
+
+func safeGoogleConversationPromptText(value string, maxLength int) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	replacer := strings.NewReplacer(
+		"raw prompt", "[redacted]",
+		"Raw prompt", "[redacted]",
+		"bearer", "[redacted]",
+		"Bearer", "[redacted]",
+		"credential", "[redacted]",
+		"Credential", "[redacted]",
+		"password", "[redacted]",
+		"Password", "[redacted]",
+		"secret", "[redacted]",
+		"Secret", "[redacted]",
+		"token", "[redacted]",
+		"Token", "[redacted]",
+		"api key", "[redacted]",
+		"API key", "[redacted]",
+		"apikey", "[redacted]",
+	)
+	value = replacer.Replace(value)
+	if len(value) <= maxLength {
+		return value
+	}
+	return strings.TrimSpace(value[:maxLength]) + " ..."
 }
 
 func languageContents(input ports.LanguageInferenceInput) ([]geminiContent, error) {

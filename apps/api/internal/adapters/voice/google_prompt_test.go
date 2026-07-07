@@ -79,3 +79,29 @@ func TestGoogleGeminiLanguagePromptUsesCompactReadOnlyPromptForRequiredToolTurns
 		}
 	}
 }
+
+func TestGoogleGeminiLanguagePromptIncludesBoundedConversationContext(t *testing.T) {
+	t.Parallel()
+
+	prompt := languagePrompt(ports.LanguageInferenceInput{
+		Transcript: "Put it in the office.",
+		ConversationTurns: []ports.AgentConversationTurn{
+			{Role: ports.AgentConversationRoleUser, Text: "Where should I put it?"},
+			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Which item should I update?"},
+		},
+	})
+
+	for _, required := range []string{
+		"Same-session safe conversation context:",
+		"user: Where should I put it?",
+		"assistant clarification: Which item should I update?",
+		"Current transcript: Put it in the office.",
+	} {
+		if !strings.Contains(prompt, required) {
+			t.Fatalf("expected prompt to include %q, got %s", required, prompt)
+		}
+	}
+	if strings.Contains(prompt, "raw prompt") || strings.Contains(prompt, "bearer") {
+		t.Fatalf("prompt leaked unsafe context marker: %s", prompt)
+	}
+}

@@ -126,11 +126,7 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing.T) {
 	t.Parallel()
 
-	application := newSeededTestAppWithVoice(t, seededState{
-		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
-		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "clarification-response-id", "answer-response-id"},
-	}, &scriptedSpeechToText{transcripts: []string{"Where should I put it?", "Put it in the office."}}, &scriptedFinalLanguageModel{finals: []ports.StructuredAgentResponse{
+	language := &scriptedFinalLanguageModel{finals: []ports.StructuredAgentResponse{
 		{
 			Kind:            ports.StructuredAgentResponseKindClarification,
 			SpokenResponse:  "Which item should I update?",
@@ -141,7 +137,12 @@ func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing
 			SpokenResponse:  "Got it. I will use the office context.",
 			DisplayResponse: "Got it. I will use the office context.",
 		},
-	}}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+	}}
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id", "clarification-response-id", "answer-response-id"},
+	}, &scriptedSpeechToText{transcripts: []string{"Where should I put it?", "Put it in the office."}}, language, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
 
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
@@ -185,6 +186,15 @@ func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing
 	secondPayload, _ := secondResponse["response"].(map[string]any)
 	if secondPayload["kind"] != "answer" || secondPayload["spokenResponse"] != "Got it. I will use the office context." {
 		t.Fatalf("expected follow-up answer on same session, got %+v", secondPayload)
+	}
+	if len(language.inputs) < 2 || len(language.inputs[1].ConversationTurns) != 2 {
+		t.Fatalf("expected follow-up language turn to include prior user and assistant context, got %+v", language.inputs)
+	}
+	if language.inputs[1].ConversationTurns[0].Role != ports.AgentConversationRoleUser || language.inputs[1].ConversationTurns[0].Text != "Where should I put it?" {
+		t.Fatalf("unexpected prior user context: %+v", language.inputs[1].ConversationTurns)
+	}
+	if language.inputs[1].ConversationTurns[1].Role != ports.AgentConversationRoleAssistant || language.inputs[1].ConversationTurns[1].Kind != string(ports.StructuredAgentResponseKindClarification) || language.inputs[1].ConversationTurns[1].Text != "Which item should I update?" {
+		t.Fatalf("unexpected prior assistant context: %+v", language.inputs[1].ConversationTurns)
 	}
 }
 
@@ -764,9 +774,11 @@ func (m finalResponseLanguageModel) NextTurn(context.Context, ports.LanguageInfe
 
 type scriptedFinalLanguageModel struct {
 	finals []ports.StructuredAgentResponse
+	inputs []ports.LanguageInferenceInput
 }
 
-func (m *scriptedFinalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (m *scriptedFinalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	m.inputs = append(m.inputs, input)
 	if len(m.finals) == 0 {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
