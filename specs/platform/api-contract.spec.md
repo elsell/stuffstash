@@ -97,6 +97,13 @@ Successful JSON responses must use a consistent envelope unless a spec explicitl
 - Field names in JSON must use `camelCase`.
 - Response bodies must not leak internal package names, stack traces, SQL errors, SpiceDB internals, OIDC provider internals, secrets, tokens, filesystem paths, or infrastructure details.
 
+## Request Format
+
+- JSON object request bodies must reject unknown fields unless a domain spec explicitly defines an open extension map for that request.
+- Unknown request fields must fail before the request reaches application services.
+- Unknown request field failures must use the safe error envelope with `invalid_request`; safe validation details may identify rejected field names.
+- Request bodies must not allow callers to smuggle principal IDs, roles, permissions, actor IDs, authorization hints, audit metadata, or system-managed fields unless a spec explicitly defines that field as caller-controlled.
+
 ## Browser CORS
 
 Separate browser clients may call the API directly.
