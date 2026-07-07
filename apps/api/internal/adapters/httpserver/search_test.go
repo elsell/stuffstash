@@ -42,7 +42,7 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 func TestAssetSearchFiltersByCheckoutState(t *testing.T) {
 	fixture := newAssetSearchFixture(t)
 	assetPath := "/tenants/" + fixture.tenantID + "/inventories/" + fixture.toolsInventoryID + "/assets/" + fixture.drillAssetID
-	checkout := performRequest(fixture.server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "using at bench"})
+	checkout := performRequest(fixture.server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner:owner@example.test", map[string]any{"details": "using at bench"})
 	if checkout.Code != http.StatusCreated {
 		t.Fatalf("expected checkout status %d, got %d with body %s", http.StatusCreated, checkout.Code, checkout.Body.String())
 	}
@@ -54,6 +54,9 @@ func TestAssetSearchFiltersByCheckoutState(t *testing.T) {
 	}
 	if checkedOutSearch.Data[0].Asset.CurrentCheckout == nil || checkedOutSearch.Data[0].Asset.CurrentCheckout.ID != checkedOut.Data.ID {
 		t.Fatalf("expected search current checkout projection, got %+v", checkedOutSearch.Data[0].Asset.CurrentCheckout)
+	}
+	if checkedOutSearch.Data[0].Asset.CurrentCheckout.CheckedOutByPrincipalID != "owner" || checkedOutSearch.Data[0].Asset.CurrentCheckout.CheckedOutByPrincipal == nil || checkedOutSearch.Data[0].Asset.CurrentCheckout.CheckedOutByPrincipal.Email != "owner@example.test" {
+		t.Fatalf("expected search current checkout principal profile, got %+v", checkedOutSearch.Data[0].Asset.CurrentCheckout)
 	}
 
 	availableSearch := searchAssetsWithCheckoutState(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Drill", "available")

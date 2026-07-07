@@ -52,7 +52,7 @@ func apply(ctx context.Context, application app.App, input *dto.ApplyUndoableOpe
 
 	return &dto.ApplyUndoableOperationOutput{
 		Body: shared.SuccessEnvelope[assetsdto.AssetResponse]{
-			Data: assetsmapper.AssetToResponse(item, nil, nil),
+			Data: assetsmapper.AssetToResponse(item, nil, nil, nil),
 			Meta: shared.Meta{TenantID: input.TenantID},
 		},
 	}, nil

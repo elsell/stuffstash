@@ -81,6 +81,7 @@ const (
 	EventBlobDeletionOutboxFailed             EventName = "blob_deletion_outbox.failed"
 	EventBlobDeletionOutboxDeadLettered       EventName = "blob_deletion_outbox.dead_lettered"
 	EventAuditRecordsListed                   EventName = "audit_record.listed"
+	EventPrincipalResolutionFailed            EventName = "principal.resolution_failed"
 	EventAuditPrincipalResolutionFailed       EventName = "audit_principal.resolution_failed"
 	EventUndoableOperationUndone              EventName = "undoable_operation.undone"
 	EventUndoableOperationRedone              EventName = "undoable_operation.redone"

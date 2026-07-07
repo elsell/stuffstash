@@ -106,6 +106,12 @@ export interface CurrentCheckout {
   state: string;
   checkedOutAt: string;
   checkedOutByPrincipalId: string;
+  checkedOutByPrincipal?: CheckoutPrincipal;
+}
+
+export interface CheckoutPrincipal {
+  id: string;
+  email?: string;
 }
 
 export interface AssetCheckout extends CurrentCheckout {
@@ -1766,7 +1772,8 @@ function mapCurrentCheckout(response: components['schemas']['CurrentCheckout'] |
     id: response.id,
     state: response.state,
     checkedOutAt: response.checkedOutAt,
-    checkedOutByPrincipalId: response.checkedOutByPrincipalId
+    checkedOutByPrincipalId: response.checkedOutByPrincipalId,
+    checkedOutByPrincipal: response.checkedOutByPrincipal
   };
 }
 

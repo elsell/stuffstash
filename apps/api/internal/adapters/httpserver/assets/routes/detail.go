@@ -31,8 +31,12 @@ func RegisterDetail(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
+		var checkouts []asset.Checkout
+		if result.CurrentCheckout != nil {
+			checkouts = []asset.Checkout{*result.CurrentCheckout}
+		}
 		return &dto.GetAssetOutput{Body: shared.SuccessEnvelope[dto.AssetResponse]{
-			Data: mapper.AssetToResponse(result.Item, result.PrimaryPhoto, result.CurrentCheckout),
+			Data: mapper.AssetToResponse(result.Item, result.PrimaryPhoto, result.CurrentCheckout, resolveCheckoutPrincipals(ctx, application, checkouts)),
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("assets"), shared.SecuredOperation)

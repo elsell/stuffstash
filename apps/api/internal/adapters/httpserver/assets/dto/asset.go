@@ -166,10 +166,16 @@ type AssetPrimaryPhoto = shared.AssetPrimaryPhoto
 type AssetPhotoThumbnails = shared.AssetPhotoThumbnails
 
 type CurrentCheckout struct {
-	ID                      string `json:"id"`
-	State                   string `json:"state"`
-	CheckedOutAt            string `json:"checkedOutAt"`
-	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+	ID                      string                          `json:"id"`
+	State                   string                          `json:"state"`
+	CheckedOutAt            string                          `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string                          `json:"checkedOutByPrincipalId"`
+	CheckedOutByPrincipal   *AssetCheckoutPrincipalResponse `json:"checkedOutByPrincipal,omitempty"`
+}
+
+type AssetCheckoutPrincipalResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email,omitempty"`
 }
 
 type AssetCheckoutResponse struct {

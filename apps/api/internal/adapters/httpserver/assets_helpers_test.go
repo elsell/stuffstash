@@ -23,10 +23,16 @@ type assetResponse struct {
 }
 
 type currentCheckout struct {
-	ID                      string `json:"id"`
-	State                   string `json:"state"`
-	CheckedOutAt            string `json:"checkedOutAt"`
-	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+	ID                      string            `json:"id"`
+	State                   string            `json:"state"`
+	CheckedOutAt            string            `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string            `json:"checkedOutByPrincipalId"`
+	CheckedOutByPrincipal   *principalSummary `json:"checkedOutByPrincipal,omitempty"`
+}
+
+type principalSummary struct {
+	ID    string `json:"id"`
+	Email string `json:"email,omitempty"`
 }
 
 type assetPrimaryPhoto struct {

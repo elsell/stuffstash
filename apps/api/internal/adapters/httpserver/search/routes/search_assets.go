@@ -42,7 +42,7 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 
 		return &dto.SearchAssetsOutput{
 			Body: shared.SuccessEnvelope[[]dto.AssetSearchResultResponse]{
-				Data: mapper.AssetSearchResultsToResponse(result.Items, result.PrimaryPhotos),
+				Data: mapper.AssetSearchResultsToResponse(result.Items, result.PrimaryPhotos, resolveSearchCheckoutPrincipals(ctx, application, result.Items)),
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

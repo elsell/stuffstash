@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/dto"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func AssetSearchResultsToResponse(results []ports.AssetSearchResult, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment) []dto.AssetSearchResultResponse {
+func AssetSearchResultsToResponse(results []ports.AssetSearchResult, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment, checkoutPrincipals map[identity.PrincipalID]identity.User) []dto.AssetSearchResultResponse {
 	data := make([]dto.AssetSearchResultResponse, 0, len(results))
 	for _, result := range results {
 		var primaryPhoto *media.Attachment
@@ -22,12 +23,12 @@ func AssetSearchResultsToResponse(results []ports.AssetSearchResult, primaryPhot
 		if photo, ok := primaryPhotos[ref]; ok {
 			primaryPhoto = &photo
 		}
-		data = append(data, AssetSearchResultToResponse(result, primaryPhoto))
+		data = append(data, AssetSearchResultToResponse(result, primaryPhoto, checkoutPrincipals))
 	}
 	return data
 }
 
-func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *media.Attachment) dto.AssetSearchResultResponse {
+func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *media.Attachment, checkoutPrincipals map[identity.PrincipalID]identity.User) dto.AssetSearchResultResponse {
 	assetSummary := dto.AssetSummary{
 		ID:                result.Asset.ID.String(),
 		InventoryID:       result.Asset.InventoryID.String(),
@@ -50,6 +51,12 @@ func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *m
 			State:                   result.CurrentCheckout.State.String(),
 			CheckedOutAt:            result.CurrentCheckout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
 			CheckedOutByPrincipalID: result.CurrentCheckout.CheckedOutByPrincipal,
+		}
+		if user, ok := checkoutPrincipals[identity.PrincipalID(result.CurrentCheckout.CheckedOutByPrincipal)]; ok {
+			assetSummary.CurrentCheckout.CheckedOutByPrincipal = &dto.SearchCheckoutPrincipalResponse{
+				ID:    user.ID.String(),
+				Email: user.Email.String(),
+			}
 		}
 	}
 	return dto.AssetSearchResultResponse{

@@ -52,10 +52,16 @@ type AssetPrimaryPhoto = shared.AssetPrimaryPhoto
 type AssetPhotoThumbnails = shared.AssetPhotoThumbnails
 
 type SearchCurrentCheckout struct {
-	ID                      string `json:"id"`
-	State                   string `json:"state"`
-	CheckedOutAt            string `json:"checkedOutAt"`
-	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+	ID                      string                           `json:"id"`
+	State                   string                           `json:"state"`
+	CheckedOutAt            string                           `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string                           `json:"checkedOutByPrincipalId"`
+	CheckedOutByPrincipal   *SearchCheckoutPrincipalResponse `json:"checkedOutByPrincipal,omitempty"`
+}
+
+type SearchCheckoutPrincipalResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email,omitempty"`
 }
 
 type SearchMatch struct {

@@ -104,7 +104,8 @@ describe('StuffStashClient', () => {
             id: 'checkout-one',
             state: 'open',
             checkedOutAt: '2026-06-24T11:00:00Z',
-            checkedOutByPrincipalId: 'user-one'
+            checkedOutByPrincipalId: 'user-one',
+            checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
           }
         },
         meta: {}
@@ -116,7 +117,8 @@ describe('StuffStashClient', () => {
       currentCheckout: {
         id: 'checkout-one',
         state: 'open',
-        checkedOutByPrincipalId: 'user-one'
+        checkedOutByPrincipalId: 'user-one',
+        checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
       }
     });
   });
@@ -201,14 +203,16 @@ describe('StuffStashClient', () => {
           id: 'checkout-open',
           state: 'open',
           checkedOutAt: '2026-06-24T11:00:00Z',
-          checkedOutByPrincipalId: 'user-one'
+          checkedOutByPrincipalId: 'user-one',
+          checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
         }
       },
       checkout: {
         id: 'checkout-open',
         state: 'open',
         checkedOutAt: '2026-06-24T11:00:00Z',
-        checkedOutByPrincipalId: 'user-one'
+        checkedOutByPrincipalId: 'user-one',
+        checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
       }
     };
     const client = new StuffStashClient({
@@ -237,8 +241,20 @@ describe('StuffStashClient', () => {
     await expect(client.listCheckedOutAssets('tenant-one', 'inventory-one', 5)).resolves.toMatchObject({
       items: [
         {
-          asset: { id: 'asset-one', lifecycleState: 'archived', currentCheckout: { id: 'checkout-open', state: 'open' } },
-          checkout: { id: 'checkout-open', state: 'open' }
+          asset: {
+            id: 'asset-one',
+            lifecycleState: 'archived',
+            currentCheckout: {
+              id: 'checkout-open',
+              state: 'open',
+              checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
+            }
+          },
+          checkout: {
+            id: 'checkout-open',
+            state: 'open',
+            checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
+          }
         }
       ],
       pagination: { limit: 5, nextCursor: null, hasMore: false }
@@ -918,7 +934,14 @@ describe('StuffStashClient', () => {
                 title: 'Passport',
                 description: '',
                 parentAssetId: null,
-                lifecycleState: 'archived'
+                lifecycleState: 'archived',
+                currentCheckout: {
+                  id: 'checkout-open',
+                  state: 'open',
+                  checkedOutAt: '2026-06-24T11:00:00Z',
+                  checkedOutByPrincipalId: 'user-one',
+                  checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
+                }
               },
               matches: [{ field: 'title', value: 'Passport' }]
             }
@@ -931,7 +954,16 @@ describe('StuffStashClient', () => {
     await expect(
       client.searchAssets('tenant-one', 'Passport', { limit: 5, inventoryId: 'inventory-one', lifecycleState: 'archived', mode: 'exact' })
     ).resolves.toMatchObject({
-      items: [{ asset: { id: 'asset-one', lifecycleState: 'archived' } }]
+      items: [{
+        asset: {
+          id: 'asset-one',
+          lifecycleState: 'archived',
+          currentCheckout: {
+            id: 'checkout-open',
+            checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
+          }
+        }
+      }]
     });
 
     expect(requests[0]?.url).toBe(

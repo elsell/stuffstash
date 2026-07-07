@@ -1208,6 +1208,10 @@ export interface components {
             permissions: string[] | null;
             relationship: string;
         };
+        AssetCheckoutPrincipalResponse: {
+            email?: string;
+            id: string;
+        };
         AssetCheckoutResponse: {
             assetId: string;
             checkedOutAt: string;
@@ -1453,6 +1457,7 @@ export interface components {
         };
         CurrentCheckout: {
             checkedOutAt: string;
+            checkedOutByPrincipal?: components["schemas"]["AssetCheckoutPrincipalResponse"];
             checkedOutByPrincipalId: string;
             id: string;
             state: string;
@@ -1840,8 +1845,13 @@ export interface components {
             /** @description Optional return details */
             details?: string;
         };
+        SearchCheckoutPrincipalResponse: {
+            email?: string;
+            id: string;
+        };
         SearchCurrentCheckout: {
             checkedOutAt: string;
+            checkedOutByPrincipal?: components["schemas"]["SearchCheckoutPrincipalResponse"];
             checkedOutByPrincipalId: string;
             id: string;
             state: string;

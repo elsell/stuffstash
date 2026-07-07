@@ -41,7 +41,7 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	created := decodeAsset(t, create)
 	assetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + created.Data.ID
 
-	checkout := performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "  using at my desk  "})
+	checkout := performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner:owner@example.test", map[string]any{"details": "  using at my desk  "})
 	if checkout.Code != http.StatusCreated {
 		t.Fatalf("expected checkout status %d, got %d with body %s", http.StatusCreated, checkout.Code, checkout.Body.String())
 	}
@@ -68,6 +68,9 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	if detailBody.Data.CurrentCheckout == nil || detailBody.Data.CurrentCheckout.ID != checkedOut.Data.ID {
 		t.Fatalf("expected detail current checkout, got %+v", detailBody.Data.CurrentCheckout)
 	}
+	if detailBody.Data.CurrentCheckout.CheckedOutByPrincipalID != "owner" || detailBody.Data.CurrentCheckout.CheckedOutByPrincipal == nil || detailBody.Data.CurrentCheckout.CheckedOutByPrincipal.Email != "owner@example.test" {
+		t.Fatalf("expected detail current checkout principal profile, got %+v", detailBody.Data.CurrentCheckout)
+	}
 
 	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=10", "Bearer dev:viewer-user", nil)
 	if list.Code != http.StatusOK {
@@ -77,6 +80,9 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	if len(listBody.Data) != 1 || listBody.Data[0].CurrentCheckout == nil || listBody.Data[0].CurrentCheckout.ID != checkedOut.Data.ID {
 		t.Fatalf("expected list current checkout projection, got %+v", listBody.Data)
 	}
+	if listBody.Data[0].CurrentCheckout.CheckedOutByPrincipalID != "owner" || listBody.Data[0].CurrentCheckout.CheckedOutByPrincipal == nil || listBody.Data[0].CurrentCheckout.CheckedOutByPrincipal.Email != "owner@example.test" {
+		t.Fatalf("expected list current checkout principal profile, got %+v", listBody.Data[0].CurrentCheckout)
+	}
 
 	checkedOutList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/checked-out-assets?limit=10", "Bearer dev:viewer-user", nil)
 	if checkedOutList.Code != http.StatusOK {
@@ -85,6 +91,9 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	checkedOutListBody := decodeCheckedOutAssetList(t, checkedOutList)
 	if len(checkedOutListBody.Data) != 1 || checkedOutListBody.Data[0].Asset.ID != created.Data.ID || checkedOutListBody.Data[0].Checkout.ID != checkedOut.Data.ID {
 		t.Fatalf("unexpected checked-out list: %+v", checkedOutListBody.Data)
+	}
+	if checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipalID != "owner" || checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipal == nil || checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipal.Email != "owner@example.test" {
+		t.Fatalf("expected checked-out list principal profile, got %+v", checkedOutListBody.Data[0].Checkout)
 	}
 
 	history := performRequest(server, http.MethodGet, assetPath+"/checkouts?limit=10", "Bearer dev:viewer-user", nil)
