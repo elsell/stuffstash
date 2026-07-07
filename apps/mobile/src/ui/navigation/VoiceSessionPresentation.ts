@@ -161,23 +161,17 @@ function accessoryProgressTitle(realtime: VoiceRealtimeState | null | undefined)
   }
 }
 
+const voiceAccessoryPhaseTitles = {
+  understanding: 'Understanding request',
+  exploring: 'Checking inventory',
+  planning: 'Preparing plan',
+  reviewing: 'Preparing review',
+  answering: 'Preparing answer',
+  recovering: 'Recovering safely'
+} satisfies Record<NonNullable<VoiceRealtimeState['conversationPhase']>, string>;
+
 function accessoryPhaseTitle(phase: VoiceRealtimeState['conversationPhase']): string {
-  switch (phase) {
-    case 'understanding':
-      return 'Understanding request';
-    case 'exploring':
-      return 'Checking inventory';
-    case 'planning':
-      return 'Preparing plan';
-    case 'reviewing':
-      return 'Preparing review';
-    case 'answering':
-      return 'Preparing answer';
-    case 'recovering':
-      return 'Recovering safely';
-    default:
-      return 'Checking inventory';
-  }
+  return phase ? voiceAccessoryPhaseTitles[phase] : 'Checking inventory';
 }
 
 function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | undefined, diagnosticsEnabled: boolean): string | undefined {

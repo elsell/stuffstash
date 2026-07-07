@@ -78,14 +78,23 @@ func TestRealtimeVoiceSkipsDuplicateToolCallButExecutesUnseenCallsInSameTurn(t *
 	if !realtimeVoiceDuplicateTestToolResultContent(finalTurnResults, RealtimeVoiceToolSearchAuthorizedAssets, `"assetId":"water-bottle-1"`) {
 		t.Fatalf("expected search result to be returned to final turn, got %+v", finalTurnResults)
 	}
+	if count := realtimeVoiceDuplicateTestToolResultContentCount(finalTurnResults, RealtimeVoiceToolSearchAuthorizedAssets, `"assetId":"water-bottle-1"`); count != 1 {
+		t.Fatalf("expected exactly one successful duplicated search execution, got %d results: %+v", count, finalTurnResults)
+	}
 	if !realtimeVoiceDuplicateTestToolResultContent(finalTurnResults, RealtimeVoiceToolListAuthorizedAssets, `"assetId":"flashlight-1"`) {
 		t.Fatalf("expected unseen list call to execute after duplicate, got %+v", finalTurnResults)
 	}
-	if !realtimeVoiceDuplicateTestToolResultContent(finalTurnResults, RealtimeVoiceToolSearchAuthorizedAssets, `"code":"duplicate_tool_request"`) {
-		t.Fatalf("expected duplicate request repair result in final turn, got %+v", finalTurnResults)
+	if count := realtimeVoiceDuplicateTestToolResultContentCount(finalTurnResults, RealtimeVoiceToolSearchAuthorizedAssets, `"code":"duplicate_tool_request"`); count != 1 {
+		t.Fatalf("expected exactly one duplicate request repair result in final turn, got %d results: %+v", count, finalTurnResults)
 	}
 	if !realtimeVoiceDuplicateTestEventCode(events, RealtimeVoiceEventToolCallFailed, "duplicate_tool_request") {
 		t.Fatalf("expected duplicate tool failure event, got %+v", events)
+	}
+	if count := realtimeVoiceDuplicateTestCompletedCount(events, "search-water-bottle"); count != 1 {
+		t.Fatalf("expected first search to complete exactly once, got %d events: %+v", count, events)
+	}
+	if realtimeVoiceDuplicateTestToolCompleted(events, "search-water-bottle-again") {
+		t.Fatalf("did not expect duplicate search tool call to complete, got %+v", events)
 	}
 	if !realtimeVoiceDuplicateTestToolCompleted(events, "list-visible-items") {
 		t.Fatalf("expected unseen list call to complete after duplicate, got %+v", events)
@@ -104,6 +113,16 @@ func realtimeVoiceDuplicateTestToolResultContent(results []ports.AgentToolResult
 	return false
 }
 
+func realtimeVoiceDuplicateTestToolResultContentCount(results []ports.AgentToolResult, name string, term string) int {
+	count := 0
+	for _, result := range results {
+		if result.Name == name && strings.Contains(result.Content, term) {
+			count++
+		}
+	}
+	return count
+}
+
 func realtimeVoiceDuplicateTestEventCode(events []RealtimeVoiceEvent, eventType string, code string) bool {
 	for _, event := range events {
 		if event.Type == eventType && event.Code == code {
@@ -111,6 +130,16 @@ func realtimeVoiceDuplicateTestEventCode(events []RealtimeVoiceEvent, eventType 
 		}
 	}
 	return false
+}
+
+func realtimeVoiceDuplicateTestCompletedCount(events []RealtimeVoiceEvent, toolCallID string) int {
+	count := 0
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventToolCallCompleted && event.ToolCallID == toolCallID {
+			count++
+		}
+	}
+	return count
 }
 
 func realtimeVoiceDuplicateTestToolCompleted(events []RealtimeVoiceEvent, toolCallID string) bool {
