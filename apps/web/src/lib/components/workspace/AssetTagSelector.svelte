@@ -26,6 +26,26 @@
   let selected = $derived(new Set(selectedIds));
   let selectedExistingTags = $derived(tags.filter((tag) => selected.has(tag.id)));
   let hasSelection = $derived(selectedExistingTags.length > 0 || newTags.length > 0);
+  let normalizedNewTagColor = $derived(normalizeColor(newTagColor));
+  let canAddTag = $derived(newTagName.trim().length > 0 && (newTagColor.trim().length === 0 || normalizedNewTagColor !== undefined));
+
+  $effect(() => {
+    const reconciledIds: string[] = [];
+    const remainingTags: AssetTagDraft[] = [];
+    for (const tag of newTags) {
+      const existing = tags.find((candidate) => sameTagName(candidate.displayName, tag.displayName));
+      if (existing) {
+        reconciledIds.push(existing.id);
+      } else {
+        remainingTags.push(tag);
+      }
+    }
+    if (reconciledIds.length === 0) {
+      return;
+    }
+    onSelectedIdsChange(Array.from(new Set([...selectedIds, ...reconciledIds])));
+    onNewTagsChange(remainingTags);
+  });
 
   function toggleTag(tagId: string): void {
     const next = new Set(selectedIds);
@@ -42,7 +62,22 @@
     if (!displayName) {
       return;
     }
-    const color = normalizeColor(newTagColor);
+    const existing = tags.find((tag) => sameTagName(tag.displayName, displayName));
+    if (existing) {
+      onSelectedIdsChange(Array.from(new Set([...selectedIds, existing.id])));
+      newTagName = '';
+      newTagColor = '';
+      return;
+    }
+    if (newTags.some((tag) => sameTagName(tag.displayName, displayName))) {
+      newTagName = '';
+      newTagColor = '';
+      return;
+    }
+    if (newTagColor.trim().length > 0 && !normalizedNewTagColor) {
+      return;
+    }
+    const color = normalizedNewTagColor;
     onNewTagsChange([...newTags, color ? { displayName, color } : { displayName }]);
     newTagName = '';
     newTagColor = '';
@@ -59,6 +94,14 @@
     }
     const color = raw.startsWith('#') ? raw : `#${raw}`;
     return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toUpperCase() : undefined;
+  }
+
+  function sameTagName(left: string, right: string): boolean {
+    return tagNameKey(left) === tagNameKey(right);
+  }
+
+  function tagNameKey(value: string): string {
+    return value.trim().toLocaleLowerCase();
   }
 </script>
 
@@ -109,6 +152,6 @@
       <Label for="new-tag-color">Color</Label>
       <Input id="new-tag-color" bind:value={newTagColor} placeholder="#2F80ED" />
     </div>
-    <Button.Root type="button" variant="outline" disabled={newTagName.trim().length === 0} onclick={addTag}><Plus /> Add</Button.Root>
+    <Button.Root type="button" variant="outline" disabled={!canAddTag} onclick={addTag}><Plus /> Add</Button.Root>
   </div>
 </fieldset>

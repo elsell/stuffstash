@@ -298,9 +298,9 @@
     busy = true;
     error = '';
     notification = null;
+    const createdTags = [];
     try {
       const previousParentId = selectedAsset.parentAssetId;
-      const createdTags = [];
       for (const tag of draft.newTags ?? []) {
         createdTags.push(await repository.createAssetTag(selectedAsset.tenantId, selectedAsset.inventoryId, tag));
       }
@@ -325,6 +325,15 @@
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
+      }
+      if (createdTags.length > 0) {
+        data = {
+          ...data,
+          context: {
+            ...data.context,
+            assetTags: mergeAssetTags(data.context.assetTags ?? [], createdTags)
+          }
+        };
       }
       error = caught instanceof Error ? caught.message : 'Action failed.';
       throw new Error(error);

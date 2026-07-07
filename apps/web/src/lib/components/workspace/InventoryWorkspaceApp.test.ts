@@ -17,6 +17,7 @@ import type {
   InventoryAccessInvitation,
   InvitationStatusFilter,
   SelectedPhoto,
+  UpdateAssetDraft,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
@@ -163,6 +164,24 @@ class DelayedAssetRepository extends SeededInventoryRepository {
       });
     }
     return super.getAsset(tenantId, inventoryId, assetId);
+  }
+}
+
+class AssetUpdateFailingRepository extends SeededInventoryRepository {
+  createdTagCount = 0;
+
+  async createAssetTag(...args: Parameters<SeededInventoryRepository['createAssetTag']>) {
+    this.createdTagCount += 1;
+    return super.createAssetTag(...args);
+  }
+
+  async updateAsset(
+    _tenantId: string,
+    _inventoryId: string,
+    _assetId: string,
+    _draft: UpdateAssetDraft
+  ): Promise<Asset> {
+    throw new Error('Update failed.');
   }
 }
 
@@ -1111,6 +1130,45 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps inline-created edit tags visible when asset update fails', async () => {
+    const repository = new AssetUpdateFailingRepository(structuredClone(seed));
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home/edit',
+      repository
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Edit asset');
+      expect(document.body.querySelector<HTMLInputElement>('#new-tag-name')).toBeTruthy();
+    });
+
+    setInputValue(document.body.querySelector<HTMLInputElement>('#new-tag-name')!, 'Workshop');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#new-tag-color')!, '2f80ed');
+    await tick();
+    await waitFor(() => {
+      expect(tagAddButton().disabled).toBe(false);
+    });
+    tagAddButton().click();
+    await waitFor(() => {
+      expect(document.body.querySelector('.pending-tag')?.textContent).toContain('Workshop');
+    });
+    const saveButton = await waitForSaveButton();
+    saveButton.click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Update failed.');
+    });
+    expect(repository.createdTagCount).toBe(1);
+    controlContaining('Cancel').click();
+    await waitFor(() => {
+      expect(document.body.textContent).not.toContain('Edit asset');
+    });
+    controlContaining('Edit').click();
+    await waitFor(() => {
+      expect(document.body.querySelector('.tag-options')?.textContent).toContain('Workshop');
+    });
+  });
+
   it('keeps ordinary location back clicks aligned with the exposed locations href', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
 
@@ -1358,6 +1416,19 @@ function buttonContaining(text: string): HTMLButtonElement {
   );
   if (!button) {
     throw new Error(`Missing button containing ${text}`);
+  }
+  return button;
+}
+
+function tagAddButton(): HTMLButtonElement {
+  const fieldset = Array.from(document.body.querySelectorAll('fieldset')).find((candidate) =>
+    candidate.textContent?.includes('Tags')
+  );
+  const button = Array.from(fieldset?.querySelectorAll<HTMLButtonElement>('button') ?? []).find(
+    (candidate) => candidate.textContent?.trim() === 'Add'
+  );
+  if (!button) {
+    throw new Error('Missing tag Add button');
   }
   return button;
 }

@@ -3,6 +3,7 @@ import type {
   AddAssetDraft,
   Asset,
   AssetAttachment,
+  AssetTag,
   Inventory,
   SelectedPhoto,
   WorkspaceData
@@ -46,6 +47,15 @@ function asset(id: string, title = id, kind: Asset['kind'] = 'item'): Asset {
     description: '',
     parentAssetId: null,
     lifecycleState: 'active'
+  };
+}
+
+function assetTag(id: string, displayName: string, color?: string): AssetTag {
+  return {
+    id,
+    key: displayName.toLowerCase().replaceAll(' ', '-'),
+    displayName,
+    color
   };
 }
 
@@ -296,6 +306,31 @@ describe('workspace asset workflow', () => {
     expect(result.data.assets.map((item) => item.id)).toEqual(['parent-one']);
   });
 
+  it('keeps inline-created tags visible when asset creation fails', async () => {
+    const repository = fakeRepository({
+      createdAssets: [],
+      createdTags: [assetTag('tag-workshop', 'Workshop', '#2F80ED')],
+      createFailureAfter: 0
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      tagIds: [],
+      newTags: [{ displayName: 'Workshop', color: '#2f80ed' }],
+      photos: []
+    });
+
+    expect(result.saveResult).toEqual({ saved: false });
+    expect(result.closeAdd).toBe(false);
+    expect(result.data.context.assetTags).toMatchObject([
+      { id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }
+    ]);
+  });
+
   it('switches back to active lifecycle when creating from an archived view', async () => {
     const activeData = workspaceData([asset('asset-one', 'Tape measure')], 'active');
     const repository = fakeRepository({
@@ -422,6 +457,7 @@ function fakeRepository({
   uploadFailureError = new Error('Upload failed.'),
   failedUploadIndexes = [],
   createFailureAfter,
+  createdTags = [],
   selectedLifecycleData,
   selectLifecycleFailure = false
 }: {
@@ -431,12 +467,22 @@ function fakeRepository({
   uploadFailureError?: Error;
   failedUploadIndexes?: number[];
   createFailureAfter?: number;
+  createdTags?: AssetTag[];
   selectedLifecycleData?: WorkspaceData;
   selectLifecycleFailure?: boolean;
-}): Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto'> {
+}): Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto' | 'createAssetTag'> {
   let createCount = 0;
   let uploadCount = 0;
+  let tagCreateCount = 0;
   return {
+    async createAssetTag(): Promise<AssetTag> {
+      const created = createdTags[tagCreateCount];
+      tagCreateCount += 1;
+      if (!created) {
+        throw new Error('Missing created tag fixture.');
+      }
+      return created;
+    },
     async createAsset(_tenantId: string, _inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
       if (createFailureAfter !== undefined && createCount >= createFailureAfter) {
         throw new Error('Create failed.');
