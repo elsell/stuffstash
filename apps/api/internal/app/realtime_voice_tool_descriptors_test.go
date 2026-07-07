@@ -68,3 +68,41 @@ func TestRealtimeVoiceAuditHistoryToolRequiresVisibleAsset(t *testing.T) {
 		}
 	}
 }
+
+func TestRealtimeVoiceCheckoutReadToolsAreProviderCallableReadOnly(t *testing.T) {
+	t.Parallel()
+
+	tools := map[string]string{}
+	readOnly := map[string]bool{}
+	providerCallable := map[string]bool{}
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		tools[tool.Name] = tool.Description
+		readOnly[tool.Name] = tool.ReadOnly
+		providerCallable[tool.Name] = tool.ProviderCallable
+	}
+	for _, name := range []string{
+		RealtimeVoiceToolListCheckedOutAssets,
+		RealtimeVoiceToolListAssetCheckoutHistory,
+	} {
+		if !readOnly[name] || !providerCallable[name] {
+			t.Fatalf("expected %s to be provider-callable read-only", name)
+		}
+	}
+	for _, required := range []string{
+		"currently checked out",
+		"checkout state",
+	} {
+		if !strings.Contains(tools[RealtimeVoiceToolListCheckedOutAssets], required) {
+			t.Fatalf("expected checked-out list guidance to include %q, got %q", required, tools[RealtimeVoiceToolListCheckedOutAssets])
+		}
+	}
+	for _, required := range []string{
+		"checkout history",
+		"already returned by an authorized read tool",
+		"checkout and return details",
+	} {
+		if !strings.Contains(tools[RealtimeVoiceToolListAssetCheckoutHistory], required) {
+			t.Fatalf("expected checkout history guidance to include %q, got %q", required, tools[RealtimeVoiceToolListAssetCheckoutHistory])
+		}
+	}
+}

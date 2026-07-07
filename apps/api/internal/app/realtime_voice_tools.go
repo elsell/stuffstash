@@ -28,6 +28,12 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	case RealtimeVoiceToolListAssetAuditHistory:
 		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(ctx, session, call, visibleAssetIDs)
 		return result, nil, err
+	case RealtimeVoiceToolListCheckedOutAssets:
+		result, err := a.executeRealtimeVoiceCheckedOutAssetsTool(ctx, session, call)
+		return result, nil, err
+	case RealtimeVoiceToolListAssetCheckoutHistory:
+		result, err := a.executeRealtimeVoiceAssetCheckoutHistoryTool(ctx, session, call, visibleAssetIDs)
+		return result, nil, err
 	case RealtimeVoiceToolProposeActionPlan:
 		return a.executeRealtimeVoiceProposeActionPlanTool(ctx, session, transcript, priorResults, call, visibleAssetIDs)
 	default:

@@ -78,6 +78,41 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			},
 		},
 		{
+			Name:             RealtimeVoiceToolListCheckedOutAssets,
+			Label:            realtimeVoiceListCheckedOutAssetsPublicName,
+			Description:      "List visible assets in the selected inventory that are currently checked out. Use this for questions about what is checked out, what is away from its home, who has items, and checkout state. Arguments: optional limit number. Results are JSON with asset metadata, internal asset IDs for follow-up checkout history or action-plan arguments, current checkout state, and containment paths. Do not speak or display asset IDs to the user.",
+			ReadOnly:         true,
+			ProviderCallable: true,
+			Parameters: ports.AgentToolParameters{
+				Properties: map[string]ports.AgentToolParameter{
+					"limit": {
+						Type:        ports.AgentToolParameterTypeInteger,
+						Description: "Maximum number of checked-out assets to return. Defaults to 10 and is capped at 20.",
+					},
+				},
+			},
+		},
+		{
+			Name:             RealtimeVoiceToolListAssetCheckoutHistory,
+			Label:            realtimeVoiceListCheckoutHistoryPublicName,
+			Description:      "List checkout history for one visible asset already returned by an authorized read tool in this voice session. Use this for checkout history, who checked something out, when it was checked out, whether it was returned, and checkout and return details. Arguments: assetId from a prior read tool result, optional limit number. Results are JSON with safe bounded checkout records, states, timestamps, actor principal IDs, checkout details, and return details. Do not guess checkout history from current checkout state alone. Do not speak or display asset IDs to the user.",
+			ReadOnly:         true,
+			ProviderCallable: true,
+			Parameters: ports.AgentToolParameters{
+				Required: []string{"assetId"},
+				Properties: map[string]ports.AgentToolParameter{
+					"assetId": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Opaque asset ID copied exactly from an earlier authorized read tool result in this session.",
+					},
+					"limit": {
+						Type:        ports.AgentToolParameterTypeInteger,
+						Description: "Maximum number of checkout history entries to return. Defaults to 10 and is capped at 20.",
+					},
+				},
+			},
+		},
+		{
 			Name:             RealtimeVoiceToolProposeActionPlan,
 			Label:            realtimeVoiceProposeActionPlanPublicName,
 			Description:      "Prepare a user-reviewable action plan for a requested inventory change. This does not execute the change. Use commandKind plus arguments for single-command create, move, update, archive, restore, checkout, or return plans. Prefer commands array for multi-step plans. Each command object has id, kind, summary, and arguments. Use create_asset for new items and containers. Use create_location only for a true location. Use checkout_asset when the user says they took, borrowed, are using, or checked out an item that should return to its home later. Use return_asset when the user says a checked-out item is back, returned, replaced, or checked in. For checkout_asset and return_asset, use assetId from a read tool and optional details for user-provided context like who has it or where it is being used; do not change parentAssetId. Never put assetId in create_asset arguments; assetId is only for move_asset, archive_asset, restore_asset, checkout_asset, or return_asset of an existing asset returned by a read tool. For create or move into an existing location/container, resolve the parent with read tools and use its assetId as parentAssetId. For create or move into something created earlier in the same plan, use parentCommandId. If the user asks to add a new item into a missing container under an existing location, create the missing container first with parentAssetId set to the existing location, then create the item with parentCommandId set to the container command id. If the user asks to move an existing asset to a missing but clearly named location or container, assume they want it created unless the words are ambiguous or likely mistranscribed. Propose creating the missing destination first and then moving the existing asset using parentCommandId. Do not ask a final yes/no clarification for clear missing destinations; this proposal is the review step.",
@@ -228,6 +263,10 @@ func realtimeVoiceToolLabel(name string) string {
 		return realtimeVoiceListAuthorizedAssetsPublicName
 	case RealtimeVoiceToolListAssetAuditHistory:
 		return realtimeVoiceListAssetAuditHistoryPublicName
+	case RealtimeVoiceToolListCheckedOutAssets:
+		return realtimeVoiceListCheckedOutAssetsPublicName
+	case RealtimeVoiceToolListAssetCheckoutHistory:
+		return realtimeVoiceListCheckoutHistoryPublicName
 	default:
 		return realtimeVoiceSearchAuthorizedAssetsPublicName
 	}

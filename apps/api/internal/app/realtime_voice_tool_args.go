@@ -64,6 +64,32 @@ func parseRealtimeVoiceAssetAuditHistoryArgs(args map[string]any) (realtimeVoice
 	return realtimeVoiceAssetAuditHistoryArgs{AssetID: assetID, Limit: limit}, nil
 }
 
+func parseRealtimeVoiceCheckedOutAssetsArgs(args map[string]any) (realtimeVoiceCheckedOutAssetsArgs, error) {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "limit"); err != nil {
+		return realtimeVoiceCheckedOutAssetsArgs{}, err
+	}
+	limit, err := realtimeVoiceToolLimit(args["limit"])
+	if err != nil {
+		return realtimeVoiceCheckedOutAssetsArgs{}, err
+	}
+	return realtimeVoiceCheckedOutAssetsArgs{Limit: limit}, nil
+}
+
+func parseRealtimeVoiceAssetCheckoutHistoryArgs(args map[string]any) (realtimeVoiceAssetCheckoutHistoryArgs, error) {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "assetId", "limit"); err != nil {
+		return realtimeVoiceAssetCheckoutHistoryArgs{}, err
+	}
+	assetID := strings.TrimSpace(stringArg(args["assetId"]))
+	if _, ok := asset.NewID(assetID); !ok {
+		return realtimeVoiceAssetCheckoutHistoryArgs{}, ports.ErrInvalidProviderInput
+	}
+	limit, err := realtimeVoiceToolLimit(args["limit"])
+	if err != nil {
+		return realtimeVoiceAssetCheckoutHistoryArgs{}, err
+	}
+	return realtimeVoiceAssetCheckoutHistoryArgs{AssetID: assetID, Limit: limit}, nil
+}
+
 func rejectUnknownRealtimeVoiceArgs(args map[string]any, allowed ...string) error {
 	allowedSet := map[string]struct{}{}
 	for _, key := range allowed {
@@ -106,6 +132,15 @@ type realtimeVoiceListArgs struct {
 }
 
 type realtimeVoiceAssetAuditHistoryArgs struct {
+	AssetID string
+	Limit   int
+}
+
+type realtimeVoiceCheckedOutAssetsArgs struct {
+	Limit int
+}
+
+type realtimeVoiceAssetCheckoutHistoryArgs struct {
 	AssetID string
 	Limit   int
 }
@@ -163,4 +198,25 @@ type realtimeVoiceAssetAuditHistoryEntry struct {
 	PreviousState       string `json:"previousState,omitempty"`
 	LifecycleState      string `json:"lifecycleState,omitempty"`
 	Summary             string `json:"summary"`
+}
+
+type realtimeVoiceAssetCheckoutHistoryToolOutput struct {
+	Tool    string                                   `json:"tool"`
+	Asset   realtimeVoiceAssetToolItem               `json:"asset"`
+	Order   string                                   `json:"order"`
+	Count   int                                      `json:"count"`
+	HasMore bool                                     `json:"hasMore,omitempty"`
+	Note    string                                   `json:"note,omitempty"`
+	Entries []realtimeVoiceAssetCheckoutHistoryEntry `json:"entries"`
+}
+
+type realtimeVoiceAssetCheckoutHistoryEntry struct {
+	ID                      string `json:"id"`
+	State                   string `json:"state"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+	CheckoutDetails         string `json:"checkoutDetails,omitempty"`
+	ReturnedAt              string `json:"returnedAt,omitempty"`
+	ReturnedByPrincipalID   string `json:"returnedByPrincipalId,omitempty"`
+	ReturnDetails           string `json:"returnDetails,omitempty"`
 }
