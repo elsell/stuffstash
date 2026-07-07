@@ -423,6 +423,61 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('keeps many imported record summaries visually bounded in job detail', async () => {
+    class ManyResourcefulImportJobRepository extends ResourcefulImportJobRepository {
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          resources: Array.from({ length: 18 }, (_, index) => ({
+            resourceType: 'asset' as const,
+            resourceId: `asset-imported-${index + 1}`,
+            displayName: `Imported record ${index + 1}`,
+            sourceEntityType: 'asset' as const,
+            sourceEntityId: `homebox-item-${index + 1}`,
+            createdAt: '2026-07-06T12:03:00Z'
+          }))
+        };
+      }
+    }
+
+    await mountImportWorkspace(new ManyResourcefulImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('History');
+    });
+
+    buttonContaining('Details').click();
+    await waitFor(() => {
+      expect(buttonContaining('Records')).toBeTruthy();
+    });
+    buttonContaining('Records').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Showing 12 of 18');
+      expect(document.body.textContent).toContain('Imported record 12');
+      expect(document.body.textContent).not.toContain('Imported record 13');
+      expect(document.body.textContent).toContain('6 more imported records hidden.');
+    });
+    const recordRegion = document.body.querySelector<HTMLElement>('#imported-record-summaries');
+    expect(recordRegion?.getAttribute('role')).toBe('region');
+    expect(recordRegion?.getAttribute('aria-label')).toBe('Imported record summaries');
+    expect(recordRegion?.getAttribute('tabindex')).toBe('0');
+    expect(buttonContaining('Show more records').getAttribute('aria-controls')).toBe('imported-record-summaries');
+    expect(buttonContaining('Show more records').getAttribute('aria-expanded')).toBe('false');
+
+    buttonContaining('Show more records').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('18 records');
+      expect(document.body.textContent).toContain('Imported record 18');
+      expect(document.body.textContent).toContain('All returned record summaries are shown.');
+    });
+    expect(buttonContaining('Show fewer').getAttribute('aria-controls')).toBe('imported-record-summaries');
+    expect(buttonContaining('Show fewer').getAttribute('aria-expanded')).toBe('true');
+    expect(document.body.querySelector('.resource-list.bounded')).toBeTruthy();
+  });
+
   it('shows preview-preserved warnings in terminal import job detail', async () => {
     await mountImportWorkspace(new TerminalPreviewMessageImportJobRepository(structuredClone(seed)));
 

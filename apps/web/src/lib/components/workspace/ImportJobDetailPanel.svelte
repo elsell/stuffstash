@@ -33,6 +33,8 @@
   import ImportMessagesList from './ImportMessagesList.svelte';
   import ImportPreviewSamples from './ImportPreviewSamples.svelte';
 
+  const COLLAPSED_RESOURCE_LIMIT = 12;
+
   type ImportResource = ImportJob['resources'][number];
 
   type Props = {
@@ -65,11 +67,16 @@
 
   let selectedTab = $state('overview');
   let defaultedTabJobId = $state('');
+  let resourcesExpanded = $state(false);
   let issueCount = $derived(detailMessages(job).length);
+  let resourcesBounded = $derived(job.resources.length > COLLAPSED_RESOURCE_LIMIT);
+  let visibleResources = $derived(resourcesExpanded ? job.resources : job.resources.slice(0, COLLAPSED_RESOURCE_LIMIT));
+  let hiddenResourceCount = $derived(Math.max(0, job.resources.length - visibleResources.length));
 
   $effect(() => {
     if (job.id === defaultedTabJobId) return;
     selectedTab = detailMessages(job).length > 0 ? 'issues' : 'overview';
+    resourcesExpanded = false;
     defaultedTabJobId = job.id;
   });
 
@@ -202,10 +209,19 @@
                 <section class="detail-panel">
                   <div class="sample-heading">
                     <h3>Imported records</h3>
-                    {#if job.resources.length >= 50}<small>Showing a sample</small>{/if}
+                    {#if job.resources.length > COLLAPSED_RESOURCE_LIMIT}
+                      <small>{resourcesExpanded ? `${job.resources.length} records` : `Showing ${visibleResources.length} of ${job.resources.length}`}</small>
+                    {/if}
                   </div>
-                  <div class="sample-list">
-                    {#each job.resources as resource}
+                  <!-- svelte-ignore a11y_no_noninteractive_tabindex (bounded overflow regions need a keyboard focus target) -->
+                  <div
+                    id="imported-record-summaries"
+                    class={resourcesBounded ? 'sample-list resource-list bounded' : 'sample-list resource-list'}
+                    role={resourcesBounded ? 'region' : undefined}
+                    aria-label={resourcesBounded ? 'Imported record summaries' : undefined}
+                    tabindex={resourcesBounded ? 0 : undefined}
+                  >
+                    {#each visibleResources as resource}
                       <div class="sample-row resource-row">
                         <span>{resourceLabel(resource)}</span>
                         <small>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</small>
@@ -215,6 +231,33 @@
                       </div>
                     {/each}
                   </div>
+                  {#if hiddenResourceCount > 0}
+                    <div class="resource-overflow-action">
+                      <span>{hiddenResourceCount} more imported {hiddenResourceCount === 1 ? 'record' : 'records'} hidden.</span>
+                      <Button.Root
+                        variant="outline"
+                        size="sm"
+                        aria-controls="imported-record-summaries"
+                        aria-expanded={resourcesExpanded}
+                        onclick={() => (resourcesExpanded = true)}
+                      >
+                        Show more records
+                      </Button.Root>
+                    </div>
+                  {:else if resourcesExpanded && job.resources.length > COLLAPSED_RESOURCE_LIMIT}
+                    <div class="resource-overflow-action">
+                      <span>All returned record summaries are shown.</span>
+                      <Button.Root
+                        variant="outline"
+                        size="sm"
+                        aria-controls="imported-record-summaries"
+                        aria-expanded={resourcesExpanded}
+                        onclick={() => (resourcesExpanded = false)}
+                      >
+                        Show fewer
+                      </Button.Root>
+                    </div>
+                  {/if}
                 </section>
               {:else}
                 <div class="quiet-row">
@@ -440,6 +483,25 @@
     gap: 0.45rem;
   }
 
+  .resource-list.bounded {
+    max-height: min(20rem, 45vh);
+    overflow-y: auto;
+    padding-right: 0.35rem;
+  }
+
+  .resource-overflow-action {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+
+  .resource-overflow-action span {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.82rem;
+  }
+
   .timeline-list {
     gap: 0.35rem;
   }
@@ -519,9 +581,16 @@
 
   .resource-row {
     align-items: center;
+    border-top: 1px solid hsl(var(--border));
     display: grid;
     gap: 0.5rem;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    padding-top: 0.55rem;
+  }
+
+  .resource-row:first-child {
+    border-top: 0;
+    padding-top: 0;
   }
 
   .sample-row span,
@@ -539,6 +608,10 @@
     font-weight: 600;
     gap: 0.4rem;
     text-decoration: none;
+  }
+
+  .resource-link {
+    justify-self: start;
   }
 
   .resource-link:hover,
@@ -593,7 +666,18 @@
     }
 
     .resource-row {
+      gap: 0.35rem;
       grid-template-columns: 1fr;
+    }
+
+    .resource-list.bounded {
+      max-height: min(14rem, 34vh);
+    }
+
+    .resource-overflow-action {
+      align-items: flex-start;
+      display: grid;
+      justify-content: stretch;
     }
   }
 </style>
