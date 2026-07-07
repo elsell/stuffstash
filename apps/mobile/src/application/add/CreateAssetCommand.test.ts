@@ -134,7 +134,7 @@ describe('CreateAssetCommand', () => {
       parentAssetId: 'asset-garage',
       tagIds: ['tag-workshop', 'tag-safety', 'tag-created-1']
     });
-    expect(repository.createdTags).toEqual([{ displayName: 'Camping', color: '#2f80ed' }]);
+    expect(repository.createdTags).toEqual([{ displayName: 'Camping', color: '#2F80ED' }]);
     expect(repository.addedPhotos).toEqual([
       {
         assetId: 'asset-created',

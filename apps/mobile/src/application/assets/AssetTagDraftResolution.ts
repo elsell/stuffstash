@@ -157,7 +157,7 @@ export function reconcilePendingAssetTagDrafts(input: {
       continue;
     }
     pendingKeys.add(key);
-    const color = tag.color?.trim();
+    const color = normalizeTagColor(tag.color ?? '');
     pendingTags.push(color ? { displayName, color } : { displayName });
   }
 
@@ -177,12 +177,13 @@ export async function createPendingAssetTags(
   const created = [];
   for (const tag of pendingTags) {
     const displayName = tag.displayName.trim();
-    if (displayName.length === 0) {
+    if (displayName.length === 0 || assetTagKeyFromDisplayName(displayName).length === 0) {
       continue;
     }
+    const color = normalizeTagColor(tag.color ?? '');
     created.push(await repository.createAssetTag({
       displayName,
-      color: tag.color?.trim() || undefined
+      color
     }));
   }
   return created.map((tag) => tag.id);

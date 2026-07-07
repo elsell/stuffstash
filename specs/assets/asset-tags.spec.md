@@ -161,6 +161,8 @@ Web and mobile clients must load active inventory tags through client adapter bo
 
 Clients must reconcile pending inline tag drafts against known inventory tags by normalized key before calling the tag creation API. If a matching active tag is already known locally, the save must reuse that tag ID instead of issuing a duplicate create request.
 
+Before creating inline tag drafts, clients must trim draft names, discard empty or keyless drafts, normalize valid colors to uppercase `#RRGGBB`, and omit invalid stale draft colors rather than sending a tag create request that the API will reject.
+
 The first inline creation behavior may create the tag immediately before saving the asset draft. If asset save then fails, the created tag may remain available in the inventory; the UI must keep that state visible by refreshing the active tag list.
 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.

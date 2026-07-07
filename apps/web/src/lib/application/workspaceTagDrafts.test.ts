@@ -29,7 +29,26 @@ describe('reconcilePendingAssetTagDrafts', () => {
 
     expect(result).toEqual({
       tagIds: ['tag-selected'],
-      newTags: [{ displayName: 'Camp / Kitchen', color: '#2f80ed' }]
+      newTags: [{ displayName: 'Camp / Kitchen', color: '#2F80ED' }]
+    });
+  });
+
+  it('drops invalid stale colors before creating pending tags', () => {
+    const result = reconcilePendingAssetTagDrafts(
+      [],
+      [],
+      [
+        { displayName: ' Travel ', color: ' blue ' },
+        { displayName: 'Medical', color: '00aa88' }
+      ]
+    );
+
+    expect(result).toEqual({
+      tagIds: [],
+      newTags: [
+        { displayName: 'Travel' },
+        { displayName: 'Medical', color: '#00AA88' }
+      ]
     });
   });
 });

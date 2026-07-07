@@ -33,9 +33,18 @@ export function reconcilePendingAssetTagDrafts(
       continue;
     }
     pendingKeys.add(key);
-    const color = pending.color?.trim();
+    const color = normalizeTagColor(pending.color ?? '');
     newTags.push(color ? { displayName, color } : { displayName });
   }
 
   return { tagIds: Array.from(tagIds), newTags };
+}
+
+function normalizeTagColor(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const match = /^#?([0-9a-fA-F]{6})$/.exec(trimmed);
+  return match ? `#${match[1].toUpperCase()}` : undefined;
 }

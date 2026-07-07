@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyInlineAssetTagResolution,
   canResolveInlineAssetTag,
+  createPendingAssetTags,
   reconcileCreatedAssetTags,
   reconcilePendingAssetTagDrafts,
   resolveInlineAssetTag
@@ -120,4 +121,45 @@ describe('asset tag draft resolution', () => {
       pendingTags: [{ displayName: 'Travel' }]
     });
   });
+
+  it('drops invalid stale colors before creating pending tags', () => {
+    expect(reconcilePendingAssetTagDrafts({
+      selectedTagIds: [],
+      pendingTags: [
+        { displayName: ' Travel ', color: ' blue ' },
+        { displayName: 'Medical', color: '00aa88' }
+      ],
+      activeTags: []
+    })).toEqual({
+      tagIds: [],
+      pendingTags: [
+        { displayName: 'Travel' },
+        { displayName: 'Medical', color: '#00AA88' }
+      ]
+    });
+  });
+
+  it('sanitizes drafts at the tag creation boundary', async () => {
+    const repository = new FakeAssetTagCreateRepository();
+
+    await expect(createPendingAssetTags(repository, [
+      { displayName: ' ### ', color: '#2f80ed' },
+      { displayName: ' Travel ', color: ' blue ' },
+      { displayName: 'Medical', color: '00aa88' }
+    ])).resolves.toEqual(['tag-created-1', 'tag-created-2']);
+
+    expect(repository.createdTags).toEqual([
+      { displayName: 'Travel' },
+      { displayName: 'Medical', color: '#00AA88' }
+    ]);
+  });
 });
+
+class FakeAssetTagCreateRepository {
+  readonly createdTags: Array<{ readonly displayName: string; readonly color?: string }> = [];
+
+  async createAssetTag(input: { readonly displayName: string; readonly color?: string }) {
+    this.createdTags.push(input);
+    return { id: `tag-created-${this.createdTags.length.toString()}` };
+  }
+}

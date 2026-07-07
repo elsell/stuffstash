@@ -56,7 +56,7 @@ describe('UpdateAssetCommand', () => {
       description: 'Metal bottle',
       tagIds: ['tag-camping', 'tag-kitchen', 'tag-created-1']
     });
-    expect(repository.createdTags).toEqual([{ displayName: 'Travel', color: '#2f80ed' }]);
+    expect(repository.createdTags).toEqual([{ displayName: 'Travel', color: '#2F80ED' }]);
   });
 
   it('reuses active tags instead of creating duplicate pending tag drafts', async () => {
