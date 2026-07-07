@@ -21,26 +21,30 @@
 
   type Props = {
     previewJob: ImportJob | null;
+    availableSteps: Array<'source' | 'connect' | 'preview' | 'run'>;
     previewReady: boolean;
     previewStale: boolean;
     busy: boolean;
     onStart: () => void;
+    onNavigateStep: (step: 'source' | 'connect' | 'preview' | 'run') => void;
     onBack: () => void;
   };
 
   let {
     previewJob,
+    availableSteps,
     previewReady,
     previewStale,
     busy,
     onStart,
+    onNavigateStep,
     onBack
   }: Props = $props();
 </script>
 
 <Card.Root>
   <Card.Header>
-    <ImportFlowStepper current="preview" />
+    <ImportFlowStepper current="preview" {availableSteps} {onNavigateStep} />
     <Card.Title>Preview import</Card.Title>
     <Card.Description>Review the plan before starting the background import.</Card.Description>
   </Card.Header>
@@ -67,8 +71,20 @@
         </ul>
       </div>
       <ImportCountGrid cells={visiblePreviewCountCells(previewJob)} />
-      <ImportPreviewSamples preview={previewJob.preview} />
-      <ImportMessagesList messages={visiblePreviewMessages(previewJob)} emptyText="No blocking issues found." truncated={previewJob.preview.messagesTruncated} />
+      <section class="preview-issues-section" aria-label="Preview issues">
+        <div class="preview-section-heading">
+          <h3>Issues</h3>
+          <small>{previewJob.counts.warnings + previewJob.counts.errors === 0 ? 'No blockers' : 'Grouped by cause'}</small>
+        </div>
+        <ImportMessagesList messages={visiblePreviewMessages(previewJob)} emptyText="No blocking issues found." truncated={previewJob.preview.messagesTruncated} />
+      </section>
+      <section class="preview-samples-section" aria-label="Preview samples">
+        <div class="preview-section-heading">
+          <h3>Plan samples</h3>
+          <small>Showing representative records</small>
+        </div>
+        <ImportPreviewSamples preview={previewJob.preview} />
+      </section>
     {/if}
 
     <div class="action-row">
@@ -160,6 +176,32 @@
     font-size: 0.78rem;
   }
 
+  .preview-issues-section,
+  .preview-samples-section {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .preview-section-heading {
+    align-items: baseline;
+    border-top: 1px solid hsl(var(--border));
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    padding-top: 0.85rem;
+  }
+
+  .preview-section-heading h3 {
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .preview-section-heading small {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.78rem;
+  }
+
   @media (max-width: 860px) {
     .action-row {
       align-items: flex-start;
@@ -176,5 +218,10 @@
       justify-items: start;
     }
 
+    .preview-section-heading {
+      align-items: flex-start;
+      display: grid;
+      gap: 0.2rem;
+    }
   }
 </style>

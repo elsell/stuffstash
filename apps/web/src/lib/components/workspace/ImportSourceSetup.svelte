@@ -15,6 +15,7 @@
 
   type Props = {
     sourceChoice: ImportSourceChoice;
+    availableSteps: Array<'source' | 'connect' | 'preview' | 'run'>;
     baseUrl: string;
     username: string;
     password: string;
@@ -27,11 +28,13 @@
     inventory: Inventory | null;
     onFileSelected: (event: Event) => void;
     onConfirmSource: () => void;
+    onNavigateStep: (step: 'source' | 'connect' | 'preview' | 'run') => void;
     onBack: () => void;
   };
 
   let {
     sourceChoice,
+    availableSteps,
     baseUrl = $bindable(''),
     username = $bindable(''),
     password = $bindable(''),
@@ -44,13 +47,14 @@
     inventory,
     onFileSelected,
     onConfirmSource,
+    onNavigateStep,
     onBack
   }: Props = $props();
 </script>
 
 <Card.Root>
   <Card.Header>
-    <ImportFlowStepper current="connect" />
+    <ImportFlowStepper current="connect" {availableSteps} {onNavigateStep} />
     <Card.Title>{sourceChoice === 'homebox_live' ? 'Connect to Homebox' : 'Upload Homebox CSV'}</Card.Title>
     <Card.Description>Stuff Stash will verify the source and build a preview.</Card.Description>
   </Card.Header>

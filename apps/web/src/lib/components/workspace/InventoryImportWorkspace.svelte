@@ -39,6 +39,7 @@
   import ImportSourceSetup from './ImportSourceSetup.svelte';
 
   type FlowStep = 'history' | 'source' | 'setup' | 'preview' | 'run' | 'detail';
+  type ImportFlowStepID = 'source' | 'connect' | 'preview' | 'run';
 
   const MAX_CSV_BYTES = 10 * 1024 * 1024;
 
@@ -102,6 +103,7 @@
   let canConfirmSource = $derived(
     Boolean(canCreateImports && (sourceChoice === 'homebox_csv' ? contentBase64 : baseUrl.trim() && username.trim() && password))
   );
+  let availableWizardSteps = $derived(reachableWizardSteps());
 
   $effect(() => {
     tenantId;
@@ -573,17 +575,52 @@
     return workspaceRouteHref({ mode: 'import', importSource: importSourceRouteForChoice(choice) }, tenantId, inventory?.id ?? null);
   }
 
+  function reachableWizardSteps(): ImportFlowStepID[] {
+    const steps: ImportFlowStepID[] = ['source'];
+    if (sourceChoice) {
+      steps.push('connect');
+    }
+    if (previewJob) {
+      steps.push('preview');
+    }
+    if (startedJob) {
+      steps.push('run');
+    }
+    return steps;
+  }
+
+  function navigateWizardStep(target: ImportFlowStepID): void {
+    if (!canCreateImports || !availableWizardSteps.includes(target) || busy) return;
+    error = '';
+    notice = '';
+    if (target === 'source') {
+      onImportSourceChange(null);
+      step = 'source';
+      return;
+    }
+    if (target === 'connect') {
+      onImportSourceChange(importSourceRouteForChoice(sourceChoice));
+      step = 'setup';
+      return;
+    }
+    if (target === 'preview' && previewJob) {
+      onImportSourceChange(importSourceRouteForChoice(sourceChoice));
+      step = 'preview';
+      return;
+    }
+    if (target === 'run' && startedJob) {
+      onImportSourceChange(null);
+      step = 'run';
+    }
+  }
+
   function returnToSourceChoice(): void {
     onImportSourceChange(null);
     step = 'source';
   }
 
   function returnToSetupFromPreview(): void {
-    if (sourceChoice === 'homebox_live') {
-      password = '';
-    }
-    previewJob = null;
-    previewedRequestKey = '';
+    onImportSourceChange(importSourceRouteForChoice(sourceChoice));
     step = 'setup';
   }
 
@@ -684,11 +721,13 @@
       liveHref={importSourceHref('homebox_live')}
       csvHref={importSourceHref('homebox_csv')}
       onChoose={chooseSourceFromLink}
+      onNavigateStep={navigateWizardStep}
       onCancel={returnToHistory}
     />
   {:else if step === 'setup'}
     <ImportSourceSetup
       {sourceChoice}
+      availableSteps={availableWizardSteps}
       bind:baseUrl
       bind:username
       bind:password
@@ -701,20 +740,25 @@
       {inventory}
       onFileSelected={(event) => { void handleFile(event); }}
       onConfirmSource={() => { void confirmSource(); }}
+      onNavigateStep={navigateWizardStep}
       onBack={returnToSourceChoice}
     />
   {:else if step === 'preview'}
     <ImportPreviewPanel
       {previewJob}
+      availableSteps={availableWizardSteps}
       {previewReady}
       {previewStale}
       {busy}
       onStart={() => { void start(); }}
+      onNavigateStep={navigateWizardStep}
       onBack={returnToSetupFromPreview}
       />
   {:else if step === 'run' && startedJob}
     <ImportJobRunHandoff
       job={startedJob}
+      availableSteps={availableWizardSteps}
+      onNavigateStep={navigateWizardStep}
       onViewHistory={returnToHistory}
     />
   {:else if step === 'detail' && selectedJob}

@@ -10,15 +10,16 @@
     liveHref: string;
     csvHref: string;
     onChoose: (event: MouseEvent, choice: ImportSourceChoice) => void;
+    onNavigateStep: (step: 'source' | 'connect' | 'preview' | 'run') => void;
     onCancel: () => void;
   };
 
-  let { liveHref, csvHref, onChoose, onCancel }: Props = $props();
+  let { liveHref, csvHref, onChoose, onNavigateStep, onCancel }: Props = $props();
 </script>
 
 <Card.Root>
   <Card.Header>
-    <ImportFlowStepper current="source" />
+    <ImportFlowStepper current="source" availableSteps={['source']} {onNavigateStep} />
     <Card.Title>Choose import method</Card.Title>
     <Card.Description>Pick the path that matches the data you have right now.</Card.Description>
   </Card.Header>

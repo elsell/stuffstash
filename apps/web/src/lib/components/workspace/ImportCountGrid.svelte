@@ -44,16 +44,35 @@
 
   @media (max-width: 860px) {
     .summary-grid {
-      gap: 0.5rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0;
+      grid-template-columns: 1fr;
     }
 
     .summary-grid div {
-      padding: 0.65rem 0.7rem;
+      align-items: baseline;
+      border: 0;
+      border-top: 1px solid hsl(var(--border));
+      border-radius: 0;
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: minmax(7rem, auto) minmax(0, 1fr);
+      padding: 0.65rem 0;
+    }
+
+    .summary-grid div:first-child {
+      border-top: 0;
     }
 
     .summary-grid strong {
-      font-size: 1.15rem;
+      font-size: 0.98rem;
+      order: 2;
+    }
+
+    .summary-grid span {
+      font-size: 0.76rem;
+      font-weight: 700;
+      order: 1;
+      text-transform: uppercase;
     }
   }
 </style>

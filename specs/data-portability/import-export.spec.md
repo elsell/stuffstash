@@ -261,6 +261,10 @@ The durable import UI must optimize for low-friction, low-cognition user workflo
 The durable import UI must live inside the inventory workspace.
 The guided new-import flow must show one primary step per screen and make the user's place in the flow visible without requiring them to remember the sequence.
 The guided flow must use spatial progress cues for the current step and must not duplicate that cue with redundant visible copy such as `Step 3 of 4` beside the same step indicator.
+The guided flow step indicator must be interactive navigation for reachable steps, not static explanatory text.
+Users must be able to return to prior source-selection, source-setup, and preview-review steps without discarding the active wizard session's non-secret draft state or existing preview plan.
+The step indicator must not allow jumping forward to states that do not yet exist; preview requires an existing preview plan, and run requires a started durable job.
+Changing source inputs, source options, selected file metadata, selected file content, image options, security options, or source fingerprint after returning to setup must make the existing preview stale and require a new preview before the import can start.
 Import source text inputs must avoid mobile auto-capitalization, autocorrection, and spellcheck where they collect URLs, emails, usernames, passwords, or source identifiers.
 The UI must present source snapshots, imported records, and audit links in user-facing language. Internal resource IDs, source fingerprints, and source entity IDs may be available as secondary diagnostic metadata where useful, but they must not be the primary label for records or trust signals.
 Removing an import job from visible history must require an explicit confirmation in the UI. The confirmation must state that imported records and audit history remain.

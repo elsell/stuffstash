@@ -9,15 +9,17 @@
 
   type Props = {
     job: ImportJob;
+    availableSteps?: Array<'source' | 'connect' | 'preview' | 'run'>;
+    onNavigateStep?: (step: 'source' | 'connect' | 'preview' | 'run') => void;
     onViewHistory: () => void;
   };
 
-  let { job, onViewHistory }: Props = $props();
+  let { job, availableSteps = ['run'], onNavigateStep, onViewHistory }: Props = $props();
 </script>
 
 <Card.Root>
   <Card.Header>
-    <ImportFlowStepper current="run" />
+    <ImportFlowStepper current="run" {availableSteps} {onNavigateStep} />
     <Card.Title>{isTerminal(job) ? 'Import finished' : 'Import is running'}</Card.Title>
     <Card.Description>
       {isTerminal(job) ? statusSentence(job) : 'You can leave this page and return from import history.'}

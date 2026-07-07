@@ -381,6 +381,32 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     });
   });
 
+  it('keeps preview issues above plan samples so warnings are not buried', async () => {
+    await mountImportWorkspace(new PreviewMessageOnlyRepository(structuredClone(seed)));
+
+    await openLiveHomeboxSetup();
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-url')!, 'http://homebox.local:7744');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-user')!, 'codex@jsksell.com');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-password')!, 'asldfj3290f!');
+
+    await waitFor(() => {
+      expect(buttonContaining('Confirm connection').disabled).toBe(false);
+    });
+    buttonContaining('Confirm connection').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Preview import');
+      expect(document.body.textContent).toContain('Attachment will be skipped');
+      expect(document.body.textContent).toContain('Plan samples');
+    });
+
+    const issuesSection = document.body.querySelector<HTMLElement>('.preview-issues-section');
+    const samplesSection = document.body.querySelector<HTMLElement>('.preview-samples-section');
+    expect(issuesSection).toBeTruthy();
+    expect(samplesSection).toBeTruthy();
+    expect(issuesSection!.compareDocumentPosition(samplesSection!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('keeps preview hierarchy user-facing instead of showing raw parent source IDs', async () => {
     await mountImportWorkspace(new PreviewHierarchyRepository(structuredClone(seed)));
 
@@ -538,10 +564,9 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     exactButton('Back').click();
     await waitFor(() => {
       expect(document.body.textContent).toContain('Connect to Homebox');
-      expect(document.body.querySelector<HTMLInputElement>('#homebox-password')?.value).toBe('');
-      expect(buttonContaining('Confirm connection').disabled).toBe(true);
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-password')?.value).toBe('asldfj3290f!');
+      expect(buttonContaining('Confirm connection').disabled).toBe(false);
     });
-    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-password')!, 'asldfj3290f!');
     setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-url')!, 'http://homebox.changed.local:7744');
 
     await waitFor(() => {
@@ -585,10 +610,9 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     exactButton('Back').click();
     await waitFor(() => {
       expect(document.body.textContent).toContain('Connect to Homebox');
-      expect(document.body.querySelector<HTMLInputElement>('#homebox-password')?.value).toBe('');
-      expect(buttonContaining('Confirm connection').disabled).toBe(true);
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-password')?.value).toBe('asldfj3290f!');
+      expect(buttonContaining('Confirm connection').disabled).toBe(false);
     });
-    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-password')!, 'asldfj3290f!');
     checkboxContaining('Import photos when Homebox provides them').click();
 
     await waitFor(() => {
@@ -605,6 +629,49 @@ describe('InventoryImportWorkspace import setup and preview', () => {
     });
     expect(repository.previewInputs[1]).toMatchObject({
       includeImages: false
+    });
+  });
+
+  it('lets users navigate reachable wizard steps without losing preview progress', async () => {
+    const repository = new ImportPreviewRecordingRepository(structuredClone(seed));
+    await mountImportWorkspace(repository);
+
+    await openLiveHomeboxSetup();
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-url')!, 'http://homebox.local:7744');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-user')!, 'codex@jsksell.com');
+    setInputValue(document.body.querySelector<HTMLInputElement>('#homebox-password')!, 'asldfj3290f!');
+
+    await waitFor(() => {
+      expect(buttonContaining('Confirm connection').disabled).toBe(false);
+    });
+    expect(buttonsNamed('Preview')).toHaveLength(0);
+
+    buttonContaining('Confirm connection').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Preview import');
+      expect(buttonContaining('Start background import').disabled).toBe(false);
+      expect(buttonsNamed('Preview')).toHaveLength(1);
+    });
+
+    exactButton('Connect').click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Connect to Homebox');
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-url')?.value).toBe('http://homebox.local:7744');
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-user')?.value).toBe('codex@jsksell.com');
+      expect(document.body.querySelector<HTMLInputElement>('#homebox-password')?.value).toBe('asldfj3290f!');
+    });
+
+    exactButton('Preview').click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Preview import');
+      expect(buttonContaining('Start background import').disabled).toBe(false);
+    });
+    expect(repository.previewInputs).toHaveLength(1);
+
+    exactButton('Source').click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Choose import method');
     });
   });
 
