@@ -946,7 +946,9 @@ function voiceFailureProgressLabel(code: string): string {
 }
 
 function safeBoundedText(value: string, maxLength: number): string {
-  const normalized = value.replace(/\s+/g, ' ').trim();
+  const normalized = redactUnsafeVoiceText(value)
+    .replace(/\s+/g, ' ')
+    .trim();
   if (normalized.length <= maxLength) {
     return normalized;
   }
@@ -954,9 +956,7 @@ function safeBoundedText(value: string, maxLength: number): string {
 }
 
 function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
-  const normalized = value
-    .replace(/\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+/gi, '$1: [redacted]')
-    .replace(/bearer\s+[a-z0-9._-]+/gi, 'bearer [redacted]')
+  const normalized = redactUnsafeVoiceText(value)
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .replace(/[ \t]{2,}/g, ' ')
@@ -966,4 +966,11 @@ function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
     return normalized;
   }
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function redactUnsafeVoiceText(value: string): string {
+  return value
+    .replace(/\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+/gi, '$1: [redacted]')
+    .replace(/bearer\s+[a-z0-9._-]+/gi, 'bearer [redacted]')
+    .replace(/\b(raw prompt|stack trace|raw query|raw transcript|provider session id)\b/gi, '[redacted]');
 }

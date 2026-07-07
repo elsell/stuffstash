@@ -1055,6 +1055,34 @@ describe('RealtimeVoiceSessionController', () => {
     expect(visibleProgressLabels.join(' ')).not.toContain('bearer secret');
     expect(states.at(-1)?.progressSteps?.join(' ')).not.toContain('bearer secret');
   });
+
+  it('redacts unsafe agent progress text before it reaches visible state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'agent.progress',
+          seq: 1,
+          sessionId: 'session-1',
+          status: 'exploring',
+          message: 'raw prompt bearer abc123 stack trace provider session id: gemini-live-1'
+        },
+        { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+    const visibleText = `${states.at(-1)?.progressLabel ?? ''} ${(states.at(-1)?.progressSteps ?? []).join(' ')}`;
+
+    expect(visibleText).toContain('[redacted]');
+    expect(visibleText).not.toContain('raw prompt');
+    expect(visibleText).not.toContain('bearer abc123');
+    expect(visibleText).not.toContain('stack trace');
+    expect(visibleText).not.toContain('gemini-live-1');
+  });
 });
 
 class FakeRecorder implements VoiceAudioRecorder {
