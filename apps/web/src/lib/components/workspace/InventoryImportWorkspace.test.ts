@@ -170,7 +170,8 @@ describe('InventoryImportWorkspace import setup and preview', () => {
       expect(document.body.textContent).toContain('Preview import');
       expect(document.body.textContent).toContain('Private-network URLs allowed');
       expect(document.body.textContent).toContain('Self-signed TLS allowed');
-      expect(document.body.textContent).toContain('Photos on');
+      expect(document.body.textContent).toContain('Live Homebox connection');
+      expect(document.body.textContent).not.toContain('Photos on');
       expect(buttonContaining('Start background import').disabled).toBe(false);
     });
     const sourceOptions = document.body.querySelector<HTMLUListElement>('ul[aria-label="Selected source options"]');
@@ -272,8 +273,7 @@ describe('InventoryImportWorkspace import setup and preview', () => {
 
     await waitFor(() => {
       expect(repository.previewInputs).toHaveLength(1);
-      expect(document.body.textContent).toContain('photos unavailable');
-      expect(document.body.textContent).toContain('Photos unavailable from CSV');
+      expect(document.body.textContent).toContain('Photos are not included in Homebox CSV exports');
       expect(document.body.textContent).not.toContain('images disabled');
     });
   });

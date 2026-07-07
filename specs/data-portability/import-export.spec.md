@@ -270,6 +270,7 @@ Changing source inputs, source options, selected file metadata, selected file co
 Import source text inputs must avoid mobile auto-capitalization, autocorrection, and spellcheck where they collect URLs, emails, usernames, passwords, or source identifiers.
 The UI must present source snapshots, imported records, and audit links in user-facing language. Internal resource IDs, source fingerprints, and source entity IDs may be available as secondary diagnostic metadata where useful, but they must not be the primary label for records or trust signals.
 Removing an import job from visible history must require an explicit confirmation in the UI. The confirmation must state that imported records and audit history remain.
+Removing an import job from visible history must use a focused confirmation dialog or overlay. It must not replace the import history or detail surface with a full-page confirmation step.
 State-changing import actions must show an in-progress affordance, such as an animated spinner and operation-specific label, while the operation is pending; disabling controls alone is not sufficient feedback.
 Import refresh and detail-loading actions must also show a visible loading affordance while the read operation is pending so users can distinguish a delayed response from an inert control.
 It must preserve inventory context throughout source setup, preview, running progress, result review, and history.
@@ -290,6 +291,9 @@ The import history screen must summarize the inventory's import state before the
 The import history screen must not repeat page-level headings such as `Imports` and `Import history` as competing primary hierarchy. The page title owns the surface; the history content below it should start with controls, status filters, current work, or the ledger.
 History status summaries must be aligned, compact controls when they filter or jump the page state. They must expose selected state instead of looking like decorative statistics, and their count/icon alignment must make each summary read as a single clickable control.
 History rows must use user-facing status language and must not require users to know durable-job implementation statuses.
+History rows should use `Source` as the first ledger column because import sources are pluggable. Source cells should show the source name, instance identity, and source version when available; method details such as live connection, CSV upload, image options, and default network protections must not compete with the source identity unless they require user attention.
+History rows should avoid repeating the same warning or result state across multiple columns. A warning-level completed import may show a single amber issue indicator and concise result text; detailed warning counts and explanations belong in job detail.
+History row timestamps should favor the user-actionable temporal state, such as completed time for terminal jobs or elapsed/progress state for active jobs. Actor labels are secondary metadata and must not make the timestamp column visually heavy.
 Previewed jobs are drafts waiting for confirmation, not completed history; the UI must present them separately from terminal history and make them easy to resume.
 If an inventory has active import jobs, the UI must make those jobs easy to resume from the import surface before encouraging a new import.
 Active jobs and preview drafts must be grouped as current work ahead of completed history so users can resume, inspect, or cancel ongoing work before starting another import.
@@ -298,6 +302,9 @@ Warnings and blocking errors must be visually separated. Warnings are non-blocki
 The history page may show a compact action-required alert before the ledger, but it must not render a second row list that pushes the actual history ledger below the first viewport.
 In history summaries and filters, `Completed` means a succeeded import without action-required severity. Succeeded imports with warning-only severity may still count as completed; succeeded imports with returned blocking errors or stale error counts must count as action-required instead.
 Import detail must preserve the same severity model as history: warning-only runs may show an amber review callout, while blocking errors, failed imports, and discard-cleanup failures must use action-required language and red destructive/error emphasis.
+Import detail must avoid repeating the same state in the heading, badge, metric strip, and issue callout. The top summary should make source identity, final state, changed records, and issue severity clear with as few repeated labels as practical.
+Import detail must distinguish source identity from import method. For Homebox, the source is Homebox plus the safe instance URL and version when available; live connection or CSV upload are method details.
+Default safe options such as normal network protections should not be surfaced as standalone source facts unless the user changed a risky option or needs to understand a failure.
 When import detail counts and returned messages disagree, the web UI must render the highest safe severity from terminal job status, count fields, and returned message severities; a returned error message is action-required, and a returned warning message is warning-level unless action-required status or counts are also present.
 The history ledger should be compact enough that recent runs remain visible in the first screen on ordinary desktop viewports whenever there is no active blocking work, and terminal rows should avoid wall-of-text descriptions by reserving detailed issue lists for job detail.
 Users may explicitly switch the ledger to action-required or warning history when they want the full row-level context for jobs that need review.
@@ -413,6 +420,7 @@ Import job detail must include:
 - Cancellation and discard outcome when applicable.
 - Link or navigation path to audit history.
 - Live navigation for audit history and imported-record actions when the web app can handle the target in the current workspace, with normal links retained as reload and deep-link fallback.
+- URL-addressable detail state for the selected import job and selected detail tab so users can reload or share the current import detail context without losing their place.
 
 When a job completed with partial progress discarded, job detail may acknowledge that records were created and discarded, but it must not render those discarded resources as normal openable inventory records.
 

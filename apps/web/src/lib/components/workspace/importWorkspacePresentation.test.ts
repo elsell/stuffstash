@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ImportJob } from '$lib/domain/inventory';
-import { visiblePreviewMessages } from './importWorkspacePresentation';
+import { sourceDescription, sourceOptionsSummary, visiblePreviewMessages } from './importWorkspacePresentation';
 
 describe('importWorkspacePresentation', () => {
   it('deduplicates fallback job messages before limiting preview-visible messages', () => {
@@ -10,6 +10,18 @@ describe('importWorkspacePresentation', () => {
     ]);
 
     expect(visiblePreviewMessages(job).map((item) => item.sourceId)).toEqual(['duplicate-source', 'distinct-source']);
+  });
+
+  it('keeps default live Homebox source copy focused on source identity instead of noisy options', () => {
+    const job = importJobWithMessages([]);
+    job.source.baseUrl = 'https://stuff.jsksell.com/api/v1';
+    job.source.version = 'v0.24.2';
+    job.source.imageImport = 'enabled';
+    job.source.allowPrivateNetwork = false;
+    job.source.allowInsecureTLS = false;
+
+    expect(sourceDescription(job)).toBe('stuff.jsksell.com · v0.24.2');
+    expect(sourceOptionsSummary(job)).toEqual(['Live Homebox connection']);
   });
 });
 

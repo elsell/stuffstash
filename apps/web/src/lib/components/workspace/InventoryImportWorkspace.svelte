@@ -684,7 +684,7 @@
       <h1>{step === 'history' ? 'Imports' : step === 'detail' ? 'Import details' : step === 'run' ? 'Import running' : 'New import'}</h1>
       <p>
         {#if step === 'history'}
-          {`Review runs for ${inventory?.name ?? 'this inventory'} and resume current work.`}
+          {`View current and past data imports for ${inventory?.name ?? 'this inventory'}.`}
         {:else if step === 'detail'}
           {`Import run for ${inventory?.name ?? 'this inventory'}.`}
         {:else if step === 'run'}
@@ -727,19 +727,9 @@
         </div>
       </Card.Content>
     </Card.Root>
-  {:else if cancelIntent || removeIntent}
-    <ImportJobConfirmationPanel
-      cancelJob={cancelIntent?.job ?? null}
-      removeJob={removeIntent?.job ?? null}
-      {busy}
-      onCancelJob={(job, mode) => { void cancel(job, mode); }}
-      onDismissCancel={() => (cancelIntent = null)}
-      onRemoveJob={(job) => { void removeFromHistory(job); }}
-      onDismissRemove={() => (removeIntent = null)}
-    />
   {/if}
 
-  {#if canViewImports && !cancelIntent && !removeIntent}
+  {#if canViewImports}
     {#if step === 'history'}
       <ImportJobHistory
         {jobs}
@@ -823,6 +813,37 @@
     />
     {/if}
   {/if}
+
+  {#if canViewImports && (cancelIntent || removeIntent)}
+    <div class="import-confirmation-overlay" role="presentation">
+      <div
+        class="import-confirmation-backdrop"
+        aria-hidden="true"
+        onclick={() => {
+          if (!busy) {
+            cancelIntent = null;
+            removeIntent = null;
+          }
+        }}
+      ></div>
+      <div
+        class="import-confirmation-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={cancelIntent ? 'Cancel import' : 'Remove import from history'}
+      >
+        <ImportJobConfirmationPanel
+          cancelJob={cancelIntent?.job ?? null}
+          removeJob={removeIntent?.job ?? null}
+          {busy}
+          onCancelJob={(job, mode) => { void cancel(job, mode); }}
+          onDismissCancel={() => (cancelIntent = null)}
+          onRemoveJob={(job) => { void removeFromHistory(job); }}
+          onDismissRemove={() => (removeIntent = null)}
+        />
+      </div>
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -851,6 +872,28 @@
 
   .toolbar-actions {
     justify-content: flex-end;
+  }
+
+  .import-confirmation-overlay {
+    align-items: center;
+    display: grid;
+    inset: 0;
+    justify-items: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 60;
+  }
+
+  .import-confirmation-backdrop {
+    background: color-mix(in oklab, var(--background) 72%, transparent);
+    inset: 0;
+    position: absolute;
+  }
+
+  .import-confirmation-dialog {
+    max-width: min(34rem, 100%);
+    position: relative;
+    width: 100%;
   }
 
   h1,

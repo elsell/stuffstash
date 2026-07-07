@@ -158,13 +158,13 @@
           </div>
         {/if}
         <div class="detail-summary-strip" aria-label="Import run summary">
-          <div class={`summary-tile ${issueTone}`}>
-            <span>Issues</span>
-            <strong>{issueCountSummary(job)}</strong>
-          </div>
           <div class="summary-tile">
             <span>Changed</span>
             <strong>{changedRecordSummary(job)}</strong>
+          </div>
+          <div class={`summary-tile ${issueTone}`}>
+            <span>Issues</span>
+            <strong>{issueCount === 0 ? 'No issues' : issueTone === 'action' ? 'Action required' : issueCountSummary(job)}</strong>
           </div>
         </div>
         {#if issueCount > 0}
@@ -172,7 +172,7 @@
             <AlertCircle class="issue-callout-icon" size={18} aria-hidden="true" />
             <div>
               <strong>{issueCountSummary(job)}</strong>
-              <span>{issueTone === 'action' ? 'Review blocking issues before treating this import as complete.' : 'Review warnings before treating this import as clean.'}</span>
+              <span>{issueTone === 'action' ? 'Open Issues to review what needs action.' : 'Open Issues to review warning groups before treating this import as clean.'}</span>
             </div>
             {#if selectedTab !== 'issues'}
               <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
@@ -339,8 +339,8 @@
         <div class="detail-side" aria-label="Import controls and source">
           <section class="source-options-section" aria-label="Import source options">
             <div class="sample-heading">
-              <h3>Source</h3>
-              <small>{job.source.type === 'legacy_homebox_csv' ? 'File snapshot' : 'Live connection'}</small>
+              <h3>Method</h3>
+              <small>{job.source.name}</small>
             </div>
             <ul class="source-option-list" aria-label="Selected source options">
               {#each sourceOptionsSummary(job) as option}

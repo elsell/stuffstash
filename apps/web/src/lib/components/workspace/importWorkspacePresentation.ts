@@ -166,27 +166,24 @@ export function progressTimeline(job: ImportJob): ImportJob['progressHistory'] {
 }
 
 export function sourceDescription(job: ImportJob): string {
-  const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : compactSourceURL(job.source.baseUrl) || 'Live connection'];
+  const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : compactSourceURL(job.source.baseUrl) || 'Homebox'];
   if (job.source.version) parts.push(job.source.version);
-  if (job.source.imageImport === 'enabled') parts.push('photos on');
-  if (job.source.imageImport === 'disabled') parts.push('photos off');
-  if (job.source.imageImport === 'unavailable') parts.push('photos unavailable');
   return parts.join(' · ');
 }
 
 export function sourceOptionsSummary(job: ImportJob): string[] {
   if (job.source.type === 'legacy_homebox_csv') {
-    return ['CSV import', 'Photos unavailable from CSV'];
+    return ['CSV upload', 'Photos are not included in Homebox CSV exports'];
   }
-  const options = [job.source.imageImport === 'disabled' ? 'Photos off' : 'Photos on'];
+  const options = ['Live Homebox connection'];
+  if (job.source.imageImport === 'disabled') {
+    options.push('Photo import disabled');
+  }
   if (job.source.allowPrivateNetwork) {
     options.push('Private-network URLs allowed');
   }
   if (job.source.allowInsecureTLS) {
     options.push('Self-signed TLS allowed');
-  }
-  if (!job.source.allowPrivateNetwork && !job.source.allowInsecureTLS) {
-    options.push('Standard network protections');
   }
   return options;
 }

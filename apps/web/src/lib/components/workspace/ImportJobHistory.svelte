@@ -130,6 +130,18 @@
   function jobHasReviewWarnings(job: ImportJob): boolean {
     return importIssueTone(job) === 'warning';
   }
+
+  function openHistoryRow(event: MouseEvent, job: ImportJob): void {
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    if (target?.closest('button, a')) return;
+    onOpenJob(job);
+  }
+
+  function openHistoryRowFromKeyboard(event: KeyboardEvent, job: ImportJob): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    onOpenJob(job);
+  }
 </script>
 
 <div class={jobs.length > 0 && currentWorkJobs.length === 0 ? 'history-header compact' : 'history-header'}>
@@ -339,15 +351,22 @@
       </div>
       <div class="history-ledger" role="table" aria-label="Import history">
         <div class="history-ledger-head" role="row">
-          <span role="columnheader">Import</span>
+          <span role="columnheader">Source</span>
           <span role="columnheader">Result</span>
           <span role="columnheader">Issues</span>
-          <span role="columnheader">Completed</span>
+          <span role="columnheader">When</span>
           <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
-          <div class={jobRequiresAction(job) ? 'history-row attention-row' : jobHasReviewWarnings(job) ? 'history-row warning-row' : 'history-row'} role="row">
-            <div class="status-cell" role="cell" data-cell-label="Import">
+          <div
+            class={jobRequiresAction(job) ? 'history-row attention-row clickable-row' : jobHasReviewWarnings(job) ? 'history-row warning-row clickable-row' : 'history-row clickable-row'}
+            role="row"
+            tabindex="0"
+            aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'Review Details for' : 'View details for', job)}
+            onclick={(event) => openHistoryRow(event, job)}
+            onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
+          >
+            <div class="status-cell" role="cell" data-cell-label="Source">
               <span class="status-icon">
                 {#if jobRequiresAction(job)}
                   <XCircle size={18} aria-hidden="true" />
@@ -361,12 +380,11 @@
               </span>
               <div class="history-title">
                 <strong>{job.source.name}</strong>
-                <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
                 <span>{sourceDescription(job)}</span>
               </div>
             </div>
             <div class="result-cell" role="cell" data-cell-label="Result">
-              <span>{statusSentence(job)}</span>
+              <span><Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge> {statusSentence(job)}</span>
               <span>
                 {historyCountSummary(job)}
                 {#if job.cancellationMode === 'keep_partial_progress'} · Partial progress kept{/if}
@@ -378,13 +396,13 @@
                 <Badge variant="destructive">Action required</Badge>
                 <span>{attentionSummary(job)}</span>
               {:else if jobHasReviewWarnings(job)}
-                <Badge variant="secondary">Warnings</Badge>
-                <span>{attentionSummary(job)}</span>
+                <Badge variant="secondary" class="warning-badge">Warnings</Badge>
+                <span>Review before treating as clean</span>
               {:else}
                 <span>No issues</span>
               {/if}
             </div>
-            <div class="time-cell" role="cell" data-cell-label="Completed">
+            <div class="time-cell" role="cell" data-cell-label="When">
               {#if job.completedAt}
                 <span>{jobTimeLabel('', job.completedAt).trim()}</span>
               {:else if job.startedAt}
@@ -717,7 +735,7 @@
   .history-ledger .history-row {
     display: grid;
     gap: 0.65rem;
-    grid-template-columns: minmax(11rem, 1.05fr) minmax(13rem, 1.2fr) minmax(9rem, 0.76fr) minmax(9rem, 0.8fr) auto;
+    grid-template-columns: minmax(12rem, 1.12fr) minmax(14rem, 1.2fr) minmax(8.5rem, 0.72fr) minmax(8rem, 0.64fr) auto;
   }
 
   .history-ledger-head {
@@ -751,7 +769,11 @@
 
   .result-cell span:first-child,
   .issue-cell span:first-child {
+    align-items: center;
     color: var(--foreground);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
   }
 
   .result-cell span,
@@ -769,12 +791,26 @@
     color: var(--color-warning-foreground);
   }
 
+  :global(.warning-badge) {
+    background: color-mix(in oklab, var(--color-warning) 16%, transparent);
+    color: var(--color-warning-foreground);
+  }
+
   .issue-cell.action span {
     color: var(--destructive);
   }
 
   .history-row:hover {
     background: color-mix(in oklab, var(--muted) 25%, transparent);
+  }
+
+  .clickable-row {
+    cursor: pointer;
+  }
+
+  .clickable-row:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   .history-row.attention-row {

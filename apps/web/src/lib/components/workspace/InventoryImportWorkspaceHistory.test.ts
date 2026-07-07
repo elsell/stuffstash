@@ -321,8 +321,9 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('2 assets skipped');
       expect(document.body.textContent).toContain('1 photo/file skipped');
       expect(document.body.textContent).toContain('2 warnings');
-      expect(document.body.textContent).toContain('Source');
-      expect(document.body.textContent).toContain('Photos on');
+      expect(document.body.textContent).toContain('Method');
+      expect(document.body.textContent).toContain('Live Homebox connection');
+      expect(document.body.textContent).not.toContain('Photos on');
       expect(document.body.textContent).toContain('Private-network URLs allowed');
       expect(document.body.textContent).toContain('Self-signed TLS allowed');
       expect(document.body.textContent).toContain('Preview plan');
@@ -342,7 +343,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Imported records and audit history will remain.');
     });
 
-    buttonContaining('Remove from history').click();
+    confirmationButton('Remove from history').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('No import runs yet');
@@ -501,7 +502,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Clean Homebox');
       expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).toContain('Action required');
-      expect(document.body.textContent).toContain('2 warnings');
+      expect(historyLedgerText()).toContain('Review before treating as clean');
       expect(buttonContaining('Review Details')).toBeTruthy();
       expect(historyLedgerText()).toContain('Clean Homebox');
       expect(historyLedgerText()).toContain('Completed with warnings.');
@@ -714,9 +715,11 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Remove Homebox from history?');
       expect(document.body.textContent).toContain('This only removes the run from the import history list.');
       expect(document.body.textContent).toContain('Keep in history');
+      expect(document.body.textContent).toContain('Runs');
+      expect(document.body.textContent).toContain('Completed with warnings.');
     });
 
-    buttonContaining('Keep in history').click();
+    confirmationButton('Keep in history').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
@@ -730,7 +733,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Remove Homebox from history?');
     });
 
-    buttonContaining('Remove from history').click();
+    confirmationButton('Remove from history').click();
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('No import runs yet');
@@ -762,7 +765,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Remove Homebox from history?');
     });
 
-    buttonContaining('Remove from history').click();
+    confirmationButton('Remove from history').click();
 
     await waitFor(() => {
       expect(buttonContaining('Removing from history').disabled).toBe(true);
@@ -900,7 +903,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Attachment could not be imported');
       expect(document.body.textContent).toContain('Homebox reported a file without downloadable bytes.');
       expect(document.body.textContent).toContain('receipt.png');
-      expect(document.body.textContent).toContain('Review warnings before treating this import as clean.');
+      expect(document.body.textContent).toContain('Open Issues to review warning groups before treating this import as clean.');
       expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
       expect(document.body.querySelector('.summary-tile.warning')).toBeTruthy();
@@ -953,7 +956,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Attachment could not be imported');
-      expect(document.body.textContent).toContain('Review warnings before treating this import as clean.');
+      expect(document.body.textContent).toContain('Open Issues to review warning groups before treating this import as clean.');
       expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
     });
@@ -1158,7 +1161,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).not.toContain('Imported records');
     });
 
-    buttonContaining('Details').click();
+    document.body.querySelector<HTMLElement>('.history-row.clickable-row')?.click();
 
     await waitFor(() => {
       expect(repository.detailCalls).toBe(1);
@@ -1255,7 +1258,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('cleanup will retry');
-      expect(document.body.textContent).toContain('Review blocking issues before treating this import as complete.');
+      expect(document.body.textContent).toContain('Open Issues to review what needs action.');
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeTruthy();
       expect(document.body.querySelector('.summary-tile.action')).toBeTruthy();
       expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
@@ -1388,6 +1391,17 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
 function historyLedgerText(): string {
   return document.body.querySelector('.history-ledger')?.textContent ?? '';
+}
+
+function confirmationButton(text: string): HTMLButtonElement {
+  const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+  const button = Array.from(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? []).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!button) {
+    throw new Error(`Missing confirmation button containing ${text}`);
+  }
+  return button;
 }
 
 function statusStripText(): string {
