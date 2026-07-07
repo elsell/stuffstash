@@ -983,6 +983,42 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-restore"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID tags */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-tags"];
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID tags */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-tags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID tags by tag ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id"];
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID tags by tag ID */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id"];
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo": {
         parameters: {
             query?: never;
@@ -1254,6 +1290,7 @@ export interface components {
             lifecycleState: string;
             parentAssetId?: string;
             primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
+            tags: components["schemas"]["CompactTag"][] | null;
             tenantId: string;
             title: string;
             updatedAt: string;
@@ -1280,6 +1317,17 @@ export interface components {
             parentAssetId?: string;
             primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
             title: string;
+            updatedAt: string;
+        };
+        AssetTagResponse: {
+            color?: string;
+            createdAt: string;
+            displayName: string;
+            id: string;
+            inventoryId: string;
+            key: string;
+            lifecycleState: string;
+            tenantId: string;
             updatedAt: string;
         };
         AssetTypeResponse: {
@@ -1323,6 +1371,12 @@ export interface components {
             /** @description Optional checkout details */
             details?: string;
         };
+        CompactTag: {
+            color?: string;
+            displayName: string;
+            id: string;
+            key: string;
+        };
         CreateAssetBody: {
             /**
              * Format: uri
@@ -1345,8 +1399,24 @@ export interface components {
             kind: "item" | "container" | "location";
             /** @description Parent asset ID */
             parentAssetId?: string;
+            /** @description Complete assigned tag ID list */
+            tagIds?: string[] | null;
             /** @description Asset title */
             title: string;
+        };
+        CreateAssetTagBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/CreateAssetTagBody.json
+             */
+            readonly $schema?: string;
+            /** @description Optional #RRGGBB tag color */
+            color?: string;
+            /** @description User-facing tag name */
+            displayName: string;
+            /** @description Stable tag key */
+            key?: string;
         };
         CreateAssetTypeBody: {
             /**
@@ -1574,6 +1644,12 @@ export interface components {
             /** Format: int64 */
             sourceLinksDiscarded: number;
             /** Format: int64 */
+            tags: number;
+            /** Format: int64 */
+            tagsCreated: number;
+            /** Format: int64 */
+            tagsExisting: number;
+            /** Format: int64 */
             warnings: number;
         };
         ImportJobListResponse: {
@@ -1590,6 +1666,8 @@ export interface components {
             locationsTruncated: boolean;
             messages: components["schemas"]["ImportMessageResponse"][] | null;
             messagesTruncated: boolean;
+            tags: components["schemas"]["ImportJobPreviewTag"][] | null;
+            tagsTruncated: boolean;
         };
         ImportJobPreviewAsset: {
             archived: boolean;
@@ -1611,6 +1689,11 @@ export interface components {
             displayName: string;
             key: string;
             type: string;
+        };
+        ImportJobPreviewTag: {
+            color?: string;
+            displayName: string;
+            key: string;
         };
         ImportJobProgress: {
             /** Format: int64 */
@@ -1885,6 +1968,16 @@ export interface components {
             data: components["schemas"]["AssetResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeAssetTagResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeAssetTagResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["AssetTagResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeAssetTypeResponse: {
             /**
              * Format: uri
@@ -2013,6 +2106,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["AssetSearchResultResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListAssetTagResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListAssetTagResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["AssetTagResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListAssetTypeResponse: {
@@ -2194,8 +2297,22 @@ export interface components {
             description?: string;
             /** @description Parent asset ID, or null to move to inventory root */
             parentAssetId?: string | null;
+            /** @description Complete assigned tag ID list */
+            tagIds?: string[];
             /** @description Asset title */
             title?: string;
+        };
+        UpdateAssetTagBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateAssetTagBody.json
+             */
+            readonly $schema?: string;
+            /** @description Optional #RRGGBB tag color */
+            color?: string;
+            /** @description User-facing tag name */
+            displayName?: string;
         };
         UpdateAssetTypeBody: {
             /**
@@ -5769,6 +5886,179 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeInventoryResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-tags": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListAssetTagResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-tags": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssetTagBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTagResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Tag ID */
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTagResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Tag ID */
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAssetTagBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetTagResponse"];
                 };
             };
             /** @description Error */
