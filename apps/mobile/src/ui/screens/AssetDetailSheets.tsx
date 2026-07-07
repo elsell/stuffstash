@@ -153,14 +153,31 @@ function EditTagPicker({
     if (disabled || displayName.length === 0) {
       return;
     }
-    const color = newTagColor.trim();
-    onNewTagsChange([
-      ...newTags,
-      color.length > 0 ? { displayName, color } : { displayName }
-    ]);
+    const color = normalizeTagColor(newTagColor);
+    if (color === undefined && newTagColor.trim().length > 0) {
+      return;
+    }
+    const existing = tags.find((tag) => sameTagName(tag.label, displayName));
+    if (existing) {
+      if (!selected.has(existing.id)) {
+        onChange([...selectedTagIds, existing.id]);
+      }
+      setNewTagName('');
+      setNewTagColor('');
+      return;
+    }
+    if (newTags.some((tag) => sameTagName(tag.displayName, displayName))) {
+      setNewTagName('');
+      setNewTagColor('');
+      return;
+    }
+    onNewTagsChange([...newTags, color ? { displayName, color } : { displayName }]);
     setNewTagName('');
     setNewTagColor('');
   }
+
+  const canAddNewTag = newTagName.trim().length > 0
+    && (newTagColor.trim().length === 0 || normalizeTagColor(newTagColor) !== undefined);
 
   return (
     <View style={styles.tagPicker}>
@@ -223,15 +240,32 @@ function EditTagPicker({
         />
         <Pressable
           accessibilityRole="button"
-          disabled={disabled || newTagName.trim().length === 0}
+          disabled={disabled || !canAddNewTag}
           onPress={addNewTag}
-          style={[styles.newTagButton, disabled || newTagName.trim().length === 0 ? styles.disabledAction : null]}
+          style={[styles.newTagButton, disabled || !canAddNewTag ? styles.disabledAction : null]}
         >
           <Text style={styles.newTagButtonText}>Add</Text>
         </Pressable>
       </View>
     </View>
   );
+}
+
+function normalizeTagColor(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const match = /^#?([0-9a-fA-F]{6})$/.exec(trimmed);
+  return match ? `#${match[1].toUpperCase()}` : undefined;
+}
+
+function sameTagName(left: string, right: string): boolean {
+  return tagNameKey(left) === tagNameKey(right);
+}
+
+function tagNameKey(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 export function MoveAssetSheet({
