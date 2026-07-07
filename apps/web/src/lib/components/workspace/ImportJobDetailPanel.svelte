@@ -325,7 +325,14 @@
                             <td>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</td>
                             <td>
                               {#if resourceCanOpen(job, resource)}
-                                <a class="resource-link" href={resourceHref(resource)} onclick={(event) => onOpenResource(event, resource)}>Open</a>
+                                <a
+                                  class="resource-link"
+                                  href={resourceHref(resource)}
+                                  aria-label={`Open ${resourceLabel(resource)}`}
+                                  onclick={(event) => onOpenResource(event, resource)}
+                                >
+                                  Open
+                                </a>
                               {:else}
                                 <span class="resource-empty-action">-</span>
                               {/if}
@@ -851,7 +858,6 @@
     overflow-wrap: anywhere;
   }
 
-  .sample-row,
   .resource-list {
     min-width: 0;
   }
@@ -908,7 +914,6 @@
     font-weight: 600;
   }
 
-  .sample-row span,
   .resource-list td {
     overflow-wrap: anywhere;
   }
