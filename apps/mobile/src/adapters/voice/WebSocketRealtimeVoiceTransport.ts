@@ -73,6 +73,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let lastResponseKind = '';
       let followUpPending = false;
       let followUpResolve: (() => void) | null = null;
+      let followUpReject: ((error: Error) => void) | null = null;
       let currentOnEvent = onEvent;
       let settled = false;
       let decisionSent = false;
@@ -165,6 +166,17 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       };
       socket.onclose = (event) => {
         void messageChain.then(() => {
+          if (thisTransport.activeFollowUpSession?.close === closeFollowUpSession) {
+            thisTransport.activeFollowUpSession = null;
+          }
+          if (followUpPending) {
+            const error = new Error(prematureCloseMessage(event));
+            followUpPending = false;
+            followUpResolve = null;
+            followUpReject?.(error);
+            followUpReject = null;
+            return;
+          }
           if (!completed) {
             settleReject(new Error(prematureCloseMessage(event)));
           }
@@ -216,12 +228,14 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
               followUpPending = false;
               followUpResolve?.();
               followUpResolve = null;
+              followUpReject = null;
               this.activeFollowUpSession = {
                 sendAudio: (audioChunksBase64, followUpOnEvent) => {
                   currentOnEvent = followUpOnEvent ?? onEvent;
                   followUpPending = true;
-                  const promise = new Promise<void>((resolveFollowUp) => {
+                  const promise = new Promise<void>((resolveFollowUp, rejectFollowUp) => {
                     followUpResolve = resolveFollowUp;
+                    followUpReject = rejectFollowUp;
                   });
                   sendAudioTurn(audioChunksBase64);
                   return promise;
@@ -234,6 +248,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
               this.activeFollowUpSession = null;
               followUpResolve?.();
               followUpResolve = null;
+              followUpReject = null;
             }
             settleResolve();
           }
@@ -243,6 +258,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             this.activeFollowUpSession = null;
             followUpResolve?.();
             followUpResolve = null;
+            followUpReject = null;
             socket.close();
             settleResolve();
           }
@@ -252,6 +268,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             this.activeFollowUpSession = null;
             followUpResolve?.();
             followUpResolve = null;
+            followUpReject = null;
             socket.close();
             settleResolve();
           }
@@ -261,6 +278,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             this.activeFollowUpSession = null;
             followUpResolve?.();
             followUpResolve = null;
+            followUpReject = null;
             socket.close();
             settleResolve();
           }

@@ -517,6 +517,82 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(transport.canSendFollowUpAudio()).toBe(false);
   });
 
+  it('clears follow-up availability when an idle clarification socket closes', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['Zmlyc3Q=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'clarification', spokenResponse: 'Which item?', displayResponse: 'Which item?' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    await run;
+
+    expect(transport.canSendFollowUpAudio()).toBe(true);
+    socket.closeFromServer(1000, 'clarification follow-up timed out');
+    await waitForNoFollowUpAudio(transport);
+    expect(transport.canSendFollowUpAudio()).toBe(false);
+    await expect(transport.sendFollowUpAudio(['c2Vjb25k'])).rejects.toThrow('not active');
+  });
+
+  it('rejects a pending follow-up when the clarification socket closes mid-turn', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['Zmlyc3Q=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'clarification', spokenResponse: 'Which item?', displayResponse: 'Which item?' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    await run;
+
+    const followUp = transport.sendFollowUpAudio(['c2Vjb25k']);
+    socket.closeFromServer(1006, 'network dropped');
+
+    await expect(followUp).rejects.toThrow('Voice socket closed before the session completed (code 1006).');
+    expect(transport.canSendFollowUpAudio()).toBe(false);
+  });
+
   it('sends session cancel and rejects safely when cancelled after session start', async () => {
     const socket = new FakeWebSocket();
     const controller = new AbortController();
@@ -758,6 +834,12 @@ async function waitForSocketReady(socket: FakeWebSocket): Promise<void> {
 
 async function waitForEventType(events: readonly unknown[], type: string): Promise<void> {
   for (let attempts = 0; attempts < 20 && !events.some((event) => isEventType(event, type)); attempts++) {
+    await Promise.resolve();
+  }
+}
+
+async function waitForNoFollowUpAudio(transport: WebSocketRealtimeVoiceTransport): Promise<void> {
+  for (let attempts = 0; attempts < 20 && transport.canSendFollowUpAudio(); attempts++) {
     await Promise.resolve();
   }
 }
