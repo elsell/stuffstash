@@ -62,6 +62,7 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 				return RealtimeVoiceActionPlanCommand{}, err
 			}
 			proposal.AssetKind = moved.Kind.String()
+			proposal.Title = moved.Title.String()
 			proposal.ParentAssetID = args.ParentAssetID
 			if args.ParentAssetID != "" {
 				parent, err := a.realtimeVoiceReviewAsset(ctx, session, args.ParentAssetID)

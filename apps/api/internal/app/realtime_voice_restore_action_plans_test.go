@@ -154,6 +154,39 @@ func TestRealtimeVoiceLifecycleProposalCommandIncludesAssetDisplayContext(t *tes
 	}
 }
 
+func TestRealtimeVoiceMoveProposalCommandIncludesAssetDisplayContext(t *testing.T) {
+	t.Parallel()
+
+	item := assetItem("drill-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	title, _ := asset.NewTitle("Cordless drill")
+	item.Title = title
+	location := assetItem("garage-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	application := newActionPlanExecutionTestApp(&fakeActionPlanRepository{}, &fakeAssetRepository{
+		items: map[asset.ID]asset.Asset{
+			item.ID:     item,
+			location.ID: location,
+		},
+	}, &fakeIDGenerator{})
+
+	proposal, err := application.realtimeVoiceActionPlanCommand(context.Background(), RealtimeVoiceSession{
+		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		Source:      RealtimeVoiceSourceMobile,
+	}, ports.ActionPlanCommandRecord{
+		ID:            "cmd-move-drill",
+		Kind:          actionplan.CommandKindMoveAsset,
+		Summary:       "Move whatever the model says",
+		ArgumentsJSON: []byte(`{"assetId":"drill-1","parentAssetId":"garage-1"}`),
+	})
+	if err != nil {
+		t.Fatalf("build move proposal command: %v", err)
+	}
+	if proposal.Kind != string(actionplan.CommandKindMoveAsset) || proposal.Operation != "move" || proposal.Title != "Cordless drill" || proposal.AssetKind != asset.KindItem.String() || proposal.ParentTitle != "Asset garage-1" || proposal.ParentKind != asset.KindLocation.String() {
+		t.Fatalf("unexpected move proposal command: %+v", proposal)
+	}
+}
+
 func TestRealtimeVoiceCanProposeRestoreActionPlanInPlannerMode(t *testing.T) {
 	t.Parallel()
 
