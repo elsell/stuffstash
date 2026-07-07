@@ -92,7 +92,8 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
         locationTrail: ['Home', 'Garage', 'Furnace filters'],
         description: 'MERV 11 three-pack.',
         updatedAtLabel: 'Updated today',
-        hasPhoto: false
+        hasPhoto: false,
+        tags: [{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }]
       }
     ]
   };
@@ -125,6 +126,7 @@ describe('InventoryAssetsQuery', () => {
           locationTrailLabel: 'Garage / Furnace filters',
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
+          tags: [{ id: 'tag-workshop', label: 'Workshop', color: '#2F80ED' }],
           imagePlaceholderLabel: 'Item'
         }
       ]

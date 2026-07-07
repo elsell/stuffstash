@@ -17,6 +17,14 @@ export type AssetSummary = {
   readonly photos?: readonly AssetPhoto[];
   readonly photo?: AssetPhoto;
   readonly currentCheckout?: CurrentCheckoutSummary;
+  readonly tags?: readonly AssetTagSummary[];
+};
+
+export type AssetTagSummary = {
+  readonly id: string;
+  readonly key: string;
+  readonly displayName: string;
+  readonly color?: string;
 };
 
 export type CurrentCheckoutSummary = {

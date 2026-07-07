@@ -95,7 +95,7 @@ export interface Asset {
   lifecycleState: AssetLifecycleState;
   customAssetTypeId?: string;
   customFields: Record<string, unknown>;
-  tags: CompactAssetTag[];
+  tags?: CompactAssetTag[];
   createdAt: string;
   updatedAt: string;
   primaryPhoto?: AssetPrimaryPhoto;

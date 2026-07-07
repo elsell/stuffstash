@@ -882,7 +882,8 @@ function mapAsset(
     hasPhoto: photo !== undefined,
     photos,
     photo,
-    currentCheckout: asset.currentCheckout
+    currentCheckout: asset.currentCheckout,
+    tags: asset.tags
   };
 }
 
@@ -939,6 +940,7 @@ function summaryToApiAsset(
     description: asset.description,
     parentAssetId: asset.parentAssetId ?? null,
     lifecycleState: asset.lifecycleState,
+    tags: [...(asset.tags ?? [])],
     customFields: {},
     createdAt: '',
     updatedAt: '',

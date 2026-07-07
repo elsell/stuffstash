@@ -1,6 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { colors, radius, spacing } from '../theme/tokens';
+import { AssetTagChips } from './AssetTagChips';
 
 type AssetCardProps = {
   readonly asset: AssetCardViewModel;
@@ -36,6 +37,7 @@ export function AssetCard({ asset, onPress }: AssetCardProps) {
         <Text numberOfLines={1} style={styles.meta}>
           {asset.locationTrailLabel}
         </Text>
+        <AssetTagChips tags={asset.tags} />
         <View style={styles.footer}>
           <Text style={asset.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
             {asset.photoLabel}

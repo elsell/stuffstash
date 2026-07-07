@@ -10,11 +10,18 @@ export type AssetCardViewModel = {
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
   readonly checkedOutLabel?: string;
+  readonly tags?: readonly AssetTagViewModel[];
   readonly imagePlaceholderLabel: string;
   readonly photo?: {
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };
+};
+
+export type AssetTagViewModel = {
+  readonly id: string;
+  readonly label: string;
+  readonly color?: string;
 };
 
 export type AssetPhotoViewModel = {
@@ -52,6 +59,7 @@ export type AssetDetailViewModel = {
   readonly isCheckedOut: boolean;
   readonly checkoutLabel: string;
   readonly checkoutActorLabel?: string;
+  readonly tags?: readonly AssetTagViewModel[];
   readonly canCheckout: boolean;
   readonly canReturn: boolean;
   readonly containedAssets: readonly AssetCardViewModel[];
@@ -69,6 +77,11 @@ export type AssetDetailViewModel = {
 };
 
 export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
+  const tags = (asset.tags ?? []).map((tag) => ({
+    id: tag.id,
+    label: tag.displayName,
+    color: tag.color
+  }));
   return {
     id: asset.id,
     title: asset.title,
@@ -79,6 +92,7 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     updatedAtLabel: asset.updatedAtLabel,
     photoLabel: asset.hasPhoto ? 'Photo ready' : 'Needs photo',
     checkedOutLabel: asset.currentCheckout ? 'Checked out' : undefined,
+    ...(tags.length > 0 ? { tags } : {}),
     imagePlaceholderLabel: placeholderForKind(asset.kind),
     photo: asset.photo
   };

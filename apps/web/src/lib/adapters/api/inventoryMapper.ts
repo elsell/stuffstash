@@ -85,7 +85,7 @@ export function mapAsset(asset: ApiAsset): Asset {
     lifecycleState: asset.lifecycleState,
     customAssetTypeId: asset.customAssetTypeId,
     customFields: asset.customFields,
-    tags: asset.tags.map(mapAssetTagSummary),
+    tags: (asset.tags ?? []).map(mapAssetTagSummary),
     currentCheckout: mapCurrentCheckout(asset.currentCheckout),
     updatedAt: undefined
   };

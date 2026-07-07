@@ -13,6 +13,7 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import {
   assetPhotoStatusLabel
 } from './AssetPhotoWorkspacePresentation';
+import { AssetTagChips } from './AssetTagChips';
 import {
   canUseContainedAssetAction,
   containedAssetActions,
@@ -182,6 +183,7 @@ function IdentitySection({
             ))}
           </View>
           <Text style={styles.title}>{asset.title}</Text>
+          <AssetTagChips tags={asset.tags} />
         </View>
         {onMoreActions ? (
           <Pressable
