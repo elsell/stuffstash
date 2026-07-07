@@ -158,10 +158,6 @@
           </div>
         {/if}
         <div class="detail-summary-strip" aria-label="Import run summary">
-          <div class="summary-tile">
-            <span>Status</span>
-            <strong>{statusLabel(job)}</strong>
-          </div>
           <div class={`summary-tile ${issueTone}`}>
             <span>Issues</span>
             <strong>{issueCountSummary(job)}</strong>
@@ -169,10 +165,6 @@
           <div class="summary-tile">
             <span>Changed</span>
             <strong>{changedRecordSummary(job)}</strong>
-          </div>
-          <div class="summary-tile">
-            <span>Source</span>
-            <strong>{job.source.type === 'legacy_homebox_csv' ? 'CSV' : 'Homebox'}</strong>
           </div>
         </div>
         {#if issueCount > 0}
@@ -436,7 +428,7 @@
   .detail-summary-strip {
     display: grid;
     gap: 0.5rem;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(10rem, 0.72fr) minmax(0, 1fr);
   }
 
   .summary-tile {
@@ -791,29 +783,20 @@
     }
 
     .detail-summary-strip {
-      gap: 0;
+      gap: 0.5rem;
       grid-template-columns: 1fr;
     }
 
     .summary-tile {
-      align-items: baseline;
-      background: transparent;
-      border: 0;
-      border-top: 1px solid var(--border);
-      border-radius: 0;
-      gap: 0.75rem;
-      grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
-      padding: 0.65rem 0;
+      padding: 0.65rem;
     }
 
-    .summary-tile:first-child {
-      border-top: 0;
+    .summary-tile.warning {
+      border-color: color-mix(in oklab, var(--color-warning) 26%, transparent);
     }
 
-    .summary-tile.warning,
     .summary-tile.action {
-      background: transparent;
-      border-color: var(--border);
+      border-color: color-mix(in oklab, var(--destructive) 22%, transparent);
     }
 
     .summary-tile.warning strong {

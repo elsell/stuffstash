@@ -1,6 +1,7 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
+  import { afterNavigate } from '$app/navigation';
   import { onMount } from 'svelte';
   import {
     detailAssetList,
@@ -32,7 +33,8 @@
     type AssetRouteAction,
     type ImportSourceRoute,
     type SettingsSection,
-    type WorkspaceRouteState
+    type WorkspaceRouteState,
+    workspaceRouteHref
   } from '$lib/application/workspaceRoute';
   import {
     assetRouteActionIsAvailable,
@@ -71,6 +73,7 @@
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+  import type { WorkspaceNotification, WorkspaceNotificationAction } from '$lib/components/ui/sonner/index.js';
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
   import InventoryWorkspaceRouteContent from './InventoryWorkspaceRouteContent.svelte';
@@ -102,7 +105,7 @@
   let attachmentId = $state<string | null>(null);
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
   let busy = $state(false);
-  let message = $state('');
+  let notification = $state<WorkspaceNotification | null>(null);
   let error = $state('');
   let searchQuery = $state('');
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
@@ -125,6 +128,8 @@
   let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
   let assetDetailRequestId = 0;
   let applyingRoute = false;
+  let activeRouteApplicationKey: string | null = null;
+  let queuedRoute: { route: WorkspaceRouteState; href: string } | null = null;
   let routeUnavailable = $state('');
 
   let selectedInventory = $derived(data.context.inventories.find((inventory) => inventory.id === data.context.selectedInventoryId) ?? null);
@@ -151,6 +156,10 @@
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
+  });
+
+  afterNavigate(() => {
+    void applyRoute(currentWorkspaceRoute());
   });
 
   async function selectInventory(tenantId: string, inventoryId: string): Promise<void> {
@@ -205,8 +214,15 @@
         : await repository.createTenantWithInventory({ tenantName: 'Home', inventoryName: 'Household' });
       routeUnavailable = '';
       mode = 'home';
-      message = 'Created Household.';
       replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
+      setSuccessNotification('Created Household.', {
+        label: 'Open inventory',
+        href: workspaceRouteHref(
+          { mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId },
+          data.context.selectedTenantId,
+          data.context.selectedInventoryId
+        )
+      });
     });
   }
 
@@ -221,12 +237,12 @@
     }
     busy = true;
     error = '';
-    message = '';
+    notification = null;
     try {
       const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
       data = result.data;
       if (result.message) {
-        message = result.message;
+        setSuccessNotification(result.message, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
       }
       if (result.error) {
         error = result.error;
@@ -279,8 +295,9 @@
     }
     busy = true;
     error = '';
-    message = '';
+    notification = null;
     try {
+      const previousParentId = selectedAsset.parentAssetId;
       const asset = await repository.updateAsset(
         selectedAsset.tenantId,
         selectedAsset.inventoryId,
@@ -289,7 +306,7 @@
       );
       data = replaceWorkspaceAsset(data, asset);
       loadedAssetDetail = asset;
-      message = `Saved ${asset.title}.`;
+      setSuccessNotification(`Saved ${asset.title}.`, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -304,7 +321,7 @@
   async function search(): Promise<void> {
     busy = true;
     error = '';
-    message = '';
+    notification = null;
     searchError = '';
     searchResults = [];
     searchSubmitted = true;
@@ -380,7 +397,14 @@
       await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      message = `Archived ${asset.title}.`;
+      setSuccessNotification(`Archived ${asset.title}.`, {
+        label: 'View archived',
+        href: workspaceRouteHref(
+          { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
+          asset.tenantId,
+          asset.inventoryId
+        )
+      });
     });
   }
 
@@ -397,7 +421,7 @@
       await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      message = `Restored ${asset.title}.`;
+      setSuccessNotification(`Restored ${asset.title}.`, viewAssetAction(asset));
     });
   }
 
@@ -414,7 +438,7 @@
       await repository.deleteAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      message = `Deleted ${asset.title}.`;
+      setSuccessNotification(`Deleted ${asset.title}.`);
     });
   }
 
@@ -434,7 +458,7 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      message = `Checked out ${refreshed.title}.`;
+      setSuccessNotification(`Checked out ${refreshed.title}.`, viewAssetAction(refreshed));
     });
   }
 
@@ -454,7 +478,7 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      message = `Returned ${refreshed.title}.`;
+      setSuccessNotification(`Returned ${refreshed.title}.`, viewAssetAction(refreshed));
     });
   }
 
@@ -466,7 +490,7 @@
     await run(async () => {
       await repository.archiveAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
-      message = `Archived ${attachment.fileName}.`;
+      setSuccessNotification(`Archived ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
     });
   }
 
@@ -478,7 +502,7 @@
     await run(async () => {
       await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
-      message = `Deleted ${attachment.fileName}.`;
+      setSuccessNotification(`Deleted ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
     });
   }
 
@@ -494,14 +518,14 @@
     await run(async () => {
       await repository.uploadAssetAttachment(asset.tenantId, asset.inventoryId, asset.id, attachment);
       await refreshSelectedAttachments(asset.tenantId, asset.inventoryId, asset.id);
-      message = `Uploaded ${attachment.name}.`;
+      setSuccessNotification(`Uploaded ${attachment.name}.`, viewAssetAction(asset));
     });
   }
 
   async function run(task: () => Promise<void>): Promise<void> {
     busy = true;
     error = '';
-    message = '';
+    notification = null;
     try {
       await task();
     } catch (caught) {
@@ -512,6 +536,58 @@
     } finally {
       busy = false;
     }
+  }
+
+  function setSuccessNotification(title: string, action?: WorkspaceNotificationAction): void {
+    notification = { kind: 'success', title, action };
+  }
+
+  function viewAssetAction(asset: Asset): WorkspaceNotificationAction {
+    return asset.kind === 'location'
+      ? {
+          label: 'View location',
+          href: workspaceRouteHref(
+            { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
+            asset.tenantId,
+            asset.inventoryId
+          )
+        }
+      : viewAssetByIdAction(asset.tenantId, asset.inventoryId, asset.id);
+  }
+
+  function viewAssetByIdAction(tenantId: string, inventoryId: string, assetId: string): WorkspaceNotificationAction {
+    return {
+      label: 'View asset',
+      href: workspaceRouteHref({ mode: 'asset', tenantId, inventoryId, assetId }, tenantId, inventoryId)
+    };
+  }
+
+  function parentDestinationAction(parentAssetId: string | null): WorkspaceNotificationAction {
+    if (!parentAssetId) {
+      return { label: 'View home', href: homeHref() };
+    }
+    const target = parentTargets(assets).find((candidate) => candidate.id === parentAssetId);
+    if (!target) {
+      return { label: 'View asset', href: workspaceRouteHref({ mode: 'asset', assetId: parentAssetId }, data.context.selectedTenantId, data.context.selectedInventoryId) };
+    }
+    if (target.kind === 'location') {
+      return {
+        label: 'View location',
+        href: workspaceRouteHref(
+          { mode: 'location', tenantId: target.tenantId, inventoryId: target.inventoryId, locationId: target.id },
+          target.tenantId,
+          target.inventoryId
+        )
+      };
+    }
+    return {
+      label: 'View parent',
+      href: workspaceRouteHref(
+        { mode: 'asset', tenantId: target.tenantId, inventoryId: target.inventoryId, assetId: target.id },
+        target.tenantId,
+        target.inventoryId
+      )
+    };
   }
 
   function openLocation(asset: Asset): void {
@@ -563,6 +639,16 @@
   }
 
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
+    const routeKey = routeApplicationKey(route);
+    if (activeRouteApplicationKey) {
+      if (routeKey === activeRouteApplicationKey) {
+        queuedRoute = null;
+      } else {
+        queuedRoute = { route, href: currentWorkspaceHref() };
+      }
+      return;
+    }
+    activeRouteApplicationKey = routeKey;
     applyingRoute = true;
     try {
       const shouldCanonicalizeAlias = shouldCanonicalizeWorkspaceAlias(route);
@@ -767,8 +853,25 @@
       normalizeInventoryHomeRoute(route);
       canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
     } finally {
+      if (activeRouteApplicationKey === routeKey) {
+        activeRouteApplicationKey = null;
+      }
       applyingRoute = false;
+      const nextRoute = queuedRoute;
+      queuedRoute = null;
+      if (nextRoute) {
+        window.history.replaceState({}, '', nextRoute.href);
+        void applyRoute(currentWorkspaceRoute());
+      }
     }
+  }
+
+  function routeApplicationKey(route: WorkspaceRouteState): string {
+    return JSON.stringify(route);
+  }
+
+  function currentWorkspaceHref(): string {
+    return typeof window === 'undefined' ? '/' : `${window.location.pathname}${window.location.search}`;
   }
 
   function navigateTo(route: Partial<WorkspaceRouteState>): void {
@@ -1111,7 +1214,6 @@
     const requestId = ++assetDetailRequestId;
     busy = true;
     error = '';
-    message = '';
     selectedLocationId = null;
     selectedAssetId = null;
     loadedAssetDetail = null;
@@ -1348,7 +1450,7 @@
   customAssetTypes={data.context.customAssetTypes}
   customFieldDefinitions={data.context.customFieldDefinitions}
   saving={busy}
-  {message}
+  {notification}
   {error}
   onAddClose={closeAdd}
   onAddSave={createAsset}

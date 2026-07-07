@@ -4,6 +4,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import { Toaster } from '$lib/components/ui/sonner/index.js';
+import {
+  ResourcefulImportJobRepository,
+  TerminalImportJobRepository,
+  seed as importWorkspaceSeed
+} from './InventoryImportWorkspace.test-helpers';
 import type {
   Asset,
   AssetAttachment,
@@ -18,6 +23,21 @@ import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
 import type { AuditRecordPage } from '$lib/ports/inventoryAuditRepository';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
+
+const afterNavigateCallbacks = vi.hoisted(() => [] as Array<() => void>);
+
+vi.mock('$app/navigation', () => ({
+  afterNavigate: (callback: () => void) => {
+    afterNavigateCallbacks.push(callback);
+    queueMicrotask(callback);
+    return () => {
+      const index = afterNavigateCallbacks.indexOf(callback);
+      if (index >= 0) {
+        afterNavigateCallbacks.splice(index, 1);
+      }
+    };
+  }
+}));
 
 let component: ReturnType<typeof mount> | null = null;
 let toaster: ReturnType<typeof mount> | null = null;
@@ -133,6 +153,19 @@ class AuditScopeRecordingRepository extends SeededInventoryRepository {
   }
 }
 
+class DelayedAssetRepository extends SeededInventoryRepository {
+  releaseAssetLoad: (() => void) | null = null;
+
+  async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+    if (assetId === 'asset-home' && !this.releaseAssetLoad) {
+      await new Promise<void>((resolve) => {
+        this.releaseAssetLoad = resolve;
+      });
+    }
+    return super.getAsset(tenantId, inventoryId, assetId);
+  }
+}
+
 async function mountWorkspace(
   path: string,
   repository = new SeededInventoryRepository(structuredClone(seed)),
@@ -196,6 +229,7 @@ afterEach(() => {
   }
   document.body.innerHTML = '';
   window.history.replaceState({}, '', '/');
+  afterNavigateCallbacks.splice(0, afterNavigateCallbacks.length);
 });
 
 describe('InventoryWorkspaceApp route application', () => {
@@ -398,6 +432,178 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import');
       expect(document.body.textContent).toContain('Imports');
       expect(document.body.textContent).toContain('No import runs yet');
+    });
+  });
+
+  it('opens import detail audit history inside the workspace shell without a reload', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/import',
+      new TerminalImportJobRepository(structuredClone(importWorkspaceSeed))
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Import details');
+      expect(controlContaining('View audit history').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/settings/activity'
+      );
+    });
+
+    controlContaining('View audit history').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(document.body.textContent).toContain('Activity');
+      expect(document.body.textContent).not.toContain('Import details');
+    });
+  });
+
+  it('applies workspace route state after client-side navigation without a popstate event', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/import',
+      new TerminalImportJobRepository(structuredClone(importWorkspaceSeed))
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Imports');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import');
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
+    afterNavigateCallbacks.forEach((callback) => callback());
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(document.body.textContent).toContain('Activity');
+      expect(document.body.textContent).not.toContain('Imports');
+    });
+  });
+
+  it('opens imported records from import detail inside the workspace shell without a reload', async () => {
+    const shellSeed = structuredClone(importWorkspaceSeed);
+    shellSeed.assets.push({
+      id: 'asset-imported-passport',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'item',
+      title: 'Imported Passport',
+      description: 'Created by import',
+      parentAssetId: null,
+      lifecycleState: 'active'
+    });
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/import',
+      new ResourcefulImportJobRepository(shellSeed)
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Review Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Import details');
+      expect(buttonContaining('Records')).toBeTruthy();
+    });
+
+    buttonContaining('Records').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Imported records');
+      expect(controlContaining('Open').getAttribute('href')).toBe(
+        '/tenants/tenant-home/inventories/inventory-household/assets/asset-imported-passport'
+      );
+    });
+
+    controlContaining('Open').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-imported-passport');
+      expect(document.body.textContent).toContain('Imported Passport');
+      expect(document.body.textContent).not.toContain('Import details');
+    });
+  });
+
+  it('applies the newest client-side route after an older route finishes loading', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => {
+      expect(repository.releaseAssetLoad).toBeTruthy();
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    repository.releaseAssetLoad?.();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(document.body.textContent).toContain('Activity');
+      expect(document.body.textContent).not.toContain('Blue folder');
+    });
+  });
+
+  it('keeps the queued route URL when an older alias route canonicalizes after navigation', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => {
+      expect(repository.releaseAssetLoad).toBeTruthy();
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    repository.releaseAssetLoad?.();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(document.body.textContent).toContain('Activity');
+      expect(document.body.textContent).not.toContain('Blue folder');
+    });
+  });
+
+  it('preserves a queued non-workspace URL after an older route finishes loading', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => {
+      expect(repository.releaseAssetLoad).toBeTruthy();
+    });
+
+    window.history.pushState({}, '', '/not-a-workspace-route');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    repository.releaseAssetLoad?.();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/not-a-workspace-route');
+      expect(document.body.textContent).not.toContain('Blue folder');
+    });
+  });
+
+  it('keeps the active route when a queued route is superseded before loading finishes', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => {
+      expect(repository.releaseAssetLoad).toBeTruthy();
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    repository.releaseAssetLoad?.();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.textContent).not.toContain('Activity');
     });
   });
 

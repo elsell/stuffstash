@@ -82,6 +82,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Inter variable font package for web UI: `@fontsource-variable/inter 5.2.8`.
 - Internationalized date helper used by generated UI components: `@internationalized/date 3.12.2`.
 - Svelte icon package used by generated UI components: `@lucide/svelte 1.17.0`.
+- Svelte Sonner toast runtime for web notification feedback: `svelte-sonner 1.1.1`.
 
 ## Pinned Go Dependencies
 

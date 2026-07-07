@@ -8,6 +8,7 @@
     MediaUploadPolicy,
     ParentTargetViewModel
   } from '$lib/domain/inventory';
+  import type { WorkspaceNotification } from '$lib/components/ui/sonner/index.js';
 
   export type InventoryWorkspaceOverlaysProps = {
     addOpen: boolean;
@@ -20,7 +21,7 @@
     customAssetTypes: CustomAssetType[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
-    message: string;
+    notification: WorkspaceNotification | null;
     error: string;
     onAddClose: () => void;
     onAddSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
@@ -28,7 +29,7 @@
 </script>
 
 <script lang="ts">
-  import * as Alert from '$lib/components/ui/alert/index.js';
+  import { notify, notifyError } from '$lib/components/ui/sonner/index.js';
   import AddAssetTray from './AddAssetTray.svelte';
 
   let {
@@ -42,11 +43,31 @@
     customAssetTypes,
     customFieldDefinitions,
     saving,
-    message,
+    notification,
     error,
     onAddClose,
     onAddSave
   }: InventoryWorkspaceOverlaysProps = $props();
+
+  let lastNotificationKey = '';
+  let lastError = '';
+
+  $effect(() => {
+    const nextNotificationKey = notification
+      ? `${notification.kind}:${notification.title}:${notification.description ?? ''}:${notification.action?.label ?? ''}:${notification.action?.href ?? ''}`
+      : '';
+    if (notification && nextNotificationKey !== lastNotificationKey) {
+      notify(notification);
+    }
+    lastNotificationKey = nextNotificationKey;
+  });
+
+  $effect(() => {
+    if (error && error !== lastError) {
+      notifyError(error);
+    }
+    lastError = error;
+  });
 </script>
 
 <AddAssetTray
@@ -62,14 +83,3 @@
   onClose={onAddClose}
   onSave={onAddSave}
 />
-
-{#if message}
-  <Alert.Root class="toast" variant="default">
-    <Alert.Description>{message}</Alert.Description>
-  </Alert.Root>
-{/if}
-{#if error}
-  <Alert.Root class="toast" variant="destructive">
-    <Alert.Description>{error}</Alert.Description>
-  </Alert.Root>
-{/if}

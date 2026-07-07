@@ -572,7 +572,7 @@
   :global(.status-chip.selected) {
     background: color-mix(in oklab, var(--primary) 7%, transparent);
     border-color: color-mix(in oklab, var(--ring) 34%, var(--border));
-    box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 18%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--ring) 16%, transparent);
     color: var(--foreground);
   }
 
@@ -865,6 +865,21 @@
     .job-main {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    .current-work-section :global(.import-job-card) {
+      gap: 0.7rem;
+    }
+
+    .current-work-section .job-main {
+      align-items: flex-start;
+      flex-direction: row;
+      width: 100%;
+    }
+
+    .current-work-section .action-row {
+      flex-direction: row;
+      width: 100%;
     }
 
     .history-row,

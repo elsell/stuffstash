@@ -627,6 +627,7 @@ Required implementation split:
 - Search result and suggestion href derivation must live in focused application helpers rather than component-local route string assembly.
 - Search panel loading, first-run, empty-result, and error presentation must live in focused application helpers rather than component-local conditional copy.
 - Route-backed control click interception must use a shared helper so ordinary in-app clicks, modified clicks, non-primary clicks, and already-prevented events behave consistently across navigation, filters, suggestions, settings actions, and dialogs.
+- The workspace shell must apply route state after client-side navigation changes as well as initial mount and browser back/forward navigation. Route-backed links must not require a full reload before the visible workspace mode, focused asset, settings section, or import destination updates.
 - Add route availability, route-backed parent preselection, and invalid parent-route normalization must live in focused application helpers rather than accumulating in the product shell component.
 - Settings access invitation action availability and canonical action/cancel href derivation must live in focused application helpers rather than component-local route string assembly.
 - Settings access invitation action labels, destructive tone, disabled state, row option metadata, and confirmation copy must live in focused application helpers rather than component-local conditionals.
