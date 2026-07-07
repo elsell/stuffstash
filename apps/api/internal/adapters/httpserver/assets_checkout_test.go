@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -137,6 +138,9 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 		ids: []string{
 			"checkout-security-asset", "op-checkout-security-asset", "audit-checkout-security-asset",
 			"checkout-security-record", "op-checkout-security-record", "audit-checkout-security-record",
+			"checkout-smuggle-asset", "op-checkout-smuggle-asset", "audit-checkout-smuggle-asset",
+			"checkout-smuggle-record", "op-checkout-smuggle-record", "audit-checkout-smuggle-record",
+			"op-return-smuggle-record", "audit-return-smuggle-record",
 		},
 	}))
 	requireStatus(t, performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]any{"principalId": "viewer-user", "relationship": "viewer"}), http.StatusCreated)
@@ -199,6 +203,12 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 		{name: "checked-out list missing auth", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/checked-out-assets?limit=10", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
 		{name: "checked-out list malformed auth", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/checked-out-assets?limit=10", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
 		{name: "checked-out list intruder", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/checked-out-assets?limit=10", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
+		{name: "asset detail checkout projection missing auth", path: assetPath, status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "asset detail checkout projection malformed auth", path: assetPath, authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "asset list checkout projection missing auth", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets?limit=10", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "asset list checkout projection malformed auth", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets?limit=10", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "search checkout projection missing auth", path: "/tenants/" + tenantID + "/search/assets?q=Checkout&inventoryId=" + inventoryID + "&checkoutState=checked_out", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "search checkout projection malformed auth", path: "/tenants/" + tenantID + "/search/assets?q=Checkout&inventoryId=" + inventoryID + "&checkoutState=checked_out", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
 	}
 	for _, tc := range readCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -219,5 +229,56 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 	requireStatus(t, wrongInventoryList, http.StatusOK)
 	if len(decodeCheckedOutAssetList(t, wrongInventoryList).Data) != 0 {
 		t.Fatalf("expected wrong inventory checked-out list to be empty")
+	}
+
+	smuggleCreate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Smuggle Target",
+	})
+	requireStatus(t, smuggleCreate, http.StatusCreated)
+	smuggleAsset := decodeAsset(t, smuggleCreate)
+	smugglePath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + smuggleAsset.Data.ID
+	smuggledCheckout := performRequest(server, http.MethodPost, smugglePath+"/checkout", "Bearer dev:owner", map[string]any{
+		"details":                 "using at desk",
+		"checkedOutByPrincipalId": "attacker",
+		"returnedByPrincipalId":   "attacker",
+		"principalId":             "attacker",
+		"role":                    "owner",
+		"permissions":             []string{"inventory.edit_asset"},
+	})
+	if smuggledCheckout.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected smuggled checkout status %d, got %d with body %s", http.StatusUnprocessableEntity, smuggledCheckout.Code, smuggledCheckout.Body.String())
+	}
+	assertValidationError(t, smuggledCheckout)
+	smuggleDetail := performRequest(server, http.MethodGet, smugglePath, "Bearer dev:owner", nil)
+	requireStatus(t, smuggleDetail, http.StatusOK)
+	if decodeAsset(t, smuggleDetail).Data.CurrentCheckout != nil {
+		t.Fatalf("expected rejected smuggled checkout not to mutate asset")
+	}
+	requireStatus(t, performRequest(server, http.MethodPost, smugglePath+"/checkout", "Bearer dev:owner", map[string]any{"details": "using at desk"}), http.StatusCreated)
+	smuggledReturn := performRequest(server, http.MethodPost, smugglePath+"/return", "Bearer dev:owner", map[string]any{
+		"details":               "back",
+		"returnedByPrincipalId": "attacker",
+		"principalId":           "attacker",
+		"role":                  "owner",
+		"permissions":           []string{"inventory.edit_asset"},
+	})
+	if smuggledReturn.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected smuggled return status %d, got %d with body %s", http.StatusUnprocessableEntity, smuggledReturn.Code, smuggledReturn.Body.String())
+	}
+	assertValidationError(t, smuggledReturn)
+	smuggleDetail = performRequest(server, http.MethodGet, smugglePath, "Bearer dev:owner", nil)
+	requireStatus(t, smuggleDetail, http.StatusOK)
+	if decodeAsset(t, smuggleDetail).Data.CurrentCheckout == nil {
+		t.Fatalf("expected rejected smuggled return not to close checkout")
+	}
+}
+
+func assertValidationError(t *testing.T, response *httptest.ResponseRecorder) {
+	t.Helper()
+	var body errorResponse
+	decodeBody(t, response, &body)
+	if body.Error.Code != "invalid_request" || body.Error.Message != "validation failed" {
+		t.Fatalf("expected validation error, got %+v", body.Error)
 	}
 }
