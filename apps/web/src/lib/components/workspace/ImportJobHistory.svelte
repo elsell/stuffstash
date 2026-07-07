@@ -114,7 +114,11 @@
     if (historyFilter === 'attention') return 'Imports that need action.';
     if (historyFilter === 'warnings') return 'Completed imports with warnings.';
     if (historyFilter === 'completed') return 'Completed imports.';
-    return 'Import runs, newest and most important first.';
+    return 'Important and recent runs first.';
+  }
+
+  function allRunCount(): number {
+    return jobs.length;
   }
 
   function jobRequiresAction(job: ImportJob): boolean {
@@ -126,8 +130,10 @@
   }
 </script>
 
-<div class="history-header">
-  <p>{summaryDescription}</p>
+<div class={jobs.length > 0 && currentWorkJobs.length === 0 ? 'history-header compact' : 'history-header'}>
+  {#if jobs.length === 0 || currentWorkJobs.length > 0}
+    <p>{summaryDescription}</p>
+  {/if}
   {#if jobs.length > 0}
     <Button.Root onclick={onBeginImport} disabled={!canCreateImports} variant={currentWorkJobs.length > 0 ? 'outline' : 'default'}>
       <Plus size={16} aria-hidden="true" />
@@ -138,6 +144,16 @@
 
 {#if jobs.length > 0}
   <div class="history-status-strip" aria-label="Import history filters">
+    <Button.Root
+      class={historyFilter === 'all' ? 'status-chip selected' : 'status-chip'}
+      variant="ghost"
+      onclick={() => (historyFilter = 'all')}
+      aria-pressed={historyFilter === 'all'}
+    >
+      <Database size={14} aria-hidden="true" />
+      <span>All runs</span>
+      <strong>{allRunCount()}</strong>
+    </Button.Root>
     <Button.Root
       class={historyFilter === 'current' ? 'status-chip active selected' : activeJobs.length > 0 ? 'status-chip active' : 'status-chip'}
       variant="ghost"
@@ -321,18 +337,18 @@
       </div>
       <div class="history-ledger" role="table" aria-label="Import history">
         <div class="history-ledger-head" role="row">
-          <span role="columnheader">Status</span>
-          <span role="columnheader">Source</span>
+          <span role="columnheader">Import</span>
           <span role="columnheader">Result</span>
-          <span role="columnheader">Time</span>
+          <span role="columnheader">Issues</span>
+          <span role="columnheader">Completed</span>
           <span role="columnheader">Actions</span>
         </div>
         {#each filteredTerminalJobs as job}
           <div class={jobRequiresAction(job) ? 'history-row attention-row' : jobHasReviewWarnings(job) ? 'history-row warning-row' : 'history-row'} role="row">
-            <div class="status-cell" role="cell" data-cell-label="Status">
+            <div class="status-cell" role="cell" data-cell-label="Import">
               <span class="status-icon">
                 {#if jobRequiresAction(job)}
-                  <AlertTriangle size={18} aria-hidden="true" />
+                  <XCircle size={18} aria-hidden="true" />
                 {:else if jobHasReviewWarnings(job)}
                   <AlertTriangle size={18} aria-hidden="true" />
                 {:else if isTerminal(job) && job.status !== 'succeeded'}
@@ -344,29 +360,35 @@
               <div class="history-title">
                 <strong>{job.source.name}</strong>
                 <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
-                {#if jobRequiresAction(job)}
-                  <Badge variant="destructive">Action required</Badge>
-                {:else if jobHasReviewWarnings(job)}
-                  <Badge variant="secondary">Warnings</Badge>
-                {/if}
+                <span>{sourceDescription(job)}</span>
               </div>
-            </div>
-            <div class="source-cell" role="cell" data-cell-label="Source">
-              <span>{sourceDescription(job)}</span>
-              {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
             </div>
             <div class="result-cell" role="cell" data-cell-label="Result">
               <span>{statusSentence(job)}</span>
               <span>
                 {historyCountSummary(job)}
-                {#if jobHasReviewWarnings(job)} · {attentionSummary(job)}{/if}
                 {#if job.cancellationMode === 'keep_partial_progress'} · Partial progress kept{/if}
                 {#if job.cancellationMode === 'discard_partial_progress'} · Partial progress discarded{/if}
               </span>
             </div>
-            <div class="time-cell" role="cell" data-cell-label="Time">
-              {#if job.startedAt}<span>{jobTimeLabel('Started', job.startedAt)}</span>{/if}
-              {#if job.completedAt}<span>{jobTimeLabel('Completed', job.completedAt)}</span>{/if}
+            <div class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} role="cell" data-cell-label="Issues">
+              {#if jobRequiresAction(job)}
+                <Badge variant="destructive">Action required</Badge>
+                <span>{attentionSummary(job)}</span>
+              {:else if jobHasReviewWarnings(job)}
+                <Badge variant="secondary">Warnings</Badge>
+                <span>{attentionSummary(job)}</span>
+              {:else}
+                <span>No issues</span>
+              {/if}
+            </div>
+            <div class="time-cell" role="cell" data-cell-label="Completed">
+              {#if job.completedAt}
+                <span>{jobTimeLabel('', job.completedAt).trim()}</span>
+              {:else if job.startedAt}
+                <span>{jobTimeLabel('', job.startedAt).trim()}</span>
+              {/if}
+              {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
             </div>
             <div class="row-actions" role="cell" data-cell-label="Actions">
               <Button.Root
@@ -416,6 +438,10 @@
   .history-header,
   :global(.import-job-card) {
     justify-content: space-between;
+  }
+
+  .history-header.compact {
+    justify-content: flex-end;
   }
 
   .history-header > p {
@@ -470,7 +496,7 @@
     display: grid;
     gap: 0.75rem;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    padding: 0.65rem 0.75rem;
+    padding: 0.6rem 0.7rem;
   }
 
   .attention-marker {
@@ -481,7 +507,7 @@
 
   .attention-alert > div:nth-child(2) {
     display: grid;
-    gap: 0.1rem;
+    gap: 0.08rem;
     min-width: 0;
   }
 
@@ -500,7 +526,7 @@
     align-items: center;
     display: grid;
     gap: 0.45rem;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     margin: 0;
   }
 
@@ -514,8 +540,8 @@
     gap: 0.12rem 0.4rem;
     grid-template-columns: auto 1fr auto;
     min-width: 0;
-    min-height: 2.65rem;
-    padding: 0.42rem 0.55rem;
+    min-height: 2.3rem;
+    padding: 0.35rem 0.5rem;
     text-align: left;
   }
 
@@ -524,15 +550,15 @@
   }
 
   :global(.status-chip.active) {
-    background: color-mix(in oklab, var(--primary) 6%, transparent);
-    border-color: color-mix(in oklab, var(--primary) 28%, transparent);
+    background: transparent;
+    border-color: var(--border);
     color: var(--foreground);
   }
 
   :global(.status-chip.warning) {
-    background: color-mix(in oklab, var(--color-warning, #a15c00) 7%, transparent);
-    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 30%, transparent);
-    color: var(--color-warning-foreground, #6b3a00);
+    background: color-mix(in oklab, var(--color-warning) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning) 30%, transparent);
+    color: var(--color-warning-foreground);
   }
 
   :global(.status-chip.danger) {
@@ -542,7 +568,10 @@
   }
 
   :global(.status-chip.selected) {
+    background: color-mix(in oklab, var(--primary) 7%, transparent);
+    border-color: color-mix(in oklab, var(--ring) 34%, var(--border));
     box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 18%, transparent);
+    color: var(--foreground);
   }
 
   :global(.status-chip span) {
@@ -626,6 +655,16 @@
     gap: 0.5rem;
   }
 
+  .history-title > span {
+    color: var(--muted-foreground);
+    flex-basis: 100%;
+    font-size: 0.78rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .history-meta {
     color: var(--muted-foreground);
     display: flex;
@@ -676,14 +715,14 @@
   .history-ledger .history-row {
     display: grid;
     gap: 0.65rem;
-    grid-template-columns: minmax(10rem, 1fr) minmax(11rem, 1fr) minmax(12rem, 1.25fr) minmax(8rem, 0.72fr) auto;
+    grid-template-columns: minmax(11rem, 1.05fr) minmax(13rem, 1.2fr) minmax(9rem, 0.76fr) minmax(9rem, 0.8fr) auto;
   }
 
   .history-ledger-head {
     color: var(--muted-foreground);
     font-size: 0.75rem;
     font-weight: 700;
-    padding: 0 0.8rem;
+    padding: 0 0.72rem;
     text-transform: uppercase;
   }
 
@@ -698,8 +737,8 @@
     min-width: 0;
   }
 
+  .issue-cell,
   .result-cell,
-  .source-cell,
   .time-cell {
     color: var(--muted-foreground);
     display: grid;
@@ -708,14 +747,28 @@
     min-width: 0;
   }
 
-  .result-cell span:first-child {
+  .result-cell span:first-child,
+  .issue-cell span:first-child {
     color: var(--foreground);
   }
 
   .result-cell span,
-  .source-cell span,
+  .issue-cell span,
   .time-cell span {
     overflow-wrap: anywhere;
+  }
+
+  .issue-cell {
+    align-content: start;
+    justify-items: start;
+  }
+
+  .issue-cell.warning span {
+    color: var(--color-warning-foreground);
+  }
+
+  .issue-cell.action span {
+    color: var(--destructive);
   }
 
   .history-row:hover {
@@ -732,11 +785,12 @@
   }
 
   .history-row.warning-row {
-    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 26%, var(--border));
+    background: color-mix(in oklab, var(--color-warning) 3.5%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning) 26%, var(--border));
   }
 
   .warning-row .status-icon {
-    color: var(--color-warning-foreground, #6b3a00);
+    color: var(--color-warning-foreground);
   }
 
   .row-actions {
@@ -825,18 +879,14 @@
       grid-template-columns: 1fr;
     }
 
-    .history-ledger .history-row > [role="cell"]::before {
-      color: var(--muted-foreground);
-      content: attr(data-cell-label);
-      display: block;
-      font-size: 0.68rem;
-      font-weight: 700;
-      margin-bottom: 0.22rem;
-      text-transform: uppercase;
-    }
-
     .status-cell {
       display: block;
+    }
+
+    .result-cell,
+    .issue-cell,
+    .time-cell {
+      gap: 0.12rem;
     }
 
     .history-status-strip {
@@ -846,7 +896,8 @@
 
     :global(.status-chip) {
       justify-content: flex-start;
-      padding: 0.5rem 0.6rem;
+      min-height: 2.2rem;
+      padding: 0.42rem 0.55rem;
     }
 
     .history-meta {
@@ -875,6 +926,10 @@
 
     .current-work-section .section-heading p {
       display: none;
+    }
+
+    .job-section:last-child {
+      padding-bottom: var(--mobile-scroll-clearance, 7rem);
     }
   }
 </style>

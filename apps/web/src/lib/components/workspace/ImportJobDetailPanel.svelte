@@ -433,8 +433,8 @@
   }
 
   .summary-tile.warning {
-    background: color-mix(in oklab, var(--color-warning, #a15c00) 7%, transparent);
-    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 26%, transparent);
+    background: color-mix(in oklab, var(--color-warning) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning) 26%, transparent);
   }
 
   .summary-tile.action {
@@ -467,8 +467,8 @@
   }
 
   .detail-issue-callout.warning {
-    background: color-mix(in oklab, var(--color-warning, #a15c00) 7%, transparent);
-    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 26%, transparent);
+    background: color-mix(in oklab, var(--color-warning) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning) 26%, transparent);
   }
 
   .detail-issue-callout.action {
@@ -477,7 +477,7 @@
   }
 
   :global(.detail-issue-callout.warning .issue-callout-icon) {
-    color: var(--color-warning-foreground, #6b3a00);
+    color: var(--color-warning-foreground);
   }
 
   :global(.detail-issue-callout.action .issue-callout-icon) {
@@ -800,7 +800,7 @@
     }
 
     .summary-tile.warning strong {
-      color: var(--color-warning-foreground, #6b3a00);
+      color: var(--color-warning-foreground);
     }
 
     .summary-tile.action strong {

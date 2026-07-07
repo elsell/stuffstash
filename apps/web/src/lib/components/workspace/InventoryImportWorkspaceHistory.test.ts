@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
 import type { ImportJob, ImportJobCancellationMode } from '$lib/domain/inventory';
+import importJobDetailPanelSource from './ImportJobDetailPanel.svelte?raw';
+import importJobHistorySource from './ImportJobHistory.svelte?raw';
 import {
   CancellableImportJobRepository,
   CompletingImportJobRepository,
@@ -36,6 +38,20 @@ afterEach(() => {
 });
 
 describe('InventoryImportWorkspace import history and progress', () => {
+  it('keeps import warning styles on semantic warning tokens', () => {
+    expect(importJobHistorySource).toContain('var(--color-warning)');
+    expect(importJobHistorySource).toContain('var(--color-warning-foreground)');
+    expect(importJobHistorySource).not.toContain('var(--color-warning,');
+    expect(importJobHistorySource).not.toContain('var(--color-warning-foreground,');
+
+    expect(importJobDetailPanelSource).toContain('var(--color-warning)');
+    expect(importJobDetailPanelSource).toContain('var(--color-warning-foreground)');
+    expect(importJobDetailPanelSource).not.toContain('var(--color-warning,');
+    expect(importJobDetailPanelSource).not.toContain('var(--color-warning-foreground,');
+    expect(importJobHistorySource).toContain('.attention-alert');
+    expect(importJobHistorySource).toContain('var(--destructive)');
+  });
+
   it('refreshes workspace data when a running import job finishes', async () => {
     const repository = new CompletingImportJobRepository(structuredClone(seed));
     let refreshes = 0;
@@ -337,8 +353,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Completed');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).toContain('Prepared by owner');
-      expect(document.body.textContent).toContain('Started Jul 6, 2026');
-      expect(document.body.textContent).toContain('Completed Jul 6, 2026');
+      expect(document.body.textContent).toContain('Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
       expect(document.body.textContent).not.toContain('No other import runs to show.');
       expect(historyLedgerText()).toContain('Completed with warnings.');
@@ -491,11 +506,14 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain('Current work');
       expect(document.body.textContent).toContain('Completed Homebox');
+      expect(statusStripText()).toContain('All runs 3');
+      expect(statusButton('All runs')?.getAttribute('aria-pressed')).toBe('true');
     });
 
     buttonContaining('Running').click();
 
     await waitFor(() => {
+      expect(statusButton('Running')?.getAttribute('aria-pressed')).toBe('true');
       expect(document.body.textContent).toContain('Current work');
       expect(document.body.textContent).toContain('Homebox');
       expect(document.body.textContent).not.toContain('No imports match this filter.');
@@ -560,7 +578,6 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await mountImportWorkspace(new ActionRequiredImportJobRepository(structuredClone(seed)));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('2 imports require action.');
       expect(document.body.textContent).toContain('Action required');
       expect(document.body.textContent).toContain('2 imports require action');
       expect(document.body.textContent).toContain('Failed Homebox');

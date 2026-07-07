@@ -858,10 +858,21 @@
       padding-bottom: var(--mobile-scroll-clearance, 7rem);
     }
 
-    .import-toolbar,
-    .toolbar-actions {
+    .import-toolbar {
       align-items: flex-start;
-      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+    }
+
+    .import-toolbar > div:first-child {
+      flex: 1 1 13rem;
+      min-width: 0;
+    }
+
+    .toolbar-actions {
+      align-items: center;
+      flex-direction: row;
+      flex-wrap: wrap;
     }
   }
 </style>
