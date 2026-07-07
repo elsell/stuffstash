@@ -87,6 +87,25 @@ describe('ImportMessagesList', () => {
     expect(document.body.querySelectorAll('.message-row')).toHaveLength(2);
   });
 
+  it('keeps high-volume warnings bounded instead of rendering every affected record', () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: Array.from({ length: 100 }, (_, index) =>
+          sourceIDMessage('warning', 'Attachment could not be imported', 'import validation failed', `source-photo-${index + 1}`)
+        ),
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    expect(document.body.querySelector('.bounded-message-groups')).toBeTruthy();
+    expect(document.body.querySelector('.issue-stat.warning')?.textContent).toContain('Warnings 100');
+    expect(document.body.querySelector('.message-group-heading')?.textContent).toContain('File did not pass attachment validation');
+    expect(document.body.querySelector('.message-group-heading')?.textContent).toContain('100 items');
+    expect(document.body.querySelectorAll('.message-row')).toHaveLength(3);
+    expect(document.body.textContent).toContain('Show 97 more in this group');
+  });
+
   it('labels truncated message lists as partial lists instead of samples', () => {
     component = mount(ImportMessagesList, {
       target: document.body,
