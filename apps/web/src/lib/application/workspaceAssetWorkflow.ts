@@ -5,6 +5,7 @@ import type {
   Asset,
   AssetAttachment,
   AssetTag,
+  AssetTagDraft,
   Inventory,
   SelectedPhoto,
   WorkspaceData,
@@ -12,6 +13,7 @@ import type {
 } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import type { WorkspaceRouteState } from './workspaceRoute';
+import { reconcilePendingAssetTagDrafts } from './workspaceTagDrafts';
 
 type AssetCreateRepository = Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto'> &
   Partial<Pick<InventoryRepository, 'createAssetTag'>>;
@@ -47,8 +49,9 @@ export async function createAssetWorkflow(
   let uploadResult: PhotoUploadResult = { uploaded: [], failures: 0, failureReasons: [] };
 
   try {
-    createdTags = await createPendingTags(repository, data, inventory, draft);
-    const tagIds = [...(draft.tagIds ?? []), ...createdTags.map((tag) => tag.id)];
+    const reconciledTags = reconcilePendingAssetTagDrafts(data.context.assetTags ?? [], draft.tagIds ?? [], draft.newTags ?? []);
+    createdTags = await createPendingTags(repository, data, inventory, reconciledTags.newTags);
+    const tagIds = [...reconciledTags.tagIds, ...createdTags.map((tag) => tag.id)];
     createdParent = draft.parentQuickCreate
       ? await repository.createAsset(data.context.selectedTenantId, inventory.id, {
           kind: draft.parentQuickCreate.kind,
@@ -140,13 +143,13 @@ async function createPendingTags(
   repository: AssetCreateRepository,
   data: WorkspaceData,
   inventory: Inventory,
-  draft: AddAssetSubmission
+  pendingTags: AssetTagDraft[]
 ): Promise<AssetTag[]> {
   const created: AssetTag[] = [];
-  if ((draft.newTags?.length ?? 0) > 0 && !repository.createAssetTag) {
+  if (pendingTags.length > 0 && !repository.createAssetTag) {
     throw new Error('Tag creation is unavailable.');
   }
-  for (const tag of draft.newTags ?? []) {
+  for (const tag of pendingTags) {
     created.push(await repository.createAssetTag!(data.context.selectedTenantId, inventory.id, tag));
   }
   return created;

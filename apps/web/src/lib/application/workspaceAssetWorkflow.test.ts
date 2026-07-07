@@ -18,7 +18,11 @@ const inventory: Inventory = {
   access: { relationship: 'owner', permissions: ['view', 'create_asset', 'edit_asset'] }
 };
 
-function workspaceData(assets: Asset[] = [], lifecycleState: WorkspaceData['context']['assetLifecycleState'] = 'active'): WorkspaceData {
+function workspaceData(
+  assets: Asset[] = [],
+  lifecycleState: WorkspaceData['context']['assetLifecycleState'] = 'active',
+  assetTags: AssetTag[] = []
+): WorkspaceData {
   return {
     context: {
       principal: { id: 'principal-one', email: 'owner@example.test' },
@@ -30,6 +34,7 @@ function workspaceData(assets: Asset[] = [], lifecycleState: WorkspaceData['cont
       mediaUploadPolicy: { supportedContentTypes: ['image/jpeg'], maxBytes: 1024 },
       customAssetTypes: [],
       customFieldDefinitions: [],
+      assetTags,
       capability: 'editor'
     },
     assets,
@@ -331,6 +336,31 @@ describe('workspace asset workflow', () => {
     ]);
   });
 
+  it('reuses known inventory tags before creating asset drafts', async () => {
+    const createdDrafts: AddAssetDraft[] = [];
+    const repository = fakeRepository({
+      createdAssets: [asset('asset-one', 'Tape measure')],
+      onCreateAsset: (draft) => {
+        createdDrafts.push(draft);
+      }
+    });
+
+    const result = await createAssetWorkflow(repository, workspaceData([], 'active', [assetTag('tag-ted', 'Ted')]), inventory, {
+      kind: 'item',
+      title: 'Tape measure',
+      description: '',
+      parentAssetId: null,
+      customFields: {},
+      tagIds: [],
+      newTags: [{ displayName: 'ted' }],
+      photos: []
+    });
+
+    expect(result.saveResult).toEqual({ saved: true });
+    expect(result.data.assets[0]?.id).toBe('asset-one');
+    expect(createdDrafts[0]?.tagIds).toEqual(['tag-ted']);
+  });
+
   it('switches back to active lifecycle when creating from an archived view', async () => {
     const activeData = workspaceData([asset('asset-one', 'Tape measure')], 'active');
     const repository = fakeRepository({
@@ -459,7 +489,8 @@ function fakeRepository({
   createFailureAfter,
   createdTags = [],
   selectedLifecycleData,
-  selectLifecycleFailure = false
+  selectLifecycleFailure = false,
+  onCreateAsset
 }: {
   createdAssets: Asset[];
   uploadedPhotos?: AssetAttachment[];
@@ -470,6 +501,7 @@ function fakeRepository({
   createdTags?: AssetTag[];
   selectedLifecycleData?: WorkspaceData;
   selectLifecycleFailure?: boolean;
+  onCreateAsset?: (draft: AddAssetDraft) => void;
 }): Pick<InventoryRepository, 'createAsset' | 'selectAssetLifecycle' | 'uploadAssetPhoto' | 'createAssetTag'> {
   let createCount = 0;
   let uploadCount = 0;
@@ -484,6 +516,7 @@ function fakeRepository({
       return created;
     },
     async createAsset(_tenantId: string, _inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
+      onCreateAsset?.(draft);
       if (createFailureAfter !== undefined && createCount >= createFailureAfter) {
         throw new Error('Create failed.');
       }

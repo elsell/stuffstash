@@ -28,6 +28,7 @@
     refreshWorkspaceAssetAttachments
   } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
+  import { reconcilePendingAssetTagDrafts } from '$lib/application/workspaceTagDrafts';
   import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
   import {
     type AssetRouteAction,
@@ -301,7 +302,8 @@
     const createdTags = [];
     try {
       const previousParentId = selectedAsset.parentAssetId;
-      for (const tag of draft.newTags ?? []) {
+      const reconciledTags = reconcilePendingAssetTagDrafts(data.context.assetTags ?? [], draft.tagIds ?? [], draft.newTags ?? []);
+      for (const tag of reconciledTags.newTags) {
         createdTags.push(await repository.createAssetTag(selectedAsset.tenantId, selectedAsset.inventoryId, tag));
       }
       const asset = await repository.updateAsset(
@@ -310,7 +312,7 @@
         selectedAsset.id,
         {
           ...draft,
-          tagIds: [...(draft.tagIds ?? []), ...createdTags.map((tag) => tag.id)]
+          tagIds: [...reconciledTags.tagIds, ...createdTags.map((tag) => tag.id)]
         }
       );
       data = {
