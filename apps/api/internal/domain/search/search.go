@@ -61,6 +61,8 @@ const (
 	MatchFieldCustomAssetTypeKey    MatchField = "custom_asset_type_key"
 	MatchFieldCustomAssetTypeName   MatchField = "custom_asset_type_name"
 	MatchFieldCustomAssetTypeText   MatchField = "custom_asset_type_text"
+	MatchFieldTagKey                MatchField = "tag_key"
+	MatchFieldTagDisplayName        MatchField = "tag_display_name"
 	MatchFieldAttachmentFileName    MatchField = "attachment_file_name"
 	MatchFieldAttachmentContentType MatchField = "attachment_content_type"
 )

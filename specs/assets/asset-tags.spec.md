@@ -77,6 +77,7 @@ Required queries:
 - `ListAssetTags`: active tags in one inventory, cursor paginated.
 - `AssetTagsByAsset`: active assigned tags for one asset.
 - `AssetTagsByAssets`: active assigned tags for asset list responses.
+- Asset search must match assigned active tag display names and keys for assets the caller is authorized to search.
 
 ## REST API
 
@@ -94,6 +95,12 @@ Asset create and update requests must accept:
 Asset detail and list responses must include:
 
 - `tags`: ordered compact assigned tag objects with ID, key, display name, and optional color.
+
+Asset search results:
+
+- Must include assets when the search query matches an assigned active tag display name or tag key.
+- Must not match archived tags.
+- Must preserve the existing tenant, inventory, lifecycle, checkout, and authorization filters before evaluating tag matches.
 
 Authorization:
 
@@ -161,6 +168,7 @@ Required coverage:
 - REST authentication, authorization, cross-tenant, cross-inventory, and legitimate-principal paths.
 - Asset create/update assignment behavior.
 - Asset list/detail assigned tag responses.
+- Asset search matches assigned active tag display names and keys.
 - Homebox CSV `HB.labels` and `HB.tags` mapping.
 - Homebox live tag color preservation.
 - Import execution tag create/reuse counts and assignment.

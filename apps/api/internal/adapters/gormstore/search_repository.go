@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -56,6 +57,10 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 	if err := query.Find(&assetModels).Error; err != nil {
 		return nil, err
 	}
+	assetIDs := make([]asset.ID, 0, len(assetModels))
+	for _, model := range assetModels {
+		assetIDs = append(assetIDs, asset.ID(model.ID))
+	}
 	currentCheckouts, err := s.searchOpenCheckouts(ctx, tenantID, inventoryIDValues)
 	if err != nil {
 		return nil, err
@@ -66,6 +71,10 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 		return nil, err
 	}
 	attachments, err := s.searchAttachments(ctx, tenantID, inventoryIDValues)
+	if err != nil {
+		return nil, err
+	}
+	assignedTags, err := s.assetTagsByAssetsInInventories(ctx, tenantID, inventoryIDValues, assetIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +93,7 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 		if !checkoutStateMatches(hasOpenCheckout, page.CheckoutFilter) {
 			continue
 		}
-		matches := search.MatchAsset(assetDocument(item, assetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())], attachments[item.ID.String()]), page.Query, page.Mode)
+		matches := search.MatchAsset(assetDocument(item, assetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())], assignedTags[item.ID], attachments[item.ID.String()]), page.Query, page.Mode)
 		if len(matches) == 0 {
 			continue
 		}
@@ -180,10 +189,17 @@ func (s Store) searchAttachments(ctx context.Context, tenantID tenant.ID, invent
 	return result, nil
 }
 
-func assetDocument(item asset.Asset, assetType customfield.AssetType, attachments []media.Attachment) search.AssetDocument {
+func assetDocument(item asset.Asset, assetType customfield.AssetType, tags []assettag.Tag, attachments []media.Attachment) search.AssetDocument {
 	fields := make([]string, 0, len(item.CustomFields.Values()))
 	for _, value := range item.CustomFields.Values() {
 		fields = append(fields, fmt.Sprint(value))
+	}
+	tagDocuments := make([]search.TagDocument, 0, len(tags))
+	for _, tag := range tags {
+		tagDocuments = append(tagDocuments, search.TagDocument{
+			Key:         tag.Key.String(),
+			DisplayName: tag.DisplayName.String(),
+		})
 	}
 	attachmentDocuments := make([]search.AttachmentDocument, 0, len(attachments))
 	for _, attachment := range attachments {
@@ -199,6 +215,7 @@ func assetDocument(item asset.Asset, assetType customfield.AssetType, attachment
 		CustomAssetTypeKey:  assetType.Key.String(),
 		CustomAssetTypeName: assetType.DisplayName.String(),
 		CustomAssetTypeText: assetType.Description.String(),
+		Tags:                tagDocuments,
 		Attachments:         attachmentDocuments,
 	}
 }

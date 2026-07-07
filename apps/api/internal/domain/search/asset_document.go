@@ -11,7 +11,13 @@ type AssetDocument struct {
 	CustomAssetTypeKey  string
 	CustomAssetTypeName string
 	CustomAssetTypeText string
+	Tags                []TagDocument
 	Attachments         []AttachmentDocument
+}
+
+type TagDocument struct {
+	Key         string
+	DisplayName string
 }
 
 type AttachmentDocument struct {
@@ -40,6 +46,19 @@ func MatchAsset(document AssetDocument, query Query, mode Mode) []Match {
 			{field: MatchFieldCustomAssetTypeKey, value: document.CustomAssetTypeKey},
 			{field: MatchFieldCustomAssetTypeName, value: document.CustomAssetTypeName},
 			{field: MatchFieldCustomAssetTypeText, value: document.CustomAssetTypeText},
+		} {
+			if valueMatches(candidate.value, query, mode) {
+				matches = append(matches, Match{Field: candidate.field, Value: candidate.value})
+			}
+		}
+	}
+	for _, tag := range document.Tags {
+		for _, candidate := range []struct {
+			field MatchField
+			value string
+		}{
+			{field: MatchFieldTagKey, value: tag.Key},
+			{field: MatchFieldTagDisplayName, value: tag.DisplayName},
 		} {
 			if valueMatches(candidate.value, query, mode) {
 				matches = append(matches, Match{Field: candidate.field, Value: candidate.value})

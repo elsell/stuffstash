@@ -198,8 +198,12 @@ func (s Store) AssetTagsByAsset(ctx context.Context, tenantID tenant.ID, invento
 }
 
 func (s Store) AssetTagsByAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetIDs []asset.ID) (map[asset.ID][]assettag.Tag, error) {
+	return s.assetTagsByAssetsInInventories(ctx, tenantID, []string{inventoryID.String()}, assetIDs)
+}
+
+func (s Store) assetTagsByAssetsInInventories(ctx context.Context, tenantID tenant.ID, inventoryIDValues []string, assetIDs []asset.ID) (map[asset.ID][]assettag.Tag, error) {
 	out := map[asset.ID][]assettag.Tag{}
-	if len(assetIDs) == 0 {
+	if len(inventoryIDValues) == 0 || len(assetIDs) == 0 {
 		return out, nil
 	}
 	ids := make([]string, 0, len(assetIDs))
@@ -215,7 +219,8 @@ func (s Store) AssetTagsByAssets(ctx context.Context, tenantID tenant.ID, invent
 	}
 	var assignments []assetTagAssignmentModel
 	if err := s.db.WithContext(ctx).
-		Where(&assetTagAssignmentModel{TenantID: tenantID.String(), InventoryID: inventoryID.String()}).
+		Where(&assetTagAssignmentModel{TenantID: tenantID.String()}).
+		Where(clause.IN{Column: clause.Column{Name: "inventory_id"}, Values: stringValues(inventoryIDValues)}).
 		Where(clause.IN{Column: clause.Column{Name: "asset_id"}, Values: stringValues(ids)}).
 		Find(&assignments).Error; err != nil {
 		return nil, err
@@ -229,7 +234,8 @@ func (s Store) AssetTagsByAssets(ctx context.Context, tenantID tenant.ID, invent
 	}
 	var models []assetTagModel
 	if err := s.db.WithContext(ctx).
-		Where(&assetTagModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), LifecycleState: assettag.LifecycleStateActive.String()}).
+		Where(&assetTagModel{TenantID: tenantID.String(), LifecycleState: assettag.LifecycleStateActive.String()}).
+		Where(clause.IN{Column: clause.Column{Name: "inventory_id"}, Values: stringValues(inventoryIDValues)}).
 		Where(clause.IN{Column: clause.Column{Name: "id"}, Values: stringValues(tagIDs)}).
 		Find(&models).Error; err != nil {
 		return nil, err
