@@ -127,7 +127,7 @@ func TestBuildRepositoriesAcceptsMemoryMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("build repositories: %v", err)
 	}
-	if repositories.tenants == nil || repositories.inventories == nil {
+	if repositories.tenants == nil || repositories.inventories == nil || repositories.assetTags == nil || repositories.assetTagUnitOfWork == nil {
 		t.Fatalf("expected repositories")
 	}
 	if err := closeRepositories(); err != nil {
@@ -159,7 +159,7 @@ func TestBuildRepositoriesAcceptsSQLiteMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("build repositories: %v", err)
 	}
-	if repositories.tenants == nil || repositories.providerCredentials == nil || repositories.blobs == nil {
+	if repositories.tenants == nil || repositories.providerCredentials == nil || repositories.blobs == nil || repositories.assetTags == nil || repositories.assetTagUnitOfWork == nil {
 		t.Fatalf("expected sqlite-backed repositories")
 	}
 	if err := closeRepositories(); err != nil {
