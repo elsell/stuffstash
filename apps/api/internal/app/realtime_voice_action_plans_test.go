@@ -93,6 +93,14 @@ func TestRealtimeVoiceCanProposePersistedActionPlanForMobileReview(t *testing.T)
 	if len(language.seenTools) < 2 || containsRealtimeTool(language.seenTools[0], RealtimeVoiceToolProposeActionPlan) || !containsRealtimeTool(language.seenTools[1], RealtimeVoiceToolProposeActionPlan) {
 		t.Fatalf("expected first turn to gather context and second turn to include propose action plan tool, got %+v", language.seenTools)
 	}
+	if len(language.seenRequireToolCall) < 2 || !language.seenRequireToolCall[0] || language.seenRequireToolCall[1] {
+		t.Fatalf("expected first turn to require a read tool and planner turn not to force function calling, got %+v", language.seenRequireToolCall)
+	}
+	for _, tool := range language.seenTools[0] {
+		if !tool.ReadOnly || tool.RequiresApproval || tool.MutatesInventory || tool.Name == RealtimeVoiceToolProposeActionPlan {
+			t.Fatalf("expected required first-turn tools to be read-only context tools, got %+v", language.seenTools[0])
+		}
+	}
 	if len(language.seenToolResults) != 2 {
 		t.Fatalf("expected loop to stop after proposal without requesting final turn, got %d turns", len(language.seenToolResults))
 	}
