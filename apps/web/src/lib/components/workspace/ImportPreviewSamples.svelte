@@ -1,146 +1,339 @@
 <script lang="ts">
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+  import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+  import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import type { ImportJobPreview } from '$lib/domain/inventory';
+  import * as Button from '$lib/components/ui/button/index.js';
   import { fileSizeLabel, previewAssetContext, previewLocationContext } from './importWorkspacePresentation';
+
+  const PLAN_PAGE_SIZE = 8;
+
+  type PlanSectionId = 'fields' | 'locations' | 'assets' | 'attachments';
+
+  type PlanColumn = {
+    key: string;
+    label: string;
+  };
+
+  type PlanRow = {
+    id: string;
+    cells: Record<string, string>;
+  };
+
+  type PlanSection = {
+    id: PlanSectionId;
+    title: string;
+    emptyText: string;
+    truncated: boolean;
+    columns: PlanColumn[];
+    rows: PlanRow[];
+  };
 
   type Props = {
     preview: ImportJobPreview;
   };
 
   let { preview }: Props = $props();
+  let pageBySection = $state<Record<PlanSectionId, number>>({
+    fields: 0,
+    locations: 0,
+    assets: 0,
+    attachments: 0
+  });
 
-  function countLabel(count: number, singular: string, plural = `${singular}s`): string {
-    return `${count} ${count === 1 ? singular : plural}`;
+  let sections = $derived(buildSections(preview));
+
+  $effect(() => {
+    for (const section of sections) {
+      const pageCount = planPageCount(section);
+      if (pageBySection[section.id] >= pageCount) {
+        pageBySection = {
+          ...pageBySection,
+          [section.id]: Math.max(0, pageCount - 1)
+        };
+      }
+    }
+  });
+
+  function buildSections(preview: ImportJobPreview): PlanSection[] {
+    return [
+      {
+        id: 'fields',
+        title: 'Fields',
+        emptyText: 'No custom fields planned.',
+        truncated: preview.fieldsTruncated,
+        columns: [
+          { key: 'name', label: 'Field' },
+          { key: 'key', label: 'Key' },
+          { key: 'type', label: 'Type' }
+        ],
+        rows: preview.fields.map((field) => ({
+          id: field.key,
+          cells: {
+            name: field.displayName || field.key,
+            key: field.key,
+            type: field.type
+          }
+        }))
+      },
+      {
+        id: 'locations',
+        title: 'Locations',
+        emptyText: 'No locations planned.',
+        truncated: preview.locationsTruncated,
+        columns: [
+          { key: 'name', label: 'Location' },
+          { key: 'kind', label: 'Kind' },
+          { key: 'context', label: 'Context' }
+        ],
+        rows: preview.locations.map((item, index) => ({
+          id: `location-${index}-${item.title}`,
+          cells: {
+            name: item.title,
+            kind: item.kind,
+            context: previewLocationContext(item)
+          }
+        }))
+      },
+      {
+        id: 'assets',
+        title: 'Assets',
+        emptyText: 'No asset records planned.',
+        truncated: preview.assetsTruncated,
+        columns: [
+          { key: 'name', label: 'Asset' },
+          { key: 'kind', label: 'Kind' },
+          { key: 'context', label: 'Context' }
+        ],
+        rows: preview.assets.map((item, index) => ({
+          id: `asset-${index}-${item.title}`,
+          cells: {
+            name: item.title,
+            kind: item.kind,
+            context: previewAssetContext(item)
+          }
+        }))
+      },
+      {
+        id: 'attachments',
+        title: 'Photos/files',
+        emptyText: 'No photos or files planned.',
+        truncated: preview.attachmentsTruncated,
+        columns: [
+          { key: 'name', label: 'File' },
+          { key: 'type', label: 'Type' },
+          { key: 'size', label: 'Size' }
+        ],
+        rows: preview.attachments.map((attachment, index) => ({
+          id: `attachment-${index}-${attachment.fileName || 'unnamed'}`,
+          cells: {
+            name: `${attachment.fileName || 'Unnamed attachment'}${attachment.primary ? ' (primary)' : ''}`,
+            type: attachment.contentType || 'unknown type',
+            size: fileSizeLabel(attachment.sizeBytes)
+          }
+        }))
+      }
+    ];
+  }
+
+  function planPageCount(section: PlanSection): number {
+    return Math.max(1, Math.ceil(section.rows.length / PLAN_PAGE_SIZE));
+  }
+
+  function visibleRows(section: PlanSection): PlanRow[] {
+    const start = visibleStart(section);
+    return section.rows.slice(start, start + PLAN_PAGE_SIZE);
+  }
+
+  function visibleStart(section: PlanSection): number {
+    return Math.min(pageBySection[section.id] * PLAN_PAGE_SIZE, Math.max(0, section.rows.length - 1));
+  }
+
+  function visibleEnd(section: PlanSection): number {
+    return Math.min(section.rows.length, visibleStart(section) + visibleRows(section).length);
+  }
+
+  function sectionCountLabel(section: PlanSection): string {
+    if (section.rows.length === 0) return 'None planned';
+    if (section.rows.length > PLAN_PAGE_SIZE || section.truncated) {
+      return `${visibleStart(section) + 1}-${visibleEnd(section)} of ${section.rows.length}${section.truncated ? '+' : ''}`;
+    }
+    return `${section.rows.length} ${section.rows.length === 1 ? 'record' : 'records'}`;
+  }
+
+  function setPage(section: PlanSection, nextPage: number): void {
+    pageBySection = {
+      ...pageBySection,
+      [section.id]: Math.max(0, Math.min(planPageCount(section) - 1, nextPage))
+    };
   }
 </script>
 
-<div class="preview-samples">
-  <section>
-    <div class="sample-heading">
-      <h3>Fields</h3>
-      <small>{countLabel(preview.fields.length, 'field')}{preview.fieldsTruncated ? ' shown' : ''}</small>
-    </div>
-    <div class="sample-list">
-      {#each preview.fields as field}
-        <div class="sample-row">
-          <span>{field.displayName || field.key}</span>
-          <small>{field.key} · {field.type}</small>
+<div class="preview-plan-sections">
+  {#each sections as section}
+    <section class="plan-section" aria-labelledby={`import-plan-${section.id}`}>
+      <div class="plan-section-heading">
+        <div>
+          <h3 id={`import-plan-${section.id}`}>{section.title}</h3>
+          <small>{sectionCountLabel(section)}</small>
         </div>
-      {/each}
-      {#if preview.fields.length === 0}
-        <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> No custom fields planned.</div>
-      {/if}
-    </div>
-  </section>
-  <section>
-    <div class="sample-heading">
-      <h3>Locations</h3>
-      <small>{countLabel(preview.locations.length, 'location')}{preview.locationsTruncated ? ' shown' : ''}</small>
-    </div>
-    <div class="sample-list">
-      {#each preview.locations as item}
-        <div class="sample-row">
-          <span>{item.title}</span>
-          <small>{previewLocationContext(item)}</small>
+        {#if section.truncated}
+          <span class="sample-badge">Sample</span>
+        {/if}
+      </div>
+
+      {#if section.rows.length === 0}
+        <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {section.emptyText}</div>
+      {:else}
+        <div class="plan-table" role="table" aria-label={`${section.title} plan sample`}>
+          <div class="plan-row plan-head" role="row">
+            {#each section.columns as column}
+              <span role="columnheader">{column.label}</span>
+            {/each}
+          </div>
+          {#each visibleRows(section) as row}
+            <div class="plan-row" role="row">
+              {#each section.columns as column, index}
+                <span class:primary-cell={index === 0} role="cell" data-cell-label={column.label}>{row.cells[column.key]}</span>
+              {/each}
+            </div>
+          {/each}
         </div>
-      {/each}
-      {#if preview.locations.length === 0}
-        <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> No locations planned.</div>
+        {#if section.rows.length > PLAN_PAGE_SIZE}
+          <div class="plan-pagination">
+            <span>Page {pageBySection[section.id] + 1} of {planPageCount(section)}</span>
+            <Button.Root
+              variant="outline"
+              size="icon"
+              disabled={pageBySection[section.id] === 0}
+              aria-label={`Previous ${section.title.toLowerCase()} plan page`}
+              onclick={() => setPage(section, pageBySection[section.id] - 1)}
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+            </Button.Root>
+            <Button.Root
+              variant="outline"
+              size="icon"
+              disabled={pageBySection[section.id] >= planPageCount(section) - 1}
+              aria-label={`Next ${section.title.toLowerCase()} plan page`}
+              onclick={() => setPage(section, pageBySection[section.id] + 1)}
+            >
+              <ChevronRight size={16} aria-hidden="true" />
+            </Button.Root>
+          </div>
+        {/if}
       {/if}
-    </div>
-  </section>
-  <section>
-    <div class="sample-heading">
-      <h3>Assets</h3>
-      <small>{countLabel(preview.assets.length, 'asset')}{preview.assetsTruncated ? ' shown' : ''}</small>
-    </div>
-    <div class="sample-list">
-      {#each preview.assets as item}
-        <div class="sample-row">
-          <span>{item.title}</span>
-          <small>{previewAssetContext(item)}</small>
-        </div>
-      {/each}
-      {#if preview.assets.length === 0}
-        <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> No asset records planned.</div>
-      {/if}
-    </div>
-  </section>
-  <section>
-    <div class="sample-heading">
-      <h3>Photos/files</h3>
-      <small>{countLabel(preview.attachments.length, 'photo/file', 'photos/files')}{preview.attachmentsTruncated ? ' shown' : ''}</small>
-    </div>
-    <div class="sample-list">
-      {#each preview.attachments as attachment}
-        <div class="sample-row">
-          <span>{attachment.fileName || 'Unnamed attachment'}</span>
-          <small>{attachment.contentType || 'unknown type'} · {fileSizeLabel(attachment.sizeBytes)}{attachment.primary ? ' · primary' : ''}</small>
-        </div>
-      {/each}
-      {#if preview.attachments.length === 0}
-        <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> No photos or files planned.</div>
-      {/if}
-    </div>
-  </section>
+    </section>
+  {/each}
 </div>
 
 <style>
-  .preview-samples {
+  .preview-plan-sections {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .preview-samples section {
+  .plan-section {
     border-top: 1px solid var(--border);
     display: grid;
-    gap: 0.6rem;
+    gap: 0.65rem;
     min-width: 0;
     padding-top: 0.75rem;
   }
 
-  .preview-samples section:nth-child(-n + 2) {
+  .plan-section:first-child {
     border-top: 0;
     padding-top: 0;
   }
 
-  .sample-heading {
-    align-items: baseline;
-    display: flex;
-    gap: 0.5rem;
-    justify-content: space-between;
-  }
-
-  .sample-heading small,
-  .sample-row small {
-    color: var(--muted-foreground);
-    font-size: 0.78rem;
-  }
-
-  .sample-list {
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  .sample-row {
-    background: color-mix(in oklab, var(--muted) 24%, transparent);
-    border: 1px solid color-mix(in oklab, var(--border) 72%, transparent);
-    border-radius: 8px;
-    min-width: 0;
-    padding: 0.55rem 0.65rem;
-  }
-
-  .sample-row span,
-  .sample-row small {
-    display: block;
-    overflow-wrap: anywhere;
-  }
-
+  .plan-section-heading,
+  .plan-pagination,
   .quiet-row {
     align-items: center;
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .plan-section-heading {
+    justify-content: space-between;
+  }
+
+  .plan-section-heading > div {
+    min-width: 0;
+  }
+
+  .plan-section-heading small {
+    color: var(--muted-foreground);
+    display: block;
+    font-size: 0.78rem;
+    margin-top: 0.1rem;
+  }
+
+  .sample-badge {
+    background: color-mix(in oklab, var(--muted) 54%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    white-space: nowrap;
+  }
+
+  .plan-table {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .plan-row {
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(7rem, 0.52fr) minmax(0, 1fr);
+    min-width: 0;
+    padding: 0.48rem 0.6rem;
+  }
+
+  .plan-row:first-child {
+    border-top: 0;
+  }
+
+  .plan-head {
+    background: color-mix(in oklab, var(--muted) 32%, transparent);
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .plan-row span {
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .plan-row .primary-cell {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .plan-pagination {
+    justify-content: flex-end;
+  }
+
+  .plan-pagination span {
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    margin-right: auto;
+  }
+
+  .quiet-row {
+    color: var(--muted-foreground);
+    font-size: 0.88rem;
   }
 
   h3 {
@@ -149,19 +342,19 @@
   }
 
   @media (max-width: 860px) {
-    .preview-samples {
-      grid-template-columns: 1fr;
+    .plan-row {
+      gap: 0.28rem;
+      grid-template-columns: minmax(0, 1fr);
     }
 
-    .preview-samples section,
-    .preview-samples section:nth-child(-n + 3) {
-      border-top: 1px solid var(--border);
-      padding-top: 0.75rem;
+    .plan-head {
+      display: none;
     }
 
-    .preview-samples section:first-child {
-      border-top: 0;
-      padding-top: 0;
+    .plan-row span:not(.primary-cell)::before {
+      color: var(--muted-foreground);
+      content: attr(data-cell-label) ": ";
+      font-weight: 700;
     }
   }
 </style>
