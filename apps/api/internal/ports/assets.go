@@ -22,12 +22,23 @@ type AssetUnitOfWork interface {
 	CreateAssetWithParentPromotion(ctx context.Context, promotedParent asset.Asset, parentAuditRecord audit.Record, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	UpdateAsset(ctx context.Context, asset asset.Asset, auditRecords []audit.Record, undoableOperation *UndoableOperation) error
 	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
+	CheckOutAsset(ctx context.Context, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *UndoableOperation) error
+	ReturnAsset(ctx context.Context, expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error
+}
+
+type AssetCheckoutRepository interface {
+	CurrentAssetCheckout(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Checkout, bool, error)
+	AssetCheckoutByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error)
+	ListAssetCheckoutHistory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page AssetCheckoutHistoryPageRequest) ([]asset.Checkout, error)
+	ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page CheckedOutAssetsPageRequest) ([]CheckedOutAsset, error)
+	HasLaterCheckout(ctx context.Context, checkout asset.Checkout) (bool, error)
 }
 
 type UndoableOperationRepository interface {
 	UndoableOperationByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, operationID string) (UndoableOperation, bool, error)
 	ApplyAssetUndoableOperation(ctx context.Context, operationID string, direction UndoableOperationDirection, expectedCurrent asset.Asset, resulting asset.Asset, auditRecord audit.Record) (UndoableOperation, asset.Asset, error)
+	ApplyAssetCheckoutUndoableOperation(ctx context.Context, operationID string, direction UndoableOperationDirection, expectedCurrent asset.Checkout, resulting asset.Checkout, auditRecord audit.Record) (UndoableOperation, asset.Checkout, error)
 }
 
 type UndoableOperationStatus string
@@ -59,8 +70,27 @@ type UndoableOperation struct {
 	LastAppliedAt     time.Time
 	BeforeAsset       *asset.Asset
 	AfterAsset        asset.Asset
+	BeforeCheckout    *asset.Checkout
+	AfterCheckout     *asset.Checkout
 	UndoAuditRecordID audit.ID
 	RedoAuditRecordID audit.ID
+}
+
+type AssetCheckoutHistoryPageRequest struct {
+	AfterCheckoutID   asset.CheckoutID
+	AfterCheckedOutAt time.Time
+	Limit             int
+}
+
+type CheckedOutAssetsPageRequest struct {
+	AfterAssetID      asset.ID
+	AfterCheckedOutAt time.Time
+	Limit             int
+}
+
+type CheckedOutAsset struct {
+	Asset    asset.Asset
+	Checkout asset.Checkout
 }
 
 type AssetLifecycleFilter string

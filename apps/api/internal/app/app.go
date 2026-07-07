@@ -30,6 +30,7 @@ type App struct {
 	customFields                ports.CustomFieldDefinitionRepository
 	customFieldUnitOfWork       ports.CustomFieldDefinitionUnitOfWork
 	assets                      ports.AssetRepository
+	checkouts                   ports.AssetCheckoutRepository
 	assetUnitOfWork             ports.AssetUnitOfWork
 	undoables                   ports.UndoableOperationRepository
 	search                      ports.AssetSearchRepository
@@ -96,6 +97,7 @@ type Dependencies struct {
 	CustomFields                    ports.CustomFieldDefinitionRepository
 	CustomFieldUnitOfWork           ports.CustomFieldDefinitionUnitOfWork
 	Assets                          ports.AssetRepository
+	Checkouts                       ports.AssetCheckoutRepository
 	AssetUnitOfWork                 ports.AssetUnitOfWork
 	Undoables                       ports.UndoableOperationRepository
 	Search                          ports.AssetSearchRepository
@@ -182,6 +184,7 @@ func New(deps Dependencies) App {
 		customFields:                deps.CustomFields,
 		customFieldUnitOfWork:       deps.CustomFieldUnitOfWork,
 		assets:                      deps.Assets,
+		checkouts:                   deps.Checkouts,
 		assetUnitOfWork:             deps.AssetUnitOfWork,
 		undoables:                   deps.Undoables,
 		search:                      deps.Search,
@@ -236,6 +239,7 @@ func New(deps Dependencies) App {
 		CustomAssetTypes: app.customAssetTypes,
 		CustomFields:     app.customFields,
 		Assets:           app.assets,
+		Checkouts:        app.checkouts,
 		Attachments:      app.attachments,
 		AssetUnitOfWork:  app.assetUnitOfWork,
 		Undoables:        app.undoables,

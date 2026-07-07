@@ -18,6 +18,12 @@ type UpdateAssetInput = assetapp.UpdateAssetInput
 type UpdateAssetLifecycleInput = assetapp.UpdateAssetLifecycleInput
 type GetAssetResult = assetapp.GetAssetResult
 type ListAssetsResult = assetapp.ListAssetsResult
+type CheckoutAssetInput = assetapp.CheckoutAssetInput
+type ReturnAssetInput = assetapp.ReturnAssetInput
+type ListAssetCheckoutHistoryInput = assetapp.ListAssetCheckoutHistoryInput
+type ListCheckedOutAssetsInput = assetapp.ListCheckedOutAssetsInput
+type AssetCheckoutHistoryResult = assetapp.AssetCheckoutHistoryResult
+type CheckedOutAssetsResult = assetapp.CheckedOutAssetsResult
 
 func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
 	return a.assetService.CreateAsset(ctx, input)
@@ -52,6 +58,22 @@ func (a App) GetAssetDetail(ctx context.Context, input GetAssetInput) (GetAssetR
 
 func (a App) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) error {
 	return a.assetService.DeleteAsset(ctx, input)
+}
+
+func (a App) CheckoutAsset(ctx context.Context, input CheckoutAssetInput) (asset.Checkout, error) {
+	return a.assetService.CheckoutAsset(ctx, input)
+}
+
+func (a App) ReturnAsset(ctx context.Context, input ReturnAssetInput) (asset.Checkout, error) {
+	return a.assetService.ReturnAsset(ctx, input)
+}
+
+func (a App) ListAssetCheckoutHistory(ctx context.Context, input ListAssetCheckoutHistoryInput) (AssetCheckoutHistoryResult, error) {
+	return a.assetService.ListAssetCheckoutHistory(ctx, input)
+}
+
+func (a App) ListCheckedOutAssets(ctx context.Context, input ListCheckedOutAssetsInput) (CheckedOutAssetsResult, error) {
+	return a.assetService.ListCheckedOutAssets(ctx, input)
 }
 
 func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsResult, error) {

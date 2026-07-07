@@ -27,7 +27,9 @@ type undoableOperationModel struct {
 	CreatedAt         time.Time
 	LastAppliedAt     *time.Time
 	BeforeAsset       *string `gorm:"type:jsonb"`
-	AfterAsset        string  `gorm:"type:jsonb;not null"`
+	AfterAsset        *string `gorm:"type:jsonb"`
+	BeforeCheckout    *string `gorm:"type:jsonb"`
+	AfterCheckout     *string `gorm:"type:jsonb"`
 	UndoAuditRecordID *string `gorm:"size:26"`
 	RedoAuditRecordID *string `gorm:"size:26"`
 }
@@ -49,18 +51,54 @@ type undoableAssetSnapshot struct {
 	LifecycleState    string         `json:"lifecycleState"`
 }
 
+type undoableCheckoutSnapshot struct {
+	ID                    string `json:"id"`
+	TenantID              string `json:"tenantId"`
+	InventoryID           string `json:"inventoryId"`
+	AssetID               string `json:"assetId"`
+	State                 string `json:"state"`
+	CheckedOutAt          string `json:"checkedOutAt"`
+	CheckedOutByPrincipal string `json:"checkedOutByPrincipal"`
+	CheckoutDetails       string `json:"checkoutDetails,omitempty"`
+	ReturnedAt            string `json:"returnedAt,omitempty"`
+	ReturnedByPrincipal   string `json:"returnedByPrincipal,omitempty"`
+	ReturnDetails         string `json:"returnDetails,omitempty"`
+	CreatedAt             string `json:"createdAt"`
+	UpdatedAt             string `json:"updatedAt"`
+}
+
 func newUndoableOperationModel(operation ports.UndoableOperation) (undoableOperationModel, error) {
-	afterAsset, err := marshalUndoableAssetSnapshot(operation.AfterAsset)
-	if err != nil {
-		return undoableOperationModel{}, err
-	}
+	var afterAsset *string
 	var beforeAsset *string
-	if operation.BeforeAsset != nil {
-		encoded, err := marshalUndoableAssetSnapshot(*operation.BeforeAsset)
+	if operation.AfterCheckout == nil {
+		encoded, err := marshalUndoableAssetSnapshot(operation.AfterAsset)
 		if err != nil {
 			return undoableOperationModel{}, err
 		}
-		beforeAsset = &encoded
+		afterAsset = &encoded
+		if operation.BeforeAsset != nil {
+			encoded, err := marshalUndoableAssetSnapshot(*operation.BeforeAsset)
+			if err != nil {
+				return undoableOperationModel{}, err
+			}
+			beforeAsset = &encoded
+		}
+	}
+	var afterCheckout *string
+	var beforeCheckout *string
+	if operation.AfterCheckout != nil {
+		encoded, err := marshalUndoableCheckoutSnapshot(*operation.AfterCheckout)
+		if err != nil {
+			return undoableOperationModel{}, err
+		}
+		afterCheckout = &encoded
+		if operation.BeforeCheckout != nil {
+			encoded, err := marshalUndoableCheckoutSnapshot(*operation.BeforeCheckout)
+			if err != nil {
+				return undoableOperationModel{}, err
+			}
+			beforeCheckout = &encoded
+		}
 	}
 	var lastAppliedAt *time.Time
 	if !operation.LastAppliedAt.IsZero() {
@@ -80,15 +118,21 @@ func newUndoableOperationModel(operation ports.UndoableOperation) (undoableOpera
 		LastAppliedAt:     lastAppliedAt,
 		BeforeAsset:       beforeAsset,
 		AfterAsset:        afterAsset,
+		BeforeCheckout:    beforeCheckout,
+		AfterCheckout:     afterCheckout,
 		UndoAuditRecordID: stringPtrFromAuditID(operation.UndoAuditRecordID),
 		RedoAuditRecordID: stringPtrFromAuditID(operation.RedoAuditRecordID),
 	}, nil
 }
 
 func (m undoableOperationModel) toPort() (ports.UndoableOperation, bool) {
-	afterAsset, ok := unmarshalUndoableAssetSnapshot(m.AfterAsset)
-	if !ok {
-		return ports.UndoableOperation{}, false
+	afterAsset := asset.Asset{}
+	if m.AfterAsset != nil {
+		var ok bool
+		afterAsset, ok = unmarshalUndoableAssetSnapshot(*m.AfterAsset)
+		if !ok {
+			return ports.UndoableOperation{}, false
+		}
 	}
 	var beforeAsset *asset.Asset
 	if m.BeforeAsset != nil {
@@ -97,6 +141,22 @@ func (m undoableOperationModel) toPort() (ports.UndoableOperation, bool) {
 			return ports.UndoableOperation{}, false
 		}
 		beforeAsset = &item
+	}
+	var afterCheckout *asset.Checkout
+	if m.AfterCheckout != nil {
+		checkout, ok := unmarshalUndoableCheckoutSnapshot(*m.AfterCheckout)
+		if !ok {
+			return ports.UndoableOperation{}, false
+		}
+		afterCheckout = &checkout
+	}
+	var beforeCheckout *asset.Checkout
+	if m.BeforeCheckout != nil {
+		checkout, ok := unmarshalUndoableCheckoutSnapshot(*m.BeforeCheckout)
+		if !ok {
+			return ports.UndoableOperation{}, false
+		}
+		beforeCheckout = &checkout
 	}
 	lastAppliedAt := time.Time{}
 	if m.LastAppliedAt != nil {
@@ -142,9 +202,104 @@ func (m undoableOperationModel) toPort() (ports.UndoableOperation, bool) {
 		LastAppliedAt:     lastAppliedAt,
 		BeforeAsset:       beforeAsset,
 		AfterAsset:        afterAsset,
+		BeforeCheckout:    beforeCheckout,
+		AfterCheckout:     afterCheckout,
 		UndoAuditRecordID: undoAuditRecordID,
 		RedoAuditRecordID: redoAuditRecordID,
 	}, true
+}
+
+func marshalUndoableCheckoutSnapshot(checkout asset.Checkout) (string, error) {
+	encoded, err := json.Marshal(undoableCheckoutSnapshot{
+		ID:                    checkout.ID.String(),
+		TenantID:              checkout.TenantID.String(),
+		InventoryID:           checkout.InventoryID.String(),
+		AssetID:               checkout.AssetID.String(),
+		State:                 checkout.State.String(),
+		CheckedOutAt:          checkout.CheckedOutAt.Format(time.RFC3339Nano),
+		CheckedOutByPrincipal: checkout.CheckedOutByPrincipal,
+		CheckoutDetails:       checkout.CheckoutDetails.String(),
+		ReturnedAt:            timeString(checkout.ReturnedAt),
+		ReturnedByPrincipal:   checkout.ReturnedByPrincipal,
+		ReturnDetails:         checkout.ReturnDetails.String(),
+		CreatedAt:             checkout.CreatedAt.Format(time.RFC3339Nano),
+		UpdatedAt:             checkout.UpdatedAt.Format(time.RFC3339Nano),
+	})
+	return string(encoded), err
+}
+
+func unmarshalUndoableCheckoutSnapshot(encoded string) (asset.Checkout, bool) {
+	var snapshot undoableCheckoutSnapshot
+	if err := json.Unmarshal([]byte(encoded), &snapshot); err != nil {
+		return asset.Checkout{}, false
+	}
+	id, ok := asset.NewCheckoutID(snapshot.ID)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	assetID, ok := asset.NewID(snapshot.AssetID)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	state, ok := asset.NewCheckoutState(snapshot.State)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	checkoutDetails, ok := asset.NewCheckoutDetails(snapshot.CheckoutDetails)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	returnDetails, ok := asset.NewCheckoutDetails(snapshot.ReturnDetails)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	checkedOutAt, ok := parseSnapshotTime(snapshot.CheckedOutAt)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	createdAt, ok := parseSnapshotTime(snapshot.CreatedAt)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	updatedAt, ok := parseSnapshotTime(snapshot.UpdatedAt)
+	if !ok {
+		return asset.Checkout{}, false
+	}
+	returnedAt := time.Time{}
+	if snapshot.ReturnedAt != "" {
+		var parsed bool
+		returnedAt, parsed = parseSnapshotTime(snapshot.ReturnedAt)
+		if !parsed {
+			return asset.Checkout{}, false
+		}
+	}
+	return asset.Checkout{
+		ID:                    id,
+		TenantID:              asset.TenantID(snapshot.TenantID),
+		InventoryID:           asset.InventoryID(snapshot.InventoryID),
+		AssetID:               assetID,
+		State:                 state,
+		CheckedOutAt:          checkedOutAt,
+		CheckedOutByPrincipal: snapshot.CheckedOutByPrincipal,
+		CheckoutDetails:       checkoutDetails,
+		ReturnedAt:            returnedAt,
+		ReturnedByPrincipal:   snapshot.ReturnedByPrincipal,
+		ReturnDetails:         returnDetails,
+		CreatedAt:             createdAt,
+		UpdatedAt:             updatedAt,
+	}, true
+}
+
+func timeString(value time.Time) string {
+	if value.IsZero() {
+		return ""
+	}
+	return value.Format(time.RFC3339Nano)
+}
+
+func parseSnapshotTime(value string) (time.Time, bool) {
+	parsed, err := time.Parse(time.RFC3339Nano, value)
+	return parsed, err == nil
 }
 
 func marshalUndoableAssetSnapshot(item asset.Asset) (string, error) {

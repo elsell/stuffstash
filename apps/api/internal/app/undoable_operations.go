@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"time"
 
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -45,13 +46,6 @@ func (a App) applyUndoableOperation(ctx context.Context, input ApplyUndoableOper
 	if !found {
 		return asset.Asset{}, ErrNotFound
 	}
-	expectedCurrent, resulting, err := assetUndoableOperationStates(operation, direction)
-	if err != nil {
-		return asset.Asset{}, err
-	}
-	if err := a.validateUndoableAssetResult(ctx, input.TenantID, input.InventoryID, resulting); err != nil {
-		return asset.Asset{}, err
-	}
 	auditAction := audit.ActionUndoableOperationUndone
 	eventName := ports.EventUndoableOperationUndone
 	eventMessage := "undoable operation undone"
@@ -79,12 +73,64 @@ func (a App) applyUndoableOperation(ctx context.Context, input ApplyUndoableOper
 	if err != nil {
 		return asset.Asset{}, err
 	}
+	if operation.AfterCheckout != nil {
+		return a.applyCheckoutUndoableOperation(ctx, input, direction, operation, auditRecord, eventName, eventMessage)
+	}
+	expectedCurrent, resulting, err := assetUndoableOperationStates(operation, direction)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if err := a.validateUndoableAssetResult(ctx, input.TenantID, input.InventoryID, resulting); err != nil {
+		return asset.Asset{}, err
+	}
 	applied, item, err := a.undoables.ApplyAssetUndoableOperation(ctx, operation.ID, direction, expectedCurrent, resulting, auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return asset.Asset{}, ErrInvalidInput
 		}
 		return asset.Asset{}, err
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    eventName,
+		Message: eventMessage,
+		Fields: map[string]string{
+			"tenant_id":       input.TenantID.String(),
+			"inventory_id":    input.InventoryID.String(),
+			"operation_id":    applied.ID,
+			"original_action": applied.OriginalAction.String(),
+			"target_type":     applied.TargetType.String(),
+			"target_id":       applied.TargetID,
+			"principal_id":    input.Principal.ID.String(),
+		},
+	})
+	return item, nil
+}
+
+func (a App) applyCheckoutUndoableOperation(ctx context.Context, input ApplyUndoableOperationInput, direction ports.UndoableOperationDirection, operation ports.UndoableOperation, auditRecord audit.Record, eventName ports.EventName, eventMessage string) (asset.Asset, error) {
+	if a.checkouts == nil || a.assets == nil {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	expectedCurrent, resulting, err := checkoutUndoableOperationStates(ctx, a.checkouts, operation, direction)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	applied, _, err := a.undoables.ApplyAssetCheckoutUndoableOperation(ctx, operation.ID, direction, expectedCurrent, resulting, auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
+			return asset.Asset{}, ErrInvalidInput
+		}
+		return asset.Asset{}, err
+	}
+	itemID, ok := asset.NewID(operation.TargetID)
+	if !ok {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	item, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, itemID)
+	if err != nil {
+		return asset.Asset{}, err
+	}
+	if !found {
+		return asset.Asset{}, ErrNotFound
 	}
 	a.observer.Record(ctx, ports.Event{
 		Name:    eventName,
@@ -135,6 +181,9 @@ func (a App) ensureSnapshotCustomAssetTypeExists(ctx context.Context, tenantID t
 }
 
 func assetUndoableOperationStates(operation ports.UndoableOperation, direction ports.UndoableOperationDirection) (asset.Asset, asset.Asset, error) {
+	if operation.AfterCheckout != nil {
+		return asset.Asset{}, asset.Asset{}, ErrInvalidInput
+	}
 	if operation.TargetType != audit.TargetAsset {
 		return asset.Asset{}, asset.Asset{}, ErrInvalidInput
 	}
@@ -170,5 +219,55 @@ func assetUndoableOperationStates(operation ports.UndoableOperation, direction p
 		}
 	default:
 		return asset.Asset{}, asset.Asset{}, ErrInvalidInput
+	}
+}
+
+func checkoutUndoableOperationStates(ctx context.Context, checkouts ports.AssetCheckoutRepository, operation ports.UndoableOperation, direction ports.UndoableOperationDirection) (asset.Checkout, asset.Checkout, error) {
+	if operation.TargetType != audit.TargetAsset || operation.AfterCheckout == nil {
+		return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
+	}
+	if later, err := checkouts.HasLaterCheckout(ctx, *operation.AfterCheckout); err != nil {
+		return asset.Checkout{}, asset.Checkout{}, err
+	} else if later {
+		return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
+	}
+	after := *operation.AfterCheckout
+	switch direction {
+	case ports.UndoableOperationDirectionUndo:
+		switch operation.OriginalAction {
+		case audit.ActionAssetCheckedOut:
+			resulting := after
+			resulting.State = asset.CheckoutStateUndone
+			resulting.ReturnedAt = time.Time{}
+			resulting.ReturnedByPrincipal = ""
+			resulting.ReturnDetails, _ = asset.NewCheckoutDetails("")
+			return after, resulting, nil
+		case audit.ActionAssetReturned:
+			if operation.BeforeCheckout == nil {
+				return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
+			}
+			return after, *operation.BeforeCheckout, nil
+		default:
+			return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
+		}
+	case ports.UndoableOperationDirectionRedo:
+		switch operation.OriginalAction {
+		case audit.ActionAssetCheckedOut:
+			expected := after
+			expected.State = asset.CheckoutStateUndone
+			expected.ReturnedAt = time.Time{}
+			expected.ReturnedByPrincipal = ""
+			expected.ReturnDetails, _ = asset.NewCheckoutDetails("")
+			return expected, after, nil
+		case audit.ActionAssetReturned:
+			if operation.BeforeCheckout == nil {
+				return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
+			}
+			return *operation.BeforeCheckout, after, nil
+		default:
+			return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
+		}
+	default:
+		return asset.Checkout{}, asset.Checkout{}, ErrInvalidInput
 	}
 }

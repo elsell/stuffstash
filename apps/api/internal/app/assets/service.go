@@ -17,6 +17,7 @@ type Service struct {
 	customAssetTypes ports.CustomAssetTypeRepository
 	customFields     ports.CustomFieldDefinitionRepository
 	assets           ports.AssetRepository
+	checkouts        ports.AssetCheckoutRepository
 	attachments      ports.AttachmentRepository
 	assetUnitOfWork  ports.AssetUnitOfWork
 	undoables        ports.UndoableOperationRepository
@@ -35,6 +36,7 @@ type Dependencies struct {
 	CustomAssetTypes ports.CustomAssetTypeRepository
 	CustomFields     ports.CustomFieldDefinitionRepository
 	Assets           ports.AssetRepository
+	Checkouts        ports.AssetCheckoutRepository
 	Attachments      ports.AttachmentRepository
 	AssetUnitOfWork  ports.AssetUnitOfWork
 	Undoables        ports.UndoableOperationRepository
@@ -59,6 +61,7 @@ func New(deps Dependencies) Service {
 		customAssetTypes: deps.CustomAssetTypes,
 		customFields:     deps.CustomFields,
 		assets:           deps.Assets,
+		checkouts:        deps.Checkouts,
 		attachments:      deps.Attachments,
 		assetUnitOfWork:  deps.AssetUnitOfWork,
 		undoables:        deps.Undoables,
@@ -83,6 +86,13 @@ func (s Service) ensureInventoryAccessDependencies() error {
 
 func (s Service) ensureAssetRepository() error {
 	if s.assets == nil {
+		return apperrors.ErrInvalidInput
+	}
+	return nil
+}
+
+func (s Service) ensureCheckoutDependencies() error {
+	if s.assets == nil || s.checkouts == nil || s.assetUnitOfWork == nil || s.undoables == nil {
 		return apperrors.ErrInvalidInput
 	}
 	return nil

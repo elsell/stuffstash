@@ -88,6 +88,8 @@ const (
 	ActionAssetArchived                        Action = "asset.archived"
 	ActionAssetRestored                        Action = "asset.restored"
 	ActionAssetDeleted                         Action = "asset.deleted"
+	ActionAssetCheckedOut                      Action = "asset.checked_out"
+	ActionAssetReturned                        Action = "asset.returned"
 	ActionAttachmentCreated                    Action = "attachment.created"
 	ActionAttachmentViewed                     Action = "attachment.viewed"
 	ActionAttachmentListed                     Action = "attachment.listed"
@@ -169,6 +171,8 @@ func NewAction(value string) (Action, bool) {
 		ActionAssetArchived,
 		ActionAssetRestored,
 		ActionAssetDeleted,
+		ActionAssetCheckedOut,
+		ActionAssetReturned,
 		ActionAttachmentCreated,
 		ActionAttachmentViewed,
 		ActionAttachmentListed,

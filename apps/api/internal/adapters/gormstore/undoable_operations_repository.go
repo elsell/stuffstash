@@ -129,6 +129,85 @@ func (s Store) ApplyAssetUndoableOperation(ctx context.Context, operationID stri
 	return saved, resulting, nil
 }
 
+func (s Store) ApplyAssetCheckoutUndoableOperation(ctx context.Context, operationID string, direction ports.UndoableOperationDirection, expectedCurrent asset.Checkout, resulting asset.Checkout, auditRecord audit.Record) (ports.UndoableOperation, asset.Checkout, error) {
+	var saved ports.UndoableOperation
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var operationModel undoableOperationModel
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&undoableOperationModel{ID: operationID}).First(&operationModel).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
+		operation, ok := operationModel.toPort()
+		if !ok {
+			return fmt.Errorf("invalid undoable operation row %q", operationModel.ID)
+		}
+		if operation.TenantID.String() != expectedCurrent.TenantID.String() || operation.InventoryID.String() != expectedCurrent.InventoryID.String() || operation.TargetID != expectedCurrent.AssetID.String() {
+			return ports.ErrForbidden
+		}
+		var currentModel assetCheckoutModel
+		err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetCheckoutModel{
+			ID:          expectedCurrent.ID.String(),
+			TenantID:    expectedCurrent.TenantID.String(),
+			InventoryID: expectedCurrent.InventoryID.String(),
+		}).First(&currentModel).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrConflict
+		}
+		if err != nil {
+			return err
+		}
+		current, ok := currentModel.toDomain()
+		if !ok {
+			return fmt.Errorf("invalid asset checkout row %q", currentModel.ID)
+		}
+		if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+			return ports.ErrConflict
+		}
+		if current.ID != resulting.ID || current.TenantID != resulting.TenantID || current.InventoryID != resulting.InventoryID || current.AssetID != resulting.AssetID {
+			return ports.ErrForbidden
+		}
+		if err := tx.Model(&currentModel).Updates(assetCheckoutUpdateMap(resulting)).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, auditRecord); err != nil {
+			return err
+		}
+		now := time.Now().UTC()
+		switch direction {
+		case ports.UndoableOperationDirectionUndo:
+			if operation.Status != ports.UndoableOperationAvailable && operation.Status != ports.UndoableOperationRedone {
+				return ports.ErrConflict
+			}
+			operationModel.Status = string(ports.UndoableOperationUndone)
+			operationModel.UndoAuditRecordID = stringPtr(auditRecord.ID.String())
+		case ports.UndoableOperationDirectionRedo:
+			if operation.Status != ports.UndoableOperationUndone {
+				return ports.ErrConflict
+			}
+			operationModel.Status = string(ports.UndoableOperationRedone)
+			operationModel.RedoAuditRecordID = stringPtr(auditRecord.ID.String())
+		default:
+			return ports.ErrConflict
+		}
+		operationModel.LastAppliedAt = &now
+		if err := tx.Save(&operationModel).Error; err != nil {
+			return err
+		}
+		saved, ok = operationModel.toPort()
+		if !ok {
+			return fmt.Errorf("invalid undoable operation row %q", operationModel.ID)
+		}
+		return nil
+	})
+	if err != nil {
+		return ports.UndoableOperation{}, asset.Checkout{}, err
+	}
+	return saved, resulting, nil
+}
+
 func validateUndoableAssetResult(tx *gorm.DB, item asset.Asset) error {
 	if item.ParentAssetID.String() != "" {
 		var parent assetModel

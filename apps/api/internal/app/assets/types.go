@@ -73,12 +73,67 @@ type UpdateAssetLifecycleInput struct {
 	AssetID     asset.ID
 }
 
+type CheckoutAssetInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	Details     string
+}
+
+type ReturnAssetInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	Details     string
+}
+
+type ListAssetCheckoutHistoryInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	Limit       int
+	Cursor      string
+}
+
+type ListCheckedOutAssetsInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Limit       int
+	Cursor      string
+}
+
 type ListAssetsResult struct {
 	Items         []asset.Asset
 	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
 	Limit         int
 	NextCursor    *string
 	HasMore       bool
+}
+
+type AssetCheckoutHistoryResult struct {
+	Items      []asset.Checkout
+	Limit      int
+	NextCursor *string
+	HasMore    bool
+}
+
+type CheckedOutAssetsResult struct {
+	Items      []ports.CheckedOutAsset
+	Limit      int
+	NextCursor *string
+	HasMore    bool
 }
 
 type GetAssetResult struct {

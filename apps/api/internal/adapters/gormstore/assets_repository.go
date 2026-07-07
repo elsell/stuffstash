@@ -329,6 +329,27 @@ func (s Store) DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID 
 		if hasActiveChildren {
 			return ports.ErrForbidden
 		}
+		var openCheckoutCount int64
+		if err := tx.Model(&assetCheckoutModel{}).
+			Where(&assetCheckoutModel{
+				TenantID:    tenantID.String(),
+				InventoryID: inventoryID.String(),
+				AssetID:     assetID.String(),
+				State:       asset.CheckoutStateOpen.String(),
+			}).
+			Count(&openCheckoutCount).Error; err != nil {
+			return err
+		}
+		if openCheckoutCount > 0 {
+			return ports.ErrForbidden
+		}
+		if err := tx.Where(&assetCheckoutModel{
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+			AssetID:     assetID.String(),
+		}).Delete(&assetCheckoutModel{}).Error; err != nil {
+			return err
+		}
 		if err := createAuditRecord(tx, auditRecord); err != nil {
 			return err
 		}

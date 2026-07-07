@@ -246,11 +246,21 @@ func (s *Store) DeleteAsset(_ context.Context, tenantID tenant.ID, inventoryID i
 			return ports.ErrForbidden
 		}
 	}
+	for _, checkout := range s.checkouts {
+		if checkout.TenantID.String() == tenantID.String() && checkout.InventoryID.String() == inventoryID.String() && checkout.AssetID == assetID && checkout.State == asset.CheckoutStateOpen {
+			return ports.ErrForbidden
+		}
+	}
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
 	}
 	s.auditRecords[auditRecord.ID] = auditRecord
 	delete(s.assets, assetID)
+	for checkoutID, checkout := range s.checkouts {
+		if checkout.TenantID.String() == tenantID.String() && checkout.InventoryID.String() == inventoryID.String() && checkout.AssetID == assetID {
+			delete(s.checkouts, checkoutID)
+		}
+	}
 	return nil
 }
 
@@ -263,6 +273,169 @@ func (s *Store) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inv
 		return asset.Asset{}, false, nil
 	}
 	return item, true, nil
+}
+
+func (s *Store) CheckOutAsset(_ context.Context, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item, ok := s.assets[checkout.AssetID]
+	if !ok || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID || item.LifecycleState != asset.LifecycleStateActive || checkout.State != asset.CheckoutStateOpen {
+		return ports.ErrForbidden
+	}
+	for _, existing := range s.checkouts {
+		if existing.TenantID == checkout.TenantID && existing.InventoryID == checkout.InventoryID && existing.AssetID == checkout.AssetID && existing.State == asset.CheckoutStateOpen {
+			return ports.ErrConflict
+		}
+	}
+	if _, exists := s.checkouts[checkout.ID]; exists {
+		return ports.ErrConflict
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	if undoableOperation != nil {
+		if _, exists := s.undoables[undoableOperation.ID]; exists {
+			return ports.ErrConflict
+		}
+	}
+	s.checkouts[checkout.ID] = checkout
+	s.auditRecords[auditRecord.ID] = auditRecord
+	if undoableOperation != nil {
+		s.undoables[undoableOperation.ID] = *undoableOperation
+	}
+	return nil
+}
+
+func (s *Store) ReturnAsset(_ context.Context, expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	current, ok := s.checkouts[expectedCurrent.ID]
+	if !ok || !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+		return ports.ErrConflict
+	}
+	if current.State != asset.CheckoutStateOpen || returned.ID != current.ID || returned.TenantID != current.TenantID || returned.InventoryID != current.InventoryID || returned.AssetID != current.AssetID || returned.State != asset.CheckoutStateReturned || returned.ReturnedAt.IsZero() || returned.ReturnedByPrincipal == "" {
+		return ports.ErrForbidden
+	}
+	if _, ok := s.assets[current.AssetID]; !ok {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	if undoableOperation != nil {
+		if _, exists := s.undoables[undoableOperation.ID]; exists {
+			return ports.ErrConflict
+		}
+	}
+	s.checkouts[returned.ID] = returned
+	s.auditRecords[auditRecord.ID] = auditRecord
+	if undoableOperation != nil {
+		s.undoables[undoableOperation.ID] = *undoableOperation
+	}
+	return nil
+}
+
+func (s *Store) CurrentAssetCheckout(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Checkout, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, checkout := range s.checkouts {
+		if checkout.TenantID.String() == tenantID.String() && checkout.InventoryID.String() == inventoryID.String() && checkout.AssetID == assetID && checkout.State == asset.CheckoutStateOpen {
+			return checkout, true, nil
+		}
+	}
+	return asset.Checkout{}, false, nil
+}
+
+func (s *Store) AssetCheckoutByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	checkout, ok := s.checkouts[checkoutID]
+	if !ok || checkout.TenantID.String() != tenantID.String() || checkout.InventoryID.String() != inventoryID.String() {
+		return asset.Checkout{}, false, nil
+	}
+	return checkout, true, nil
+}
+
+func (s *Store) ListAssetCheckoutHistory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page ports.AssetCheckoutHistoryPageRequest) ([]asset.Checkout, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	checkouts := []asset.Checkout{}
+	for _, checkout := range s.checkouts {
+		if checkout.TenantID.String() == tenantID.String() && checkout.InventoryID.String() == inventoryID.String() && checkout.AssetID == assetID && checkoutHistoryCursorMatches(checkout, page) {
+			checkouts = append(checkouts, checkout)
+		}
+	}
+	sort.Slice(checkouts, func(left int, right int) bool {
+		if checkouts[left].CheckedOutAt.Equal(checkouts[right].CheckedOutAt) {
+			return checkouts[left].ID.String() > checkouts[right].ID.String()
+		}
+		return checkouts[left].CheckedOutAt.After(checkouts[right].CheckedOutAt)
+	})
+	if page.Limit > 0 && len(checkouts) > page.Limit {
+		checkouts = checkouts[:page.Limit]
+	}
+	return checkouts, nil
+}
+
+func checkoutHistoryCursorMatches(checkout asset.Checkout, page ports.AssetCheckoutHistoryPageRequest) bool {
+	if page.AfterCheckoutID.String() == "" {
+		return true
+	}
+	return checkout.CheckedOutAt.Before(page.AfterCheckedOutAt) || (checkout.CheckedOutAt.Equal(page.AfterCheckedOutAt) && checkout.ID.String() < page.AfterCheckoutID.String())
+}
+
+func (s *Store) ListCheckedOutAssets(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CheckedOutAssetsPageRequest) ([]ports.CheckedOutAsset, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := []ports.CheckedOutAsset{}
+	for _, checkout := range s.checkouts {
+		if checkout.TenantID.String() != tenantID.String() || checkout.InventoryID.String() != inventoryID.String() || checkout.State != asset.CheckoutStateOpen || !checkedOutAssetsCursorMatches(checkout, page) {
+			continue
+		}
+		item, ok := s.assets[checkout.AssetID]
+		if !ok || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID {
+			continue
+		}
+		items = append(items, ports.CheckedOutAsset{Asset: item, Checkout: checkout})
+	}
+	sort.Slice(items, func(left int, right int) bool {
+		if items[left].Checkout.CheckedOutAt.Equal(items[right].Checkout.CheckedOutAt) {
+			return items[left].Asset.ID.String() > items[right].Asset.ID.String()
+		}
+		return items[left].Checkout.CheckedOutAt.After(items[right].Checkout.CheckedOutAt)
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
+func checkedOutAssetsCursorMatches(checkout asset.Checkout, page ports.CheckedOutAssetsPageRequest) bool {
+	if page.AfterAssetID.String() == "" {
+		return true
+	}
+	return checkout.CheckedOutAt.Before(page.AfterCheckedOutAt) || (checkout.CheckedOutAt.Equal(page.AfterCheckedOutAt) && checkout.AssetID.String() < page.AfterAssetID.String())
+}
+
+func (s *Store) HasLaterCheckout(_ context.Context, checkout asset.Checkout) (bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, candidate := range s.checkouts {
+		if candidate.TenantID != checkout.TenantID || candidate.InventoryID != checkout.InventoryID || candidate.AssetID != checkout.AssetID || candidate.ID == checkout.ID {
+			continue
+		}
+		if candidate.CheckedOutAt.After(checkout.CheckedOutAt) || (candidate.CheckedOutAt.Equal(checkout.CheckedOutAt) && candidate.ID.String() > checkout.ID.String()) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (s *Store) AssetHasActiveChildren(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (bool, error) {
