@@ -282,14 +282,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return err
 	}
 	effectiveTranscript := realtimeVoiceEffectiveTranscript(transcript, input.ConversationTurns)
+	if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressUnderstanding, "Understanding your request.", emit); err != nil {
+		return err
+	}
 	if response, ok := realtimeVoiceUnsafeUnsupportedTranscriptResponse(effectiveTranscript); ok {
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit, input.ContinueAfterClarification)
 	}
 	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(effectiveTranscript); ok {
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit, input.ContinueAfterClarification)
-	}
-	if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressUnderstanding, "Understanding your request.", emit); err != nil {
-		return err
 	}
 
 	toolResults := []ports.AgentToolResult{}

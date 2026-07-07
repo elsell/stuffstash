@@ -21,7 +21,9 @@ func TestRealtimeVoiceAmbiguousDestinationCompletesClarificationWithoutLanguageP
 		t.Fatalf("start realtime voice session: %v", err)
 	}
 	var completed *ports.StructuredAgentResponse
+	var events []RealtimeVoiceEvent
 	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
 		if event.Type == RealtimeVoiceEventAssistantResponseCompleted {
 			completed = event.Response
 		}
@@ -34,6 +36,9 @@ func TestRealtimeVoiceAmbiguousDestinationCompletesClarificationWithoutLanguageP
 	}
 	if len(language.seenTools) != 0 {
 		t.Fatalf("expected language provider not to be called, got %+v", language.seenTools)
+	}
+	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressUnderstanding) {
+		t.Fatalf("expected local clarification to emit understanding progress, got %+v", events)
 	}
 }
 

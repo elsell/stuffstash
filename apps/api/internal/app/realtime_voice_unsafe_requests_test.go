@@ -22,7 +22,9 @@ func TestRealtimeVoiceFallsForwardForProviderCredentialRequestWithoutLanguagePro
 		t.Fatalf("start realtime voice session: %v", err)
 	}
 	var completed *ports.StructuredAgentResponse
+	var events []RealtimeVoiceEvent
 	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
 		if event.Type == RealtimeVoiceEventAssistantResponseCompleted {
 			completed = event.Response
 		}
@@ -35,6 +37,9 @@ func TestRealtimeVoiceFallsForwardForProviderCredentialRequestWithoutLanguagePro
 	}
 	if tts.lastText != "I cannot read or change provider API keys or credentials from voice." {
 		t.Fatalf("expected unsupported response to be spoken, got %q", tts.lastText)
+	}
+	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressUnderstanding) {
+		t.Fatalf("expected local unsupported response to emit understanding progress, got %+v", events)
 	}
 }
 
