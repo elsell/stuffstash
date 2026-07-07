@@ -207,6 +207,7 @@ export type VoiceSessionPresentation = {
   readonly isBusy: boolean;
   readonly progressLabel: string;
   readonly progressSteps: readonly string[];
+  readonly progressTrace: readonly string[];
   readonly recoveryAction?: VoiceSessionRecoveryAction;
   readonly response?: string;
   readonly title: string;
@@ -292,6 +293,7 @@ export function buildVoiceSessionPresentation({
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',
     progressLabel,
     progressSteps: realtime?.progressSteps ?? [],
+    progressTrace: progressTraceForState(stage, realtime),
     recoveryAction: isProviderRecoveryFailure(realtime?.failureCode)
       ? { label: 'Voice providers', target: 'provider_profiles' }
       : undefined,
@@ -313,6 +315,30 @@ function activityForState(
     return { kind: 'busy', label: progressLabel };
   }
   return { kind: 'idle' };
+}
+
+function progressTraceForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): readonly string[] {
+  if (realtime?.actionPlan) {
+    return [];
+  }
+  if (stage !== 'processing' && stage !== 'speaking' && stage !== 'review') {
+    return [];
+  }
+  const steps = realtime?.progressSteps ?? [];
+  const bounded = uniqueProgressSteps(steps).slice(-5);
+  return bounded.length > 1 ? bounded : [];
+}
+
+function uniqueProgressSteps(steps: readonly string[]): readonly string[] {
+  const unique: string[] = [];
+  for (const step of steps) {
+    const normalized = step.replace(/\s+/g, ' ').trim();
+    if (!normalized || unique[unique.length - 1] === normalized) {
+      continue;
+    }
+    unique.push(normalized.length <= 72 ? normalized : `${normalized.slice(0, 71).trim()}...`);
+  }
+  return unique;
 }
 
 function boundedLevel(value: number | undefined): number {

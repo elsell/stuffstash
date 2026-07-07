@@ -321,6 +321,20 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
+            {!actionPlan && session.progressTrace.length ? (
+              <View style={styles.progressTraceSection}>
+                <Text style={styles.sectionLabel}>Progress</Text>
+                <View style={styles.progressTraceList}>
+                  {session.progressTrace.map((step, index) => (
+                    <View key={`${step}-${index.toString()}`} style={styles.progressTraceRow}>
+                      <View style={styles.progressTraceMarker} />
+                      <Text style={styles.progressTraceText}>{step}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
             {session.response ? (
               <View style={styles.responseSection}>
                 <View style={styles.responseIcon}>
@@ -755,6 +769,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0,
     lineHeight: 23
+  },
+  progressTraceList: {
+    gap: spacing.sm,
+    marginTop: spacing.sm
+  },
+  progressTraceMarker: {
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+    height: 8,
+    marginTop: 6,
+    width: 8
+  },
+  progressTraceRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.sm
+  },
+  progressTraceSection: {
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md
+  },
+  progressTraceText: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20
   },
   resetButton: {
     alignItems: 'center',

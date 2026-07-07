@@ -367,7 +367,65 @@ describe('VoiceSessionPresentation', () => {
     });
 
     expect(session.progressSteps).toEqual(['Sending audio', 'Connected', 'Searching visible inventory']);
+    expect(session.progressTrace).toEqual(['Sending audio', 'Connected', 'Searching visible inventory']);
     expect(session.diagnostics).toBeNull();
+  });
+
+  it('bounds active progress trace and hides it behind action-plan review content', () => {
+    const active = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Recovering safely',
+        progressSteps: [
+          'Sending audio',
+          'Connected',
+          'Connected',
+          'Understanding request',
+          'Checking inventory',
+          'Preparing plan',
+          'Recovering safely after model contract failure with an overly long but safe status label that should be bounded in the sheet'
+        ],
+        debugEvents: []
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    });
+    expect(active.progressTrace).toEqual([
+      'Connected',
+      'Understanding request',
+      'Checking inventory',
+      'Preparing plan',
+      'Recovering safely after model contract failure with an overly long but...'
+    ]);
+
+    const review = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        progressSteps: ['Sending audio', 'Checking inventory', 'Review needed'],
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Create item water bottle?',
+          commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+    expect(review.progressTrace).toEqual([]);
   });
 
   it('uses the partial transcript until the final transcript is available', () => {

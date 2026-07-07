@@ -41,7 +41,7 @@ describe('VoiceSessionSheetPresentation', () => {
     ).toBe(true);
   });
 
-  it('keeps progress out of body content so approval review stays high in the sheet', () => {
+  it('uses bounded progress trace as body content before approval review exists', () => {
     expect(
       buildVoiceSessionSheetBodyPresentation(readyVoiceState({
         status: 'processing',
@@ -50,8 +50,23 @@ describe('VoiceSessionSheetPresentation', () => {
         progressLabel: 'Checking your inventory',
         progressSteps: ['Sending audio', 'Checking your inventory'],
         debugEvents: []
-      }), {}, false).hasBodyContent
-    ).toBe(false);
+      }), {
+        progressTrace: ['Sending audio', 'Checking your inventory']
+      }, false).hasBodyContent
+    ).toBe(true);
+    expect(
+      buildVoiceSessionSheetBodyPresentation(readyVoiceState({
+        status: 'review',
+        tenantName: 'Home tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        progressSteps: ['Sending audio', 'Review needed'],
+        debugEvents: []
+      }), {
+        actionPlan: { planId: 'plan-one' },
+        progressTrace: []
+      }, false).hasBodyContent
+    ).toBe(true);
   });
 
   it('requires explicit diagnostics enablement before diagnostics occupy body content', () => {

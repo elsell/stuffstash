@@ -10,6 +10,7 @@ export function buildVoiceSessionSheetBodyPresentation(
     readonly response?: string;
     readonly transcript?: string;
     readonly actionPlan?: unknown;
+    readonly progressTrace?: readonly string[];
   },
   diagnosticsEnabled: boolean
 ): VoiceSessionSheetBodyPresentation {
@@ -18,6 +19,7 @@ export function buildVoiceSessionSheetBodyPresentation(
       session.response ||
         session.transcript ||
         session.actionPlan ||
+        (session.progressTrace?.length ?? 0) > 0 ||
         (state.status === 'ready' && state.realtime?.errorMessage) ||
         (diagnosticsEnabled && state.status === 'ready' && state.realtime?.debugEvents.length)
     )
