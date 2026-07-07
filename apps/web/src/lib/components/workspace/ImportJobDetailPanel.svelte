@@ -177,6 +177,13 @@
       selectedTab = 'records';
     }
   }
+
+  function overviewCaption(job: ImportJob): string {
+    if (job.status === 'previewed') return 'Planned records';
+    if (job.status === 'cancelled_discarded') return 'Discarded progress';
+    if (job.status === 'cancelled_kept') return 'Kept partial progress';
+    return 'Saved and skipped records';
+  }
 </script>
 
 <Card.Root>
@@ -257,7 +264,7 @@
               <section class="detail-panel" aria-label="Import result overview">
                 <div class="section-heading">
                   <h3>Result</h3>
-                  <small>{statusSentence(job)}</small>
+                  <small>{overviewCaption(job)}</small>
                 </div>
                 <ImportCountGrid cells={overviewCells} actionForCell={handleOverviewCellAction} />
               </section>

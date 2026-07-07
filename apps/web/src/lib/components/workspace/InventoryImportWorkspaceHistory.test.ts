@@ -1420,7 +1420,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
-      expect(document.body.textContent).toContain('Completed with warnings.');
+      expect(document.body.textContent).toContain('2 warnings');
+      expect(document.body.textContent).not.toContain('Completed with warnings.');
       expect(document.body.textContent).toContain('Import details could not be refreshed.');
       expect(document.body.textContent).not.toContain('provider-stacktrace');
       expect(document.body.textContent).not.toContain('password=secret');
