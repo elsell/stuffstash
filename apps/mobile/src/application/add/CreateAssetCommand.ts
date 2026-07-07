@@ -1,6 +1,7 @@
 import { assetId, type AssetKind } from '../../domain/assets/AssetSummary';
+import type { ActiveAssetTagReference, CreateAssetTagDraft } from '../assets/AssetTagDraftResolution';
+import { createPendingAssetTags, reconcilePendingAssetTagDrafts } from '../assets/AssetTagDraftResolution';
 import type {
-  CreateInventoryAssetTagInput,
   CreateInventoryAssetPhotoInput,
   InventorySummaryRepository
 } from '../home/InventorySummaryRepository';
@@ -11,7 +12,8 @@ export type CreateAssetCommandInput = {
   readonly description: string;
   readonly parentAssetId?: string;
   readonly tagIds?: readonly string[];
-  readonly newTags?: readonly CreateInventoryAssetTagInput[];
+  readonly newTags?: readonly CreateAssetTagDraft[];
+  readonly activeTags?: readonly ActiveAssetTagReference[];
   readonly photos?: readonly CreateAssetPhotoInput[];
 };
 
@@ -32,8 +34,13 @@ export class CreateAssetCommand {
       throw new Error('Name is required.');
     }
 
-    const createdTagIds = await createNewTags(this.inventories, input.newTags);
-    const tagIds = [...(normalizeTagIds(input.tagIds) ?? []), ...createdTagIds];
+    const reconciledTags = reconcilePendingAssetTagDrafts({
+      selectedTagIds: input.tagIds ?? [],
+      pendingTags: input.newTags ?? [],
+      activeTags: input.activeTags ?? []
+    });
+    const createdTagIds = await createPendingAssetTags(this.inventories, reconciledTags.pendingTags);
+    const tagIds = [...reconciledTags.tagIds, ...createdTagIds];
 
     const asset = await this.inventories.createAsset({
       kind: input.kind ?? 'item',
@@ -60,33 +67,4 @@ export class CreateAssetCommand {
           : `Saved ${asset.title}.`
     };
   }
-}
-
-async function createNewTags(
-  inventories: InventorySummaryRepository,
-  newTags: readonly CreateInventoryAssetTagInput[] | undefined
-): Promise<readonly string[]> {
-  if ((newTags?.length ?? 0) === 0) {
-    return [];
-  }
-  if (!inventories.createAssetTag) {
-    throw new Error('Tag creation is not available.');
-  }
-  const created = [];
-  for (const tag of newTags ?? []) {
-    const displayName = tag.displayName.trim();
-    if (displayName.length === 0) {
-      continue;
-    }
-    created.push(await inventories.createAssetTag({
-      displayName,
-      color: tag.color?.trim() || undefined
-    }));
-  }
-  return created.map((tag) => tag.id);
-}
-
-function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] | undefined {
-  const normalized = (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
-  return normalized.length > 0 ? normalized : undefined;
 }

@@ -1,11 +1,11 @@
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
-import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
+import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 
 export type EditDraft = {
   readonly title: string;
   readonly description: string;
   readonly tagIds?: readonly string[];
-  readonly newTags?: readonly CreateInventoryAssetTagInput[];
+  readonly newTags?: readonly CreateAssetTagDraft[];
 };
 
 export type AssetEditContext = {
@@ -18,7 +18,7 @@ export type NormalizedEditDraft = {
   readonly title: string;
   readonly description: string;
   readonly tagIds?: readonly string[];
-  readonly newTags?: readonly CreateInventoryAssetTagInput[];
+  readonly newTags?: readonly CreateAssetTagDraft[];
 };
 
 export function canSaveEditAsset(
@@ -71,7 +71,7 @@ function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string
   return (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
 }
 
-function normalizeNewTags(newTags: readonly CreateInventoryAssetTagInput[] | undefined): readonly CreateInventoryAssetTagInput[] {
+function normalizeNewTags(newTags: readonly CreateAssetTagDraft[] | undefined): readonly CreateAssetTagDraft[] {
   return (newTags ?? [])
     .map((tag) => {
       const displayName = tag.displayName.trim();

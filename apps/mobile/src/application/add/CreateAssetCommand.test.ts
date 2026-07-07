@@ -149,6 +149,22 @@ describe('CreateAssetCommand', () => {
     ]);
   });
 
+  it('reuses active tags instead of creating duplicate pending tag drafts', async () => {
+    const repository = new FakeInventorySummaryRepository();
+    const command = new CreateAssetCommand(repository);
+
+    await command.execute({
+      title: 'Tent',
+      description: '',
+      tagIds: [],
+      newTags: [{ displayName: ' Camp / Kitchen ' }],
+      activeTags: [{ id: 'tag-camp-kitchen', key: 'camp-kitchen' }]
+    });
+
+    expect(repository.createdTags).toEqual([]);
+    expect(repository.createdInput?.tagIds).toEqual(['tag-camp-kitchen']);
+  });
+
   it('rejects an empty title before calling the repository', async () => {
     const repository = new FakeInventorySummaryRepository();
     const command = new CreateAssetCommand(repository);

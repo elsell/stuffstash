@@ -26,6 +26,7 @@ import type { AssetTagSummary } from '../../domain/assets/AssetSummary';
 import {
   applyInlineAssetTagResolution,
   canResolveInlineAssetTag,
+  type CreateAssetTagDraft,
   reconcileCreatedAssetTags,
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
@@ -42,7 +43,6 @@ import {
   HomeDashboardQuery,
   HomeDashboardViewModel
 } from '../../application/home/HomeDashboardQuery';
-import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
@@ -116,7 +116,7 @@ export function AddAssetScreen({
     emptyDraft.selectedPhotos
   );
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(emptyDraft.selectedTagIds ?? []);
-  const [newTags, setNewTags] = useState<readonly CreateInventoryAssetTagInput[]>(emptyDraft.newTags ?? []);
+  const [newTags, setNewTags] = useState<readonly CreateAssetTagDraft[]>(emptyDraft.newTags ?? []);
   const [showDetails, setShowDetails] = useState(emptyDraft.showDetails);
   const [lastParent, setLastParent] = useState<ParentSelection | undefined>(emptyDraft.lastParent);
   const [isParentMenuOpen, setIsParentMenuOpen] = useState(false);
@@ -264,6 +264,7 @@ export function AddAssetScreen({
         parentAssetId: resolvedParentAssetId,
         tagIds: selectedTagIds,
         newTags,
+        activeTags: loadState.status === 'ready' ? loadState.dashboard.assetTags : [],
         photos: selectedPhotos.map((photo) => ({
           fileName: photo.fileName,
           contentType: photo.contentType,
@@ -314,7 +315,7 @@ export function AddAssetScreen({
     }
   }
 
-  async function refreshDashboardAfterTagCreation(stagedTags: readonly CreateInventoryAssetTagInput[]): Promise<void> {
+  async function refreshDashboardAfterTagCreation(stagedTags: readonly CreateAssetTagDraft[]): Promise<void> {
     try {
       const dashboard = await dashboardQuery.execute();
       setLoadState({ status: 'ready', dashboard });
@@ -1001,8 +1002,8 @@ function AssetTagPicker({
   selectedTagIds,
   onChange
 }: {
-  readonly newTags: readonly CreateInventoryAssetTagInput[];
-  readonly onNewTagsChange: (tags: readonly CreateInventoryAssetTagInput[]) => void;
+  readonly newTags: readonly CreateAssetTagDraft[];
+  readonly onNewTagsChange: (tags: readonly CreateAssetTagDraft[]) => void;
   readonly tags: readonly AssetTagSummary[];
   readonly selectedTagIds: readonly string[];
   readonly onChange: (tagIds: readonly string[]) => void;

@@ -1,19 +1,17 @@
 import { assetId } from '../../domain/assets/AssetSummary';
 import type {
-  CreateInventoryAssetTagInput,
   InventoryAssetUpdateRepository
 } from '../home/InventorySummaryRepository';
-
-type InventoryAssetTagCreateRepository = {
-  createAssetTag?: (input: CreateInventoryAssetTagInput) => Promise<{ readonly id: string }>;
-};
+import type { ActiveAssetTagReference, AssetTagCreateRepository, CreateAssetTagDraft } from './AssetTagDraftResolution';
+import { createPendingAssetTags, reconcilePendingAssetTagDrafts } from './AssetTagDraftResolution';
 
 export type UpdateAssetCommandInput = {
   readonly assetId: string;
   readonly title: string;
   readonly description: string;
   readonly tagIds?: readonly string[];
-  readonly newTags?: readonly CreateInventoryAssetTagInput[];
+  readonly newTags?: readonly CreateAssetTagDraft[];
+  readonly activeTags?: readonly ActiveAssetTagReference[];
 };
 
 export type UpdateAssetCommandResult = {
@@ -23,7 +21,7 @@ export type UpdateAssetCommandResult = {
 };
 
 export class UpdateAssetCommand {
-  constructor(private readonly inventories: InventoryAssetUpdateRepository & InventoryAssetTagCreateRepository) {}
+  constructor(private readonly inventories: InventoryAssetUpdateRepository & AssetTagCreateRepository) {}
 
   async execute(input: UpdateAssetCommandInput): Promise<UpdateAssetCommandResult> {
     const title = input.title.trim();
@@ -31,8 +29,15 @@ export class UpdateAssetCommand {
       throw new Error('Name is required.');
     }
 
-    const createdTagIds = await createNewTags(this.inventories, input.newTags);
-    const baseTagIds = normalizeTagIds(input.tagIds);
+    const reconciledTags = reconcilePendingAssetTagDrafts({
+      selectedTagIds: input.tagIds ?? [],
+      pendingTags: input.newTags ?? [],
+      activeTags: input.activeTags ?? []
+    });
+    const createdTagIds = await createPendingAssetTags(this.inventories, reconciledTags.pendingTags);
+    const baseTagIds = input.tagIds === undefined && reconciledTags.tagIds.length === 0
+      ? undefined
+      : reconciledTags.tagIds;
     const tagIds = baseTagIds === undefined && createdTagIds.length === 0
       ? undefined
       : [...(baseTagIds ?? []), ...createdTagIds];
@@ -50,36 +55,4 @@ export class UpdateAssetCommand {
       message: `Updated ${updated.title}.`
     };
   }
-}
-
-async function createNewTags(
-  inventories: InventoryAssetTagCreateRepository,
-  newTags: readonly CreateInventoryAssetTagInput[] | undefined
-): Promise<readonly string[]> {
-  if ((newTags?.length ?? 0) === 0) {
-    return [];
-  }
-  if (!inventories.createAssetTag) {
-    throw new Error('Tag creation is not available.');
-  }
-  const created = [];
-  for (const tag of newTags ?? []) {
-    const displayName = tag.displayName.trim();
-    if (displayName.length === 0) {
-      continue;
-    }
-    created.push(await inventories.createAssetTag({
-      displayName,
-      color: tag.color?.trim() || undefined
-    }));
-  }
-  return created.map((tag) => tag.id);
-}
-
-function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] | undefined {
-  if (tagIds === undefined) {
-    return undefined;
-  }
-  const normalized = (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
-  return normalized;
 }

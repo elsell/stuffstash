@@ -59,6 +59,23 @@ describe('UpdateAssetCommand', () => {
     expect(repository.createdTags).toEqual([{ displayName: 'Travel', color: '#2f80ed' }]);
   });
 
+  it('reuses active tags instead of creating duplicate pending tag drafts', async () => {
+    const repository = new FakeAssetUpdateRepository();
+    const command = new UpdateAssetCommand(repository);
+
+    await command.execute({
+      assetId: 'asset-water-bottle',
+      title: 'Water bottle',
+      description: '',
+      tagIds: [],
+      newTags: [{ displayName: ' Camp / Kitchen ' }],
+      activeTags: [{ id: 'tag-camp-kitchen', key: 'camp-kitchen' }]
+    });
+
+    expect(repository.createdTags).toEqual([]);
+    expect(repository.updateInput?.tagIds).toEqual(['tag-camp-kitchen']);
+  });
+
   it('rejects blank names before updating', async () => {
     const repository = new FakeAssetUpdateRepository();
     const command = new UpdateAssetCommand(repository);

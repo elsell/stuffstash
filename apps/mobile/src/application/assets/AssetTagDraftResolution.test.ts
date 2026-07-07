@@ -3,6 +3,7 @@ import {
   applyInlineAssetTagResolution,
   canResolveInlineAssetTag,
   reconcileCreatedAssetTags,
+  reconcilePendingAssetTagDrafts,
   resolveInlineAssetTag
 } from './AssetTagDraftResolution';
 
@@ -63,6 +64,13 @@ describe('asset tag draft resolution', () => {
       activeTags: [],
       pendingTags: []
     })).toEqual({ status: 'display_name_too_long' });
+
+    expect(resolveInlineAssetTag({
+      displayName: `${'a'.repeat(79)}é`,
+      color: '',
+      activeTags: [],
+      pendingTags: []
+    })).toEqual({ status: 'display_name_too_long' });
   });
 
   it('applies picker transitions consistently', () => {
@@ -94,6 +102,22 @@ describe('asset tag draft resolution', () => {
     )).toEqual({
       createdTagIds: ['tag-camp-kitchen'],
       remainingTags: [{ displayName: 'Uncreated' }]
+    });
+  });
+
+  it('reuses active tags before save and leaves only truly new drafts to create', () => {
+    expect(reconcilePendingAssetTagDrafts({
+      selectedTagIds: [' tag-selected ', ''],
+      pendingTags: [
+        { displayName: ' Camp / Kitchen ', color: ' #2f80ed ' },
+        { displayName: 'Travel' },
+        { displayName: 'travel' },
+        { displayName: ' ' }
+      ],
+      activeTags: [{ id: 'tag-camp-kitchen', key: 'camp-kitchen' }]
+    })).toEqual({
+      tagIds: ['tag-selected', 'tag-camp-kitchen'],
+      pendingTags: [{ displayName: 'Travel' }]
     });
   });
 });

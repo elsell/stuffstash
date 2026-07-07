@@ -12,11 +12,11 @@ import {
 import { Check } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
-import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
   applyInlineAssetTagResolution,
   canResolveInlineAssetTag,
+  type CreateAssetTagDraft,
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
 import {
@@ -132,9 +132,9 @@ function EditTagPicker({
   tags
 }: {
   readonly disabled: boolean;
-  readonly newTags: readonly CreateInventoryAssetTagInput[];
+  readonly newTags: readonly CreateAssetTagDraft[];
   readonly onChange: (tagIds: readonly string[]) => void;
-  readonly onNewTagsChange: (tags: readonly CreateInventoryAssetTagInput[]) => void;
+  readonly onNewTagsChange: (tags: readonly CreateAssetTagDraft[]) => void;
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {

@@ -17,8 +17,7 @@ import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand'
 import { InventoryAssetTagsQuery, type AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
-import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
-import { reconcileCreatedAssetTags } from '../../application/assets/AssetTagDraftResolution';
+import { reconcileCreatedAssetTags, type CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
 import {
   AssetCheckoutHistorySheet,
@@ -69,11 +68,10 @@ export function AssetEditSheetRouteScreen({
 
   useEffect(() => {
     let isCurrent = true;
-    assetDetailQuery
-      .execute(assetId)
-      .then((asset) => {
+    Promise.all([assetDetailQuery.execute(assetId), inventoryAssetTagsQuery.execute()])
+      .then(([asset, assetTags]) => {
         if (isCurrent) {
-          setState({ status: 'ready', asset, assetTags: [] });
+          setState({ status: 'ready', asset, assetTags });
           setDraft({
             title: asset.title,
             description: asset.description,
@@ -81,18 +79,10 @@ export function AssetEditSheetRouteScreen({
             newTags: []
           });
         }
-        return inventoryAssetTagsQuery.execute();
-      })
-      .then((assetTags) => {
-        if (isCurrent) {
-          setState((current) => current.status === 'ready' ? { ...current, assetTags } : current);
-        }
       })
       .catch((error: unknown) => {
         if (isCurrent) {
-          setState((current) => current.status === 'ready'
-            ? current
-            : { status: 'error', message: readableError(error, 'Could not load asset.') });
+          setState({ status: 'error', message: readableError(error, 'Could not load asset.') });
         }
       });
     return () => {
@@ -123,7 +113,8 @@ export function AssetEditSheetRouteScreen({
         title: normalized.title,
         description: normalized.description,
         tagIds: normalized.tagIds,
-        newTags: normalized.newTags
+        newTags: normalized.newTags,
+        activeTags: state.status === 'ready' ? state.assetTags ?? [] : []
       });
       recordAssetActionCompletion({ assetId, action: 'edit', message: result.message });
       router.back();
@@ -135,7 +126,7 @@ export function AssetEditSheetRouteScreen({
     }
   }
 
-  async function refreshEditAssetTags(stagedTags: readonly CreateInventoryAssetTagInput[]): Promise<void> {
+  async function refreshEditAssetTags(stagedTags: readonly CreateAssetTagDraft[]): Promise<void> {
     try {
       const assetTags = await inventoryAssetTagsQuery.execute();
       const reconciled = reconcileCreatedAssetTags(stagedTags, assetTags);
