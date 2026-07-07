@@ -14,6 +14,7 @@
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
+  import * as Dialog from '$lib/components/ui/dialog/index.js';
   import { fileToBase64 } from '$lib/application/fileEncoding';
   import { workspaceRouteHref, type ImportDetailTabRoute, type ImportSourceRoute } from '$lib/application/workspaceRoute';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
@@ -904,36 +905,25 @@
     {/if}
   {/if}
 
-  {#if canViewImports && (cancelIntent || removeIntent)}
-    <div class="import-confirmation-overlay" role="presentation">
-      <div
-        class="import-confirmation-backdrop"
-        aria-hidden="true"
-        onclick={() => {
-          if (!busy) {
-            cancelIntent = null;
-            removeIntent = null;
-          }
-        }}
-      ></div>
-      <div
-        class="import-confirmation-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-label={cancelIntent ? 'Cancel import' : 'Remove import from history'}
-      >
-        <ImportJobConfirmationPanel
-          cancelJob={cancelIntent?.job ?? null}
-          removeJob={removeIntent?.job ?? null}
-          {busy}
-          onCancelJob={(job, mode) => { void cancel(job, mode); }}
-          onDismissCancel={() => (cancelIntent = null)}
-          onRemoveJob={(job) => { void removeFromHistory(job); }}
-          onDismissRemove={() => (removeIntent = null)}
-        />
-      </div>
-    </div>
-  {/if}
+  <Dialog.Root
+    open={canViewImports && Boolean(cancelIntent || removeIntent)}
+    ariaLabel={cancelIntent ? 'Cancel import' : 'Remove import from history'}
+    dismissDisabled={busy}
+    onDismiss={() => {
+      cancelIntent = null;
+      removeIntent = null;
+    }}
+  >
+    <ImportJobConfirmationPanel
+      cancelJob={cancelIntent?.job ?? null}
+      removeJob={removeIntent?.job ?? null}
+      {busy}
+      onCancelJob={(job, mode) => { void cancel(job, mode); }}
+      onDismissCancel={() => (cancelIntent = null)}
+      onRemoveJob={(job) => { void removeFromHistory(job); }}
+      onDismissRemove={() => (removeIntent = null)}
+    />
+  </Dialog.Root>
 </section>
 
 <style>
@@ -962,28 +952,6 @@
 
   .toolbar-actions {
     justify-content: flex-end;
-  }
-
-  .import-confirmation-overlay {
-    align-items: center;
-    display: grid;
-    inset: 0;
-    justify-items: center;
-    padding: 1rem;
-    position: fixed;
-    z-index: 60;
-  }
-
-  .import-confirmation-backdrop {
-    background: color-mix(in oklab, var(--background) 72%, transparent);
-    inset: 0;
-    position: absolute;
-  }
-
-  .import-confirmation-dialog {
-    max-width: min(34rem, 100%);
-    position: relative;
-    width: 100%;
   }
 
   h1,

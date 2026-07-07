@@ -778,6 +778,20 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Remove Homebox from history?');
     });
 
+    document.body.querySelector<HTMLElement>('[role="dialog"]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+      expect(document.body.textContent).toContain('Homebox');
+      expect(document.body.textContent).not.toContain('Remove Homebox from history?');
+    });
+
+    document.body.querySelector<HTMLButtonElement>('button[aria-label^="Remove from history Homebox import"]')?.click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Remove Homebox from history?');
+    });
+
     confirmationButton('Remove from history').click();
 
     await waitFor(() => {
