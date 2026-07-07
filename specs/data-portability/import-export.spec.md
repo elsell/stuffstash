@@ -131,6 +131,7 @@ Credentials for non-terminal jobs that run longer than `STUFF_STASH_IMPORT_JOB_T
 `STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS` defaults to `900`.
 The first credential vacuum interval is configured by `STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS`, which defaults to `60`.
 Successful worker cleanup of stored credentials after terminal execution must write the same safe credential-cleaned audit action as recurring credential vacuum cleanup.
+Import job identifiers are globally unique, but credential vacuum persistence must still delete the exact tenant/inventory/job-scoped source material rows selected for cleanup. It must not collapse scoped selection into a job-identifier-only delete.
 
 Import-job credential cleanup must be observable and auditable without exposing credentials, bearer tokens, passwords, or provider internals.
 Credential cleanup audit must identify only the import job scope and safe source or job metadata.

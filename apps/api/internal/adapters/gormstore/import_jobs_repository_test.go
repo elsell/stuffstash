@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"gorm.io/gorm"
 )
 
 func TestImportJobRepositoryPersistsScopedJobHistory(t *testing.T) {
@@ -461,6 +463,155 @@ func TestImportJobSourceVacuumDeletesTerminalJobSourcesBeforeExpiry(t *testing.T
 	}
 	if _, found, err := store.ImportJobSource(ctx, ports.ImportJobSourceScope{TenantID: tenant.ID(job.TenantID.String()), InventoryID: inventory.InventoryID(job.InventoryID.String()), JobID: job.ID}); err != nil || found {
 		t.Fatalf("expected source removed, found=%t err=%v", found, err)
+	}
+}
+
+func TestImportJobSourceVacuumPreservesNonVacuumableSiblingSources(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveTenant(t, ctx, store, tenant.ID("tenant-garage"), "Garage")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-cellar", tenant.ID("tenant-home"), "Cellar")
+	saveInventory(t, ctx, store, "inventory-garage", tenant.ID("tenant-garage"), "Garage")
+	now := time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC)
+	expiredJob := gormImportJob("job-expired", now)
+	expiredJob.TenantID = importjob.TenantID("tenant-home")
+	expiredJob.InventoryID = importjob.InventoryID("inventory-home")
+	activeJob := gormImportJob("job-active", now)
+	activeJob.TenantID = importjob.TenantID("tenant-garage")
+	activeJob.InventoryID = importjob.InventoryID("inventory-garage")
+	if err := store.SaveImportJob(ctx, expiredJob); err != nil {
+		t.Fatalf("save expired import job: %v", err)
+	}
+	if err := store.SaveImportJob(ctx, activeJob); err != nil {
+		t.Fatalf("save active import job: %v", err)
+	}
+	expiredScope := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID(expiredJob.TenantID.String()),
+		InventoryID: inventory.InventoryID(expiredJob.InventoryID.String()),
+		JobID:       expiredJob.ID,
+	}
+	activeScope := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID(activeJob.TenantID.String()),
+		InventoryID: inventory.InventoryID(activeJob.InventoryID.String()),
+		JobID:       activeJob.ID,
+	}
+	if err := store.ReplaceImportJobSource(ctx, gormImportJobSourceRecord(expiredScope, now, now.Add(-time.Minute))); err != nil {
+		t.Fatalf("save expired import source: %v", err)
+	}
+	if err := store.ReplaceImportJobSource(ctx, gormImportJobSourceRecord(activeScope, now, now.Add(time.Hour))); err != nil {
+		t.Fatalf("save active import source: %v", err)
+	}
+
+	deleted, err := store.DeleteVacuumableImportJobSources(ctx, []importjob.Status{importjob.StatusSucceeded}, now)
+	if err != nil {
+		t.Fatalf("vacuum sources: %v", err)
+	}
+	if len(deleted) != 1 || deleted[0] != expiredScope {
+		t.Fatalf("expected only expired source scope deleted, got %+v", deleted)
+	}
+	if _, found, err := store.ImportJobSource(ctx, expiredScope); err != nil || found {
+		t.Fatalf("expected expired source removed, found=%t err=%v", found, err)
+	}
+	if _, found, err := store.ImportJobSource(ctx, activeScope); err != nil || !found {
+		t.Fatalf("expected active sibling source preserved, found=%t err=%v", found, err)
+	}
+}
+
+func TestImportJobSourceVacuumDeleteQueryUsesScopedIdentity(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	scopes := []ports.ImportJobSourceScope{
+		{
+			TenantID:    tenant.ID("tenant-home"),
+			InventoryID: inventory.InventoryID("inventory-home"),
+			JobID:       importjob.ID("job-one"),
+		},
+		{
+			TenantID:    tenant.ID("tenant-garage"),
+			InventoryID: inventory.InventoryID("inventory-garage"),
+			JobID:       importjob.ID("job-two"),
+		},
+	}
+
+	sql := store.db.Session(&gorm.Session{DryRun: true}).ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return scopedImportJobSourceDeleteQuery(tx, scopes).Delete(&importJobSourceModel{})
+	})
+	if !strings.Contains(sql, "tenant_id") || !strings.Contains(sql, "inventory_id") || !strings.Contains(sql, "job_id") {
+		t.Fatalf("expected delete query to include scoped identity columns, got %s", sql)
+	}
+	if strings.Contains(sql, "job_id IN") {
+		t.Fatalf("expected delete query not to collapse to job_id-only deletion, got %s", sql)
+	}
+}
+
+func TestImportJobSourceScopedDeleteRemovesOnlyExactScope(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveTenant(t, ctx, store, tenant.ID("tenant-garage"), "Garage")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	saveInventory(t, ctx, store, "inventory-cellar", tenant.ID("tenant-home"), "Cellar")
+	saveInventory(t, ctx, store, "inventory-garage", tenant.ID("tenant-garage"), "Garage")
+	now := time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC)
+	selected := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		JobID:       importjob.ID("job-selected"),
+	}
+	sameTenantInventory := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		JobID:       importjob.ID("job-same-inventory"),
+	}
+	sameTenantDifferentInventory := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-cellar"),
+		JobID:       importjob.ID("job-other-inventory"),
+	}
+	differentTenant := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-garage"),
+		InventoryID: inventory.InventoryID("inventory-garage"),
+		JobID:       importjob.ID("job-other-tenant"),
+	}
+	for _, scope := range []ports.ImportJobSourceScope{selected, sameTenantInventory, sameTenantDifferentInventory, differentTenant} {
+		if err := store.ReplaceImportJobSource(ctx, gormImportJobSourceRecord(scope, now, now.Add(time.Hour))); err != nil {
+			t.Fatalf("save import source %s: %v", scope.JobID.String(), err)
+		}
+	}
+
+	if err := scopedImportJobSourceDeleteQuery(store.db.WithContext(ctx), []ports.ImportJobSourceScope{selected}).Delete(&importJobSourceModel{}).Error; err != nil {
+		t.Fatalf("delete selected source: %v", err)
+	}
+	if _, found, err := store.ImportJobSource(ctx, selected); err != nil || found {
+		t.Fatalf("expected selected source removed, found=%t err=%v", found, err)
+	}
+	for _, scope := range []ports.ImportJobSourceScope{sameTenantInventory, sameTenantDifferentInventory, differentTenant} {
+		if _, found, err := store.ImportJobSource(ctx, scope); err != nil || !found {
+			t.Fatalf("expected sibling source %s preserved, found=%t err=%v", scope.JobID.String(), found, err)
+		}
+	}
+}
+
+func gormImportJobSourceRecord(scope ports.ImportJobSourceScope, now time.Time, expiresAt time.Time) ports.ImportJobSourceRecord {
+	return ports.ImportJobSourceRecord{
+		Scope: scope,
+		Sealed: ports.SealedImportJobSource{
+			KeyID:      "key-one",
+			Algorithm:  ports.ProviderCredentialAlgorithmAES256GCM,
+			Nonce:      []byte("123456789012"),
+			Ciphertext: []byte("sealed-source"),
+		},
+		ExpiresAt: expiresAt,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 }
 

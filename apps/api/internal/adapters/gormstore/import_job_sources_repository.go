@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const importJobSourceScopeChunkSize = 100
+
 func (s Store) ReplaceImportJobSource(ctx context.Context, source ports.ImportJobSourceRecord) error {
 	if err := validateImportJobSourceRecord(source); err != nil {
 		return err
@@ -30,7 +32,7 @@ func (s Store) ImportJobSource(ctx context.Context, scope ports.ImportJobSourceS
 	}
 	var model importJobSourceModel
 	err := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND job_id = ?", scope.TenantID.String(), scope.InventoryID.String(), scope.JobID.String()).
+		Where(importJobSourceScopeModel(scope)).
 		First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ports.ImportJobSourceRecord{}, false, nil
@@ -50,7 +52,7 @@ func (s Store) DeleteImportJobSource(ctx context.Context, scope ports.ImportJobS
 		return false, err
 	}
 	result := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND job_id = ?", scope.TenantID.String(), scope.InventoryID.String(), scope.JobID.String()).
+		Where(importJobSourceScopeModel(scope)).
 		Delete(&importJobSourceModel{})
 	if result.Error != nil {
 		return false, result.Error
@@ -62,7 +64,7 @@ func (s Store) DeleteExpiredImportJobSources(ctx context.Context, now time.Time)
 	if now.IsZero() {
 		return 0, ports.ErrInvalidProviderInput
 	}
-	result := s.db.WithContext(ctx).Where("expires_at <= ?", now).Delete(&importJobSourceModel{})
+	result := s.db.WithContext(ctx).Where(clause.Lte{Column: clause.Column{Name: "expires_at"}, Value: now}).Delete(&importJobSourceModel{})
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -80,37 +82,122 @@ func (s Store) DeleteVacuumableImportJobSources(ctx context.Context, terminalSta
 		}
 		statuses = append(statuses, string(status))
 	}
-	query := s.db.WithContext(ctx).Where("expires_at <= ?", now)
-	if len(statuses) > 0 {
-		terminalJobs := s.db.Model(&importJobModel{}).
-			Select("id").
-			Where("import_jobs.id = import_job_sources.job_id").
-			Where("import_jobs.tenant_id = import_job_sources.tenant_id").
-			Where("import_jobs.inventory_id = import_job_sources.inventory_id").
-			Where("import_jobs.status IN ?", statuses)
-		query = query.Or("EXISTS (?)", terminalJobs)
-	}
 	var models []importJobSourceModel
-	if err := query.Find(&models).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where(clause.Lte{Column: clause.Column{Name: "expires_at"}, Value: now}).Find(&models).Error; err != nil {
 		return nil, err
+	}
+	if len(statuses) > 0 {
+		terminalScopes, err := s.terminalImportJobSourceScopes(ctx, statuses)
+		if err != nil {
+			return nil, err
+		}
+		for _, chunk := range chunkImportJobSourceScopes(terminalScopes) {
+			var terminalModels []importJobSourceModel
+			if err := s.db.WithContext(ctx).Where(importJobSourceScopesCondition(chunk)).Find(&terminalModels).Error; err != nil {
+				return nil, err
+			}
+			models = append(models, terminalModels...)
+		}
 	}
 	if len(models) == 0 {
 		return nil, nil
 	}
+	scopes := uniqueImportJobSourceScopes(models)
+	if len(scopes) == 0 {
+		return nil, nil
+	}
+	for _, chunk := range chunkImportJobSourceScopes(scopes) {
+		deleteQuery := scopedImportJobSourceDeleteQuery(s.db.WithContext(ctx), chunk)
+		if err := deleteQuery.Delete(&importJobSourceModel{}).Error; err != nil {
+			return nil, err
+		}
+	}
+	return scopes, nil
+}
+
+func uniqueImportJobSourceScopes(models []importJobSourceModel) []ports.ImportJobSourceScope {
 	scopes := make([]ports.ImportJobSourceScope, 0, len(models))
-	jobIDs := make([]string, 0, len(models))
+	seen := make(map[string]struct{}, len(models))
 	for _, model := range models {
-		scopes = append(scopes, ports.ImportJobSourceScope{
+		scope := ports.ImportJobSourceScope{
 			TenantID:    tenant.ID(model.TenantID),
 			InventoryID: inventory.InventoryID(model.InventoryID),
 			JobID:       importjob.ID(model.JobID),
-		})
-		jobIDs = append(jobIDs, model.JobID)
+		}
+		key := importJobSourceScopeKey(scope)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		scopes = append(scopes, scope)
 	}
-	if err := s.db.WithContext(ctx).Where("job_id IN ?", jobIDs).Delete(&importJobSourceModel{}).Error; err != nil {
+	return scopes
+}
+
+func scopedImportJobSourceDeleteQuery(db *gorm.DB, scopes []ports.ImportJobSourceScope) *gorm.DB {
+	return db.Where(importJobSourceScopesCondition(scopes))
+}
+
+func (s Store) terminalImportJobSourceScopes(ctx context.Context, statuses []string) ([]ports.ImportJobSourceScope, error) {
+	var jobs []importJobModel
+	if err := s.db.WithContext(ctx).
+		Select("id", "tenant_id", "inventory_id").
+		Where(clause.IN{Column: clause.Column{Name: "status"}, Values: stringValues(statuses)}).
+		Find(&jobs).Error; err != nil {
 		return nil, err
 	}
+	scopes := make([]ports.ImportJobSourceScope, 0, len(jobs))
+	for _, job := range jobs {
+		scopes = append(scopes, ports.ImportJobSourceScope{
+			TenantID:    tenant.ID(job.TenantID),
+			InventoryID: inventory.InventoryID(job.InventoryID),
+			JobID:       importjob.ID(job.ID),
+		})
+	}
 	return scopes, nil
+}
+
+func chunkImportJobSourceScopes(scopes []ports.ImportJobSourceScope) [][]ports.ImportJobSourceScope {
+	if len(scopes) == 0 {
+		return nil
+	}
+	chunks := make([][]ports.ImportJobSourceScope, 0, (len(scopes)+importJobSourceScopeChunkSize-1)/importJobSourceScopeChunkSize)
+	for start := 0; start < len(scopes); start += importJobSourceScopeChunkSize {
+		end := start + importJobSourceScopeChunkSize
+		if end > len(scopes) {
+			end = len(scopes)
+		}
+		chunks = append(chunks, scopes[start:end])
+	}
+	return chunks
+}
+
+func importJobSourceScopeKey(scope ports.ImportJobSourceScope) string {
+	return scope.TenantID.String() + "\x00" + scope.InventoryID.String() + "\x00" + scope.JobID.String()
+}
+
+func importJobSourceScopeModel(scope ports.ImportJobSourceScope) *importJobSourceModel {
+	return &importJobSourceModel{
+		TenantID:    scope.TenantID.String(),
+		InventoryID: scope.InventoryID.String(),
+		JobID:       scope.JobID.String(),
+	}
+}
+
+func importJobSourceScopeCondition(scope ports.ImportJobSourceScope) clause.Expression {
+	return clause.And(
+		clause.Eq{Column: clause.Column{Name: "tenant_id"}, Value: scope.TenantID.String()},
+		clause.Eq{Column: clause.Column{Name: "inventory_id"}, Value: scope.InventoryID.String()},
+		clause.Eq{Column: clause.Column{Name: "job_id"}, Value: scope.JobID.String()},
+	)
+}
+
+func importJobSourceScopesCondition(scopes []ports.ImportJobSourceScope) clause.Expression {
+	expressions := make([]clause.Expression, 0, len(scopes))
+	for _, scope := range scopes {
+		expressions = append(expressions, importJobSourceScopeCondition(scope))
+	}
+	return clause.Or(expressions...)
 }
 
 func importJobSourceModelFromRecord(source ports.ImportJobSourceRecord) importJobSourceModel {
