@@ -11,7 +11,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment) dto.AssetResponse {
+func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment, currentCheckout *asset.Checkout) dto.AssetResponse {
 	response := dto.AssetResponse{
 		ID:                item.ID.String(),
 		TenantID:          item.TenantID.String(),
@@ -28,6 +28,9 @@ func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment) dto.Asset
 	}
 	if primaryPhoto != nil {
 		response.PrimaryPhoto = assetPrimaryPhotoToResponse(*primaryPhoto)
+	}
+	if currentCheckout != nil {
+		response.CurrentCheckout = CurrentCheckoutToResponse(*currentCheckout)
 	}
 	return response
 }
@@ -57,7 +60,7 @@ func assetAttachmentThumbnailPath(attachment media.Attachment, variant media.Thu
 	return path + "?" + query.Encode()
 }
 
-func AssetsToResponse(items []asset.Asset, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment) []dto.AssetResponse {
+func AssetsToResponse(items []asset.Asset, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment, currentCheckouts map[asset.ID]asset.Checkout) []dto.AssetResponse {
 	data := make([]dto.AssetResponse, 0, len(items))
 	for _, item := range items {
 		var primaryPhoto *media.Attachment
@@ -68,7 +71,59 @@ func AssetsToResponse(items []asset.Asset, primaryPhotos map[ports.AttachmentAss
 		if photo, ok := primaryPhotos[ref]; ok {
 			primaryPhoto = &photo
 		}
-		data = append(data, AssetToResponse(item, primaryPhoto))
+		var currentCheckout *asset.Checkout
+		if checkout, ok := currentCheckouts[item.ID]; ok {
+			currentCheckout = &checkout
+		}
+		data = append(data, AssetToResponse(item, primaryPhoto, currentCheckout))
+	}
+	return data
+}
+
+func CurrentCheckoutToResponse(checkout asset.Checkout) *dto.CurrentCheckout {
+	return &dto.CurrentCheckout{
+		ID:                      checkout.ID.String(),
+		CheckedOutAt:            checkout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
+		CheckedOutByPrincipalID: checkout.CheckedOutByPrincipal,
+	}
+}
+
+func CheckoutToResponse(checkout asset.Checkout) dto.AssetCheckoutResponse {
+	response := dto.AssetCheckoutResponse{
+		ID:                      checkout.ID.String(),
+		TenantID:                checkout.TenantID.String(),
+		InventoryID:             checkout.InventoryID.String(),
+		AssetID:                 checkout.AssetID.String(),
+		State:                   checkout.State.String(),
+		CheckedOutAt:            checkout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
+		CheckedOutByPrincipalID: checkout.CheckedOutByPrincipal,
+		CheckoutDetails:         checkout.CheckoutDetails.String(),
+		CreatedAt:               checkout.CreatedAt.UTC().Format(time.RFC3339Nano),
+		UpdatedAt:               checkout.UpdatedAt.UTC().Format(time.RFC3339Nano),
+	}
+	if !checkout.ReturnedAt.IsZero() {
+		response.ReturnedAt = checkout.ReturnedAt.UTC().Format(time.RFC3339Nano)
+	}
+	response.ReturnedByPrincipalID = checkout.ReturnedByPrincipal
+	response.ReturnDetails = checkout.ReturnDetails.String()
+	return response
+}
+
+func CheckoutsToResponse(checkouts []asset.Checkout) []dto.AssetCheckoutResponse {
+	data := make([]dto.AssetCheckoutResponse, 0, len(checkouts))
+	for _, checkout := range checkouts {
+		data = append(data, CheckoutToResponse(checkout))
+	}
+	return data
+}
+
+func CheckedOutAssetsToResponse(items []ports.CheckedOutAsset) []dto.CheckedOutAssetResponse {
+	data := make([]dto.CheckedOutAssetResponse, 0, len(items))
+	for _, item := range items {
+		data = append(data, dto.CheckedOutAssetResponse{
+			Asset:    AssetToResponse(item.Asset, nil, &item.Checkout),
+			Checkout: *CurrentCheckoutToResponse(item.Checkout),
+		})
 	}
 	return data
 }

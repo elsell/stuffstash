@@ -117,6 +117,7 @@ type ListCheckedOutAssetsInput struct {
 type ListAssetsResult struct {
 	Items         []asset.Asset
 	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
+	Checkouts     map[asset.ID]asset.Checkout
 	Limit         int
 	NextCursor    *string
 	HasMore       bool
@@ -137,6 +138,7 @@ type CheckedOutAssetsResult struct {
 }
 
 type GetAssetResult struct {
-	Item         asset.Asset
-	PrimaryPhoto *media.Attachment
+	Item            asset.Asset
+	PrimaryPhoto    *media.Attachment
+	CurrentCheckout *asset.Checkout
 }

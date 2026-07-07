@@ -35,7 +35,7 @@ func RegisterRestore(api huma.API, application app.App) {
 
 		return &dto.UpdateAssetLifecycleOutput{
 			Body: shared.SuccessEnvelope[dto.AssetResponse]{
-				Data: mapper.AssetToResponse(item, nil),
+				Data: mapper.AssetToResponse(item, nil, nil),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil

@@ -69,6 +69,67 @@ type UpdateAssetLifecycleOutput struct {
 
 type DeleteAssetOutput struct{}
 
+type CheckoutAssetInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	Body          CheckoutAssetBody
+}
+
+type CheckoutAssetBody struct {
+	Details string `json:"details,omitempty" maxLength:"1000" doc:"Optional checkout details"`
+}
+
+type CheckoutAssetOutput struct {
+	Body shared.SuccessEnvelope[AssetCheckoutResponse]
+}
+
+type ReturnAssetInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	Body          ReturnAssetBody
+}
+
+type ReturnAssetBody struct {
+	Details string `json:"details,omitempty" maxLength:"1000" doc:"Optional return details"`
+}
+
+type ReturnAssetOutput struct {
+	Body shared.SuccessEnvelope[AssetCheckoutResponse]
+}
+
+type ListAssetCheckoutHistoryInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type ListAssetCheckoutHistoryOutput struct {
+	Body shared.SuccessEnvelope[[]AssetCheckoutResponse]
+}
+
+type ListCheckedOutAssetsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+}
+
+type ListCheckedOutAssetsOutput struct {
+	Body shared.SuccessEnvelope[[]CheckedOutAssetResponse]
+}
+
 type ListAssetsInput struct {
 	Authorization  string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	RequestID      string `header:"X-Request-ID" doc:"Optional request correlation ID"`
@@ -98,7 +159,35 @@ type AssetResponse struct {
 	CreatedAt         string             `json:"createdAt"`
 	UpdatedAt         string             `json:"updatedAt"`
 	PrimaryPhoto      *AssetPrimaryPhoto `json:"primaryPhoto,omitempty"`
+	CurrentCheckout   *CurrentCheckout   `json:"currentCheckout,omitempty"`
 }
 
 type AssetPrimaryPhoto = shared.AssetPrimaryPhoto
 type AssetPhotoThumbnails = shared.AssetPhotoThumbnails
+
+type CurrentCheckout struct {
+	ID                      string `json:"id"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+}
+
+type AssetCheckoutResponse struct {
+	ID                      string `json:"id"`
+	TenantID                string `json:"tenantId"`
+	InventoryID             string `json:"inventoryId"`
+	AssetID                 string `json:"assetId"`
+	State                   string `json:"state"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+	CheckoutDetails         string `json:"checkoutDetails,omitempty"`
+	ReturnedAt              string `json:"returnedAt,omitempty"`
+	ReturnedByPrincipalID   string `json:"returnedByPrincipalId,omitempty"`
+	ReturnDetails           string `json:"returnDetails,omitempty"`
+	CreatedAt               string `json:"createdAt"`
+	UpdatedAt               string `json:"updatedAt"`
+}
+
+type CheckedOutAssetResponse struct {
+	Asset    AssetResponse   `json:"asset"`
+	Checkout CurrentCheckout `json:"checkout"`
+}

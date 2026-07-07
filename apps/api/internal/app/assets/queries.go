@@ -76,9 +76,14 @@ func (s Service) GetAssetDetail(ctx context.Context, input GetAssetInput) (GetAs
 	if photo, ok := primaryPhotos[ref]; ok {
 		primaryPhoto = &photo
 	}
+	currentCheckout, err := s.currentCheckoutForAsset(ctx, item)
+	if err != nil {
+		return GetAssetResult{}, err
+	}
 	return GetAssetResult{
-		Item:         item,
-		PrimaryPhoto: primaryPhoto,
+		Item:            item,
+		PrimaryPhoto:    primaryPhoto,
+		CurrentCheckout: currentCheckout,
 	}, nil
 }
 
@@ -125,6 +130,10 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	if err != nil {
 		return ListAssetsResult{}, err
 	}
+	currentCheckouts, err := s.currentCheckoutsForAssets(ctx, items)
+	if err != nil {
+		return ListAssetsResult{}, err
+	}
 
 	s.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAssetsListed,
@@ -159,10 +168,42 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	return ListAssetsResult{
 		Items:         items,
 		PrimaryPhotos: primaryPhotos,
+		Checkouts:     currentCheckouts,
 		Limit:         limit,
 		NextCursor:    nextCursor,
 		HasMore:       hasMore,
 	}, nil
+}
+
+func (s Service) currentCheckoutForAsset(ctx context.Context, item asset.Asset) (*asset.Checkout, error) {
+	if s.checkouts == nil {
+		return nil, nil
+	}
+	checkout, found, err := s.checkouts.CurrentAssetCheckout(ctx, tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), item.ID)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, nil
+	}
+	return &checkout, nil
+}
+
+func (s Service) currentCheckoutsForAssets(ctx context.Context, items []asset.Asset) (map[asset.ID]asset.Checkout, error) {
+	if s.checkouts == nil || len(items) == 0 {
+		return nil, nil
+	}
+	checkouts := map[asset.ID]asset.Checkout{}
+	for _, item := range items {
+		current, err := s.currentCheckoutForAsset(ctx, item)
+		if err != nil {
+			return nil, err
+		}
+		if current != nil {
+			checkouts[item.ID] = *current
+		}
+	}
+	return checkouts, nil
 }
 
 func (s Service) primaryImageAttachments(ctx context.Context, tenantID tenant.ID, items []asset.Asset) (map[ports.AttachmentAssetReference]media.Attachment, error) {

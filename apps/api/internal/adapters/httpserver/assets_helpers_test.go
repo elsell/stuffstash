@@ -19,6 +19,13 @@ type assetResponse struct {
 	CreatedAt         string                 `json:"createdAt"`
 	UpdatedAt         string                 `json:"updatedAt"`
 	PrimaryPhoto      *assetPrimaryPhoto     `json:"primaryPhoto,omitempty"`
+	CurrentCheckout   *currentCheckout       `json:"currentCheckout,omitempty"`
+}
+
+type currentCheckout struct {
+	ID                      string `json:"id"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
 }
 
 type assetPrimaryPhoto struct {
@@ -45,6 +52,42 @@ type assetListBody struct {
 	Meta responseMeta    `json:"meta"`
 }
 
+type assetCheckoutResponse struct {
+	ID                      string `json:"id"`
+	TenantID                string `json:"tenantId"`
+	InventoryID             string `json:"inventoryId"`
+	AssetID                 string `json:"assetId"`
+	State                   string `json:"state"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+	CheckoutDetails         string `json:"checkoutDetails,omitempty"`
+	ReturnedAt              string `json:"returnedAt,omitempty"`
+	ReturnedByPrincipalID   string `json:"returnedByPrincipalId,omitempty"`
+	ReturnDetails           string `json:"returnDetails,omitempty"`
+	CreatedAt               string `json:"createdAt"`
+	UpdatedAt               string `json:"updatedAt"`
+}
+
+type assetCheckoutBody struct {
+	Data assetCheckoutResponse `json:"data"`
+	Meta responseMeta          `json:"meta"`
+}
+
+type assetCheckoutListBody struct {
+	Data []assetCheckoutResponse `json:"data"`
+	Meta responseMeta            `json:"meta"`
+}
+
+type checkedOutAssetResponse struct {
+	Asset    assetResponse   `json:"asset"`
+	Checkout currentCheckout `json:"checkout"`
+}
+
+type checkedOutAssetListBody struct {
+	Data []checkedOutAssetResponse `json:"data"`
+	Meta responseMeta              `json:"meta"`
+}
+
 func decodeAsset(t *testing.T, response *httptest.ResponseRecorder) assetBody {
 	t.Helper()
 
@@ -57,6 +100,30 @@ func decodeAssetList(t *testing.T, response *httptest.ResponseRecorder) assetLis
 	t.Helper()
 
 	var body assetListBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeAssetCheckout(t *testing.T, response *httptest.ResponseRecorder) assetCheckoutBody {
+	t.Helper()
+
+	var body assetCheckoutBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeAssetCheckoutList(t *testing.T, response *httptest.ResponseRecorder) assetCheckoutListBody {
+	t.Helper()
+
+	var body assetCheckoutListBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeCheckedOutAssetList(t *testing.T, response *httptest.ResponseRecorder) checkedOutAssetListBody {
+	t.Helper()
+
+	var body checkedOutAssetListBody
 	decodeBody(t, response, &body)
 	return body
 }

@@ -317,6 +317,7 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		CustomFields:              store,
 		CustomFieldUnitOfWork:     store,
 		Assets:                    store,
+		Checkouts:                 store,
 		AssetUnitOfWork:           store,
 		Undoables:                 store,
 		Search:                    store,

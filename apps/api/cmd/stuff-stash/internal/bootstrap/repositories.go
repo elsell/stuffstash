@@ -29,6 +29,7 @@ type repositories struct {
 	customFields               ports.CustomFieldDefinitionRepository
 	customFieldUnitOfWork      ports.CustomFieldDefinitionUnitOfWork
 	assets                     ports.AssetRepository
+	checkouts                  ports.AssetCheckoutRepository
 	assetUnitOfWork            ports.AssetUnitOfWork
 	undoables                  ports.UndoableOperationRepository
 	search                     ports.AssetSearchRepository
@@ -58,7 +59,7 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, directUploads: blobstore.NewLocalDirectAttachmentUploader(store), imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, func() error { return nil }, nil
+		return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, directUploads: blobstore.NewLocalDirectAttachmentUploader(store), imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -88,7 +89,7 @@ func repositoriesFromGORMStore(cfg config.Config, store gormstore.Store, closeSt
 		_ = closeStore()
 		return repositories{}, nil, err
 	}
-	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
+	return repositories{tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
 }
 
 func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {

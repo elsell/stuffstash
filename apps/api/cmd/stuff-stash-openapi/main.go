@@ -39,6 +39,7 @@ func run() error {
 		CustomFields:              store,
 		CustomFieldUnitOfWork:     store,
 		Assets:                    store,
+		Checkouts:                 store,
 		AssetUnitOfWork:           store,
 		Undoables:                 store,
 		Search:                    store,

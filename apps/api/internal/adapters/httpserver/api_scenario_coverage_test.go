@@ -140,6 +140,10 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", assetPath, "Bearer dev:owner", map[string]any{"title": "Impact Driver"}, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive", assetPath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore", assetPath+"/restore", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkout", assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "using at bench"}, http.StatusCreated)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets/checked-out", inventoryPath+"/assets/checked-out?limit=10", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts", assetPath+"/checkouts?limit=10", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/return", assetPath+"/return", "Bearer dev:owner", map[string]any{"details": "back on shelf"}, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/search/assets", tenantPath+"/search/assets?q=Impact&limit=10", "Bearer dev:owner", nil, http.StatusOK)
 
 	attachmentCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments", assetPath+"/attachments", "Bearer dev:owner", map[string]any{
@@ -351,6 +355,10 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", path: assetPath, body: map[string]any{"title": "Blocked"}},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive", path: assetPath + "/archive"},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore", path: assetPath + "/restore"},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkout", path: assetPath + "/checkout", body: map[string]any{"details": "blocked"}},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/return", path: assetPath + "/return", body: map[string]any{"details": "blocked"}},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts", path: assetPath + "/checkouts?limit=10"},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/checked-out", path: inventoryPath + "/assets/checked-out?limit=10"},
 		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", path: assetPath},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments", path: assetPath + "/attachments", body: map[string]any{"fileName": "blocked.png", "contentType": "image/png", "contentBase64": base64.StdEncoding.EncodeToString(pngAttachmentContent())}},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads", path: assetPath + "/attachments/direct-uploads", body: map[string]any{"fileName": "blocked.png", "contentType": "image/png", "sizeBytes": 1}},

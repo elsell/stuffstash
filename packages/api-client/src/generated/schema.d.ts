@@ -445,6 +445,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/checked-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets checked out */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-checked-out"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}": {
         parameters: {
             query?: never;
@@ -636,6 +653,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID checkout */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID checkouts */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
         parameters: {
             query?: never;
@@ -651,6 +702,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID restore */
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID return */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-return"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/audit-records": {
@@ -1140,6 +1208,21 @@ export interface components {
             permissions: string[] | null;
             relationship: string;
         };
+        AssetCheckoutResponse: {
+            assetId: string;
+            checkedOutAt: string;
+            checkedOutByPrincipalId: string;
+            checkoutDetails?: string;
+            createdAt: string;
+            id: string;
+            inventoryId: string;
+            returnDetails?: string;
+            returnedAt?: string;
+            returnedByPrincipalId?: string;
+            state: string;
+            tenantId: string;
+            updatedAt: string;
+        };
         AssetPhotoThumbnails: {
             large: string;
             medium: string;
@@ -1155,6 +1238,7 @@ export interface components {
         };
         AssetResponse: {
             createdAt: string;
+            currentCheckout?: components["schemas"]["CurrentCheckout"];
             customAssetTypeId?: string;
             customFields: {
                 [key: string]: unknown;
@@ -1219,6 +1303,20 @@ export interface components {
         AuditPrincipalResponse: {
             email?: string;
             id: string;
+        };
+        CheckedOutAssetResponse: {
+            asset: components["schemas"]["AssetResponse"];
+            checkout: components["schemas"]["CurrentCheckout"];
+        };
+        CheckoutAssetBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/CheckoutAssetBody.json
+             */
+            readonly $schema?: string;
+            /** @description Optional checkout details */
+            details?: string;
         };
         CreateAssetBody: {
             /**
@@ -1351,6 +1449,11 @@ export interface components {
             readonly $schema?: string;
             /** @description Tenant name */
             name: string;
+        };
+        CurrentCheckout: {
+            checkedOutAt: string;
+            checkedOutByPrincipalId: string;
+            id: string;
         };
         DefinitionResponse: {
             applicability: string;
@@ -1725,9 +1828,29 @@ export interface components {
             /** @description Credential purpose */
             purpose: string;
         };
+        ReturnAssetBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ReturnAssetBody.json
+             */
+            readonly $schema?: string;
+            /** @description Optional return details */
+            details?: string;
+        };
         SearchMatch: {
             field: string;
             value: string;
+        };
+        SuccessEnvelopeAssetCheckoutResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeAssetCheckoutResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["AssetCheckoutResponse"];
+            meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeAssetResponse: {
             /**
@@ -1839,6 +1962,16 @@ export interface components {
             data: components["schemas"]["InvitationResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListAssetCheckoutResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListAssetCheckoutResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["AssetCheckoutResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListAssetResponse: {
             /**
              * Format: uri
@@ -1877,6 +2010,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["AttachmentResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListCheckedOutAssetResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListCheckedOutAssetResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["CheckedOutAssetResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListDefinitionResponse: {
@@ -3829,6 +3972,50 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-checked-out": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListCheckedOutAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
         parameters: {
             query?: never;
@@ -4478,6 +4665,97 @@ export interface operations {
             };
         };
     };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkout": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutAssetBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetCheckoutResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts": {
+        parameters: {
+            query?: {
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListAssetCheckoutResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
         parameters: {
             query?: never;
@@ -4506,6 +4784,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-return": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnAssetBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetCheckoutResponse"];
                 };
             };
             /** @description Error */

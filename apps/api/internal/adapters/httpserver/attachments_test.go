@@ -713,6 +713,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		CustomFields:              store,
 		CustomFieldUnitOfWork:     store,
 		Assets:                    store,
+		Checkouts:                 store,
 		AssetUnitOfWork:           store,
 		Undoables:                 store,
 		Search:                    store,

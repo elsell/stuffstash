@@ -43,6 +43,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		CustomFields:                    repositories.customFields,
 		CustomFieldUnitOfWork:           repositories.customFieldUnitOfWork,
 		Assets:                          repositories.assets,
+		Checkouts:                       repositories.checkouts,
 		AssetUnitOfWork:                 repositories.assetUnitOfWork,
 		Undoables:                       repositories.undoables,
 		Search:                          repositories.search,
