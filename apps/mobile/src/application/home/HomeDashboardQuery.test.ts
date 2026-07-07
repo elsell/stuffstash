@@ -88,6 +88,14 @@ describe('HomeDashboardQuery', () => {
             description: 'Everyday household items.',
             updatedAtLabel: 'Updated 12 min ago',
             locationCount: 2,
+            assetTags: [
+              {
+                id: 'tag-workshop',
+                key: 'workshop',
+                displayName: 'Workshop',
+                color: '#2F80ED'
+              }
+            ],
             locations: [
               {
                 id: assetId('asset-kitchen'),
@@ -209,6 +217,14 @@ describe('HomeDashboardQuery', () => {
         containedAssetCountLabel: '12',
         recentAssetLabel: 'AA batteries, LED bulbs',
         photoLabel: 'Photo ready'
+      }
+    ]);
+    expect(dashboard.assetTags).toEqual([
+      {
+        id: 'tag-workshop',
+        key: 'workshop',
+        displayName: 'Workshop',
+        color: '#2F80ED'
       }
     ]);
     expect(dashboard.recentAssets).toEqual([

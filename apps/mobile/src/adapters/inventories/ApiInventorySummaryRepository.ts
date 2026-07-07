@@ -1,5 +1,6 @@
 import type {
   Asset,
+  AssetTag,
   AssetPhotoReference,
   AssetSearchResult,
   Inventory,
@@ -33,6 +34,7 @@ type InventoryApiClient = Pick<
   | 'listMyTenants'
   | 'listInventories'
   | 'listAssets'
+  | 'listAssetTags'
   | 'createAsset'
   | 'updateAsset'
   | 'checkoutAsset'
@@ -323,6 +325,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     inventory: Inventory
   ): Promise<InventorySummary> {
     const assets = await this.listRecentInventoryAssets(tenant.id, inventory.id);
+    const assetTagsPage = await this.client.listAssetTags(tenant.id, inventory.id, 100);
     const locations = await Promise.all(
       assets
         .filter((asset) => asset.kind === 'location')
@@ -343,7 +346,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       updatedAtLabel: 'Loaded from API',
       locationCount: locations.length,
       locations,
-      assets: mappedAssets
+      assets: mappedAssets,
+      assetTags: assetTagsPage.items.map(mapAssetTag)
     };
   }
 
@@ -813,6 +817,15 @@ function mapTenant(tenant: Tenant) {
   return {
     id: tenantId(tenant.id),
     name: tenant.name
+  };
+}
+
+function mapAssetTag(tag: AssetTag) {
+  return {
+    id: tag.id,
+    key: tag.key,
+    displayName: tag.displayName,
+    color: tag.color
   };
 }
 

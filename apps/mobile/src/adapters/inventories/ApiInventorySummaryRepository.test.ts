@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type {
   Asset,
+  AssetTag,
   AssetCheckout,
   CheckedOutAsset,
   AssetPhotoReference,
@@ -93,6 +94,11 @@ class FakeInventoryApiClient {
     readonly assetId: string;
     readonly limit?: number;
     readonly cursor?: string;
+  }> = [];
+  listAssetTagRequests: Array<{
+    readonly tenantId: string;
+    readonly inventoryId: string;
+    readonly limit?: number;
   }> = [];
   thumbnailRequests: Array<{
     readonly assetId: string;
@@ -207,6 +213,30 @@ class FakeInventoryApiClient {
       start + limit < sortedAssets.length ? (start + limit).toString() : null;
 
     return pageWithCursor(items, nextCursor);
+  }
+
+  async listAssetTags(
+    tenantId: string,
+    inventoryId: string,
+    limit?: number
+  ): Promise<Page<AssetTag>> {
+    this.listAssetTagRequests.push({ tenantId, inventoryId, limit });
+    if (inventoryId !== this.inventory.id) {
+      return page([]);
+    }
+    return page([
+      {
+        id: 'tag-workshop',
+        tenantId,
+        inventoryId,
+        key: 'workshop',
+        displayName: 'Workshop',
+        color: '#2F80ED',
+        lifecycleState: 'active',
+        createdAt: '2026-06-20T10:00:00Z',
+        updatedAt: '2026-06-20T10:00:00Z'
+      }
+    ]);
   }
 
   async listAssetAttachments(
@@ -629,10 +659,8 @@ class FakeDirectUploadTransport {
 
 describe('ApiInventorySummaryRepository', () => {
   it('maps generated API client responses into mobile inventory summaries', async () => {
-    const repository = new ApiInventorySummaryRepository(
-      new FakeInventoryApiClient(),
-      'tenant-home'
-    );
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
 
     await expect(repository.getInventoryWorkspace()).resolves.toMatchObject({
       tenants: [
@@ -647,6 +675,14 @@ describe('ApiInventorySummaryRepository', () => {
           name: 'Home Inventory',
           role: 'owner',
           locationCount: 1,
+          assetTags: [
+            {
+              id: 'tag-workshop',
+              key: 'workshop',
+              displayName: 'Workshop',
+              color: '#2F80ED'
+            }
+          ],
           locations: [
             {
               id: 'asset-garage',
@@ -692,6 +728,11 @@ describe('ApiInventorySummaryRepository', () => {
           assets: []
         }
       ]
+    });
+    expect(client.listAssetTagRequests).toContainEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      limit: 100
     });
   });
 

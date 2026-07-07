@@ -1,4 +1,9 @@
-import { AssetSummary, countActiveAssets, countAssetsWithPhotos } from '../assets/AssetSummary';
+import {
+  AssetSummary,
+  AssetTagSummary,
+  countActiveAssets,
+  countAssetsWithPhotos
+} from '../assets/AssetSummary';
 import type { LocationSummary } from '../locations/LocationSummary';
 
 export type AccessRole = 'owner' | 'editor' | 'viewer';
@@ -25,6 +30,7 @@ export type InventorySummary = {
   readonly locationCount: number;
   readonly locations: readonly LocationSummary[];
   readonly assets: readonly AssetSummary[];
+  readonly assetTags?: readonly AssetTagSummary[];
 };
 
 export type InventoryOverview = {

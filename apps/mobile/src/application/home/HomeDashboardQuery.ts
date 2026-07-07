@@ -43,6 +43,12 @@ export type HomeDashboardViewModel = {
   readonly topLocations: readonly HomeDashboardLocationViewModel[];
   readonly locations: readonly HomeDashboardLocationViewModel[];
   readonly recentAssets: readonly AssetCardViewModel[];
+  readonly assetTags: readonly {
+    readonly id: string;
+    readonly key: string;
+    readonly displayName: string;
+    readonly color?: string;
+  }[];
 };
 
 export class HomeDashboardQuery {
@@ -88,7 +94,8 @@ export class HomeDashboardQuery {
       canAdd: inventory.permissions.includes('create_asset'),
       topLocations: overview.locations.slice(0, 3).map(toLocationViewModel),
       locations: overview.locations.map(toLocationViewModel),
-      recentAssets: inventory.assets.slice(0, 10).map(toAssetCardViewModel)
+      recentAssets: inventory.assets.slice(0, 10).map(toAssetCardViewModel),
+      assetTags: [...(inventory.assetTags ?? [])]
     };
   }
 }
