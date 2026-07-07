@@ -73,6 +73,11 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}", inventoryPath, "Bearer dev:owner", map[string]any{"name": "Updated Tools"}, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/archive", inventoryPath+"/archive", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/restore", inventoryPath+"/restore", "Bearer dev:owner", nil, http.StatusOK)
+	tagCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/tags", inventoryPath+"/tags", "Bearer dev:owner", map[string]any{"displayName": "Workshop", "color": "#2f80ed"}, http.StatusCreated)
+	tagID := decodeScenarioTag(t, tagCreate).Data.ID
+	tagPath := inventoryPath + "/tags/" + tagID
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/tags", inventoryPath+"/tags?limit=10", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}", tagPath, "Bearer dev:owner", map[string]any{"displayName": "Workshop Tools"}, http.StatusOK)
 	importInventoryCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories", tenantPath+"/inventories", "Bearer dev:owner", map[string]any{"name": "Imports"}, http.StatusCreated)
 	importInventoryID := decodeScenarioInventory(t, importInventoryCreate).Data.ID
 	importInventoryPath := tenantPath + "/inventories/" + importInventoryID
@@ -203,6 +208,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/custom-field-definitions/{definitionId}", tenantFieldPath, "Bearer dev:owner", nil, http.StatusNoContent)
 	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}", inventoryTypePath, "Bearer dev:owner", nil, http.StatusNoContent)
 	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}", tenantTypePath, "Bearer dev:owner", nil, http.StatusNoContent)
+	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}", tagPath, "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", assetPath, "Bearer dev:owner", nil, http.StatusNoContent)
 	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", inventoryPath+"/assets/"+undoAssetID, "Bearer dev:owner", nil, http.StatusNoContent)
 	coverage.request(t, server, http.MethodDelete, "/tenants/{tenantId}/inventories/{inventoryId}", inventoryPath, "Bearer dev:owner", nil, http.StatusNoContent)
@@ -257,6 +263,10 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 	requireStatus(t, inventoryCreate, http.StatusCreated)
 	inventoryID := decodeScenarioInventory(t, inventoryCreate).Data.ID
 	inventoryPath := tenantPath + "/inventories/" + inventoryID
+
+	tagCreate := performRequest(server, http.MethodPost, inventoryPath+"/tags", "Bearer dev:owner", map[string]any{"displayName": "Workshop"})
+	requireStatus(t, tagCreate, http.StatusCreated)
+	tagPath := inventoryPath + "/tags/" + decodeScenarioTag(t, tagCreate).Data.ID
 
 	assetCreate := performRequest(server, http.MethodPost, inventoryPath+"/assets", "Bearer dev:owner", map[string]any{"kind": "item", "title": "Drill"})
 	requireStatus(t, assetCreate, http.StatusCreated)
@@ -343,6 +353,10 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/archive", path: inventoryPath + "/archive"},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/restore", path: inventoryPath + "/restore"},
 		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}", path: inventoryPath},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/tags", path: inventoryPath + "/tags", body: map[string]any{"displayName": "Blocked"}},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/tags", path: inventoryPath + "/tags?limit=10"},
+		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}", path: tagPath, body: map[string]any{"displayName": "Blocked"}},
+		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}", path: tagPath},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs", path: inventoryPath + "/imports/jobs"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview", path: inventoryPath + "/imports/jobs/preview", body: homeboxImportBody},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}", path: inventoryPath + "/imports/jobs/job-one"},

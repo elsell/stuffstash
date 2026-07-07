@@ -20,6 +20,11 @@ func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset
 	if err := s.persistPreparedCreateAsset(ctx, prepared); err != nil {
 		return asset.Asset{}, err
 	}
+	if len(input.TagIDs) > 0 {
+		if err := s.setAssetTagAssignments(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, prepared.Asset.ID, input.TagIDs); err != nil {
+			return asset.Asset{}, err
+		}
+	}
 	s.RecordAssetCreated(ctx, prepared.Asset, input.Principal.ID)
 	return prepared.Asset, nil
 }
@@ -220,6 +225,11 @@ func (s Service) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset
 	}
 	if err := s.persistPreparedUpdateAsset(ctx, prepared); err != nil {
 		return asset.Asset{}, err
+	}
+	if input.TagIDs != nil {
+		if err := s.setAssetTagAssignments(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, prepared.Asset.ID, *input.TagIDs); err != nil {
+			return asset.Asset{}, err
+		}
 	}
 	s.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
 	return prepared.Asset, nil

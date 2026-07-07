@@ -141,6 +141,66 @@ func TestCreateAssetPromotesItemParent(t *testing.T) {
 	}
 }
 
+func TestAssetEndpointsAssignAndReturnTags(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+		},
+		ids: []string{
+			"workshop-tag", "audit-workshop-tag",
+			"drill", "op-drill", "audit-drill", "audit-drill-tags", "audit-drill-read",
+			"audit-list",
+			"audit-clear-tags", "audit-clear-read",
+		},
+	}))
+
+	tagResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/tags", "Bearer dev:owner", map[string]any{
+		"displayName": "Workshop",
+		"color":       "#2f80ed",
+	})
+	if tagResponse.Code != http.StatusCreated {
+		t.Fatalf("expected tag create status %d, got %d with body %s", http.StatusCreated, tagResponse.Code, tagResponse.Body.String())
+	}
+	tag := decodeScenarioTag(t, tagResponse)
+
+	createAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":   "item",
+		"title":  "Drill",
+		"tagIds": []string{tag.Data.ID},
+	})
+	if createAsset.Code != http.StatusCreated {
+		t.Fatalf("expected asset create status %d, got %d with body %s", http.StatusCreated, createAsset.Code, createAsset.Body.String())
+	}
+	created := decodeAsset(t, createAsset)
+	if len(created.Data.Tags) != 1 || created.Data.Tags[0].Key != "workshop" || created.Data.Tags[0].Color != "#2F80ED" {
+		t.Fatalf("expected created asset tag, got %+v", created.Data.Tags)
+	}
+
+	list := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=10", "Bearer dev:owner", nil)
+	if list.Code != http.StatusOK {
+		t.Fatalf("expected list status %d, got %d with body %s", http.StatusOK, list.Code, list.Body.String())
+	}
+	listBody := decodeAssetList(t, list)
+	if len(listBody.Data) != 1 || len(listBody.Data[0].Tags) != 1 || listBody.Data[0].Tags[0].ID != tag.Data.ID {
+		t.Fatalf("expected listed asset tag, got %+v", listBody.Data)
+	}
+
+	clearTags := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+created.Data.ID, "Bearer dev:owner", map[string]any{
+		"tagIds": []string{},
+	})
+	if clearTags.Code != http.StatusOK {
+		t.Fatalf("expected clear tags status %d, got %d with body %s", http.StatusOK, clearTags.Code, clearTags.Body.String())
+	}
+	if tags := decodeAsset(t, clearTags).Data.Tags; len(tags) != 0 {
+		t.Fatalf("expected cleared response tags, got %+v", tags)
+	}
+}
+
 func TestUnrelatedUserCannotCreateOrListAssets(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"

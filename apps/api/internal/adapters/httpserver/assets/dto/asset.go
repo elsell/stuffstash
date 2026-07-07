@@ -17,6 +17,7 @@ type CreateAssetBody struct {
 	ParentAssetID     string         `json:"parentAssetId,omitempty" doc:"Parent asset ID"`
 	CustomAssetTypeID string         `json:"customAssetTypeId,omitempty" doc:"Custom asset type ID"`
 	CustomFields      map[string]any `json:"customFields,omitempty" doc:"Custom field values"`
+	TagIDs            []string       `json:"tagIds,omitempty" doc:"Complete assigned tag ID list"`
 }
 
 type CreateAssetOutput struct {
@@ -37,6 +38,7 @@ type UpdateAssetBody struct {
 	Description   *string               `json:"description,omitempty" doc:"Asset description"`
 	ParentAssetID shared.NullableString `json:"parentAssetId,omitempty" doc:"Parent asset ID, or null to move to inventory root"`
 	CustomFields  map[string]any        `json:"customFields,omitempty" doc:"Custom field values"`
+	TagIDs        *[]string             `json:"tagIds,omitempty" doc:"Complete assigned tag ID list"`
 }
 
 type UpdateAssetOutput struct {
@@ -155,11 +157,19 @@ type AssetResponse struct {
 	Title             string             `json:"title"`
 	Description       string             `json:"description"`
 	CustomFields      map[string]any     `json:"customFields"`
+	Tags              []CompactTag       `json:"tags"`
 	LifecycleState    string             `json:"lifecycleState"`
 	CreatedAt         string             `json:"createdAt"`
 	UpdatedAt         string             `json:"updatedAt"`
 	PrimaryPhoto      *AssetPrimaryPhoto `json:"primaryPhoto,omitempty"`
 	CurrentCheckout   *CurrentCheckout   `json:"currentCheckout,omitempty"`
+}
+
+type CompactTag struct {
+	ID          string `json:"id"`
+	Key         string `json:"key"`
+	DisplayName string `json:"displayName"`
+	Color       string `json:"color,omitempty"`
 }
 
 type AssetPrimaryPhoto = shared.AssetPrimaryPhoto

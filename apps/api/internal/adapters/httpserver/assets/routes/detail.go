@@ -36,7 +36,7 @@ func RegisterDetail(api huma.API, application app.App) {
 			checkouts = []asset.Checkout{*result.CurrentCheckout}
 		}
 		return &dto.GetAssetOutput{Body: shared.SuccessEnvelope[dto.AssetResponse]{
-			Data: mapper.AssetToResponse(result.Item, result.PrimaryPhoto, result.CurrentCheckout, resolveCheckoutPrincipals(ctx, application, checkouts)),
+			Data: mapper.AssetToResponseWithTags(result.Item, result.Tags, result.PrimaryPhoto, result.CurrentCheckout, resolveCheckoutPrincipals(ctx, application, checkouts)),
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("assets"), shared.SecuredOperation)

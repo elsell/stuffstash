@@ -7,7 +7,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) completeRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
+func (a App) completeRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolCallIDs []string, emit RealtimeVoiceEventSink, continueAfterClarification ...bool) error {
 	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressAnswering, "Preparing a response.", emit); err != nil {
 		return err
 	}
@@ -58,8 +58,10 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioCompleted, SessionID: session.ID}); err != nil {
 		return err
 	}
-	if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
-		return err
+	if !realtimeVoiceShouldContinueAfterClarification(response, continueAfterClarification...) {
+		if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
+			return err
+		}
 	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
 }
@@ -73,4 +75,8 @@ func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeV
 		SpokenResponse:  "I could not finish that voice request safely. Please try again with a little more detail.",
 		DisplayResponse: "I could not finish that voice request safely. Please try again with a little more detail.",
 	}, toolCallIDs, emit)
+}
+
+func realtimeVoiceShouldContinueAfterClarification(response ports.StructuredAgentResponse, continueAfterClarification ...bool) bool {
+	return len(continueAfterClarification) > 0 && continueAfterClarification[0] && response.Kind == ports.StructuredAgentResponseKindClarification
 }

@@ -90,6 +90,10 @@ const (
 	ActionAssetDeleted                         Action = "asset.deleted"
 	ActionAssetCheckedOut                      Action = "asset.checked_out"
 	ActionAssetReturned                        Action = "asset.returned"
+	ActionAssetTagCreated                      Action = "asset_tag.created"
+	ActionAssetTagListed                       Action = "asset_tag.listed"
+	ActionAssetTagUpdated                      Action = "asset_tag.updated"
+	ActionAssetTagArchived                     Action = "asset_tag.archived"
 	ActionAttachmentCreated                    Action = "attachment.created"
 	ActionAttachmentViewed                     Action = "attachment.viewed"
 	ActionAttachmentListed                     Action = "attachment.listed"
@@ -173,6 +177,10 @@ func NewAction(value string) (Action, bool) {
 		ActionAssetDeleted,
 		ActionAssetCheckedOut,
 		ActionAssetReturned,
+		ActionAssetTagCreated,
+		ActionAssetTagListed,
+		ActionAssetTagUpdated,
+		ActionAssetTagArchived,
 		ActionAttachmentCreated,
 		ActionAttachmentViewed,
 		ActionAttachmentListed,
@@ -246,6 +254,7 @@ const (
 	TargetCustomAssetType       TargetType = "custom_asset_type"
 	TargetCustomFieldDefinition TargetType = "custom_field_definition"
 	TargetAsset                 TargetType = "asset"
+	TargetAssetTag              TargetType = "asset_tag"
 	TargetAttachment            TargetType = "attachment"
 	TargetAuditRecord           TargetType = "audit_record"
 	TargetUndoableOperation     TargetType = "undoable_operation"
@@ -256,7 +265,7 @@ const (
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob:
+	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob:
 		return targetType, true
 	default:
 		return "", false

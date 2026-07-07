@@ -24,6 +24,7 @@ import (
 const realtimeVoicePath = "/v1/realtime/voice"
 const maxRealtimeAudioChunkBytes = 512 * 1024
 const maxRealtimeVoiceFrameBytes = 710 * 1024
+const maxRealtimeVoiceTurnsPerSession = 3
 
 var errRealtimeVoiceCancelled = errors.New("voice session cancelled")
 
@@ -88,58 +89,75 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		}
 		serverSeq++
 
-		audioChunks, lastClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, start.Seq)
-		if err != nil {
-			if errors.Is(err, errRealtimeVoiceCancelled) {
-				_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
-				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
-				_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
-				return
-			} else {
-				_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
-			}
-			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
-			_ = connection.Close(websocket.StatusPolicyViolation, "voice session failed")
-			return
-		}
-
-		reviewPlanID := ""
-		err = application.RunRealtimeVoiceQuery(ctx, app.RealtimeVoiceQueryInput{
-			Session:     session,
-			AudioChunks: audioChunks,
-		}, func(event app.RealtimeVoiceEvent) error {
-			if event.Type == app.RealtimeVoiceEventActionPlanProposed && event.ActionPlan != nil {
-				reviewPlanID = strings.TrimSpace(event.ActionPlan.PlanID)
-			}
-			message := realtimeServerMessageFromEvent(event, serverSeq)
-			serverSeq++
-			return writeRealtimeServerMessage(ctx, connection, message)
-		})
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
-				_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
-				return
-			}
-			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session failed safely."})
-			_ = connection.Close(websocket.StatusInternalError, "voice session failed")
-			return
-		}
-		if reviewPlanID != "" {
-			reviewOutcome, err := handleRealtimeActionPlanDecision(ctx, connection, application, session, reviewPlanID, &lastClientSeq, &serverSeq)
+		lastClientSeq := start.Seq
+		for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
+			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq)
+			lastClientSeq = nextClientSeq
 			if err != nil {
-				_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
-				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The action plan decision could not be applied safely."})
-				_ = connection.Close(websocket.StatusPolicyViolation, "voice review failed")
+				if errors.Is(err, errRealtimeVoiceCancelled) {
+					_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
+					_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
+					return
+				} else {
+					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
+				}
+				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
+				_ = connection.Close(websocket.StatusPolicyViolation, "voice session failed")
 				return
 			}
-			switch reviewOutcome {
-			case ports.RealtimeSessionStateCancelled:
-				_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
-			default:
-				_ = application.MarkRealtimeVoiceSessionCompleted(ctx, session)
+
+			reviewPlanID := ""
+			completedResponseKind := ""
+			err = application.RunRealtimeVoiceQuery(ctx, app.RealtimeVoiceQueryInput{
+				Session:                    session,
+				AudioChunks:                audioChunks,
+				ContinueAfterClarification: true,
+			}, func(event app.RealtimeVoiceEvent) error {
+				if event.Type == app.RealtimeVoiceEventActionPlanProposed && event.ActionPlan != nil {
+					reviewPlanID = strings.TrimSpace(event.ActionPlan.PlanID)
+				}
+				if event.Type == app.RealtimeVoiceEventAssistantResponseCompleted && event.Response != nil {
+					completedResponseKind = string(event.Response.Kind)
+				}
+				message := realtimeServerMessageFromEvent(event, serverSeq)
+				serverSeq++
+				return writeRealtimeServerMessage(ctx, connection, message)
+			})
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
+					_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
+					return
+				}
+				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session failed safely."})
+				_ = connection.Close(websocket.StatusInternalError, "voice session failed")
+				return
+			}
+			if reviewPlanID != "" {
+				reviewOutcome, err := handleRealtimeActionPlanDecision(ctx, connection, application, session, reviewPlanID, &lastClientSeq, &serverSeq)
+				if err != nil {
+					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The action plan decision could not be applied safely."})
+					_ = connection.Close(websocket.StatusPolicyViolation, "voice review failed")
+					return
+				}
+				switch reviewOutcome {
+				case ports.RealtimeSessionStateCancelled:
+					_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
+				default:
+					_ = application.MarkRealtimeVoiceSessionCompleted(ctx, session)
+				}
+				_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
+				return
+			}
+			if completedResponseKind != string(ports.StructuredAgentResponseKindClarification) {
+				_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
+				return
 			}
 		}
+		_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, "clarification_turn_limit")
+		_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: "clarification_turn_limit", Message: "The voice session needs a fresh start."})
 		_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
 	}
 }

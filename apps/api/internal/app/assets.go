@@ -5,6 +5,7 @@ import (
 
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -24,6 +25,11 @@ type ListAssetCheckoutHistoryInput = assetapp.ListAssetCheckoutHistoryInput
 type ListCheckedOutAssetsInput = assetapp.ListCheckedOutAssetsInput
 type AssetCheckoutHistoryResult = assetapp.AssetCheckoutHistoryResult
 type CheckedOutAssetsResult = assetapp.CheckedOutAssetsResult
+type CreateAssetTagInput = assetapp.CreateAssetTagInput
+type UpdateAssetTagInput = assetapp.UpdateAssetTagInput
+type ListAssetTagsInput = assetapp.ListAssetTagsInput
+type AssetTagLifecycleInput = assetapp.AssetTagLifecycleInput
+type ListAssetTagsResult = assetapp.ListAssetTagsResult
 
 func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
 	return a.assetService.CreateAsset(ctx, input)
@@ -83,6 +89,22 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	}
 	a.warmPrimarySmallThumbnails(ctx, primaryPhotosForAssets(result.Items, result.PrimaryPhotos))
 	return result, nil
+}
+
+func (a App) CreateAssetTag(ctx context.Context, input CreateAssetTagInput) (assettag.Tag, error) {
+	return a.assetService.CreateAssetTag(ctx, input)
+}
+
+func (a App) UpdateAssetTag(ctx context.Context, input UpdateAssetTagInput) (assettag.Tag, error) {
+	return a.assetService.UpdateAssetTag(ctx, input)
+}
+
+func (a App) ArchiveAssetTag(ctx context.Context, input AssetTagLifecycleInput) (assettag.Tag, error) {
+	return a.assetService.ArchiveAssetTag(ctx, input)
+}
+
+func (a App) ListAssetTags(ctx context.Context, input ListAssetTagsInput) (ListAssetTagsResult, error) {
+	return a.assetService.ListAssetTags(ctx, input)
 }
 
 func primaryPhotosForAssets(items []asset.Asset, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment) []media.Attachment {

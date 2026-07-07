@@ -92,6 +92,94 @@ func TestCreateAndListAssets(t *testing.T) {
 	}
 }
 
+func TestCreateUpdateAndReadAssetTags(t *testing.T) {
+	assets := &fakeAssetRepository{}
+	application := New(Dependencies{
+		Observer:           &fakeObserver{},
+		Authorizer:         &fakeAuthorizer{},
+		Tenants:            &fakeTenantRepository{exists: true},
+		Inventories:        &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		Assets:             assets,
+		AssetTags:          assets,
+		AssetUnitOfWork:    assets,
+		AssetTagUnitOfWork: assets,
+		Undoables:          assets,
+		Audit:              &fakeAuditRepository{},
+		Outbox:             &fakeOutbox{},
+		IDs:                &fakeIDGenerator{ids: []string{"tag-one", "audit-tag-one", "asset-one", "op-asset-one", "audit-asset-one", "audit-asset-tags", "audit-clear-tags"}},
+	})
+
+	tag, err := application.CreateAssetTag(context.Background(), CreateAssetTagInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		DisplayName: "Workshop",
+		Color:       "#2f80ed",
+	})
+	if err != nil {
+		t.Fatalf("create tag: %v", err)
+	}
+	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		Kind:        "item",
+		Title:       "Drill",
+		TagIDs:      []string{tag.ID.String()},
+	})
+	if err != nil {
+		t.Fatalf("create asset with tag: %v", err)
+	}
+
+	detail, err := application.GetAssetDetail(context.Background(), GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     item.ID,
+	})
+	if err != nil {
+		t.Fatalf("get asset detail: %v", err)
+	}
+	if len(detail.Tags) != 1 || detail.Tags[0].ID != tag.ID {
+		t.Fatalf("expected detail tag %q, got %+v", tag.ID, detail.Tags)
+	}
+
+	list, err := application.ListAssets(context.Background(), ListAssetsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+	})
+	if err != nil {
+		t.Fatalf("list assets: %v", err)
+	}
+	if len(list.Tags[item.ID]) != 1 || list.Tags[item.ID][0].Key.String() != "workshop" {
+		t.Fatalf("expected list tags for asset, got %+v", list.Tags)
+	}
+
+	clearTags := []string{}
+	if _, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     item.ID,
+		TagIDs:      &clearTags,
+	}); err != nil {
+		t.Fatalf("clear asset tags: %v", err)
+	}
+	cleared, err := application.GetAssetDetail(context.Background(), GetAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     item.ID,
+	})
+	if err != nil {
+		t.Fatalf("get cleared asset detail: %v", err)
+	}
+	if len(cleared.Tags) != 0 {
+		t.Fatalf("expected cleared tags, got %+v", cleared.Tags)
+	}
+}
+
 func TestCreateAssetPromotesItemParentToContainer(t *testing.T) {
 	itemParent := assetItem("asset-parent", "tenant-one", "inventory-one", asset.KindItem, "")
 	assets := &fakeAssetRepository{

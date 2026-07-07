@@ -3,6 +3,7 @@ package memory
 import (
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -24,6 +25,8 @@ type Store struct {
 	customAssetTypes map[customfield.AssetTypeID]customfield.AssetType
 	customFields     map[customfield.ID]customfield.Definition
 	assets           map[asset.ID]asset.Asset
+	assetTags        map[assettag.ID]assettag.Tag
+	assetTagLinks    map[asset.ID]map[assettag.ID]struct{}
 	checkouts        map[asset.CheckoutID]asset.Checkout
 	undoables        map[string]ports.UndoableOperation
 	attachments      map[media.ID]media.Attachment
@@ -52,6 +55,8 @@ func NewStore() *Store {
 		customAssetTypes: map[customfield.AssetTypeID]customfield.AssetType{},
 		customFields:     map[customfield.ID]customfield.Definition{},
 		assets:           map[asset.ID]asset.Asset{},
+		assetTags:        map[assettag.ID]assettag.Tag{},
+		assetTagLinks:    map[asset.ID]map[assettag.ID]struct{}{},
 		checkouts:        map[asset.CheckoutID]asset.Checkout{},
 		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},

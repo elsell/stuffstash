@@ -30,8 +30,10 @@ type App struct {
 	customFields                ports.CustomFieldDefinitionRepository
 	customFieldUnitOfWork       ports.CustomFieldDefinitionUnitOfWork
 	assets                      ports.AssetRepository
+	assetTags                   ports.AssetTagRepository
 	checkouts                   ports.AssetCheckoutRepository
 	assetUnitOfWork             ports.AssetUnitOfWork
+	assetTagUnitOfWork          ports.AssetTagUnitOfWork
 	undoables                   ports.UndoableOperationRepository
 	search                      ports.AssetSearchRepository
 	attachments                 ports.AttachmentRepository
@@ -97,8 +99,10 @@ type Dependencies struct {
 	CustomFields                    ports.CustomFieldDefinitionRepository
 	CustomFieldUnitOfWork           ports.CustomFieldDefinitionUnitOfWork
 	Assets                          ports.AssetRepository
+	AssetTags                       ports.AssetTagRepository
 	Checkouts                       ports.AssetCheckoutRepository
 	AssetUnitOfWork                 ports.AssetUnitOfWork
+	AssetTagUnitOfWork              ports.AssetTagUnitOfWork
 	Undoables                       ports.UndoableOperationRepository
 	Search                          ports.AssetSearchRepository
 	Attachments                     ports.AttachmentRepository
@@ -184,8 +188,10 @@ func New(deps Dependencies) App {
 		customFields:                deps.CustomFields,
 		customFieldUnitOfWork:       deps.CustomFieldUnitOfWork,
 		assets:                      deps.Assets,
+		assetTags:                   deps.AssetTags,
 		checkouts:                   deps.Checkouts,
 		assetUnitOfWork:             deps.AssetUnitOfWork,
+		assetTagUnitOfWork:          deps.AssetTagUnitOfWork,
 		undoables:                   deps.Undoables,
 		search:                      deps.Search,
 		attachments:                 deps.Attachments,
@@ -232,22 +238,24 @@ func New(deps Dependencies) App {
 		thumbnailGenerationState:    newThumbnailGenerationState(),
 	}
 	app.assetService = assetapp.New(assetapp.Dependencies{
-		Observer:         app.observer,
-		Authorizer:       app.authorizer,
-		Tenants:          app.tenants,
-		Inventories:      app.inventories,
-		CustomAssetTypes: app.customAssetTypes,
-		CustomFields:     app.customFields,
-		Assets:           app.assets,
-		Checkouts:        app.checkouts,
-		Attachments:      app.attachments,
-		AssetUnitOfWork:  app.assetUnitOfWork,
-		Undoables:        app.undoables,
-		Audit:            app.audit,
-		IDs:              app.ids,
-		Clock:            app.clock,
-		DefaultPageLimit: app.defaultPageLimit,
-		MaxPageLimit:     app.maxPageLimit,
+		Observer:           app.observer,
+		Authorizer:         app.authorizer,
+		Tenants:            app.tenants,
+		Inventories:        app.inventories,
+		CustomAssetTypes:   app.customAssetTypes,
+		CustomFields:       app.customFields,
+		Assets:             app.assets,
+		Checkouts:          app.checkouts,
+		Attachments:        app.attachments,
+		AssetTags:          app.assetTags,
+		AssetUnitOfWork:    app.assetUnitOfWork,
+		AssetTagUnitOfWork: app.assetTagUnitOfWork,
+		Undoables:          app.undoables,
+		Audit:              app.audit,
+		IDs:                app.ids,
+		Clock:              app.clock,
+		DefaultPageLimit:   app.defaultPageLimit,
+		MaxPageLimit:       app.maxPageLimit,
 	})
 	app.customFieldService = customfieldapp.New(customfieldapp.Dependencies{
 		Observer:                  app.observer,

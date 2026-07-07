@@ -2,6 +2,7 @@ package assets
 
 import (
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -22,6 +23,7 @@ type CreateAssetInput struct {
 	ParentAssetID     string
 	CustomAssetTypeID string
 	CustomFields      map[string]any
+	TagIDs            []string
 }
 
 type ListAssetsInput struct {
@@ -62,6 +64,7 @@ type UpdateAssetInput struct {
 	Description   *string
 	ParentAssetID AssetParentUpdate
 	CustomFields  map[string]any
+	TagIDs        *[]string
 }
 
 type UpdateAssetLifecycleInput struct {
@@ -116,6 +119,7 @@ type ListCheckedOutAssetsInput struct {
 
 type ListAssetsResult struct {
 	Items         []asset.Asset
+	Tags          map[asset.ID][]assettag.Tag
 	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
 	Checkouts     map[asset.ID]asset.Checkout
 	Limit         int
@@ -146,6 +150,7 @@ type PreparedCheckoutOperation struct {
 
 type GetAssetResult struct {
 	Item            asset.Asset
+	Tags            []assettag.Tag
 	PrimaryPhoto    *media.Attachment
 	CurrentCheckout *asset.Checkout
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -15,11 +16,137 @@ import (
 
 type fakeAssetRepository struct {
 	items            map[asset.ID]asset.Asset
+	assetTags        map[assettag.ID]assettag.Tag
+	assetTagLinks    map[asset.ID]map[assettag.ID]struct{}
 	checkouts        map[asset.CheckoutID]asset.Checkout
 	undoables        map[string]ports.UndoableOperation
 	auditRecords     []audit.Record
 	checkOutAssetErr error
 	returnAssetErr   error
+}
+
+func (f *fakeAssetRepository) CreateAssetTag(_ context.Context, tag assettag.Tag, auditRecord audit.Record) error {
+	if f.assetTags == nil {
+		f.assetTags = map[assettag.ID]assettag.Tag{}
+	}
+	if _, exists := f.assetTags[tag.ID]; exists {
+		return ports.ErrConflict
+	}
+	for _, existing := range f.assetTags {
+		if existing.TenantID == tag.TenantID && existing.InventoryID == tag.InventoryID && existing.Key == tag.Key {
+			return ports.ErrConflict
+		}
+	}
+	f.assetTags[tag.ID] = tag
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
+func (f *fakeAssetRepository) UpdateAssetTag(_ context.Context, tag assettag.Tag, auditRecord audit.Record) error {
+	if f.assetTags == nil {
+		return ports.ErrForbidden
+	}
+	current, ok := f.assetTags[tag.ID]
+	if !ok || current.TenantID != tag.TenantID || current.InventoryID != tag.InventoryID || current.Key != tag.Key || current.LifecycleState != assettag.LifecycleStateActive {
+		return ports.ErrForbidden
+	}
+	f.assetTags[tag.ID] = tag
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
+func (f *fakeAssetRepository) UpdateAssetTagLifecycle(_ context.Context, tag assettag.Tag, auditRecord audit.Record) error {
+	if f.assetTags == nil {
+		return ports.ErrForbidden
+	}
+	current, ok := f.assetTags[tag.ID]
+	if !ok || current.TenantID != tag.TenantID || current.InventoryID != tag.InventoryID || current.Key != tag.Key || current.LifecycleState != assettag.LifecycleStateActive {
+		return ports.ErrForbidden
+	}
+	f.assetTags[tag.ID] = tag
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
+func (f *fakeAssetRepository) SetAssetTags(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, tagIDs []assettag.ID, auditRecord audit.Record) error {
+	item, ok := f.items[assetID]
+	if !ok || item.TenantID.String() != tenantID.String() || item.InventoryID.String() != inventoryID.String() {
+		return ports.ErrForbidden
+	}
+	for _, tagID := range tagIDs {
+		tag, ok := f.assetTags[tagID]
+		if !ok || tag.TenantID.String() != tenantID.String() || tag.InventoryID.String() != inventoryID.String() || tag.LifecycleState != assettag.LifecycleStateActive {
+			return ports.ErrForbidden
+		}
+	}
+	if f.assetTagLinks == nil {
+		f.assetTagLinks = map[asset.ID]map[assettag.ID]struct{}{}
+	}
+	links := map[assettag.ID]struct{}{}
+	for _, tagID := range tagIDs {
+		links[tagID] = struct{}{}
+	}
+	f.assetTagLinks[assetID] = links
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
+func (f *fakeAssetRepository) AssetTagByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, tagID assettag.ID) (assettag.Tag, bool, error) {
+	tag, ok := f.assetTags[tagID]
+	if !ok || tag.TenantID.String() != tenantID.String() || tag.InventoryID.String() != inventoryID.String() {
+		return assettag.Tag{}, false, nil
+	}
+	return tag, true, nil
+}
+
+func (f *fakeAssetRepository) AssetTagByKey(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, key assettag.Key) (assettag.Tag, bool, error) {
+	for _, tag := range f.assetTags {
+		if tag.TenantID.String() == tenantID.String() && tag.InventoryID.String() == inventoryID.String() && tag.Key == key {
+			return tag, true, nil
+		}
+	}
+	return assettag.Tag{}, false, nil
+}
+
+func (f *fakeAssetRepository) ListAssetTags(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetTagPageRequest) ([]assettag.Tag, error) {
+	items := []assettag.Tag{}
+	for _, tag := range f.assetTags {
+		if tag.TenantID.String() == tenantID.String() && tag.InventoryID.String() == inventoryID.String() && tag.LifecycleState == assettag.LifecycleStateActive && tag.ID.String() > page.AfterTagID.String() {
+			items = append(items, tag)
+		}
+	}
+	sort.Slice(items, func(left, right int) bool {
+		return items[left].ID.String() < items[right].ID.String()
+	})
+	if page.Limit > 0 && len(items) > page.Limit {
+		items = items[:page.Limit]
+	}
+	return items, nil
+}
+
+func (f *fakeAssetRepository) AssetTagsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) ([]assettag.Tag, error) {
+	items, err := f.AssetTagsByAssets(ctx, tenantID, inventoryID, []asset.ID{assetID})
+	if err != nil {
+		return nil, err
+	}
+	return items[assetID], nil
+}
+
+func (f *fakeAssetRepository) AssetTagsByAssets(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetIDs []asset.ID) (map[asset.ID][]assettag.Tag, error) {
+	result := map[asset.ID][]assettag.Tag{}
+	for _, assetID := range assetIDs {
+		result[assetID] = []assettag.Tag{}
+		for tagID := range f.assetTagLinks[assetID] {
+			tag, ok := f.assetTags[tagID]
+			if ok && tag.TenantID.String() == tenantID.String() && tag.InventoryID.String() == inventoryID.String() && tag.LifecycleState == assettag.LifecycleStateActive {
+				result[assetID] = append(result[assetID], tag)
+			}
+		}
+		sort.Slice(result[assetID], func(left, right int) bool {
+			return result[assetID][left].Key.String() < result[assetID][right].Key.String()
+		})
+	}
+	return result, nil
 }
 
 func (f *fakeAssetRepository) CreateAsset(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -80,8 +81,13 @@ func (s Service) GetAssetDetail(ctx context.Context, input GetAssetInput) (GetAs
 	if err != nil {
 		return GetAssetResult{}, err
 	}
+	tags, err := s.tagsForAsset(ctx, item)
+	if err != nil {
+		return GetAssetResult{}, err
+	}
 	return GetAssetResult{
 		Item:            item,
+		Tags:            tags,
 		PrimaryPhoto:    primaryPhoto,
 		CurrentCheckout: currentCheckout,
 	}, nil
@@ -134,6 +140,10 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	if err != nil {
 		return ListAssetsResult{}, err
 	}
+	tags, err := s.tagsForAssets(ctx, items)
+	if err != nil {
+		return ListAssetsResult{}, err
+	}
 
 	s.observer.Record(ctx, ports.Event{
 		Name:    ports.EventAssetsListed,
@@ -167,12 +177,32 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 
 	return ListAssetsResult{
 		Items:         items,
+		Tags:          tags,
 		PrimaryPhotos: primaryPhotos,
 		Checkouts:     currentCheckouts,
 		Limit:         limit,
 		NextCursor:    nextCursor,
 		HasMore:       hasMore,
 	}, nil
+}
+
+func (s Service) tagsForAsset(ctx context.Context, item asset.Asset) ([]assettag.Tag, error) {
+	if s.assetTags == nil {
+		return nil, nil
+	}
+	return s.assetTags.AssetTagsByAsset(ctx, tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), item.ID)
+}
+
+func (s Service) tagsForAssets(ctx context.Context, items []asset.Asset) (map[asset.ID][]assettag.Tag, error) {
+	if s.assetTags == nil || len(items) == 0 {
+		return nil, nil
+	}
+	first := items[0]
+	assetIDs := make([]asset.ID, 0, len(items))
+	for _, item := range items {
+		assetIDs = append(assetIDs, item.ID)
+	}
+	return s.assetTags.AssetTagsByAssets(ctx, tenant.ID(first.TenantID.String()), inventory.InventoryID(first.InventoryID.String()), assetIDs)
 }
 
 func (s Service) currentCheckoutForAsset(ctx context.Context, item asset.Asset) (*asset.Checkout, error) {

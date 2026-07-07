@@ -6,6 +6,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -13,6 +14,10 @@ import (
 )
 
 func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment, currentCheckout *asset.Checkout, checkoutPrincipals map[identity.PrincipalID]identity.User) dto.AssetResponse {
+	return AssetToResponseWithTags(item, nil, primaryPhoto, currentCheckout, checkoutPrincipals)
+}
+
+func AssetToResponseWithTags(item asset.Asset, tags []assettag.Tag, primaryPhoto *media.Attachment, currentCheckout *asset.Checkout, checkoutPrincipals map[identity.PrincipalID]identity.User) dto.AssetResponse {
 	response := dto.AssetResponse{
 		ID:                item.ID.String(),
 		TenantID:          item.TenantID.String(),
@@ -23,6 +28,7 @@ func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment, currentCh
 		Title:             item.Title.String(),
 		Description:       item.Description.String(),
 		CustomFields:      item.CustomFields.Values(),
+		Tags:              TagsToResponse(tags),
 		LifecycleState:    item.LifecycleState.String(),
 		CreatedAt:         item.CreatedAt.UTC().Format(time.RFC3339Nano),
 		UpdatedAt:         item.UpdatedAt.UTC().Format(time.RFC3339Nano),
@@ -34,6 +40,22 @@ func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment, currentCh
 		response.CurrentCheckout = CurrentCheckoutToResponse(*currentCheckout, checkoutPrincipals)
 	}
 	return response
+}
+
+func TagsToResponse(tags []assettag.Tag) []dto.CompactTag {
+	if len(tags) == 0 {
+		return []dto.CompactTag{}
+	}
+	data := make([]dto.CompactTag, 0, len(tags))
+	for _, tag := range tags {
+		data = append(data, dto.CompactTag{
+			ID:          tag.ID.String(),
+			Key:         tag.Key.String(),
+			DisplayName: tag.DisplayName.String(),
+			Color:       tag.Color.String(),
+		})
+	}
+	return data
 }
 
 func assetPrimaryPhotoToResponse(attachment media.Attachment) *dto.AssetPrimaryPhoto {
@@ -62,6 +84,10 @@ func assetAttachmentThumbnailPath(attachment media.Attachment, variant media.Thu
 }
 
 func AssetsToResponse(items []asset.Asset, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment, currentCheckouts map[asset.ID]asset.Checkout, checkoutPrincipals map[identity.PrincipalID]identity.User) []dto.AssetResponse {
+	return AssetsToResponseWithTags(items, nil, primaryPhotos, currentCheckouts, checkoutPrincipals)
+}
+
+func AssetsToResponseWithTags(items []asset.Asset, tags map[asset.ID][]assettag.Tag, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment, currentCheckouts map[asset.ID]asset.Checkout, checkoutPrincipals map[identity.PrincipalID]identity.User) []dto.AssetResponse {
 	data := make([]dto.AssetResponse, 0, len(items))
 	for _, item := range items {
 		var primaryPhoto *media.Attachment
@@ -76,7 +102,7 @@ func AssetsToResponse(items []asset.Asset, primaryPhotos map[ports.AttachmentAss
 		if checkout, ok := currentCheckouts[item.ID]; ok {
 			currentCheckout = &checkout
 		}
-		data = append(data, AssetToResponse(item, primaryPhoto, currentCheckout, checkoutPrincipals))
+		data = append(data, AssetToResponseWithTags(item, tags[item.ID], primaryPhoto, currentCheckout, checkoutPrincipals))
 	}
 	return data
 }
