@@ -90,6 +90,8 @@ The first REST endpoints are:
 
 Creating a tag with a normalized key that already belongs to an active tag in the inventory must return that existing tag instead of failing. This keeps inline tag creation safe for stale clients and concurrent saves. Archived tags keep their keys reserved; creating a new tag with an archived tag key must fail until a future merge or restore workflow is specified.
 
+Updating a tag with an empty `color` value must clear the optional color. Omitting `color` must leave the current color unchanged.
+
 Asset create and update requests must accept:
 
 - `tagIds`: complete assigned tag ID list.

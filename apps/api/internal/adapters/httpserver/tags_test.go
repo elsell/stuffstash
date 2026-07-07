@@ -82,6 +82,18 @@ func TestTagEndpointsAuthorizeAndScopeInventory(t *testing.T) {
 		t.Fatalf("expected owner to update tag, got %+v", updated)
 	}
 
+	ownerRenameOnly := performRequest(server, http.MethodPatch, ownerOnlyTagPath, "Bearer dev:owner", map[string]any{"displayName": "Owner Renamed"})
+	requireStatus(t, ownerRenameOnly, http.StatusOK)
+	if updated := decodeScenarioTag(t, ownerRenameOnly).Data; updated.DisplayName != "Owner Renamed" || updated.Color != "#00AA88" {
+		t.Fatalf("expected owner rename to preserve tag color, got %+v", updated)
+	}
+
+	ownerClearColor := performRequest(server, http.MethodPatch, ownerOnlyTagPath, "Bearer dev:owner", map[string]any{"color": ""})
+	requireStatus(t, ownerClearColor, http.StatusOK)
+	if updated := decodeScenarioTag(t, ownerClearColor).Data; updated.DisplayName != "Owner Renamed" || updated.Color != "" {
+		t.Fatalf("expected owner to clear tag color without changing display name, got %+v", updated)
+	}
+
 	ownerDelete := performRequest(server, http.MethodDelete, ownerOnlyTagPath, "Bearer dev:owner", nil)
 	requireStatus(t, ownerDelete, http.StatusOK)
 	if archived := decodeScenarioTag(t, ownerDelete).Data; archived.LifecycleState != "archived" {
