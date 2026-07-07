@@ -317,6 +317,8 @@ The new-import flow must be step-by-step, with one primary task per screen:
 - Step 3 previews the normalized import plan and asks for explicit import confirmation.
 - Step 4 starts the durable job, shows a brief handoff confirmation that the import is running in the background, and gives the user a direct path back to the import-history screen showing the in-progress job.
 
+On mobile viewports, fixed browser or application chrome must not cover import setup summaries, source options, or primary step actions. The source setup screen must reserve enough bottom clearance for the confirm and back actions to remain fully visible and tappable.
+
 Source selection must present live Homebox connection and Homebox CSV upload as two large, clearly differentiated choices with enough explanatory detail for the user to decide without opening either option.
 The source-selection screen must frame the choice as an import method choice, not as an adapter or endpoint choice.
 

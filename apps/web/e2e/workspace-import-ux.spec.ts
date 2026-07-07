@@ -69,6 +69,19 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
   await expect(page.getByLabel('Allow private-network Homebox URL')).toBeVisible();
   await expect(page.getByLabel('Allow self-signed TLS certificate')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+
+  await page.getByRole('textbox', { name: 'Homebox URL' }).fill('stuff.jsksell.com');
+  await page.getByRole('textbox', { name: 'Email' }).fill('codex@jsksell.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('asldfj3290f!');
+  const actionRow = page.locator('.import-source-setup-content .action-row');
+  await actionRow.scrollIntoViewIfNeeded();
+  await expect(page.getByRole('button', { name: 'Confirm connection' })).toBeEnabled();
+  await expect(actionRow).toBeInViewport();
+  const [actionBox, mobileNavBox] = await Promise.all([
+    actionRow.boundingBox(),
+    page.locator('.mobile-nav').boundingBox()
+  ]);
+  expect(actionBox && mobileNavBox ? actionBox.y + actionBox.height <= mobileNavBox.y - 8 : false).toBe(true);
 });
 
 async function hasHorizontalOverflow(locator: import('@playwright/test').Locator): Promise<boolean> {
