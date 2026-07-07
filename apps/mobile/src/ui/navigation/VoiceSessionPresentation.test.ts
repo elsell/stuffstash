@@ -857,5 +857,25 @@ describe('VoiceSessionPresentation', () => {
       stage: 'failed',
       tenantName: 'Main tenant'
     }).recoveryAction).toBeUndefined();
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice needs a fresh start',
+        debugEvents: [],
+        failureCode: 'clarification_turn_limit',
+        errorMessage: 'That thread needs a fresh voice request. Start again with the missing detail included.'
+      },
+      stage: 'failed',
+      tenantName: 'Main tenant'
+    })).toMatchObject({
+      bottomHint: 'Reset and try again when you are ready.',
+      recoveryAction: undefined
+    });
   });
 });

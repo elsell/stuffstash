@@ -204,6 +204,7 @@ export type VoiceRealtimeFailureCode =
   | 'speech_to_text_failed'
   | 'language_inference_failed'
   | 'text_to_speech_failed'
+  | 'clarification_turn_limit'
   | 'voice_failed';
 
 export class VoiceRealtimeCancelledError extends Error {
@@ -523,7 +524,7 @@ export class RealtimeVoiceSessionController {
         return withProgressStep(state, 'Cancelled', { status: 'cancelled', partialTranscript: undefined });
       case 'session.failed':
         await this.player.stop();
-        return withProgressStep(state, 'Voice failed', {
+        return withProgressStep(state, voiceFailureProgressLabel(event.code), {
           status: 'failed',
           partialTranscript: undefined,
           failureCode: voiceFailureCode(event.code),
@@ -916,6 +917,7 @@ function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
     case 'speech_to_text_failed':
     case 'language_inference_failed':
     case 'text_to_speech_failed':
+    case 'clarification_turn_limit':
       return code;
     default:
       return 'voice_failed';
@@ -932,9 +934,15 @@ function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled:
         : 'Language model stopped while continuing this request. Check Voice providers and try again.';
     case 'text_to_speech_failed':
       return 'Text-to-speech provider failed. Check Voice providers and try again.';
+    case 'clarification_turn_limit':
+      return 'That thread needs a fresh voice request. Start again with the missing detail included.';
     default:
       return fallback;
   }
+}
+
+function voiceFailureProgressLabel(code: string): string {
+  return code === 'clarification_turn_limit' ? 'Voice needs a fresh start' : 'Voice failed';
 }
 
 function safeBoundedText(value: string, maxLength: number): string {

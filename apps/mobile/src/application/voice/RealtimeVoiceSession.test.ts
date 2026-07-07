@@ -827,6 +827,25 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('maps clarification turn limits to a fresh-request failure state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{ type: 'session.failed', seq: 1, code: 'clarification_turn_limit', message: 'The voice session needs a fresh start.' }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      failureCode: 'clarification_turn_limit',
+      errorMessage: 'That thread needs a fresh voice request. Start again with the missing detail included.',
+      progressLabel: 'Voice needs a fresh start'
+    });
+  });
+
   it('mentions diagnostics for language provider failures only when diagnostics are enabled', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
