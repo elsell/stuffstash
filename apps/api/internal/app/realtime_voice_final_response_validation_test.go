@@ -107,3 +107,47 @@ func TestRealtimeVoiceRecoversUnsafeFinalResponseBeforeMobileOrTTS(t *testing.T)
 		}
 	}
 }
+
+func TestRealtimeVoiceRecoversEmptyModelTurnWithSafeSpokenResponse(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+
+	const recovered = "I could not finish that voice request safely. Please try again with a little more detail."
+	if tts.lastText != recovered {
+		t.Fatalf("expected recovered safe response to reach TTS, got %q", tts.lastText)
+	}
+	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressRecovering) {
+		t.Fatalf("expected recovering progress before safe completion, got %+v", events)
+	}
+	completed := false
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAssistantResponseCompleted && event.Response != nil {
+			completed = true
+			if event.Response.Kind != ports.StructuredAgentResponseKindSafeFailure || event.Response.SpokenResponse != recovered {
+				t.Fatalf("expected safe failure response, got %+v", event.Response)
+			}
+		}
+	}
+	if !completed {
+		t.Fatalf("expected assistant response completion, got %+v", events)
+	}
+}

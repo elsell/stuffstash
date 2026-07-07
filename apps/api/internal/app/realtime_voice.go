@@ -411,7 +411,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, emit, input.ContinueAfterClarification)
 		}
 		if len(modelTurn.ToolCalls) == 0 {
-			return ports.ErrInvalidProviderInput
+			return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, emit)
 		}
 		for _, call := range modelTurn.ToolCalls {
 			if selectedCall, diagnosticTitle := realtimeVoiceServerSelectedReadCall(effectiveTranscript, turn, toolResults, call); diagnosticTitle != "" {
