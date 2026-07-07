@@ -22,7 +22,7 @@ describe('RealtimeVoiceSessionController', () => {
   it('records the selected inventory context, streams safe progress, and plays TTS chunks', async () => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([
-      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      sessionStarted(),
       { type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Where are my tools?' },
       { type: 'tool.call.started', seq: 3, sessionId: 'session-1', toolCallId: 'tool-1', toolLabel: 'Search inventory', status: 'searching' },
       { type: 'tool.call.completed', seq: 4, sessionId: 'session-1', toolCallId: 'tool-1', toolLabel: 'Search inventory', status: 'completed' },
@@ -105,7 +105,7 @@ describe('RealtimeVoiceSessionController', () => {
       new FakeInventoryRepository(),
       new FakeRecorder(),
       new FakeTransport([
-        { type: 'session.started', seq: 1, sessionId: 'session-1' },
+        sessionStarted(),
         { type: 'transcript.delta', seq: 2, sessionId: 'session-1', text: 'Where is' },
         { type: 'transcript.final', seq: 3, sessionId: 'session-1', text: 'Where is the drill?' },
         { type: 'agent.progress', seq: 4, sessionId: 'session-1', status: 'searching', message: 'Searching visible inventory' },
@@ -232,7 +232,7 @@ describe('RealtimeVoiceSessionController', () => {
 
   it('bounds progress steps and collapses adjacent duplicate labels', async () => {
     const events: VoiceRealtimeEvent[] = [
-      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      sessionStarted(),
       { type: 'agent.progress', seq: 2, sessionId: 'session-1', status: 'duplicate', message: 'Checking shelves' },
       { type: 'agent.progress', seq: 3, sessionId: 'session-1', status: 'duplicate', message: 'Checking shelves' },
       ...Array.from({ length: 13 }, (_, index) => ({
@@ -268,7 +268,7 @@ describe('RealtimeVoiceSessionController', () => {
       new FakeInventoryRepository(),
       new FakeRecorder(),
       new FakeTransport([
-        { type: 'session.started', seq: 1, sessionId: 'session-1' },
+        sessionStarted(),
         { type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'Add a water bottle' },
         {
           type: 'action.plan.proposed',
@@ -1329,7 +1329,7 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>
   ): Promise<void> {
     this.onEvent = onEvent;
-    await onEvent({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    await onEvent(sessionStarted());
     await onEvent({
       type: 'action.plan.proposed',
       seq: 2,
@@ -1547,6 +1547,17 @@ function testUploadIntent(commandId: string, assetIdValue: string, fileName: str
       formFields: {},
       expiresAt: '2026-07-01T12:00:00Z'
     }
+  };
+}
+
+function sessionStarted() {
+  return {
+    type: 'session.started' as const,
+    seq: 1,
+    sessionId: 'session-1',
+    acceptedInputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+    acceptedOutputAudio: { mimeTypes: ['audio/mpeg'] },
+    acceptedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
   };
 }
 

@@ -306,11 +306,11 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({ type: 'transcript.final', seq: 2, sessionId: 'session-other', text: 'Wrong session' });
 
     await expect(run).rejects.toThrow('session');
-    expect(events).toEqual([{ type: 'session.started', seq: 1, sessionId: 'session-1' }]);
+    expect(events).toEqual([sessionStarted()]);
   });
 
   it('forwards verbose agent diagnostic and tool detail events', async () => {
@@ -336,7 +336,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'agent.diagnostic',
       seq: 2,
@@ -426,7 +426,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'assistant.response.completed',
       seq: 2,
@@ -486,7 +486,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'assistant.response.completed',
       seq: 2,
@@ -559,7 +559,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'assistant.response.completed',
       seq: 2,
@@ -597,7 +597,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'assistant.response.completed',
       seq: 2,
@@ -639,7 +639,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     }, { signal: controller.signal });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
 
     await expect(run).rejects.toMatchObject({ code: 'voice_cancelled' });
     expect(socket.sent.at(-1)).toMatchObject({
@@ -651,7 +651,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
     socket.receive({ type: 'transcript.final', seq: 2, sessionId: 'session-1', text: 'late transcript' });
     await Promise.resolve();
-    expect(events).toEqual([{ type: 'session.started', seq: 1, sessionId: 'session-1' }]);
+    expect(events).toEqual([sessionStarted()]);
   });
 
   it('still settles cancellation when the socket rejects the best-effort cancel send', async () => {
@@ -678,7 +678,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     }, { signal: controller.signal });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
 
     await expect(run).rejects.toMatchObject({ code: 'voice_cancelled' });
     expect(socket.closedByClient).toBe(true);
@@ -706,12 +706,12 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({ type: 'session.cancelled', seq: 2, sessionId: 'session-1' });
 
     await expect(run).resolves.toBeUndefined();
     expect(events).toEqual([
-      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      sessionStarted(),
       { type: 'session.cancelled', seq: 2, sessionId: 'session-1' }
     ]);
   });
@@ -737,13 +737,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({ type: 'session.completed', seq: 2, sessionId: 'session-1' });
     socket.closeFromServer(1000, 'voice session completed');
 
     await expect(run).resolves.toBeUndefined();
     expect(events).toEqual([
-      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      sessionStarted(),
       { type: 'session.completed', seq: 2, sessionId: 'session-1' }
     ]);
   });
@@ -804,7 +804,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       });
 
       socket.open();
-      socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+      socket.receive(sessionStarted());
       socket.receive({
         type: 'action.plan.executed',
         seq: 2,
@@ -839,7 +839,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
       await expect(run).rejects.toThrow('Voice event field url has unsupported direct upload URL.');
       expect(events).toEqual([
-        { type: 'session.started', seq: 1, sessionId: 'session-1' }
+        sessionStarted()
       ]);
     }
   });
@@ -862,7 +862,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     }, async () => {});
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'action.plan.executed',
       seq: 2,
@@ -914,7 +914,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
 
     socket.open();
-    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive(sessionStarted());
     socket.receive({
       type: 'action.plan.executed',
       seq: 2,
@@ -943,7 +943,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
     await expect(run).resolves.toBeUndefined();
     expect(events).toEqual([
-      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      sessionStarted(),
       {
         type: 'action.plan.executed',
         seq: 2,
@@ -1032,6 +1032,17 @@ class FakeWebSocket {
   receive(message: Record<string, unknown>): void {
     this.onmessage?.({ data: JSON.stringify(message) });
   }
+}
+
+function sessionStarted() {
+  return {
+    type: 'session.started',
+    seq: 1,
+    sessionId: 'session-1',
+    acceptedInputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+    acceptedOutputAudio: { mimeTypes: ['audio/mpeg'] },
+    acceptedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
+  };
 }
 
 async function waitForSentMessageCount(socket: FakeWebSocket, count: number): Promise<void> {

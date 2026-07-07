@@ -69,12 +69,12 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | {
       readonly type: 'session.started';
       readonly sessionId: string;
-      readonly acceptedInputAudio?: {
+      readonly acceptedInputAudio: {
         readonly mimeType: string;
         readonly sampleRate: number;
         readonly channels: number;
       };
-      readonly acceptedOutputAudio?: {
+      readonly acceptedOutputAudio: {
         readonly mimeTypes: readonly string[];
       };
       readonly acceptedCapabilities?: readonly string[];

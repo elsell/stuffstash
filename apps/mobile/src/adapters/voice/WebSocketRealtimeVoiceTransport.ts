@@ -351,8 +351,8 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         ...metadata,
         type: 'session.started',
         sessionId: stringField(message, 'sessionId'),
-        ...optionalAcceptedInputAudioField(message),
-        ...optionalAcceptedOutputAudioField(message),
+        acceptedInputAudio: acceptedInputAudioField(message),
+        acceptedOutputAudio: acceptedOutputAudioField(message),
         ...optionalStringArrayObjectField(message, 'acceptedCapabilities')
       };
     case 'session.failed':
@@ -571,29 +571,19 @@ function optionalStringArrayObjectField<T extends string>(message: Record<string
   return { [field]: stringArrayField(message, field) } as { readonly [key in T]?: readonly string[] };
 }
 
-function optionalAcceptedInputAudioField(message: Record<string, unknown>) {
-  if (message.acceptedInputAudio === undefined) {
-    return {};
-  }
+function acceptedInputAudioField(message: Record<string, unknown>) {
   const acceptedInputAudio = objectField(message, 'acceptedInputAudio');
   return {
-    acceptedInputAudio: {
-      mimeType: stringField(acceptedInputAudio, 'mimeType'),
-      sampleRate: numberField(acceptedInputAudio, 'sampleRate'),
-      channels: numberField(acceptedInputAudio, 'channels')
-    }
+    mimeType: stringField(acceptedInputAudio, 'mimeType'),
+    sampleRate: numberField(acceptedInputAudio, 'sampleRate'),
+    channels: numberField(acceptedInputAudio, 'channels')
   };
 }
 
-function optionalAcceptedOutputAudioField(message: Record<string, unknown>) {
-  if (message.acceptedOutputAudio === undefined) {
-    return {};
-  }
+function acceptedOutputAudioField(message: Record<string, unknown>) {
   const acceptedOutputAudio = objectField(message, 'acceptedOutputAudio');
   return {
-    acceptedOutputAudio: {
-      mimeTypes: stringArrayField(acceptedOutputAudio, 'mimeTypes')
-    }
+    mimeTypes: stringArrayField(acceptedOutputAudio, 'mimeTypes')
   };
 }
 

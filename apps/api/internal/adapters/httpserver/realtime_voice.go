@@ -408,7 +408,7 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 	chunks := [][]byte{}
 	seenChunks := map[string]struct{}{}
 	for {
-		message, err := readRealtimeClientMessage(ctx, connection)
+		message, err := readRealtimeAudioMessage(ctx, connection)
 		if err != nil {
 			return nil, lastClientSeq, err
 		}
