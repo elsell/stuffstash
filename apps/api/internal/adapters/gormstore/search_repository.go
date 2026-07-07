@@ -56,6 +56,10 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 	if err := query.Find(&assetModels).Error; err != nil {
 		return nil, err
 	}
+	currentCheckouts, err := s.searchOpenCheckouts(ctx, tenantID, inventoryIDValues)
+	if err != nil {
+		return nil, err
+	}
 
 	assetTypes, err := s.searchCustomAssetTypes(ctx, tenantID)
 	if err != nil {
@@ -76,6 +80,10 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 		if !ok {
 			continue
 		}
+		currentCheckout, hasOpenCheckout := currentCheckouts[item.ID.String()]
+		if !checkoutStateMatches(hasOpenCheckout, page.CheckoutFilter) {
+			continue
+		}
 		matches := search.MatchAsset(assetDocument(item, assetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())], attachments[item.ID.String()]), page.Query, page.Mode)
 		if len(matches) == 0 {
 			continue
@@ -86,6 +94,9 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 			Inventory: containingInventory,
 			Asset:     item,
 			Matches:   matches,
+		}
+		if hasOpenCheckout {
+			result.CurrentCheckout = &currentCheckout
 		}
 		if result.CursorKey() <= page.AfterResultKey {
 			continue
@@ -100,6 +111,38 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 		results = results[:page.Limit]
 	}
 	return results, nil
+}
+
+func (s Store) searchOpenCheckouts(ctx context.Context, tenantID tenant.ID, inventoryIDValues []string) (map[string]asset.Checkout, error) {
+	var models []assetCheckoutModel
+	if err := s.db.WithContext(ctx).
+		Where(&assetCheckoutModel{TenantID: tenantID.String(), State: asset.CheckoutStateOpen.String()}).
+		Where(map[string]any{"inventory_id": inventoryIDValues}).
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+	result := map[string]asset.Checkout{}
+	for _, model := range models {
+		checkout, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid asset checkout row %q", model.ID)
+		}
+		result[checkout.AssetID.String()] = checkout
+	}
+	return result, nil
+}
+
+func checkoutStateMatches(hasOpenCheckout bool, filter ports.AssetCheckoutStateFilter) bool {
+	switch filter {
+	case "", ports.AssetCheckoutStateFilterAny:
+		return true
+	case ports.AssetCheckoutStateFilterCheckedOut:
+		return hasOpenCheckout
+	case ports.AssetCheckoutStateFilterAvailable:
+		return !hasOpenCheckout
+	default:
+		return false
+	}
 }
 
 func (s Store) searchCustomAssetTypes(ctx context.Context, tenantID tenant.ID) (map[customfield.AssetTypeID]customfield.AssetType, error) {

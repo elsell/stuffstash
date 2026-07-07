@@ -24,6 +24,7 @@ type SearchAssetsInput struct {
 	Mode              string
 	CustomAssetTypeID string
 	LifecycleState    string
+	CheckoutState     string
 	Limit             int
 	Cursor            string
 }
@@ -62,12 +63,16 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	if err != nil {
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
+	checkoutFilter, err := searchCheckoutStateFilter(input.CheckoutState)
+	if err != nil {
+		return SearchAssetsResult{}, ErrInvalidInput
+	}
 	customAssetTypeID, err := parseSearchCustomAssetTypeID(input.CustomAssetTypeID)
 	if err != nil {
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
-	cursorScope := searchCursorScope(input.TenantID, input.InventoryIDs, query, mode, customAssetTypeID, lifecycleFilter)
+	cursorScope := searchCursorScope(input.TenantID, input.InventoryIDs, query, mode, customAssetTypeID, lifecycleFilter, checkoutFilter)
 	afterResultKey, err := decodePageCursor("search.assets", cursorScope, input.Cursor)
 	if err != nil {
 		return SearchAssetsResult{}, ErrInvalidInput
@@ -98,6 +103,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		AfterResultKey:    afterResultKey,
 		Limit:             limit + 1,
 		LifecycleFilter:   lifecycleFilter,
+		CheckoutFilter:    checkoutFilter,
 	})
 	if err != nil {
 		return SearchAssetsResult{}, err
@@ -216,6 +222,7 @@ func searchCursorScope(
 	mode search.Mode,
 	customAssetTypeID asset.CustomAssetTypeID,
 	lifecycleFilter ports.AssetLifecycleFilter,
+	checkoutFilter ports.AssetCheckoutStateFilter,
 ) string {
 	return strings.Join([]string{
 		tenantID.String(),
@@ -224,7 +231,21 @@ func searchCursorScope(
 		mode.String(),
 		customAssetTypeID.String(),
 		string(lifecycleFilter),
+		string(checkoutFilter),
 	}, ":")
+}
+
+func searchCheckoutStateFilter(raw string) (ports.AssetCheckoutStateFilter, error) {
+	switch strings.TrimSpace(raw) {
+	case "", string(ports.AssetCheckoutStateFilterAny):
+		return ports.AssetCheckoutStateFilterAny, nil
+	case string(ports.AssetCheckoutStateFilterCheckedOut):
+		return ports.AssetCheckoutStateFilterCheckedOut, nil
+	case string(ports.AssetCheckoutStateFilterAvailable):
+		return ports.AssetCheckoutStateFilterAvailable, nil
+	default:
+		return "", ErrInvalidInput
+	}
 }
 
 func searchInventoryCursorScope(inventoryIDs []inventory.InventoryID) string {

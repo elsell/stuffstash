@@ -20,14 +20,24 @@ type AssetSearchPageRequest struct {
 	AfterResultKey    string
 	Limit             int
 	LifecycleFilter   AssetLifecycleFilter
+	CheckoutFilter    AssetCheckoutStateFilter
 }
 
+type AssetCheckoutStateFilter string
+
+const (
+	AssetCheckoutStateFilterAny        AssetCheckoutStateFilter = "any"
+	AssetCheckoutStateFilterCheckedOut AssetCheckoutStateFilter = "checked_out"
+	AssetCheckoutStateFilterAvailable  AssetCheckoutStateFilter = "available"
+)
+
 type AssetSearchResult struct {
-	Type      search.ResultType
-	TenantID  tenant.ID
-	Inventory inventory.Inventory
-	Asset     asset.Asset
-	Matches   []search.Match
+	Type            search.ResultType
+	TenantID        tenant.ID
+	Inventory       inventory.Inventory
+	Asset           asset.Asset
+	CurrentCheckout *asset.Checkout
+	Matches         []search.Match
 }
 
 func (r AssetSearchResult) CursorKey() string {

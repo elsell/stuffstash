@@ -39,6 +39,29 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 	}
 }
 
+func TestAssetSearchFiltersByCheckoutState(t *testing.T) {
+	fixture := newAssetSearchFixture(t)
+	assetPath := "/tenants/" + fixture.tenantID + "/inventories/" + fixture.toolsInventoryID + "/assets/" + fixture.drillAssetID
+	checkout := performRequest(fixture.server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "using at bench"})
+	if checkout.Code != http.StatusCreated {
+		t.Fatalf("expected checkout status %d, got %d with body %s", http.StatusCreated, checkout.Code, checkout.Body.String())
+	}
+	checkedOut := decodeAssetCheckout(t, checkout)
+
+	checkedOutSearch := searchAssetsWithCheckoutState(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Drill", "checked_out")
+	if len(checkedOutSearch.Data) != 1 || checkedOutSearch.Data[0].Asset.ID != fixture.drillAssetID {
+		t.Fatalf("expected checked-out search to find drill only, got %+v", checkedOutSearch.Data)
+	}
+	if checkedOutSearch.Data[0].Asset.CurrentCheckout == nil || checkedOutSearch.Data[0].Asset.CurrentCheckout.ID != checkedOut.Data.ID {
+		t.Fatalf("expected search current checkout projection, got %+v", checkedOutSearch.Data[0].Asset.CurrentCheckout)
+	}
+
+	availableSearch := searchAssetsWithCheckoutState(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Drill", "available")
+	if len(availableSearch.Data) != 1 || availableSearch.Data[0].Asset.Title != "Drill Bits" {
+		t.Fatalf("expected available search to exclude checked-out drill, got %+v", availableSearch.Data)
+	}
+}
+
 func TestAssetSearchPaginatesAndRejectsWrongCursorScope(t *testing.T) {
 	fixture := newAssetSearchFixture(t)
 
@@ -188,6 +211,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"aspirin-asset", "audit-aspirin-asset",
 			"other-asset", "audit-other-asset",
 			"drill-attachment", "audit-drill-attachment",
+			"drill-checkout", "op-drill-checkout", "audit-drill-checkout",
 			"viewer-grant-event", "audit-viewer-grant", "viewer-claim",
 			"archive-drill-audit",
 		},
@@ -333,6 +357,15 @@ func searchAssetsWithLimit(t *testing.T, server *http.Server, tenantID string, a
 	return decodeAssetSearch(t, response)
 }
 
+func searchAssetsWithCheckoutState(t *testing.T, server *http.Server, tenantID string, authorization string, query string, checkoutState string) searchAssetListBody {
+	t.Helper()
+	response := searchAssetsResponseWithCheckoutState(server, tenantID, "", authorization, query, "", "", "", checkoutState, 0, "")
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected search status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
+	}
+	return decodeAssetSearch(t, response)
+}
+
 func searchAssetsInInventory(t *testing.T, server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string) searchAssetListBody {
 	t.Helper()
 	return searchAssetsInInventoryWithLimit(t, server, tenantID, inventoryID, authorization, query, mode, customAssetTypeID, lifecycleState, 0, "")
@@ -348,6 +381,10 @@ func searchAssetsInInventoryWithLimit(t *testing.T, server *http.Server, tenantI
 }
 
 func searchAssetsResponse(server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, limit int, cursor string) *httptest.ResponseRecorder {
+	return searchAssetsResponseWithCheckoutState(server, tenantID, inventoryID, authorization, query, mode, customAssetTypeID, lifecycleState, "", limit, cursor)
+}
+
+func searchAssetsResponseWithCheckoutState(server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, checkoutState string, limit int, cursor string) *httptest.ResponseRecorder {
 	values := url.Values{}
 	if inventoryID != "" {
 		values.Set("inventoryId", inventoryID)
@@ -363,6 +400,9 @@ func searchAssetsResponse(server *http.Server, tenantID string, inventoryID stri
 	}
 	if lifecycleState != "" {
 		values.Set("lifecycleState", lifecycleState)
+	}
+	if checkoutState != "" {
+		values.Set("checkoutState", checkoutState)
 	}
 	if limit > 0 {
 		values.Set("limit", strconv.Itoa(limit))

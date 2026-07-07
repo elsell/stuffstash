@@ -32,6 +32,7 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 			Mode:              input.Mode,
 			CustomAssetTypeID: input.CustomAssetTypeID,
 			LifecycleState:    input.LifecycleState,
+			CheckoutState:     input.CheckoutState,
 			Limit:             input.Limit,
 			Cursor:            input.Cursor,
 		})

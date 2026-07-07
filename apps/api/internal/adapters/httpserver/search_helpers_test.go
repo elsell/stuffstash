@@ -23,6 +23,7 @@ type searchAssetResultResponse struct {
 		CustomFields      map[string]any     `json:"customFields"`
 		LifecycleState    string             `json:"lifecycleState"`
 		PrimaryPhoto      *assetPrimaryPhoto `json:"primaryPhoto,omitempty"`
+		CurrentCheckout   *currentCheckout   `json:"currentCheckout,omitempty"`
 	} `json:"asset"`
 	Matches []struct {
 		Field string `json:"field"`

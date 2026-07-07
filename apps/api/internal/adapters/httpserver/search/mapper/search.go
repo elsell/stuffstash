@@ -44,6 +44,13 @@ func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *m
 	if primaryPhoto != nil {
 		assetSummary.PrimaryPhoto = assetPrimaryPhotoToResponse(*primaryPhoto)
 	}
+	if result.CurrentCheckout != nil {
+		assetSummary.CurrentCheckout = &dto.SearchCurrentCheckout{
+			ID:                      result.CurrentCheckout.ID.String(),
+			CheckedOutAt:            result.CurrentCheckout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
+			CheckedOutByPrincipalID: result.CurrentCheckout.CheckedOutByPrincipal,
+		}
+	}
 	return dto.AssetSearchResultResponse{
 		Type:     result.Type.String(),
 		TenantID: result.TenantID.String(),

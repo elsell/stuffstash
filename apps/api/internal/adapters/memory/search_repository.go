@@ -41,6 +41,10 @@ func (s *Store) SearchAssets(_ context.Context, tenantID tenant.ID, inventoryIDs
 		if page.CustomAssetTypeID.String() != "" && item.CustomAssetTypeID.String() != page.CustomAssetTypeID.String() {
 			continue
 		}
+		currentCheckout, hasOpenCheckout := s.currentOpenCheckoutForSearch(item)
+		if !checkoutStateMatches(hasOpenCheckout, page.CheckoutFilter) {
+			continue
+		}
 
 		matches := search.MatchAsset(assetDocument(item, s.customAssetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())], searchAttachmentsForAsset(item, s.attachments)), page.Query, page.Mode)
 		if len(matches) == 0 {
@@ -52,6 +56,9 @@ func (s *Store) SearchAssets(_ context.Context, tenantID tenant.ID, inventoryIDs
 			Inventory: containingInventory,
 			Asset:     item,
 			Matches:   matches,
+		}
+		if hasOpenCheckout {
+			result.CurrentCheckout = &currentCheckout
 		}
 		if result.CursorKey() <= page.AfterResultKey {
 			continue
@@ -66,6 +73,28 @@ func (s *Store) SearchAssets(_ context.Context, tenantID tenant.ID, inventoryIDs
 		results = results[:page.Limit]
 	}
 	return results, nil
+}
+
+func (s *Store) currentOpenCheckoutForSearch(item asset.Asset) (asset.Checkout, bool) {
+	for _, checkout := range s.checkouts {
+		if checkout.TenantID == item.TenantID && checkout.InventoryID == item.InventoryID && checkout.AssetID == item.ID && checkout.State == asset.CheckoutStateOpen {
+			return checkout, true
+		}
+	}
+	return asset.Checkout{}, false
+}
+
+func checkoutStateMatches(hasOpenCheckout bool, filter ports.AssetCheckoutStateFilter) bool {
+	switch filter {
+	case "", ports.AssetCheckoutStateFilterAny:
+		return true
+	case ports.AssetCheckoutStateFilterCheckedOut:
+		return hasOpenCheckout
+	case ports.AssetCheckoutStateFilterAvailable:
+		return !hasOpenCheckout
+	default:
+		return false
+	}
 }
 
 func assetDocument(item asset.Asset, assetType customfield.AssetType, attachments []media.Attachment) search.AssetDocument {

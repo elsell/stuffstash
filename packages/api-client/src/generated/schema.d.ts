@@ -1263,6 +1263,7 @@ export interface components {
         };
         AssetSummary: {
             createdAt: string;
+            currentCheckout?: components["schemas"]["SearchCurrentCheckout"];
             customAssetTypeId?: string;
             customFields: {
                 [key: string]: unknown;
@@ -1837,6 +1838,11 @@ export interface components {
             readonly $schema?: string;
             /** @description Optional return details */
             details?: string;
+        };
+        SearchCurrentCheckout: {
+            checkedOutAt: string;
+            checkedOutByPrincipalId: string;
+            id: string;
         };
         SearchMatch: {
             field: string;
@@ -6250,6 +6256,8 @@ export interface operations {
                 customAssetTypeId?: string;
                 /** @description Lifecycle filter; defaults to active */
                 lifecycleState?: "active" | "archived" | "all";
+                /** @description Checkout state filter; defaults to any */
+                checkoutState?: "any" | "checked_out" | "available";
                 /** @description Requested page size */
                 limit?: number;
                 /** @description Opaque cursor from the previous page */

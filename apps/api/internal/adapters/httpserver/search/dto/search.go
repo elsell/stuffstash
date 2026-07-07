@@ -10,6 +10,7 @@ type SearchAssetsInput struct {
 	Mode              string `query:"mode" enum:"fuzzy,exact" doc:"Search mode; defaults to fuzzy"`
 	CustomAssetTypeID string `query:"customAssetTypeId" doc:"Custom asset type filter"`
 	LifecycleState    string `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
+	CheckoutState     string `query:"checkoutState" enum:"any,checked_out,available" doc:"Checkout state filter; defaults to any"`
 	Limit             int    `query:"limit" minimum:"1" doc:"Requested page size"`
 	Cursor            string `query:"cursor" doc:"Opaque cursor from the previous page"`
 }
@@ -32,22 +33,29 @@ type InventorySummary struct {
 }
 
 type AssetSummary struct {
-	ID                string             `json:"id"`
-	InventoryID       string             `json:"inventoryId"`
-	ParentAssetID     string             `json:"parentAssetId,omitempty"`
-	CustomAssetTypeID string             `json:"customAssetTypeId,omitempty"`
-	Kind              string             `json:"kind"`
-	Title             string             `json:"title"`
-	Description       string             `json:"description"`
-	CustomFields      map[string]any     `json:"customFields"`
-	LifecycleState    string             `json:"lifecycleState"`
-	CreatedAt         string             `json:"createdAt"`
-	UpdatedAt         string             `json:"updatedAt"`
-	PrimaryPhoto      *AssetPrimaryPhoto `json:"primaryPhoto,omitempty"`
+	ID                string                 `json:"id"`
+	InventoryID       string                 `json:"inventoryId"`
+	ParentAssetID     string                 `json:"parentAssetId,omitempty"`
+	CustomAssetTypeID string                 `json:"customAssetTypeId,omitempty"`
+	Kind              string                 `json:"kind"`
+	Title             string                 `json:"title"`
+	Description       string                 `json:"description"`
+	CustomFields      map[string]any         `json:"customFields"`
+	LifecycleState    string                 `json:"lifecycleState"`
+	CreatedAt         string                 `json:"createdAt"`
+	UpdatedAt         string                 `json:"updatedAt"`
+	PrimaryPhoto      *AssetPrimaryPhoto     `json:"primaryPhoto,omitempty"`
+	CurrentCheckout   *SearchCurrentCheckout `json:"currentCheckout,omitempty"`
 }
 
 type AssetPrimaryPhoto = shared.AssetPrimaryPhoto
 type AssetPhotoThumbnails = shared.AssetPhotoThumbnails
+
+type SearchCurrentCheckout struct {
+	ID                      string `json:"id"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+}
 
 type SearchMatch struct {
 	Field string `json:"field"`
