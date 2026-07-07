@@ -450,6 +450,111 @@ func TestRealtimeVoiceDowngradesUnsafeProviderDiagnosticCategories(t *testing.T)
 	}
 }
 
+func TestRealtimeVoiceEmitsSafeTextToSpeechFailureDiagnosticAfterToolWork(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-1",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "Your water bottle is in the Office.",
+				DisplayResponse: "Your water bottle is in the Office.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = failingResolvedTextToSpeech{err: safeRealtimeVoiceDiagnosticFailure{safe: "provider_timeout"}}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
+		t.Fatalf("expected text-to-speech failure, got %v", err)
+	}
+	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
+	for _, required := range []string{`"stage": "text_to_speech"`, `"safeCode": "text_to_speech_failed"`, `"safeError": "provider_timeout"`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets} {
+		if !strings.Contains(diagnostic.Detail, required) {
+			t.Fatalf("expected diagnostic to contain %q, got %s", required, diagnostic.Detail)
+		}
+	}
+	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(strings.ToLower(diagnostic.Detail), "bearer ") || strings.Contains(diagnostic.Detail, "should-not-leak") {
+		t.Fatalf("expected text-to-speech diagnostic to be redacted, got %s", diagnostic.Detail)
+	}
+}
+
+func TestRealtimeVoiceTextToSpeechFailureDiagnosticKeepsToolWorkDuringRecovery(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-1",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "water bottle"},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "raw prompt: should not be spoken",
+				DisplayResponse: "raw prompt: should not be displayed",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = failingResolvedTextToSpeech{err: safeRealtimeVoiceDiagnosticFailure{safe: "provider_timeout"}}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	waterBottleTitle, _ := asset.NewTitle("Water bottle")
+	waterBottle.Title = waterBottleTitle
+	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
+		t.Fatalf("expected text-to-speech failure, got %v", err)
+	}
+	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
+	for _, required := range []string{`"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets} {
+		if !strings.Contains(diagnostic.Detail, required) {
+			t.Fatalf("expected recovery diagnostic to contain %q, got %s", required, diagnostic.Detail)
+		}
+	}
+}
+
 func findRealtimeVoiceDiagnosticEvent(t *testing.T, events []RealtimeVoiceEvent, message string) RealtimeVoiceEvent {
 	t.Helper()
 
@@ -472,4 +577,12 @@ func (e safeRealtimeVoiceDiagnosticFailure) Error() string {
 
 func (e safeRealtimeVoiceDiagnosticFailure) SafeRealtimeVoiceDiagnostic() string {
 	return e.safe
+}
+
+type failingResolvedTextToSpeech struct {
+	err error
+}
+
+func (f failingResolvedTextToSpeech) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
+	return ports.TextToSpeechResult{}, f.err
 }

@@ -12,14 +12,6 @@ func emitRealtimeVoiceLanguageFailureDiagnostic(session RealtimeVoiceSession, tu
 	if !session.DeveloperDiagnostics {
 		return nil
 	}
-	toolNames := make([]string, 0, len(toolResults))
-	for _, result := range toolResults {
-		name := strings.TrimSpace(result.Name)
-		if name == "" {
-			continue
-		}
-		toolNames = append(toolNames, name)
-	}
 	payload, marshalErr := json.MarshalIndent(map[string]any{
 		"stage":           "language_inference",
 		"safeCode":        strings.TrimSpace(safeCode),
@@ -28,12 +20,41 @@ func emitRealtimeVoiceLanguageFailureDiagnostic(session RealtimeVoiceSession, tu
 		"previousTurns":   max(turn-1, 0),
 		"finalOnly":       finalOnly,
 		"toolResultCount": len(toolResults),
-		"toolNames":       toolNames,
+		"toolNames":       realtimeVoiceToolResultNames(toolResults),
 	}, "", "  ")
 	if marshalErr != nil {
 		return emitRealtimeVoiceDiagnostic(session.ID, "Language provider failed", "Language provider failure diagnostic could not be rendered safely.", emit)
 	}
 	return emitRealtimeVoiceDiagnostic(session.ID, "Language provider failed", string(payload), emit)
+}
+
+func emitRealtimeVoiceTextToSpeechFailureDiagnostic(session RealtimeVoiceSession, toolResults []ports.AgentToolResult, safeCode string, err error, emit RealtimeVoiceEventSink) error {
+	if !session.DeveloperDiagnostics {
+		return nil
+	}
+	payload, marshalErr := json.MarshalIndent(map[string]any{
+		"stage":           "text_to_speech",
+		"safeCode":        strings.TrimSpace(safeCode),
+		"safeError":       safeRealtimeVoiceProviderDiagnosticError(err),
+		"toolResultCount": len(toolResults),
+		"toolNames":       realtimeVoiceToolResultNames(toolResults),
+	}, "", "  ")
+	if marshalErr != nil {
+		return emitRealtimeVoiceDiagnostic(session.ID, "Text-to-speech provider failed", "Text-to-speech provider failure diagnostic could not be rendered safely.", emit)
+	}
+	return emitRealtimeVoiceDiagnostic(session.ID, "Text-to-speech provider failed", string(payload), emit)
+}
+
+func realtimeVoiceToolResultNames(toolResults []ports.AgentToolResult) []string {
+	toolNames := make([]string, 0, len(toolResults))
+	for _, result := range toolResults {
+		name := strings.TrimSpace(result.Name)
+		if name == "" {
+			continue
+		}
+		toolNames = append(toolNames, name)
+	}
+	return toolNames
 }
 
 type realtimeVoiceSafeDiagnosticError interface {

@@ -7,7 +7,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) completeRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolCallIDs []string, emit RealtimeVoiceEventSink, continueAfterClarification ...bool) error {
+func (a App) completeRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolCallIDs []string, toolResults []ports.AgentToolResult, emit RealtimeVoiceEventSink, continueAfterClarification ...bool) error {
 	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressAnswering, "Preparing a response.", emit); err != nil {
 		return err
 	}
@@ -39,6 +39,9 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		MimeTypes:   session.OutputAudio.MimeTypes,
 	})
 	if err != nil {
+		if diagnosticErr := emitRealtimeVoiceTextToSpeechFailureDiagnostic(session, toolResults, realtimeVoiceFailureTextToSpeech, err, emit); diagnosticErr != nil {
+			return diagnosticErr
+		}
 		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureTextToSpeech, err: err}
 	}
 	if speech.MimeType == "" || len(speech.Chunks) == 0 {
@@ -66,7 +69,7 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
 }
 
-func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
+func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, toolCallIDs []string, toolResults []ports.AgentToolResult, emit RealtimeVoiceEventSink) error {
 	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressRecovering, "Recovering safely.", emit); err != nil {
 		return err
 	}
@@ -74,7 +77,7 @@ func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeV
 		Kind:            ports.StructuredAgentResponseKindSafeFailure,
 		SpokenResponse:  "I could not finish that voice request safely. Please try again with a little more detail.",
 		DisplayResponse: "I could not finish that voice request safely. Please try again with a little more detail.",
-	}, toolCallIDs, emit)
+	}, toolCallIDs, toolResults, emit)
 }
 
 func realtimeVoiceShouldContinueAfterClarification(response ports.StructuredAgentResponse, continueAfterClarification ...bool) bool {

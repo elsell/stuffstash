@@ -149,10 +149,10 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return err
 	}
 	if response, ok := realtimeVoiceUnsafeUnsupportedTranscriptResponse(effectiveTranscript); ok {
-		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit, input.ContinueAfterClarification)
+		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, nil, emit, input.ContinueAfterClarification)
 	}
 	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(effectiveTranscript); ok {
-		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit, input.ContinueAfterClarification)
+		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, nil, emit, input.ContinueAfterClarification)
 	}
 
 	toolResults := []ports.AgentToolResult{}
@@ -181,7 +181,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				return nil
 			}
 			if response, ok := realtimeVoiceMissingMoveSourceResponse(effectiveTranscript, toolResults); ok {
-				return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, emit, input.ContinueAfterClarification)
+				return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, toolResults, emit, input.ContinueAfterClarification)
 			}
 			if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(effectiveTranscript, toolResults) {
 				return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
@@ -282,7 +282,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			}
 			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
 				if recoverableRealtimeVoiceToolError(err) {
-					return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, emit)
+					return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, toolResults, emit)
 				}
 				return err
 			}
@@ -291,10 +291,10 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 					return err
 				}
 			}
-			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, emit, input.ContinueAfterClarification)
+			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, toolResults, emit, input.ContinueAfterClarification)
 		}
 		if len(modelTurn.ToolCalls) == 0 {
-			return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, emit)
+			return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, toolResults, emit)
 		}
 		for _, call := range modelTurn.ToolCalls {
 			if selectedCall, diagnosticTitle := realtimeVoiceServerSelectedReadCall(effectiveTranscript, turn, toolResults, call); diagnosticTitle != "" {
@@ -418,7 +418,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
 		}
 		if response, ok := realtimeVoiceMissingMoveSourceResponse(effectiveTranscript, toolResults); ok {
-			return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, emit, input.ContinueAfterClarification)
+			return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, toolResults, emit, input.ContinueAfterClarification)
 		}
 	}
 	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, emit, input.ContinueAfterClarification)
@@ -454,11 +454,11 @@ func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session R
 		return err
 	}
 	if modelTurn.Final == nil {
-		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, emit)
+		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
 	}
 	if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
 		if recoverableRealtimeVoiceToolError(err) {
-			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, emit)
+			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
 		}
 		return err
 	}
@@ -467,7 +467,7 @@ func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session R
 			return err
 		}
 	}
-	return a.completeRealtimeVoiceResponse(ctx, session, *modelTurn.Final, toolCallIDs, emit, continueAfterClarification...)
+	return a.completeRealtimeVoiceResponse(ctx, session, *modelTurn.Final, toolCallIDs, toolResults, emit, continueAfterClarification...)
 }
 
 func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
