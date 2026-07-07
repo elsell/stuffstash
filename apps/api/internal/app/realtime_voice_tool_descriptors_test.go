@@ -96,6 +96,32 @@ func TestRealtimeVoiceAssetDetailToolRequiresVisibleAsset(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceListToolDescribesRootLevelFilter(t *testing.T) {
+	t.Parallel()
+
+	var listDescription string
+	var parentScopeEnum []string
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name != RealtimeVoiceToolListAuthorizedAssets {
+			continue
+		}
+		listDescription = tool.Description
+		parentScopeEnum = tool.Parameters.Properties["parentScope"].Enum
+	}
+	for _, required := range []string{
+		"root-level assets",
+		"parentScope any|root",
+		"do not combine it with parentTitle or locationTitle",
+	} {
+		if !strings.Contains(listDescription, required) {
+			t.Fatalf("expected list guidance to include %q, got %q", required, listDescription)
+		}
+	}
+	if len(parentScopeEnum) != 2 || parentScopeEnum[0] != "any" || parentScopeEnum[1] != "root" {
+		t.Fatalf("expected parentScope enum any/root, got %+v", parentScopeEnum)
+	}
+}
+
 func TestRealtimeVoiceCheckoutReadToolsAreProviderCallableReadOnly(t *testing.T) {
 	t.Parallel()
 

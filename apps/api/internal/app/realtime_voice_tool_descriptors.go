@@ -43,7 +43,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:             RealtimeVoiceToolListAuthorizedAssets,
 			Label:            realtimeVoiceListAuthorizedAssetsPublicName,
-			Description:      "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, checkout state, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, checkout state when currently checked out, and containment paths.",
+			Description:      "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, checkout state, root-level assets, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional parentScope any|root, optional limit number. Use parentScope root only for assets at the inventory root and do not combine it with parentTitle or locationTitle. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, checkout state when currently checked out, and containment paths.",
 			ReadOnly:         true,
 			ProviderCallable: true,
 			Parameters: ports.AgentToolParameters{
@@ -65,6 +65,11 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 					"locationTitle": {
 						Type:        ports.AgentToolParameterTypeString,
 						Description: "Optional containing location title filter for questions about what is in a place.",
+					},
+					"parentScope": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional parent scope filter. Use root to list only assets at the inventory root. Defaults to any.",
+						Enum:        []string{"any", "root"},
 					},
 					"limit": {
 						Type:        ports.AgentToolParameterTypeInteger,

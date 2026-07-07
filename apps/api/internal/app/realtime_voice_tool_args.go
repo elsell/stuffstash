@@ -23,7 +23,7 @@ func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs,
 }
 
 func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentTitle", "locationTitle", "limit"); err != nil {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentTitle", "locationTitle", "parentScope", "limit"); err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
 	kind, err := realtimeVoiceOptionalAssetKind(args["kind"])
@@ -46,7 +46,14 @@ func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, err
 	if err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
-	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentTitle: parentTitle, LocationTitle: locationTitle, Limit: limit}, nil
+	parentScope, err := realtimeVoiceOptionalParentScope(args["parentScope"])
+	if err != nil {
+		return realtimeVoiceListArgs{}, err
+	}
+	if parentScope == realtimeVoiceParentScopeRoot && (parentTitle != "" || locationTitle != "") {
+		return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
+	}
+	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentTitle: parentTitle, LocationTitle: locationTitle, ParentScope: parentScope, Limit: limit}, nil
 }
 
 func parseRealtimeVoiceAssetAuditHistoryArgs(args map[string]any) (realtimeVoiceAssetAuditHistoryArgs, error) {
@@ -129,6 +136,28 @@ func optionalRealtimeVoiceTitle(raw any) (string, error) {
 	return value, nil
 }
 
+func realtimeVoiceOptionalParentScope(raw any) (string, error) {
+	if raw == nil {
+		return "", nil
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return "", ports.ErrInvalidProviderInput
+	}
+	value = strings.TrimSpace(value)
+	switch value {
+	case "", realtimeVoiceParentScopeAny, realtimeVoiceParentScopeRoot:
+		return value, nil
+	default:
+		return "", ports.ErrInvalidProviderInput
+	}
+}
+
+const (
+	realtimeVoiceParentScopeAny  = "any"
+	realtimeVoiceParentScopeRoot = "root"
+)
+
 type realtimeVoiceSearchArgs struct {
 	Query string
 	Limit int
@@ -139,6 +168,7 @@ type realtimeVoiceListArgs struct {
 	LifecycleState string
 	ParentTitle    string
 	LocationTitle  string
+	ParentScope    string
 	Limit          int
 }
 

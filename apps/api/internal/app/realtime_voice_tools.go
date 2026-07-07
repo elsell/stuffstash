@@ -465,6 +465,9 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 			if args.LocationTitle != "" && !strings.EqualFold(toolItem.LocationTitle, args.LocationTitle) {
 				continue
 			}
+			if args.ParentScope == realtimeVoiceParentScopeRoot && toolItem.ParentTitle != "" {
+				continue
+			}
 			items = append(items, toolItem)
 			if len(items) >= args.Limit {
 				break
@@ -485,6 +488,7 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 			"lifecycleState": args.LifecycleState,
 			"parentTitle":    args.ParentTitle,
 			"locationTitle":  args.LocationTitle,
+			"parentScope":    args.ParentScope,
 		},
 		Items: items,
 	})

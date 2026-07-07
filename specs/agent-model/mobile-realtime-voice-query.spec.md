@@ -578,7 +578,7 @@ The application loop may also perform narrowly bounded proactive read-only calls
 
 Server-selected reads must preserve tenant, inventory, authorization, and visible-resource scoping. They must emit developer diagnostics when developer diagnostics are enabled. They must be minimization-preserving: the loop must not replace a narrow no-match lookup with a broad list of unrelated visible inventory merely to help the model guess a category or synonym.
 
-The first improved implementation may expose a generic filtered list tool that covers list-by-location, list-root-level, and list-by-kind behavior before separate public tool names are added. The first voice tool catalog must support at least these user intents accurately for visible inventory data:
+The first improved implementation may expose a generic filtered list tool that covers list-by-location, list-root-level, and list-by-kind behavior before separate public tool names are added. The generic list tool must provide an explicit root-level filter, such as `parentScope: root`, because omitting a parent or location filter means "all visible assets" rather than "only assets at inventory root." Root-level filtering must not be combined with parent-title or location-title filters. The first voice tool catalog must support at least these user intents accurately for visible inventory data:
 
 - "Where is my water bottle?" returns the containing location or containment path when available.
 - "What items do I have?" returns visible item-kind assets in the selected inventory.
