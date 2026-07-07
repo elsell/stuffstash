@@ -618,7 +618,7 @@ export class RealtimeVoiceSessionController {
       const reviewedCommand = reviewedPhotoCommands.get(commandId);
       const commandResult = (event.commandResults ?? []).find((result) => result.commandId === commandId);
       if (!reviewedCommand || !commandResult || !commandResultMatchesReviewedCommand(commandResult, reviewedCommand)) {
-        retry.photos[commandId] = photos;
+        nonRetryableFailures.push(...photos.map(() => 'The server did not return an upload intent for this photo.'));
         continue;
       }
       const photosWithIntents: CreateInventoryAssetPhotoInput[] = [];

@@ -641,6 +641,50 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('does not offer retry when execution results do not match the reviewed command', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'archive',
+        assetKind: 'item'
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg')]
+    });
+    const repository = new FakeInventoryRepository();
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'cGhvdG8=',
+        sizeBytes: 5
+      }]
+    });
+    const states = await stop;
+
+    expect(states.at(-1)?.photoAttachmentStatus).toEqual({
+      status: 'failed',
+      message: 'The change was applied, but photos could not be attached: The server did not return an upload intent for this photo.',
+      canRetry: false
+    });
+    expect(repository.addedPhotos).toEqual([]);
+    await expect(controller.retryPhotoAttachments('plan-1')).resolves.toEqual({
+      status: 'failed',
+      message: 'There are no photos ready to retry.'
+    });
+  });
+
   it('rejects staged photos without size metadata before approving a plan', async () => {
     const transport = new ReviewDecisionTransport();
     const repository = new FakeInventoryRepository();
