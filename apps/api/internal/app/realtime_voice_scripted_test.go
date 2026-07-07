@@ -13,6 +13,7 @@ type scriptedRealtimeLanguageInference struct {
 	seenToolResults [][]ports.AgentToolResult
 	seenFinalOnly   []bool
 	seenPlanOnly    []bool
+	seenTranscripts []string
 }
 
 func (s *scriptedRealtimeLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
@@ -20,6 +21,7 @@ func (s *scriptedRealtimeLanguageInference) NextTurn(_ context.Context, input po
 	s.seenToolResults = append(s.seenToolResults, append([]ports.AgentToolResult{}, input.ToolResults...))
 	s.seenFinalOnly = append(s.seenFinalOnly, input.FinalOnly)
 	s.seenPlanOnly = append(s.seenPlanOnly, input.PlanOnly)
+	s.seenTranscripts = append(s.seenTranscripts, input.Transcript)
 	if len(s.errs) > 0 {
 		err := s.errs[0]
 		s.errs = s.errs[1:]

@@ -279,10 +279,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTranscriptFinal, SessionID: input.Session.ID, Text: transcript}); err != nil {
 		return err
 	}
-	if response, ok := realtimeVoiceUnsafeUnsupportedTranscriptResponse(transcript); ok {
+	effectiveTranscript := realtimeVoiceEffectiveTranscript(transcript, input.ConversationTurns)
+	if response, ok := realtimeVoiceUnsafeUnsupportedTranscriptResponse(effectiveTranscript); ok {
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit, input.ContinueAfterClarification)
 	}
-	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(transcript); ok {
+	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(effectiveTranscript); ok {
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit, input.ContinueAfterClarification)
 	}
 	if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressUnderstanding, "Understanding your request.", emit); err != nil {
@@ -294,14 +295,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	executedToolCalls := map[string]struct{}{}
 	visibleAssetIDs := map[string]struct{}{}
 	for turn := 0; turn < realtimeVoiceToolTurnBudget; turn++ {
-		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedReadCallWithoutModel(transcript, turn, toolResults, ""); ok {
+		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedReadCallWithoutModel(effectiveTranscript, turn, toolResults, ""); ok {
 			if strings.TrimSpace(call.ID) == "" {
 				call.ID = a.newRealtimeVoiceID()
 			}
 			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
 				return err
 			}
-			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, transcript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
+			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, effectiveTranscript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
 			if err != nil {
 				return err
 			}
@@ -314,19 +315,19 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				}
 				return nil
 			}
-			if response, ok := realtimeVoiceMissingMoveSourceResponse(transcript, toolResults); ok {
+			if response, ok := realtimeVoiceMissingMoveSourceResponse(effectiveTranscript, toolResults); ok {
 				return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, emit, input.ContinueAfterClarification)
 			}
-			if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript, toolResults) {
-				return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, transcript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
+			if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(effectiveTranscript, toolResults) {
+				return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
 			}
 			continue
 		}
 		tools := realtimeVoiceToolDescriptors()
-		planOnly := realtimeVoiceShouldUseConstrainedPlanner(transcript, turn, toolResults)
-		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(transcript, turn, toolResults)
+		planOnly := realtimeVoiceShouldUseConstrainedPlanner(effectiveTranscript, turn, toolResults)
+		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(effectiveTranscript, turn, toolResults)
 		if requireToolCall {
-			tools = realtimeVoiceReadToolsForTurn(transcript, turn, toolResults)
+			tools = realtimeVoiceReadToolsForTurn(effectiveTranscript, turn, toolResults)
 		}
 		if planOnly {
 			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressPlanning, "Preparing a safe plan.", emit); err != nil {
@@ -341,7 +342,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			TenantID:           input.Session.TenantID,
 			InventoryID:        input.Session.InventoryID,
 			Principal:          input.Session.Principal,
-			Transcript:         transcript,
+			Transcript:         effectiveTranscript,
 			ConversationTurns:  safeRealtimeVoiceConversationTurns(input.ConversationTurns),
 			PromptTemplate:     input.Session.LanguagePromptTemplate,
 			Tools:              tools,
@@ -368,7 +369,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			}
 		}
 		if modelTurn.Final != nil {
-			if realtimeVoiceShouldRepairCreateClarification(transcript, *modelTurn.Final, toolResults) {
+			if realtimeVoiceShouldRepairCreateClarification(effectiveTranscript, *modelTurn.Final, toolResults) {
 				result, resultErr := realtimeVoiceFinalClarificationRepairResult(a.newRealtimeVoiceID())
 				if resultErr != nil {
 					return resultErr
@@ -381,7 +382,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				}
 				continue
 			}
-			if realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(transcript, *modelTurn.Final, toolResults) {
+			if realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(effectiveTranscript, *modelTurn.Final, toolResults) {
 				result, resultErr := realtimeVoiceFinalWriteClaimRepairResult(a.newRealtimeVoiceID())
 				if resultErr != nil {
 					return resultErr
@@ -411,7 +412,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			return ports.ErrInvalidProviderInput
 		}
 		for _, call := range modelTurn.ToolCalls {
-			if selectedCall, diagnosticTitle := realtimeVoiceServerSelectedReadCall(transcript, turn, toolResults, call); diagnosticTitle != "" {
+			if selectedCall, diagnosticTitle := realtimeVoiceServerSelectedReadCall(effectiveTranscript, turn, toolResults, call); diagnosticTitle != "" {
 				call = selectedCall
 				if input.Session.DeveloperDiagnostics {
 					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, diagnosticTitle, realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
@@ -458,7 +459,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				Name:      call.Name,
 				Arguments: call.Arguments,
 			}
-			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, transcript, toolResults, executableCall, visibleAssetIDs)
+			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, effectiveTranscript, toolResults, executableCall, visibleAssetIDs)
 			if err != nil {
 				if !recoverableRealtimeVoiceToolError(err) {
 					_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
@@ -510,11 +511,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				return nil
 			}
 		}
-		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedExplorationCall(transcript, turn, toolResults, a.newRealtimeVoiceID()); ok {
+		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedExplorationCall(effectiveTranscript, turn, toolResults, a.newRealtimeVoiceID()); ok {
 			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking one more match.", emit); err != nil {
 				return err
 			}
-			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, transcript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
+			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, effectiveTranscript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
 			if err != nil {
 				return err
 			}
@@ -528,14 +529,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				return nil
 			}
 		}
-		if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript, toolResults) {
-			return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, transcript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
+		if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(effectiveTranscript, toolResults) {
+			return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
 		}
-		if response, ok := realtimeVoiceMissingMoveSourceResponse(transcript, toolResults); ok {
+		if response, ok := realtimeVoiceMissingMoveSourceResponse(effectiveTranscript, toolResults); ok {
 			return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, emit, input.ContinueAfterClarification)
 		}
 	}
-	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, transcript, input.ConversationTurns, toolResults, toolCallIDs, emit, input.ContinueAfterClarification)
+	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, emit, input.ContinueAfterClarification)
 }
 
 func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, toolResults []ports.AgentToolResult, toolCallIDs []string, emit RealtimeVoiceEventSink, continueAfterClarification ...bool) error {
@@ -717,34 +718,6 @@ func unsafeRealtimeVoiceDiagnosticKey(key string) bool {
 		}
 	}
 	return false
-}
-
-func safeRealtimeVoiceConversationTurns(turns []ports.AgentConversationTurn) []ports.AgentConversationTurn {
-	if len(turns) == 0 {
-		return nil
-	}
-	const maxTurns = 6
-	safe := make([]ports.AgentConversationTurn, 0, min(len(turns), maxTurns))
-	start := 0
-	if len(turns) > maxTurns {
-		start = len(turns) - maxTurns
-	}
-	for _, turn := range turns[start:] {
-		text := safeRealtimeVoiceDiagnosticText(turn.Text, 500)
-		if text == "" {
-			continue
-		}
-		role := turn.Role
-		if role != ports.AgentConversationRoleUser && role != ports.AgentConversationRoleAssistant {
-			continue
-		}
-		safe = append(safe, ports.AgentConversationTurn{
-			Role: role,
-			Kind: safeRealtimeVoiceDiagnosticText(turn.Kind, 80),
-			Text: text,
-		})
-	}
-	return safe
 }
 
 func (a App) ensureRealtimeVoiceDependencies() error {
