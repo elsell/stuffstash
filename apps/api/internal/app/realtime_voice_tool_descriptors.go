@@ -25,6 +25,22 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 			},
 		},
 		{
+			Name:             RealtimeVoiceToolGetAssetDetail,
+			Label:            realtimeVoiceGetAssetDetailPublicName,
+			Description:      "Get safe current details for one visible asset already returned by an authorized read tool in this voice session. Use this after search or list identifies the likely item, container, or location and the next answer or action needs precise detail. Arguments: assetId from a prior read tool result. Results are JSON with bounded asset metadata, internal asset ID for follow-up tool calls or action-plan arguments, checkout state when currently checked out, and containment path. Do not speak or display asset IDs to the user.",
+			ReadOnly:         true,
+			ProviderCallable: true,
+			Parameters: ports.AgentToolParameters{
+				Required: []string{"assetId"},
+				Properties: map[string]ports.AgentToolParameter{
+					"assetId": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Opaque asset ID copied exactly from an earlier authorized read tool result in this session.",
+					},
+				},
+			},
+		},
+		{
 			Name:             RealtimeVoiceToolListAuthorizedAssets,
 			Label:            realtimeVoiceListAuthorizedAssetsPublicName,
 			Description:      "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, checkout state, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional limit number. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, checkout state when currently checked out, and containment paths.",
@@ -247,6 +263,15 @@ func realtimeVoiceSearchAuthorizedAssetsToolDescriptor() ports.AgentToolDescript
 	return ports.AgentToolDescriptor{}
 }
 
+func realtimeVoiceGetAssetDetailToolDescriptor() ports.AgentToolDescriptor {
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolGetAssetDetail {
+			return tool
+		}
+	}
+	return ports.AgentToolDescriptor{}
+}
+
 func realtimeVoiceListAuthorizedAssetsToolDescriptor() ports.AgentToolDescriptor {
 	for _, tool := range realtimeVoiceToolDescriptors() {
 		if tool.Name == RealtimeVoiceToolListAuthorizedAssets {
@@ -278,6 +303,8 @@ func realtimeVoiceToolLabel(name string) string {
 	switch name {
 	case RealtimeVoiceToolProposeActionPlan:
 		return realtimeVoiceProposeActionPlanPublicName
+	case RealtimeVoiceToolGetAssetDetail:
+		return realtimeVoiceGetAssetDetailPublicName
 	case RealtimeVoiceToolListAuthorizedAssets:
 		return realtimeVoiceListAuthorizedAssetsPublicName
 	case RealtimeVoiceToolListAssetAuditHistory:

@@ -69,6 +69,33 @@ func TestRealtimeVoiceAuditHistoryToolRequiresVisibleAsset(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceAssetDetailToolRequiresVisibleAsset(t *testing.T) {
+	t.Parallel()
+
+	var detailDescription string
+	var detailReadOnly bool
+	var detailProviderCallable bool
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolGetAssetDetail {
+			detailDescription = tool.Description
+			detailReadOnly = tool.ReadOnly
+			detailProviderCallable = tool.ProviderCallable
+		}
+	}
+	if !detailReadOnly || !detailProviderCallable {
+		t.Fatalf("expected asset detail tool to be provider-callable read-only")
+	}
+	for _, required := range []string{
+		"already returned by an authorized read tool",
+		"precise detail",
+		"Do not speak or display asset IDs",
+	} {
+		if !strings.Contains(detailDescription, required) {
+			t.Fatalf("expected asset detail guidance to include %q, got %q", required, detailDescription)
+		}
+	}
+}
+
 func TestRealtimeVoiceCheckoutReadToolsAreProviderCallableReadOnly(t *testing.T) {
 	t.Parallel()
 

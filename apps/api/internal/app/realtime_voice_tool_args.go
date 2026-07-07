@@ -64,6 +64,17 @@ func parseRealtimeVoiceAssetAuditHistoryArgs(args map[string]any) (realtimeVoice
 	return realtimeVoiceAssetAuditHistoryArgs{AssetID: assetID, Limit: limit}, nil
 }
 
+func parseRealtimeVoiceAssetDetailArgs(args map[string]any) (realtimeVoiceAssetDetailArgs, error) {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "assetId"); err != nil {
+		return realtimeVoiceAssetDetailArgs{}, err
+	}
+	assetID := strings.TrimSpace(stringArg(args["assetId"]))
+	if _, ok := asset.NewID(assetID); !ok {
+		return realtimeVoiceAssetDetailArgs{}, ports.ErrInvalidProviderInput
+	}
+	return realtimeVoiceAssetDetailArgs{AssetID: assetID}, nil
+}
+
 func parseRealtimeVoiceCheckedOutAssetsArgs(args map[string]any) (realtimeVoiceCheckedOutAssetsArgs, error) {
 	if err := rejectUnknownRealtimeVoiceArgs(args, "limit"); err != nil {
 		return realtimeVoiceCheckedOutAssetsArgs{}, err
@@ -134,6 +145,10 @@ type realtimeVoiceListArgs struct {
 type realtimeVoiceAssetAuditHistoryArgs struct {
 	AssetID string
 	Limit   int
+}
+
+type realtimeVoiceAssetDetailArgs struct {
+	AssetID string
 }
 
 type realtimeVoiceCheckedOutAssetsArgs struct {

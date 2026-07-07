@@ -524,6 +524,7 @@ func newActionPlanExecutionTestAppWithAuthorizer(repository ports.ActionPlanRepo
 		AssetUnitOfWork: assetRepository,
 		Checkouts:       assetRepository,
 		Undoables:       assetRepository,
+		Audit:           &fakeAuditRepository{},
 		ActionPlans:     repository,
 		IDs:             ids,
 		Clock:           fakeClock{now: time.Date(2026, 6, 26, 17, 30, 0, 0, time.UTC)},

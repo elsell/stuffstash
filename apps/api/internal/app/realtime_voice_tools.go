@@ -22,6 +22,9 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	case RealtimeVoiceToolSearchAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceSearchTool(ctx, session, call)
 		return result, nil, err
+	case RealtimeVoiceToolGetAssetDetail:
+		result, err := a.executeRealtimeVoiceAssetDetailTool(ctx, session, call, visibleAssetIDs)
+		return result, nil, err
 	case RealtimeVoiceToolListAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceListTool(ctx, session, call)
 		return result, nil, err

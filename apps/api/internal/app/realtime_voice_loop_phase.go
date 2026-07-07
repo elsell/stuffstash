@@ -357,6 +357,7 @@ func realtimeVoiceVisibleReadItems(toolResults []ports.AgentToolResult) []realti
 
 func realtimeVoiceToolReturnsVisibleAssetItems(name string) bool {
 	return name == RealtimeVoiceToolSearchAuthorizedAssets ||
+		name == RealtimeVoiceToolGetAssetDetail ||
 		name == RealtimeVoiceToolListAuthorizedAssets ||
 		name == RealtimeVoiceToolListCheckedOutAssets
 }
