@@ -376,24 +376,24 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('resets the import child to history when the route returns to bare import', async () => {
+  it('resets the import route to history when the route returns to bare import', async () => {
     const importSeed = structuredClone(seed);
     importSeed.inventories[0].access.permissions.push('configure', 'view_import_job', 'create_import_job');
 
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/import/homebox', new SeededInventoryRepository(importSeed));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Connect to Homebox');
-      expect(document.body.querySelector<HTMLInputElement>('#homebox-url')).toBeTruthy();
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import/homebox');
+      expect(document.body.textContent).toContain('New import');
     });
 
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/import');
     window.dispatchEvent(new PopStateEvent('popstate'));
 
     await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import');
       expect(document.body.textContent).toContain('Import history');
       expect(document.body.textContent).toContain('No import runs yet');
-      expect(document.body.querySelector<HTMLInputElement>('#homebox-url')).toBeFalsy();
     });
   });
 
