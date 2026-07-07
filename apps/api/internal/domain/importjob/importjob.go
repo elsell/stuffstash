@@ -30,6 +30,7 @@ const (
 	PhaseReady       Phase = "ready"
 	PhaseReading     Phase = "reading_source"
 	PhaseFields      Phase = "creating_fields"
+	PhaseTags        Phase = "creating_tags"
 	PhaseLocations   Phase = "creating_locations"
 	PhaseAssets      Phase = "creating_assets"
 	PhaseAttachments Phase = "importing_attachments"
@@ -64,6 +65,7 @@ const (
 
 type Counts struct {
 	Fields               int
+	Tags                 int
 	Locations            int
 	Assets               int
 	Attachments          int
@@ -71,6 +73,8 @@ type Counts struct {
 	Errors               int
 	FieldsCreated        int
 	FieldsExisting       int
+	TagsCreated          int
+	TagsExisting         int
 	LocationsCreated     int
 	AssetsCreated        int
 	AssetsSkipped        int
@@ -90,11 +94,13 @@ type Progress struct {
 
 type PreviewSummary struct {
 	Fields               []PreviewField
+	Tags                 []PreviewTag
 	Locations            []PreviewAsset
 	Assets               []PreviewAsset
 	Attachments          []PreviewAttachment
 	Messages             []Message
 	FieldsTruncated      bool
+	TagsTruncated        bool
 	LocationsTruncated   bool
 	AssetsTruncated      bool
 	AttachmentsTruncated bool
@@ -121,6 +127,12 @@ type PreviewField struct {
 	Key         string
 	DisplayName string
 	Type        string
+}
+
+type PreviewTag struct {
+	Key         string
+	DisplayName string
+	Color       string
 }
 
 type PreviewAsset struct {
@@ -196,8 +208,8 @@ func NewPreviewedRecord(id ID, tenantID TenantID, inventoryID InventoryID, actor
 	}
 	progress := Progress{
 		Phase:     PhaseReady,
-		Done:      counts.Fields + counts.Locations + counts.Assets + counts.Attachments,
-		Total:     counts.Fields + counts.Locations + counts.Assets + counts.Attachments,
+		Done:      counts.Fields + counts.Tags + counts.Locations + counts.Assets + counts.Attachments,
+		Total:     counts.Fields + counts.Tags + counts.Locations + counts.Assets + counts.Attachments,
 		Message:   "Preview ready",
 		UpdatedAt: now,
 	}

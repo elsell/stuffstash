@@ -25,6 +25,7 @@ func importJobCountsFromPlan(plan importplan.Plan) importjob.Counts {
 	counts := plan.Counts()
 	jobCounts := importjob.Counts{
 		Fields:      counts.Fields,
+		Tags:        counts.Tags,
 		Locations:   counts.Locations,
 		Assets:      counts.Assets,
 		Attachments: counts.Attachments,
@@ -48,8 +49,19 @@ func importJobPreviewSummaryFromPlan(plan importplan.Plan, limit int) importjob.
 	}
 	summary := importjob.PreviewSummary{
 		FieldsTruncated:      len(plan.Fields) > limit,
+		TagsTruncated:        len(plan.Tags) > limit,
 		AttachmentsTruncated: len(plan.Attachments) > limit,
 		MessagesTruncated:    len(plan.Messages) > limit,
+	}
+	for _, tag := range plan.Tags {
+		if len(summary.Tags) >= limit {
+			break
+		}
+		summary.Tags = append(summary.Tags, importjob.PreviewTag{
+			Key:         tag.Key,
+			DisplayName: tag.DisplayName,
+			Color:       tag.Color,
+		})
 	}
 	for _, field := range plan.Fields {
 		if len(summary.Fields) >= limit {

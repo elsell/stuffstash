@@ -116,6 +116,7 @@ type ImportJobSourceResponse struct {
 
 type ImportJobCountsResponse struct {
 	Fields               int `json:"fields"`
+	Tags                 int `json:"tags"`
 	Locations            int `json:"locations"`
 	Assets               int `json:"assets"`
 	Attachments          int `json:"attachments"`
@@ -123,6 +124,8 @@ type ImportJobCountsResponse struct {
 	Errors               int `json:"errors"`
 	FieldsCreated        int `json:"fieldsCreated"`
 	FieldsExisting       int `json:"fieldsExisting"`
+	TagsCreated          int `json:"tagsCreated"`
+	TagsExisting         int `json:"tagsExisting"`
 	LocationsCreated     int `json:"locationsCreated"`
 	AssetsCreated        int `json:"assetsCreated"`
 	AssetsSkipped        int `json:"assetsSkipped"`
@@ -134,11 +137,13 @@ type ImportJobCountsResponse struct {
 
 type ImportJobPreview struct {
 	Fields               []ImportJobPreviewField      `json:"fields"`
+	Tags                 []ImportJobPreviewTag        `json:"tags"`
 	Locations            []ImportJobPreviewAsset      `json:"locations"`
 	Assets               []ImportJobPreviewAsset      `json:"assets"`
 	Attachments          []ImportJobPreviewAttachment `json:"attachments"`
 	Messages             []ImportMessageResponse      `json:"messages"`
 	FieldsTruncated      bool                         `json:"fieldsTruncated"`
+	TagsTruncated        bool                         `json:"tagsTruncated"`
 	LocationsTruncated   bool                         `json:"locationsTruncated"`
 	AssetsTruncated      bool                         `json:"assetsTruncated"`
 	AttachmentsTruncated bool                         `json:"attachmentsTruncated"`
@@ -149,6 +154,12 @@ type ImportJobPreviewField struct {
 	Key         string `json:"key"`
 	DisplayName string `json:"displayName"`
 	Type        string `json:"type"`
+}
+
+type ImportJobPreviewTag struct {
+	Key         string `json:"key"`
+	DisplayName string `json:"displayName"`
+	Color       string `json:"color,omitempty"`
 }
 
 type ImportJobPreviewAsset struct {

@@ -33,6 +33,7 @@ func JobToResponse(job importjob.Record, users map[identity.PrincipalID]identity
 		},
 		Counts: dto.ImportJobCountsResponse{
 			Fields:               job.Counts.Fields,
+			Tags:                 job.Counts.Tags,
 			Locations:            job.Counts.Locations,
 			Assets:               job.Counts.Assets,
 			Attachments:          job.Counts.Attachments,
@@ -40,6 +41,8 @@ func JobToResponse(job importjob.Record, users map[identity.PrincipalID]identity
 			Errors:               job.Counts.Errors,
 			FieldsCreated:        job.Counts.FieldsCreated,
 			FieldsExisting:       job.Counts.FieldsExisting,
+			TagsCreated:          job.Counts.TagsCreated,
+			TagsExisting:         job.Counts.TagsExisting,
 			LocationsCreated:     job.Counts.LocationsCreated,
 			AssetsCreated:        job.Counts.AssetsCreated,
 			AssetsSkipped:        job.Counts.AssetsSkipped,
@@ -91,11 +94,13 @@ func progressHistoryToResponse(history []importjob.Progress) []dto.ImportJobProg
 func previewToResponse(preview importjob.PreviewSummary) dto.ImportJobPreview {
 	return dto.ImportJobPreview{
 		Fields:               previewFieldsToResponse(preview.Fields),
+		Tags:                 previewTagsToResponse(preview.Tags),
 		Locations:            previewAssetsToResponse(preview.Locations),
 		Assets:               previewAssetsToResponse(preview.Assets),
 		Attachments:          previewAttachmentsToResponse(preview.Attachments),
 		Messages:             messagesToResponse(preview.Messages),
 		FieldsTruncated:      preview.FieldsTruncated,
+		TagsTruncated:        preview.TagsTruncated,
 		LocationsTruncated:   preview.LocationsTruncated,
 		AssetsTruncated:      preview.AssetsTruncated,
 		AttachmentsTruncated: preview.AttachmentsTruncated,
@@ -110,6 +115,18 @@ func previewFieldsToResponse(fields []importjob.PreviewField) []dto.ImportJobPre
 			Key:         field.Key,
 			DisplayName: field.DisplayName,
 			Type:        field.Type,
+		})
+	}
+	return out
+}
+
+func previewTagsToResponse(tags []importjob.PreviewTag) []dto.ImportJobPreviewTag {
+	out := make([]dto.ImportJobPreviewTag, 0, len(tags))
+	for _, tag := range tags {
+		out = append(out, dto.ImportJobPreviewTag{
+			Key:         tag.Key,
+			DisplayName: tag.DisplayName,
+			Color:       tag.Color,
 		})
 	}
 	return out

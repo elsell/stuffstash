@@ -12,7 +12,9 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -72,6 +74,8 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 	}
 	job.Counts.FieldsCreated = result.Counts.FieldsCreated
 	job.Counts.FieldsExisting = result.Counts.FieldsExisting
+	job.Counts.TagsCreated = result.Counts.TagsCreated
+	job.Counts.TagsExisting = result.Counts.TagsExisting
 	job.Counts.LocationsCreated = result.Counts.LocationsCreated
 	job.Counts.AssetsCreated = result.Counts.AssetsCreated
 	job.Counts.AssetsSkipped = result.Counts.AssetsSkipped
@@ -234,11 +238,15 @@ func (a App) applyImportPlan(ctx context.Context, command ports.ImportJobCommand
 	if err := a.applyImportFields(ctx, command, plan, &result); err != nil {
 		return result, err
 	}
+	tagIDsByKey, err := a.applyImportTags(ctx, command, plan, &result)
+	if err != nil {
+		return result, err
+	}
 	duplicates, err := a.existingHomeboxReferences(ctx, command.TenantID, command.InventoryID)
 	if err != nil {
 		return result, err
 	}
-	sourceToAssetID, err := a.applyImportAssets(ctx, command, job.ID, sourceIdentity, plan, duplicates, &result)
+	sourceToAssetID, err := a.applyImportAssets(ctx, command, job.ID, sourceIdentity, plan, duplicates, tagIDsByKey, &result)
 	if err != nil {
 		return result, err
 	}
@@ -299,7 +307,77 @@ func (a App) applyImportFields(ctx context.Context, command ports.ImportJobComma
 	return nil
 }
 
-func (a App) applyImportAssets(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, plan importplan.Plan, duplicates map[string]struct{}, result *ImportResult) (map[string]string, error) {
+func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand, plan importplan.Plan, result *ImportResult) (map[string]string, error) {
+	tagIDsByKey := map[string]string{}
+	if len(plan.Tags) == 0 {
+		return tagIDsByKey, nil
+	}
+	existing, err := a.existingImportTagIDs(ctx, command.TenantID, command.InventoryID)
+	if err != nil {
+		return nil, err
+	}
+	total := len(plan.Tags)
+	if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, 0, total, "Creating tags"); err != nil {
+		return nil, err
+	}
+	for index, tag := range plan.Tags {
+		if err := a.stopIfImportCancelled(ctx, command); err != nil {
+			return nil, err
+		}
+		if existingID := existing[tag.Key]; existingID != "" {
+			tagIDsByKey[tag.Key] = existingID
+			result.Counts.TagsExisting++
+			if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		created, err := a.CreateAssetTag(ctx, CreateAssetTagInput{
+			Principal:   command.Principal,
+			Source:      audit.SourceImport,
+			RequestID:   command.RequestID,
+			TenantID:    command.TenantID,
+			InventoryID: command.InventoryID,
+			Key:         tag.Key,
+			DisplayName: tag.DisplayName,
+			Color:       tag.Color,
+		})
+		if err != nil {
+			if errors.Is(err, ErrInvalidInput) {
+				result.Counts.TagsExisting++
+				if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
+					return nil, err
+				}
+				continue
+			}
+			return nil, err
+		}
+		tagIDsByKey[tag.Key] = created.ID.String()
+		existing[tag.Key] = created.ID.String()
+		result.Counts.TagsCreated++
+		if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
+			return nil, err
+		}
+	}
+	return tagIDsByKey, nil
+}
+
+func (a App) existingImportTagIDs(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]string, error) {
+	tags := map[string]string{}
+	if a.assetTags == nil {
+		return tags, nil
+	}
+	items, err := a.assetTags.ListAssetTags(ctx, tenantID, inventoryID, ports.AssetTagPageRequest{Limit: 10000})
+	if err != nil {
+		return nil, err
+	}
+	for _, tag := range items {
+		tags[tag.Key.String()] = tag.ID.String()
+	}
+	return tags, nil
+}
+
+func (a App) applyImportAssets(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, plan importplan.Plan, duplicates map[string]struct{}, tagIDsByKey map[string]string, result *ImportResult) (map[string]string, error) {
 	sourceToAssetID := map[string]string{}
 	locations := sortedImportAssets(plan.Assets, "location")
 	if len(locations) > 0 {
@@ -311,7 +389,7 @@ func (a App) applyImportAssets(ctx context.Context, command ports.ImportJobComma
 		if err := a.stopIfImportCancelled(ctx, command); err != nil {
 			return nil, err
 		}
-		created, skipped, err := a.createImportedAsset(ctx, command, jobID, sourceIdentity, planned, sourceToAssetID, duplicates)
+		created, skipped, err := a.createImportedAsset(ctx, command, jobID, sourceIdentity, planned, sourceToAssetID, duplicates, tagIDsByKey)
 		if err != nil {
 			return nil, err
 		}
@@ -338,7 +416,7 @@ func (a App) applyImportAssets(ctx context.Context, command ports.ImportJobComma
 		if err := a.stopIfImportCancelled(ctx, command); err != nil {
 			return nil, err
 		}
-		created, skipped, err := a.createImportedAsset(ctx, command, jobID, sourceIdentity, planned, sourceToAssetID, duplicates)
+		created, skipped, err := a.createImportedAsset(ctx, command, jobID, sourceIdentity, planned, sourceToAssetID, duplicates, tagIDsByKey)
 		if err != nil {
 			return nil, err
 		}
@@ -557,7 +635,7 @@ func shouldPersistProgressAfterCancellation(current importjob.Progress, next imp
 	return next.Done > current.Done
 }
 
-func (a App) createImportedAsset(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, planned importplan.Asset, sourceToAssetID map[string]string, duplicates map[string]struct{}) (asset.Asset, bool, error) {
+func (a App) createImportedAsset(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, planned importplan.Asset, sourceToAssetID map[string]string, duplicates map[string]struct{}, tagIDsByKey map[string]string) (asset.Asset, bool, error) {
 	if a.importAssetUnitOfWork == nil {
 		return asset.Asset{}, false, ErrInvalidInput
 	}
@@ -622,6 +700,12 @@ func (a App) createImportedAsset(ctx context.Context, command ports.ImportJobCom
 		}
 		return asset.Asset{}, false, err
 	}
+	tagIDs := plannedImportTagIDs(planned.TagKeys, tagIDsByKey)
+	if len(tagIDs) > 0 {
+		if err := a.assetService.SetAssetTagAssignmentsForImport(ctx, command.Principal, command.RequestID, command.TenantID, command.InventoryID, prepared.Asset.ID, tagIDs); err != nil {
+			return asset.Asset{}, false, err
+		}
+	}
 	a.assetService.RecordAssetCreated(ctx, prepared.Asset, command.Principal.ID)
 	for _, key := range []string{"homebox-source-id", "homebox-asset-id"} {
 		if value, ok := planned.CustomFields[key].(string); ok && strings.TrimSpace(value) != "" {
@@ -629,6 +713,26 @@ func (a App) createImportedAsset(ctx context.Context, command ports.ImportJobCom
 		}
 	}
 	return prepared.Asset, false, nil
+}
+
+func plannedImportTagIDs(tagKeys []string, tagIDsByKey map[string]string) []string {
+	if len(tagKeys) == 0 {
+		return nil
+	}
+	tagIDs := make([]string, 0, len(tagKeys))
+	seen := map[string]struct{}{}
+	for _, key := range tagKeys {
+		tagID := tagIDsByKey[strings.TrimSpace(key)]
+		if tagID == "" {
+			continue
+		}
+		if _, ok := seen[tagID]; ok {
+			continue
+		}
+		seen[tagID] = struct{}{}
+		tagIDs = append(tagIDs, tagID)
+	}
+	return tagIDs
 }
 
 func (a App) stopIfImportCancelled(ctx context.Context, command ports.ImportJobCommand) error {
