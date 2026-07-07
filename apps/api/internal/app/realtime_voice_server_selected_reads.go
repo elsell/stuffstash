@@ -106,6 +106,9 @@ func realtimeVoiceSpecificLookupObjectQuery(transcript string) string {
 			query := normalizeRealtimeVoiceSourceText(text[index+len(marker):])
 			query = strings.TrimSpace(strings.TrimPrefix(query, "my "))
 			query = strings.TrimSpace(strings.TrimPrefix(query, "the "))
+			if followUpQuery := realtimeVoiceFollowUpAnswerLookupQuery(query); followUpQuery != "" {
+				return followUpQuery
+			}
 			return query
 		}
 	}
@@ -120,6 +123,30 @@ func realtimeVoiceSpecificLookupObjectQuery(transcript string) string {
 		}
 	}
 	return strings.Join(filtered, " ")
+}
+
+func realtimeVoiceFollowUpAnswerLookupQuery(query string) string {
+	const marker = " follow-up answer "
+	if !strings.Contains(query, marker) {
+		return ""
+	}
+	parts := strings.SplitN(query, marker, 2)
+	if len(parts) != 2 || !realtimeVoiceLooksLikeGenericLookupTarget(parts[0]) {
+		return ""
+	}
+	answer := normalizeRealtimeVoiceSourceText(parts[1])
+	answer = strings.TrimSpace(strings.TrimPrefix(answer, "my "))
+	answer = strings.TrimSpace(strings.TrimPrefix(answer, "the "))
+	return answer
+}
+
+func realtimeVoiceLooksLikeGenericLookupTarget(value string) bool {
+	switch normalizeRealtimeVoiceSourceText(value) {
+	case "it", "that", "this", "one", "that one", "this one", "the one", "item", "thing":
+		return true
+	default:
+		return false
+	}
 }
 
 func realtimeVoiceLooksLikePluralCategoryQuery(transcript string) bool {

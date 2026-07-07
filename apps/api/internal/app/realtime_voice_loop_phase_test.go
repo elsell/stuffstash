@@ -292,6 +292,12 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "office" {
 		t.Fatalf("expected proactive office search, got ok=%v call=%+v", ok, call)
 	}
+	if query := realtimeVoiceSpecificLookupObjectQuery("Where is it? Follow-up answer: Water bottle."); query != "water bottle" {
+		t.Fatalf("expected follow-up read query to use concrete answer, got %q", query)
+	}
+	if query := realtimeVoiceSpecificLookupObjectQuery("Can you find it? Follow-up answer: The blue passport."); query != "blue passport" {
+		t.Fatalf("expected follow-up find query to use concrete answer, got %q", query)
+	}
 	_, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("Add an Apple TV remote to the box under the TV in the living room.", 0, nil, "read-3")
 	if ok {
 		t.Fatalf("did not expect proactive read for nested create path")
