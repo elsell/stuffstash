@@ -1,6 +1,7 @@
 import type { ImportJob } from '$lib/domain/inventory';
 
 export type CountCell = { value: number; label: string; muted?: boolean };
+export type ImportIssueTone = 'none' | 'warning' | 'action';
 
 export function statusLabel(job: ImportJob): string {
   switch (job.status) {
@@ -31,6 +32,17 @@ export function jobNeedsAttention(job: ImportJob): boolean {
 
 export function jobHasWarnings(job: ImportJob): boolean {
   return !jobNeedsAttention(job) && job.counts.warnings > 0;
+}
+
+export function importIssueTone(job: ImportJob): ImportIssueTone {
+  const messages = allJobMessages(job);
+  if (jobNeedsAttention(job) || messages.some((message) => message.severity === 'error')) {
+    return 'action';
+  }
+  if (jobHasWarnings(job) || messages.some((message) => message.severity === 'warning')) {
+    return 'warning';
+  }
+  return 'none';
 }
 
 export function attentionSummary(job: ImportJob): string {

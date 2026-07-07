@@ -13,6 +13,7 @@
     actorSummary,
     canRemoveJobFromHistory,
     changedRecordSummary,
+    importIssueTone,
     isTerminal,
     issueCountSummary,
     phaseLabel,
@@ -71,6 +72,7 @@
   let defaultedTabJobId = $state('');
   let resourcesExpanded = $state(false);
   let issueCount = $derived(detailMessages(job).length);
+  let issueTone = $derived(importIssueTone(job));
   let resourcesBounded = $derived(job.resources.length > COLLAPSED_RESOURCE_LIMIT);
   let visibleResources = $derived(resourcesExpanded ? job.resources : job.resources.slice(0, COLLAPSED_RESOURCE_LIMIT));
   let hiddenResourceCount = $derived(Math.max(0, job.resources.length - visibleResources.length));
@@ -149,7 +151,7 @@
             <span>Status</span>
             <strong>{statusLabel(job)}</strong>
           </div>
-          <div class={job.counts.errors > 0 || job.counts.warnings > 0 ? 'summary-tile attention' : 'summary-tile'}>
+          <div class={`summary-tile ${issueTone}`}>
             <span>Issues</span>
             <strong>{issueCountSummary(job)}</strong>
           </div>
@@ -163,11 +165,11 @@
           </div>
         </div>
         {#if issueCount > 0}
-          <div class="detail-attention-callout">
-            <AlertCircle class="attention-callout-icon" size={18} aria-hidden="true" />
+          <div class={`detail-issue-callout ${issueTone}`}>
+            <AlertCircle class="issue-callout-icon" size={18} aria-hidden="true" />
             <div>
               <strong>{issueCountSummary(job)}</strong>
-              <span>Review grouped issues before treating this import as clean.</span>
+              <span>{issueTone === 'action' ? 'Review blocking issues before treating this import as complete.' : 'Review warnings before treating this import as clean.'}</span>
             </div>
             {#if selectedTab !== 'issues'}
               <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
@@ -430,7 +432,12 @@
     padding: 0.7rem;
   }
 
-  .summary-tile.attention {
+  .summary-tile.warning {
+    background: color-mix(in oklab, var(--color-warning, #a15c00) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 26%, transparent);
+  }
+
+  .summary-tile.action {
     background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
     border-color: color-mix(in oklab, var(--destructive) 22%, transparent);
   }
@@ -449,28 +456,41 @@
     overflow-wrap: anywhere;
   }
 
-  .detail-attention-callout {
+  .detail-issue-callout {
     align-items: center;
-    background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
-    border: 1px solid color-mix(in oklab, var(--destructive) 22%, transparent);
     border-radius: 8px;
+    border: 1px solid var(--border);
     display: grid;
     gap: 0.75rem;
     grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 0.75rem;
   }
 
-  :global(.attention-callout-icon) {
+  .detail-issue-callout.warning {
+    background: color-mix(in oklab, var(--color-warning, #a15c00) 7%, transparent);
+    border-color: color-mix(in oklab, var(--color-warning, #a15c00) 26%, transparent);
+  }
+
+  .detail-issue-callout.action {
+    background: color-mix(in oklab, var(--destructive) 5.5%, transparent);
+    border-color: color-mix(in oklab, var(--destructive) 22%, transparent);
+  }
+
+  :global(.detail-issue-callout.warning .issue-callout-icon) {
+    color: var(--color-warning-foreground, #6b3a00);
+  }
+
+  :global(.detail-issue-callout.action .issue-callout-icon) {
     color: var(--destructive);
   }
 
-  .detail-attention-callout div {
+  .detail-issue-callout div {
     display: grid;
     gap: 0.15rem;
     min-width: 0;
   }
 
-  .detail-attention-callout span {
+  .detail-issue-callout span {
     color: var(--muted-foreground);
     font-size: 0.82rem;
   }
@@ -773,12 +793,17 @@
       border-top: 0;
     }
 
-    .summary-tile.attention {
+    .summary-tile.warning,
+    .summary-tile.action {
       background: transparent;
       border-color: var(--border);
     }
 
-    .summary-tile.attention strong {
+    .summary-tile.warning strong {
+      color: var(--color-warning-foreground, #6b3a00);
+    }
+
+    .summary-tile.action strong {
       color: var(--destructive);
     }
 
@@ -787,7 +812,7 @@
       font-weight: 650;
     }
 
-    .detail-attention-callout {
+    .detail-issue-callout {
       align-items: flex-start;
       grid-template-columns: 1fr;
       scroll-margin-bottom: var(--mobile-scroll-clearance, 9rem);

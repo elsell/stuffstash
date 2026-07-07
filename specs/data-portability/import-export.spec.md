@@ -293,6 +293,8 @@ If an inventory has active import jobs, the UI must make those jobs easy to resu
 Active jobs and preview drafts must be grouped as current work ahead of completed history so users can resume, inspect, or cancel ongoing work before starting another import.
 Jobs promoted into current-work or action-required groups must not be duplicated in the default history ledger immediately below those groups.
 Warnings and blocking errors must be visually separated. Warnings are non-blocking review signals and should be shown as amber indicators in the main history ledger. Blocking errors, failed imports, and discard-cleanup failures require action and may be elevated into a more prominent red action-required group.
+Import detail must preserve the same severity model as history: warning-only runs may show an amber review callout, while blocking errors, failed imports, and discard-cleanup failures must use action-required language and red destructive/error emphasis.
+When import detail counts and returned messages disagree, the web UI must render the highest safe severity from terminal job status, count fields, and returned message severities; a returned error message is action-required, and a returned warning message is warning-level unless action-required status or counts are also present.
 The history ledger should be compact enough that recent runs remain visible in the first screen on ordinary desktop viewports whenever there is no active blocking work.
 Users may explicitly switch the ledger to action-required or warning history when they want the full row-level context for jobs that need review.
 If an inventory has no import jobs, the import surface must show an empty state with one clear action to start an import.

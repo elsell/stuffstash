@@ -768,7 +768,52 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Attachment could not be imported');
       expect(document.body.textContent).toContain('Homebox reported a file without downloadable bytes.');
       expect(document.body.textContent).toContain('receipt.png');
+      expect(document.body.textContent).toContain('Review warnings before treating this import as clean.');
+      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
+      expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
+      expect(document.body.querySelector('.summary-tile.warning')).toBeTruthy();
       expect(document.body.textContent).not.toContain('No import messages.');
+    });
+  });
+
+  it('uses returned warning messages for detail severity when warning counts are stale', async () => {
+    class StaleWarningCountImportJobRepository extends TerminalImportJobRepository {
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          counts: {
+            ...this.job.counts,
+            warnings: 0,
+            errors: 0
+          },
+          messages: [
+            {
+              code: 'warning-count-stale',
+              severity: 'warning',
+              summary: 'Attachment could not be imported',
+              detail: 'Homebox returned a warning after counts were calculated.',
+              sourceName: 'receipt.png'
+            }
+          ]
+        };
+      }
+    }
+
+    await mountImportWorkspace(new StaleWarningCountImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('History');
+      expect(document.body.textContent).toContain('Homebox');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Attachment could not be imported');
+      expect(document.body.textContent).toContain('Review warnings before treating this import as clean.');
+      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
+      expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
     });
   });
 
@@ -916,6 +961,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('cleanup will retry');
+      expect(document.body.textContent).toContain('Review blocking issues before treating this import as complete.');
+      expect(document.body.querySelector('.detail-issue-callout.action')).toBeTruthy();
+      expect(document.body.querySelector('.summary-tile.action')).toBeTruthy();
+      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
     });
     expect(document.body.textContent).not.toContain('Remove from history');
   });
