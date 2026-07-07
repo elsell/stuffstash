@@ -3,6 +3,9 @@ import { VoiceProviderReadinessError } from '../../application/providerProfiles/
 import {
   applyRecordingLevelToRealtime,
   buildFailedVoiceRealtimeState,
+  markPhotoRetryFailure,
+  markPhotoRetryInProgress,
+  markPhotoRetryResult,
   refreshClarificationFollowUpAvailability
 } from './VoiceInteractionStateContext';
 
@@ -89,4 +92,74 @@ describe('buildFailedVoiceRealtimeState', () => {
     };
     expect(refreshClarificationFollowUpAvailability(answerState, false)).toBe(answerState);
   });
+
+  it('marks voice photo retry progress without changing the session outcome', () => {
+    expect(markPhotoRetryInProgress(completedVoiceState())).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Adding photos'
+    });
+    expect(markPhotoRetryInProgress(null)).toBeNull();
+  });
+
+  it('maps voice photo retry results onto the existing session state', () => {
+    expect(markPhotoRetryResult(completedVoiceState(), {
+      status: 'attached',
+      message: 'Photos attached.'
+    })).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Photos updated',
+      photoAttachmentStatus: {
+        status: 'attached',
+        message: 'Photos attached.'
+      }
+    });
+
+    expect(markPhotoRetryResult(completedVoiceState(), {
+      status: 'partial_failed',
+      message: 'One photo failed.',
+      canRetry: true
+    })).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Photo upload failed',
+      photoAttachmentStatus: {
+        status: 'partial_failed',
+        message: 'One photo failed.',
+        canRetry: true
+      }
+    });
+  });
+
+  it('keeps inventory action success visible when a voice photo retry throws', () => {
+    expect(markPhotoRetryFailure(completedVoiceState(), new Error('network failed'))).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Photo upload failed',
+      photoAttachmentStatus: {
+        status: 'failed',
+        message: 'network failed',
+        canRetry: true
+      }
+    });
+
+    expect(markPhotoRetryFailure(null, new Error('network failed'))).toMatchObject({
+      status: 'failed',
+      progressLabel: 'Voice failed',
+      errorMessage: 'Voice failed safely.'
+    });
+  });
 });
+
+function completedVoiceState() {
+  return {
+    status: 'completed' as const,
+    tenantName: 'Home tenant',
+    inventoryName: 'Home',
+    progressLabel: 'Photo upload failed',
+    spokenResponse: 'The approved change was applied.',
+    debugEvents: [],
+    photoAttachmentStatus: {
+      status: 'failed' as const,
+      message: 'Photos could not be attached.',
+      canRetry: true
+    }
+  };
+}

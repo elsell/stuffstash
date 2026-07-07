@@ -8,6 +8,7 @@ import {
   VoiceRealtimeFailureCode,
   VoiceRealtimeCancelledError,
   VoiceRealtimeState,
+  VoicePhotoAttachmentStatus,
   type VoiceActionPlanPhotoDrafts
 } from '../../application/voice/RealtimeVoiceSession';
 
@@ -211,24 +212,12 @@ export function VoiceInteractionStateProvider({
         }
       },
       retryRealtimeActionPlanPhotos: async (planId: string) => {
-        setRealtime(realtime ? { ...realtime, progressLabel: 'Adding photos' } : realtime);
+        setRealtime(markPhotoRetryInProgress(realtime));
         try {
           const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
-          setRealtime((current) => current ? {
-            ...current,
-            progressLabel: photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
-            photoAttachmentStatus
-          } : current);
+          setRealtime((current) => markPhotoRetryResult(current, photoAttachmentStatus));
         } catch (error) {
-          setRealtime((current) => current ? {
-            ...current,
-            progressLabel: 'Photo upload failed',
-            photoAttachmentStatus: {
-              status: 'failed',
-              message: readableError(error, 'Photos could not be attached.'),
-              canRetry: true
-            }
-          } : buildFailedVoiceRealtimeState(error));
+          setRealtime((current) => markPhotoRetryFailure(current, error));
         }
       },
       cancelRealtime: async () => {
@@ -266,6 +255,33 @@ function markReviewDecisionPending(state: VoiceRealtimeState | null, progressLab
     progressLabel,
     reviewDecisionPending: true
   };
+}
+
+export function markPhotoRetryInProgress(state: VoiceRealtimeState | null): VoiceRealtimeState | null {
+  return state ? { ...state, progressLabel: 'Adding photos' } : state;
+}
+
+export function markPhotoRetryResult(
+  state: VoiceRealtimeState | null,
+  photoAttachmentStatus: VoicePhotoAttachmentStatus
+): VoiceRealtimeState | null {
+  return state ? {
+    ...state,
+    progressLabel: photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
+    photoAttachmentStatus
+  } : state;
+}
+
+export function markPhotoRetryFailure(state: VoiceRealtimeState | null, error: unknown): VoiceRealtimeState {
+  return state ? {
+    ...state,
+    progressLabel: 'Photo upload failed',
+    photoAttachmentStatus: {
+      status: 'failed',
+      message: readableError(error, 'Photos could not be attached.'),
+      canRetry: true
+    }
+  } : buildFailedVoiceRealtimeState(error);
 }
 
 export function useVoiceInteractionState(): VoiceInteractionStateContextValue {
