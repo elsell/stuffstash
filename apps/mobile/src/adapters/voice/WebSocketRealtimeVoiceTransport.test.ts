@@ -271,6 +271,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       webSocketFactory: () => socket
     });
     const events: unknown[] = [];
+    const followUpEvents: unknown[] = [];
 
     const run = transport.run({
       tenantId: 'tenant-home',
@@ -300,6 +301,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       webSocketFactory: () => socket
     });
     const events: unknown[] = [];
+    const followUpEvents: unknown[] = [];
 
     const run = transport.run({
       tenantId: 'tenant-home',
@@ -389,6 +391,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       webSocketFactory: () => socket
     });
     const events: unknown[] = [];
+    const followUpEvents: unknown[] = [];
 
     const run = transport.run({
       tenantId: 'tenant-home',
@@ -414,7 +417,9 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
     expect(transport.canSendFollowUpAudio()).toBe(true);
     expect(socket.closedByClient).toBe(false);
-    const followUp = transport.sendFollowUpAudio(['c2Vjb25k']);
+    const followUp = transport.sendFollowUpAudio(['c2Vjb25k'], async (event) => {
+      followUpEvents.push(event);
+    });
     socket.receive({
       type: 'assistant.response.completed',
       seq: 4,
@@ -433,6 +438,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       'audio.end'
     ]);
     expect(socket.sent[3]).toMatchObject({ seq: 4, sessionId: 'session-1', audioBase64: 'c2Vjb25k' });
+    expect(followUpEvents.map((event) => isEventType(event, 'assistant.response.completed') || isEventType(event, 'session.completed'))).toEqual([true, true]);
     expect(transport.canSendFollowUpAudio()).toBe(false);
   });
 

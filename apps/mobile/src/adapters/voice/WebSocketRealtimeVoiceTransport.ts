@@ -23,7 +23,7 @@ type ActiveRealtimeReviewSession = {
 };
 
 type ActiveRealtimeFollowUpSession = {
-  readonly sendAudio: (audioChunksBase64: readonly string[]) => Promise<void>;
+  readonly sendAudio: (audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>) => Promise<void>;
   readonly close: () => void;
 };
 
@@ -73,6 +73,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let lastResponseKind = '';
       let followUpPending = false;
       let followUpResolve: (() => void) | null = null;
+      let currentOnEvent = onEvent;
       let settled = false;
       let decisionSent = false;
       let messageChain = Promise.resolve();
@@ -195,7 +196,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           if (message.type === 'session.started') {
             sessionId = message.sessionId;
           }
-          await onEvent(message);
+          await currentOnEvent(message);
           if (message.type === 'session.started') {
             if (settled || options.signal?.aborted) {
               return;
@@ -213,7 +214,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             completed = true;
             if (lastResponseKind === 'clarification') {
               this.activeFollowUpSession = {
-                sendAudio: (audioChunksBase64) => {
+                sendAudio: (audioChunksBase64, followUpOnEvent) => {
+                  currentOnEvent = followUpOnEvent ?? onEvent;
                   followUpPending = true;
                   const promise = new Promise<void>((resolveFollowUp) => {
                     followUpResolve = resolveFollowUp;
@@ -268,11 +270,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     return this.activeFollowUpSession !== null;
   }
 
-  async sendFollowUpAudio(audioChunksBase64: readonly string[]): Promise<void> {
+  async sendFollowUpAudio(audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void> {
     if (!this.activeFollowUpSession) {
       throw new Error('Voice follow-up session is not active.');
     }
-    await this.activeFollowUpSession.sendAudio(audioChunksBase64);
+    await this.activeFollowUpSession.sendAudio(audioChunksBase64, onEvent);
   }
 
   async approveActionPlan(planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []): Promise<void> {

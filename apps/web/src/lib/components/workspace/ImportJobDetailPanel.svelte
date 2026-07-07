@@ -309,23 +309,31 @@
                       <small>{visibleResourceStart + 1}-{visibleResourceEnd} of {job.resources.length}</small>
                     {/if}
                   </div>
-                  <div class="sample-list resource-list" role="table" aria-label="Imported records">
-                    <div class="resource-head" role="row">
-                      <span role="columnheader">Record</span>
-                      <span role="columnheader">Source</span>
-                      <span role="columnheader">Opened</span>
-                    </div>
-                    {#each visibleResources as resource}
-                      <div class="sample-row resource-row" role="row">
-                        <span>{resourceLabel(resource)}</span>
-                        <small>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</small>
-                        {#if resourceCanOpen(job, resource)}
-                          <a class="resource-link" href={resourceHref(resource)} onclick={(event) => onOpenResource(event, resource)}>Open</a>
-                        {:else}
-                          <span class="resource-empty-action">-</span>
-                        {/if}
-                      </div>
-                    {/each}
+                  <div class="resource-table-wrap">
+                    <table class="resource-list" aria-label="Imported records">
+                      <thead>
+                        <tr>
+                          <th scope="col">Record</th>
+                          <th scope="col">Source</th>
+                          <th scope="col">Open</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {#each visibleResources as resource}
+                          <tr>
+                            <td class="resource-name-cell">{resourceLabel(resource)}</td>
+                            <td>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</td>
+                            <td>
+                              {#if resourceCanOpen(job, resource)}
+                                <a class="resource-link" href={resourceHref(resource)} onclick={(event) => onOpenResource(event, resource)}>Open</a>
+                              {:else}
+                                <span class="resource-empty-action">-</span>
+                              {/if}
+                            </td>
+                          </tr>
+                        {/each}
+                      </tbody>
+                    </table>
                   </div>
                   {#if job.resources.length > RESOURCE_PAGE_SIZE}
                     <div class="resource-overflow-action">
@@ -745,14 +753,9 @@
     }
   }
 
-  .sample-list,
   .source-option-list,
   .timeline-list {
     display: grid;
-  }
-
-  .sample-list {
-    gap: 0.45rem;
   }
 
   .resource-overflow-action {
@@ -818,8 +821,7 @@
     overflow-wrap: anywhere;
   }
 
-  .sample-heading small,
-  .sample-row small {
+  .sample-heading small {
     color: var(--muted-foreground);
     font-size: 0.78rem;
   }
@@ -849,38 +851,65 @@
     overflow-wrap: anywhere;
   }
 
-  .sample-row {
+  .sample-row,
+  .resource-list {
     min-width: 0;
   }
 
-  .resource-row {
-    align-items: center;
-    border-top: 1px solid var(--border);
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    padding-top: 0.55rem;
+  .resource-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-width: 0;
+    overflow-x: auto;
   }
 
-  .resource-head {
+  .resource-list {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .resource-list th,
+  .resource-list td {
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    min-width: 8rem;
+    padding: 0.55rem 0.65rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .resource-list th {
+    background: color-mix(in oklab, var(--muted) 32%, transparent);
+    border-top: 0;
     color: var(--muted-foreground);
-    display: grid;
     font-size: 0.72rem;
     font-weight: 700;
-    gap: 0.5rem;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    padding-bottom: 0.15rem;
     text-transform: uppercase;
   }
 
-  .resource-row:nth-child(2) {
-    border-top: 0;
-    padding-top: 0;
+  .resource-list td {
+    color: var(--muted-foreground);
+  }
+
+  .resource-list th:first-child,
+  .resource-list td:first-child {
+    min-width: 12rem;
+  }
+
+  .resource-list th:last-child,
+  .resource-list td:last-child {
+    min-width: 5rem;
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .resource-name-cell {
+    color: var(--foreground);
+    font-weight: 600;
   }
 
   .sample-row span,
-  .sample-row small {
-    display: block;
+  .resource-list td {
     overflow-wrap: anywhere;
   }
 
@@ -996,13 +1025,9 @@
       padding-inline: 0.35rem;
     }
 
-    .resource-row {
-      gap: 0.35rem;
-      grid-template-columns: 1fr;
-    }
-
-    .resource-list.bounded {
-      max-height: min(14rem, 34vh);
+    .resource-list th,
+    .resource-list td {
+      min-width: 11rem;
     }
 
     .resource-overflow-action {

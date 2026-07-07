@@ -980,7 +980,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).not.toContain('Imported record 26');
       expect(document.body.textContent).toContain('Page 1 of 2');
     });
-    expect(document.body.querySelector<HTMLElement>('.resource-list')?.getAttribute('role')).toBe('table');
+    expect(document.body.querySelector<HTMLElement>('.resource-list')?.tagName).toBe('TABLE');
     expect(buttonContaining('Previous').disabled).toBe(true);
     expect(buttonContaining('Next').disabled).toBe(false);
 
