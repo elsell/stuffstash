@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"strings"
 
@@ -356,124 +355,6 @@ func realtimeVoiceActionPlanReferencedAssetIDs(command ActionPlanCommandInput) (
 		return nil, ports.ErrInvalidProviderInput
 	}
 	return ids, nil
-}
-
-func (a App) realtimeVoiceActionPlanProposal(ctx context.Context, session RealtimeVoiceSession, record ports.ActionPlanRecord) (RealtimeVoiceActionPlanProposal, error) {
-	commands := make([]RealtimeVoiceActionPlanCommand, 0, len(record.Commands))
-	for _, command := range record.Commands {
-		proposalCommand, err := a.realtimeVoiceActionPlanCommand(ctx, session, command)
-		if err != nil {
-			return RealtimeVoiceActionPlanProposal{}, err
-		}
-		commands = append(commands, proposalCommand)
-	}
-	return RealtimeVoiceActionPlanProposal{
-		PlanID:              record.ID,
-		ConfirmationSummary: record.ConfirmationSummary,
-		Commands:            commands,
-		Risks:               append([]string{}, record.Risks...),
-	}, nil
-}
-
-func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session RealtimeVoiceSession, command ports.ActionPlanCommandRecord) (RealtimeVoiceActionPlanCommand, error) {
-	proposal := RealtimeVoiceActionPlanCommand{
-		ID:        command.ID,
-		Kind:      string(command.Kind),
-		Summary:   command.Summary,
-		Operation: actionPlanCommandOperation(command.Kind),
-	}
-	if command.Kind == actionplan.CommandKindCreateAsset || command.Kind == actionplan.CommandKindCreateLocation {
-		args, err := parseActionPlanCreateArguments(command)
-		if err == nil {
-			proposal.Title = args.Title
-			proposal.AssetKind = args.Kind
-			if command.Kind == actionplan.CommandKindCreateLocation {
-				proposal.AssetKind = asset.KindLocation.String()
-			}
-			if proposal.AssetKind == "" {
-				proposal.AssetKind = asset.KindItem.String()
-			}
-			proposal.ParentAssetID = args.ParentAssetID
-			if args.ParentAssetID != "" {
-				parentID, ok := asset.NewID(args.ParentAssetID)
-				if !ok {
-					return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
-				}
-				parent, found, err := a.assets.AssetByID(ctx, session.TenantID, session.InventoryID, parentID)
-				if err != nil {
-					return RealtimeVoiceActionPlanCommand{}, err
-				}
-				if !found {
-					return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
-				}
-				proposal.ParentTitle = parent.Title.String()
-				proposal.ParentKind = parent.Kind.String()
-			}
-			proposal.ParentCommandID = args.ParentCommandID
-		}
-	} else if command.Kind == actionplan.CommandKindMoveAsset {
-		args, err := parseActionPlanMoveArguments(command)
-		if err == nil {
-			moved, found, err := a.assets.AssetByID(ctx, session.TenantID, session.InventoryID, args.AssetID)
-			if err != nil {
-				return RealtimeVoiceActionPlanCommand{}, err
-			}
-			if !found {
-				return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
-			}
-			proposal.AssetKind = moved.Kind.String()
-			proposal.ParentAssetID = args.ParentAssetID
-			if args.ParentAssetID != "" {
-				parentID, ok := asset.NewID(args.ParentAssetID)
-				if !ok {
-					return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
-				}
-				parent, found, err := a.assets.AssetByID(ctx, session.TenantID, session.InventoryID, parentID)
-				if err != nil {
-					return RealtimeVoiceActionPlanCommand{}, err
-				}
-				if !found {
-					return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
-				}
-				proposal.ParentTitle = parent.Title.String()
-				proposal.ParentKind = parent.Kind.String()
-			}
-			proposal.ParentCommandID = args.ParentCommandID
-		}
-	} else if command.Kind == actionplan.CommandKindCheckoutAsset || command.Kind == actionplan.CommandKindReturnAsset {
-		args, err := parseActionPlanCheckoutArguments(command)
-		if err == nil {
-			item, found, err := a.assets.AssetByID(ctx, session.TenantID, session.InventoryID, args.AssetID)
-			if err != nil {
-				return RealtimeVoiceActionPlanCommand{}, err
-			}
-			if !found {
-				return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
-			}
-			proposal.AssetKind = item.Kind.String()
-			proposal.Title = item.Title.String()
-		}
-	}
-	return proposal, nil
-}
-
-func actionPlanCommandOperation(kind actionplan.CommandKind) string {
-	switch kind {
-	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
-		return "create"
-	case actionplan.CommandKindMoveAsset:
-		return "move"
-	case actionplan.CommandKindArchiveAsset:
-		return "archive"
-	case actionplan.CommandKindRestoreAsset:
-		return "restore"
-	case actionplan.CommandKindCheckoutAsset:
-		return "checkout"
-	case actionplan.CommandKindReturnAsset:
-		return "return"
-	default:
-		return "update"
-	}
 }
 
 func canonicalRealtimeVoiceDependentParentReference(arguments map[string]any, previousCommandIDs map[string]struct{}) map[string]any {

@@ -8,6 +8,9 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -108,6 +111,46 @@ func TestCreateActionPlanAcceptsRestoreCommandFromVoicePlanner(t *testing.T) {
 	}
 	if created.ID != "plan-id" || len(created.Commands) != 1 || created.Commands[0].Kind != actionplan.CommandKindRestoreAsset {
 		t.Fatalf("unexpected restore action plan: %+v", created)
+	}
+}
+
+func TestRealtimeVoiceLifecycleProposalCommandIncludesAssetDisplayContext(t *testing.T) {
+	t.Parallel()
+
+	item := assetItem("drill-1", "tenant-home", "inventory-home", asset.KindContainer, "")
+	application := newActionPlanExecutionTestApp(&fakeActionPlanRepository{}, &fakeAssetRepository{
+		items: map[asset.ID]asset.Asset{
+			item.ID: item,
+		},
+	}, &fakeIDGenerator{})
+
+	for _, tt := range []struct {
+		name      string
+		kind      actionplan.CommandKind
+		operation string
+	}{
+		{name: "archive", kind: actionplan.CommandKindArchiveAsset, operation: "archive"},
+		{name: "restore", kind: actionplan.CommandKindRestoreAsset, operation: "restore"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			proposal, err := application.realtimeVoiceActionPlanCommand(context.Background(), RealtimeVoiceSession{
+				Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
+				TenantID:    tenant.ID("tenant-home"),
+				InventoryID: inventory.InventoryID("inventory-home"),
+				Source:      RealtimeVoiceSourceMobile,
+			}, ports.ActionPlanCommandRecord{
+				ID:            "cmd-" + tt.name + "-drill",
+				Kind:          tt.kind,
+				Summary:       tt.name + " drill",
+				ArgumentsJSON: []byte(`{"assetId":"drill-1"}`),
+			})
+			if err != nil {
+				t.Fatalf("build %s proposal command: %v", tt.name, err)
+			}
+			if proposal.Kind != string(tt.kind) || proposal.Operation != tt.operation || proposal.Title != "Asset drill-1" || proposal.AssetKind != asset.KindContainer.String() {
+				t.Fatalf("unexpected %s proposal command: %+v", tt.name, proposal)
+			}
+		})
 	}
 }
 
