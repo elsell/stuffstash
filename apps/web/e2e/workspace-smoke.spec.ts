@@ -304,10 +304,11 @@ test('settings and import deep links render route-backed sections', async ({ pag
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox-csv');
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/import/homebox-csv');
-  await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'CSV', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByLabel('CSV file')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Connect', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('heading', { name: 'New import', exact: true })).toBeVisible();
+  await expect(page.getByText('Upload Homebox CSV')).toBeVisible();
+  await expect(page.getByLabel('Homebox CSV export')).toBeVisible();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await expect(page.getByRole('link', { name: /Connect to Homebox/ })).toHaveAttribute(
     'href',
     '/tenants/tenant-home/inventories/inventory-household/import/homebox'
   );
@@ -318,13 +319,13 @@ test('mobile import source actions clear the bottom nav', async ({ page }, testI
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox');
 
-  await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
-  const sourcePanel = page.locator('.import-source-panel');
-  await sourcePanel.getByRole('button', { name: 'Preview' }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole('heading', { name: 'New import', exact: true })).toBeVisible();
+  const setupPanel = page.locator('.import-source-setup-content');
+  await page.getByRole('button', { name: 'Confirm connection' }).scrollIntoViewIfNeeded();
   await page.evaluate(() => { window.scrollBy(0, 96); });
-  const actionsBox = await sourcePanel.locator('.heading-actions').boundingBox();
+  const actionsBox = await setupPanel.locator('.action-row').boundingBox();
   const navBox = await page.locator('.mobile-nav').boundingBox();
-  const lastOptionBox = await sourcePanel.locator('.binary-option').filter({ hasText: 'Private network address' }).boundingBox();
+  const lastOptionBox = await setupPanel.getByText('Connection options').boundingBox();
   expect(lastOptionBox && actionsBox ? lastOptionBox.y + lastOptionBox.height : Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
     (actionsBox?.y ?? 0) - 8
   );
@@ -333,7 +334,7 @@ test('mobile import source actions clear the bottom nav', async ({ page }, testI
   await page.setViewportSize({ width: 820, height: 650 });
   await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox');
   await expect(page.locator('.mobile-nav')).toBeVisible();
-  await expect(page.locator('.import-layout')).toHaveCSS('grid-template-columns', '792px');
+  expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
 });
 
 test('mobile long settings and import pages keep final content above bottom chrome', async ({ page }, testInfo) => {
@@ -350,9 +351,9 @@ test('mobile long settings and import pages keep final content above bottom chro
   expect(await clearsBottomChrome(page.locator('.settings-panel').last(), page.locator('.mobile-nav'))).toBe(true);
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/import/homebox');
-  await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
-  await scrollToEnd(page.locator('.import-source-panel .heading-actions'));
-  expect(await clearsBottomChrome(page.locator('.import-source-panel .heading-actions'), page.locator('.mobile-nav'))).toBe(true);
+  await expect(page.getByRole('heading', { name: 'New import', exact: true })).toBeVisible();
+  await scrollToEnd(page.locator('.import-source-setup-content .action-row'));
+  expect(await clearsBottomChrome(page.locator('.import-source-setup-content .action-row'), page.locator('.mobile-nav'))).toBe(true);
 });
 
 function tinyPng(): Buffer {

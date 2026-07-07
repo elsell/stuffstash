@@ -43,6 +43,26 @@ describe('ImportMessagesList', () => {
     expect(groups[3]?.textContent).toContain('Blocking');
     expect(groups[3]?.textContent).toContain('Duplicate asset found');
   });
+
+  it('uses source IDs for grouped rows when source names are unavailable', () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [
+          sourceIDMessage('warning', 'Asset appears to have already been imported', 'homebox-source-id duplicate', 'source-wardrobe'),
+          sourceIDMessage('warning', 'Asset appears to have already been imported', 'homebox-source-id duplicate', 'source-baby-hats')
+        ],
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    const group = document.body.querySelector<HTMLElement>('.message-group');
+    expect(group?.querySelector('.message-group-heading')?.textContent).toContain('homebox-source-id duplicate');
+    expect(group?.textContent).toContain('2 items');
+    expect(group?.textContent).toContain('Source record source-wardrobe');
+    expect(group?.textContent).toContain('Source record source-baby-hats');
+    expect(group?.querySelectorAll('.message-row')[0]?.textContent).not.toBe('homebox-source-id duplicate');
+  });
 });
 
 function message(severity: ImportMessage['severity'], summary: string, detail: string, sourceName: string): ImportMessage {
@@ -52,5 +72,15 @@ function message(severity: ImportMessage['severity'], summary: string, detail: s
     summary,
     detail,
     sourceName
+  };
+}
+
+function sourceIDMessage(severity: ImportMessage['severity'], summary: string, detail: string, sourceId: string): ImportMessage {
+  return {
+    code: summary.toLowerCase().replaceAll(' ', '-'),
+    severity,
+    summary,
+    detail,
+    sourceId
   };
 }

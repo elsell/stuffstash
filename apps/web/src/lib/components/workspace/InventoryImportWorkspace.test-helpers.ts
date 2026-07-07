@@ -257,6 +257,16 @@ export class TerminalImportJobRepository extends SeededInventoryRepository {
   }
 }
 
+export class LongActorImportJobRepository extends TerminalImportJobRepository {
+  constructor(seedData: typeof seed) {
+    super(seedData);
+    this.job = {
+      ...this.job,
+      actorId: 'oidc_vZWJGXPHf8OYYeSghzupLo9vyyywfxu9DKltriM27O9'
+    };
+  }
+}
+
 export class PreviewedImportJobRepository extends TerminalImportJobRepository {
   private previewedJob: ImportJob;
 

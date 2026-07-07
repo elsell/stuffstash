@@ -225,6 +225,7 @@
   .import-detail-content {
     display: grid;
     gap: 1rem;
+    min-width: 0;
   }
 
   .action-row,
@@ -241,6 +242,7 @@
 
   .detail-topline {
     justify-content: space-between;
+    min-width: 0;
   }
 
   .detail-topline span {
@@ -248,6 +250,7 @@
     display: block;
     font-size: 0.85rem;
     margin-top: 0.15rem;
+    overflow-wrap: anywhere;
   }
 
   .progress-track {
@@ -348,6 +351,13 @@
     display: flex;
     gap: 0.5rem;
     justify-content: space-between;
+    min-width: 0;
+  }
+
+  .sample-heading h3,
+  .detail-topline strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .sample-heading small,

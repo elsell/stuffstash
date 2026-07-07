@@ -7,6 +7,7 @@ import {
   DetailRefreshFailureImportJobRepository,
   DiscardFailedImportJobRepository,
   DiscardedImportJobRepository,
+  LongActorImportJobRepository,
   MultiCancellableImportJobRepository,
   PreviewedCSVImportJobRepository,
   PreviewedImportJobRepository,
@@ -184,7 +185,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Cancel Garage Homebox?');
-      expect(document.body.textContent).toContain('http://garage-homebox.local:7744');
+      expect(document.body.textContent).toContain('garage-homebox.local:7744');
       expect(document.body.textContent).toContain('Importing garage shelves');
       expect(document.activeElement?.textContent).toContain('Keep imported items');
     });
@@ -255,6 +256,15 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Started Jul 6, 2026');
       expect(document.body.textContent).toContain('Completed Jul 6, 2026');
       expect(document.body.textContent).toContain('1 asset created');
+    });
+  });
+
+  it('keeps long actor identifiers compact but distinguishable', async () => {
+    await mountImportWorkspace(new LongActorImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Prepared by oidc_vZWJGXP...ltriM27O9');
+      expect(document.body.textContent).not.toContain('Prepared by signed-in user');
     });
   });
 

@@ -140,7 +140,7 @@ export function progressTimeline(job: ImportJob): ImportJob['progressHistory'] {
 }
 
 export function sourceDescription(job: ImportJob): string {
-  const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : job.source.baseUrl || 'Live connection'];
+  const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : compactSourceURL(job.source.baseUrl) || 'Live connection'];
   if (job.source.version) parts.push(job.source.version);
   if (job.source.imageImport === 'enabled') parts.push('photos on');
   if (job.source.imageImport === 'disabled') parts.push('photos off');
@@ -167,7 +167,23 @@ export function sourceOptionsSummary(job: ImportJob): string[] {
 
 export function actorSummary(job: ImportJob): string {
   if (!job.actorId) return '';
+  if (!job.actorId.includes('@') && job.actorId.length > 24) return `Prepared by ${compactIdentifier(job.actorId)}`;
   return `Prepared by ${job.actorId}`;
+}
+
+export function compactSourceURL(value?: string): string {
+  if (!value) return '';
+  try {
+    const parsed = new URL(value);
+    return parsed.host || value;
+  } catch {
+    return value.replace(/^https?:\/\//, '').replace(/\/api\/v\d+\/?$/, '');
+  }
+}
+
+export function compactIdentifier(value: string): string {
+  if (value.length <= 24) return value;
+  return `${value.slice(0, 12)}...${value.slice(-9)}`;
 }
 
 export function historyCountSummary(job: ImportJob): string {

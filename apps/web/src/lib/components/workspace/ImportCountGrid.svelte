@@ -44,7 +44,16 @@
 
   @media (max-width: 860px) {
     .summary-grid {
-      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .summary-grid div {
+      padding: 0.65rem 0.7rem;
+    }
+
+    .summary-grid strong {
+      font-size: 1.15rem;
     }
   }
 </style>

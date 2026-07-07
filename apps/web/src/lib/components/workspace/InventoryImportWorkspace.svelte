@@ -776,6 +776,10 @@
   }
 
   @media (max-width: 860px) {
+    .import-workspace {
+      padding-bottom: 7rem;
+    }
+
     .import-toolbar,
     .toolbar-actions {
       align-items: flex-start;

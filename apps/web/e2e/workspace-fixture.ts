@@ -542,7 +542,8 @@ function initialImportJobs(): object[] {
         fieldsCreated: 1,
         locationsCreated: 1,
         assetsCreated: 2,
-        attachmentsCreated: 1
+        attachmentsCreated: 1,
+        warnings: 2
       },
       resources: [
         {
@@ -551,6 +552,22 @@ function initialImportJobs(): object[] {
           sourceEntityType: 'asset',
           sourceEntityId: 'asset:tomato',
           createdAt: '2026-07-06T11:12:00Z'
+        }
+      ],
+      messages: [
+        {
+          code: 'duplicate-source',
+          severity: 'warning',
+          summary: 'Asset appears to have already been imported',
+          detail: 'homebox-source-id duplicate',
+          sourceId: 'source-wardrobe'
+        },
+        {
+          code: 'duplicate-source',
+          severity: 'warning',
+          summary: 'Asset appears to have already been imported',
+          detail: 'homebox-source-id duplicate',
+          sourceId: 'source-baby-hats'
         }
       ]
     }),
@@ -596,6 +613,7 @@ function importJob(input: {
   updatedAt: string;
   counts?: Partial<Record<string, number>>;
   resources?: object[];
+  messages?: object[];
 }): object {
   const counts = {
     fields: 2,
@@ -618,11 +636,11 @@ function importJob(input: {
   return {
     id: input.id,
     status: input.status,
-    actorId: 'principal-owner',
+    actorId: 'oidc_vZWJGXPHf8OYYeSghzupLo9vyyywfxu9DKltriM27O9',
     source: {
       type: 'legacy_homebox',
       name: 'Homebox',
-      baseUrl: 'http://homebox.local:7744',
+      baseUrl: 'https://stuff.jsksell.com/api/v1',
       imageImport: 'enabled',
       fingerprint: `fingerprint-${input.id}`
     },
@@ -656,7 +674,7 @@ function importJob(input: {
     completedAt: input.completedAt,
     updatedAt: input.updatedAt,
     resources: input.resources ?? [],
-    messages: []
+    messages: input.messages ?? []
   };
 }
 

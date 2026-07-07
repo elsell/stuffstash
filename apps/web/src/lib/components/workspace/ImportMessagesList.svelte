@@ -51,6 +51,12 @@
   function groupCountLabel(count: number): string {
     return count === 1 ? '1 item' : `${count} items`;
   }
+
+  function messageRowLabel(message: ImportMessage, group: MessageGroup): string {
+    if (message.sourceName) return message.sourceName;
+    if (message.sourceId) return `Source record ${message.sourceId}`;
+    return message.detail || group.summary;
+  }
 </script>
 
 <div class="message-list">
@@ -66,7 +72,7 @@
       <div class="message-group-items">
         {#each group.messages as message}
           <div class="message-row">
-            <span>{message.sourceName || message.detail || group.summary}</span>
+            <span>{messageRowLabel(message, group)}</span>
             {#if message.sourceName && message.detail && message.detail !== group.cause}
               <small>{message.detail}</small>
             {/if}
@@ -98,9 +104,14 @@
   }
 
   .message-group-heading {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
     gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .message-group-heading > div {
+    min-width: 0;
   }
 
   .message-group-heading strong,
@@ -108,6 +119,7 @@
   .message-row span,
   .message-row small {
     display: block;
+    overflow-wrap: anywhere;
   }
 
   .message-group-heading span,
@@ -123,8 +135,19 @@
 
   .message-row,
   .quiet-row {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
     gap: 0.75rem;
+  }
+
+  @media (max-width: 640px) {
+    .message-group-heading {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .message-row {
+      display: block;
+    }
   }
 </style>

@@ -171,6 +171,7 @@
 
   .action-row {
     flex-wrap: wrap;
+    scroll-margin-bottom: 8rem;
   }
 
   .advanced-options {
