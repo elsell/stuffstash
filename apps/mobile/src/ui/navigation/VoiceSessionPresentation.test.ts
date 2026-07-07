@@ -725,6 +725,55 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('does not offer photo drafts on lifecycle or checkout review rows', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Update the drill?',
+          commands: [
+            {
+              id: 'cmd-archive-drill',
+              kind: 'archive_asset',
+              operation: 'archive',
+              title: 'Drill',
+              assetKind: 'item',
+              summary: 'Archive Drill'
+            },
+            {
+              id: 'cmd-return-drill',
+              kind: 'return_asset',
+              operation: 'return',
+              title: 'Drill',
+              assetKind: 'item',
+              summary: 'Return Drill'
+            }
+          ],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan?.commands.map((command) => ({
+      title: command.title,
+      photoDraftEligible: command.photoDraftEligible
+    }))).toEqual([
+      { title: 'Drill', photoDraftEligible: false },
+      { title: 'Drill', photoDraftEligible: false }
+    ]);
+  });
+
   it('disables action plan decisions while a review decision is pending', () => {
     expect(buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

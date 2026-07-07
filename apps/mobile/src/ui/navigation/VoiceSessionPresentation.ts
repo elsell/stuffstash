@@ -410,11 +410,10 @@ function isPhotoDraftEligible(command: VoiceActionPlanCommand): boolean {
   if (command.kind === 'move_asset' || command.operation === 'move') {
     return assetKind === 'item' || assetKind === 'container' || assetKind === 'location';
   }
-  return assetKind === 'item' ||
-    assetKind === 'container' ||
-    assetKind === 'location' ||
-    command.kind === 'create_asset' ||
-    command.kind === 'create_location';
+  if (command.kind === 'create_asset' || command.kind === 'create_location' || command.operation === 'create') {
+    return assetKind === 'item' || assetKind === 'container' || assetKind === 'location' || command.kind === 'create_asset' || command.kind === 'create_location';
+  }
+  return false;
 }
 
 function placementLabel(command: VoiceActionPlanCommand, titlesByID: ReadonlyMap<string, string>): string | undefined {
