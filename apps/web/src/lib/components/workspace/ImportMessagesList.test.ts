@@ -87,6 +87,20 @@ describe('ImportMessagesList', () => {
     expect(document.body.querySelectorAll('.message-row')).toHaveLength(2);
   });
 
+  it('labels truncated message lists as partial lists instead of samples', () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [message('warning', 'Attachment could not be imported', 'download failed', 'receipt.png')],
+        emptyText: 'No blocking issues found.',
+        truncated: true
+      }
+    });
+
+    expect(document.body.textContent).toContain('Showing a partial list of import messages.');
+    expect(document.body.textContent).not.toContain('Showing a sample of import messages.');
+  });
+
   it('keeps source IDs secondary when source names are unavailable', () => {
     component = mount(ImportMessagesList, {
       target: document.body,

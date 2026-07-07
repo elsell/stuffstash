@@ -25,7 +25,7 @@
     messages,
     emptyText,
     truncated = false,
-    truncatedText = 'Showing a sample of import messages.',
+    truncatedText = 'Showing a partial list of import messages.',
     reportedWarnings,
     reportedErrors
   }: Props = $props();

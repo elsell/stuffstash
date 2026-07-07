@@ -358,10 +358,10 @@ Preview review must:
 - Group warnings and blocking errors by user-understandable cause.
 - Collapse exact duplicate safe warning or blocking messages in visible issue summaries so repeated provider messages do not create wall-of-text detail pages. Distinct affected source records must remain distinguishable when their safe source name or source ID differs. When reported warning or blocking counts differ from the deduplicated visible messages, summary counts must use the reported counts while the issue-list affected-record stat must describe the distinct visible records.
 - Issue groups must provide a concise detail affordance that explains the user-facing meaning, impact, and likely next action for the warning or blocking cause. This guidance must be derived from safe import message codes, severities, and sanitized details; it must not expose credentials, bearer tokens, provider storage paths, raw source payloads, attachment bytes, or arbitrary provider internals.
-- Put readiness, blocking status, and re-preview requirements ahead of sample rows.
-- Show bounded samples of planned records and state when only a subset is shown.
+- Put readiness, blocking status, and re-preview requirements ahead of plan preview rows.
+- Show bounded partial lists of planned records and state when only a subset is shown.
 - Planned records must be presented with recognizable native table structure, stable headings, and concise row metadata rather than raw text blocks or div-only table imitation. Each planned-record section should expose the record name as the primary cell and diagnostic context as secondary columns.
-- When a planned-record sample is larger than the default visible page, the UI must provide explicit previous/next pagination or an equivalent bounded navigation pattern and must state the visible range. Ambiguous copy such as `shown` without range or total context is not sufficient.
+- When a planned-record list is larger than the default visible page, the UI must provide explicit previous/next pagination or an equivalent bounded navigation pattern and must state the visible range. Ambiguous copy such as `shown` without range or total context is not sufficient.
 - Disable start-import actions when the preview has blocking errors.
 - Require a new preview when the source input, source options, selected file, file content, image option, security options, or source fingerprint changes.
 - Treat source-fingerprint changes as blocking re-preview requirements, not warning-only states.
