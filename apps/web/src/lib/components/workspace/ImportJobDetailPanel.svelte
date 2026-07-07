@@ -433,8 +433,8 @@
                   <a class="detail-action-item" role="menuitem" href={auditHistoryHref} onclick={onOpenAuditHistory}>
                     <Activity size={16} aria-hidden="true" />
                     <span>
-                      <strong>View audit history</strong>
-                      <small>Inventory activity evidence for this run.</small>
+                      <strong>Open inventory activity</strong>
+                      <small>Shows the full inventory activity log.</small>
                     </span>
                   </a>
                   {#if canCreateImports && canRemoveJobFromHistory(job)}

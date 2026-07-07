@@ -454,13 +454,13 @@ describe('InventoryWorkspaceApp route application', () => {
     buttonContaining('More').click();
 
     await waitFor(() => {
-      expect(controlContaining('View audit history').getAttribute('href')).toBe(
+      expect(controlContaining('Open inventory activity').getAttribute('href')).toBe(
         '/tenants/tenant-home/inventories/inventory-household/settings/activity'
       );
-      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
+      expect(document.body.textContent).toContain('Shows the full inventory activity log.');
     });
 
-    controlContaining('View audit history').click();
+    controlContaining('Open inventory activity').click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');

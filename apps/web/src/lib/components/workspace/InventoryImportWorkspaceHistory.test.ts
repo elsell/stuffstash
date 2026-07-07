@@ -331,15 +331,15 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Garage');
       expect(document.body.textContent).toContain('Cordless drill');
       expect(document.body.textContent).toContain('drill-photo.jpg');
-      expect(document.body.textContent).not.toContain('Inventory activity evidence for this run.');
+      expect(document.body.textContent).not.toContain('Shows the full inventory activity log.');
     });
 
     buttonContaining('More').click();
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
+      expect(document.body.textContent).toContain('Shows the full inventory activity log.');
       expect(document.body.textContent).toContain('Imported records and audit history remain.');
     });
-    expect(linkContaining('View audit history').getAttribute('href')).toBe(
+    expect(linkContaining('Open inventory activity').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/settings/activity'
     );
 
@@ -425,14 +425,14 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('More').click();
 
     await waitFor(() => {
-      expect(linkContaining('View audit history')).toBeTruthy();
-      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
+      expect(linkContaining('Open inventory activity')).toBeTruthy();
+      expect(document.body.textContent).toContain('Shows the full inventory activity log.');
     });
-    expect(linkContaining('View audit history').getAttribute('href')).toBe(
+    expect(linkContaining('Open inventory activity').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/settings/activity'
     );
 
-    linkContaining('View audit history').click();
+    linkContaining('Open inventory activity').click();
 
     await waitFor(() => {
       expect(auditOpenCount).toBe(1);
@@ -1395,7 +1395,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
     buttonContaining('More').click();
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
+      expect(document.body.textContent).toContain('Shows the full inventory activity log.');
     });
     expect(document.body.textContent).not.toContain('Remove from history');
   });
