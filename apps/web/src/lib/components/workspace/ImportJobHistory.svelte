@@ -8,7 +8,7 @@
   import Plus from '@lucide/svelte/icons/plus';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import XCircle from '@lucide/svelte/icons/x-circle';
-  import type { ImportJob } from '$lib/domain/inventory';
+  import type { ImportJob, Principal } from '$lib/domain/inventory';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
@@ -44,6 +44,7 @@
     attentionJobs: ImportJob[];
     currentWorkJobs: ImportJob[];
     summaryDescription: string;
+    currentPrincipal?: Principal;
     canCreateImports: boolean;
     busy: boolean;
     onBeginImport: () => void;
@@ -62,6 +63,7 @@
     attentionJobs,
     currentWorkJobs,
     summaryDescription,
+    currentPrincipal,
     canCreateImports,
     busy,
     onBeginImport,
@@ -250,7 +252,7 @@
                   <strong>{job.source.name}</strong>
                   <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
                 </div>
-                <span>{job.status === 'cancel_requested' ? statusSentence(job) : actorSummary(job) || 'Background job'}</span>
+                <span>{job.status === 'cancel_requested' ? statusSentence(job) : actorSummary(job, currentPrincipal) || 'Background job'}</span>
                 <div class="progress-header">
                   <span>{phaseLabel(job)}</span>
                   <strong>{progressSummary(job)}</strong>
@@ -301,7 +303,7 @@
             <div class="history-meta">
               <span>{statusSentence(job)}</span>
               <span>{historyCountSummary(job)}</span>
-              {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
+              {#if actorSummary(job, currentPrincipal)}<span>{actorSummary(job, currentPrincipal)}</span>{/if}
               <span>{jobTimeLabel('Previewed', job.createdAt)}</span>
             </div>
           </div>
@@ -388,7 +390,7 @@
               {:else if job.startedAt}
                 <span>{jobTimeLabel('', job.startedAt).trim()}</span>
               {/if}
-              {#if actorSummary(job)}<span>{actorSummary(job)}</span>{/if}
+              {#if actorSummary(job, currentPrincipal)}<span>{actorSummary(job, currentPrincipal)}</span>{/if}
             </div>
             <div class="row-actions" role="cell" data-cell-label="Actions">
               <Button.Root

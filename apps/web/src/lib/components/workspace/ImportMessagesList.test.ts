@@ -47,6 +47,46 @@ describe('ImportMessagesList', () => {
     expect(groups[3]?.textContent).toContain('Duplicate asset found');
   });
 
+  it('collapses exact duplicate safe messages before counting and rendering', () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [
+          sourceIDMessage('warning', 'Homebox partial date imported as text', '0001-09-28', 'source-compressed-air'),
+          sourceIDMessage('warning', 'Homebox partial date imported as text', '0001-09-28', 'source-compressed-air'),
+          sourceIDMessage('warning', 'Homebox partial date imported as text', '0001-09-28', 'source-wood-glue')
+        ],
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    expect(document.body.querySelector('.issue-stat.warning')?.textContent).toContain('Warnings 2');
+    expect(document.body.querySelector('.issue-stat')?.textContent).toContain('Groups 1');
+    expect(document.body.querySelectorAll('.message-row')).toHaveLength(2);
+    expect(document.body.textContent).toContain('2 items');
+    expect(document.body.textContent).toContain('Source ID source-compressed-air');
+    expect(document.body.textContent).toContain('Source ID source-wood-glue');
+  });
+
+  it('keeps reported issue counts separate from distinct visible affected records', () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [
+          sourceIDMessage('warning', 'Homebox partial date imported as text', '0001-09-28', 'source-compressed-air'),
+          sourceIDMessage('warning', 'Homebox partial date imported as text', '0001-09-28', 'source-compressed-air'),
+          sourceIDMessage('warning', 'Homebox partial date imported as text', '0001-09-28', 'source-wood-glue')
+        ],
+        emptyText: 'No blocking issues found.',
+        reportedWarnings: 4
+      }
+    });
+
+    expect(document.body.querySelector('.issue-stat.warning')?.textContent).toContain('Warnings 4');
+    expect(document.body.textContent).toContain('2 affected records');
+    expect(document.body.querySelectorAll('.message-row')).toHaveLength(2);
+  });
+
   it('keeps source IDs secondary when source names are unavailable', () => {
     component = mount(ImportMessagesList, {
       target: document.body,

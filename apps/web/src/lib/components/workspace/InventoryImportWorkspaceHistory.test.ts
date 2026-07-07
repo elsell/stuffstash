@@ -339,6 +339,54 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('uses the current principal email in import history and detail actor copy when available', async () => {
+    await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)), {
+      currentPrincipal: { id: 'owner', email: 'owner@example.test' }
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+      expect(document.body.textContent).toContain('Prepared by owner@example.test');
+      expect(document.body.textContent).not.toContain('Prepared by owner ·');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Prepared by owner@example.test');
+      expect(document.body.textContent).not.toContain('Prepared by owner ·');
+    });
+  });
+
+  it('opens audit history from import detail through the workspace router callback', async () => {
+    let auditOpenCount = 0;
+    await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)), {
+      onOpenInventoryAuditHistory: () => {
+        auditOpenCount += 1;
+      }
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(linkContaining('View audit history')).toBeTruthy();
+    });
+
+    expect(linkContaining('View audit history').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/settings/activity'
+    );
+
+    linkContaining('View audit history').click();
+
+    await waitFor(() => {
+      expect(auditOpenCount).toBe(1);
+    });
+  });
+
   it('summarizes terminal import history as a scannable job ledger', async () => {
     await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)));
 
@@ -717,6 +765,41 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('opens imported records from detail through the workspace router callback', async () => {
+    const openedAssetIds: string[] = [];
+    await mountImportWorkspace(new ResourcefulImportJobRepository(structuredClone(seed)), {
+      onOpenImportedAssetId: async (assetId) => {
+        openedAssetIds.push(assetId);
+      }
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    buttonContaining('Details').click();
+
+    await waitFor(() => {
+      expect(buttonContaining('Records')).toBeTruthy();
+    });
+
+    buttonContaining('Records').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Imported records');
+      expect(linkContaining('Open')).toBeTruthy();
+    });
+
+    const openLink = linkContaining('Open');
+    expect(openLink.getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-imported-passport');
+
+    openLink.click();
+
+    await waitFor(() => {
+      expect(openedAssetIds).toEqual(['asset-imported-passport']);
+    });
+  });
+
   it('keeps many imported record summaries visually bounded in job detail', async () => {
     class ManyResourcefulImportJobRepository extends ResourcefulImportJobRepository {
       constructor(seedData: typeof seed) {
@@ -842,6 +925,116 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Review warnings before treating this import as clean.');
       expect(document.body.querySelector('.detail-issue-callout.warning')).toBeTruthy();
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
+    });
+  });
+
+  it('keeps detail issue tabs and stats aligned when returned messages contain exact duplicates', async () => {
+    class DuplicateWarningMessageImportJobRepository extends TerminalImportJobRepository {
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          counts: {
+            ...this.job.counts,
+            warnings: 2,
+            errors: 0
+          },
+          messages: [
+            {
+              code: 'partial-date',
+              severity: 'warning',
+              summary: 'Homebox partial date imported as text',
+              detail: '0001-09-28',
+              sourceId: 'source-compressed-air'
+            },
+            {
+              code: 'partial-date',
+              severity: 'warning',
+              summary: 'Homebox partial date imported as text',
+              detail: '0001-09-28',
+              sourceId: 'source-compressed-air'
+            },
+            {
+              code: 'partial-date',
+              severity: 'warning',
+              summary: 'Homebox partial date imported as text',
+              detail: '0001-09-28',
+              sourceId: 'source-wood-glue'
+            }
+          ]
+        };
+      }
+    }
+
+    await mountImportWorkspace(new DuplicateWarningMessageImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(historyLedgerText()).toContain('Warnings');
+    });
+
+    buttonContaining('Review Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Issues (2)');
+      expect(document.body.textContent).toContain('Warnings 2');
+      expect(document.body.textContent).toContain('2 affected records');
+      expect(document.body.querySelectorAll('.message-row')).toHaveLength(2);
+      expect(document.body.textContent).toContain('Source ID source-compressed-air');
+      expect(document.body.textContent).toContain('Source ID source-wood-glue');
+    });
+  });
+
+  it('uses reported warning counts for detail totals while showing distinct affected messages', async () => {
+    class ReportedAndDedupedWarningMessageImportJobRepository extends TerminalImportJobRepository {
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          counts: {
+            ...this.job.counts,
+            warnings: 4,
+            errors: 0
+          },
+          messages: [
+            {
+              code: 'partial-date',
+              severity: 'warning',
+              summary: 'Homebox partial date imported as text',
+              detail: '0001-09-28',
+              sourceId: 'source-compressed-air'
+            },
+            {
+              code: 'partial-date',
+              severity: 'warning',
+              summary: 'Homebox partial date imported as text',
+              detail: '0001-09-28',
+              sourceId: 'source-compressed-air'
+            },
+            {
+              code: 'partial-date',
+              severity: 'warning',
+              summary: 'Homebox partial date imported as text',
+              detail: '0001-09-28',
+              sourceId: 'source-wood-glue'
+            }
+          ]
+        };
+      }
+    }
+
+    await mountImportWorkspace(new ReportedAndDedupedWarningMessageImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(historyLedgerText()).toContain('Warnings');
+    });
+
+    buttonContaining('Review Details').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Issues (4)');
+      expect(document.body.textContent).toContain('Warnings 4');
+      expect(document.body.textContent).toContain('2 affected records');
+      expect(document.body.querySelectorAll('.message-row')).toHaveLength(2);
     });
   });
 

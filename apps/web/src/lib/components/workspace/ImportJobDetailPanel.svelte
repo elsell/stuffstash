@@ -4,7 +4,7 @@
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import Trash2 from '@lucide/svelte/icons/trash-2';
-  import type { ImportJob } from '$lib/domain/inventory';
+  import type { ImportJob, Principal } from '$lib/domain/inventory';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
@@ -16,6 +16,7 @@
     importIssueTone,
     isTerminal,
     issueCountSummary,
+    issueTotalCount,
     phaseLabel,
     progressBarLabel,
     progressBarStyle,
@@ -25,10 +26,13 @@
     resourceDiagnosticLabel,
     resourceLabel,
     resultCountCells,
+    reportedErrorCount,
+    reportedWarningCount,
     sourceDescription,
     sourceOptionsSummary,
     statusLabel,
     statusSentence,
+    uniqueImportMessages,
     visibleCountCells,
     visiblePreviewCountCells
   } from './importWorkspacePresentation';
@@ -46,9 +50,12 @@
     detailLoading: boolean;
     canCreateImports: boolean;
     busy: boolean;
+    currentPrincipal?: Principal;
     auditHistoryHref: string;
     resourceCanOpen: (job: ImportJob, resource: ImportResource) => boolean;
     resourceHref: (resource: ImportResource) => string;
+    onOpenAuditHistory: (event: MouseEvent) => void;
+    onOpenResource: (event: MouseEvent, resource: ImportResource) => void;
     onCancel: () => void;
     onContinue: () => void;
     onRemove: () => void;
@@ -60,9 +67,12 @@
     detailLoading,
     canCreateImports,
     busy,
+    currentPrincipal,
     auditHistoryHref,
     resourceCanOpen,
     resourceHref,
+    onOpenAuditHistory,
+    onOpenResource,
     onCancel,
     onContinue,
     onRemove
@@ -71,7 +81,7 @@
   let selectedTab = $state('overview');
   let defaultedTabJobId = $state('');
   let resourcesExpanded = $state(false);
-  let issueCount = $derived(detailMessages(job).length);
+  let issueCount = $derived(issueTotalCount(job));
   let issueTone = $derived(importIssueTone(job));
   let resourcesBounded = $derived(job.resources.length > COLLAPSED_RESOURCE_LIMIT);
   let visibleResources = $derived(resourcesExpanded ? job.resources : job.resources.slice(0, COLLAPSED_RESOURCE_LIMIT));
@@ -97,7 +107,8 @@
   }
 
   function detailMessages(job: ImportJob): ImportJob['messages'] {
-    return job.messages.length > 0 ? job.messages : job.preview.messages;
+    const messages = job.messages.length > 0 ? job.messages : job.preview.messages;
+    return uniqueImportMessages(messages);
   }
 
   function cancellationSummary(job: ImportJob): string {
@@ -121,7 +132,7 @@
         <div class="job-heading">
           <div>
             <strong>{job.source.name}</strong>
-            <span>{sourceDescription(job)}{actorSummary(job) ? ` · ${actorSummary(job)}` : ''}</span>
+            <span>{sourceDescription(job)}{actorSummary(job, currentPrincipal) ? ` · ${actorSummary(job, currentPrincipal)}` : ''}</span>
           </div>
           <Badge variant={job.status === 'failed' || job.status === 'discard_failed' ? 'destructive' : 'secondary'}>
             {statusLabel(job)}
@@ -212,7 +223,13 @@
                   <h3>Issues</h3>
                   <small>{issueCount === 0 ? 'No issues' : 'Grouped by cause'}</small>
                 </div>
-                <ImportMessagesList messages={detailMessages(job)} emptyText="No import messages." truncated={job.messages.length === 0 && job.preview.messagesTruncated} />
+                <ImportMessagesList
+                  messages={detailMessages(job)}
+                  emptyText="No import messages."
+                  truncated={job.messages.length === 0 && job.preview.messagesTruncated}
+                  reportedWarnings={reportedWarningCount(job)}
+                  reportedErrors={reportedErrorCount(job)}
+                />
               </section>
             </Tabs.Content>
 
@@ -260,7 +277,7 @@
                         <span>{resourceLabel(resource)}</span>
                         <small>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</small>
                         {#if resourceCanOpen(job, resource)}
-                          <a class="resource-link" href={resourceHref(resource)}>Open</a>
+                          <a class="resource-link" href={resourceHref(resource)} onclick={(event) => onOpenResource(event, resource)}>Open</a>
                         {/if}
                       </div>
                     {/each}
@@ -346,7 +363,7 @@
             </div>
           {/if}
           <section class="detail-actions" aria-label="Import actions">
-            <a class="detail-link" href={auditHistoryHref}>
+            <a class="detail-link" href={auditHistoryHref} onclick={onOpenAuditHistory}>
               <Activity size={16} aria-hidden="true" />
               View audit history
             </a>

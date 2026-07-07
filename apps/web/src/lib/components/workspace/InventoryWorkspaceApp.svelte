@@ -829,6 +829,32 @@
     });
   }
 
+  async function openImportedAssetId(assetId: string): Promise<void> {
+    await applyRoute(
+      pushWorkspaceRoute(
+        {
+          mode: 'asset',
+          tenantId: data.context.selectedTenantId,
+          inventoryId: data.context.selectedInventoryId,
+          assetId
+        },
+        data.context.selectedTenantId || null,
+        data.context.selectedInventoryId || null
+      )
+    );
+  }
+
+  function openInventoryAuditHistory(): void {
+    auditScope = 'inventory';
+    navigateTo({
+      mode: 'settings',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      settingsSection: 'activity',
+      auditScope: 'inventory'
+    });
+  }
+
   async function refreshInventoryAfterImportJob(scope: { tenantId: string; inventoryId: string }): Promise<void> {
     const lifecycleState = data.context.assetLifecycleState;
     if (data.context.selectedTenantId !== scope.tenantId || data.context.selectedInventoryId !== scope.inventoryId) {
@@ -1295,6 +1321,8 @@
       onOpenSearchAsset: openSearchAsset,
       onImportSourceChange: openImportSource,
       onImportJobInventoryChanged: refreshInventoryAfterImportJob,
+      onOpenImportedAssetId: openImportedAssetId,
+      onOpenInventoryAuditHistory: openInventoryAuditHistory,
       onSettingsSectionChange: openSettingsSection,
       onInvitationStatusChange: openInvitationStatusFilter,
       onAccessInvitationActionOpen: openAccessInvitationAction,

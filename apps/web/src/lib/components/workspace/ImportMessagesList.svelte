@@ -4,6 +4,7 @@
   import type { ImportMessage } from '$lib/domain/inventory';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
+  import { uniqueImportMessages } from './importWorkspacePresentation';
 
   const COLLAPSED_GROUP_LIMIT = 5;
   const EXPANDED_GROUP_LIMIT = 15;
@@ -15,19 +16,31 @@
     emptyText: string;
     truncated?: boolean;
     truncatedText?: string;
+    reportedWarnings?: number;
+    reportedErrors?: number;
   };
 
-  let { messages, emptyText, truncated = false, truncatedText = 'Showing a sample of import messages.' }: Props = $props();
+  let {
+    messages,
+    emptyText,
+    truncated = false,
+    truncatedText = 'Showing a sample of import messages.',
+    reportedWarnings,
+    reportedErrors
+  }: Props = $props();
 
-  let groups = $derived(groupMessages(messages));
-  let warningCount = $derived(messages.filter((message) => message.severity === 'warning').length);
-  let errorCount = $derived(messages.filter((message) => message.severity === 'error').length);
+  let visibleMessages = $derived(uniqueImportMessages(messages));
+  let groups = $derived(groupMessages(visibleMessages));
+  let visibleWarningCount = $derived(visibleMessages.filter((message) => message.severity === 'warning').length);
+  let visibleErrorCount = $derived(visibleMessages.filter((message) => message.severity === 'error').length);
+  let warningCount = $derived(Math.max(reportedWarnings ?? 0, visibleWarningCount));
+  let errorCount = $derived(Math.max(reportedErrors ?? 0, visibleErrorCount));
   let expanded = $state(false);
   let visibleGroupLimit = $derived(expanded ? EXPANDED_GROUP_LIMIT : COLLAPSED_GROUP_LIMIT);
   let visibleRecordLimit = $derived(expanded ? EXPANDED_RECORD_LIMIT : COLLAPSED_RECORD_LIMIT);
   let visibleGroups = $derived(groups.slice(0, visibleGroupLimit));
   let hiddenGroupCount = $derived(Math.max(0, groups.length - visibleGroups.length));
-  let shouldBoundGroups = $derived(messages.length > 12 || groups.length > COLLAPSED_GROUP_LIMIT);
+  let shouldBoundGroups = $derived(visibleMessages.length > 12 || groups.length > COLLAPSED_GROUP_LIMIT);
 
   type MessageGroup = {
     key: string;
@@ -105,7 +118,7 @@
       </div>
       <div class="issue-stat">
         <span>Affected</span>
-        <strong>{messages.length}</strong>
+        <strong>{visibleMessages.length}</strong>
       </div>
       {#if errorCount > 0}
         <div class="issue-stat blocking">
@@ -119,7 +132,7 @@
           <strong>{warningCount}</strong>
         </div>
       {/if}
-      <span class="sr-only">{messages.length === 1 ? '1 affected record' : `${messages.length} affected records`}</span>
+      <span class="sr-only">{visibleMessages.length === 1 ? '1 affected record' : `${visibleMessages.length} affected records`}</span>
     </div>
   {/if}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex (bounded overflow regions need a keyboard focus target) -->
@@ -171,7 +184,7 @@
       <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>Show fewer</Button.Root>
     </div>
   {/if}
-  {#if messages.length === 0}
+  {#if visibleMessages.length === 0}
     <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {emptyText}</div>
   {/if}
   {#if truncated}

@@ -7,6 +7,7 @@ import type {
   ImportJob,
   ImportJobCancellationMode,
   ImportSourceRequest,
+  Principal,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
@@ -692,7 +693,10 @@ export async function mountImportWorkspace(
   options: {
     importSource?: 'homebox' | 'homebox-csv' | null;
     inventory?: WorkspaceSeed['inventories'][number] | null;
+    currentPrincipal?: Principal;
     onImportJobInventoryChanged?: (scope: { tenantId: string; inventoryId: string }) => Promise<void>;
+    onOpenImportedAssetId?: (assetId: string) => Promise<void>;
+    onOpenInventoryAuditHistory?: () => void;
   } = {}
 ): Promise<SeededInventoryRepository> {
   component = mount(InventoryImportWorkspaceHarness, {
@@ -702,7 +706,10 @@ export async function mountImportWorkspace(
       inventory: options.inventory === undefined ? seed.inventories[0] : options.inventory,
       repository,
       initialImportSource: options.importSource ?? null,
-      onImportJobInventoryChanged: options.onImportJobInventoryChanged
+      currentPrincipal: options.currentPrincipal,
+      onImportJobInventoryChanged: options.onImportJobInventoryChanged,
+      onOpenImportedAssetId: options.onOpenImportedAssetId,
+      onOpenInventoryAuditHistory: options.onOpenInventoryAuditHistory
     }
   });
   return repository;

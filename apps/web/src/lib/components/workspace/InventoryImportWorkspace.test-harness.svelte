@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ImportSourceRoute } from '$lib/application/workspaceRoute';
-  import type { Inventory } from '$lib/domain/inventory';
+  import type { Inventory, Principal } from '$lib/domain/inventory';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import InventoryImportWorkspace from './InventoryImportWorkspace.svelte';
 
@@ -14,13 +14,19 @@
     inventory,
     repository,
     initialImportSource = null,
-    onImportJobInventoryChanged = async () => {}
+    currentPrincipal = undefined,
+    onImportJobInventoryChanged = async () => {},
+    onOpenImportedAssetId = async () => {},
+    onOpenInventoryAuditHistory = () => {}
   }: {
     tenantId: string;
     inventory: Inventory | null;
     repository: InventoryRepository;
     initialImportSource?: ImportSourceRoute;
+    currentPrincipal?: Principal;
     onImportJobInventoryChanged?: (scope: ImportJobInventoryRefreshScope) => Promise<void>;
+    onOpenImportedAssetId?: (assetId: string) => Promise<void>;
+    onOpenInventoryAuditHistory?: () => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally -- test harness seeds route state once, then local callbacks mutate it.
@@ -30,8 +36,11 @@
 <InventoryImportWorkspace
   {tenantId}
   {inventory}
+  {currentPrincipal}
   {repository}
   {importSource}
   onImportSourceChange={(next) => (importSource = next)}
   {onImportJobInventoryChanged}
+  {onOpenImportedAssetId}
+  {onOpenInventoryAuditHistory}
 />

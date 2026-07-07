@@ -101,6 +101,8 @@
     onOpenSearchAsset: (asset: Asset) => void;
     onImportSourceChange: (source: ImportSourceRoute) => void;
     onImportJobInventoryChanged: (scope: { tenantId: string; inventoryId: string }) => Promise<void>;
+    onOpenImportedAssetId: (assetId: string) => Promise<void>;
+    onOpenInventoryAuditHistory: () => void;
     onSettingsSectionChange: (section: SettingsSection) => void;
     onInvitationStatusChange: (status: WorkspaceRouteState['invitationStatus']) => void;
     onAccessInvitationActionOpen: (action: WorkspaceRouteState['accessInvitationAction'], invitationId: string) => void;
@@ -238,10 +240,13 @@
   <InventoryImportWorkspace
     tenantId={workspace.data.context.selectedTenantId}
     inventory={workspace.selectedInventory}
+    currentPrincipal={workspace.data.context.principal}
     repository={workspace.repository}
     importSource={route.importSource}
     onImportSourceChange={handlers.onImportSourceChange}
     onImportJobInventoryChanged={handlers.onImportJobInventoryChanged}
+    onOpenImportedAssetId={handlers.onOpenImportedAssetId}
+    onOpenInventoryAuditHistory={handlers.onOpenInventoryAuditHistory}
   />
 {:else if route.mode === 'settings'}
   <InventorySettings

@@ -8,6 +8,8 @@
     previewReadinessBadge,
     previewReadinessDescription,
     previewReadinessTitle,
+    reportedErrorCount,
+    reportedWarningCount,
     sourceDescription,
     sourceOptionsSummary,
     sourceSnapshotDescription,
@@ -76,7 +78,13 @@
           <h3>Issues</h3>
           <small>{previewJob.counts.warnings + previewJob.counts.errors === 0 ? 'No blockers' : 'Grouped by cause'}</small>
         </div>
-        <ImportMessagesList messages={visiblePreviewMessages(previewJob)} emptyText="No blocking issues found." truncated={previewJob.preview.messagesTruncated} />
+        <ImportMessagesList
+          messages={visiblePreviewMessages(previewJob)}
+          emptyText="No blocking issues found."
+          truncated={previewJob.preview.messagesTruncated}
+          reportedWarnings={reportedWarningCount(previewJob)}
+          reportedErrors={reportedErrorCount(previewJob)}
+        />
       </section>
       <section class="preview-samples-section" aria-label="Preview samples">
         <div class="preview-section-heading">

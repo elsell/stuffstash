@@ -8,7 +8,8 @@
     type ImportJob,
     type ImportJobCancellationMode,
     type Inventory,
-    type ImportSourceRequest
+    type ImportSourceRequest,
+    type Principal
   } from '$lib/domain/inventory';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -46,10 +47,13 @@
   type Props = {
     tenantId: string;
     inventory: Inventory | null;
+    currentPrincipal?: Principal;
     repository: InventoryRepository;
     importSource: ImportSourceRoute;
     onImportSourceChange: (source: ImportSourceRoute) => void;
     onImportJobInventoryChanged: (scope: ImportJobInventoryRefreshScope) => Promise<void>;
+    onOpenImportedAssetId: (assetId: string) => Promise<void>;
+    onOpenInventoryAuditHistory: () => void;
   };
 
   type ImportJobInventoryRefreshScope = {
@@ -57,7 +61,17 @@
     inventoryId: string;
   };
 
-  let { tenantId, inventory, repository, importSource, onImportSourceChange, onImportJobInventoryChanged }: Props = $props();
+  let {
+    tenantId,
+    inventory,
+    currentPrincipal,
+    repository,
+    importSource,
+    onImportSourceChange,
+    onImportJobInventoryChanged,
+    onOpenImportedAssetId,
+    onOpenInventoryAuditHistory
+  }: Props = $props();
 
   let step = $state<FlowStep>('history');
   let sourceChoice = $state<ImportSourceChoice>('homebox_live');
@@ -568,6 +582,26 @@
     return workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: 'inventory' }, tenantId, inventory?.id ?? null);
   }
 
+  function resourceAssetId(resource: ImportJob['resources'][number]): string | null {
+    if (resource.resourceType === 'asset') return resource.resourceId;
+    if (resource.resourceType === 'attachment' && resource.resourceOwnerId) return resource.resourceOwnerId;
+    return null;
+  }
+
+  function openImportedResource(event: MouseEvent, resource: ImportJob['resources'][number]): void {
+    if (!shouldHandleWorkspaceLinkClick(event)) return;
+    const assetId = resourceAssetId(resource);
+    if (!assetId) return;
+    event.preventDefault();
+    void onOpenImportedAssetId(assetId);
+  }
+
+  function openInventoryAuditHistory(event: MouseEvent): void {
+    if (!shouldHandleWorkspaceLinkClick(event)) return;
+    event.preventDefault();
+    onOpenInventoryAuditHistory();
+  }
+
   function importSourceRouteForChoice(choice: ImportSourceChoice): Exclude<ImportSourceRoute, null> {
     return choice === 'homebox_csv' ? 'homebox-csv' : 'homebox';
   }
@@ -716,6 +750,7 @@
         {attentionJobs}
         {currentWorkJobs}
         summaryDescription={historySummaryDescription()}
+        {currentPrincipal}
         {canCreateImports}
         {busy}
         onBeginImport={beginImport}
@@ -776,9 +811,12 @@
       {detailLoading}
       {canCreateImports}
       {busy}
+      {currentPrincipal}
       auditHistoryHref={auditHistoryHref()}
       {resourceCanOpen}
       {resourceHref}
+      onOpenAuditHistory={openInventoryAuditHistory}
+      onOpenResource={openImportedResource}
       onCancel={requestSelectedJobCancellation}
       onContinue={() => { if (selectedJob) resumePreviewedJob(selectedJob); }}
       onRemove={removeSelectedJobFromHistory}

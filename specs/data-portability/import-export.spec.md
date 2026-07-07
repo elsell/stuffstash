@@ -335,6 +335,7 @@ Preview review must:
 - Show source identity and source version when available.
 - Show planned counts for locations, assets, images or attachments, custom fields, duplicates, warnings, and blocking errors when available.
 - Group warnings and blocking errors by user-understandable cause.
+- Collapse exact duplicate safe warning or blocking messages in visible issue summaries so repeated provider messages do not create wall-of-text detail pages. Distinct affected source records must remain distinguishable when their safe source name or source ID differs. When reported warning or blocking counts differ from the deduplicated visible messages, summary counts must use the reported counts while the issue-list affected-record stat must describe the distinct visible records.
 - Put readiness, blocking status, and re-preview requirements ahead of sample rows.
 - Show bounded samples of planned records and state when only a subset is shown.
 - Disable start-import actions when the preview has blocking errors.
@@ -403,9 +404,11 @@ Import job detail must include:
 - Preview plan summary.
 - Progress and phase history.
 - Warnings and failures.
+- Deduplicated, grouped warning and failure summaries for exact duplicate safe messages.
 - Created or modified records when records remain.
 - Cancellation and discard outcome when applicable.
 - Link or navigation path to audit history.
+- Live navigation for audit history and imported-record actions when the web app can handle the target in the current workspace, with normal links retained as reload and deep-link fallback.
 
 When a job completed with partial progress discarded, job detail may acknowledge that records were created and discarded, but it must not render those discarded resources as normal openable inventory records.
 
@@ -416,6 +419,7 @@ Imported-resource summaries must not include source credentials, bearer tokens, 
 The first resource summary limit is implementation-defined and must be enforced at the import-owned repository/query boundary before application mapping or JSON response construction.
 The web UI must also keep the resource summary visually bounded when shown in job detail.
 The import job API response must include the safe actor principal identifier when the job has an actor so import history can identify who started or prepared the job without exposing provider credentials or source internals.
+The web UI must prefer a known user-facing actor label, such as the signed-in user's email when the actor matches the current principal, before falling back to a compact opaque principal identifier.
 
 The import job API response must include a safe progress history for job detail.
 Progress history records must include only the phase, done count, total count, safe user-facing message, and update time.

@@ -1,4 +1,4 @@
-import type { ImportJob } from '$lib/domain/inventory';
+import type { ImportJob, ImportMessage, Principal } from '$lib/domain/inventory';
 
 export type CountCell = { value: number; label: string; muted?: boolean };
 export type ImportIssueTone = 'none' | 'warning' | 'action';
@@ -191,8 +191,9 @@ export function sourceOptionsSummary(job: ImportJob): string[] {
   return options;
 }
 
-export function actorSummary(job: ImportJob): string {
+export function actorSummary(job: ImportJob, currentPrincipal?: Principal): string {
   if (!job.actorId) return '';
+  if (currentPrincipal?.id === job.actorId && currentPrincipal.email) return `Prepared by ${currentPrincipal.email}`;
   if (!job.actorId.includes('@') && job.actorId.length > 24) return `Prepared by ${compactIdentifier(job.actorId)}`;
   return `Prepared by ${job.actorId}`;
 }
@@ -239,13 +240,27 @@ export function historyCountSummary(job: ImportJob): string {
 }
 
 export function issueCountSummary(job: ImportJob): string {
-  const errorCount = job.counts.errors || allJobMessages(job).filter((message) => message.severity === 'error').length;
-  const warningCount = job.counts.warnings || allJobMessages(job).filter((message) => message.severity === 'warning').length;
+  const errorCount = reportedErrorCount(job);
+  const warningCount = reportedWarningCount(job);
   if (errorCount === 0 && warningCount === 0) return 'No issues';
   return countParts([
     [errorCount, 'blocking issue', 'blocking issues'],
     [warningCount, 'warning', 'warnings']
   ]);
+}
+
+export function issueTotalCount(job: ImportJob): number {
+  return reportedErrorCount(job) + reportedWarningCount(job);
+}
+
+export function reportedErrorCount(job: ImportJob): number {
+  const messageCount = uniqueImportMessages(allJobMessages(job)).filter((message) => message.severity === 'error').length;
+  return Math.max(job.counts.errors, messageCount);
+}
+
+export function reportedWarningCount(job: ImportJob): number {
+  const messageCount = uniqueImportMessages(allJobMessages(job)).filter((message) => message.severity === 'warning').length;
+  return Math.max(job.counts.warnings, messageCount);
 }
 
 export function changedRecordSummary(job: ImportJob): string {
@@ -320,7 +335,27 @@ export function visibleCountCells(cells: CountCell[]): CountCell[] {
 }
 
 export function visiblePreviewMessages(job: ImportJob): ImportJob['messages'] {
-  return job.preview.messages.length > 0 ? job.preview.messages : job.messages.slice(0, 8);
+  const messages = job.preview.messages.length > 0 ? job.preview.messages : job.messages;
+  return uniqueImportMessages(messages).slice(0, 8);
+}
+
+export function uniqueImportMessages(messages: ImportMessage[]): ImportMessage[] {
+  const seen = new Set<string>();
+  const unique: ImportMessage[] = [];
+  for (const message of messages) {
+    const key = [
+      message.severity,
+      message.code,
+      message.summary,
+      message.detail ?? '',
+      message.sourceName ?? '',
+      message.sourceId ?? ''
+    ].join('\u001f');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(message);
+  }
+  return unique;
 }
 
 export function previewReadinessTitle(job: ImportJob, previewStale: boolean): string {
