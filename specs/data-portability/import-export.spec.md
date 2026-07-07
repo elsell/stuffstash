@@ -427,6 +427,8 @@ Import job detail must include:
 - Live navigation for audit history and imported-record actions when the web app can handle the target in the current workspace, with normal links retained as reload and deep-link fallback.
 - URL-addressable detail state for the selected import job and selected detail tab so users can reload or share the current import detail context without losing their place. The canonical web route for an import job detail must identify the job in the path and may identify the selected detail tab with a query parameter. If no tab is selected in the URL, the detail view may choose the most helpful default tab for the job, such as `Issues` when warnings or errors are present.
 
+Secondary job-detail actions such as opening audit history or removing a terminal run from visible import history should be grouped away from the primary source/result summary. The UI must make clear that audit history is inventory activity evidence for the run and that removing a run only removes it from import history, not from inventory records or audit history.
+
 When a job completed with partial progress discarded, job detail may acknowledge that records were created and discarded, but it must not render those discarded resources as normal openable inventory records.
 
 The import job API response may include a bounded safe imported-resource summary derived from import-owned resource records.

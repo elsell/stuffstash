@@ -2,6 +2,7 @@
   import Activity from '@lucide/svelte/icons/activity';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+  import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import type { ImportJob, Principal } from '$lib/domain/inventory';
@@ -82,6 +83,7 @@
   }: Props = $props();
 
   let resourcePage = $state(0);
+  let actionMenuOpen = $state(false);
   let issueCount = $derived(issueTotalCount(job));
   let issueTone = $derived(importIssueTone(job));
   let resourcePageCount = $derived(Math.max(1, Math.ceil(job.resources.length / RESOURCE_PAGE_SIZE)));
@@ -94,6 +96,7 @@
   $effect(() => {
     job.id;
     resourcePage = 0;
+    actionMenuOpen = false;
   });
 
   $effect(() => {
@@ -362,10 +365,6 @@
             </div>
           {/if}
           <section class="detail-actions" aria-label="Import actions">
-            <a class="detail-link" href={auditHistoryHref} onclick={onOpenAuditHistory}>
-              <Activity size={16} aria-hidden="true" />
-              View audit history
-            </a>
             {#if canCreateImports && canRequestCancellation}
               <Button.Root variant="outline" onclick={onCancel} disabled={busy}>
                 <Button.BusyContent {busy} label="Cancel" busyLabel="Cancelling" />
@@ -376,11 +375,35 @@
                 <Button.BusyContent {busy} label="Continue import" busyLabel="Opening preview" />
               </Button.Root>
             {/if}
-            {#if canCreateImports && canRemoveJobFromHistory(job)}
-              <Button.Root variant="ghost" onclick={onRemove} disabled={busy}>
-                <Button.BusyContent {busy} icon={Trash2} label="Remove from history" busyLabel="Removing from history" />
+            <div class="detail-more-actions">
+              <Button.Root
+                variant="outline"
+                size="sm"
+                aria-expanded={actionMenuOpen}
+                aria-controls="import-detail-secondary-actions"
+                onclick={() => (actionMenuOpen = !actionMenuOpen)}
+              >
+                <MoreHorizontal size={16} aria-hidden="true" />
+                More
               </Button.Root>
-            {/if}
+              {#if actionMenuOpen}
+                <div id="import-detail-secondary-actions" class="detail-action-menu" role="menu" aria-label="More import actions">
+                  <a class="detail-action-item" role="menuitem" href={auditHistoryHref} onclick={onOpenAuditHistory}>
+                    <Activity size={16} aria-hidden="true" />
+                    <span>
+                      <strong>View audit history</strong>
+                      <small>Inventory activity evidence for this run.</small>
+                    </span>
+                  </a>
+                  {#if canCreateImports && canRemoveJobFromHistory(job)}
+                    <Button.Root variant="ghost" class="detail-action-item danger" role="menuitem" onclick={onRemove} disabled={busy}>
+                      <Button.BusyContent {busy} icon={Trash2} label="Remove from history" busyLabel="Removing from history" />
+                      <small>Imported records and audit history remain.</small>
+                    </Button.Root>
+                  {/if}
+                </div>
+              {/if}
+            </div>
           </section>
         </div>
       </div>
@@ -563,7 +586,73 @@
 
   .detail-actions {
     border-top: 1px solid var(--border);
+    justify-items: start;
     padding-top: 0.75rem;
+  }
+
+  .detail-more-actions {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: start;
+    position: relative;
+    width: 100%;
+  }
+
+  .detail-action-menu {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 1rem 2.5rem color-mix(in oklab, var(--foreground) 12%, transparent);
+    display: grid;
+    gap: 0.25rem;
+    min-width: min(100%, 17rem);
+    padding: 0.35rem;
+    z-index: 2;
+  }
+
+  .detail-action-item {
+    align-items: flex-start;
+    border-radius: 6px;
+    color: var(--foreground);
+    display: flex;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.55rem 0.6rem;
+    text-align: left;
+    text-decoration: none;
+    width: 100%;
+  }
+
+  :global(.detail-action-item[data-slot='button']) {
+    height: auto;
+    justify-content: flex-start;
+    white-space: normal;
+  }
+
+  .detail-action-item:hover,
+  .detail-action-item:focus-visible {
+    background: color-mix(in oklab, var(--muted) 36%, transparent);
+    text-decoration: none;
+  }
+
+  .detail-action-item span {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+  }
+
+  .detail-action-item small {
+    color: var(--muted-foreground);
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-top: 0.14rem;
+    overflow-wrap: anywhere;
+  }
+
+  .detail-action-item.danger {
+    color: var(--destructive);
   }
 
   .detail-topline span {

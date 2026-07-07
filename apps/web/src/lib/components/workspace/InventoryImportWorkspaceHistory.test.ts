@@ -315,7 +315,6 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Progress timeline');
-      expect(document.body.textContent).toContain('Remove from history');
       expect(document.body.textContent).toContain('1 field reused');
       expect(document.body.textContent).toContain('1 location created');
       expect(document.body.textContent).toContain('2 assets skipped');
@@ -332,6 +331,13 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Garage');
       expect(document.body.textContent).toContain('Cordless drill');
       expect(document.body.textContent).toContain('drill-photo.jpg');
+      expect(document.body.textContent).not.toContain('Inventory activity evidence for this run.');
+    });
+
+    buttonContaining('More').click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
+      expect(document.body.textContent).toContain('Imported records and audit history remain.');
     });
     expect(linkContaining('View audit history').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/settings/activity'
@@ -412,9 +418,15 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Details').click();
 
     await waitFor(() => {
-      expect(linkContaining('View audit history')).toBeTruthy();
+      expect(document.body.textContent).toContain('Import details');
     });
 
+    buttonContaining('More').click();
+
+    await waitFor(() => {
+      expect(linkContaining('View audit history')).toBeTruthy();
+      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
+    });
     expect(linkContaining('View audit history').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/settings/activity'
     );
@@ -1312,6 +1324,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.querySelector('.detail-issue-callout.action')).toBeFalsy();
       expect(document.body.querySelector('.summary-tile.action')).toBeTruthy();
       expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
+    });
+    buttonContaining('More').click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
     });
     expect(document.body.textContent).not.toContain('Remove from history');
   });

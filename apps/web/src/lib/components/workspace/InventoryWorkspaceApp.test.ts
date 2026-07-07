@@ -449,9 +449,15 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Import details');
+    });
+
+    buttonContaining('More').click();
+
+    await waitFor(() => {
       expect(controlContaining('View audit history').getAttribute('href')).toBe(
         '/tenants/tenant-home/inventories/inventory-household/settings/activity'
       );
+      expect(document.body.textContent).toContain('Inventory activity evidence for this run.');
     });
 
     controlContaining('View audit history').click();
