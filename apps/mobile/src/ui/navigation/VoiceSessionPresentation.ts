@@ -81,6 +81,15 @@ export function buildVoiceAccessoryPresentation({
   }
 
   if (stage === 'completed') {
+    if (realtime?.responseKind === 'clarification') {
+      return {
+        accessibilityLabel: 'Open voice follow-up',
+        primaryAction: 'expand',
+        subtitle: safeAccessorySubtitle(realtime.spokenResponse) ?? context,
+        title: 'Needs detail',
+        tone: 'attention'
+      };
+    }
     return {
       accessibilityLabel: 'Open voice answer',
       primaryAction: 'expand',
@@ -178,6 +187,7 @@ export type VoiceSessionPresentation = {
     readonly risks: readonly string[];
   };
   readonly bottomAction: VoiceSessionBottomAction;
+  readonly bottomHint: string;
   readonly canReset: boolean;
   readonly contextLabel: string;
   readonly diagnostics: readonly string[] | null;
@@ -261,6 +271,7 @@ export function buildVoiceSessionPresentation({
         }
       : undefined,
     activity: activityForState(stage, progressLabel, realtime?.recordingLevel),
+    bottomHint: bottomHintForState(stage, realtime),
     bottomAction,
     canReset: stage === 'completed' || stage === 'cancelled' || stage === 'failed' || (stage === 'review' && realtime?.actionPlan?.status !== 'proposed'),
     contextLabel: `${inventoryName} · ${tenantName}`,
@@ -448,6 +459,24 @@ function titleForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeStat
     return 'Needs detail';
   }
   return titleForStage(stage);
+}
+
+function bottomHintForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): string {
+  if (stage === 'completed' && realtime?.responseKind === 'clarification') {
+    return 'Answer the follow-up to keep this conversation going.';
+  }
+  switch (stage) {
+    case 'ready':
+      return 'Ask a question about this inventory.';
+    case 'completed':
+      return 'You can ask another question or close this.';
+    case 'cancelled':
+      return 'You can start again when you are ready.';
+    case 'failed':
+      return 'Reset and try again when you are ready.';
+    default:
+      return 'Keep this open while Stuff Stash works.';
+  }
 }
 
 export function formatSafeDiagnosticEvent(event: VoiceSafeDiagnosticEvent): string {

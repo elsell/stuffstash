@@ -78,6 +78,25 @@ describe('VoiceSessionPresentation', () => {
     expect(buildVoiceAccessoryPresentation({
       pathname: '/locations/location-1',
       realtime: {
+        status: 'completed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Needs detail',
+        responseKind: 'clarification',
+        spokenResponse: 'Which item should I update?',
+        debugEvents: []
+      },
+      stage: 'completed',
+      status: 'ready'
+    })).toMatchObject({
+      accessibilityLabel: 'Open voice follow-up',
+      title: 'Needs detail',
+      subtitle: 'Which item should I update?'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
         status: 'failed',
         tenantName: 'Main tenant',
         inventoryName: 'Home',
@@ -150,6 +169,7 @@ describe('VoiceSessionPresentation', () => {
     });
 
     expect(session.title).toBe('Needs detail');
+    expect(session.bottomHint).toBe('Answer the follow-up to keep this conversation going.');
     expect(session.bottomAction).toMatchObject({
       kind: 'session_controls',
       mic: { accessibilityLabel: 'Answer follow-up' }

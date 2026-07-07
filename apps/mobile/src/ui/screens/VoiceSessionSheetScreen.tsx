@@ -390,7 +390,7 @@ function VoiceSessionSheet({
                   numberOfLines={bottomAction.kind === 'review_decision' ? 1 : 2}
                   style={styles.progressHint}
                 >
-                  {hintForStage(state.stage)}
+                  {session.bottomHint}
                 </Text>
               </View>
               {bottomAction.kind === 'review_decision' ? (
@@ -479,21 +479,6 @@ function SessionErrorState({ message }: { readonly message: string }) {
       <Text style={styles.centerStateText}>{message}</Text>
     </View>
   );
-}
-
-function hintForStage(stage: VoiceInteractionState['stage']): string {
-  switch (stage) {
-    case 'ready':
-      return 'Ask a question about this inventory.';
-    case 'completed':
-      return 'You can ask another question or close this.';
-    case 'cancelled':
-      return 'You can start again when you are ready.';
-    case 'failed':
-      return 'Reset and try again when you are ready.';
-    default:
-      return 'Keep this open while Stuff Stash works.';
-  }
 }
 
 const styles = StyleSheet.create({
