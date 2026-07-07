@@ -714,3 +714,28 @@ func slicesContains(values []string, needle string) bool {
 	}
 	return false
 }
+
+func assertRealtimeVoiceLocalCompletionOrder(t *testing.T, events []RealtimeVoiceEvent) {
+	t.Helper()
+	transcriptIndex := realtimeVoiceEventIndex(events, func(event RealtimeVoiceEvent) bool {
+		return event.Type == RealtimeVoiceEventTranscriptFinal
+	})
+	understandingIndex := realtimeVoiceEventIndex(events, func(event RealtimeVoiceEvent) bool {
+		return event.Type == RealtimeVoiceEventAgentProgress && event.Status == realtimeVoiceProgressUnderstanding
+	})
+	completedIndex := realtimeVoiceEventIndex(events, func(event RealtimeVoiceEvent) bool {
+		return event.Type == RealtimeVoiceEventAssistantResponseCompleted
+	})
+	if transcriptIndex < 0 || understandingIndex < 0 || completedIndex < 0 || !(transcriptIndex < understandingIndex && understandingIndex < completedIndex) {
+		t.Fatalf("expected transcript.final before understanding progress before assistant completion, got %+v", events)
+	}
+}
+
+func realtimeVoiceEventIndex(events []RealtimeVoiceEvent, match func(RealtimeVoiceEvent) bool) int {
+	for index, event := range events {
+		if match(event) {
+			return index
+		}
+	}
+	return -1
+}

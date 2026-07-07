@@ -40,6 +40,7 @@ func TestRealtimeVoiceAmbiguousDestinationCompletesClarificationWithoutLanguageP
 	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressUnderstanding) {
 		t.Fatalf("expected local clarification to emit understanding progress, got %+v", events)
 	}
+	assertRealtimeVoiceLocalCompletionOrder(t, events)
 }
 
 func TestRealtimeVoiceAmbiguousDestinationDoesNotCatchNamedPlaces(t *testing.T) {

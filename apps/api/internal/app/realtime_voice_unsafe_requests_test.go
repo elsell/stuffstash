@@ -41,6 +41,7 @@ func TestRealtimeVoiceFallsForwardForProviderCredentialRequestWithoutLanguagePro
 	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressUnderstanding) {
 		t.Fatalf("expected local unsupported response to emit understanding progress, got %+v", events)
 	}
+	assertRealtimeVoiceLocalCompletionOrder(t, events)
 }
 
 type failingRealtimeVoiceLanguageInference struct{}
