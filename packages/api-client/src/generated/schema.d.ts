@@ -5902,7 +5902,7 @@ export interface operations {
     "get-tenants-by-tenant-id-inventories-by-inventory-id-tags": {
         parameters: {
             query?: {
-                /** @description Requested page size */
+                /** @description Requested page size; 0 uses the default page size */
                 limit?: number;
                 /** @description Opaque cursor from the previous page */
                 cursor?: string;

@@ -55,7 +55,7 @@ type ListAssetTagsInput struct {
 	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
 	TenantID      string `path:"tenantId" doc:"Tenant ID"`
 	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
-	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Limit         int    `query:"limit" minimum:"0" doc:"Requested page size; 0 uses the default page size"`
 	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
 }
 

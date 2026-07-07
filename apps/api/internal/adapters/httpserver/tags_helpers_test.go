@@ -19,10 +19,29 @@ type tagBody struct {
 	Data tagResponse `json:"data"`
 }
 
+type tagListBody struct {
+	Data []tagResponse `json:"data"`
+	Meta struct {
+		Pagination *struct {
+			Limit      int     `json:"limit"`
+			NextCursor *string `json:"nextCursor"`
+			HasMore    bool    `json:"hasMore"`
+		} `json:"pagination"`
+	} `json:"meta"`
+}
+
 func decodeScenarioTag(t *testing.T, response *httptest.ResponseRecorder) tagBody {
 	t.Helper()
 
 	var body tagBody
+	decodeBody(t, response, &body)
+	return body
+}
+
+func decodeScenarioTagList(t *testing.T, response *httptest.ResponseRecorder) tagListBody {
+	t.Helper()
+
+	var body tagListBody
 	decodeBody(t, response, &body)
 	return body
 }
