@@ -222,12 +222,12 @@
             <strong>{issueCount === 0 ? 'No issues' : issueTone === 'action' ? 'Action required' : issueCountSummary(job)}</strong>
           </div>
         </div>
-        {#if issueCount > 0 && selectedTab !== 'issues'}
+        {#if issueCount > 0 && issueTone === 'action' && selectedTab !== 'issues'}
           <div class={`detail-issue-callout ${issueTone}`}>
             <AlertCircle class="issue-callout-icon" size={18} aria-hidden="true" />
             <div>
               <strong>{issueCountSummary(job)}</strong>
-              <span>{issueTone === 'action' ? 'Review the blocking items before relying on this run.' : 'Warnings do not block the import, but they should be reviewed.'}</span>
+              <span>Review the blocking items before relying on this run.</span>
             </div>
             <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
           </div>

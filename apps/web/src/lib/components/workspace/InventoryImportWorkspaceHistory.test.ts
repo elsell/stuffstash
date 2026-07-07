@@ -1238,6 +1238,30 @@ describe('InventoryImportWorkspace import history and progress', () => {
     expect(Array.from(document.body.querySelectorAll('button')).some((button) => button.textContent?.trim() === 'Review issues')).toBe(false);
   });
 
+  it('does not add a second top-level warning callout when viewing other detail tabs', async () => {
+    await mountImportWorkspace(new TerminalPreviewMessageImportJobRepository(structuredClone(seed)));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+      expect(document.body.textContent).toContain('Warnings');
+    });
+
+    buttonContaining('Review Details').click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
+      expect(document.body.textContent).toContain('Warnings 1');
+    });
+
+    buttonContaining('Records').click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('.summary-tile.warning')).toBeTruthy();
+      expect(document.body.querySelector('.detail-issue-callout.warning')).toBeFalsy();
+      expect(Array.from(document.body.querySelectorAll('button')).some((button) => button.textContent?.trim() === 'Review issues')).toBe(false);
+    });
+  });
+
   it('prefers terminal import messages over preview-preserved messages in job detail', async () => {
     await mountImportWorkspace(new TerminalJobAndPreviewMessageImportJobRepository(structuredClone(seed)));
 
