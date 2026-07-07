@@ -149,6 +149,16 @@ func TestLegacyHomeboxPreviewPlansImagesWithoutDownloadingAttachmentBytes(t *tes
 	if err != nil {
 		t.Fatalf("read private-network Homebox source: %v", err)
 	}
+	tagsByKey := map[string]importplan.TagDefinition{}
+	for _, tag := range plan.Tags {
+		tagsByKey[tag.Key] = tag
+	}
+	if tagsByKey["workshop"].Color != "#2F80ED" {
+		t.Fatalf("expected live Homebox tag color preservation, got %+v", tagsByKey)
+	}
+	if tagsByKey["damaged"].Color != "" {
+		t.Fatalf("expected invalid live Homebox tag color to be cleared, got %+v", tagsByKey["damaged"])
+	}
 	if attachmentDownloads != 0 {
 		t.Fatalf("preview downloaded attachment bytes %d times", attachmentDownloads)
 	}
@@ -286,7 +296,7 @@ func newLegacyHomeboxTestServerWithAttachmentResponse(t *testing.T, itemDetailSt
 				http.Error(w, "database password leaked", itemDetailStatus)
 				return
 			}
-			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"attachments":[{"id":"attachment-one","type":"photo","primary":true,"title":"drill.jpg","mimeType":"image/jpeg"}]}`))
+			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"tags":[{"name":"Workshop","color":"2f80ed"},{"name":"Damaged","color":"not-a-color"}],"attachments":[{"id":"attachment-one","type":"photo","primary":true,"title":"drill.jpg","mimeType":"image/jpeg"}]}`))
 		case "/api/v1/items/item-one/attachments/attachment-one":
 			if attachmentDownloads != nil {
 				(*attachmentDownloads)++

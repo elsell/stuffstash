@@ -19,9 +19,10 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await expect(page.getByText('stuff.jsksell.com').first()).toBeVisible();
   await expect(page.getByText('/api/v1')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Warnings/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Action required/ })).toBeDisabled();
-  const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: '2 warnings' });
-  await expect(warningRow.getByText('Completed with warnings.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Action required/ })).toHaveCount(0);
+  const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: 'Warnings' });
+  await expect(warningRow.getByText('Completed with warnings.')).toHaveCount(0);
+  await expect(warningRow.getByText('Completed')).toBeVisible();
   await expect(warningRow.locator('[data-slot="badge"]').filter({ hasText: 'Warnings' })).toBeVisible();
   await expect(warningRow.getByRole('cell', { name: /Jul 6, 2026, 7:15 AM/ })).toBeVisible();
   expect(await hasHorizontalOverflow(warningRow)).toBe(false);
@@ -36,19 +37,20 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await page.evaluate(() => {
     (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel = 'same-document';
   });
-  await page.getByRole('link', { name: 'View audit history' }).click();
+  await page.getByRole('button', { name: /More/ }).click();
+  await page.getByRole('menuitem', { name: /Open inventory activity/ }).click();
   await expect(page).toHaveURL(/\/settings\/activity/);
   expect(await importNavigationSentinel(page)).toBe('same-document');
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/import');
   await warningRow.getByRole('button', { name: /review details/i }).click();
   await page.getByRole('tab', { name: 'Records' }).click();
-  const importedAssetRow = page.locator('.resource-row').filter({ hasText: 'Imported asset' });
+  const importedAssetRow = page.getByRole('row').filter({ hasText: 'Imported asset' });
   await expect(importedAssetRow).toBeVisible();
   await page.evaluate(() => {
     (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel = 'same-document';
   });
-  await importedAssetRow.getByRole('link', { name: 'Open' }).click();
+  await importedAssetRow.getByRole('link', { name: /Open Imported asset/ }).click();
   await expect(page).toHaveURL(/\/assets\/asset-tomato$/);
   expect(await importNavigationSentinel(page)).toBe('same-document');
 
@@ -71,7 +73,7 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
 
   await expect(page.getByRole('heading', { name: 'Imports', exact: true })).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-workspace'))).toBe(false);
-  const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: '2 warnings' });
+  const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: 'Warnings' });
   await warningRow.getByRole('button', { name: /review details/i }).click();
   await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-detail-content'))).toBe(false);

@@ -117,7 +117,7 @@ Live imports:
 
 - Read tags from item detail responses.
 - Preserve tag names.
-- Preserve tag color when Homebox provides one.
+- Preserve tag color when Homebox provides one. Accepted Homebox color values are `#RRGGBB` or `RRGGBB`; imported colors must normalize to uppercase `#RRGGBB`.
 - Normalize invalid or absent colors to no color.
 
 Import planning must include reusable tag definitions and per-asset tag key assignments. Import execution must create or reuse tag definitions before creating assets, then assign imported assets to the created or reused tags.
@@ -132,11 +132,22 @@ Import job counts must include:
 
 Web and mobile clients must show assigned tags as compact chips in asset list and detail views.
 
+Tag chips must:
+
+- Show the display name.
+- Use the tag color as a small swatch when a color is present.
+- Keep the asset title, photo, kind, parent/location, checkout state, and lifecycle state visually higher priority than tags.
+- Collapse gracefully on narrow screens without causing row height jumps or text overlap.
+
 Asset create and edit flows must let users:
 
 - Select existing active tags.
 - Remove assigned tags.
 - Create a new tag inline with display name and optional color where the UI already supports editing asset metadata.
+
+Web and mobile clients must load active inventory tags through client adapter boundaries, map API tag DTOs into client domain models, and submit complete `tagIds` lists on asset create and update. Clients must not treat generated API DTOs as UI domain models.
+
+The first inline creation behavior may create the tag immediately before saving the asset draft. If asset save then fails, the created tag may remain available in the inventory; the UI must keep that state visible by refreshing the active tag list.
 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.
 
