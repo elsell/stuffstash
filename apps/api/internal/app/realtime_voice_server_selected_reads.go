@@ -37,7 +37,11 @@ func realtimeVoiceContentsQuestionTargetQuery(transcript string) string {
 	text := normalizedRealtimeVoiceVerbText(transcript)
 	for _, marker := range []string{" in ", " inside "} {
 		if index := strings.LastIndex(text, marker); index >= 0 {
-			return normalizeRealtimeVoiceSourceText(text[index+len(marker):])
+			query := normalizeRealtimeVoiceSourceText(text[index+len(marker):])
+			if followUpQuery := realtimeVoiceFollowUpAnswerForGenericTarget(query); followUpQuery != "" {
+				return followUpQuery
+			}
+			return query
 		}
 	}
 	return ""
@@ -126,6 +130,10 @@ func realtimeVoiceSpecificLookupObjectQuery(transcript string) string {
 }
 
 func realtimeVoiceFollowUpAnswerLookupQuery(query string) string {
+	return realtimeVoiceFollowUpAnswerForGenericTarget(query)
+}
+
+func realtimeVoiceFollowUpAnswerForGenericTarget(query string) string {
 	const marker = " follow-up answer "
 	if !strings.Contains(query, marker) {
 		return ""

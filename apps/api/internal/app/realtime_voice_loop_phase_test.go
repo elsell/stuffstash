@@ -298,6 +298,12 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	if query := realtimeVoiceSpecificLookupObjectQuery("Can you find it? Follow-up answer: The blue passport."); query != "blue passport" {
 		t.Fatalf("expected follow-up find query to use concrete answer, got %q", query)
 	}
+	if query := realtimeVoiceContentsQuestionTargetQuery("What's in it? Follow-up answer: Toolbox."); query != "toolbox" {
+		t.Fatalf("expected follow-up contents query to use concrete answer, got %q", query)
+	}
+	if query := realtimeVoiceContentsQuestionTargetQuery("What do I have inside that one? Follow-up answer: The garage cabinet."); query != "garage cabinet" {
+		t.Fatalf("expected follow-up contents query to use concrete container answer, got %q", query)
+	}
 	_, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("Add an Apple TV remote to the box under the TV in the living room.", 0, nil, "read-3")
 	if ok {
 		t.Fatalf("did not expect proactive read for nested create path")
