@@ -130,12 +130,12 @@ describe('buildFailedVoiceRealtimeState', () => {
   });
 
   it('keeps inventory action success visible when a voice photo retry throws', () => {
-    expect(markPhotoRetryFailure(completedVoiceState(), new Error('network failed'))).toMatchObject({
+    expect(markPhotoRetryFailure(completedVoiceState(), new Error('https://uploads.example.test/raw-object failed'))).toMatchObject({
       status: 'completed',
       progressLabel: 'Photo upload failed',
       photoAttachmentStatus: {
         status: 'failed',
-        message: 'network failed',
+        message: 'Photos could not be attached. Try again.',
         canRetry: true
       }
     });

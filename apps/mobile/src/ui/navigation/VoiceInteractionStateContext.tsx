@@ -278,7 +278,7 @@ export function markPhotoRetryFailure(state: VoiceRealtimeState | null, error: u
     progressLabel: 'Photo upload failed',
     photoAttachmentStatus: {
       status: 'failed',
-      message: readableError(error, 'Photos could not be attached.'),
+      message: 'Photos could not be attached. Try again.',
       canRetry: true
     }
   } : buildFailedVoiceRealtimeState(error);
