@@ -11,9 +11,15 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Stuff Stash',
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/elsell/stuffstash' },
+      ],
       logo: {
         src: './src/assets/stuff-stash-glyph.png',
         alt: '',
+      },
+      editLink: {
+        baseUrl: 'https://github.com/elsell/stuffstash/edit/main/docs/',
       },
       favicon: '/brand/stuff-stash-glyph.png',
       customCss: ['./src/styles/brand.css'],
