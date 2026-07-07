@@ -129,13 +129,22 @@ export function createMobileComposition(
 ): MobileComposition {
   const client = createStuffStashClient(profile, options);
   const serviceScopeId = createServiceScopeId();
-  const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '', undefined, serviceScopeId);
+  const config = toRuntimeConfig(profile);
+  const directUploadPolicy = {
+    allowLocalDevelopmentTargets: runtimeSeed.directUploadLocalDevelopmentTargetsEnabled
+  };
+  const inventorySummaries = new ApiInventorySummaryRepository(
+    client,
+    profile.tenantId ?? '',
+    undefined,
+    serviceScopeId,
+    directUploadPolicy
+  );
   const assetAuditHistory = new ApiAssetAuditHistoryRepository(client, inventorySummaries);
   const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
-  const config = toRuntimeConfig(profile);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(serviceScopeId);
 
   return {
@@ -175,7 +184,8 @@ export function createMobileComposition(
       new WebSocketRealtimeVoiceTransport({
         apiBaseUrl: config?.apiBaseUrl ?? 'http://127.0.0.1:8080',
         tokenProvider: () => validIdTokenForProfile(profile, options),
-        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
+        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
+        directUploadPolicy
       }),
       new ExpoVoiceAudioPlayer(),
       {
@@ -242,7 +252,8 @@ function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | unde
   return {
     apiBaseUrl: profile.apiBaseUrl,
     tenantId: profile.tenantId,
-    voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
+    voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
+    directUploadLocalDevelopmentTargetsEnabled: runtimeSeed.directUploadLocalDevelopmentTargetsEnabled
   };
 }
 

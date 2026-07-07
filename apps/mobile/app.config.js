@@ -48,7 +48,9 @@ module.exports = {
         apiBaseUrl: process.env.EXPO_PUBLIC_STUFF_STASH_API_BASE_URL ?? '',
         tenantId: process.env.EXPO_PUBLIC_STUFF_STASH_TENANT_ID ?? '',
         voiceDeveloperDiagnosticsEnabled:
-          process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED ?? ''
+          process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED ?? '',
+        directUploadLocalDevelopmentTargetsEnabled:
+          process.env.EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED ?? ''
       }
     }
   }

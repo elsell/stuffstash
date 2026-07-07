@@ -22,6 +22,10 @@ export function loadMobileRuntimeConfigSeed(): MobileRuntimeConfigSeed {
     voiceDeveloperDiagnosticsEnabled: optionalBooleanValue(
       'EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED',
       config.voiceDeveloperDiagnosticsEnabled
+    ),
+    directUploadLocalDevelopmentTargetsEnabled: optionalBooleanValue(
+      'EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED',
+      config.directUploadLocalDevelopmentTargetsEnabled
     )
   };
 }
@@ -33,6 +37,7 @@ function readExpoExtraConfig() {
           readonly apiBaseUrl?: string;
           readonly tenantId?: string;
           readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
+          readonly directUploadLocalDevelopmentTargetsEnabled?: string | boolean;
         };
       }
     | undefined;
@@ -40,7 +45,8 @@ function readExpoExtraConfig() {
   return {
     apiBaseUrl: extra?.stuffStash?.apiBaseUrl,
     tenantId: extra?.stuffStash?.tenantId,
-    voiceDeveloperDiagnosticsEnabled: extra?.stuffStash?.voiceDeveloperDiagnosticsEnabled
+    voiceDeveloperDiagnosticsEnabled: extra?.stuffStash?.voiceDeveloperDiagnosticsEnabled,
+    directUploadLocalDevelopmentTargetsEnabled: extra?.stuffStash?.directUploadLocalDevelopmentTargetsEnabled
   };
 }
 
@@ -48,6 +54,7 @@ function readExpoPublicEnvConfig() {
   return {
     apiBaseUrl: process.env.EXPO_PUBLIC_STUFF_STASH_API_BASE_URL,
     tenantId: process.env.EXPO_PUBLIC_STUFF_STASH_TENANT_ID,
-    voiceDeveloperDiagnosticsEnabled: process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED
+    voiceDeveloperDiagnosticsEnabled: process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED,
+    directUploadLocalDevelopmentTargetsEnabled: process.env.EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED
   };
 }

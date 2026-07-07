@@ -1295,7 +1295,13 @@ describe('ApiInventorySummaryRepository', () => {
     const client = new FakeInventoryApiClient();
     client.directUploadURL = 'http://192.168.2.52:3900/stuffstash/object-one';
     const directUploads = new FakeDirectUploadTransport();
-    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', directUploads);
+    const repository = new ApiInventorySummaryRepository(
+      client,
+      'tenant-home',
+      directUploads,
+      'test-scope',
+      { allowLocalDevelopmentTargets: true }
+    );
 
     await repository.addAssetPhoto(assetId('asset-created'), {
       fileName: 'created.jpg',
@@ -1337,7 +1343,13 @@ describe('ApiInventorySummaryRepository', () => {
     const client = new FakeInventoryApiClient();
     client.directUploadURL = 'stuffstash-local://direct-uploads/upload-one';
     const directUploads = new FakeDirectUploadTransport(false);
-    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', directUploads);
+    const repository = new ApiInventorySummaryRepository(
+      client,
+      'tenant-home',
+      directUploads,
+      'test-scope',
+      { allowLocalDevelopmentTargets: true }
+    );
 
     await repository.addAssetPhoto(assetId('asset-created'), {
       fileName: 'created.jpg',
@@ -1354,6 +1366,25 @@ describe('ApiInventorySummaryRepository', () => {
       assetId: 'asset-created',
       fileName: 'created.jpg'
     });
+  });
+
+  it('rejects local-only direct upload targets when local development targets are not enabled', async () => {
+    const client = new FakeInventoryApiClient();
+    client.directUploadURL = 'stuffstash-local://direct-uploads/upload-one';
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', new FakeDirectUploadTransport(false));
+
+    await expect(
+      repository.addAssetPhoto(assetId('asset-created'), {
+        fileName: 'created.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'ZmFrZQ==',
+        uri: 'file:///created.jpg',
+        sizeBytes: 4
+      })
+    ).rejects.toThrow('Unsupported direct attachment upload target.');
+
+    expect(client.createdAttachmentInput).toBeUndefined();
+    expect(client.completedDirectUploadInput).toBeUndefined();
   });
 
   it('rejects unexpected direct upload target schemes instead of silently falling back', async () => {

@@ -29,6 +29,13 @@ import {
   tenantId
 } from '../../domain/inventories/InventorySummary';
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
+import {
+  directUploadMethod,
+  isDirectUploadHTTPTransportAllowed,
+  isDirectUploadTargetSupported,
+  isLocalDirectUploadURL,
+  type DirectUploadTargetPolicy
+} from '../uploads/DirectUploadPolicy';
 
 type InventoryApiClient = Pick<
   StuffStashClient,
@@ -69,13 +76,17 @@ type DirectUploadTransportInput = {
 
 export class ApiInventorySummaryRepository implements InventorySummaryRepository, InventoryMapAssetRepository {
   private selectedInventoryId: InventoryId | undefined;
+  private readonly directUploadTransport: DirectUploadTransport;
 
   constructor(
     private readonly client: InventoryApiClient,
     private readonly configuredTenantId: string,
-    private readonly directUploadTransport: DirectUploadTransport = new ExpoDirectUploadTransport(),
-    private readonly sessionScopeId = 'mobile-composition'
-  ) {}
+    directUploadTransport?: DirectUploadTransport,
+    private readonly sessionScopeId = 'mobile-composition',
+    private readonly directUploadPolicy: DirectUploadTargetPolicy = {}
+  ) {
+    this.directUploadTransport = directUploadTransport ?? new ExpoDirectUploadTransport(directUploadPolicy);
+  }
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     const tenantsPage = await this.client.listMyTenants(100);
@@ -192,7 +203,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         contentType: input.contentType,
         sizeBytes: input.sizeBytes
       });
-      if (!isDirectUploadTargetSupported(directUpload.url)) {
+      if (!isDirectUploadTargetSupported(directUpload.url, this.directUploadPolicy)) {
         throw new Error('Unsupported direct attachment upload target.');
       }
       const uploaded = await this.directUploadTransport.upload({
@@ -731,11 +742,13 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 }
 
 class ExpoDirectUploadTransport implements DirectUploadTransport {
+  constructor(private readonly directUploadPolicy: DirectUploadTargetPolicy = {}) {}
+
   async upload(input: DirectUploadTransportInput): Promise<boolean> {
-    if (isLocalDirectUploadURL(input.upload.url)) {
+    if (this.directUploadPolicy.allowLocalDevelopmentTargets === true && isLocalDirectUploadURL(input.upload.url)) {
       return false;
     }
-    if (!isDirectUploadHTTPTransportAllowed(input.upload.url)) {
+    if (!isDirectUploadHTTPTransportAllowed(input.upload.url, this.directUploadPolicy)) {
       throw new Error('Direct attachment upload target must use HTTPS or a private local development host.');
     }
     const FileSystem = await import('expo-file-system/legacy');
@@ -758,63 +771,6 @@ class ExpoDirectUploadTransport implements DirectUploadTransport {
       throw new Error('Direct attachment upload failed.');
     }
     return true;
-  }
-}
-
-function isDirectUploadTargetSupported(value: string): boolean {
-  return isDirectUploadHTTPTransportAllowed(value) || isLocalDirectUploadURL(value);
-}
-
-function isDirectUploadHTTPTransportAllowed(value: string): boolean {
-  const parsed = parseHTTPURL(value);
-  if (!parsed) {
-    return false;
-  }
-  if (parsed.protocol === 'https:') {
-    return true;
-  }
-  return parsed.protocol === 'http:' && isLocalDevelopmentHost(parsed.hostname);
-}
-
-function parseHTTPURL(value: string): URL | undefined {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function isLocalDevelopmentHost(hostname: string): boolean {
-  const value = hostname.toLowerCase();
-  if (value === 'localhost' || value.endsWith('.local')) {
-    return true;
-  }
-  if (value === '127.0.0.1' || value === '::1' || value === '[::1]') {
-    return true;
-  }
-  const octets = value.split('.').map((part) => Number.parseInt(part, 10));
-  if (octets.length !== 4 || octets.some((part) => Number.isNaN(part) || part < 0 || part > 255)) {
-    return false;
-  }
-  const [first, second] = octets;
-  return first === 10
-    || (first === 172 && second >= 16 && second <= 31)
-    || (first === 192 && second === 168);
-}
-
-function isLocalDirectUploadURL(value: string): boolean {
-  return value.startsWith('stuffstash-local://direct-uploads/');
-}
-
-function directUploadMethod(value: string): 'POST' | 'PUT' | 'PATCH' {
-  switch (value.toUpperCase()) {
-    case 'POST':
-      return 'POST';
-    case 'PATCH':
-      return 'PATCH';
-    default:
-      return 'PUT';
   }
 }
 

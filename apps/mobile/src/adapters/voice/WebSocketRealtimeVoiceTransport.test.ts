@@ -817,6 +817,134 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     ]);
   });
 
+  it('rejects unsupported direct upload methods from executed action plan events', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async () => {});
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'action.plan.executed',
+      seq: 2,
+      sessionId: 'session-1',
+      planId: 'plan-1',
+      status: 'executed',
+      message: 'The approved change was applied.',
+      attachmentUploadIntents: [{
+        commandId: 'cmd-water-bottle',
+        photoIndex: 0,
+        assetId: 'asset-water-bottle',
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 123,
+        directUpload: {
+          uploadId: 'upload-one',
+          attachmentId: 'attachment-one',
+          method: 'DELETE',
+          url: 'https://uploads.example.test/upload-one',
+          headers: {},
+          formFields: {},
+          expiresAt: '2026-07-01T12:00:00Z'
+        }
+      }]
+    });
+
+    await expect(run).rejects.toThrow('Voice event field method has unsupported direct upload method.');
+  });
+
+  it('accepts local direct upload sentinels only when local targets are enabled', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      directUploadPolicy: { allowLocalDevelopmentTargets: true },
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'action.plan.executed',
+      seq: 2,
+      sessionId: 'session-1',
+      planId: 'plan-1',
+      status: 'executed',
+      message: 'The approved change was applied.',
+      attachmentUploadIntents: [{
+        commandId: 'cmd-water-bottle',
+        photoIndex: 0,
+        assetId: 'asset-water-bottle',
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 123,
+        directUpload: {
+          uploadId: 'upload-one',
+          attachmentId: 'attachment-one',
+          method: 'PUT',
+          url: 'stuffstash-local://direct-uploads/upload-one',
+          headers: {},
+          formFields: {},
+          expiresAt: '2026-07-01T12:00:00Z'
+        }
+      }]
+    });
+
+    await expect(run).resolves.toBeUndefined();
+    expect(events).toEqual([
+      { type: 'session.started', seq: 1, sessionId: 'session-1' },
+      {
+        type: 'action.plan.executed',
+        seq: 2,
+        sessionId: 'session-1',
+        planId: 'plan-1',
+        status: 'executed',
+        message: 'The approved change was applied.',
+        attachmentUploadIntents: [{
+          commandId: 'cmd-water-bottle',
+          photoIndex: 0,
+          assetId: 'asset-water-bottle',
+          fileName: 'water-bottle.jpg',
+          contentType: 'image/jpeg',
+          sizeBytes: 123,
+          directUpload: {
+            uploadId: 'upload-one',
+            attachmentId: 'attachment-one',
+            method: 'PUT',
+            url: 'stuffstash-local://direct-uploads/upload-one',
+            headers: {},
+            formFields: {},
+            expiresAt: '2026-07-01T12:00:00Z'
+          }
+        }]
+      }
+    ]);
+  });
+
   it('includes safe close metadata when the socket closes before a terminal event', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({

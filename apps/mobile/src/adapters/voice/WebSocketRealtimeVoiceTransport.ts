@@ -6,6 +6,11 @@ import type {
   VoiceRealtimeEvent
 } from '../../application/voice/RealtimeVoiceSession';
 import { VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
+import {
+  directUploadMethod,
+  isDirectUploadTargetSupported,
+  type DirectUploadTargetPolicy
+} from '../uploads/DirectUploadPolicy';
 
 type VoiceWebSocket = {
   onopen: (() => void) | null;
@@ -31,6 +36,7 @@ export type WebSocketRealtimeVoiceTransportOptions = {
   readonly apiBaseUrl: string;
   readonly tokenProvider: () => string | Promise<string>;
   readonly diagnosticsEnabled?: boolean;
+  readonly directUploadPolicy?: DirectUploadTargetPolicy;
   readonly webSocketFactory?: VoiceWebSocketFactory;
 };
 
@@ -38,6 +44,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
   private readonly apiBaseUrl: string;
   private readonly tokenProvider: () => string | Promise<string>;
   private readonly diagnosticsEnabled: boolean;
+  private readonly directUploadPolicy: DirectUploadTargetPolicy;
   private readonly webSocketFactory: VoiceWebSocketFactory;
   private activeReviewSession: ActiveRealtimeReviewSession | null = null;
   private activeFollowUpSession: ActiveRealtimeFollowUpSession | null = null;
@@ -46,6 +53,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     this.apiBaseUrl = options.apiBaseUrl.replace(/\/+$/, '');
     this.tokenProvider = options.tokenProvider;
     this.diagnosticsEnabled = options.diagnosticsEnabled ?? false;
+    this.directUploadPolicy = options.directUploadPolicy ?? {};
     this.webSocketFactory = options.webSocketFactory ?? createReactNativeWebSocket;
   }
 
@@ -202,7 +210,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
               return;
             }
           }
-          const message = parseServerMessage(event.data);
+          const message = parseServerMessage(event.data, thisTransport.directUploadPolicy);
           validateServerMessage(message, sessionId, lastServerSeq);
           lastServerSeq = message.seq;
           if (message.type === 'session.started') {
@@ -334,7 +342,7 @@ function createReactNativeWebSocket(url: string, headers: Record<string, string>
   return new WebSocketConstructor(url, [], { headers });
 }
 
-function parseServerMessage(raw: string): VoiceRealtimeEvent {
+function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetPolicy): VoiceRealtimeEvent {
   const message = JSON.parse(raw) as Record<string, unknown>;
   const metadata = eventMetadata(message);
   switch (message.type) {
@@ -393,7 +401,7 @@ function parseServerMessage(raw: string): VoiceRealtimeEvent {
     case 'action.plan.executed':
     case 'action.plan.failed': {
       const commandResults = actionPlanCommandResultsField(message);
-      const attachmentUploadIntents = actionPlanAttachmentUploadIntentsField(message);
+      const attachmentUploadIntents = actionPlanAttachmentUploadIntentsField(message, directUploadPolicy);
       return {
         ...metadata,
         type: message.type,
@@ -561,7 +569,7 @@ function actionPlanCommandResultsField(message: Record<string, unknown>) {
   });
 }
 
-function actionPlanAttachmentUploadIntentsField(message: Record<string, unknown>) {
+function actionPlanAttachmentUploadIntentsField(message: Record<string, unknown>, directUploadPolicy: DirectUploadTargetPolicy) {
   const raw = message.attachmentUploadIntents;
   if (raw === undefined) {
     return undefined;
@@ -583,7 +591,7 @@ function actionPlanAttachmentUploadIntentsField(message: Record<string, unknown>
         uploadId: stringField(directUpload, 'uploadId'),
         attachmentId: stringField(directUpload, 'attachmentId'),
         method: directUploadMethodField(directUpload, 'method'),
-        url: directUploadURLField(directUpload, 'url'),
+        url: directUploadURLField(directUpload, 'url', directUploadPolicy),
         headers: stringRecordField(directUpload, 'headers'),
         formFields: stringRecordField(directUpload, 'formFields'),
         expiresAt: stringField(directUpload, 'expiresAt')
@@ -601,60 +609,19 @@ function photoContentTypeField(message: Record<string, unknown>, field: string):
 }
 
 function directUploadMethodField(message: Record<string, unknown>, field: string): 'POST' | 'PUT' | 'PATCH' {
-  const value = stringField(message, field).toUpperCase();
-  if (value === 'POST' || value === 'PUT' || value === 'PATCH') {
-    return value;
+  try {
+    return directUploadMethod(stringField(message, field));
+  } catch {
+    throw new Error(`Voice event field ${field} has unsupported direct upload method.`);
   }
-  throw new Error(`Voice event field ${field} has unsupported direct upload method.`);
 }
 
-function directUploadURLField(message: Record<string, unknown>, field: string): string {
+function directUploadURLField(message: Record<string, unknown>, field: string, directUploadPolicy: DirectUploadTargetPolicy): string {
   const value = stringField(message, field);
-  if (isSupportedDirectUploadURL(value)) {
+  if (isDirectUploadTargetSupported(value, directUploadPolicy)) {
     return value;
   }
   throw new Error(`Voice event field ${field} has unsupported direct upload URL.`);
-}
-
-function isSupportedDirectUploadURL(value: string): boolean {
-  if (value.startsWith('stuffstash-local://direct-uploads/')) {
-    return true;
-  }
-  const parsed = parseHTTPURL(value);
-  if (!parsed) {
-    return false;
-  }
-  if (parsed.protocol === 'https:') {
-    return true;
-  }
-  return parsed.protocol === 'http:' && isLocalDevelopmentHost(parsed.hostname);
-}
-
-function parseHTTPURL(value: string): URL | undefined {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function isLocalDevelopmentHost(hostname: string): boolean {
-  const value = hostname.toLowerCase();
-  if (value === 'localhost' || value.endsWith('.local')) {
-    return true;
-  }
-  if (value === '127.0.0.1' || value === '::1' || value === '[::1]') {
-    return true;
-  }
-  const octets = value.split('.').map((part) => Number.parseInt(part, 10));
-  if (octets.length !== 4 || octets.some((part) => Number.isNaN(part) || part < 0 || part > 255)) {
-    return false;
-  }
-  const [first, second] = octets;
-  return first === 10
-    || (first === 172 && second >= 16 && second <= 31)
-    || (first === 192 && second === 168);
 }
 
 function stringRecordField(message: Record<string, unknown>, field: string): Readonly<Record<string, string>> {
