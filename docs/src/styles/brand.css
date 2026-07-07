@@ -81,7 +81,7 @@ h1 {
   color: var(--sl-color-text-accent);
 }
 
-a:not(.sl-link-button):hover {
+a:not(.sl-link-button):not(.link-button):not([data-slot='button']):hover {
   color: var(--ss-charcoal-deep);
 }
 

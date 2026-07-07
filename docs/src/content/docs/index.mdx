@@ -1,9 +1,9 @@
 ---
 title: Stuff Stash
-description: Find your stuff without turning inventory into a chore.
+description: Low friction inventory management for Homeowners
 template: splash
 hero:
-  tagline: Find the thing you put in a storage bin last year.
+  tagline: Low friction inventory management by homeowners, for Homeowners
   actions:
     - text: See it in action (coming soon)
       link: product/
@@ -11,11 +11,17 @@ hero:
       link: self-hosting/
 ---
 
-Stuff Stash is a self-hosted home inventory app for people who do not want to
-maintain a database every time they clean a shelf.
+import { ContainerSection } from 'lucode-starlight/components';
 
-Open the app. Start voice mode. Ask where the thing is. When you move something,
-review the plan and save the update before you forget.
+<ContainerSection>
+
+I built Stuff Stash, a self-hosted home inventory solution with a native
+phone app, because I wanted an inventory system but I didn't have time to maintain it.
+
+Stuff Stash can be maintained by clicking, tapping, and typing, but I use
+the LLM-powered voice mode because I value my time.
+
+Stuff Stash supports cloud and local models for text to speech, speech to text, and LLMs.
 
 <div class="ss-card-grid">
   <a class="ss-card" href="product/">
@@ -35,25 +41,41 @@ review the plan and save the update before you forget.
   </a>
 </div>
 
+</ContainerSection>
+
+<ContainerSection>
+
 ## Why It Exists
 
-Home inventory fails when upkeep is slower than real life.
+My previous inventory solution was invaluable when I needed to find something 
+I had in storage. 
 
-Stuff Stash is built to make the small updates easy: add the new bottle of
-medicine, snap a photo of a receipt, move the drill from one bin to another, and
-ask where something ended up months later.
+But when I needed to move things around, add new items, or lend something to a friend,
+it fell short. 
 
-## What Matters
+It wasn't for lack of _functionality_, but rather the friction was too high. 
 
-- **Low-friction upkeep:** voice and text workflows are first-class, not a side
-  feature.
+</ContainerSection>
+
+<ContainerSection>
+
+## Core Tenants
+
+- **Low-friction upkeep:** inventory lifecycle must be manageable with native voice
+  control
 - **Local control:** the app is designed for self-hosting with separate API and
   web deployables.
 - **Native SSO:** authentication uses OIDC from the beginning.
 - **Scoped sharing:** tenants and inventories protect household boundaries.
 - **Portable data:** import and export are core trust promises.
 
+</ContainerSection>
+
+<ContainerSection>
+
 ## Start Here
 
 If you are evaluating Stuff Stash, start with [Run Stuff Stash](self-hosting/).
 If you want the product shape first, start with [What It Does](product/).
+
+</ContainerSection>

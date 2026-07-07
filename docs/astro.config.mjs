@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import lucode from 'lucode-starlight';
 
 const site = process.env.STUFF_STASH_DOCS_SITE ?? 'https://elsell.github.io';
 const base = process.env.STUFF_STASH_DOCS_BASE ?? '/stuffstash/';
@@ -16,6 +17,7 @@ export default defineConfig({
       },
       favicon: '/brand/stuff-stash-glyph.png',
       customCss: ['./src/styles/brand.css'],
+      plugins: [lucode()],
       sidebar: [
         {
           label: 'Evaluate',

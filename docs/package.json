@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/starlight": "0.39.3",
     "@fontsource/geist-sans": "5.2.5",
-    "astro": "6.4.4"
+    "astro": "6.4.4",
+    "lucode-starlight": "0.1.6"
   }
 }
