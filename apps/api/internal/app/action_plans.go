@@ -288,7 +288,10 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
-		return ActionPlanExecutionResult{Record: executed}, nil
+		return ActionPlanExecutionResult{
+			Record:         executed,
+			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "archive")},
+		}, nil
 	case actionplan.CommandKindRestoreAsset:
 		restoreInput, err := actionPlanLifecycleAssetInput(input, command)
 		if err != nil {
@@ -317,7 +320,10 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 			return ActionPlanExecutionResult{}, ErrNotFound
 		}
 		a.assetService.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
-		return ActionPlanExecutionResult{Record: executed}, nil
+		return ActionPlanExecutionResult{
+			Record:         executed,
+			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "restore")},
+		}, nil
 	case actionplan.CommandKindCheckoutAsset:
 		checkoutInput, err := actionPlanCheckoutAssetInput(input, command)
 		if err != nil {
