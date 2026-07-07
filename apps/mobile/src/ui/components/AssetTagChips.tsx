@@ -12,7 +12,7 @@ type AssetTagChipsProps = {
 export function AssetTagChips({ tags, compact = false, overflowLimit }: AssetTagChipsProps) {
   const presentation = assetTagChipPresentation(tags, overflowLimit);
   const layout = assetTagChipLayoutPresentation(compact);
-  if (presentation.visibleTags.length === 0) {
+  if (!presentation.shouldRender) {
     return null;
   }
 

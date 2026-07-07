@@ -5,21 +5,40 @@ describe('assetTagChipPresentation', () => {
   it('shows every tag in full detail contexts', () => {
     expect(assetTagChipPresentation([tag('tools'), tag('camping'), tag('kids')])).toEqual({
       visibleTags: [tag('tools'), tag('camping'), tag('kids')],
-      hiddenCount: 0
+      hiddenCount: 0,
+      shouldRender: true
     });
   });
 
   it('keeps compact density independent from overflow summarization', () => {
     expect(assetTagChipPresentation([tag('tools'), tag('camping'), tag('kids')])).toEqual({
       visibleTags: [tag('tools'), tag('camping'), tag('kids')],
-      hiddenCount: 0
+      hiddenCount: 0,
+      shouldRender: true
     });
   });
 
   it('caps card contexts and reports the overflow count when requested', () => {
     expect(assetTagChipPresentation([tag('tools'), tag('camping'), tag('kids'), tag('garage')], 2)).toEqual({
       visibleTags: [tag('tools'), tag('camping')],
-      hiddenCount: 2
+      hiddenCount: 2,
+      shouldRender: true
+    });
+  });
+
+  it('can summarize every tag into overflow when no visible chips fit', () => {
+    expect(assetTagChipPresentation([tag('tools'), tag('camping')], 0)).toEqual({
+      visibleTags: [],
+      hiddenCount: 2,
+      shouldRender: true
+    });
+  });
+
+  it('does not render an empty tag row when no tags are assigned', () => {
+    expect(assetTagChipPresentation([], 0)).toEqual({
+      visibleTags: [],
+      hiddenCount: 0,
+      shouldRender: false
     });
   });
 

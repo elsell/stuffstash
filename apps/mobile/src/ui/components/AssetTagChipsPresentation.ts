@@ -3,6 +3,7 @@ import type { AssetTagViewModel } from '../../application/assets/AssetViewModels
 export type AssetTagChipPresentation = {
   readonly visibleTags: readonly AssetTagViewModel[];
   readonly hiddenCount: number;
+  readonly shouldRender: boolean;
 };
 
 export type AssetTagChipLayoutPresentation = {
@@ -17,9 +18,11 @@ export function assetTagChipPresentation(
   const allTags = tags ?? [];
   const visibleLimit = overflowLimit ?? allTags.length;
   const visibleTags = allTags.slice(0, visibleLimit);
+  const hiddenCount = Math.max(0, allTags.length - visibleTags.length);
   return {
     visibleTags,
-    hiddenCount: Math.max(0, allTags.length - visibleTags.length)
+    hiddenCount,
+    shouldRender: visibleTags.length > 0 || hiddenCount > 0
   };
 }
 
