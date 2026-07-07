@@ -64,6 +64,17 @@ describe('InventoryImportWorkspace import history and progress', () => {
     expect(tabTriggerRule).toContain('min-width: max-content');
   });
 
+  it('keeps import history filters compact on narrow screens', () => {
+    const filterRule = importJobHistorySource.match(/\.history-status-strip\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+    const mobileRule =
+      importJobHistorySource.match(/@media \(max-width: 860px\)\s*{[\s\S]*?\.history-status-strip\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+
+    expect(filterRule).toContain('display: flex');
+    expect(filterRule).toContain('flex-wrap: wrap');
+    expect(mobileRule).toContain('flex-wrap: nowrap');
+    expect(mobileRule).toContain('overflow-x: auto');
+  });
+
   it('refreshes workspace data when a running import job finishes', async () => {
     const repository = new CompletingImportJobRepository(structuredClone(seed));
     let refreshes = 0;
@@ -418,7 +429,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Details').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Homebox import');
+      expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
       expect(document.body.textContent).toContain('homebox.local:7744');
     });
 
@@ -647,7 +658,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     currentWorkRows()[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Homebox import');
+      expect(document.body.querySelector('h1')?.textContent).toBe('Preview Homebox import');
       expect(document.body.textContent).toContain('Continue import');
     });
   });
@@ -1283,7 +1294,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(repository.detailCalls).toBe(1);
-      expect(document.body.textContent).toContain('Homebox import');
+      expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
       expect(document.body.textContent).toContain('Imported records');
       expect(document.body.textContent).toContain('Source asset: homebox-detail-asset');
       expect(activeDetailTabText()).toContain('Records');
@@ -1306,7 +1317,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(selectedRoutes).toContainEqual({ jobId: 'job-terminal', tab: null });
-      expect(document.body.textContent).toContain('Homebox import');
+      expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
     });
 
     buttonContaining('Records').click();
@@ -1371,7 +1382,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     buttonContaining('Details').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Homebox import');
+      expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
       expect(document.body.textContent).toContain('Completed with warnings.');
       expect(document.body.textContent).toContain('Import details could not be refreshed.');
       expect(document.body.textContent).not.toContain('provider-stacktrace');
@@ -1418,7 +1429,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
     currentWorkRows()[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Homebox import');
+      expect(document.body.querySelector('h1')?.textContent).toBe('Homebox import');
       expect(document.body.textContent).toContain('Continue import');
     });
 

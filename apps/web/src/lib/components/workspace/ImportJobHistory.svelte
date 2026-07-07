@@ -667,9 +667,9 @@
 
   .history-status-strip {
     align-items: center;
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.45rem;
-    grid-template-columns: repeat(auto-fit, minmax(8.5rem, max-content));
     justify-content: start;
     margin: 0;
   }
@@ -1096,13 +1096,22 @@
     }
 
     .history-status-strip {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      justify-content: stretch;
+      flex-wrap: nowrap;
+      margin-inline: -0.15rem;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      padding: 0 0.15rem 0.2rem;
+      scrollbar-width: none;
+    }
+
+    .history-status-strip::-webkit-scrollbar {
+      display: none;
     }
 
     :global(.status-chip) {
+      flex: 0 0 auto;
       justify-content: flex-start;
+      min-width: 8.25rem;
       min-height: 2.2rem;
       padding: 0.42rem 0.55rem;
     }
