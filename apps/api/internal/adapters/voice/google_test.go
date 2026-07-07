@@ -526,6 +526,31 @@ func TestGoogleGeminiToolSchemaSupportsObjectParameters(t *testing.T) {
 	}
 }
 
+func TestGoogleGeminiNativeToolsExcludeProviderCallableWriteTools(t *testing.T) {
+	t.Parallel()
+
+	tools := geminiTools([]ports.AgentToolDescriptor{
+		{
+			Name:             "search_authorized_assets",
+			Description:      "Search visible assets.",
+			ReadOnly:         true,
+			ProviderCallable: true,
+		},
+		{
+			Name:             "propose_action_plan",
+			Description:      "Prepare a user-reviewable action plan.",
+			ProviderCallable: true,
+			RequiresApproval: true,
+		},
+	})
+	if len(tools) != 1 || len(tools[0].FunctionDeclarations) != 1 {
+		t.Fatalf("expected only read-only native tool declaration, got %+v", tools)
+	}
+	if tools[0].FunctionDeclarations[0].Name != "search_authorized_assets" {
+		t.Fatalf("expected write tool to be excluded from Gemini native functions, got %+v", tools[0].FunctionDeclarations)
+	}
+}
+
 func TestGoogleGeminiLanguageInferenceProbeReturnsStructuredFinalResponse(t *testing.T) {
 	t.Parallel()
 

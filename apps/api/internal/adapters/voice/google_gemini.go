@@ -627,7 +627,7 @@ func allowedToolNames(tools []ports.AgentToolDescriptor) map[string]bool {
 }
 
 func googleGeminiProviderCallableTool(tool ports.AgentToolDescriptor) bool {
-	return tool.ProviderCallable || tool.ReadOnly
+	return tool.ReadOnly
 }
 
 func isAllowedStructuredResponseKind(kind ports.StructuredAgentResponseKind) bool {
