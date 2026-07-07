@@ -1,9 +1,11 @@
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
 
 export type EditDraft = {
   readonly title: string;
   readonly description: string;
   readonly tagIds?: readonly string[];
+  readonly newTags?: readonly CreateInventoryAssetTagInput[];
 };
 
 export type AssetEditContext = {
@@ -16,6 +18,7 @@ export type NormalizedEditDraft = {
   readonly title: string;
   readonly description: string;
   readonly tagIds?: readonly string[];
+  readonly newTags?: readonly CreateInventoryAssetTagInput[];
 };
 
 export function canSaveEditAsset(
@@ -36,7 +39,8 @@ export function normalizedEditDraft(draft: EditDraft): NormalizedEditDraft {
   return {
     title: draft.title.trim(),
     description: draft.description.trim(),
-    tagIds: normalizeTagIds(draft.tagIds)
+    tagIds: normalizeTagIds(draft.tagIds),
+    newTags: normalizeNewTags(draft.newTags)
   };
 }
 
@@ -54,7 +58,8 @@ function editDraftState(
   const normalized = normalizedEditDraft(draft);
   const isDirty = normalized.title !== asset.title
     || normalized.description !== asset.description
-    || !sameTagAssignments(normalized.tagIds ?? [], asset.tags?.map((tag) => tag.id) ?? []);
+    || !sameTagAssignments(normalized.tagIds ?? [], asset.tags?.map((tag) => tag.id) ?? [])
+    || (normalized.newTags?.length ?? 0) > 0;
 
   return {
     canSave: normalized.title.length > 0 && isDirty,
@@ -64,6 +69,16 @@ function editDraftState(
 
 function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] {
   return (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
+}
+
+function normalizeNewTags(newTags: readonly CreateInventoryAssetTagInput[] | undefined): readonly CreateInventoryAssetTagInput[] {
+  return (newTags ?? [])
+    .map((tag) => {
+      const displayName = tag.displayName.trim();
+      const color = tag.color?.trim();
+      return color ? { displayName, color } : { displayName };
+    })
+    .filter((tag) => tag.displayName.length > 0);
 }
 
 function sameTagAssignments(left: readonly string[], right: readonly string[]): boolean {

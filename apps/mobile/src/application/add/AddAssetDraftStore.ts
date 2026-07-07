@@ -1,5 +1,6 @@
 import type { SelectedAssetPhoto } from './PhotoSelectionQuery';
 import type { AssetKind } from '../../domain/assets/AssetSummary';
+import type { CreateInventoryAssetTagInput } from '../home/InventorySummaryRepository';
 
 export type AddAssetDraftParent = {
   readonly id: string;
@@ -18,6 +19,7 @@ export type AddAssetDraft = {
   readonly parentQuery: string;
   readonly selectedPhotos: readonly SelectedAssetPhoto[];
   readonly selectedTagIds?: readonly string[];
+  readonly newTags?: readonly CreateInventoryAssetTagInput[];
   readonly showDetails: boolean;
   readonly lastParent?: AddAssetDraftParent;
 };

@@ -916,19 +916,21 @@ describe('asset edit presentation helpers', () => {
     expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the shelf.', tagIds: ['tag-kitchen'] })).toBe(true);
     expect(canSaveEditAsset(asset, { title: 'Big water bottle', description: 'On the desk.', tagIds: ['tag-kitchen'] })).toBe(true);
     expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the desk.', tagIds: [] })).toBe(true);
+    expect(canSaveEditAsset(asset, { title: 'Water bottle', description: 'On the desk.', tagIds: ['tag-kitchen'], newTags: [{ displayName: ' Travel ' }] })).toBe(true);
   });
 
   it('uses the same normalized edit state for discard warnings and save payloads', () => {
     const asset = { title: 'Water bottle', description: 'On the desk.', tags: [{ id: 'tag-kitchen', label: 'Kitchen' }] };
     const whitespaceOnly = { title: '  Water bottle  ', description: '  On the desk.  ', tagIds: ['tag-kitchen'] };
-    const changed = { title: '  Water bottle  ', description: '  On the shelf.  ', tagIds: [' tag-camping ', ''] };
+    const changed = { title: '  Water bottle  ', description: '  On the shelf.  ', tagIds: [' tag-camping ', ''], newTags: [{ displayName: ' Travel ', color: ' #2f80ed ' }, { displayName: ' ' }] };
 
     expect(hasDirtyEditAssetDraft(asset, whitespaceOnly)).toBe(false);
     expect(hasDirtyEditAssetDraft(asset, changed)).toBe(true);
     expect(normalizedEditDraft(changed)).toEqual({
       title: 'Water bottle',
       description: 'On the shelf.',
-      tagIds: ['tag-camping']
+      tagIds: ['tag-camping'],
+      newTags: [{ displayName: 'Travel', color: '#2f80ed' }]
     });
   });
 

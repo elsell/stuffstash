@@ -36,6 +36,7 @@ import {
   HomeDashboardQuery,
   HomeDashboardViewModel
 } from '../../application/home/HomeDashboardQuery';
+import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
@@ -79,6 +80,7 @@ const emptyDraft: AddAssetDraft = {
   parentQuery: '',
   selectedPhotos: [],
   selectedTagIds: [],
+  newTags: [],
   showDetails: false,
   lastParent: undefined
 };
@@ -108,6 +110,7 @@ export function AddAssetScreen({
     emptyDraft.selectedPhotos
   );
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(emptyDraft.selectedTagIds ?? []);
+  const [newTags, setNewTags] = useState<readonly CreateInventoryAssetTagInput[]>(emptyDraft.newTags ?? []);
   const [showDetails, setShowDetails] = useState(emptyDraft.showDetails);
   const [lastParent, setLastParent] = useState<ParentSelection | undefined>(emptyDraft.lastParent);
   const [isParentMenuOpen, setIsParentMenuOpen] = useState(false);
@@ -184,6 +187,7 @@ export function AddAssetScreen({
       parentQuery,
       selectedPhotos,
       selectedTagIds,
+      newTags,
       showDetails,
       lastParent
     });
@@ -196,6 +200,7 @@ export function AddAssetScreen({
     parentQuery,
     selectedPhotos,
     selectedTagIds,
+    newTags,
     showDetails,
     title
   ]);
@@ -252,6 +257,7 @@ export function AddAssetScreen({
         description,
         parentAssetId: resolvedParentAssetId,
         tagIds: selectedTagIds,
+        newTags,
         photos: selectedPhotos.map((photo) => ({
           fileName: photo.fileName,
           contentType: photo.contentType,
@@ -272,6 +278,7 @@ export function AddAssetScreen({
       setParentQuery(nextParent?.title ?? '');
       setSelectedPhotos([]);
       setSelectedTagIds([]);
+      setNewTags([]);
       setShowDetails(false);
       setLastParent(nextParent);
       if (draftContext) {
@@ -279,6 +286,7 @@ export function AddAssetScreen({
           ...emptyDraft,
           parentAssetId: nextParent?.id,
           parentQuery: nextParent?.title ?? '',
+          newTags: [],
           lastParent: nextParent
         });
       }
@@ -295,7 +303,17 @@ export function AddAssetScreen({
     } catch (error) {
       const message = readableError(error, 'Could not save asset.');
       setSaveState({ status: 'idle' });
+      await refreshDashboardAfterTagCreation();
       feedback.showNotice({ tone: 'error', title: 'Could not save asset', message });
+    }
+  }
+
+  async function refreshDashboardAfterTagCreation(): Promise<void> {
+    try {
+      const dashboard = await dashboardQuery.execute();
+      setLoadState({ status: 'ready', dashboard });
+    } catch {
+      // The original save error is the user-facing failure.
     }
   }
 
@@ -430,6 +448,7 @@ export function AddAssetScreen({
     setParentQuery(draft.parentQuery);
     setSelectedPhotos(draft.selectedPhotos);
     setSelectedTagIds(draft.selectedTagIds ?? []);
+    setNewTags(draft.newTags ?? []);
     setShowDetails(draft.showDetails);
     setLastParent(draft.lastParent);
   }
@@ -558,6 +577,8 @@ export function AddAssetScreen({
                       tags={loadState.dashboard.assetTags}
                       selectedTagIds={selectedTagIds}
                       onChange={setSelectedTagIds}
+                      newTags={newTags}
+                      onNewTagsChange={setNewTags}
                     />
                     <Pressable
                       accessibilityRole="button"
@@ -963,17 +984,20 @@ function ParentPicker({
 }
 
 function AssetTagPicker({
+  newTags,
+  onNewTagsChange,
   tags,
   selectedTagIds,
   onChange
 }: {
+  readonly newTags: readonly CreateInventoryAssetTagInput[];
+  readonly onNewTagsChange: (tags: readonly CreateInventoryAssetTagInput[]) => void;
   readonly tags: readonly AssetTagSummary[];
   readonly selectedTagIds: readonly string[];
   readonly onChange: (tagIds: readonly string[]) => void;
 }) {
-  if (tags.length === 0) {
-    return null;
-  }
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('');
 
   const selected = new Set(selectedTagIds);
 
@@ -985,10 +1009,38 @@ function AssetTagPicker({
     onChange([...selectedTagIds, tagId]);
   }
 
+  function addNewTag(): void {
+    const displayName = newTagName.trim();
+    if (displayName.length === 0) {
+      return;
+    }
+    const color = newTagColor.trim();
+    onNewTagsChange([
+      ...newTags,
+      color.length > 0 ? { displayName, color } : { displayName }
+    ]);
+    setNewTagName('');
+    setNewTagColor('');
+  }
+
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.tagPickerTitle}>Tags</Text>
       <View style={styles.tagOptions}>
+        {newTags.map((tag, index) => (
+          <Pressable
+            accessibilityRole="button"
+            key={`${tag.displayName}-${index.toString()}`}
+            onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+            style={[styles.tagOption, styles.tagOptionSelected]}
+          >
+            {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
+            <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
+              {tag.displayName}
+            </Text>
+            <X color={colors.action} size={14} strokeWidth={2.4} />
+          </Pressable>
+        ))}
         {tags.map((tag) => {
           const isSelected = selected.has(tag.id);
           return (
@@ -1007,6 +1059,33 @@ function AssetTagPicker({
             </Pressable>
           );
         })}
+      </View>
+      <View style={styles.newTagRow}>
+        <TextInput
+          accessibilityLabel="New tag name"
+          onChangeText={setNewTagName}
+          placeholder="New tag"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.newTagNameInput]}
+          value={newTagName}
+        />
+        <TextInput
+          accessibilityLabel="New tag color"
+          autoCapitalize="characters"
+          onChangeText={setNewTagColor}
+          placeholder="#2F80ED"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.newTagColorInput]}
+          value={newTagColor}
+        />
+        <Pressable
+          accessibilityRole="button"
+          disabled={newTagName.trim().length === 0}
+          onPress={addNewTag}
+          style={[styles.newTagButton, newTagName.trim().length === 0 ? styles.disabledButton : null]}
+        >
+          <Text style={styles.newTagButtonText}>Add</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -1463,6 +1542,35 @@ const styles = StyleSheet.create({
   },
   tagOptionTextSelected: {
     color: colors.text
+  },
+  newTagRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.sm
+  },
+  newTagNameInput: {
+    flex: 1,
+    minHeight: 40,
+    minWidth: 0
+  },
+  newTagColorInput: {
+    minHeight: 40,
+    width: 96
+  },
+  newTagButton: {
+    alignItems: 'center',
+    backgroundColor: colors.action,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: spacing.sm
+  },
+  newTagButtonText: {
+    color: colors.onAction,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
   },
   clearDraftButton: {
     alignItems: 'center',

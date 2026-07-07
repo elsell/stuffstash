@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -11,6 +12,7 @@ import {
 import { Check } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
+import type { CreateInventoryAssetTagInput } from '../../application/home/InventorySummaryRepository';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
   assetEditContext,
@@ -85,7 +87,7 @@ export function EditAssetSheet({
         <TextInput
           autoCapitalize="sentences"
           editable={!isSaving}
-          onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [] })}
+          onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={styles.input}
           value={draft?.title ?? ''}
         />
@@ -93,7 +95,7 @@ export function EditAssetSheet({
         <TextInput
           editable={!isSaving}
           multiline
-          onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [] })}
+          onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={[styles.input, styles.multilineInput]}
           value={draft?.description ?? ''}
         />
@@ -101,7 +103,9 @@ export function EditAssetSheet({
           disabled={isSaving}
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
-          onChange={(tagIds) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds })}
+          newTags={draft?.newTags ?? []}
+          onChange={(tagIds) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags: draft?.newTags ?? [] })}
+          onNewTagsChange={(newTags) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags })}
         />
       </ScrollView>
       <SheetActions
@@ -116,19 +120,21 @@ export function EditAssetSheet({
 
 function EditTagPicker({
   disabled,
+  newTags,
   onChange,
+  onNewTagsChange,
   selectedTagIds,
   tags
 }: {
   readonly disabled: boolean;
+  readonly newTags: readonly CreateInventoryAssetTagInput[];
   readonly onChange: (tagIds: readonly string[]) => void;
+  readonly onNewTagsChange: (tags: readonly CreateInventoryAssetTagInput[]) => void;
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {
-  if (tags.length === 0) {
-    return null;
-  }
-
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('');
   const selected = new Set(selectedTagIds);
 
   function toggleTag(tagId: string): void {
@@ -142,10 +148,39 @@ function EditTagPicker({
     onChange([...selectedTagIds, tagId]);
   }
 
+  function addNewTag(): void {
+    const displayName = newTagName.trim();
+    if (disabled || displayName.length === 0) {
+      return;
+    }
+    const color = newTagColor.trim();
+    onNewTagsChange([
+      ...newTags,
+      color.length > 0 ? { displayName, color } : { displayName }
+    ]);
+    setNewTagName('');
+    setNewTagColor('');
+  }
+
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.inputLabel}>Tags</Text>
       <View style={styles.tagOptions}>
+        {newTags.map((tag, index) => (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled, selected: true }}
+            disabled={disabled}
+            key={`${tag.displayName}-${index.toString()}`}
+            onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+            style={[styles.tagOption, styles.tagOptionSelected, disabled ? styles.disabledAction : null]}
+          >
+            {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
+            <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
+              {tag.displayName}
+            </Text>
+          </Pressable>
+        ))}
         {tags.map((tag) => {
           const isSelected = selected.has(tag.id);
           return (
@@ -165,6 +200,35 @@ function EditTagPicker({
             </Pressable>
           );
         })}
+      </View>
+      <View style={styles.newTagRow}>
+        <TextInput
+          accessibilityLabel="New tag name"
+          editable={!disabled}
+          onChangeText={setNewTagName}
+          placeholder="New tag"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.newTagNameInput]}
+          value={newTagName}
+        />
+        <TextInput
+          accessibilityLabel="New tag color"
+          autoCapitalize="characters"
+          editable={!disabled}
+          onChangeText={setNewTagColor}
+          placeholder="#2F80ED"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.newTagColorInput]}
+          value={newTagColor}
+        />
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled || newTagName.trim().length === 0}
+          onPress={addNewTag}
+          style={[styles.newTagButton, disabled || newTagName.trim().length === 0 ? styles.disabledAction : null]}
+        >
+          <Text style={styles.newTagButtonText}>Add</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -566,6 +630,34 @@ const styles = StyleSheet.create({
   },
   tagOptionTextSelected: {
     color: colors.text
+  },
+  newTagRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs
+  },
+  newTagNameInput: {
+    flex: 1,
+    minHeight: 40,
+    minWidth: 0
+  },
+  newTagColorInput: {
+    minHeight: 40,
+    width: 96
+  },
+  newTagButton: {
+    alignItems: 'center',
+    backgroundColor: colors.action,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: spacing.sm
+  },
+  newTagButtonText: {
+    color: colors.onAction,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
   },
   sheetActions: {
     flexDirection: 'row',

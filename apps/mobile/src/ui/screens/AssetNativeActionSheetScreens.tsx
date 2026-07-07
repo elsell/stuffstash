@@ -75,7 +75,8 @@ export function AssetEditSheetRouteScreen({
           setDraft({
             title: asset.title,
             description: asset.description,
-            tagIds: asset.tags?.map((tag) => tag.id) ?? []
+            tagIds: asset.tags?.map((tag) => tag.id) ?? [],
+            newTags: []
           });
         }
         return inventoryAssetTagsQuery.execute();
@@ -119,14 +120,25 @@ export function AssetEditSheetRouteScreen({
         assetId,
         title: normalized.title,
         description: normalized.description,
-        tagIds: normalized.tagIds
+        tagIds: normalized.tagIds,
+        newTags: normalized.newTags
       });
       recordAssetActionCompletion({ assetId, action: 'edit', message: result.message });
       router.back();
     } catch (error) {
+      await refreshEditAssetTags();
       Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function refreshEditAssetTags(): Promise<void> {
+    try {
+      const assetTags = await inventoryAssetTagsQuery.execute();
+      setState((current) => current.status === 'ready' ? { ...current, assetTags } : current);
+    } catch {
+      // Preserve the original save error as the visible failure.
     }
   }
 
