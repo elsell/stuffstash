@@ -246,6 +246,13 @@ func (r *fakeCheckoutAssetRepository) CurrentAssetCheckout(context.Context, tena
 	return *r.current, true, nil
 }
 
+func (r *fakeCheckoutAssetRepository) CurrentAssetCheckouts(context.Context, tenant.ID, inventory.InventoryID, []asset.ID) (map[asset.ID]asset.Checkout, error) {
+	if r.current == nil {
+		return nil, nil
+	}
+	return map[asset.ID]asset.Checkout{r.current.AssetID: *r.current}, nil
+}
+
 func (r *fakeCheckoutAssetRepository) AssetCheckoutByID(_ context.Context, _ tenant.ID, _ inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error) {
 	if r.current != nil && r.current.ID == checkoutID {
 		return *r.current, true, nil

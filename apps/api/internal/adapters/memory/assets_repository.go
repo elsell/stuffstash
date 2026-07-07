@@ -357,6 +357,28 @@ func (s *Store) CurrentAssetCheckout(_ context.Context, tenantID tenant.ID, inve
 	return asset.Checkout{}, false, nil
 }
 
+func (s *Store) CurrentAssetCheckouts(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetIDs []asset.ID) (map[asset.ID]asset.Checkout, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	wanted := make(map[asset.ID]struct{}, len(assetIDs))
+	for _, assetID := range assetIDs {
+		if assetID.String() != "" {
+			wanted[assetID] = struct{}{}
+		}
+	}
+	checkouts := map[asset.ID]asset.Checkout{}
+	for _, checkout := range s.checkouts {
+		if checkout.TenantID.String() != tenantID.String() || checkout.InventoryID.String() != inventoryID.String() || checkout.State != asset.CheckoutStateOpen {
+			continue
+		}
+		if _, ok := wanted[checkout.AssetID]; ok {
+			checkouts[checkout.AssetID] = checkout
+		}
+	}
+	return checkouts, nil
+}
+
 func (s *Store) AssetCheckoutByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

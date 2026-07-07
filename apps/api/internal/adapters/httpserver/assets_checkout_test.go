@@ -117,3 +117,107 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 		t.Fatalf("expected no checked-out assets after return")
 	}
 }
+
+func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const otherTenantID = "01ARZ3NDEKTSV4RRFFQ69G5FB1"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FB2"
+	const sameTenantOtherInventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FB3"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+			{id: otherTenantID, name: "Cabin", owner: "other-owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"},
+			{id: sameTenantOtherInventoryID, tenantID: tenantID, name: "Garden", owner: "owner"},
+			{id: otherInventoryID, tenantID: otherTenantID, name: "Cabin Gear", owner: "other-owner"},
+		},
+		ids: []string{
+			"checkout-security-asset", "op-checkout-security-asset", "audit-checkout-security-asset",
+			"checkout-security-record", "op-checkout-security-record", "audit-checkout-security-record",
+		},
+	}))
+	requireStatus(t, performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]any{"principalId": "viewer-user", "relationship": "viewer"}), http.StatusCreated)
+
+	create := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Checkout Security Asset",
+	})
+	requireStatus(t, create, http.StatusCreated)
+	created := decodeAsset(t, create)
+	assetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + created.Data.ID
+	requireStatus(t, performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "borrowed"}), http.StatusCreated)
+
+	mutationCases := []struct {
+		name          string
+		method        string
+		path          string
+		authorization string
+		body          any
+		status        int
+		code          string
+		message       string
+	}{
+		{name: "checkout missing auth", method: http.MethodPost, path: assetPath + "/checkout", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "checkout malformed auth", method: http.MethodPost, path: assetPath + "/checkout", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "return missing auth", method: http.MethodPost, path: assetPath + "/return", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "return malformed auth", method: http.MethodPost, path: assetPath + "/return", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "viewer return", method: http.MethodPost, path: assetPath + "/return", authorization: "Bearer dev:viewer-user", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
+		{name: "intruder checkout", method: http.MethodPost, path: assetPath + "/checkout", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
+		{name: "cross tenant checkout", method: http.MethodPost, path: "/tenants/" + otherTenantID + "/inventories/" + otherInventoryID + "/assets/" + created.Data.ID + "/checkout", authorization: "Bearer dev:other-owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
+		{name: "wrong inventory checkout", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + sameTenantOtherInventoryID + "/assets/" + created.Data.ID + "/checkout", authorization: "Bearer dev:owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
+		{name: "wrong inventory return", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + sameTenantOtherInventoryID + "/assets/" + created.Data.ID + "/return", authorization: "Bearer dev:owner", status: http.StatusBadRequest, code: "invalid_request", message: "Invalid request."},
+	}
+	for _, tc := range mutationCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := tc.body
+			if body == nil {
+				body = map[string]any{}
+			}
+			response := performRequest(server, tc.method, tc.path, tc.authorization, body)
+			if response.Code != tc.status {
+				t.Fatalf("expected status %d, got %d with body %s", tc.status, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, tc.code, tc.message)
+		})
+	}
+
+	readCases := []struct {
+		name          string
+		path          string
+		authorization string
+		status        int
+		code          string
+		message       string
+	}{
+		{name: "history missing auth", path: assetPath + "/checkouts?limit=10", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "history malformed auth", path: assetPath + "/checkouts?limit=10", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "history intruder", path: assetPath + "/checkouts?limit=10", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
+		{name: "history cross tenant", path: "/tenants/" + otherTenantID + "/inventories/" + otherInventoryID + "/assets/" + created.Data.ID + "/checkouts?limit=10", authorization: "Bearer dev:other-owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
+		{name: "checked-out list missing auth", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/checked-out-assets?limit=10", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "checked-out list malformed auth", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/checked-out-assets?limit=10", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "checked-out list intruder", path: "/tenants/" + tenantID + "/inventories/" + inventoryID + "/checked-out-assets?limit=10", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
+	}
+	for _, tc := range readCases {
+		t.Run(tc.name, func(t *testing.T) {
+			response := performRequest(server, http.MethodGet, tc.path, tc.authorization, nil)
+			if response.Code != tc.status {
+				t.Fatalf("expected status %d, got %d with body %s", tc.status, response.Code, response.Body.String())
+			}
+			assertSafeError(t, response, tc.code, tc.message)
+		})
+	}
+
+	otherTenantList := performRequest(server, http.MethodGet, "/tenants/"+otherTenantID+"/inventories/"+otherInventoryID+"/checked-out-assets?limit=10", "Bearer dev:other-owner", nil)
+	requireStatus(t, otherTenantList, http.StatusOK)
+	if len(decodeCheckedOutAssetList(t, otherTenantList).Data) != 0 {
+		t.Fatalf("expected other tenant checked-out list to be empty")
+	}
+	wrongInventoryList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+sameTenantOtherInventoryID+"/checked-out-assets?limit=10", "Bearer dev:owner", nil)
+	requireStatus(t, wrongInventoryList, http.StatusOK)
+	if len(decodeCheckedOutAssetList(t, wrongInventoryList).Data) != 0 {
+		t.Fatalf("expected wrong inventory checked-out list to be empty")
+	}
+}

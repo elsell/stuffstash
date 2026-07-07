@@ -29,6 +29,7 @@ type AssetUnitOfWork interface {
 
 type AssetCheckoutRepository interface {
 	CurrentAssetCheckout(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Checkout, bool, error)
+	CurrentAssetCheckouts(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetIDs []asset.ID) (map[asset.ID]asset.Checkout, error)
 	AssetCheckoutByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error)
 	ListAssetCheckoutHistory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page AssetCheckoutHistoryPageRequest) ([]asset.Checkout, error)
 	ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page CheckedOutAssetsPageRequest) ([]CheckedOutAsset, error)

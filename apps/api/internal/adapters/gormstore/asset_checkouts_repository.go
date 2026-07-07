@@ -116,6 +116,42 @@ func (s Store) CurrentAssetCheckout(ctx context.Context, tenantID tenant.ID, inv
 	return checkout, true, nil
 }
 
+func (s Store) CurrentAssetCheckouts(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetIDs []asset.ID) (map[asset.ID]asset.Checkout, error) {
+	if len(assetIDs) == 0 {
+		return nil, nil
+	}
+	values := make([]any, 0, len(assetIDs))
+	for _, assetID := range assetIDs {
+		if assetID.String() != "" {
+			values = append(values, assetID.String())
+		}
+	}
+	if len(values) == 0 {
+		return nil, nil
+	}
+	var models []assetCheckoutModel
+	err := s.db.WithContext(ctx).
+		Where(&assetCheckoutModel{
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+			State:       asset.CheckoutStateOpen.String(),
+		}).
+		Where(clause.IN{Column: clause.Column{Name: "asset_id"}, Values: values}).
+		Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+	checkouts := make(map[asset.ID]asset.Checkout, len(models))
+	for _, model := range models {
+		checkout, ok := model.toDomain()
+		if !ok {
+			return nil, fmt.Errorf("invalid asset checkout row %q", model.ID)
+		}
+		checkouts[checkout.AssetID] = checkout
+	}
+	return checkouts, nil
+}
+
 func (s Store) AssetCheckoutByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error) {
 	var model assetCheckoutModel
 	err := s.db.WithContext(ctx).Where(&assetCheckoutModel{ID: checkoutID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).First(&model).Error
@@ -147,15 +183,27 @@ func (s Store) ListAssetCheckoutHistory(ctx context.Context, tenantID tenant.ID,
 }
 
 func (s Store) ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CheckedOutAssetsPageRequest) ([]ports.CheckedOutAsset, error) {
-	query := s.db.WithContext(ctx).Table("asset_checkouts").
-		Select("asset_checkouts.*").
-		Joins("JOIN assets ON assets.id = asset_checkouts.asset_id AND assets.tenant_id = asset_checkouts.tenant_id AND assets.inventory_id = asset_checkouts.inventory_id").
-		Where("asset_checkouts.tenant_id = ? AND asset_checkouts.inventory_id = ? AND asset_checkouts.state = ?", tenantID.String(), inventoryID.String(), asset.CheckoutStateOpen.String())
+	query := s.db.WithContext(ctx).
+		Preload("Asset").
+		Where(&assetCheckoutModel{
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+			State:       asset.CheckoutStateOpen.String(),
+		})
 	if page.AfterAssetID.String() != "" {
-		query = query.Where("(asset_checkouts.checked_out_at < ? OR (asset_checkouts.checked_out_at = ? AND asset_checkouts.asset_id < ?))", page.AfterCheckedOutAt, page.AfterCheckedOutAt, page.AfterAssetID.String())
+		query = query.Where(clause.Or(
+			clause.Lt{Column: clause.Column{Name: "checked_out_at"}, Value: page.AfterCheckedOutAt},
+			clause.And(
+				clause.Eq{Column: clause.Column{Name: "checked_out_at"}, Value: page.AfterCheckedOutAt},
+				clause.Lt{Column: clause.Column{Name: "asset_id"}, Value: page.AfterAssetID.String()},
+			),
+		))
 	}
 	var checkoutModels []assetCheckoutModel
-	query = query.Order("asset_checkouts.checked_out_at DESC, asset_checkouts.asset_id DESC")
+	query = query.Order(clause.OrderBy{Columns: []clause.OrderByColumn{
+		{Column: clause.Column{Name: "checked_out_at"}, Desc: true},
+		{Column: clause.Column{Name: "asset_id"}, Desc: true},
+	}})
 	if page.Limit > 0 {
 		query = query.Limit(page.Limit)
 	}
@@ -168,14 +216,9 @@ func (s Store) ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inv
 		if !ok {
 			return nil, fmt.Errorf("invalid asset checkout row %q", checkoutModel.ID)
 		}
-		var itemModel assetModel
-		err := s.db.WithContext(ctx).Where(&assetModel{ID: checkout.AssetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).First(&itemModel).Error
-		if err != nil {
-			return nil, err
-		}
-		item, ok := itemModel.toDomain()
+		item, ok := checkoutModel.Asset.toDomain()
 		if !ok {
-			return nil, fmt.Errorf("invalid asset row %q", itemModel.ID)
+			return nil, fmt.Errorf("invalid asset row %q", checkoutModel.Asset.ID)
 		}
 		items = append(items, ports.CheckedOutAsset{Asset: item, Checkout: checkout})
 	}
@@ -185,8 +228,19 @@ func (s Store) ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inv
 func (s Store) HasLaterCheckout(ctx context.Context, checkout asset.Checkout) (bool, error) {
 	var count int64
 	err := s.db.WithContext(ctx).Model(&assetCheckoutModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND asset_id = ? AND id <> ?", checkout.TenantID.String(), checkout.InventoryID.String(), checkout.AssetID.String(), checkout.ID.String()).
-		Where("(checked_out_at > ? OR (checked_out_at = ? AND id > ?))", checkout.CheckedOutAt, checkout.CheckedOutAt, checkout.ID.String()).
+		Where(&assetCheckoutModel{
+			TenantID:    checkout.TenantID.String(),
+			InventoryID: checkout.InventoryID.String(),
+			AssetID:     checkout.AssetID.String(),
+		}).
+		Where(clause.Neq{Column: clause.Column{Name: "id"}, Value: checkout.ID.String()}).
+		Where(clause.Or(
+			clause.Gt{Column: clause.Column{Name: "checked_out_at"}, Value: checkout.CheckedOutAt},
+			clause.And(
+				clause.Eq{Column: clause.Column{Name: "checked_out_at"}, Value: checkout.CheckedOutAt},
+				clause.Gt{Column: clause.Column{Name: "id"}, Value: checkout.ID.String()},
+			),
+		)).
 		Count(&count).Error
 	return count > 0, err
 }

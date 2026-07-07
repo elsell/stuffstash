@@ -193,17 +193,14 @@ func (s Service) currentCheckoutsForAssets(ctx context.Context, items []asset.As
 	if s.checkouts == nil || len(items) == 0 {
 		return nil, nil
 	}
-	checkouts := map[asset.ID]asset.Checkout{}
+	first := items[0]
+	tenantID := tenant.ID(first.TenantID.String())
+	inventoryID := inventory.InventoryID(first.InventoryID.String())
+	assetIDs := make([]asset.ID, 0, len(items))
 	for _, item := range items {
-		current, err := s.currentCheckoutForAsset(ctx, item)
-		if err != nil {
-			return nil, err
-		}
-		if current != nil {
-			checkouts[item.ID] = *current
-		}
+		assetIDs = append(assetIDs, item.ID)
 	}
-	return checkouts, nil
+	return s.checkouts.CurrentAssetCheckouts(ctx, tenantID, inventoryID, assetIDs)
 }
 
 func (s Service) primaryImageAttachments(ctx context.Context, tenantID tenant.ID, items []asset.Asset) (map[ports.AttachmentAssetReference]media.Attachment, error) {

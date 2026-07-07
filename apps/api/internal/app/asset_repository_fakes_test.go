@@ -392,6 +392,23 @@ func (f *fakeAssetRepository) CurrentAssetCheckout(_ context.Context, tenantID t
 	return asset.Checkout{}, false, nil
 }
 
+func (f *fakeAssetRepository) CurrentAssetCheckouts(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetIDs []asset.ID) (map[asset.ID]asset.Checkout, error) {
+	wanted := make(map[asset.ID]struct{}, len(assetIDs))
+	for _, assetID := range assetIDs {
+		wanted[assetID] = struct{}{}
+	}
+	checkouts := map[asset.ID]asset.Checkout{}
+	for _, checkout := range f.checkouts {
+		if checkout.TenantID.String() != tenantID.String() || checkout.InventoryID.String() != inventoryID.String() || checkout.State != asset.CheckoutStateOpen {
+			continue
+		}
+		if _, ok := wanted[checkout.AssetID]; ok {
+			checkouts[checkout.AssetID] = checkout
+		}
+	}
+	return checkouts, nil
+}
+
 func (f *fakeAssetRepository) AssetCheckoutByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, checkoutID asset.CheckoutID) (asset.Checkout, bool, error) {
 	checkout, ok := f.checkouts[checkoutID]
 	if !ok || checkout.TenantID.String() != tenantID.String() || checkout.InventoryID.String() != inventoryID.String() {
