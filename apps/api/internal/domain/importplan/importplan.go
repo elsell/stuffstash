@@ -37,6 +37,12 @@ type FieldDefinition struct {
 	Type        string
 }
 
+type TagDefinition struct {
+	Key         string
+	DisplayName string
+	Color       string
+}
+
 type Asset struct {
 	SourceID       string
 	SourceRef      string
@@ -45,6 +51,7 @@ type Asset struct {
 	Description    string
 	ParentSourceID string
 	CustomFields   map[string]any
+	TagKeys        []string
 	Archived       bool
 }
 
@@ -62,6 +69,7 @@ type Attachment struct {
 type Plan struct {
 	Source      SourceSummary
 	Fields      []FieldDefinition
+	Tags        []TagDefinition
 	Assets      []Asset
 	Attachments []Attachment
 	Messages    []Message
@@ -70,6 +78,7 @@ type Plan struct {
 func (p Plan) Counts() Counts {
 	var counts Counts
 	counts.Fields = len(p.Fields)
+	counts.Tags = len(p.Tags)
 	for _, item := range p.Assets {
 		switch item.Kind {
 		case "location":
@@ -92,6 +101,7 @@ func (p Plan) Counts() Counts {
 
 type Counts struct {
 	Fields      int
+	Tags        int
 	Locations   int
 	Assets      int
 	Attachments int

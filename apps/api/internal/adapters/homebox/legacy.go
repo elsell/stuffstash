@@ -107,9 +107,10 @@ func (i LegacyImporter) readCSV(request ports.ImportSourceRequest) (importplan.P
 		if strings.TrimSpace(sourceID) == "" {
 			sourceID = fmt.Sprintf("csv-row-%d", rowIndex+2)
 		}
+		tagValues := tagValuesFromText(firstNonEmpty(getCSV(row, header, "HB.labels"), getCSV(row, header, "HB.tags")))
 		customFields, rowMessages := customFieldsFromLegacyValues(legacyValues{
 			AssetID:          getCSV(row, header, "HB.asset_id"),
-			Tags:             getCSV(row, header, "HB.tags"),
+			Tags:             tagValues,
 			Quantity:         getCSV(row, header, "HB.quantity"),
 			Insured:          getCSV(row, header, "HB.insured"),
 			Notes:            getCSV(row, header, "HB.notes"),
@@ -127,6 +128,7 @@ func (i LegacyImporter) readCSV(request ports.ImportSourceRequest) (importplan.P
 			SoldTime:         getCSV(row, header, "HB.sold_time"),
 			SoldNotes:        getCSV(row, header, "HB.sold_notes"),
 		}, sourceID, name)
+		plan.Tags = appendTagDefinitions(plan.Tags, tagValues)
 		plan.Messages = append(plan.Messages, rowMessages...)
 		plan.Assets = append(plan.Assets, importplan.Asset{
 			SourceID:       "item:" + sourceID,
@@ -137,6 +139,7 @@ func (i LegacyImporter) readCSV(request ports.ImportSourceRequest) (importplan.P
 			ParentSourceID: parentSourceID,
 			Archived:       parseBool(getCSV(row, header, "HB.archived")),
 			CustomFields:   customFields,
+			TagKeys:        tagKeysFromValues(tagValues),
 		})
 	}
 	return plan, nil
@@ -236,6 +239,7 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 		}
 		values := legacyValuesFromItem(detail)
 		customFields, rowMessages := customFieldsFromLegacyValues(values, detail.ID, detail.Name)
+		plan.Tags = appendTagDefinitions(plan.Tags, values.Tags)
 		plan.Messages = append(plan.Messages, rowMessages...)
 		parentSourceID := ""
 		if detail.Location.ID != "" {
@@ -250,6 +254,7 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 			ParentSourceID: parentSourceID,
 			Archived:       detail.Archived,
 			CustomFields:   customFields,
+			TagKeys:        tagKeysFromValues(values.Tags),
 		})
 		if request.IncludeImages && !detail.Archived {
 			for _, attachment := range detail.Attachments {

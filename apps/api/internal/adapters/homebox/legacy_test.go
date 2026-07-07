@@ -36,6 +36,15 @@ func TestLegacyHomeboxCSVBuildsNormalizedPlan(t *testing.T) {
 	if got := plan.Counts().Fields; got == 0 {
 		t.Fatal("expected field definitions")
 	}
+	if got := plan.Counts().Tags; got != 3 {
+		t.Fatalf("tags = %d, tags = %#v", got, plan.Tags)
+	}
+	if _, ok := plan.Assets[1].CustomFields["homebox-tags"]; ok {
+		t.Fatalf("legacy tags custom field should not be created: %#v", plan.Assets[1].CustomFields)
+	}
+	if got := plan.Assets[1].TagKeys; len(got) != 2 || got[0] != "clothing" || got[1] != "storage" {
+		t.Fatalf("first item tag keys = %#v", got)
+	}
 	item := plan.Assets[2]
 	if item.Title != "Bike Tool" {
 		t.Fatalf("item title = %q", item.Title)
@@ -57,6 +66,28 @@ func TestLegacyHomeboxCSVBuildsNormalizedPlan(t *testing.T) {
 	}
 	if plan.Counts().Warnings != 2 {
 		t.Fatalf("warnings = %d, messages = %#v", plan.Counts().Warnings, plan.Messages)
+	}
+}
+
+func TestLegacyHomeboxCSVPrefersLabelsOverTags(t *testing.T) {
+	csv := `HB.location,HB.labels,HB.tags,HB.asset_id,HB.name
+Shelf,"Favorite, Fragile",ignored,000-001,Vase`
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType: importplan.SourceLegacyHomeboxCSV,
+		FileName:   "export.csv",
+		Content:    []byte(csv),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := plan.Assets[1].TagKeys; len(got) != 2 || got[0] != "favorite" || got[1] != "fragile" {
+		t.Fatalf("tag keys = %#v", got)
+	}
+	for _, tag := range plan.Tags {
+		if tag.Key == "ignored" {
+			t.Fatalf("HB.tags should not be used when HB.labels is present: %#v", plan.Tags)
+		}
 	}
 }
 

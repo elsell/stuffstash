@@ -145,7 +145,6 @@ func homeboxFields() []importplan.FieldDefinition {
 	return []importplan.FieldDefinition{
 		{Key: "homebox-source-id", DisplayName: "Homebox Source ID", Type: "text"},
 		{Key: "homebox-asset-id", DisplayName: "Homebox Asset ID", Type: "text"},
-		{Key: "homebox-tags", DisplayName: "Homebox Tags", Type: "text"},
 		{Key: "homebox-quantity", DisplayName: "Homebox Quantity", Type: "number"},
 		{Key: "homebox-insured", DisplayName: "Homebox Insured", Type: "boolean"},
 		{Key: "homebox-notes", DisplayName: "Homebox Notes", Type: "text"},
@@ -171,7 +170,7 @@ func sourceReferenceFields(sourceID string) map[string]any {
 
 type legacyValues struct {
 	AssetID          string
-	Tags             string
+	Tags             []legacyTag
 	Quantity         string
 	Insured          string
 	Notes            string
@@ -220,7 +219,6 @@ func customFieldsFromLegacyValues(values legacyValues, sourceID string, sourceNa
 	}
 	addText("homebox-asset-id", values.AssetID)
 	addText("homebox-source-id", sourceID)
-	addText("homebox-tags", normalizedTags(values.Tags))
 	addNumber("homebox-quantity", values.Quantity)
 	addBool("homebox-insured", values.Insured)
 	addText("homebox-notes", values.Notes)
@@ -403,7 +401,8 @@ type legacyItemDetail struct {
 }
 
 type legacyTag struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
 }
 
 type legacyAttachment struct {
@@ -415,13 +414,9 @@ type legacyAttachment struct {
 }
 
 func legacyValuesFromItem(item legacyItemDetail) legacyValues {
-	tags := make([]string, 0, len(item.Tags))
-	for _, tag := range item.Tags {
-		tags = append(tags, tag.Name)
-	}
 	return legacyValues{
 		AssetID:          item.AssetID,
-		Tags:             strings.Join(tags, "; "),
+		Tags:             normalizedTagValues(item.Tags),
 		Quantity:         strconv.Itoa(item.Quantity),
 		Insured:          strconv.FormatBool(item.Insured),
 		Notes:            item.Notes,
@@ -479,26 +474,135 @@ func locationSourceID(value string) string {
 	return "location:" + strings.TrimSpace(value)
 }
 
-func normalizedTags(value string) string {
+func tagValuesFromText(value string) []legacyTag {
 	parts := strings.FieldsFunc(value, func(r rune) bool {
 		return r == ';' || r == ','
 	})
-	tags := make([]string, 0, len(parts))
+	tags := make([]legacyTag, 0, len(parts))
 	seen := map[string]struct{}{}
 	for _, part := range parts {
-		tag := strings.TrimSpace(part)
-		if tag == "" {
+		name := strings.TrimSpace(part)
+		if name == "" {
 			continue
 		}
-		key := strings.ToLower(tag)
+		key := tagKeyFromName(name)
+		if key == "" {
+			continue
+		}
 		if _, ok := seen[key]; ok {
 			continue
 		}
 		seen[key] = struct{}{}
-		tags = append(tags, tag)
+		tags = append(tags, legacyTag{Name: name})
 	}
-	sort.Strings(tags)
-	return strings.Join(tags, "; ")
+	sort.Slice(tags, func(left int, right int) bool {
+		return tagKeyFromName(tags[left].Name) < tagKeyFromName(tags[right].Name)
+	})
+	return tags
+}
+
+func normalizedTagValues(values []legacyTag) []legacyTag {
+	seen := map[string]legacyTag{}
+	for _, value := range values {
+		name := strings.TrimSpace(value.Name)
+		key := tagKeyFromName(name)
+		if key == "" {
+			continue
+		}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = legacyTag{Name: name, Color: normalizedTagColor(value.Color)}
+	}
+	keys := make([]string, 0, len(seen))
+	for key := range seen {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	out := make([]legacyTag, 0, len(keys))
+	for _, key := range keys {
+		out = append(out, seen[key])
+	}
+	return out
+}
+
+func tagDefinitionsFromValues(values []legacyTag) []importplan.TagDefinition {
+	tags := normalizedTagValues(values)
+	out := make([]importplan.TagDefinition, 0, len(tags))
+	for _, tag := range tags {
+		out = append(out, importplan.TagDefinition{
+			Key:         tagKeyFromName(tag.Name),
+			DisplayName: strings.TrimSpace(tag.Name),
+			Color:       normalizedTagColor(tag.Color),
+		})
+	}
+	return out
+}
+
+func tagKeysFromValues(values []legacyTag) []string {
+	tags := normalizedTagValues(values)
+	keys := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		keys = append(keys, tagKeyFromName(tag.Name))
+	}
+	return keys
+}
+
+func appendTagDefinitions(existing []importplan.TagDefinition, values []legacyTag) []importplan.TagDefinition {
+	seen := map[string]struct{}{}
+	for _, tag := range existing {
+		seen[tag.Key] = struct{}{}
+	}
+	for _, tag := range tagDefinitionsFromValues(values) {
+		if _, ok := seen[tag.Key]; ok {
+			continue
+		}
+		seen[tag.Key] = struct{}{}
+		existing = append(existing, tag)
+	}
+	return existing
+}
+
+func tagKeyFromName(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	var builder strings.Builder
+	lastHyphen := false
+	for _, r := range value {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			builder.WriteRune(r)
+			lastHyphen = false
+		default:
+			if builder.Len() > 0 && !lastHyphen {
+				builder.WriteByte('-')
+				lastHyphen = true
+			}
+		}
+	}
+	key := strings.Trim(builder.String(), "-")
+	if len(key) > 80 {
+		key = strings.TrimRight(key[:80], "-")
+	}
+	return key
+}
+
+func normalizedTagColor(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	if !strings.HasPrefix(value, "#") {
+		value = "#" + value
+	}
+	if len(value) != 7 {
+		return ""
+	}
+	for _, r := range value[1:] {
+		if !((r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')) {
+			return ""
+		}
+	}
+	return strings.ToUpper(value)
 }
 
 func parseBool(value string) bool {
