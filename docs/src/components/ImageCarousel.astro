@@ -1,0 +1,292 @@
+---
+// src/components/ImageCarousel.astro
+interface Props {
+images: {
+src: string;
+alt: string;
+}[];
+ariaLabel?: string;
+}
+
+const { images, ariaLabel = "Image Gallery" } = Astro.props;
+const carouselId = `carousel-${Math.random().toString(36).substring(2, 9)}`;
+import { Icon } from '@astrojs/starlight/components';
+---
+
+<section class="carousel-wrapper" role="region" aria-roledescription="carousel" aria-label={ariaLabel}>
+    <div class="carousel-container">
+        <button class="carousel-btn prev" aria-controls={carouselId} aria-label="Show previous image">
+            <span aria-hidden="true">
+                <Icon name="left-caret" />
+            </span>
+        </button>
+
+        <div id={carouselId} class="carousel-track" tabindex="0" aria-live="polite">
+            {images.map((image, index) => (
+            <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label={`Slide ${index + 1} of
+                ${images.length}`} data-index={index}>
+                <img src={image.src} alt={image.alt} loading="lazy" />
+            </figure>
+            ))}
+        </div>
+
+        <button class="carousel-btn next" aria-controls={carouselId} aria-label="Show next image">
+            <span aria-hidden="true">
+                <Icon name="right-caret" />
+            </span>
+        </button>
+    </div>
+
+    <div class="carousel-footer">
+        <div class="carousel-dots">
+            {images.map((_, index) => (
+            <button class="carousel-dot" aria-current={index===0 ? "true" : "false" } aria-label={`Jump to slide ${index
+                + 1}`} data-target={index}></button>
+            ))}
+        </div>
+
+        <div class="carousel-count" aria-hidden="true">
+            <span class="current-slide-count">1</span> / {images.length}
+        </div>
+    </div>
+
+    <div class="sr-only live-region" aria-live="polite" aria-atomic="true">
+        Slide 1 of {images.length}
+    </div>
+</section>
+
+<style>
+    .carousel-wrapper {
+        margin: 2rem 0;
+        border-radius: 8px;
+        background: var(--sl-color-gray-7);
+        overflow: hidden;
+        border: 1px solid var(--sl-color-gray-6);
+    }
+
+    .carousel-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .carousel-track {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        width: 100%;
+        outline-offset: -4px;
+    }
+
+    .carousel-track:focus-visible {
+        outline: 2px solid var(--sl-color-text-accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .carousel-track {
+            scroll-behavior: auto;
+        }
+    }
+
+    .carousel-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .carousel-slide {
+        flex: 0 0 100%;
+        scroll-snap-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    .carousel-slide img {
+        max-width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: contain;
+    }
+
+    .carousel-btn {
+        position: absolute;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.65);
+        color: white;
+        border: 0px solid transparent;
+        font-size: 2rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        border-radius: 400000px;
+        transition: background 0.2s, border-color 0.2s;
+        line-height: 0;
+    }
+
+    .carousel-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    .carousel-btn:focus-visible {
+        outline: none;
+        border-color: var(--sl-color-text-accent);
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    .prev {
+        left: 10px;
+    }
+
+    .next {
+        right: 10px;
+    }
+
+    /* Footer Styles for Dots and Counter */
+    .carousel-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: var(--sl-color-gray-7);
+        border-top: 1px solid var(--sl-color-gray-6);
+    }
+
+    .carousel-dots {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+    }
+
+    .carousel-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--sl-color-text-accent);
+        background: transparent;
+        cursor: pointer;
+        padding: 0 !important;
+        margin: 0 !important;
+        /* This stops the stair-stepping */
+        display: block !important;
+        transition: background 0.2s;
+        -webkit-appearance: none;
+        /* Strip native OS styling */
+        appearance: none;
+    }
+
+    .carousel-dot[aria-current="true"] {
+        background: var(--sl-color-text-accent);
+    }
+
+    .carousel-dot:focus-visible {
+        outline: 2px solid var(--sl-color-text-accent);
+        outline-offset: 2px;
+    }
+
+    .carousel-count {
+        font-size: 0.9rem;
+        color: var(--sl-color-gray-3);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+</style>
+
+<script>
+    function setupAccessibleCarousels() {
+        const carousels = document.querySelectorAll('.carousel-wrapper');
+
+        carousels.forEach(carousel => {
+            const track = carousel.querySelector('.carousel-track');
+            const prevBtn = carousel.querySelector('.prev');
+            const nextBtn = carousel.querySelector('.next');
+            const liveRegion = carousel.querySelector('.live-region');
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const dots = carousel.querySelectorAll('.carousel-dot');
+            const visualCount = carousel.querySelector('.current-slide-count');
+
+            if (!track || !prevBtn || !nextBtn || !liveRegion) return;
+
+            // 1. Next/Prev Button Logic
+            prevBtn.addEventListener('click', () => {
+                track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
+            });
+
+            nextBtn.addEventListener('click', () => {
+                track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
+            });
+
+            // 2. Keyboard Navigation
+            track.addEventListener('keydown', (e) => {
+                const keyboardEvent = e as KeyboardEvent;
+                if (keyboardEvent.key === 'ArrowLeft') {
+                    keyboardEvent.preventDefault();
+                    track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
+                } else if (keyboardEvent.key === 'ArrowRight') {
+                    keyboardEvent.preventDefault();
+                    track.scrollBy({ left: track.clientWidth, behavior: 'smooth' });
+                }
+            });
+
+            // 3. Dot Click Navigation
+            dots.forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    const targetIndex = parseInt((e.target as HTMLElement).getAttribute('data-target') || '0');
+                    const targetSlide = slides[targetIndex] as HTMLElement;
+                    if (targetSlide) {
+                        // Scroll to the specific slide based on its position in the track
+                        track.scrollTo({ left: targetSlide.offsetLeft, behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // 4. Update UI via Intersection Observer
+            const observerOptions = {
+                root: track,
+                threshold: 0.6
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const index = parseInt(entry.target.getAttribute('data-index') || '0');
+                        const slideNumber = index + 1;
+
+                        // Update Screen Reader text
+                        liveRegion.textContent = `Slide ${slideNumber} of ${slides.length}`;
+
+                        // Update Visual Count
+                        if (visualCount) visualCount.textContent = slideNumber.toString();
+
+                        // Update Active Dot
+                        dots.forEach((dot, i) => {
+                            dot.setAttribute('aria-current', i === index ? 'true' : 'false');
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            slides.forEach(slide => observer.observe(slide));
+        });
+    }
+
+    setupAccessibleCarousels();
+    document.addEventListener('astro:page-load', setupAccessibleCarousels);
+</script>
