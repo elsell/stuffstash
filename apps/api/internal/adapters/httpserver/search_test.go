@@ -21,6 +21,9 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 	if primaryPhoto == nil {
 		t.Fatalf("expected attachment search result to include primary photo, got %+v", attachmentSearch.Data[0].Asset)
 	}
+	if tags := attachmentSearch.Data[0].Asset.Tags; len(tags) != 1 || tags[0].DisplayName != "Workshop" || tags[0].Color != "#2F80ED" {
+		t.Fatalf("expected attachment search result to include assigned tags, got %+v", tags)
+	}
 	if primaryPhoto.FileName != "warranty-card.png" || primaryPhoto.ContentType != "image/png" {
 		t.Fatalf("unexpected search primary photo summary: %+v", primaryPhoto)
 	}
@@ -209,6 +212,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"medicine-type", "audit-medicine-type",
 			"serial-field", "audit-serial-field",
 			"expires-field", "audit-expires-field",
+			"workshop-tag", "audit-workshop-tag",
 			"drill-asset", "audit-drill-asset",
 			"drill-bits-asset", "audit-drill-bits-asset",
 			"aspirin-asset", "audit-aspirin-asset",
@@ -249,10 +253,20 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 		t.Fatalf("expected expiration field status %d, got %d with body %s", http.StatusCreated, createExpiresField.Code, createExpiresField.Body.String())
 	}
 
+	createWorkshopTag := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/tags", "Bearer dev:owner", map[string]any{
+		"displayName": "Workshop",
+		"color":       "#2f80ed",
+	})
+	if createWorkshopTag.Code != http.StatusCreated {
+		t.Fatalf("expected workshop tag status %d, got %d with body %s", http.StatusCreated, createWorkshopTag.Code, createWorkshopTag.Body.String())
+	}
+	workshopTag := decodeScenarioTag(t, createWorkshopTag)
+
 	createDrill := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":        "item",
 		"title":       "Cordless Drill",
 		"description": "Driver kit",
+		"tagIds":      []string{workshopTag.Data.ID},
 		"customFields": map[string]any{
 			"serial": "bag-42",
 		},

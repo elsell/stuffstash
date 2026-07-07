@@ -500,7 +500,15 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       checkoutState: 'checked_out'
     });
 
-    expect(results).toMatchObject([{ asset: { id: 'asset-passport', lifecycleState: 'archived' } }]);
+    expect(results).toMatchObject([
+      {
+        asset: {
+          id: 'asset-passport',
+          lifecycleState: 'archived',
+          tags: [{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }]
+        }
+      }
+    ]);
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&inventoryId=inventory-household&lifecycleState=archived&mode=exact&checkoutState=checked_out'
     ]);

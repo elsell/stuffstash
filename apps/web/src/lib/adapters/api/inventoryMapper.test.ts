@@ -123,13 +123,14 @@ describe('inventory API mapper', () => {
         description: 'Blue folder',
         lifecycleState: 'active',
         customFields: {},
-        tags: [],
+        tags: [{ id: 'tag-travel', key: 'travel', displayName: 'Travel', color: '#2F80ED' }],
         parentAssetId: 'hall-closet'
       } as any,
       matches: [{ field: 'title', value: 'Passport' }]
     });
 
     expect(result.asset.parentAssetId).toBe('hall-closet');
+    expect(result.asset.tags).toEqual([{ id: 'tag-travel', key: 'travel', displayName: 'Travel', color: '#2F80ED' }]);
     expect(result.inventory.name).toBe('Household');
   });
 

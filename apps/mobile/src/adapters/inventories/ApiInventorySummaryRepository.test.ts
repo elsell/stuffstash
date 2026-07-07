@@ -63,6 +63,7 @@ class FakeInventoryApiClient {
       parentAssetId: 'asset-garage',
       lifecycleState: 'active',
       customFields: {},
+      tags: [{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
       createdAt: '2026-06-21T10:00:00Z',
       updatedAt: '2026-06-23T10:00:00Z',
       primaryPhoto: {
@@ -1099,7 +1100,8 @@ describe('ApiInventorySummaryRepository', () => {
     await expect(repository.searchAssets('filters')).resolves.toMatchObject([
       {
         id: 'asset-filters',
-        title: 'Furnace filters'
+        title: 'Furnace filters',
+        tags: [{ id: 'tag-workshop', displayName: 'Workshop', color: '#2F80ED' }]
       }
     ]);
     await expect(repository.searchAssets('filters')).resolves.toHaveLength(1);

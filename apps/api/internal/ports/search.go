@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -37,6 +38,7 @@ type AssetSearchResult struct {
 	Inventory       inventory.Inventory
 	Asset           asset.Asset
 	CurrentCheckout *asset.Checkout
+	AssignedTags    []assettag.Tag
 	Matches         []search.Match
 }
 

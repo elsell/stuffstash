@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -124,6 +125,55 @@ func TestSearchAssetsIncludesPrimaryImageAttachments(t *testing.T) {
 	}
 	if result.PrimaryPhotos[ref].ID != media.ID("attachment-one") {
 		t.Fatalf("expected primary photo in search result, got %+v", result.PrimaryPhotos)
+	}
+}
+
+func TestSearchAssetsIncludesAssignedTags(t *testing.T) {
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	assetID := asset.ID("asset-one")
+	item := asset.Asset{
+		ID:             assetID,
+		TenantID:       asset.TenantID(tenantID.String()),
+		InventoryID:    asset.InventoryID(inventoryID.String()),
+		Kind:           asset.KindItem,
+		Title:          asset.Title("Water bottle"),
+		LifecycleState: asset.LifecycleStateActive,
+	}
+	tagKey, _ := assettag.NewKey("camping")
+	tagName, _ := assettag.NewDisplayName("Camping")
+	tagColor, _ := assettag.NewColor("#2f80ed")
+	tag, _ := assettag.NewTag("tag-camping", assettag.TenantID(tenantID.String()), assettag.InventoryID(inventoryID.String()), tagKey, tagName, tagColor, time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC))
+	application := New(Dependencies{
+		Observer:   &fakeObserver{},
+		Authorizer: &visibilityAuthorizer{t: t, tenantID: tenantID, visible: []inventory.InventoryID{inventoryID}},
+		Tenants:    &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{
+			inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
+		}},
+		Search: &recordingAssetSearchRepository{items: []ports.AssetSearchResult{{
+			Type:         search.ResultTypeAsset,
+			TenantID:     tenantID,
+			Inventory:    inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
+			Asset:        item,
+			AssignedTags: []assettag.Tag{tag},
+		}}},
+		Audit:            &fakeAuditRepository{},
+		DefaultPageLimit: 10,
+		MaxPageLimit:     20,
+	})
+
+	result, err := application.SearchAssets(context.Background(), SearchAssetsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:  tenantID,
+		Query:     "water",
+		Mode:      "exact",
+	})
+	if err != nil {
+		t.Fatalf("search assets: %v", err)
+	}
+	if tags := result.Items[0].AssignedTags; len(tags) != 1 || tags[0].ID != tag.ID || tags[0].Color != tagColor {
+		t.Fatalf("expected assigned tag in search result, got %+v", result.Items)
 	}
 }
 

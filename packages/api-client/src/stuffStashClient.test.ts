@@ -996,6 +996,7 @@ describe('StuffStashClient', () => {
                 description: '',
                 parentAssetId: null,
                 lifecycleState: 'archived',
+                tags: [{ id: 'tag-travel', key: 'travel', displayName: 'Travel', color: '#2F80ED' }],
                 currentCheckout: {
                   id: 'checkout-open',
                   state: 'open',
@@ -1019,6 +1020,7 @@ describe('StuffStashClient', () => {
         asset: {
           id: 'asset-one',
           lifecycleState: 'archived',
+          tags: [{ id: 'tag-travel', key: 'travel', displayName: 'Travel', color: '#2F80ED' }],
           currentCheckout: {
             id: 'checkout-open',
             checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }

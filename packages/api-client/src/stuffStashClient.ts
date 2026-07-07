@@ -1866,7 +1866,7 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
       lifecycleState: mapAssetLifecycleState(response.asset.lifecycleState),
       customAssetTypeId: response.asset.customAssetTypeId,
       customFields: response.asset.customFields ?? {},
-      tags: [],
+      tags: (response.asset.tags ?? []).map(mapCompactAssetTag),
       createdAt: response.asset.createdAt,
       updatedAt: response.asset.updatedAt,
       primaryPhoto: mapAssetPrimaryPhoto(response.asset.primaryPhoto),

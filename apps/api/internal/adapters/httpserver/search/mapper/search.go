@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"time"
 
+	assetmapper "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/dto"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -38,6 +39,7 @@ func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *m
 		Title:             result.Asset.Title.String(),
 		Description:       result.Asset.Description.String(),
 		CustomFields:      result.Asset.CustomFields.Values(),
+		Tags:              assetmapper.TagsToResponse(result.AssignedTags),
 		LifecycleState:    result.Asset.LifecycleState.String(),
 		CreatedAt:         result.Asset.CreatedAt.UTC().Format(time.RFC3339Nano),
 		UpdatedAt:         result.Asset.UpdatedAt.UTC().Format(time.RFC3339Nano),

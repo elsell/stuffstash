@@ -98,11 +98,12 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 			continue
 		}
 		result := ports.AssetSearchResult{
-			Type:      search.ResultTypeAsset,
-			TenantID:  tenantID,
-			Inventory: containingInventory,
-			Asset:     item,
-			Matches:   matches,
+			Type:         search.ResultTypeAsset,
+			TenantID:     tenantID,
+			Inventory:    containingInventory,
+			Asset:        item,
+			AssignedTags: assignedTags[item.ID],
+			Matches:      matches,
 		}
 		if hasOpenCheckout {
 			result.CurrentCheckout = &currentCheckout

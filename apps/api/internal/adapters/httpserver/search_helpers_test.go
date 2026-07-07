@@ -21,6 +21,7 @@ type searchAssetResultResponse struct {
 		Title             string             `json:"title"`
 		Description       string             `json:"description"`
 		CustomFields      map[string]any     `json:"customFields"`
+		Tags              []assetTagSummary  `json:"tags"`
 		LifecycleState    string             `json:"lifecycleState"`
 		PrimaryPhoto      *assetPrimaryPhoto `json:"primaryPhoto,omitempty"`
 		CurrentCheckout   *currentCheckout   `json:"currentCheckout,omitempty"`

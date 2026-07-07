@@ -1,6 +1,9 @@
 package dto
 
-import "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+import (
+	assetdto "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/dto"
+	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+)
 
 type SearchAssetsInput struct {
 	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
@@ -42,6 +45,7 @@ type AssetSummary struct {
 	Title             string                 `json:"title"`
 	Description       string                 `json:"description"`
 	CustomFields      map[string]any         `json:"customFields"`
+	Tags              []CompactTag           `json:"tags"`
 	LifecycleState    string                 `json:"lifecycleState"`
 	CreatedAt         string                 `json:"createdAt"`
 	UpdatedAt         string                 `json:"updatedAt"`
@@ -51,6 +55,7 @@ type AssetSummary struct {
 
 type AssetPrimaryPhoto = shared.AssetPrimaryPhoto
 type AssetPhotoThumbnails = shared.AssetPhotoThumbnails
+type CompactTag = assetdto.CompactTag
 
 type SearchCurrentCheckout struct {
 	ID                      string                           `json:"id"`

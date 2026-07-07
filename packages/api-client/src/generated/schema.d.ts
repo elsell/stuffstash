@@ -1316,6 +1316,7 @@ export interface components {
             lifecycleState: string;
             parentAssetId?: string;
             primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
+            tags: components["schemas"]["CompactTag"][] | null;
             title: string;
             updatedAt: string;
         };
@@ -6573,6 +6574,8 @@ export interface operations {
             header?: {
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
             };
             path: {
                 /** @description Tenant ID */
