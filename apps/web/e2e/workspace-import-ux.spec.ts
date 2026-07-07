@@ -23,7 +23,7 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   const warningRow = page.locator('.history-ledger .history-row').filter({ hasText: '2 warnings' });
   await expect(warningRow.getByText('Completed with warnings.')).toBeVisible();
   await expect(warningRow.locator('[data-slot="badge"]').filter({ hasText: 'Warnings' })).toBeVisible();
-  await expect(warningRow.getByText('Started Jul 6, 2026')).toBeVisible();
+  await expect(warningRow.getByRole('cell', { name: /Jul 6, 2026, 7:15 AM/ })).toBeVisible();
   expect(await hasHorizontalOverflow(warningRow)).toBe(false);
 
   await warningRow.getByRole('button', { name: /review details/i }).click();
@@ -32,6 +32,27 @@ test('desktop import surface scans like durable job history', async ({ page }, t
   await expect(page.getByText('Source ID source-wardrobe')).toBeVisible();
   await expect(page.getByText('Source ID source-baby-hats')).toBeVisible();
   expect(await hasHorizontalOverflow(page.locator('.import-detail-content'))).toBe(false);
+  await page.evaluate(() => {
+    (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel = 'same-document';
+  });
+  await page.getByRole('link', { name: 'View audit history' }).click();
+  await expect(page).toHaveURL(/\/settings\/activity/);
+  expect(await importNavigationSentinel(page)).toBe('same-document');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import');
+  await warningRow.getByRole('button', { name: /review details/i }).click();
+  await page.getByRole('tab', { name: 'Records' }).click();
+  const importedAssetRow = page.locator('.resource-row').filter({ hasText: 'Imported asset' });
+  await expect(importedAssetRow).toBeVisible();
+  await page.evaluate(() => {
+    (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel = 'same-document';
+  });
+  await importedAssetRow.getByRole('link', { name: 'Open' }).click();
+  await expect(page).toHaveURL(/\/assets\/asset-tomato$/);
+  expect(await importNavigationSentinel(page)).toBe('same-document');
+
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/import');
+  await warningRow.getByRole('button', { name: /review details/i }).click();
   await page.getByRole('button', { name: 'Back to history' }).click();
 
   const discardedRow = page.locator('.history-ledger .history-row').filter({ hasText: 'Partial progress discarded' });
@@ -86,4 +107,8 @@ test('mobile import setup keeps one-column flow and subordinate connection optio
 
 async function hasHorizontalOverflow(locator: import('@playwright/test').Locator): Promise<boolean> {
   return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+}
+
+async function importNavigationSentinel(page: import('@playwright/test').Page): Promise<string | undefined> {
+  return page.evaluate(() => (window as Window & { __importNavigationSentinel?: string }).__importNavigationSentinel);
 }
