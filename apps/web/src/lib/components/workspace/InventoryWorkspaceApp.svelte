@@ -120,6 +120,8 @@
   let customAssetTypeId = $state<string | null>(null);
   let customFieldDefinitionId = $state<string | null>(null);
   let importSource = $state<ImportSourceRoute>(null);
+  let importJobId = $state<string | null>(null);
+  let importTab = $state<WorkspaceRouteState['importTab']>(null);
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
@@ -672,6 +674,8 @@
       customAssetTypeId = route.customAssetTypeId;
       customFieldDefinitionId = route.customFieldDefinitionId;
       importSource = route.importSource;
+      importJobId = route.importJobId;
+      importTab = route.importTab;
 
       if (route.tenantId && route.tenantId !== data.context.selectedTenantId) {
         const tenantId = findRouteTenant(data, route);
@@ -839,6 +843,7 @@
       if (route.mode === 'settings' || route.mode === 'import') {
         mode = route.mode;
         settingsSection = route.settingsSection;
+        importSource = route.importSource;
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
@@ -901,6 +906,8 @@
     assetAction = null;
     attachmentId = null;
     attachmentAction = null;
+    importJobId = null;
+    importTab = null;
     mode = 'home';
     selectedLocationId = null;
     selectedAssetId = null;
@@ -918,7 +925,9 @@
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
       settingsSection: nextMode === 'settings' ? settingsSection : 'overview',
-      importSource: nextMode === 'import' ? importSource : null
+      importSource: nextMode === 'import' ? importSource : null,
+      importJobId: null,
+      importTab: null
     });
   }
 
@@ -928,7 +937,33 @@
       mode: 'import',
       tenantId: data.context.selectedTenantId,
       inventoryId: data.context.selectedInventoryId,
-      importSource: source
+      importSource: source,
+      importJobId: null,
+      importTab: null
+    });
+  }
+
+  function openImportJobRoute(jobId: string | null, tab: WorkspaceRouteState['importTab'] = null): void {
+    navigateTo({
+      mode: 'import',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      importSource: null,
+      importJobId: jobId,
+      importTab: jobId ? tab : null
+    });
+  }
+
+  function openImportJobTabRoute(tab: WorkspaceRouteState['importTab']): void {
+    if (mode !== 'import') return;
+    if (!importJobId) return;
+    navigateTo({
+      mode: 'import',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      importSource: null,
+      importJobId,
+      importTab: tab
     });
   }
 
@@ -1390,7 +1425,9 @@
       customizationAction,
       customAssetTypeId,
       customFieldDefinitionId,
-      importSource
+      importSource,
+      importJobId,
+      importTab
     }}
     hrefs={{ homeHref: homeHref(), assetDetailBackHref: assetDetailBackHref() }}
     bind:searchQuery
@@ -1422,6 +1459,8 @@
       onSearch: search,
       onOpenSearchAsset: openSearchAsset,
       onImportSourceChange: openImportSource,
+      onImportJobSelectionChange: openImportJobRoute,
+      onImportJobTabChange: openImportJobTabRoute,
       onImportJobInventoryChanged: refreshInventoryAfterImportJob,
       onOpenImportedAssetId: openImportedAssetId,
       onOpenInventoryAuditHistory: openInventoryAuditHistory,

@@ -15,7 +15,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
   import { fileToBase64 } from '$lib/application/fileEncoding';
-  import { workspaceRouteHref, type ImportSourceRoute } from '$lib/application/workspaceRoute';
+  import { workspaceRouteHref, type ImportDetailTabRoute, type ImportSourceRoute } from '$lib/application/workspaceRoute';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import {
     buildImportSourceRequest,
@@ -50,7 +50,11 @@
     currentPrincipal?: Principal;
     repository: InventoryRepository;
     importSource: ImportSourceRoute;
+    importJobId: string | null;
+    importTab: ImportDetailTabRoute | null;
     onImportSourceChange: (source: ImportSourceRoute) => void;
+    onImportJobSelectionChange: (jobId: string | null, tab?: ImportDetailTabRoute | null) => void;
+    onImportJobTabChange: (tab: ImportDetailTabRoute | null) => void;
     onImportJobInventoryChanged: (scope: ImportJobInventoryRefreshScope) => Promise<void>;
     onOpenImportedAssetId: (assetId: string) => Promise<void>;
     onOpenInventoryAuditHistory: () => void;
@@ -67,7 +71,11 @@
     currentPrincipal,
     repository,
     importSource,
+    importJobId,
+    importTab,
     onImportSourceChange,
+    onImportJobSelectionChange,
+    onImportJobTabChange,
     onImportJobInventoryChanged,
     onOpenImportedAssetId,
     onOpenInventoryAuditHistory
@@ -89,6 +97,9 @@
   let previewedRequestKey = $state('');
   let startedJob = $state<ImportJob | null>(null);
   let selectedJob = $state<ImportJob | null>(null);
+  let detailTab = $state<ImportDetailTabRoute>('overview');
+  let appliedImportJobRouteKey = $state('');
+  let suppressDetailTabRouteUpdate = false;
   let cancelIntent = $state<{ job: ImportJob } | null>(null);
   let removeIntent = $state<{ job: ImportJob } | null>(null);
   let loading = $state(false);
@@ -129,11 +140,32 @@
   });
 
   $effect(() => {
+    importJobId;
+    importTab;
+    jobs;
+    loading;
+    canViewImports;
+    untrack(() => {
+      applyImportJobRoute();
+    });
+  });
+
+  $effect(() => {
+    const tab = detailTab;
+    if (suppressDetailTabRouteUpdate || step !== 'detail' || !selectedJob) return;
+    if (tab === importTab) return;
+    onImportJobTabChange(tab);
+  });
+
+  $effect(() => {
     if (!canCreateImports && (step === 'source' || step === 'setup' || step === 'preview')) {
       step = 'history';
       previewJob = null;
       previewedRequestKey = '';
       onImportSourceChange(null);
+      return;
+    }
+    if (importJobId) {
       return;
     }
     if (importSource === 'homebox') {
@@ -265,12 +297,24 @@
     cancelIntent = null;
     selectedJob = null;
     startedJob = null;
+    appliedImportJobRouteKey = '';
+    onImportJobSelectionChange(null);
     onImportSourceChange(null);
     step = 'history';
   }
 
   function openJob(job: ImportJob): void {
+    showJobDetail(job, null);
+    onImportJobSelectionChange(job.id, null);
+  }
+
+  function showJobDetail(job: ImportJob, routeTab: ImportDetailTabRoute | null): void {
     selectedJob = job;
+    detailTab = routeTab ?? defaultDetailTab(job);
+    suppressDetailTabRouteUpdate = true;
+    queueMicrotask(() => {
+      suppressDetailTabRouteUpdate = false;
+    });
     cancelIntent = null;
     removeIntent = null;
     error = '';
@@ -444,6 +488,7 @@
         selectedJob = null;
         cancelIntent = null;
         step = 'history';
+        onImportJobSelectionChange(null);
       }
     } catch (removeError) {
       if (!isCurrentAction(action)) return;
@@ -520,6 +565,46 @@
     if (!selectedJob) return;
     const summary = nextJobs.find((job) => job.id === selectedJob?.id);
     selectedJob = summary ? mergeImportJobDetailSnapshot(selectedJob, summary) : selectedJob;
+  }
+
+  function applyImportJobRoute(): void {
+    if (!importJobId) {
+      if (step === 'detail' && selectedJob && !importSource) {
+        selectedJob = null;
+        appliedImportJobRouteKey = '';
+        step = 'history';
+      }
+      return;
+    }
+    if (!canViewImports) return;
+    const routeKey = `${importJobId}:${importTab ?? ''}`;
+    if (appliedImportJobRouteKey === routeKey && selectedJob?.id === importJobId) {
+      if (importTab && detailTab !== importTab) {
+        detailTab = importTab;
+      }
+      return;
+    }
+    if (selectedJob?.id === importJobId && step === 'detail') {
+      appliedImportJobRouteKey = routeKey;
+      if (importTab && detailTab !== importTab) {
+        detailTab = importTab;
+      }
+      return;
+    }
+    const routedJob = jobs.find((job) => job.id === importJobId) ?? (selectedJob?.id === importJobId ? selectedJob : null);
+    if (!routedJob) {
+      if (!loading && jobs.length > 0) {
+        error = 'That import run is not available in this inventory.';
+        step = 'history';
+      }
+      return;
+    }
+    appliedImportJobRouteKey = routeKey;
+    showJobDetail(routedJob, importTab);
+  }
+
+  function defaultDetailTab(job: ImportJob): ImportDetailTabRoute {
+    return importIssueTone(job) === 'none' ? 'overview' : 'issues';
   }
 
   function reconcileStartedJob(nextJobs: ImportJob[]): void {
@@ -645,6 +730,7 @@
     }
     if (target === 'run' && startedJob) {
       onImportSourceChange(null);
+      onImportJobSelectionChange(startedJob.id, null);
       step = 'run';
     }
   }
@@ -797,6 +883,7 @@
   {:else if step === 'detail' && selectedJob}
     <ImportJobDetailPanel
       job={selectedJob}
+      bind:selectedTab={detailTab}
       canRequestCancellation={canRequestCancellation(selectedJob)}
       {detailLoading}
       {canCreateImports}

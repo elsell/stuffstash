@@ -1182,6 +1182,45 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('opens routed import job detail on the requested tab', async () => {
+    const repository = new DetailOnlyResourcefulImportJobRepository(structuredClone(seed));
+    await mountImportWorkspace(repository, { importJobId: 'job-terminal', importTab: 'records' });
+
+    await waitFor(() => {
+      expect(repository.detailCalls).toBe(1);
+      expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Imported records');
+      expect(document.body.textContent).toContain('Source asset: homebox-detail-asset');
+      expect(activeDetailTabText()).toContain('Records');
+    });
+  });
+
+  it('reports import detail selection and tab changes to the workspace route', async () => {
+    const selectedRoutes: Array<{ jobId: string | null; tab?: string | null }> = [];
+    const selectedTabs: Array<string | null> = [];
+    await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)), {
+      onImportJobSelectionChange: (jobId, tab) => selectedRoutes.push({ jobId, tab }),
+      onImportJobTabChange: (tab) => selectedTabs.push(tab)
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Runs');
+    });
+
+    document.body.querySelector<HTMLElement>('.history-row.clickable-row')?.click();
+
+    await waitFor(() => {
+      expect(selectedRoutes).toContainEqual({ jobId: 'job-terminal', tab: null });
+      expect(document.body.textContent).toContain('Import details');
+    });
+
+    buttonContaining('Records').click();
+
+    await waitFor(() => {
+      expect(selectedTabs).toContain('records');
+    });
+  });
+
   it('shows visible refresh progress while import details reload', async () => {
     let releaseRefresh: () => void = () => {};
     const refreshGate = new Promise<void>((resolve) => {
@@ -1402,6 +1441,14 @@ function confirmationButton(text: string): HTMLButtonElement {
     throw new Error(`Missing confirmation button containing ${text}`);
   }
   return button;
+}
+
+function activeDetailTabText(): string {
+  return (
+    Array.from(document.body.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]')).find((candidate) =>
+      candidate.hasAttribute('data-active') || candidate.getAttribute('aria-selected') === 'true' || candidate.getAttribute('data-state') === 'active'
+    )?.textContent ?? ''
+  );
 }
 
 function statusStripText(): string {

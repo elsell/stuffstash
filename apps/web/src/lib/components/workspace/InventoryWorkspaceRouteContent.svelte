@@ -68,6 +68,8 @@
     customAssetTypeId: string | null;
     customFieldDefinitionId: string | null;
     importSource: WorkspaceRouteState['importSource'];
+    importJobId: WorkspaceRouteState['importJobId'];
+    importTab: WorkspaceRouteState['importTab'];
   };
 
   export type RouteContentHrefs = {
@@ -100,6 +102,8 @@
     onSearch: () => Promise<void>;
     onOpenSearchAsset: (asset: Asset) => void;
     onImportSourceChange: (source: ImportSourceRoute) => void;
+    onImportJobSelectionChange: (jobId: string | null, tab?: WorkspaceRouteState['importTab']) => void;
+    onImportJobTabChange: (tab: WorkspaceRouteState['importTab']) => void;
     onImportJobInventoryChanged: (scope: { tenantId: string; inventoryId: string }) => Promise<void>;
     onOpenImportedAssetId: (assetId: string) => Promise<void>;
     onOpenInventoryAuditHistory: () => void;
@@ -243,7 +247,11 @@
     currentPrincipal={workspace.data.context.principal}
     repository={workspace.repository}
     importSource={route.importSource}
+    importJobId={route.importJobId}
+    importTab={route.importTab}
     onImportSourceChange={handlers.onImportSourceChange}
+    onImportJobSelectionChange={handlers.onImportJobSelectionChange}
+    onImportJobTabChange={handlers.onImportJobTabChange}
     onImportJobInventoryChanged={handlers.onImportJobInventoryChanged}
     onOpenImportedAssetId={handlers.onOpenImportedAssetId}
     onOpenInventoryAuditHistory={handlers.onOpenInventoryAuditHistory}

@@ -5,6 +5,7 @@
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import type { ImportJob, Principal } from '$lib/domain/inventory';
+  import type { ImportDetailTabRoute } from '$lib/application/workspaceRoute';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
@@ -46,6 +47,7 @@
 
   type Props = {
     job: ImportJob;
+    selectedTab: ImportDetailTabRoute;
     canRequestCancellation: boolean;
     detailLoading: boolean;
     canCreateImports: boolean;
@@ -63,6 +65,7 @@
 
   let {
     job,
+    selectedTab = $bindable(),
     canRequestCancellation,
     detailLoading,
     canCreateImports,
@@ -78,8 +81,6 @@
     onRemove
   }: Props = $props();
 
-  let selectedTab = $state('overview');
-  let defaultedTabJobId = $state('');
   let resourcesExpanded = $state(false);
   let issueCount = $derived(issueTotalCount(job));
   let issueTone = $derived(importIssueTone(job));
@@ -88,10 +89,8 @@
   let hiddenResourceCount = $derived(Math.max(0, job.resources.length - visibleResources.length));
 
   $effect(() => {
-    if (job.id === defaultedTabJobId) return;
-    selectedTab = detailMessages(job).length > 0 ? 'issues' : 'overview';
+    job.id;
     resourcesExpanded = false;
-    defaultedTabJobId = job.id;
   });
 
   function hasPreviewPlan(job: ImportJob): boolean {

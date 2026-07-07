@@ -692,8 +692,12 @@ export async function mountImportWorkspace(
   repository = new SeededInventoryRepository(structuredClone(seed)),
   options: {
     importSource?: 'homebox' | 'homebox-csv' | null;
+    importJobId?: string | null;
+    importTab?: 'overview' | 'issues' | 'plan' | 'records' | 'timeline' | null;
     inventory?: WorkspaceSeed['inventories'][number] | null;
     currentPrincipal?: Principal;
+    onImportJobSelectionChange?: (jobId: string | null, tab?: 'overview' | 'issues' | 'plan' | 'records' | 'timeline' | null) => void;
+    onImportJobTabChange?: (tab: 'overview' | 'issues' | 'plan' | 'records' | 'timeline' | null) => void;
     onImportJobInventoryChanged?: (scope: { tenantId: string; inventoryId: string }) => Promise<void>;
     onOpenImportedAssetId?: (assetId: string) => Promise<void>;
     onOpenInventoryAuditHistory?: () => void;
@@ -706,7 +710,11 @@ export async function mountImportWorkspace(
       inventory: options.inventory === undefined ? seed.inventories[0] : options.inventory,
       repository,
       initialImportSource: options.importSource ?? null,
+      initialImportJobId: options.importJobId ?? null,
+      initialImportTab: options.importTab ?? null,
       currentPrincipal: options.currentPrincipal,
+      onImportJobSelectionChange: options.onImportJobSelectionChange,
+      onImportJobTabChange: options.onImportJobTabChange,
       onImportJobInventoryChanged: options.onImportJobInventoryChanged,
       onOpenImportedAssetId: options.onOpenImportedAssetId,
       onOpenInventoryAuditHistory: options.onOpenInventoryAuditHistory

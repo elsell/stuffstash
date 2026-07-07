@@ -463,6 +463,28 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('deep-links to import detail tabs inside the workspace shell', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/import/jobs/job-terminal?tab=records',
+      new ResourcefulImportJobRepository(structuredClone(importWorkspaceSeed))
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import/jobs/job-terminal');
+      expect(window.location.search).toBe('?tab=records');
+      expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Imported records');
+    });
+
+    buttonContaining('Issues').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import/jobs/job-terminal');
+      expect(window.location.search).toBe('?tab=issues');
+      expect(document.body.textContent).toContain('Grouped by cause');
+    });
+  });
+
   it('applies workspace route state after client-side navigation without a popstate event', async () => {
     await mountWorkspace(
       '/tenants/tenant-home/inventories/inventory-household/import',

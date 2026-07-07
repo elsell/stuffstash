@@ -16,6 +16,7 @@ export type AccessInvitationRouteAction = 'expire' | 'cancel' | 'delete' | null;
 export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
 export type SettingsSection = 'overview' | 'access' | 'fields' | 'activity' | 'administration';
 export type ImportSourceRoute = 'homebox' | 'homebox-csv' | null;
+export type ImportDetailTabRoute = 'overview' | 'issues' | 'plan' | 'records' | 'timeline';
 
 export interface WorkspaceRouteState {
   mode: WorkspaceMode;
@@ -38,6 +39,8 @@ export interface WorkspaceRouteState {
   customAssetTypeId: string | null;
   customFieldDefinitionId: string | null;
   importSource: ImportSourceRoute;
+  importJobId: string | null;
+  importTab: ImportDetailTabRoute | null;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
@@ -66,6 +69,8 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   customAssetTypeId: null,
   customFieldDefinitionId: null,
   importSource: null,
+  importJobId: null,
+  importTab: null,
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
@@ -81,6 +86,7 @@ const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
 const importSources = new Set<Exclude<ImportSourceRoute, null>>(['homebox', 'homebox-csv']);
+const importDetailTabs = new Set<ImportDetailTabRoute>(['overview', 'issues', 'plan', 'records', 'timeline']);
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
@@ -232,6 +238,15 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     if (remaining === 1) {
       return { ...route, mode: 'import', importSource: null };
     }
+    if (remaining === 3 && segments[inventoryOffset.nextIndex + 1] === 'jobs' && segments[inventoryOffset.nextIndex + 2]) {
+      return {
+        ...route,
+        mode: 'import',
+        importSource: null,
+        importJobId: segments[inventoryOffset.nextIndex + 2],
+        importTab: parseImportTab(url.searchParams.get('tab'))
+      };
+    }
     if (remaining === 2 && importSources.has(segments[inventoryOffset.nextIndex + 1] as Exclude<ImportSourceRoute, null>)) {
       return {
         ...route,
@@ -373,7 +388,12 @@ export function workspaceRouteHref(
     }
   } else if (inventoryId && next.mode === 'import') {
     path += '/import';
-    if (next.importSource) {
+    if (next.importJobId) {
+      path += `/jobs/${encodeURIComponent(next.importJobId)}`;
+      if (next.importTab) {
+        search.set('tab', next.importTab);
+      }
+    } else if (next.importSource) {
       path += `/${next.importSource}`;
     }
   } else if (inventoryId && next.action === 'add' && next.addKind) {
@@ -411,4 +431,8 @@ function parseInvitationStatus(value: string | null): InvitationStatusFilter {
 
 function parseAuditScope(value: string | null): AuditScope {
   return auditScopes.has(value as AuditScope) ? (value as AuditScope) : 'inventory';
+}
+
+function parseImportTab(value: string | null): ImportDetailTabRoute | null {
+  return importDetailTabs.has(value as ImportDetailTabRoute) ? (value as ImportDetailTabRoute) : null;
 }

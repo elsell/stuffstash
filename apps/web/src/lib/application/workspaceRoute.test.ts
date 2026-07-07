@@ -153,6 +153,18 @@ describe('workspace route state', () => {
       mode: 'import',
       importSource: 'homebox-csv'
     });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/jobs/job_1?tab=records'))).toMatchObject({
+      mode: 'import',
+      importSource: null,
+      importJobId: 'job_1',
+      importTab: 'records'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/import/jobs/job_1?tab=junk'))).toMatchObject({
+      mode: 'import',
+      importSource: null,
+      importJobId: 'job_1',
+      importTab: null
+    });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/add/item?parent=location_1'))).toMatchObject({
       action: 'add',
       addKind: 'item',

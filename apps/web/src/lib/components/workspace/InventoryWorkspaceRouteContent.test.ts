@@ -323,7 +323,9 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       customizationAction: null,
       customAssetTypeId: null,
       customFieldDefinitionId: null,
-      importSource: null
+      importSource: null,
+      importJobId: null,
+      importTab: null
     },
     hrefs: {
       homeHref: '/tenants/tenant-home/inventories/inventory-household',
@@ -358,6 +360,8 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       onSearch: async () => {},
       onOpenSearchAsset: () => {},
       onImportSourceChange: () => {},
+      onImportJobSelectionChange: () => {},
+      onImportJobTabChange: () => {},
       onImportJobInventoryChanged: async () => {},
       onOpenImportedAssetId: async () => {},
       onOpenInventoryAuditHistory: () => {},
