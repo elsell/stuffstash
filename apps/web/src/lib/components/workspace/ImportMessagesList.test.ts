@@ -108,6 +108,72 @@ describe('ImportMessagesList', () => {
     expect(group?.querySelectorAll('.message-row')[0]?.textContent).not.toBe('homebox-source-id duplicate');
   });
 
+  it('opens issue details with user-facing meaning, impact, next action, and affected records', async () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [
+          sourceIDMessage('warning', 'Asset appears to have already been imported', 'homebox-source-id duplicate', 'source-wardrobe'),
+          sourceIDMessage('warning', 'Asset appears to have already been imported', 'homebox-source-id duplicate', 'source-baby-hats')
+        ],
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    buttonContaining('Details').click();
+    await tick();
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog?.textContent).toContain('Meaning');
+    expect(dialog?.textContent).toContain('connected to an earlier import');
+    expect(dialog?.textContent).toContain('Those records were skipped');
+    expect(dialog?.textContent).toContain('Open the matching item in Stuff Stash');
+    expect(dialog?.textContent).toContain('Affected records');
+    expect(dialog?.textContent).toContain('Source ID source-wardrobe');
+    expect(dialog?.textContent).toContain('Source ID source-baby-hats');
+
+    buttonWithLabel('Close issue details').click();
+    await tick();
+    expect(document.body.querySelector('[role="dialog"]')).toBeFalsy();
+  });
+
+  it('uses attachment-specific guidance for skipped file warnings', async () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [message('warning', 'Attachment could not be imported', 'download failed', 'receipt.png')],
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    buttonContaining('Details').click();
+    await tick();
+
+    const dialogText = document.body.querySelector<HTMLElement>('[role="dialog"]')?.textContent ?? '';
+    expect(dialogText).toContain('could not download');
+    expect(dialogText).toContain('photos or files were skipped');
+    expect(dialogText).toContain('Homebox URL is reachable');
+  });
+
+  it('uses blocking guidance for unknown error groups', async () => {
+    component = mount(ImportMessagesList, {
+      target: document.body,
+      props: {
+        messages: [message('error', 'Import validation failed', 'cleanup will retry', 'Garage shelf')],
+        emptyText: 'No blocking issues found.'
+      }
+    });
+
+    buttonContaining('Details').click();
+    await tick();
+
+    const dialogText = document.body.querySelector<HTMLElement>('[role="dialog"]')?.textContent ?? '';
+    expect(dialogText).toContain('blocked part of the import');
+    expect(dialogText).toContain('avoid saving misleading data');
+    expect(dialogText).toContain('preview and run the import again');
+  });
+
   it('bounds large warning sets behind grouped progressive disclosure', async () => {
     component = mount(ImportMessagesList, {
       target: document.body,
@@ -156,11 +222,14 @@ describe('ImportMessagesList', () => {
   it('keeps warning stats on warning tokens instead of destructive alarm tokens', () => {
     const warningRule = importMessagesListSource.match(/\.issue-stat\.warning\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
     const warningStrongRule = importMessagesListSource.match(/\.issue-stat\.warning strong\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+    const warningBadgeRule = importMessagesListSource.match(/\.message-warning-badge\)\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
 
     expect(warningRule).toContain('var(--color-warning)');
     expect(warningRule).not.toContain('destructive');
     expect(warningStrongRule).toContain('var(--color-warning-foreground)');
     expect(warningStrongRule).not.toContain('destructive');
+    expect(warningBadgeRule).toContain('var(--color-warning)');
+    expect(warningBadgeRule).toContain('var(--color-warning-foreground)');
   });
 });
 
@@ -190,6 +259,16 @@ function buttonContaining(text: string): HTMLButtonElement {
   );
   if (!button) {
     throw new Error(`Missing button containing ${text}`);
+  }
+  return button;
+}
+
+function buttonWithLabel(label: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.getAttribute('aria-label') === label
+  );
+  if (!button) {
+    throw new Error(`Missing button with label ${label}`);
   }
   return button;
 }
