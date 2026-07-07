@@ -121,17 +121,24 @@ type realtimeVoiceAssetToolOutput struct {
 }
 
 type realtimeVoiceAssetToolItem struct {
-	AssetID         string   `json:"assetId,omitempty"`
-	Title           string   `json:"title"`
-	Kind            string   `json:"kind"`
-	Description     string   `json:"description,omitempty"`
-	InventoryName   string   `json:"inventoryName"`
-	LifecycleState  string   `json:"lifecycleState"`
-	ParentTitle     string   `json:"parentTitle,omitempty"`
-	ParentKind      string   `json:"parentKind,omitempty"`
-	LocationTitle   string   `json:"locationTitle,omitempty"`
-	ContainmentPath []string `json:"containmentPath,omitempty"`
-	MatchFields     []string `json:"matchFields,omitempty"`
+	AssetID         string                             `json:"assetId,omitempty"`
+	Title           string                             `json:"title"`
+	Kind            string                             `json:"kind"`
+	Description     string                             `json:"description,omitempty"`
+	InventoryName   string                             `json:"inventoryName"`
+	LifecycleState  string                             `json:"lifecycleState"`
+	ParentTitle     string                             `json:"parentTitle,omitempty"`
+	ParentKind      string                             `json:"parentKind,omitempty"`
+	LocationTitle   string                             `json:"locationTitle,omitempty"`
+	ContainmentPath []string                           `json:"containmentPath,omitempty"`
+	MatchFields     []string                           `json:"matchFields,omitempty"`
+	CurrentCheckout *realtimeVoiceCurrentCheckoutEntry `json:"currentCheckout,omitempty"`
+}
+
+type realtimeVoiceCurrentCheckoutEntry struct {
+	ID                      string `json:"id"`
+	CheckedOutAt            string `json:"checkedOutAt"`
+	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
 }
 
 type realtimeVoiceAssetAuditHistoryToolOutput struct {

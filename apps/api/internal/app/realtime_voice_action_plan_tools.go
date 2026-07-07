@@ -346,6 +346,12 @@ func realtimeVoiceActionPlanReferencedAssetIDs(command ActionPlanCommandInput) (
 			return nil, ports.ErrInvalidProviderInput
 		}
 		ids = append(ids, id.String())
+	case actionplan.CommandKindCheckoutAsset, actionplan.CommandKindReturnAsset:
+		args, err := parseActionPlanCheckoutArguments(record)
+		if err != nil {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		ids = append(ids, args.AssetID.String())
 	default:
 		return nil, ports.ErrInvalidProviderInput
 	}
@@ -434,6 +440,19 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 			}
 			proposal.ParentCommandID = args.ParentCommandID
 		}
+	} else if command.Kind == actionplan.CommandKindCheckoutAsset || command.Kind == actionplan.CommandKindReturnAsset {
+		args, err := parseActionPlanCheckoutArguments(command)
+		if err == nil {
+			item, found, err := a.assets.AssetByID(ctx, session.TenantID, session.InventoryID, args.AssetID)
+			if err != nil {
+				return RealtimeVoiceActionPlanCommand{}, err
+			}
+			if !found {
+				return RealtimeVoiceActionPlanCommand{}, ports.ErrInvalidProviderInput
+			}
+			proposal.AssetKind = item.Kind.String()
+			proposal.Title = item.Title.String()
+		}
 	}
 	return proposal, nil
 }
@@ -448,6 +467,10 @@ func actionPlanCommandOperation(kind actionplan.CommandKind) string {
 		return "archive"
 	case actionplan.CommandKindRestoreAsset:
 		return "restore"
+	case actionplan.CommandKindCheckoutAsset:
+		return "checkout"
+	case actionplan.CommandKindReturnAsset:
+		return "return"
 	default:
 		return "update"
 	}

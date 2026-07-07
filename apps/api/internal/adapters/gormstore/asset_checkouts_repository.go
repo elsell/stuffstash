@@ -17,34 +17,38 @@ import (
 
 func (s Store) CheckOutAsset(ctx context.Context, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var item assetModel
-		err := tx.Where(&assetModel{
-			ID:             checkout.AssetID.String(),
-			TenantID:       checkout.TenantID.String(),
-			InventoryID:    checkout.InventoryID.String(),
-			LifecycleState: asset.LifecycleStateActive.String(),
-		}).First(&item).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ports.ErrForbidden
-		}
-		if err != nil {
-			return err
-		}
-		if checkout.State != asset.CheckoutStateOpen {
-			return ports.ErrForbidden
-		}
-		model := newAssetCheckoutModel(checkout)
-		if err := tx.Create(&model).Error; err != nil {
-			if assetCheckoutUniqueConflict(err) {
-				return ports.ErrConflict
-			}
-			return err
-		}
-		if err := createAuditRecord(tx, auditRecord); err != nil {
-			return err
-		}
-		return createUndoableOperation(tx, undoableOperation)
+		return checkOutAssetInTx(tx, checkout, auditRecord, undoableOperation)
 	})
+}
+
+func checkOutAssetInTx(tx *gorm.DB, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	var item assetModel
+	err := tx.Where(&assetModel{
+		ID:             checkout.AssetID.String(),
+		TenantID:       checkout.TenantID.String(),
+		InventoryID:    checkout.InventoryID.String(),
+		LifecycleState: asset.LifecycleStateActive.String(),
+	}).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.ErrForbidden
+	}
+	if err != nil {
+		return err
+	}
+	if checkout.State != asset.CheckoutStateOpen {
+		return ports.ErrForbidden
+	}
+	model := newAssetCheckoutModel(checkout)
+	if err := tx.Create(&model).Error; err != nil {
+		if assetCheckoutUniqueConflict(err) {
+			return ports.ErrConflict
+		}
+		return err
+	}
+	if err := createAuditRecord(tx, auditRecord); err != nil {
+		return err
+	}
+	return createUndoableOperation(tx, undoableOperation)
 }
 
 func assetCheckoutUniqueConflict(err error) bool {
@@ -59,32 +63,36 @@ func assetCheckoutUniqueConflict(err error) bool {
 
 func (s Store) ReturnAsset(ctx context.Context, expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var model assetCheckoutModel
-		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetCheckoutModel{ID: expectedCurrent.ID.String(), TenantID: expectedCurrent.TenantID.String(), InventoryID: expectedCurrent.InventoryID.String()}).First(&model).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ports.ErrConflict
-		}
-		if err != nil {
-			return err
-		}
-		current, ok := model.toDomain()
-		if !ok {
-			return fmt.Errorf("invalid asset checkout row %q", model.ID)
-		}
-		if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
-			return ports.ErrConflict
-		}
-		if current.State != asset.CheckoutStateOpen || returned.ID != current.ID || returned.TenantID != current.TenantID || returned.InventoryID != current.InventoryID || returned.AssetID != current.AssetID || returned.State != asset.CheckoutStateReturned || returned.ReturnedAt.IsZero() || returned.ReturnedByPrincipal == "" {
-			return ports.ErrForbidden
-		}
-		if err := tx.Model(&model).Updates(assetCheckoutUpdateMap(returned)).Error; err != nil {
-			return err
-		}
-		if err := createAuditRecord(tx, auditRecord); err != nil {
-			return err
-		}
-		return createUndoableOperation(tx, undoableOperation)
+		return returnAssetInTx(tx, expectedCurrent, returned, auditRecord, undoableOperation)
 	})
+}
+
+func returnAssetInTx(tx *gorm.DB, expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
+	var model assetCheckoutModel
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetCheckoutModel{ID: expectedCurrent.ID.String(), TenantID: expectedCurrent.TenantID.String(), InventoryID: expectedCurrent.InventoryID.String()}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.ErrConflict
+	}
+	if err != nil {
+		return err
+	}
+	current, ok := model.toDomain()
+	if !ok {
+		return fmt.Errorf("invalid asset checkout row %q", model.ID)
+	}
+	if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+		return ports.ErrConflict
+	}
+	if current.State != asset.CheckoutStateOpen || returned.ID != current.ID || returned.TenantID != current.TenantID || returned.InventoryID != current.InventoryID || returned.AssetID != current.AssetID || returned.State != asset.CheckoutStateReturned || returned.ReturnedAt.IsZero() || returned.ReturnedByPrincipal == "" {
+		return ports.ErrForbidden
+	}
+	if err := tx.Model(&model).Updates(assetCheckoutUpdateMap(returned)).Error; err != nil {
+		return err
+	}
+	if err := createAuditRecord(tx, auditRecord); err != nil {
+		return err
+	}
+	return createUndoableOperation(tx, undoableOperation)
 }
 
 func (s Store) CurrentAssetCheckout(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Checkout, bool, error) {

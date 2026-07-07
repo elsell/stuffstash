@@ -37,11 +37,13 @@ const (
 	CommandKindUpdateAsset    CommandKind = "update_asset"
 	CommandKindArchiveAsset   CommandKind = "archive_asset"
 	CommandKindRestoreAsset   CommandKind = "restore_asset"
+	CommandKindCheckoutAsset  CommandKind = "checkout_asset"
+	CommandKindReturnAsset    CommandKind = "return_asset"
 )
 
 func (k CommandKind) Valid() bool {
 	switch k {
-	case CommandKindCreateAsset, CommandKindCreateLocation, CommandKindMoveAsset, CommandKindUpdateAsset, CommandKindArchiveAsset, CommandKindRestoreAsset:
+	case CommandKindCreateAsset, CommandKindCreateLocation, CommandKindMoveAsset, CommandKindUpdateAsset, CommandKindArchiveAsset, CommandKindRestoreAsset, CommandKindCheckoutAsset, CommandKindReturnAsset:
 		return true
 	default:
 		return false

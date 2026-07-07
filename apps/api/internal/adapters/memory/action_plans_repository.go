@@ -202,6 +202,35 @@ func (s *Store) ExecuteUpdateAssetLifecycleActionPlan(_ context.Context, tenantI
 	return cloneActionPlanRecord(updated), true, nil
 }
 
+func (s *Store) ExecuteAssetCheckoutActionPlan(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, operation ports.ActionPlanCheckoutOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, found := s.actionPlans[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From || record.State.Terminal() || transition.At.Before(record.CreatedAt) {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	if operation.ExpectedCurrent == nil {
+		if err := s.checkOutAssetLocked(operation.Checkout, operation.AuditRecord, operation.UndoableOperation); err != nil {
+			return ports.ActionPlanRecord{}, true, err
+		}
+	} else if err := s.returnAssetLocked(*operation.ExpectedCurrent, operation.Checkout, operation.AuditRecord, operation.UndoableOperation); err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	s.actionPlans[planID] = updated
+	return cloneActionPlanRecord(updated), true, nil
+}
+
 func validateActionPlanRecord(record ports.ActionPlanRecord) error {
 	if strings.TrimSpace(record.ID) == "" ||
 		record.TenantID.String() == "" ||

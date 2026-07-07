@@ -188,6 +188,34 @@ func (s Store) ExecuteUpdateAssetLifecycleActionPlan(ctx context.Context, tenant
 	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
 }
 
+func (s Store) ExecuteAssetCheckoutActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, operation ports.ActionPlanCheckoutOperation) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	found := false
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		transitionFound, err := updateActionPlanStateInDB(tx, tenantID, inventoryID, planID, transition)
+		if err != nil {
+			return err
+		}
+		found = transitionFound
+		if !found {
+			return nil
+		}
+		if operation.ExpectedCurrent == nil {
+			return checkOutAssetInTx(tx, operation.Checkout, operation.AuditRecord, operation.UndoableOperation)
+		}
+		return returnAssetInTx(tx, *operation.ExpectedCurrent, operation.Checkout, operation.AuditRecord, operation.UndoableOperation)
+	})
+	if err != nil {
+		return ports.ActionPlanRecord{}, found, err
+	}
+	if !found {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
+}
+
 func updateActionPlanStateInDB(db *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition) (bool, error) {
 	scope := actionPlanModel{
 		TenantID:    tenantID.String(),

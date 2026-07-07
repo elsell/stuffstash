@@ -11,41 +11,58 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func (s Service) CheckoutAsset(ctx context.Context, input CheckoutAssetInput) (asset.Checkout, error) {
-	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
-		return asset.Checkout{}, err
-	}
-	if err := s.ensureCheckoutDependencies(); err != nil {
-		return asset.Checkout{}, err
-	}
-	if input.AssetID.String() == "" {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
-	}
-	item, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
+	prepared, err := s.PrepareCheckoutAsset(ctx, input)
 	if err != nil {
 		return asset.Checkout{}, err
 	}
+	operation := prepared.UndoableOperation
+	if err := s.assetUnitOfWork.CheckOutAsset(ctx, prepared.Checkout, prepared.AuditRecord, &operation); err != nil {
+		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
+			return asset.Checkout{}, apperrors.ErrInvalidInput
+		}
+		return asset.Checkout{}, err
+	}
+	s.RecordAssetCheckedOut(ctx, prepared.Checkout, input.Principal.ID)
+	return prepared.Checkout, nil
+}
+
+func (s Service) PrepareCheckoutAsset(ctx context.Context, input CheckoutAssetInput) (PreparedCheckoutOperation, error) {
+	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return PreparedCheckoutOperation{}, err
+	}
+	if err := s.ensureCheckoutDependencies(); err != nil {
+		return PreparedCheckoutOperation{}, err
+	}
+	if input.AssetID.String() == "" {
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
+	}
+	item, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID)
+	if err != nil {
+		return PreparedCheckoutOperation{}, err
+	}
 	if !found {
-		return asset.Checkout{}, apperrors.ErrNotFound
+		return PreparedCheckoutOperation{}, apperrors.ErrNotFound
 	}
 	if item.LifecycleState != asset.LifecycleStateActive {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
 	if _, found, err := s.checkouts.CurrentAssetCheckout(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	} else if found {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
 	details, ok := asset.NewCheckoutDetails(input.Details)
 	if !ok {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
 	checkoutID, ok := asset.NewCheckoutID(s.newID())
 	if !ok {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
 	now := s.now().UTC()
 	checkout := asset.Checkout{
@@ -62,7 +79,7 @@ func (s Service) CheckoutAsset(ctx context.Context, input CheckoutAssetInput) (a
 	}
 	operation, err := s.newCheckoutUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetCheckedOut, nil, checkout)
 	if err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	}
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
 		Principal:   input.Principal,
@@ -81,40 +98,52 @@ func (s Service) CheckoutAsset(ctx context.Context, input CheckoutAssetInput) (a
 		},
 	})
 	if err != nil {
+		return PreparedCheckoutOperation{}, err
+	}
+	return PreparedCheckoutOperation{Checkout: checkout, AuditRecord: auditRecord, UndoableOperation: operation}, nil
+}
+
+func (s Service) ReturnAsset(ctx context.Context, input ReturnAssetInput) (asset.Checkout, error) {
+	prepared, err := s.PrepareReturnAsset(ctx, input)
+	if err != nil {
 		return asset.Checkout{}, err
 	}
-	if err := s.assetUnitOfWork.CheckOutAsset(ctx, checkout, auditRecord, &operation); err != nil {
+	if prepared.ExpectedCurrent == nil {
+		return asset.Checkout{}, apperrors.ErrInvalidInput
+	}
+	operation := prepared.UndoableOperation
+	if err := s.assetUnitOfWork.ReturnAsset(ctx, *prepared.ExpectedCurrent, prepared.Checkout, prepared.AuditRecord, &operation); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
 			return asset.Checkout{}, apperrors.ErrInvalidInput
 		}
 		return asset.Checkout{}, err
 	}
-	s.recordCheckoutEvent(ctx, ports.EventAssetCheckedOut, "asset checked out", checkout, input.Principal.ID.String())
-	return checkout, nil
+	s.RecordAssetReturned(ctx, prepared.Checkout, input.Principal.ID)
+	return prepared.Checkout, nil
 }
 
-func (s Service) ReturnAsset(ctx context.Context, input ReturnAssetInput) (asset.Checkout, error) {
+func (s Service) PrepareReturnAsset(ctx context.Context, input ReturnAssetInput) (PreparedCheckoutOperation, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	}
 	if err := s.ensureCheckoutDependencies(); err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	}
 	current, found, err := s.checkouts.CurrentAssetCheckout(ctx, input.TenantID, input.InventoryID, input.AssetID)
 	if err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	}
 	if !found {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
 	if _, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	} else if !found {
-		return asset.Checkout{}, apperrors.ErrNotFound
+		return PreparedCheckoutOperation{}, apperrors.ErrNotFound
 	}
 	details, ok := asset.NewCheckoutDetails(input.Details)
 	if !ok {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
 	now := s.now().UTC()
 	returned := current
@@ -125,7 +154,7 @@ func (s Service) ReturnAsset(ctx context.Context, input ReturnAssetInput) (asset
 	returned.UpdatedAt = now
 	operation, err := s.newCheckoutUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetReturned, &current, returned)
 	if err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	}
 	auditRecord, err := s.newAuditRecord(auditRecordInput{
 		Principal:   input.Principal,
@@ -145,16 +174,9 @@ func (s Service) ReturnAsset(ctx context.Context, input ReturnAssetInput) (asset
 		},
 	})
 	if err != nil {
-		return asset.Checkout{}, err
+		return PreparedCheckoutOperation{}, err
 	}
-	if err := s.assetUnitOfWork.ReturnAsset(ctx, current, returned, auditRecord, &operation); err != nil {
-		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
-			return asset.Checkout{}, apperrors.ErrInvalidInput
-		}
-		return asset.Checkout{}, err
-	}
-	s.recordCheckoutEvent(ctx, ports.EventAssetCheckoutReturned, "asset returned", returned, input.Principal.ID.String())
-	return returned, nil
+	return PreparedCheckoutOperation{Checkout: returned, ExpectedCurrent: &current, AuditRecord: auditRecord, UndoableOperation: operation}, nil
 }
 
 func (s Service) ListAssetCheckoutHistory(ctx context.Context, input ListAssetCheckoutHistoryInput) (AssetCheckoutHistoryResult, error) {
@@ -252,6 +274,14 @@ func (s Service) recordCheckoutEvent(ctx context.Context, name ports.EventName, 
 		"checkout_id":  checkout.ID.String(),
 		"principal_id": principalID,
 	}})
+}
+
+func (s Service) RecordAssetCheckedOut(ctx context.Context, checkout asset.Checkout, principalID identity.PrincipalID) {
+	s.recordCheckoutEvent(ctx, ports.EventAssetCheckedOut, "asset checked out", checkout, principalID.String())
+}
+
+func (s Service) RecordAssetReturned(ctx context.Context, checkout asset.Checkout, principalID identity.PrincipalID) {
+	s.recordCheckoutEvent(ctx, ports.EventAssetCheckoutReturned, "asset returned", checkout, principalID.String())
 }
 
 type checkoutHistoryCursor struct {

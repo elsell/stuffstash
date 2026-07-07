@@ -279,6 +279,10 @@ func (s *Store) CheckOutAsset(_ context.Context, checkout asset.Checkout, auditR
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	return s.checkOutAssetLocked(checkout, auditRecord, undoableOperation)
+}
+
+func (s *Store) checkOutAssetLocked(checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	item, ok := s.assets[checkout.AssetID]
 	if !ok || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID || item.LifecycleState != asset.LifecycleStateActive || checkout.State != asset.CheckoutStateOpen {
 		return ports.ErrForbidden
@@ -311,6 +315,10 @@ func (s *Store) ReturnAsset(_ context.Context, expectedCurrent asset.Checkout, r
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	return s.returnAssetLocked(expectedCurrent, returned, auditRecord, undoableOperation)
+}
+
+func (s *Store) returnAssetLocked(expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	current, ok := s.checkouts[expectedCurrent.ID]
 	if !ok || !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
 		return ports.ErrConflict

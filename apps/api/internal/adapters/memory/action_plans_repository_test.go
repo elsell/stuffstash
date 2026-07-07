@@ -165,6 +165,55 @@ func TestActionPlanRepositoryExecutesAssetLifecycleAtomically(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryExecutesAssetCheckoutAtomically(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := NewStore()
+	tenantID := tenant.ID("tenant-home")
+	inventoryID := inventory.InventoryID("inventory-home")
+	saveMemoryTenant(t, ctx, store, tenantID)
+	saveMemoryInventory(t, ctx, store, tenantID, inventoryID)
+	record := memoryActionPlanRecord("plan-checkout", time.Date(2026, 6, 26, 18, 0, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, record); err != nil {
+		t.Fatalf("save action plan: %v", err)
+	}
+	if _, _, err := store.UpdateActionPlanState(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateProposed, To: actionplan.StateApproved, At: record.CreatedAt.Add(time.Second)}); err != nil {
+		t.Fatalf("approve action plan: %v", err)
+	}
+	item := memoryAsset(t, "asset-one", tenantID, inventoryID)
+	if err := store.CreateAsset(ctx, item, memoryAuditRecord(t, "audit-create-asset", tenantID), nil); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+	checkout := asset.Checkout{
+		ID:                    asset.CheckoutID("checkout-one"),
+		TenantID:              asset.TenantID(tenantID.String()),
+		InventoryID:           asset.InventoryID(inventoryID.String()),
+		AssetID:               item.ID,
+		State:                 asset.CheckoutStateOpen,
+		CheckedOutAt:          record.CreatedAt.Add(2 * time.Second),
+		CheckedOutByPrincipal: "user-1",
+		CreatedAt:             record.CreatedAt.Add(2 * time.Second),
+		UpdatedAt:             record.CreatedAt.Add(2 * time.Second),
+	}
+	checkoutAudit := memoryAuditRecord(t, "audit-checkout", tenantID)
+	checkoutAudit.Action = audit.ActionAssetCheckedOut
+
+	executed, found, err := store.ExecuteAssetCheckoutActionPlan(ctx, record.TenantID, record.InventoryID, record.ID, ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateApproved, To: actionplan.StateExecuted, At: record.CreatedAt.Add(3 * time.Second)}, ports.ActionPlanCheckoutOperation{
+		Checkout:    checkout,
+		AuditRecord: checkoutAudit,
+	})
+	if err != nil {
+		t.Fatalf("execute checkout action plan: %v", err)
+	}
+	if !found || executed.State != actionplan.StateExecuted || executed.ExecutedAt.IsZero() {
+		t.Fatalf("unexpected executed plan found=%t record=%+v", found, executed)
+	}
+	if current, found, err := store.CurrentAssetCheckout(ctx, tenantID, inventoryID, item.ID); err != nil || !found || current.ID != checkout.ID {
+		t.Fatalf("expected current checkout found=%t checkout=%+v err=%v", found, current, err)
+	}
+}
+
 func memoryActionPlanRecord(id string, createdAt time.Time) ports.ActionPlanRecord {
 	return ports.ActionPlanRecord{
 		ID:                         id,

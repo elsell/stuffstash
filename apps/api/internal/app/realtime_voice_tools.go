@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -519,6 +520,19 @@ func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoi
 	}
 	if includeAssetID {
 		toolItem.AssetID = item.ID.String()
+	}
+	if a.checkouts != nil {
+		checkout, found, err := a.checkouts.CurrentAssetCheckout(ctx, session.TenantID, session.InventoryID, item.ID)
+		if err != nil {
+			return realtimeVoiceAssetToolItem{}, err
+		}
+		if found {
+			toolItem.CurrentCheckout = &realtimeVoiceCurrentCheckoutEntry{
+				ID:                      checkout.ID.String(),
+				CheckedOutAt:            checkout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
+				CheckedOutByPrincipalID: checkout.CheckedOutByPrincipal,
+			}
+		}
 	}
 	return toolItem, nil
 }

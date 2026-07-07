@@ -137,6 +137,13 @@ type CheckedOutAssetsResult struct {
 	HasMore    bool
 }
 
+type PreparedCheckoutOperation struct {
+	Checkout          asset.Checkout
+	ExpectedCurrent   *asset.Checkout
+	AuditRecord       audit.Record
+	UndoableOperation ports.UndoableOperation
+}
+
 type GetAssetResult struct {
 	Item            asset.Asset
 	PrimaryPhoto    *media.Attachment

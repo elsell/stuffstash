@@ -522,6 +522,7 @@ func newActionPlanExecutionTestAppWithAuthorizer(repository ports.ActionPlanRepo
 		}}},
 		Assets:          assetRepository,
 		AssetUnitOfWork: assetRepository,
+		Checkouts:       assetRepository,
 		Undoables:       assetRepository,
 		ActionPlans:     repository,
 		IDs:             ids,
@@ -745,6 +746,35 @@ func (f *fakeActionPlanRepository) ExecuteUpdateAssetLifecycleActionPlan(ctx con
 	updated.UpdatedAt = transition.At
 	updated.ExecutedAt = transition.At
 	if err := f.assetUnitOfWork.UpdateAssetLifecycle(ctx, item, auditRecord, undoableOperation); err != nil {
+		return ports.ActionPlanRecord{}, true, err
+	}
+	f.records[planID] = updated
+	return updated, true, nil
+}
+
+func (f *fakeActionPlanRepository) ExecuteAssetCheckoutActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, operation ports.ActionPlanCheckoutOperation) (ports.ActionPlanRecord, bool, error) {
+	if transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	record, found := f.records[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	if f.assetUnitOfWork == nil {
+		return ports.ActionPlanRecord{}, true, ErrInvalidInput
+	}
+	updated := record
+	updated.State = transition.To
+	updated.UpdatedAt = transition.At
+	updated.ExecutedAt = transition.At
+	if operation.ExpectedCurrent == nil {
+		if err := f.assetUnitOfWork.CheckOutAsset(ctx, operation.Checkout, operation.AuditRecord, operation.UndoableOperation); err != nil {
+			return ports.ActionPlanRecord{}, true, err
+		}
+	} else if err := f.assetUnitOfWork.ReturnAsset(ctx, *operation.ExpectedCurrent, operation.Checkout, operation.AuditRecord, operation.UndoableOperation); err != nil {
 		return ports.ActionPlanRecord{}, true, err
 	}
 	f.records[planID] = updated
