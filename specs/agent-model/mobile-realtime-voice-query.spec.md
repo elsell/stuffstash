@@ -103,6 +103,8 @@ The collapsed voice accessory is the persistent voice affordance. Activating it 
 
 When a realtime session is active or has a terminal result, the collapsed voice accessory should reflect the latest safe session state instead of only generic stage labels. It may show the current safe progress label, review-needed status, safe failure summary, and the final user-facing spoken response. It must not show partial transcript text, raw transcripts, diagnostics, tool labels, tool arguments, provider errors, prompts, credentials, internal IDs, or stack traces.
 
+When a session completes with a clarification response and the same-session follow-up window is still available, mobile must present that state as needing detail rather than as a completed answer. The collapsed accessory, expanded sheet title, bottom hint, and microphone accessibility label should make the next expected action clear: answer the follow-up in the same conversation.
+
 The expanded session surface must:
 
 - Visually read as an expansion of the bottom voice accessory.
