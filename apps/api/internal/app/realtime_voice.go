@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -51,6 +50,12 @@ const (
 	realtimeVoiceFailureLanguageInference         = "language_inference_failed"
 	realtimeVoiceFailureTextToSpeech              = "text_to_speech_failed"
 	realtimeVoiceToolTurnBudget                   = 6
+	realtimeVoiceProgressUnderstanding            = "understanding"
+	realtimeVoiceProgressExploring                = "exploring"
+	realtimeVoiceProgressPlanning                 = "planning"
+	realtimeVoiceProgressReviewing                = "reviewing"
+	realtimeVoiceProgressAnswering                = "answering"
+	realtimeVoiceProgressRecovering               = "recovering"
 )
 
 type RealtimeVoiceSessionInput struct {
@@ -278,7 +283,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(transcript); ok {
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, emit)
 	}
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentProgress, SessionID: input.Session.ID, Status: "thinking", Message: "Checking your inventory."}); err != nil {
+	if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressUnderstanding, "Understanding your request.", emit); err != nil {
 		return err
 	}
 
@@ -291,11 +296,17 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			if strings.TrimSpace(call.ID) == "" {
 				call.ID = a.newRealtimeVoiceID()
 			}
+			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
+				return err
+			}
 			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, transcript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
 			if err != nil {
 				return err
 			}
 			if proposal != nil {
+				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
+					return err
+				}
 				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
 					return err
 				}
@@ -314,6 +325,15 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(transcript, turn, toolResults)
 		if requireToolCall {
 			tools = realtimeVoiceReadToolsForTurn(transcript, turn, toolResults)
+		}
+		if planOnly {
+			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressPlanning, "Preparing a safe plan.", emit); err != nil {
+				return err
+			}
+		} else if requireToolCall {
+			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
+				return err
+			}
 		}
 		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 			TenantID:           input.Session.TenantID,
@@ -478,6 +498,27 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 				return err
 			}
 			if proposal != nil {
+				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
+					return err
+				}
+				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
+					return err
+				}
+				return nil
+			}
+		}
+		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedExplorationCall(transcript, turn, toolResults, a.newRealtimeVoiceID()); ok {
+			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking one more match.", emit); err != nil {
+				return err
+			}
+			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, transcript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
+			if err != nil {
+				return err
+			}
+			if proposal != nil {
+				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
+					return err
+				}
 				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
 					return err
 				}
@@ -499,6 +540,9 @@ func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session R
 }
 
 func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session RealtimeVoiceSession, transcript string, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink) error {
+	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressAnswering, "Preparing an answer.", emit); err != nil {
+		return err
+	}
 	modelTurn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 		TenantID:           session.TenantID,
 		InventoryID:        session.InventoryID,
@@ -676,68 +720,6 @@ func (a App) ensureRealtimeVoiceDependencies() error {
 		return apperrors.ErrInvalidInput
 	}
 	return nil
-}
-
-func (a App) completeRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
-	if response.Kind == "" {
-		response.Kind = ports.StructuredAgentResponseKindAnswer
-	}
-	response.ResponseID = a.newRealtimeVoiceID()
-	response.SessionID = session.ID
-	response.TenantID = session.TenantID
-	response.InventoryID = session.InventoryID
-	response.Source = session.Source
-	response.ToolCallIDs = append([]string{}, toolCallIDs...)
-	if response.DisplayResponse == "" {
-		response.DisplayResponse = response.SpokenResponse
-	}
-
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAssistantResponseStarted, SessionID: session.ID, Response: &response}); err != nil {
-		return err
-	}
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAssistantResponseCompleted, SessionID: session.ID, Response: &response}); err != nil {
-		return err
-	}
-
-	speech, err := session.textToSpeech.Synthesize(ctx, ports.TextToSpeechInput{
-		TenantID:    session.TenantID,
-		InventoryID: session.InventoryID,
-		Principal:   session.Principal,
-		Text:        response.SpokenResponse,
-		MimeTypes:   session.OutputAudio.MimeTypes,
-	})
-	if err != nil {
-		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureTextToSpeech, err: err}
-	}
-	if speech.MimeType == "" || len(speech.Chunks) == 0 {
-		return ports.ErrInvalidProviderInput
-	}
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioStarted, SessionID: session.ID, AudioMime: speech.MimeType}); err != nil {
-		return err
-	}
-	for index, chunk := range speech.Chunks {
-		if len(chunk) == 0 {
-			continue
-		}
-		if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioChunk, SessionID: session.ID, ChunkID: fmt.Sprintf("tts-%d", index+1), Audio: chunk, FinalChunk: index == len(speech.Chunks)-1}); err != nil {
-			return err
-		}
-	}
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioCompleted, SessionID: session.ID}); err != nil {
-		return err
-	}
-	if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
-		return err
-	}
-	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
-}
-
-func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, toolCallIDs []string, emit RealtimeVoiceEventSink) error {
-	return a.completeRealtimeVoiceResponse(ctx, session, ports.StructuredAgentResponse{
-		Kind:            ports.StructuredAgentResponseKindSafeFailure,
-		SpokenResponse:  "I could not finish that voice request safely. Please try again with a little more detail.",
-		DisplayResponse: "I could not finish that voice request safely. Please try again with a little more detail.",
-	}, toolCallIDs, emit)
 }
 
 func recoverableRealtimeVoiceToolError(err error) bool {

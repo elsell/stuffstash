@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -58,6 +59,117 @@ func realtimeVoiceSimpleCreateDestinationQuery(transcript string) string {
 		}
 	}
 	return normalizeRealtimeVoiceSourceText(best)
+}
+
+func realtimeVoiceServerSelectedExplorationCall(transcript string, turn int, toolResults []ports.AgentToolResult, id string) (ports.AgentToolCall, string, bool) {
+	if turn != 0 || !realtimeVoiceLooksLikeSpecificSingularLookup(transcript) || realtimeVoiceLooksLikePluralCategoryQuery(transcript) {
+		return ports.AgentToolCall{}, "", false
+	}
+	query := realtimeVoiceSpecificLookupObjectQuery(transcript)
+	if query == "" || realtimeVoiceSearchQueryAlreadyAttempted(query, toolResults) {
+		return ports.AgentToolCall{}, "", false
+	}
+	for _, miss := range realtimeVoiceNoMatchQueries(toolResults) {
+		if realtimeVoiceQueriesMeaningfullyOverlap(query, miss) {
+			return ports.AgentToolCall{
+				ID:        id,
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": query},
+			}, "Server-selected narrow retry", true
+		}
+	}
+	return ports.AgentToolCall{}, "", false
+}
+
+func realtimeVoiceLooksLikeSpecificSingularLookup(transcript string) bool {
+	if !realtimeVoiceLooksLikeReadQuestion(transcript) || realtimeVoiceLooksLikeWriteRequest(transcript) {
+		return false
+	}
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, pluralMarker := range []string{" where are ", " what are ", " do i have any ", " do we have any "} {
+		if strings.Contains(text, pluralMarker) {
+			return false
+		}
+	}
+	for _, marker := range []string{" where is ", " where's ", " find my ", " find the ", " can you find ", " what is "} {
+		if strings.Contains(text, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceSpecificLookupObjectQuery(transcript string) string {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, marker := range []string{" where is ", " where's ", " can you find ", " find my ", " find the ", " what is "} {
+		if index := strings.LastIndex(text, marker); index >= 0 {
+			query := normalizeRealtimeVoiceSourceText(text[index+len(marker):])
+			query = strings.TrimSpace(strings.TrimPrefix(query, "my "))
+			query = strings.TrimSpace(strings.TrimPrefix(query, "the "))
+			return query
+		}
+	}
+	words := realtimeVoiceMeaningfulWords(transcript)
+	filtered := make([]string, 0, len(words))
+	for _, word := range words {
+		switch word {
+		case "where", "what", "find", "have", "does":
+			continue
+		default:
+			filtered = append(filtered, word)
+		}
+	}
+	return strings.Join(filtered, " ")
+}
+
+func realtimeVoiceLooksLikePluralCategoryQuery(transcript string) bool {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, marker := range []string{" where are ", " what are ", " any ", " all ", " list "} {
+		if strings.Contains(text, marker) {
+			return true
+		}
+	}
+	query := realtimeVoiceSpecificLookupObjectQuery(transcript)
+	words := strings.Fields(query)
+	if len(words) == 0 {
+		return false
+	}
+	last := words[len(words)-1]
+	return strings.HasSuffix(last, "s") && !strings.HasSuffix(last, "ss")
+}
+
+func realtimeVoiceSearchQueryAlreadyAttempted(query string, toolResults []ports.AgentToolResult) bool {
+	query = normalizeRealtimeVoiceSourceText(query)
+	for _, result := range toolResults {
+		if result.Name != RealtimeVoiceToolSearchAuthorizedAssets {
+			continue
+		}
+		var output realtimeVoiceAssetToolOutput
+		if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
+			continue
+		}
+		if normalizeRealtimeVoiceSourceText(output.Query) == query {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceQueriesMeaningfullyOverlap(left string, right string) bool {
+	leftWords := map[string]struct{}{}
+	for _, word := range realtimeVoiceMeaningfulWords(left) {
+		leftWords[word] = struct{}{}
+	}
+	if len(leftWords) == 0 {
+		return false
+	}
+	matches := 0
+	for _, word := range realtimeVoiceMeaningfulWords(right) {
+		if _, ok := leftWords[word]; ok {
+			matches++
+		}
+	}
+	return matches > 0
 }
 
 func (a App) executeRealtimeVoiceServerSelectedRead(ctx context.Context, session RealtimeVoiceSession, transcript string, call ports.AgentToolCall, diagnosticTitle string, toolResults *[]ports.AgentToolResult, toolCallIDs *[]string, executedToolCalls map[string]struct{}, visibleAssetIDs map[string]struct{}, emit RealtimeVoiceEventSink) (*RealtimeVoiceActionPlanProposal, error) {
@@ -126,4 +238,8 @@ func (a App) executeRealtimeVoiceServerSelectedRead(ctx context.Context, session
 		return nil, err
 	}
 	return proposal, nil
+}
+
+func emitRealtimeVoiceProgress(session RealtimeVoiceSession, status string, message string, emit RealtimeVoiceEventSink) error {
+	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentProgress, SessionID: session.ID, Status: status, Message: message})
 }

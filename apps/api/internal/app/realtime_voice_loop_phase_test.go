@@ -414,6 +414,72 @@ func TestRealtimeVoiceDoesNotBroadListAfterPluralWhereNoMatch(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceRetriesSpecificSingularWhereMissWithTranscriptObjectWords(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-electric-drill",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "cordless electric drill"},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "Your cordless drill is in the Garage.",
+				DisplayResponse: "Your cordless drill is in the Garage.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my cordless drill?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	garage := assetItem("garage-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	garageTitle, _ := asset.NewTitle("Garage")
+	garage.Title = garageTitle
+	drill := assetItem("cordless-drill-1", "tenant-home", "inventory-home", asset.KindItem, "garage-1")
+	drillTitle, _ := asset.NewTitle("Cordless drill")
+	drill.Title = drillTitle
+	seedRealtimeVoiceLoopAsset(t, store, garage, "audit-garage")
+	seedRealtimeVoiceLoopAsset(t, store, drill, "audit-drill")
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	var events []RealtimeVoiceEvent
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %T %[1]v", err)
+	}
+	if len(language.seenToolResults) != 2 || len(language.seenToolResults[1]) < 2 {
+		t.Fatalf("expected model final turn to receive original miss and narrow retry, got %+v", language.seenToolResults)
+	}
+	retry := language.seenToolResults[1][1]
+	if retry.Name != RealtimeVoiceToolSearchAuthorizedAssets || !containsAll(retry.Content, `"query":"cordless drill"`, "cordless-drill-1", "Garage") {
+		t.Fatalf("expected narrow transcript retry to find cordless drill, got %+v", retry)
+	}
+	statuses := realtimeVoiceProgressStatuses(events)
+	for _, expected := range []string{"understanding", "exploring", "answering"} {
+		if !slicesContains(statuses, expected) {
+			t.Fatalf("expected progress status %q in %+v", expected, statuses)
+		}
+	}
+	if slicesContains(statuses, "thinking") {
+		t.Fatalf("expected bounded phase statuses, got %+v", statuses)
+	}
+	if tts.lastText != "Your cordless drill is in the Garage." {
+		t.Fatalf("expected grounded drill answer, got %q", tts.lastText)
+	}
+}
+
 func TestRealtimeVoiceContentsListPrefersNamedContainerOverOverlappingLocation(t *testing.T) {
 	t.Parallel()
 
@@ -552,4 +618,23 @@ func containsAll(text string, terms ...string) bool {
 		}
 	}
 	return true
+}
+
+func realtimeVoiceProgressStatuses(events []RealtimeVoiceEvent) []string {
+	statuses := []string{}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAgentProgress {
+			statuses = append(statuses, event.Status)
+		}
+	}
+	return statuses
+}
+
+func slicesContains(values []string, needle string) bool {
+	for _, value := range values {
+		if value == needle {
+			return true
+		}
+	}
+	return false
 }
