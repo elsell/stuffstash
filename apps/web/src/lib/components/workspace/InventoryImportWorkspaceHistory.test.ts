@@ -451,9 +451,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Homebox');
       expect(historyLedgerText()).not.toContain('Prepared by owner');
       expect(document.body.textContent).toContain('Jul 6, 2026');
-      expect(document.body.textContent).toContain('1 asset created');
+      expect(document.body.textContent).toContain('1 asset saved');
       expect(document.body.textContent).not.toContain('No other import runs to show.');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Completed');
+      expect(historyLedgerText()).not.toContain('Completed with warnings.');
       expect(historyLedgerText()).toContain('Warnings');
     });
   });
@@ -519,7 +520,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Clean Homebox');
       expect(document.body.textContent).toContain('Warnings');
       expect(document.body.textContent).not.toContain('Action required');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Completed');
+      expect(historyLedgerText()).not.toContain('Completed with warnings.');
       expect(buttonContaining('Review Details')).toBeTruthy();
       expect(historyLedgerText()).toContain('Clean Homebox');
       expect(historyLedgerText()).toContain('Warnings');
@@ -761,7 +763,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('This only removes the run from the import history list.');
       expect(document.body.textContent).toContain('Keep in history');
       expect(document.body.textContent).toContain('Runs');
-      expect(historyLedgerText()).toContain('Completed with warnings.');
+      expect(historyLedgerText()).toContain('Completed');
+      expect(historyLedgerText()).not.toContain('Completed with warnings.');
     });
     expect(document.body.querySelector<HTMLElement>('[role="dialog"]')?.getAttribute('aria-labelledby')).toBe('remove-import-heading');
 

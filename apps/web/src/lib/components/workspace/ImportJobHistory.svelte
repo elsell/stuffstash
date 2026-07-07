@@ -29,6 +29,7 @@
     progressKnown,
     progressPercent,
     progressSummary,
+    changedRecordSummary,
     sourceDescription,
     statusLabel,
     statusSentence,
@@ -197,8 +198,18 @@
   function statusDetail(job: ImportJob): string {
     if (jobRequiresAction(job)) return `${statusLabel(job)} · ${attentionSummary(job)}`;
     if (job.status === 'cancelled_kept' || job.status === 'cancelled_discarded') return statusSentence(job);
-    if (jobHasReviewWarnings(job)) return statusSentence(job);
+    if (jobHasReviewWarnings(job)) return statusLabel(job);
+    if (job.status === 'succeeded') return 'No action needed';
     return statusSentence(job);
+  }
+
+  function ledgerChangeSummary(job: ImportJob): string {
+    if (!isTerminal(job) || job.status === 'cancelled_discarded') return historyCountSummary(job);
+    const skipped = job.counts.assetsSkipped + job.counts.attachmentsSkipped;
+    const saved = changedRecordSummary(job);
+    if (skipped === 0) return saved;
+    if (saved === 'No records changed') return `${skipped} skipped`;
+    return `${saved} · ${skipped} skipped`;
   }
 
   function openHistoryRow(event: MouseEvent, job: ImportJob): void {
@@ -508,7 +519,7 @@
             </div>
             <div class="result-cell" role="cell" data-cell-label="Records">
               <span>
-                {historyCountSummary(job)}
+                {ledgerChangeSummary(job)}
                 {#if job.cancellationMode === 'keep_partial_progress'} · partial progress kept{/if}
                 {#if job.cancellationMode === 'discard_partial_progress'} · partial progress discarded{/if}
               </span>

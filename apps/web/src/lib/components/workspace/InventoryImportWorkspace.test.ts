@@ -399,15 +399,15 @@ describe('InventoryImportWorkspace import setup and preview', () => {
       expect(document.body.textContent).toContain('Preview import');
       expect(document.body.textContent).toContain('Attachment will be skipped');
       expect(document.body.textContent).toContain('Plan preview');
-      expect(document.body.textContent).toContain('Previewed rows by section');
+      expect(document.body.textContent).toContain('Planned records by section');
       expect(document.body.textContent).not.toContain('Showing representative records');
     });
 
     const issuesSection = document.body.querySelector<HTMLElement>('.preview-issues-section');
-    const samplesSection = document.body.querySelector<HTMLElement>('.preview-samples-section');
+    const planSection = document.body.querySelector<HTMLElement>('.preview-plan-section');
     expect(issuesSection).toBeTruthy();
-    expect(samplesSection).toBeTruthy();
-    expect(issuesSection!.compareDocumentPosition(samplesSection!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(planSection).toBeTruthy();
+    expect(issuesSection!.compareDocumentPosition(planSection!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('keeps preview hierarchy user-facing instead of showing raw parent source IDs', async () => {
