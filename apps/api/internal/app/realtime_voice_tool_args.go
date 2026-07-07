@@ -183,12 +183,19 @@ type realtimeVoiceAssetToolItem struct {
 	ContainmentPath []string                           `json:"containmentPath,omitempty"`
 	MatchFields     []string                           `json:"matchFields,omitempty"`
 	CurrentCheckout *realtimeVoiceCurrentCheckoutEntry `json:"currentCheckout,omitempty"`
+	CheckoutState   *realtimeVoiceCheckoutState        `json:"checkoutState,omitempty"`
 }
 
 type realtimeVoiceCurrentCheckoutEntry struct {
 	ID                      string `json:"id"`
 	CheckedOutAt            string `json:"checkedOutAt"`
 	CheckedOutByPrincipalID string `json:"checkedOutByPrincipalId"`
+}
+
+type realtimeVoiceCheckoutState struct {
+	State        string `json:"state"`
+	CheckedOut   bool   `json:"checkedOut"`
+	CheckedOutAt string `json:"checkedOutAt,omitempty"`
 }
 
 type realtimeVoiceAssetAuditHistoryToolOutput struct {

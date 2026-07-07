@@ -491,6 +491,14 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 }
 
 func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool) (realtimeVoiceAssetToolItem, error) {
+	return a.realtimeVoiceAssetToolItemWithCheckout(ctx, session, item, inventoryName, matchFields, includeAssetID, true)
+}
+
+func (a App) realtimeVoiceAssetToolItemWithoutCheckoutLookup(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool) (realtimeVoiceAssetToolItem, error) {
+	return a.realtimeVoiceAssetToolItemWithCheckout(ctx, session, item, inventoryName, matchFields, includeAssetID, false)
+}
+
+func (a App) realtimeVoiceAssetToolItemWithCheckout(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool, includeCheckout bool) (realtimeVoiceAssetToolItem, error) {
 	ancestors, err := a.realtimeVoiceAncestors(ctx, session, item)
 	if err != nil {
 		return realtimeVoiceAssetToolItem{}, err
@@ -530,7 +538,7 @@ func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoi
 	if includeAssetID {
 		toolItem.AssetID = item.ID.String()
 	}
-	if a.checkouts != nil {
+	if includeCheckout && a.checkouts != nil {
 		checkout, found, err := a.checkouts.CurrentAssetCheckout(ctx, session.TenantID, session.InventoryID, item.ID)
 		if err != nil {
 			return realtimeVoiceAssetToolItem{}, err

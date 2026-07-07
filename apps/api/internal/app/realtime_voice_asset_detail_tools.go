@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -31,9 +32,16 @@ func (a App) executeRealtimeVoiceAssetDetailTool(ctx context.Context, session Re
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}
-	toolItem, err := a.realtimeVoiceAssetToolItem(ctx, session, detail.Item, inventoryItem.Name.String(), nil, true)
+	toolItem, err := a.realtimeVoiceAssetToolItemWithoutCheckoutLookup(ctx, session, detail.Item, inventoryItem.Name.String(), nil, true)
 	if err != nil {
 		return ports.AgentToolResult{}, err
+	}
+	if detail.CurrentCheckout != nil {
+		toolItem.CheckoutState = &realtimeVoiceCheckoutState{
+			State:        detail.CurrentCheckout.State.String(),
+			CheckedOut:   detail.CurrentCheckout.State == asset.CheckoutStateOpen,
+			CheckedOutAt: detail.CurrentCheckout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
+		}
 	}
 	return realtimeVoiceToolResult(call, realtimeVoiceAssetToolOutput{
 		Tool:  call.Name,
