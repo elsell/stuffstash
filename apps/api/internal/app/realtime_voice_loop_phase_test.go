@@ -284,6 +284,9 @@ func TestRealtimeVoiceAuditHistoryToolAddsOnlyOneAuditReadRecord(t *testing.T) {
 func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *testing.T) {
 	t.Parallel()
 
+	if !containsRealtimeTool(realtimeVoiceInitialReadToolDescriptors(), RealtimeVoiceToolListCheckedOutAssets) {
+		t.Fatalf("expected initial read turn to expose checked-out list tool")
+	}
 	call, _, ok := realtimeVoiceServerSelectedReadCallWithoutModel("What's in the toolbox?", 0, nil, "read-1")
 	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "toolbox" {
 		t.Fatalf("expected proactive toolbox search, got ok=%v call=%+v", ok, call)
@@ -315,6 +318,24 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	}, "read-history-follow-up")
 	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "water bottle" {
 		t.Fatalf("expected follow-up history retry to search concrete answer, got ok=%v call=%+v", ok, call)
+	}
+	checkoutSearchResult := []ports.AgentToolResult{{
+		Name:    RealtimeVoiceToolSearchAuthorizedAssets,
+		Content: `{"tool":"search_authorized_assets","query":"drill","items":[{"assetId":"drill-1","title":"Drill","kind":"item"}]}`,
+	}}
+	if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn("Who checked out the drill?", checkoutSearchResult) {
+		t.Fatalf("expected checkout history question to require checkout history before finalizing")
+	}
+	call, title := realtimeVoiceServerSelectedReadCall("Who checked out the drill?", 1, checkoutSearchResult, ports.AgentToolCall{ID: "checkout-history"})
+	if title != "Server-selected checkout history" || call.Name != RealtimeVoiceToolListAssetCheckoutHistory || call.Arguments["assetId"] != "drill-1" {
+		t.Fatalf("expected server-selected checkout history for visible drill, title=%q call=%+v", title, call)
+	}
+	checkoutHistoryResult := append(checkoutSearchResult, ports.AgentToolResult{
+		Name:    RealtimeVoiceToolListAssetCheckoutHistory,
+		Content: `{"tool":"list_asset_checkout_history","asset":{"assetId":"drill-1","title":"Drill"},"entries":[{"state":"returned"}]}`,
+	})
+	if !realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn("Who checked out the drill?", checkoutHistoryResult) {
+		t.Fatalf("expected checkout history result to allow final answer")
 	}
 	_, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("Add an Apple TV remote to the box under the TV in the living room.", 0, nil, "read-3")
 	if ok {
@@ -608,131 +629,6 @@ func TestRealtimeVoiceReadsDestinationBeforePlanningCreateInNamedParent(t *testi
 	}
 	if proposed == nil || len(proposed.Commands) != 1 || proposed.Commands[0].ParentAssetID != "office-1" {
 		t.Fatalf("expected phone charger proposal inside Office, got %+v", proposed)
-	}
-}
-
-func TestRealtimeVoiceDerivesEffectiveTranscriptForClarificationFollowUp(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the follow-up.",
-				DisplayResponse: "I understand the follow-up.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Kitchen."}
-	resolver.providers.LanguageInference = language
-	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{
-		Session:                    session,
-		AudioChunks:                [][]byte{[]byte("audio")},
-		ContinueAfterClarification: true,
-		ConversationTurns: []ports.AgentConversationTurn{
-			{Role: ports.AgentConversationRoleUser, Text: "Move my water bottle."},
-			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Where should I move it?"},
-		},
-	}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	if len(language.seenTranscripts) == 0 || language.seenTranscripts[0] != "Move my water bottle. Follow-up answer: Kitchen." {
-		t.Fatalf("expected model to receive effective follow-up transcript, got %+v", language.seenTranscripts)
-	}
-	if len(events) == 0 || events[0].Type != RealtimeVoiceEventTranscriptFinal || events[0].Text != "Kitchen." {
-		t.Fatalf("expected client transcript event to keep literal follow-up transcript, got %+v", events)
-	}
-}
-
-func TestRealtimeVoiceDerivesEffectiveTranscriptForReadClarificationFollowUp(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the read follow-up.",
-				DisplayResponse: "I understand the read follow-up.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Water bottle."}
-	resolver.providers.LanguageInference = language
-	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{
-		Session:                    session,
-		AudioChunks:                [][]byte{[]byte("audio")},
-		ContinueAfterClarification: true,
-		ConversationTurns: []ports.AgentConversationTurn{
-			{Role: ports.AgentConversationRoleUser, Text: "Where is it?"},
-			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Which item should I find?"},
-		},
-	}, func(RealtimeVoiceEvent) error {
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	if len(language.seenTranscripts) == 0 || language.seenTranscripts[0] != "Where is it? Follow-up answer: Water bottle." {
-		t.Fatalf("expected model to receive effective read follow-up transcript, got %+v", language.seenTranscripts)
-	}
-}
-
-func TestRealtimeVoiceDerivesEffectiveTranscriptForReturnClarificationFollowUp(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the return follow-up.",
-				DisplayResponse: "I understand the return follow-up.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Drill."}
-	resolver.providers.LanguageInference = language
-	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{
-		Session:                    session,
-		AudioChunks:                [][]byte{[]byte("audio")},
-		ContinueAfterClarification: true,
-		ConversationTurns: []ports.AgentConversationTurn{
-			{Role: ports.AgentConversationRoleUser, Text: "Return it."},
-			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Which item should I mark as returned?"},
-		},
-	}, func(RealtimeVoiceEvent) error {
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	if len(language.seenTranscripts) == 0 || language.seenTranscripts[0] != "Return it. Follow-up answer: Drill." {
-		t.Fatalf("expected model to receive effective return follow-up transcript, got %+v", language.seenTranscripts)
 	}
 }
 

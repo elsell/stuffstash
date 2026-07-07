@@ -20,6 +20,9 @@ func realtimeVoiceShouldRequireReadTool(transcript string, turn int, toolResults
 	if realtimeVoiceShouldRequireNestedCreateParentRead(transcript, turn, toolResults) {
 		return true
 	}
+	if realtimeVoiceShouldRequireCheckoutHistory(transcript, toolResults) {
+		return true
+	}
 	return realtimeVoiceLooksLikeMoveRequest(transcript) && turn == 1 && realtimeVoiceReadToolResultCount(toolResults) < 2
 }
 
@@ -36,6 +39,9 @@ func realtimeVoiceReadToolsForTurn(transcript string, turn int, toolResults []po
 	if realtimeVoiceShouldRequireNestedCreateParentRead(transcript, turn, toolResults) {
 		return []ports.AgentToolDescriptor{realtimeVoiceSearchAuthorizedAssetsToolDescriptor()}
 	}
+	if realtimeVoiceShouldRequireCheckoutHistory(transcript, toolResults) {
+		return []ports.AgentToolDescriptor{realtimeVoiceListAssetCheckoutHistoryToolDescriptor()}
+	}
 	return realtimeVoiceReadToolDescriptors()
 }
 
@@ -50,6 +56,11 @@ func realtimeVoiceServerSelectedReadCall(transcript string, turn int, toolResult
 	}
 	if query := realtimeVoiceRequiredNestedCreateParentQuery(transcript, turn, toolResults); query != "" {
 		return realtimeVoiceSearchCallWithQuery(call, query), "Server-selected parent read"
+	}
+	if args, ok := realtimeVoiceCheckoutHistoryArgs(transcript, toolResults); ok {
+		call.Name = RealtimeVoiceToolListAssetCheckoutHistory
+		call.Arguments = args
+		return call, "Server-selected checkout history"
 	}
 	return call, ""
 }
@@ -221,6 +232,9 @@ func realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(transcript string, toolRes
 	if realtimeVoiceLooksLikeHistoryQuestion(transcript) && !realtimeVoiceHasAssetAuditHistoryResult(toolResults) {
 		return false
 	}
+	if realtimeVoiceLooksLikeCheckoutHistoryQuestion(transcript) && !realtimeVoiceHasAssetCheckoutHistoryResult(toolResults) {
+		return false
+	}
 	if realtimeVoiceShouldRequireContentsList(transcript, toolResults) {
 		return false
 	}
@@ -244,6 +258,63 @@ func realtimeVoiceLooksLikeHistoryQuestion(transcript string) bool {
 func realtimeVoiceHasAssetAuditHistoryResult(toolResults []ports.AgentToolResult) bool {
 	for _, result := range toolResults {
 		if result.Name == RealtimeVoiceToolListAssetAuditHistory {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceShouldRequireCheckoutHistory(transcript string, toolResults []ports.AgentToolResult) bool {
+	if realtimeVoiceLooksLikeWriteRequest(transcript) || !realtimeVoiceLooksLikeCheckoutHistoryQuestion(transcript) || realtimeVoiceHasAssetCheckoutHistoryResult(toolResults) {
+		return false
+	}
+	_, ok := realtimeVoiceCheckoutHistoryArgs(transcript, toolResults)
+	return ok
+}
+
+func realtimeVoiceLooksLikeCheckoutHistoryQuestion(transcript string) bool {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	if !realtimeVoiceLooksLikeReadQuestion(transcript) {
+		return false
+	}
+	for _, token := range []string{" checked out ", " check out ", " checkout ", " returned ", " return ", " checked in ", " check in ", " who has "} {
+		if strings.Contains(text, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceCheckoutHistoryArgs(transcript string, toolResults []ports.AgentToolResult) (map[string]any, bool) {
+	if !realtimeVoiceLooksLikeCheckoutHistoryQuestion(transcript) {
+		return nil, false
+	}
+	items := realtimeVoiceVisibleReadItems(toolResults)
+	if len(items) == 0 {
+		return nil, false
+	}
+	best := realtimeVoiceBestMentionedVisibleItem(transcript, items)
+	if strings.TrimSpace(best.AssetID) == "" {
+		return nil, false
+	}
+	return map[string]any{"assetId": best.AssetID}, true
+}
+
+func realtimeVoiceBestMentionedVisibleItem(transcript string, items []realtimeVoiceAssetToolItem) realtimeVoiceAssetToolItem {
+	if len(items) == 1 {
+		return items[0]
+	}
+	for _, item := range items {
+		if realtimeVoiceTitleMentionedInTranscript(item.Title, transcript) {
+			return item
+		}
+	}
+	return realtimeVoiceAssetToolItem{}
+}
+
+func realtimeVoiceHasAssetCheckoutHistoryResult(toolResults []ports.AgentToolResult) bool {
+	for _, result := range toolResults {
+		if result.Name == RealtimeVoiceToolListAssetCheckoutHistory {
 			return true
 		}
 	}

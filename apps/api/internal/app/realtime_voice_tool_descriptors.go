@@ -234,6 +234,7 @@ func realtimeVoiceInitialReadToolDescriptors() []ports.AgentToolDescriptor {
 	return []ports.AgentToolDescriptor{
 		realtimeVoiceSearchAuthorizedAssetsToolDescriptor(),
 		realtimeVoiceListAuthorizedAssetsToolDescriptor(),
+		realtimeVoiceListCheckedOutAssetsToolDescriptor(),
 	}
 }
 
@@ -249,6 +250,24 @@ func realtimeVoiceSearchAuthorizedAssetsToolDescriptor() ports.AgentToolDescript
 func realtimeVoiceListAuthorizedAssetsToolDescriptor() ports.AgentToolDescriptor {
 	for _, tool := range realtimeVoiceToolDescriptors() {
 		if tool.Name == RealtimeVoiceToolListAuthorizedAssets {
+			return tool
+		}
+	}
+	return ports.AgentToolDescriptor{}
+}
+
+func realtimeVoiceListCheckedOutAssetsToolDescriptor() ports.AgentToolDescriptor {
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolListCheckedOutAssets {
+			return tool
+		}
+	}
+	return ports.AgentToolDescriptor{}
+}
+
+func realtimeVoiceListAssetCheckoutHistoryToolDescriptor() ports.AgentToolDescriptor {
+	for _, tool := range realtimeVoiceToolDescriptors() {
+		if tool.Name == RealtimeVoiceToolListAssetCheckoutHistory {
 			return tool
 		}
 	}
