@@ -100,11 +100,17 @@ func realtimeVoiceLooksLikeSpecificSingularLookup(transcript string) bool {
 			return true
 		}
 	}
+	if realtimeVoiceFollowUpAnswerForEmbeddedGenericTarget(text) != "" {
+		return true
+	}
 	return false
 }
 
 func realtimeVoiceSpecificLookupObjectQuery(transcript string) string {
 	text := normalizedRealtimeVoiceVerbText(transcript)
+	if followUpQuery := realtimeVoiceFollowUpAnswerForEmbeddedGenericTarget(text); followUpQuery != "" {
+		return followUpQuery
+	}
 	for _, marker := range []string{" where is ", " where's ", " can you find ", " find my ", " find the ", " what is "} {
 		if index := strings.LastIndex(text, marker); index >= 0 {
 			query := normalizeRealtimeVoiceSourceText(text[index+len(marker):])
@@ -131,6 +137,28 @@ func realtimeVoiceSpecificLookupObjectQuery(transcript string) string {
 
 func realtimeVoiceFollowUpAnswerLookupQuery(query string) string {
 	return realtimeVoiceFollowUpAnswerForGenericTarget(query)
+}
+
+func realtimeVoiceFollowUpAnswerForEmbeddedGenericTarget(text string) string {
+	const marker = " follow-up answer "
+	if !strings.Contains(text, marker) {
+		return ""
+	}
+	parts := strings.SplitN(text, marker, 2)
+	if len(parts) != 2 {
+		return ""
+	}
+	beforeWords := strings.Fields(parts[0])
+	for length := min(3, len(beforeWords)); length > 0; length-- {
+		candidate := strings.Join(beforeWords[len(beforeWords)-length:], " ")
+		if realtimeVoiceLooksLikeGenericLookupTarget(candidate) {
+			answer := normalizeRealtimeVoiceSourceText(parts[1])
+			answer = strings.TrimSpace(strings.TrimPrefix(answer, "my "))
+			answer = strings.TrimSpace(strings.TrimPrefix(answer, "the "))
+			return answer
+		}
+	}
+	return ""
 }
 
 func realtimeVoiceFollowUpAnswerForGenericTarget(query string) string {
