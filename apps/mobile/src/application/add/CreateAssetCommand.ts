@@ -9,6 +9,7 @@ export type CreateAssetCommandInput = {
   readonly title: string;
   readonly description: string;
   readonly parentAssetId?: string;
+  readonly tagIds?: readonly string[];
   readonly photos?: readonly CreateAssetPhotoInput[];
 };
 
@@ -33,7 +34,8 @@ export class CreateAssetCommand {
       kind: input.kind ?? 'item',
       title,
       description: input.description.trim(),
-      parentAssetId: input.parentAssetId ? assetId(input.parentAssetId) : undefined
+      parentAssetId: input.parentAssetId ? assetId(input.parentAssetId) : undefined,
+      tagIds: normalizeTagIds(input.tagIds)
     });
     let failedPhotoCount = 0;
     for (const photo of input.photos ?? []) {
@@ -53,4 +55,9 @@ export class CreateAssetCommand {
           : `Saved ${asset.title}.`
     };
   }
+}
+
+function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] | undefined {
+  const normalized = (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
 }

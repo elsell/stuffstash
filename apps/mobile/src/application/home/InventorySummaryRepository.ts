@@ -75,6 +75,7 @@ export type CreateInventoryAssetInput = {
   readonly title: string;
   readonly description: string;
   readonly parentAssetId?: AssetId;
+  readonly tagIds?: readonly string[];
 };
 
 export type UpdateInventoryAssetInput = {
@@ -82,6 +83,7 @@ export type UpdateInventoryAssetInput = {
   readonly title?: string;
   readonly description?: string;
   readonly parentAssetId?: AssetId | null;
+  readonly tagIds?: readonly string[];
 };
 
 export type AssetCheckoutInput = {

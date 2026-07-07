@@ -133,7 +133,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       kind: input.kind,
       title: input.title,
       description: input.description,
-      parentAssetId: input.parentAssetId
+      parentAssetId: input.parentAssetId,
+      ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
 
     return this.mapAssetWithPhoto(
@@ -148,7 +149,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const asset = await this.client.updateAsset(inventory.tenantId, inventory.id, input.assetId, {
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
-      ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {})
+      ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {}),
+      ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
 
     const knownAssets = inventory.assets.map((item) =>

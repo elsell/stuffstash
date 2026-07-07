@@ -98,6 +98,7 @@ describe('CreateAssetCommand', () => {
         title: '  Furnace filters  ',
         description: '  MERV 11 three-pack  ',
         parentAssetId: 'asset-garage',
+        tagIds: [' tag-workshop ', '', 'tag-safety'],
         photos: [
           {
             fileName: 'filters.jpg',
@@ -118,7 +119,8 @@ describe('CreateAssetCommand', () => {
       kind: 'item',
       title: 'Furnace filters',
       description: 'MERV 11 three-pack',
-      parentAssetId: 'asset-garage'
+      parentAssetId: 'asset-garage',
+      tagIds: ['tag-workshop', 'tag-safety']
     });
     expect(repository.addedPhotos).toEqual([
       {

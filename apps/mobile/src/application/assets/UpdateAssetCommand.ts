@@ -5,6 +5,7 @@ export type UpdateAssetCommandInput = {
   readonly assetId: string;
   readonly title: string;
   readonly description: string;
+  readonly tagIds?: readonly string[];
 };
 
 export type UpdateAssetCommandResult = {
@@ -25,7 +26,8 @@ export class UpdateAssetCommand {
     const updated = await this.inventories.updateAsset({
       assetId: assetId(input.assetId),
       title,
-      description: input.description.trim()
+      description: input.description.trim(),
+      tagIds: normalizeTagIds(input.tagIds)
     });
 
     return {
@@ -34,4 +36,9 @@ export class UpdateAssetCommand {
       message: `Updated ${updated.title}.`
     };
   }
+}
+
+function normalizeTagIds(tagIds: readonly string[] | undefined): readonly string[] | undefined {
+  const normalized = (tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
 }

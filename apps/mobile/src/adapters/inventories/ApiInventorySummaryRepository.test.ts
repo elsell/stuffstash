@@ -105,6 +105,7 @@ class FakeInventoryApiClient {
         readonly inventoryId: string;
         readonly title: string;
         readonly parentAssetId?: string;
+        readonly tagIds?: readonly string[];
       }
     | undefined;
   createdAttachmentInput:
@@ -123,6 +124,7 @@ class FakeInventoryApiClient {
         readonly title?: string;
         readonly description?: string;
         readonly parentAssetId?: string | null;
+        readonly tagIds?: readonly string[];
       }
     | undefined;
   initiatedDirectUploadInput:
@@ -286,13 +288,14 @@ class FakeInventoryApiClient {
   async createAsset(
     tenantId: string,
     inventoryId: string,
-    input: { readonly kind: 'item' | 'container' | 'location'; readonly title: string; readonly description?: string; readonly parentAssetId?: string | null }
+    input: { readonly kind: 'item' | 'container' | 'location'; readonly title: string; readonly description?: string; readonly parentAssetId?: string | null; readonly tagIds?: readonly string[] }
   ): Promise<Asset> {
     this.createdAssetInput = {
       tenantId,
       inventoryId,
       title: input.title,
-      parentAssetId: input.parentAssetId ?? undefined
+      parentAssetId: input.parentAssetId ?? undefined,
+      tagIds: input.tagIds
     };
 
     return {
@@ -314,7 +317,7 @@ class FakeInventoryApiClient {
     tenantId: string,
     inventoryId: string,
     assetIdValue: string,
-    input: { readonly title?: string; readonly description?: string; readonly parentAssetId?: string | null }
+    input: { readonly title?: string; readonly description?: string; readonly parentAssetId?: string | null; readonly tagIds?: readonly string[] }
   ): Promise<Asset> {
     this.updatedAssetInput = {
       tenantId,
@@ -322,7 +325,8 @@ class FakeInventoryApiClient {
       assetId: assetIdValue,
       title: input.title,
       description: input.description,
-      parentAssetId: input.parentAssetId
+      parentAssetId: input.parentAssetId,
+      tagIds: input.tagIds
     };
     const current = this.assets.find((asset) => asset.id === assetIdValue);
     if (!current) {
@@ -932,7 +936,8 @@ describe('ApiInventorySummaryRepository', () => {
         kind: 'item',
         title: 'USB-C charger pouch',
         description: 'Chargers and spare cables.',
-        parentAssetId: assetId('asset-garage')
+        parentAssetId: assetId('asset-garage'),
+        tagIds: ['tag-workshop']
       })
     ).resolves.toMatchObject({
       id: 'asset-created',
@@ -943,7 +948,8 @@ describe('ApiInventorySummaryRepository', () => {
       tenantId: 'tenant-home',
       inventoryId: 'inventory-home',
       title: 'USB-C charger pouch',
-      parentAssetId: 'asset-garage'
+      parentAssetId: 'asset-garage',
+      tagIds: ['tag-workshop']
     });
 
     await repository.addAssetPhoto(assetId('asset-created'), {
@@ -976,7 +982,8 @@ describe('ApiInventorySummaryRepository', () => {
       assetId: assetId('asset-filters'),
       title: 'HEPA filters',
       description: 'Replacement filters.',
-      parentAssetId: null
+      parentAssetId: null,
+      tagIds: ['tag-workshop']
     })).resolves.toMatchObject({
       id: 'asset-filters',
       title: 'HEPA filters',
@@ -990,7 +997,8 @@ describe('ApiInventorySummaryRepository', () => {
       assetId: 'asset-filters',
       title: 'HEPA filters',
       description: 'Replacement filters.',
-      parentAssetId: null
+      parentAssetId: null,
+      tagIds: ['tag-workshop']
     });
   });
 

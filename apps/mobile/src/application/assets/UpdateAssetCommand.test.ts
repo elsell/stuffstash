@@ -30,7 +30,8 @@ describe('UpdateAssetCommand', () => {
     await expect(command.execute({
       assetId: 'asset-water-bottle',
       title: '  Water bottle  ',
-      description: '  Metal bottle  '
+      description: '  Metal bottle  ',
+      tagIds: [' tag-camping ', '', 'tag-kitchen']
     })).resolves.toEqual({
       id: 'asset-water-bottle',
       title: 'Water bottle',
@@ -40,7 +41,8 @@ describe('UpdateAssetCommand', () => {
     expect(repository.updateInput).toEqual({
       assetId: 'asset-water-bottle',
       title: 'Water bottle',
-      description: 'Metal bottle'
+      description: 'Metal bottle',
+      tagIds: ['tag-camping', 'tag-kitchen']
     });
   });
 
