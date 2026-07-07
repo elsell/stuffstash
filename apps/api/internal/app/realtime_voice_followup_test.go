@@ -101,6 +101,24 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 	if len(turns) != 5 {
 		t.Fatalf("expected last six input turns minus invalid role to be sent, got %+v", turns)
 	}
+	expected := []struct {
+		role ports.AgentConversationRole
+		kind string
+		text string
+	}{
+		{role: ports.AgentConversationRoleUser, text: "Older two."},
+		{role: ports.AgentConversationRoleAssistant, kind: string(ports.StructuredAgentResponseKindClarification), text: "Older clarification."},
+		{role: ports.AgentConversationRoleUser, kind: "[redacted-key][redacted]", text: "Move my water bottle. [redacted-bearer] [redacted]"},
+		{role: ports.AgentConversationRoleAssistant, kind: string(ports.StructuredAgentResponseKindClarification), text: "Where should I move it? [redacted-provider-session][redacted]"},
+	}
+	for index, expectedTurn := range expected {
+		if turns[index].Role != expectedTurn.role || turns[index].Kind != expectedTurn.kind || turns[index].Text != expectedTurn.text {
+			t.Fatalf("unexpected safe context turn %d: got %+v want %+v", index, turns[index], expectedTurn)
+		}
+	}
+	if turns[4].Role != ports.AgentConversationRoleUser || !strings.HasPrefix(turns[4].Text, "garage garage") || !strings.HasSuffix(turns[4].Text, " ...") {
+		t.Fatalf("expected newest long user turn to be retained and bounded, got %+v", turns[4])
+	}
 	joined := ""
 	for _, turn := range turns {
 		if turn.Role != ports.AgentConversationRoleUser && turn.Role != ports.AgentConversationRoleAssistant {
@@ -111,7 +129,7 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 		}
 		joined += string(turn.Role) + " " + turn.Kind + " " + turn.Text + "\n"
 	}
-	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1", "ignored bad role", "Old one"} {
+	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1", "ignored bad role", "Old one", "Old clarification"} {
 		if strings.Contains(joined, unsafe) {
 			t.Fatalf("unsafe or out-of-window conversation context reached provider: %q", joined)
 		}
@@ -120,6 +138,18 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 		if !strings.Contains(joined, expected) {
 			t.Fatalf("expected redacted marker %q in provider context, got %q", expected, joined)
 		}
+	}
+	if len(language.seenTranscripts) == 0 {
+		t.Fatalf("expected language provider to receive effective transcript")
+	}
+	effectiveTranscript := language.seenTranscripts[0]
+	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1"} {
+		if strings.Contains(effectiveTranscript, unsafe) {
+			t.Fatalf("unsafe conversation text reached effective transcript: %q", effectiveTranscript)
+		}
+	}
+	if !strings.Contains(effectiveTranscript, "Move my water bottle. [redacted-bearer] [redacted] Follow-up answer: Kitchen.") {
+		t.Fatalf("expected safe prior intent in effective transcript, got %q", effectiveTranscript)
 	}
 }
 
