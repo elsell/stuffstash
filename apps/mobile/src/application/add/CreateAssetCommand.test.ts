@@ -15,6 +15,7 @@ import { CreateAssetCommand } from './CreateAssetCommand';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
   createdInput: CreateInventoryAssetInput | undefined;
+  createdTags: Array<{ readonly displayName: string; readonly color?: string }> = [];
   addedPhotos: Array<{ readonly assetId: string; readonly photo: CreateInventoryAssetPhotoInput }> = [];
   shouldFailPhotoUpload = false;
 
@@ -45,6 +46,16 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
       description: input.description,
       updatedAtLabel: 'Updated now',
       hasPhoto: false
+    };
+  }
+
+  async createAssetTag(input: { readonly displayName: string; readonly color?: string }) {
+    this.createdTags.push(input);
+    return {
+      id: `tag-created-${this.createdTags.length.toString()}`,
+      key: input.displayName.toLowerCase().replaceAll(' ', '-'),
+      displayName: input.displayName,
+      color: input.color
     };
   }
 
@@ -99,6 +110,7 @@ describe('CreateAssetCommand', () => {
         description: '  MERV 11 three-pack  ',
         parentAssetId: 'asset-garage',
         tagIds: [' tag-workshop ', '', 'tag-safety'],
+        newTags: [{ displayName: '  Camping  ', color: ' #2f80ed ' }],
         photos: [
           {
             fileName: 'filters.jpg',
@@ -120,8 +132,9 @@ describe('CreateAssetCommand', () => {
       title: 'Furnace filters',
       description: 'MERV 11 three-pack',
       parentAssetId: 'asset-garage',
-      tagIds: ['tag-workshop', 'tag-safety']
+      tagIds: ['tag-workshop', 'tag-safety', 'tag-created-1']
     });
+    expect(repository.createdTags).toEqual([{ displayName: 'Camping', color: '#2f80ed' }]);
     expect(repository.addedPhotos).toEqual([
       {
         assetId: 'asset-created',

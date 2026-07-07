@@ -5,6 +5,7 @@ import { UpdateAssetCommand } from './UpdateAssetCommand';
 
 class FakeAssetUpdateRepository {
   updateInput: UpdateInventoryAssetInput | undefined;
+  createdTags: Array<{ readonly displayName: string; readonly color?: string }> = [];
 
   async updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary> {
     this.updateInput = input;
@@ -20,6 +21,16 @@ class FakeAssetUpdateRepository {
       hasPhoto: false
     };
   }
+
+  async createAssetTag(input: { readonly displayName: string; readonly color?: string }) {
+    this.createdTags.push(input);
+    return {
+      id: `tag-created-${this.createdTags.length.toString()}`,
+      key: input.displayName.toLowerCase().replaceAll(' ', '-'),
+      displayName: input.displayName,
+      color: input.color
+    };
+  }
 }
 
 describe('UpdateAssetCommand', () => {
@@ -31,7 +42,8 @@ describe('UpdateAssetCommand', () => {
       assetId: 'asset-water-bottle',
       title: '  Water bottle  ',
       description: '  Metal bottle  ',
-      tagIds: [' tag-camping ', '', 'tag-kitchen']
+      tagIds: [' tag-camping ', '', 'tag-kitchen'],
+      newTags: [{ displayName: ' Travel ', color: ' #2f80ed ' }]
     })).resolves.toEqual({
       id: 'asset-water-bottle',
       title: 'Water bottle',
@@ -42,8 +54,9 @@ describe('UpdateAssetCommand', () => {
       assetId: 'asset-water-bottle',
       title: 'Water bottle',
       description: 'Metal bottle',
-      tagIds: ['tag-camping', 'tag-kitchen']
+      tagIds: ['tag-camping', 'tag-kitchen', 'tag-created-1']
     });
+    expect(repository.createdTags).toEqual([{ displayName: 'Travel', color: '#2f80ed' }]);
   });
 
   it('rejects blank names before updating', async () => {

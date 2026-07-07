@@ -116,6 +116,14 @@ class FakeInventoryApiClient {
         readonly tagIds?: readonly string[];
       }
     | undefined;
+  createdAssetTagInput:
+    | {
+        readonly tenantId: string;
+        readonly inventoryId: string;
+        readonly displayName: string;
+        readonly color?: string;
+      }
+    | undefined;
   createdAttachmentInput:
     | {
         readonly tenantId: string;
@@ -270,6 +278,30 @@ class FakeInventoryApiClient {
         updatedAt: '2026-06-20T10:00:00Z'
       }
     ]);
+  }
+
+  async createAssetTag(
+    tenantId: string,
+    inventoryId: string,
+    input: { readonly displayName: string; readonly color?: string }
+  ): Promise<AssetTag> {
+    this.createdAssetTagInput = {
+      tenantId,
+      inventoryId,
+      displayName: input.displayName,
+      color: input.color
+    };
+    return {
+      id: 'tag-created',
+      tenantId,
+      inventoryId,
+      key: input.displayName.toLowerCase().replaceAll(' ', '-'),
+      displayName: input.displayName,
+      color: input.color,
+      lifecycleState: 'active',
+      createdAt: '2026-06-20T10:00:00Z',
+      updatedAt: '2026-06-20T10:00:00Z'
+    };
   }
 
   async listAssetAttachments(
@@ -1072,6 +1104,28 @@ describe('ApiInventorySummaryRepository', () => {
     ]);
     await expect(repository.searchAssets('filters')).resolves.toHaveLength(1);
     expect(client.searchedQuery).toBe('tenant-home:filters');
+  });
+
+  it('creates asset tags through the generated client wrapper', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.createAssetTag({
+      displayName: 'Camping',
+      color: '#2F80ED'
+    })).resolves.toEqual({
+      id: 'tag-created',
+      key: 'camping',
+      displayName: 'Camping',
+      color: '#2F80ED'
+    });
+
+    expect(client.createdAssetTagInput).toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      displayName: 'Camping',
+      color: '#2F80ED'
+    });
   });
 
   it('updates asset fields and parent placement through the generated client wrapper', async () => {

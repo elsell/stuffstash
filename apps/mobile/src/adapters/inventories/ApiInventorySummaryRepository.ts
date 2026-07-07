@@ -11,6 +11,7 @@ import {
   AssetBrowsePage,
   AssetBrowsePageInput,
   CreateInventoryAssetInput,
+  CreateInventoryAssetTagInput,
   CreateInventoryAssetPhotoInput,
   AddInventoryAssetPhotoInput,
   InventoryAssetPhotoDirectUpload,
@@ -19,7 +20,7 @@ import {
   UpdateInventoryAssetInput
 } from '../../application/home/InventorySummaryRepository';
 import type { InventoryMapAssetRepository } from '../../application/assets/InventoryMapQuery';
-import { assetId, AssetSummary } from '../../domain/assets/AssetSummary';
+import { assetId, AssetSummary, type AssetTagSummary } from '../../domain/assets/AssetSummary';
 import {
   AccessRole,
   InventoryId,
@@ -36,6 +37,7 @@ type InventoryApiClient = Pick<
   | 'listAssets'
   | 'listAssetTags'
   | 'createAsset'
+  | 'createAssetTag'
   | 'updateAsset'
   | 'checkoutAsset'
   | 'returnAsset'
@@ -144,6 +146,15 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       asset,
       inventory.assets.map((item) => summaryToApiAsset(inventory.tenantId, inventory.id, item))
     );
+  }
+
+  async createAssetTag(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary> {
+    const inventory = await this.getDefaultInventorySummary();
+    const tag = await this.client.createAssetTag(inventory.tenantId, inventory.id, {
+      displayName: input.displayName,
+      ...(input.color !== undefined ? { color: input.color } : {})
+    });
+    return mapAssetTag(tag);
   }
 
   async updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary> {
