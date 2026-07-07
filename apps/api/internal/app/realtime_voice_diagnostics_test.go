@@ -157,6 +157,58 @@ func TestRealtimeVoiceOmitsVerboseDiagnosticsByDefault(t *testing.T) {
 	}
 }
 
+func TestRealtimeVoiceStreamsServerSelectedReadDiagnosticsWhenEnabled(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "The toolbox contains the cordless drill.",
+				DisplayResponse: "The toolbox contains the cordless drill.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "What's in the toolbox?"}
+	resolver.providers.LanguageInference = language
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	toolbox := assetItem("toolbox-1", "tenant-home", "inventory-home", asset.KindContainer, "")
+	toolboxTitle, _ := asset.NewTitle("Toolbox")
+	toolbox.Title = toolboxTitle
+	drill := assetItem("cordless-drill-1", "tenant-home", "inventory-home", asset.KindItem, "toolbox-1")
+	drillTitle, _ := asset.NewTitle("Cordless drill")
+	drill.Title = drillTitle
+	seedRealtimeVoiceLoopAsset(t, store, toolbox, "audit-toolbox")
+	seedRealtimeVoiceLoopAsset(t, store, drill, "audit-drill")
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+
+	targetRead := findRealtimeVoiceDiagnosticEvent(t, events, "Server-selected contents target read")
+	if !strings.Contains(targetRead.Detail, RealtimeVoiceToolSearchAuthorizedAssets) || !strings.Contains(targetRead.Detail, `"query": "toolbox"`) {
+		t.Fatalf("expected target-read diagnostic to show selected search call, got %s", targetRead.Detail)
+	}
+	contentsList := findRealtimeVoiceDiagnosticEvent(t, events, "Server-selected contents list")
+	if !strings.Contains(contentsList.Detail, RealtimeVoiceToolListAuthorizedAssets) || !strings.Contains(contentsList.Detail, `"parentTitle": "Toolbox"`) {
+		t.Fatalf("expected contents-list diagnostic to show selected list call, got %s", contentsList.Detail)
+	}
+	if len(language.seenToolResults) != 1 || len(language.seenToolResults[0]) < 2 || !containsAll(language.seenToolResults[0][1].Content, "Toolbox", "Cordless drill") {
+		t.Fatalf("expected model to receive server-selected read results, got %+v", language.seenToolResults)
+	}
+}
+
 func TestRealtimeVoiceOmitsRecoverableToolErrorDiagnosticsByDefault(t *testing.T) {
 	t.Parallel()
 
