@@ -3,6 +3,7 @@ import {
   toAssetCardViewModel
 } from '../assets/AssetViewModels';
 import type {
+  AssetBrowseCheckoutFilter,
   AssetBrowseKindFilter,
   AssetBrowseLifecycleFilter,
   AssetBrowseSort,
@@ -16,6 +17,7 @@ export type SearchAssetsQueryInput = {
   readonly cursor?: string;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly kind: AssetBrowseKindFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly sort: AssetBrowseSort;
   readonly limit?: number;
 };
@@ -25,6 +27,7 @@ export type SearchAssetsViewModel = {
   readonly mode: SearchAssetsMode;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly kind: AssetBrowseKindFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly sort: AssetBrowseSort;
   readonly assets: readonly AssetCardViewModel[];
   readonly nextCursor?: string;
@@ -46,6 +49,7 @@ export class SearchAssetsQuery {
       mode: trimmed.length > 0 ? 'search' : 'browse',
       lifecycleState: input.lifecycleState,
       kind: input.kind,
+      checkoutState: input.checkoutState,
       sort: input.sort,
       assets: page.assets.map(toAssetCardViewModel),
       nextCursor: page.nextCursor,

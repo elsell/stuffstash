@@ -19,6 +19,7 @@ import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckou
 import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type {
+  AssetBrowseCheckoutFilter,
   AssetBrowseLifecycleFilter,
   AssetBrowseSort
 } from '../../application/home/InventorySummaryRepository';
@@ -102,6 +103,7 @@ export function SearchScreen({
   const mapPathStore = useRef(new Map<string, readonly string[]>());
   const [surface, setSurface] = useState<InventoryMapSurface>('list');
   const [lifecycleState, setLifecycleState] = useState<AssetBrowseLifecycleFilter>('active');
+  const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>('any');
   const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
   const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -131,12 +133,14 @@ export function SearchScreen({
   async function loadFirstPage(next: {
     readonly query?: string;
     readonly lifecycleState?: AssetBrowseLifecycleFilter;
+    readonly checkoutState?: AssetBrowseCheckoutFilter;
     readonly scope?: BrowseScope;
     readonly sort?: AssetBrowseSort;
   } = {}): Promise<void> {
     const requestId = nextRequestId(requestSequence);
     const nextQuery = next.query ?? query;
     const nextLifecycleState = next.lifecycleState ?? lifecycleState;
+    const nextCheckoutState = next.checkoutState ?? checkoutState;
     const nextScope = next.scope ?? scope;
     const nextSort = next.sort ?? sort;
     const loadingResults: BrowseResults = {
@@ -155,6 +159,7 @@ export function SearchScreen({
       const results = await loadBrowseResults({
         query: nextQuery,
         lifecycleState: nextLifecycleState,
+        checkoutState: nextCheckoutState,
         scope: nextScope,
         sort: nextSort
       });
@@ -175,12 +180,14 @@ export function SearchScreen({
   async function loadBrowseResults({
     cursor,
     lifecycleState: nextLifecycleState,
+    checkoutState: nextCheckoutState,
     query: nextQuery,
     scope: nextScope,
     sort: nextSort
   }: {
     readonly cursor?: string;
     readonly lifecycleState: AssetBrowseLifecycleFilter;
+    readonly checkoutState: AssetBrowseCheckoutFilter;
     readonly query: string;
     readonly scope: BrowseScope;
     readonly sort: AssetBrowseSort;
@@ -191,6 +198,7 @@ export function SearchScreen({
           query: nextQuery,
           cursor,
           lifecycleState: nextLifecycleState,
+          checkoutState: nextCheckoutState,
           kind: browseScopeToKind(nextScope),
           sort: nextSort,
           limit: pageSize
@@ -211,6 +219,7 @@ export function SearchScreen({
       query: nextQuery,
       cursor,
       lifecycleState: nextLifecycleState,
+      checkoutState: nextCheckoutState,
       kind: browseScopeToKind(nextScope),
       sort: nextSort,
       limit: pageSize
@@ -234,6 +243,7 @@ export function SearchScreen({
       const results = await loadBrowseResults({
         query: state.results.query,
         lifecycleState,
+        checkoutState,
         scope,
         sort
       });
@@ -275,6 +285,7 @@ export function SearchScreen({
         query: state.results.query,
         cursor: state.results.nextCursor,
         lifecycleState,
+        checkoutState,
         scope,
         sort
       });
@@ -321,6 +332,11 @@ export function SearchScreen({
   function updateLifecycleState(nextLifecycleState: AssetBrowseLifecycleFilter): void {
     setLifecycleState(nextLifecycleState);
     void loadFirstPage({ lifecycleState: nextLifecycleState });
+  }
+
+  function updateCheckoutState(nextCheckoutState: AssetBrowseCheckoutFilter): void {
+    setCheckoutState(nextCheckoutState);
+    void loadFirstPage({ checkoutState: nextCheckoutState });
   }
 
   function updateSort(nextSort: AssetBrowseSort): void {
@@ -375,6 +391,7 @@ export function SearchScreen({
           <SearchHeader
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}
+            checkoutState={checkoutState}
             query={query}
             resultCount={listItems.length}
             scope={scope}
@@ -386,6 +403,7 @@ export function SearchScreen({
             submittedQuery={state.results.query}
             onChangeSurface={setSurface}
             onChangeLifecycleState={updateLifecycleState}
+            onChangeCheckoutState={updateCheckoutState}
             onChangeQuery={setQuery}
             onChangeScope={updateScope}
             onChangeSort={updateSort}
@@ -415,6 +433,7 @@ export function SearchScreen({
 export function SearchHeader({
   isLoading,
   lifecycleState,
+  checkoutState,
   query,
   resultCount,
   scope,
@@ -426,6 +445,7 @@ export function SearchHeader({
   submittedQuery,
   onChangeSurface,
   onChangeLifecycleState,
+  onChangeCheckoutState,
   onChangeQuery,
   onChangeScope,
   onChangeSort,
@@ -436,6 +456,7 @@ export function SearchHeader({
 }: {
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly query: string;
   readonly resultCount: number;
   readonly scope: BrowseScope;
@@ -447,6 +468,7 @@ export function SearchHeader({
   readonly submittedQuery: string;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
+  readonly onChangeCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
   readonly onChangeQuery: (query: string) => void;
   readonly onChangeScope: (scope: BrowseScope) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
@@ -504,10 +526,12 @@ export function SearchHeader({
       <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
       <RefinementBar
         lifecycleState={lifecycleState}
+        checkoutState={checkoutState}
         scope={scope}
         searchMode={submittedQuery.trim().length > 0}
         sort={sort}
         onChangeLifecycleState={onChangeLifecycleState}
+        onChangeCheckoutState={onChangeCheckoutState}
         onChangeSort={onChangeSort}
       />
       {statusMessage ? <Text style={styles.errorText}>{statusMessage}</Text> : null}
@@ -545,17 +569,21 @@ function ScopeControl({
 }
 
 function RefinementBar({
+  checkoutState,
   lifecycleState,
   searchMode,
   scope,
   sort,
+  onChangeCheckoutState,
   onChangeLifecycleState,
   onChangeSort
 }: {
+  readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly searchMode: boolean;
   readonly scope: BrowseScope;
   readonly sort: AssetBrowseSort;
+  readonly onChangeCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
   readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
 }) {
@@ -582,6 +610,22 @@ function RefinementBar({
         label="All status"
         selected={lifecycleState === 'all'}
         onPress={() => onChangeLifecycleState('all')}
+      />
+      <View style={styles.refinementDivider} />
+      <FilterChip
+        label="Any checkout"
+        selected={checkoutState === 'any'}
+        onPress={() => onChangeCheckoutState('any')}
+      />
+      <FilterChip
+        label="Checked out"
+        selected={checkoutState === 'checked_out'}
+        onPress={() => onChangeCheckoutState('checked_out')}
+      />
+      <FilterChip
+        label="Available"
+        selected={checkoutState === 'available'}
+        onPress={() => onChangeCheckoutState('available')}
       />
       {!searchMode ? (
         <>

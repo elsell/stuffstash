@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AssetAuditHistoryQuery } from '../../application/assets/AssetAuditHistoryQuery';
+import { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
 import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
@@ -16,6 +17,10 @@ import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand'
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
+import {
+  AssetCheckoutHistorySheet,
+  AssetCheckoutHistorySheetState
+} from './AssetCheckoutHistorySheet';
 import {
   EditAssetSheet,
   MoveAssetSheet,
@@ -384,6 +389,54 @@ export function AssetAuditSheetRouteScreen({
   return (
     <NativeSheetFrame title="Audit history">
       <AssetAuditHistorySheet state={state} onClose={() => router.back()} />
+    </NativeSheetFrame>
+  );
+}
+
+export function AssetCheckoutHistorySheetRouteScreen({
+  assetCheckoutHistoryQuery,
+  assetDetailQuery,
+  assetId
+}: {
+  readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
+  readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetId: string;
+}) {
+  const [state, setState] = useState<AssetCheckoutHistorySheetState>({ status: 'loading', assetTitle: 'Asset' });
+
+  useEffect(() => {
+    let isCurrent = true;
+    async function load(): Promise<void> {
+      let loadedTitle = 'Asset';
+      try {
+        const asset = await assetDetailQuery.execute(assetId);
+        loadedTitle = asset.title;
+        if (isCurrent) {
+          setState({ status: 'loading', assetTitle: asset.title });
+        }
+        const history = await assetCheckoutHistoryQuery.execute({ assetId, limit: 20 });
+        if (isCurrent) {
+          setState({ status: 'ready', assetTitle: asset.title, history });
+        }
+      } catch (error) {
+        if (isCurrent) {
+          setState({
+            status: 'error',
+            assetTitle: loadedTitle,
+            message: readableError(error, 'Checkout history failed.')
+          });
+        }
+      }
+    }
+    void load();
+    return () => {
+      isCurrent = false;
+    };
+  }, [assetCheckoutHistoryQuery, assetDetailQuery, assetId]);
+
+  return (
+    <NativeSheetFrame title="Checkout history">
+      <AssetCheckoutHistorySheet state={state} onClose={() => router.back()} />
     </NativeSheetFrame>
   );
 }

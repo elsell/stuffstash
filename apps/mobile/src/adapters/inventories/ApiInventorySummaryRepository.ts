@@ -45,6 +45,7 @@ type InventoryApiClient = Pick<
   | 'completeAssetAttachmentDirectUpload'
   | 'deleteAssetAttachment'
   | 'searchAssets'
+  | 'listCheckedOutAssets'
   | 'listAssetAttachments'
   | 'assetAttachmentThumbnailReference'
 >;
@@ -241,6 +242,9 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const knownAssets = inventory.assets.map((item) =>
       summaryToApiAsset(inventory.tenantId, inventory.id, item)
     );
+    if (input.query.trim().length === 0 && input.checkoutState === 'checked_out') {
+      return await this.listCheckedOutInventoryAssetPage(inventory, input, knownAssets);
+    }
     return input.query.trim().length > 0
       ? await this.searchInventoryAssetPage(inventory, input, knownAssets)
       : await this.listInventoryAssetPage(inventory, input, knownAssets);
@@ -602,7 +606,10 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         input.lifecycleState,
         input.sort
       );
-      selectedAssets.push(...filterAssetsByKind(page.items, input.kind));
+      selectedAssets.push(...filterAssetsByCheckoutState(
+        filterAssetsByKind(page.items, input.kind),
+        input.checkoutState
+      ));
       nextCursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
       cursor = nextCursor;
@@ -637,7 +644,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       const page = await this.client.searchAssets(inventory.tenantId, input.query, {
         limit: pageSize,
         cursor,
-        lifecycleState: input.lifecycleState
+        lifecycleState: input.lifecycleState,
+        checkoutState: input.checkoutState
       });
       const inventoryAssets = page.items
         .filter((item) => item.inventory.id === inventory.id)
@@ -658,6 +666,33 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       assets,
       nextCursor,
       hasMore
+    };
+  }
+
+  private async listCheckedOutInventoryAssetPage(
+    inventory: InventorySummary,
+    input: AssetBrowsePageInput,
+    knownAssets: readonly Asset[]
+  ): Promise<AssetBrowsePage> {
+    const page = await this.client.listCheckedOutAssets(
+      inventory.tenantId,
+      inventory.id,
+      input.limit ?? 20,
+      input.cursor
+    );
+    const selectedAssets = page.items
+      .map((item) => item.asset)
+      .filter((asset) => input.lifecycleState === 'all' || asset.lifecycleState === input.lifecycleState);
+    const assets = await Promise.all(
+      filterAssetsByKind(selectedAssets, input.kind).map((asset) =>
+        this.mapAssetWithPrimaryPhoto(inventory.name, asset, knownAssets)
+      )
+    );
+
+    return {
+      assets,
+      nextCursor: page.pagination.nextCursor ?? undefined,
+      hasMore: page.pagination.hasMore
     };
   }
 }
@@ -807,6 +842,19 @@ function filterAssetsByKind(
   }
 
   return assets.filter((asset) => asset.kind === kind);
+}
+
+function filterAssetsByCheckoutState(
+  assets: readonly Asset[],
+  checkoutState: AssetBrowsePageInput['checkoutState']
+): readonly Asset[] {
+  if (checkoutState === 'checked_out') {
+    return assets.filter((asset) => asset.currentCheckout !== undefined);
+  }
+  if (checkoutState === 'available') {
+    return assets.filter((asset) => asset.currentCheckout === undefined);
+  }
+  return assets;
 }
 
 function mapAsset(

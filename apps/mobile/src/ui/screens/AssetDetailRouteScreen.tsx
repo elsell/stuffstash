@@ -292,6 +292,10 @@ export function AssetDetailRouteScreen({
             confirmLifecycleAction(action.kind, asset);
             return;
           }
+          if (index === overflow.checkoutHistoryIndex) {
+            router.push(`/assets/${asset.id}/checkouts`);
+            return;
+          }
           if (index === overflow.auditIndex) {
             router.push(`/assets/${asset.id}/audit`);
           }
@@ -305,6 +309,7 @@ export function AssetDetailRouteScreen({
         style: action.isDestructive ? 'destructive' as const : 'default' as const,
         onPress: () => confirmLifecycleAction(action.kind, asset)
       })),
+      { text: 'Checkout history', onPress: () => router.push(`/assets/${asset.id}/checkouts`) },
       { text: 'Audit history', onPress: () => router.push(`/assets/${asset.id}/audit`) },
       { text: 'Cancel', style: 'cancel' }
     ]);

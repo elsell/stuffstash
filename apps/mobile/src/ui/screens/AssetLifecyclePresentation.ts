@@ -28,6 +28,7 @@ export type AssetLifecycleFailurePresentation = {
 export type AssetLifecycleOverflowMenu = AssetLifecycleOverflowPresentation & {
   readonly options: readonly string[];
   readonly actionRows: readonly AssetLifecycleActionRow[];
+  readonly checkoutHistoryIndex: number;
   readonly auditIndex: number;
   readonly cancelIndex: number;
   readonly destructiveIndex?: number;
@@ -98,13 +99,15 @@ export function assetLifecycleOverflowMenu(
 ): AssetLifecycleOverflowMenu {
   const overflow = assetLifecycleOverflowPresentation(asset);
   const actionRows = assetLifecycleActionRows(asset);
-  const auditIndex = actionRows.length;
-  const cancelIndex = actionRows.length + 1;
+  const checkoutHistoryIndex = actionRows.length;
+  const auditIndex = actionRows.length + 1;
+  const cancelIndex = actionRows.length + 2;
   const destructiveIndex = actionRows.findIndex((action) => action.isDestructive);
   return {
     ...overflow,
     actionRows,
-    options: [...actionRows.map((action) => action.label), 'Audit history', 'Cancel'],
+    options: [...actionRows.map((action) => action.label), 'Checkout history', 'Audit history', 'Cancel'],
+    checkoutHistoryIndex,
     auditIndex,
     cancelIndex,
     destructiveIndex: destructiveIndex >= 0 ? destructiveIndex : undefined

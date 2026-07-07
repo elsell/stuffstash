@@ -52,12 +52,15 @@ export type AssetBrowseKindFilter = AssetKind | 'all';
 
 export type AssetBrowseSort = 'updated_desc' | 'id_asc';
 
+export type AssetBrowseCheckoutFilter = 'any' | 'checked_out' | 'available';
+
 export type AssetBrowsePageInput = {
   readonly query: string;
   readonly cursor?: string;
   readonly limit?: number;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly kind: AssetBrowseKindFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly sort: AssetBrowseSort;
 };
 

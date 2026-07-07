@@ -87,6 +87,7 @@ describe('SearchAssetsQuery', () => {
       query.execute({
         query: '',
         lifecycleState: 'active',
+        checkoutState: 'any',
         kind: 'container',
         sort: 'updated_desc',
         limit: 20
@@ -109,6 +110,7 @@ describe('SearchAssetsQuery', () => {
       {
         query: '',
         lifecycleState: 'active',
+        checkoutState: 'any',
         kind: 'container',
         sort: 'updated_desc',
         limit: 20
@@ -130,6 +132,7 @@ describe('SearchAssetsQuery', () => {
         query: ' ibu ',
         cursor: 'cursor-1',
         lifecycleState: 'all',
+        checkoutState: 'checked_out',
         kind: 'item',
         sort: 'id_asc',
         limit: 10
@@ -145,6 +148,7 @@ describe('SearchAssetsQuery', () => {
         query: 'ibu',
         cursor: 'cursor-1',
         lifecycleState: 'all',
+        checkoutState: 'checked_out',
         kind: 'item',
         sort: 'id_asc',
         limit: 10

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   Asset,
   AssetCheckout,
+  CheckedOutAsset,
   AssetPhotoReference,
   AssetSearchResult,
   Attachment,
@@ -82,6 +83,11 @@ class FakeInventoryApiClient {
     readonly cursor?: string;
     readonly lifecycleState?: string;
     readonly sort?: string;
+  }> = [];
+  listCheckedOutAssetRequests: Array<{
+    readonly inventoryId: string;
+    readonly limit?: number;
+    readonly cursor?: string;
   }> = [];
   listAttachmentRequests: Array<{
     readonly assetId: string;
@@ -484,7 +490,11 @@ class FakeInventoryApiClient {
   async searchAssets(
     tenantId: string,
     query: string,
-    options?: { readonly cursor?: string }
+    options?: {
+      readonly cursor?: string;
+      readonly lifecycleState?: string;
+      readonly checkoutState?: string;
+    }
   ): Promise<Page<AssetSearchResult>> {
     this.searchedQuery = `${tenantId}:${query}`;
     const asset = this.assets[1];
@@ -568,6 +578,22 @@ class FakeInventoryApiClient {
         matches: []
       }
     ]);
+  }
+
+  async listCheckedOutAssets(
+    _tenantId: string,
+    inventoryId: string,
+    limit?: number,
+    cursor?: string
+  ): Promise<Page<CheckedOutAsset>> {
+    this.listCheckedOutAssetRequests.push({ inventoryId, limit, cursor });
+    const items = this.assets
+      .filter((asset) => asset.currentCheckout !== undefined)
+      .map((asset) => ({
+        asset,
+        checkout: asset.currentCheckout!
+      }));
+    return page(items);
   }
 }
 
@@ -761,6 +787,7 @@ describe('ApiInventorySummaryRepository', () => {
         cursor: undefined,
         limit: 1,
         lifecycleState: 'active',
+        checkoutState: 'any',
         kind: 'item',
         sort: 'updated_desc'
       })
@@ -792,6 +819,7 @@ describe('ApiInventorySummaryRepository', () => {
         query: '',
         limit: 1,
         lifecycleState: 'active',
+        checkoutState: 'any',
         kind: 'item',
         sort: 'id_asc'
       })
@@ -821,6 +849,54 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
+  it('uses the checked-out inventory endpoint for checked-out browse mode', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        ...client.assets[1]!,
+        currentCheckout: {
+          id: 'checkout-filters',
+          state: 'open',
+          checkedOutAt: '2026-06-25T12:00:00Z',
+          checkedOutByPrincipalId: 'principal-home'
+        }
+      },
+      client.assets[0]!
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(
+      repository.browseAssets({
+        query: '',
+        limit: 10,
+        lifecycleState: 'active',
+        checkoutState: 'checked_out',
+        kind: 'item',
+        sort: 'updated_desc'
+      })
+    ).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-filters',
+          currentCheckout: {
+            id: 'checkout-filters',
+            state: 'open',
+            checkedOutAt: '2026-06-25T12:00:00Z',
+            checkedOutByPrincipalId: 'principal-home'
+          }
+        }
+      ],
+      hasMore: false
+    });
+    expect(client.listCheckedOutAssetRequests).toEqual([
+      {
+        inventoryId: 'inventory-home',
+        limit: 10,
+        cursor: undefined
+      }
+    ]);
+  });
+
   it('searches paged selected-inventory assets with lifecycle filtering', async () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
@@ -831,6 +907,7 @@ describe('ApiInventorySummaryRepository', () => {
         cursor: 'next-page',
         limit: 10,
         lifecycleState: 'all',
+        checkoutState: 'any',
         kind: 'item',
         sort: 'updated_desc'
       })
@@ -954,6 +1031,7 @@ describe('ApiInventorySummaryRepository', () => {
       query: '',
       limit: 10,
       lifecycleState: 'all',
+      checkoutState: 'any',
       kind: 'all',
       sort: 'updated_desc'
     })).resolves.toMatchObject({
@@ -1001,6 +1079,7 @@ describe('ApiInventorySummaryRepository', () => {
       query: '',
       limit: 10,
       lifecycleState: 'all',
+      checkoutState: 'any',
       kind: 'all',
       sort: 'updated_desc'
     })).resolves.toMatchObject({

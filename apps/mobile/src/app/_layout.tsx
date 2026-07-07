@@ -4,6 +4,7 @@ import { AppServicesProvider } from '../ui/navigation/AppServicesContext';
 import { colors } from '../ui/theme/tokens';
 import {
   assetAuditNativeSheetOptions,
+  assetCheckoutHistoryNativeSheetOptions,
   assetEditNativeSheetOptions,
   assetMoveHereNativeSheetOptions,
   assetMoveNativeSheetOptions
@@ -56,6 +57,10 @@ export default function RootLayout() {
         <Stack.Screen
           name="assets/[assetId]/audit"
           options={assetAuditNativeSheetOptions}
+        />
+        <Stack.Screen
+          name="assets/[assetId]/checkouts"
+          options={assetCheckoutHistoryNativeSheetOptions}
         />
         <Stack.Screen
           name="tenant-switcher"

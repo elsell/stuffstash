@@ -4,6 +4,7 @@ import { ApiMobileAuthMetadataGateway } from '../adapters/auth/ApiMobileAuthMeta
 import { ExpoOidcNativeClient } from '../adapters/auth/ExpoOidcNativeClient';
 import { ExpoSecureAuthSessionStore } from '../adapters/auth/ExpoSecureAuthSessionStore';
 import { ApiAssetAuditHistoryRepository } from '../adapters/audit/ApiAssetAuditHistoryRepository';
+import { ApiAssetCheckoutHistoryRepository } from '../adapters/audit/ApiAssetCheckoutHistoryRepository';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
 import { ApiOnboardingGateway } from '../adapters/onboarding/ApiOnboardingGateway';
@@ -21,6 +22,7 @@ import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
 import { AssetAuditHistoryQuery } from '../application/assets/AssetAuditHistoryQuery';
 import { AssetCheckoutCommand } from '../application/assets/AssetCheckoutCommand';
+import { AssetCheckoutHistoryQuery } from '../application/assets/AssetCheckoutHistoryQuery';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
@@ -57,6 +59,7 @@ export type MobileComposition = {
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
   readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
+  readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
@@ -126,6 +129,7 @@ export function createMobileComposition(
   const serviceScopeId = createServiceScopeId();
   const inventorySummaries = new ApiInventorySummaryRepository(client, profile.tenantId ?? '', undefined, serviceScopeId);
   const assetAuditHistory = new ApiAssetAuditHistoryRepository(client, inventorySummaries);
+  const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
@@ -137,6 +141,7 @@ export function createMobileComposition(
     selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetAuditHistoryQuery: new AssetAuditHistoryQuery(assetAuditHistory),
+    assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries),
     assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),

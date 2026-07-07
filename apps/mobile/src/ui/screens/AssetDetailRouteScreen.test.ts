@@ -854,9 +854,10 @@ describe('asset lifecycle presentation helpers', () => {
         { kind: 'restore', label: 'Restore', isDestructive: false },
         { kind: 'delete', label: 'Delete permanently', isDestructive: true }
       ],
-      options: ['Restore', 'Delete permanently', 'Audit history', 'Cancel'],
-      auditIndex: 2,
-      cancelIndex: 3,
+      options: ['Restore', 'Delete permanently', 'Checkout history', 'Audit history', 'Cancel'],
+      checkoutHistoryIndex: 2,
+      auditIndex: 3,
+      cancelIndex: 4,
       destructiveIndex: 1
     });
   });

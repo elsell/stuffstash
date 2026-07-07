@@ -265,6 +265,7 @@ function renderHeader(
   return SearchHeader({
     isLoading: false,
     lifecycleState: 'active',
+    checkoutState: 'any',
     query: '',
     resultCount: 0,
     scope: 'all',
@@ -275,6 +276,7 @@ function renderHeader(
     submittedQuery: '',
     onChangeSurface: vi.fn(),
     onChangeLifecycleState: vi.fn(),
+    onChangeCheckoutState: vi.fn(),
     onChangeQuery: vi.fn(),
     onChangeScope: vi.fn(),
     onChangeSort: vi.fn(),

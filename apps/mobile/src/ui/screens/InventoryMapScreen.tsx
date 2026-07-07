@@ -1468,6 +1468,11 @@ function InventoryMapInfoSheet({
             confirmLifecycleAction(action.kind, detail);
             return;
           }
+          if (index === overflow.checkoutHistoryIndex) {
+            onClose();
+            router.push(`/assets/${detail.id}/checkouts`);
+            return;
+          }
           if (index === overflow.auditIndex) {
             onClose();
             router.push(`/assets/${detail.id}/audit`);
@@ -1483,6 +1488,13 @@ function InventoryMapInfoSheet({
         style: action.isDestructive ? 'destructive' as const : 'default' as const,
         onPress: () => confirmLifecycleAction(action.kind, detail)
       })),
+      {
+        text: 'Checkout history',
+        onPress: () => {
+          onClose();
+          router.push(`/assets/${detail.id}/checkouts`);
+        }
+      },
       {
         text: 'Audit history',
         onPress: () => {

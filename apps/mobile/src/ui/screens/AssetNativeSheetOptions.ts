@@ -44,3 +44,8 @@ export const assetAuditNativeSheetOptions: AssetNativeSheetOptions = {
   ...baseAssetNativeSheetOptions,
   sheetAllowedDetents: [0.58, 0.92]
 };
+
+export const assetCheckoutHistoryNativeSheetOptions: AssetNativeSheetOptions = {
+  ...baseAssetNativeSheetOptions,
+  sheetAllowedDetents: [0.58, 0.92]
+};
