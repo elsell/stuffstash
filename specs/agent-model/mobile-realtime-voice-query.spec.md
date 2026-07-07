@@ -235,7 +235,7 @@ Client message fields:
 - `session.start`: `seq`, `tenantId`, `inventoryId`, `source`, `requestedCapabilities`, `inputAudio`, `outputAudio`, optional `clientCorrelationId`.
 - `audio.chunk`: `seq`, `sessionId`, `chunkId`, `audioBase64`, `isFinalChunk`.
 - `audio.end`: `seq`, `sessionId`.
-- Follow-up audio after a same-session clarification uses the same `audio.chunk` and `audio.end` messages with the existing `sessionId`; it must not start a new realtime session unless the prior session reached a terminal non-clarification outcome.
+- Follow-up audio after a same-session clarification uses the same `audio.chunk` and `audio.end` messages with the existing `sessionId`; it must not start a new realtime session unless the prior session reached a terminal non-clarification outcome. Each completed clarification turn must settle back to the mobile UI even when the server keeps the socket open for another bounded clarification follow-up.
 - `session.cancel`: `seq`, `sessionId`, optional safe `reason`.
 - `client.ack`: `seq`, `sessionId`, `ackSeq`.
 
