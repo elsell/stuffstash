@@ -185,19 +185,25 @@
       {#if section.rows.length === 0}
         <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {section.emptyText}</div>
       {:else}
-        <div class="plan-table" role="table" aria-label={`${section.title} plan preview`}>
-          <div class="plan-row plan-head" role="row">
-            {#each section.columns as column}
-              <span role="columnheader">{column.label}</span>
-            {/each}
-          </div>
-          {#each visibleRows(section) as row}
-            <div class="plan-row" role="row">
-              {#each section.columns as column, index}
-                <span class:primary-cell={index === 0} role="cell" data-cell-label={column.label}>{row.cells[column.key]}</span>
+        <div class="plan-table-wrap">
+          <table class="plan-table" aria-label={`${section.title} plan preview`}>
+            <thead>
+              <tr>
+                {#each section.columns as column}
+                  <th scope="col">{column.label}</th>
+                {/each}
+              </tr>
+            </thead>
+            <tbody>
+              {#each visibleRows(section) as row}
+                <tr>
+                  {#each section.columns as column, index}
+                    <td class:primary-cell={index === 0}>{row.cells[column.key]}</td>
+                  {/each}
+                </tr>
               {/each}
-            </div>
-          {/each}
+            </tbody>
+          </table>
         </div>
         {#if section.rows.length > PLAN_PAGE_SIZE}
           <div class="plan-pagination">
@@ -280,43 +286,49 @@
     white-space: nowrap;
   }
 
-  .plan-table {
+  .plan-table-wrap {
     border: 1px solid var(--border);
     border-radius: 8px;
-    display: grid;
     min-width: 0;
-    overflow: hidden;
+    overflow-x: auto;
   }
 
-  .plan-row {
+  .plan-table {
+    border-collapse: collapse;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .plan-table th,
+  .plan-table td {
     border-top: 1px solid var(--border);
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: minmax(0, 1.15fr) minmax(7rem, 0.52fr) minmax(0, 1fr);
-    min-width: 0;
+    font-size: 0.82rem;
+    min-width: 7rem;
+    overflow-wrap: anywhere;
     padding: 0.48rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
   }
 
-  .plan-row:first-child {
-    border-top: 0;
-  }
-
-  .plan-head {
+  .plan-table th {
     background: color-mix(in oklab, var(--muted) 32%, transparent);
+    border-top: 0;
     color: var(--muted-foreground);
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
   }
 
-  .plan-row span {
+  .plan-table td {
     color: var(--muted-foreground);
-    font-size: 0.82rem;
-    min-width: 0;
-    overflow-wrap: anywhere;
   }
 
-  .plan-row .primary-cell {
+  .plan-table th:first-child,
+  .plan-table td:first-child {
+    min-width: 12rem;
+  }
+
+  .plan-table .primary-cell {
     color: var(--foreground);
     font-weight: 600;
   }
@@ -342,19 +354,9 @@
   }
 
   @media (max-width: 860px) {
-    .plan-row {
-      gap: 0.28rem;
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .plan-head {
-      display: none;
-    }
-
-    .plan-row span:not(.primary-cell)::before {
-      color: var(--muted-foreground);
-      content: attr(data-cell-label) ": ";
-      font-weight: 700;
+    .plan-table th,
+    .plan-table td {
+      min-width: 10rem;
     }
   }
 </style>

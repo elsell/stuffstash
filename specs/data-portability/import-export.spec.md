@@ -360,7 +360,7 @@ Preview review must:
 - Issue groups must provide a concise detail affordance that explains the user-facing meaning, impact, and likely next action for the warning or blocking cause. This guidance must be derived from safe import message codes, severities, and sanitized details; it must not expose credentials, bearer tokens, provider storage paths, raw source payloads, attachment bytes, or arbitrary provider internals.
 - Put readiness, blocking status, and re-preview requirements ahead of sample rows.
 - Show bounded samples of planned records and state when only a subset is shown.
-- Planned records must be presented with recognizable table structure, stable headings, and concise row metadata rather than raw text blocks. Each planned-record section should expose the record name as the primary cell and diagnostic context as secondary columns.
+- Planned records must be presented with recognizable native table structure, stable headings, and concise row metadata rather than raw text blocks or div-only table imitation. Each planned-record section should expose the record name as the primary cell and diagnostic context as secondary columns.
 - When a planned-record sample is larger than the default visible page, the UI must provide explicit previous/next pagination or an equivalent bounded navigation pattern and must state the visible range. Ambiguous copy such as `shown` without range or total context is not sufficient.
 - Disable start-import actions when the preview has blocking errors.
 - Require a new preview when the source input, source options, selected file, file content, image option, security options, or source fingerprint changes.

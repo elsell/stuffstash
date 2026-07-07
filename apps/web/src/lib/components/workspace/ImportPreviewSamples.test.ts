@@ -41,8 +41,8 @@ describe('ImportPreviewSamples', () => {
     expect(document.body.textContent).toContain('1-2 of 2+');
     expect(document.body.textContent).toContain('Partial list');
     expect(document.body.textContent).toContain('Photos/files');
-    expect(document.body.querySelector('[role="table"][aria-label="Assets plan preview"]')).toBeTruthy();
-    expect(Array.from(document.body.querySelectorAll('[role="columnheader"]')).map((node) => node.textContent)).toEqual(
+    expect(document.body.querySelector<HTMLTableElement>('table[aria-label="Assets plan preview"]')?.tagName).toBe('TABLE');
+    expect(Array.from(document.body.querySelectorAll('th')).map((node) => node.textContent)).toEqual(
       expect.arrayContaining(['Field', 'Key', 'Type', 'Location', 'Kind', 'Context', 'Asset', 'File', 'Size'])
     );
     expect(document.body.textContent).not.toContain('shown');
