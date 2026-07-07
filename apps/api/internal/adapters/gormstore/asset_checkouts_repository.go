@@ -184,7 +184,12 @@ func (s Store) ListAssetCheckoutHistory(ctx context.Context, tenantID tenant.ID,
 
 func (s Store) ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CheckedOutAssetsPageRequest) ([]ports.CheckedOutAsset, error) {
 	query := s.db.WithContext(ctx).
-		Preload("Asset").
+		Preload("Asset", func(db *gorm.DB) *gorm.DB {
+			return db.Where(&assetModel{
+				TenantID:    tenantID.String(),
+				InventoryID: inventoryID.String(),
+			})
+		}).
 		Where(&assetCheckoutModel{
 			TenantID:    tenantID.String(),
 			InventoryID: inventoryID.String(),
@@ -219,6 +224,9 @@ func (s Store) ListCheckedOutAssets(ctx context.Context, tenantID tenant.ID, inv
 		item, ok := checkoutModel.Asset.toDomain()
 		if !ok {
 			return nil, fmt.Errorf("invalid asset row %q", checkoutModel.Asset.ID)
+		}
+		if item.TenantID.String() != tenantID.String() || item.InventoryID.String() != inventoryID.String() || item.ID != checkout.AssetID {
+			return nil, fmt.Errorf("checkout asset row %q is outside requested inventory scope", checkoutModel.Asset.ID)
 		}
 		items = append(items, ports.CheckedOutAsset{Asset: item, Checkout: checkout})
 	}
