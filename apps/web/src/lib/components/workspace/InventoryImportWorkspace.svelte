@@ -766,23 +766,29 @@
     }
   }
 
+  function workspaceTitle(): string {
+    if (step === 'history') return 'Imports';
+    if (step === 'detail') return selectedJob ? `${selectedJob.source.name} import` : 'Import details';
+    if (step === 'run') return 'Import running';
+    return 'New import';
+  }
+
+  function workspaceSubtitle(): string {
+    if (step === 'history') return `View current and past data imports for ${inventory?.name ?? 'this inventory'}.`;
+    if (step === 'detail') {
+      return selectedJob ? sourceDescription(selectedJob) : `Import details for ${inventory?.name ?? 'this inventory'}.`;
+    }
+    if (step === 'run') return 'The job is running in the background.';
+    return 'Confirm the source, preview the plan, then run it in the background.';
+  }
+
 </script>
 
 <section class="import-workspace" bind:this={importWorkspaceElement}>
   <div class="import-toolbar">
     <div>
-      <h1>{step === 'history' ? 'Imports' : step === 'detail' ? 'Import details' : step === 'run' ? 'Import running' : 'New import'}</h1>
-      <p>
-        {#if step === 'history'}
-          {`View current and past data imports for ${inventory?.name ?? 'this inventory'}.`}
-        {:else if step === 'detail'}
-          {selectedJob ? `${selectedJob.source.name} · ${sourceDescription(selectedJob)}` : `Import run for ${inventory?.name ?? 'this inventory'}.`}
-        {:else if step === 'run'}
-          The job is running in the background.
-        {:else}
-          Confirm the source, preview the plan, then run it in the background.
-        {/if}
-      </p>
+      <h1>{workspaceTitle()}</h1>
+      <p>{workspaceSubtitle()}</p>
     </div>
     {#if step === 'history'}
       <Button.Root variant="outline" size="sm" onclick={() => { void loadJobs(); }} disabled={loading || !canViewImports}>

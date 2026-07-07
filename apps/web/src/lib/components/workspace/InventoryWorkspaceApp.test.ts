@@ -448,7 +448,7 @@ describe('InventoryWorkspaceApp route application', () => {
     buttonContaining('Details').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Homebox import');
     });
 
     buttonContaining('More').click();
@@ -465,7 +465,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
       expect(document.body.textContent).toContain('Activity');
-      expect(document.body.textContent).not.toContain('Import details');
+      expect(document.body.textContent).not.toContain('Homebox import');
     });
   });
 
@@ -478,7 +478,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/import/jobs/job-terminal');
       expect(window.location.search).toBe('?tab=records');
-      expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Homebox import');
       expect(document.body.textContent).toContain('Imported records');
     });
 
@@ -536,7 +536,7 @@ describe('InventoryWorkspaceApp route application', () => {
     buttonContaining('Review Details').click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Import details');
+      expect(document.body.textContent).toContain('Homebox import');
       expect(buttonContaining('Records')).toBeTruthy();
     });
 
@@ -554,7 +554,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-imported-passport');
       expect(document.body.textContent).toContain('Imported Passport');
-      expect(document.body.textContent).not.toContain('Import details');
+      expect(document.body.textContent).not.toContain('Homebox import');
     });
   });
 
