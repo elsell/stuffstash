@@ -89,7 +89,7 @@
       <section class="preview-samples-section" aria-label="Preview samples">
         <div class="preview-section-heading">
           <h3>Plan samples</h3>
-          <small>Showing representative records</small>
+          <small>Previewed rows by section</small>
         </div>
         <ImportPreviewSamples preview={previewJob.preview} />
       </section>

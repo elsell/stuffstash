@@ -178,14 +178,14 @@
           <small>{sectionCountLabel(section)}</small>
         </div>
         {#if section.truncated}
-          <span class="sample-badge">Sample</span>
+          <span class="sample-badge">Partial list</span>
         {/if}
       </div>
 
       {#if section.rows.length === 0}
         <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {section.emptyText}</div>
       {:else}
-        <div class="plan-table" role="table" aria-label={`${section.title} plan sample`}>
+        <div class="plan-table" role="table" aria-label={`${section.title} plan preview`}>
           <div class="plan-row plan-head" role="row">
             {#each section.columns as column}
               <span role="columnheader">{column.label}</span>

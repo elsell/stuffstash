@@ -39,12 +39,14 @@ describe('ImportPreviewSamples', () => {
     expect(document.body.textContent).toContain('Fields');
     expect(document.body.textContent).toContain('1 record');
     expect(document.body.textContent).toContain('1-2 of 2+');
+    expect(document.body.textContent).toContain('Partial list');
     expect(document.body.textContent).toContain('Photos/files');
-    expect(document.body.querySelector('[role="table"]')).toBeTruthy();
+    expect(document.body.querySelector('[role="table"][aria-label="Assets plan preview"]')).toBeTruthy();
     expect(Array.from(document.body.querySelectorAll('[role="columnheader"]')).map((node) => node.textContent)).toEqual(
       expect.arrayContaining(['Field', 'Key', 'Type', 'Location', 'Kind', 'Context', 'Asset', 'File', 'Size'])
     );
     expect(document.body.textContent).not.toContain('shown');
+    expect(document.body.textContent).not.toContain('Sample');
   });
 
   it('pages large plan sections without rendering an unbounded wall', async () => {

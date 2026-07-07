@@ -399,6 +399,8 @@ describe('InventoryImportWorkspace import setup and preview', () => {
       expect(document.body.textContent).toContain('Preview import');
       expect(document.body.textContent).toContain('Attachment will be skipped');
       expect(document.body.textContent).toContain('Plan samples');
+      expect(document.body.textContent).toContain('Previewed rows by section');
+      expect(document.body.textContent).not.toContain('Showing representative records');
     });
 
     const issuesSection = document.body.querySelector<HTMLElement>('.preview-issues-section');
