@@ -339,7 +339,7 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	})
 
 	templateIndex := strings.Index(prompt, "Prefer concise spoken answers.")
-	mandatoryIndex := strings.Index(prompt, "Use only the provided native tools for inventory lookup and action-plan proposal.")
+	mandatoryIndex := strings.Index(prompt, "Use only the provided native read tools for inventory lookup.")
 	if templateIndex < 0 {
 		t.Fatalf("expected tenant prompt template in prompt: %s", prompt)
 	}
@@ -351,22 +351,20 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	}
 	for _, required := range []string{
 		"use the returned assetId as parentAssetId",
-		"Action-plan command arguments must be structured JSON",
-		"For write requests involving an existing asset, call search_authorized_assets for the source asset before propose_action_plan.",
-		"Do not call propose_action_plan for moving, archiving, or restoring an existing asset until a read tool result has returned that source asset's assetId.",
-		"If a move request names a source item and you do not have that item's assetId from a read tool, call search_authorized_assets for the source item before proposing a plan.",
+		"Action plans are produced only by a separate structured planner phase",
+		"For write requests involving an existing asset, use read tools to find the source asset before the planner phase.",
+		"For moving, archiving, restoring, checking out, or returning an existing asset, gather that source asset's assetId from a read tool result first.",
+		"If a move request names a source item and you do not have that item's assetId from a read tool, call search_authorized_assets for the source item before the planner phase.",
 		"For where-is questions, if search_authorized_assets returns the requested item with locationTitle or containmentPath, answer from that result instead of listing unrelated assets.",
 		"containmentPath ends with the returned asset itself; never say an item is inside itself.",
 		"Assume the user wants missing named locations, containers, or household surfaces created",
-		"do not ask whether to create it; call propose_action_plan",
-		"the session is not complete until you either call propose_action_plan or ask a necessary clarification",
+		"do not ask whether to create it; let the structured planner phase prepare the mobile review step",
+		"the session is not complete until the separate planner phase prepares a reviewable action plan or a necessary clarification is returned",
 		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
 		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
-		"If the destination name is not present as an assetId in tool results, create it in the same commands array and reference it with parentCommandId.",
 		"For nested create or move requests, resolve named outer locations and containers as separate search terms",
 		"A combined phrase search returning no matches does not prove each path segment is missing",
 		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
-		"If propose_action_plan returns an invalid_tool_request error, retry it once with corrected structured arguments instead of giving a final answer.",
 		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
 		"give a concise next step",
 		"follows the provided response schema",
@@ -377,6 +375,9 @@ func TestGoogleGeminiLanguagePromptIncludesTenantTemplateAndMandatoryRules(t *te
 	}
 	if strings.Contains(prompt, `{"final"`) {
 		t.Fatalf("prompt should not duplicate the provider response schema: %s", prompt)
+	}
+	if strings.Contains(prompt, "propose_action_plan") {
+		t.Fatalf("normal Gemini prompt must not describe the internal action-plan tool as callable: %s", prompt)
 	}
 }
 

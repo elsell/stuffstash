@@ -12,6 +12,7 @@ func TestGoogleGeminiLanguagePromptGuidesNestedMissingDestinationsIntoPlans(t *t
 
 	prompt := languagePrompt(ports.LanguageInferenceInput{
 		Transcript: "Move my water bottle to the second shelf in the big cabinet in the kitchen.",
+		PlanOnly:   true,
 	})
 
 	for _, required := range []string{
@@ -30,18 +31,17 @@ func TestGoogleGeminiLanguagePromptGuidesNewThingsIntoCreateCommands(t *testing.
 
 	prompt := languagePrompt(ports.LanguageInferenceInput{
 		Transcript: "Add an Apple TV remote to the box under the TV in the living room.",
+		PlanOnly:   true,
 	})
 
 	for _, required := range []string{
-		"For add/create requests for a new item, use create_asset with title or name and kind item",
-		"Do not invent an assetId for a new item",
+		"Use create_asset with kind item for new items.",
 		"Never include assetId in create_asset arguments",
 		"When a new item should go inside an existing parent, use one create_asset command with parentAssetId set to the visible parent.",
 		"Do not create the item and then move it.",
 		"create the container with parentAssetId set to that visible location assetId",
-		"Use create_asset with kind container for new containers",
+		"Use create_asset with kind container for household containers or surfaces.",
 		"Do not create the new item first and do not add a move_asset command for the new item.",
-		"use move_asset only for an existing asset returned by a read tool",
 	} {
 		if !strings.Contains(prompt, required) {
 			t.Fatalf("expected prompt to include %q, got %s", required, prompt)
