@@ -338,6 +338,7 @@ export class RealtimeVoiceSessionController {
       progressLabel: 'Listening',
       recordingLevel: this.recordingLevel(),
       responseKind: 'clarification',
+      clarificationFollowUpAvailable: true,
       debugEvents: []
     };
   }

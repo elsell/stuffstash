@@ -187,7 +187,12 @@ describe('RealtimeVoiceSessionController', () => {
     });
 
     const followUp = await controller.startFollowUp();
-    expect(followUp).toMatchObject({ status: 'listening', progressLabel: 'Listening' });
+    expect(followUp).toMatchObject({
+      status: 'listening',
+      progressLabel: 'Listening',
+      responseKind: 'clarification',
+      clarificationFollowUpAvailable: true
+    });
     const followUpStates = await controller.stopFollowUp();
     expect(transport.followUpAudio).toEqual([['ZmFrZS1hdWRpbw==']]);
     expect(followUpStates.at(-1)).toMatchObject({ status: 'completed' });
