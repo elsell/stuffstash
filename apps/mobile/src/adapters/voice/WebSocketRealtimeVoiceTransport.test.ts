@@ -381,6 +381,61 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(events).toEqual([{ type: 'session.failed', seq: 1, code: 'invalid_request', message: 'No provider.' }]);
   });
 
+  it('keeps the socket open and sends follow-up audio after a clarification completion', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['Zmlyc3Q=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive({ type: 'session.started', seq: 1, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'clarification', spokenResponse: 'Which item?', displayResponse: 'Which item?' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    await waitForEventType(events, 'session.completed');
+
+    expect(transport.canSendFollowUpAudio()).toBe(true);
+    expect(socket.closedByClient).toBe(false);
+    const followUp = transport.sendFollowUpAudio(['c2Vjb25k']);
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 4,
+      sessionId: 'session-1',
+      response: { kind: 'answer', spokenResponse: 'Found it.', displayResponse: 'Found it.' }
+    });
+    socket.receive({ type: 'session.completed', seq: 5, sessionId: 'session-1' });
+
+    await followUp;
+    await run;
+    expect(socket.sent.map((message) => message.type)).toEqual([
+      'session.start',
+      'audio.chunk',
+      'audio.end',
+      'audio.chunk',
+      'audio.end'
+    ]);
+    expect(socket.sent[3]).toMatchObject({ seq: 4, sessionId: 'session-1', audioBase64: 'c2Vjb25k' });
+    expect(transport.canSendFollowUpAudio()).toBe(false);
+  });
+
   it('sends session cancel and rejects safely when cancelled after session start', async () => {
     const socket = new FakeWebSocket();
     const controller = new AbortController();

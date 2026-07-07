@@ -238,7 +238,7 @@ export function buildVoiceSessionPresentation({
   readonly stage: VoiceInteractionStage;
   readonly tenantName: string;
 }): VoiceSessionPresentation {
-  const title = titleForStage(stage);
+  const title = titleForState(stage, realtime);
   const progressLabel = realtime?.progressLabel ?? progressForStage(stage);
   const diagnostics =
     diagnosticsEnabled && diagnosticsExpanded
@@ -428,6 +428,8 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
           ? 'Send voice request'
           : stage === 'ready' && !realtime
             ? 'Start voice interaction'
+            : stage === 'completed' && realtime?.responseKind === 'clarification'
+              ? 'Answer follow-up'
             : isWorking
               ? 'Voice request in progress'
               : 'Start another voice interaction',
@@ -439,6 +441,13 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
   }
 
   return { kind: 'none' };
+}
+
+function titleForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): string {
+  if (stage === 'completed' && realtime?.responseKind === 'clarification') {
+    return 'Needs detail';
+  }
+  return titleForStage(stage);
 }
 
 export function formatSafeDiagnosticEvent(event: VoiceSafeDiagnosticEvent): string {

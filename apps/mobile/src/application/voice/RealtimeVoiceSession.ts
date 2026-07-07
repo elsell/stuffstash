@@ -41,6 +41,8 @@ export interface RealtimeVoiceTransport {
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
     options?: RealtimeVoiceTransportRunOptions
   ): Promise<void>;
+  canSendFollowUpAudio(): boolean;
+  sendFollowUpAudio(audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void>;
   approveActionPlan(planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]): Promise<void>;
   cancelActionPlan(planId: string): Promise<void>;
 }
@@ -173,6 +175,8 @@ export type VoiceRealtimeState = {
   readonly partialTranscript?: string;
   readonly transcript?: string;
   readonly spokenResponse?: string;
+  readonly responseKind?: string;
+  readonly conversationPhase?: VoiceConversationPhase;
   readonly progressLabel?: string;
   readonly debugEvents: readonly VoiceSafeDiagnosticEvent[];
   readonly failureCode?: VoiceRealtimeFailureCode;
@@ -180,6 +184,14 @@ export type VoiceRealtimeState = {
   readonly photoAttachmentStatus?: VoicePhotoAttachmentStatus;
   readonly recordingLevel?: number;
 };
+
+export type VoiceConversationPhase =
+  | 'understanding'
+  | 'exploring'
+  | 'planning'
+  | 'reviewing'
+  | 'answering'
+  | 'recovering';
 
 export type VoicePhotoAttachmentStatus = {
   readonly status: 'attached' | 'partial_failed' | 'failed';
@@ -304,6 +316,58 @@ export class RealtimeVoiceSessionController {
     return states;
   }
 
+  canSendFollowUpAudio(): boolean {
+    return this.transport.canSendFollowUpAudio();
+  }
+
+  async startFollowUp(): Promise<VoiceRealtimeState> {
+    if (!this.transport.canSendFollowUpAudio()) {
+      throw new Error('Voice follow-up session is not active.');
+    }
+    const context = this.currentContext ?? (await this.selectedInventoryContext());
+    await this.player.stop();
+    await this.recorder.start();
+    this.recordingStarted = true;
+    return {
+      status: 'listening',
+      tenantName: context.tenantName,
+      inventoryName: context.inventoryName,
+      progressLabel: 'Listening',
+      recordingLevel: this.recordingLevel(),
+      responseKind: 'clarification',
+      debugEvents: []
+    };
+  }
+
+  async stopFollowUp(onState?: VoiceRealtimeStateHandler): Promise<readonly VoiceRealtimeState[]> {
+    if (!this.recordingStarted) {
+      throw new Error('Voice recording has not started.');
+    }
+    const context = this.currentContext ?? (await this.selectedInventoryContext());
+    const recorded = await this.recorder.stop();
+    this.recordingStarted = false;
+    const states: VoiceRealtimeState[] = [{
+      status: 'processing',
+      tenantName: context.tenantName,
+      inventoryName: context.inventoryName,
+      progressLabel: 'Sending audio',
+      progressSteps: ['Sending audio'],
+      debugEvents: []
+    }];
+    onState?.(states[0]);
+    await this.transport.sendFollowUpAudio(recorded.chunksBase64, async (event) => {
+      const previous = states[states.length - 1];
+      const next = await this.reduceEvent(previous, event);
+      states.push(next);
+      onState?.(next);
+    });
+    if (states.length === 1) {
+      states.push(withProgressStep(states[0], 'Done', { status: 'completed' }));
+      onState?.(states[1]);
+    }
+    return states;
+  }
+
   async cancel(): Promise<VoiceRealtimeState> {
     this.cancelledThroughSessionGeneration = Math.max(
       this.cancelledThroughSessionGeneration,
@@ -371,9 +435,9 @@ export class RealtimeVoiceSessionController {
       case 'transcript.delta':
         return withProgressStep(state, 'Transcribing', { status: 'processing', partialTranscript: event.text });
       case 'transcript.final':
-        return withProgressStep(state, 'Thinking', { status: 'processing', partialTranscript: undefined, transcript: event.text });
+        return withProgressStep(state, 'Understanding request', { status: 'processing', partialTranscript: undefined, transcript: event.text, conversationPhase: 'understanding' });
       case 'agent.progress':
-        return withProgressStep(state, event.message, { status: 'processing' });
+        return withProgressStep(state, event.message, { status: 'processing', conversationPhase: voiceConversationPhase(event.status) });
       case 'agent.diagnostic':
         return {
           ...state,
@@ -433,9 +497,14 @@ export class RealtimeVoiceSessionController {
           errorMessage: 'The approved change could not be applied safely.'
         });
       case 'assistant.response.started':
-        return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing' });
+        return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing', conversationPhase: 'answering' });
       case 'assistant.response.completed':
-        return withProgressStep(state, 'Preparing speech', { status: state.actionPlan ? 'review' : 'processing', spokenResponse: event.response.displayResponse });
+        return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
+          status: state.actionPlan ? 'review' : 'processing',
+          spokenResponse: event.response.displayResponse,
+          responseKind: event.response.kind,
+          conversationPhase: 'answering'
+        });
       case 'tts.audio.started':
         this.ttsMimeType = event.mimeType;
         return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
@@ -448,7 +517,7 @@ export class RealtimeVoiceSessionController {
         await this.player.stop();
         return state.actionPlan
           ? withProgressStep(state, 'Review needed', { status: 'review' })
-          : withProgressStep(state, 'Done', { status: 'completed' });
+          : withProgressStep(state, state.responseKind === 'clarification' ? 'Needs detail' : 'Done', { status: 'completed' });
       case 'session.cancelled':
         await this.player.stop();
         return withProgressStep(state, 'Cancelled', { status: 'cancelled', partialTranscript: undefined });
@@ -616,6 +685,20 @@ function boundedRecordingLevel(value: number): number {
     return 0;
   }
   return Math.max(0, Math.min(1, value));
+}
+
+function voiceConversationPhase(status: string): VoiceConversationPhase | undefined {
+  switch (status) {
+    case 'understanding':
+    case 'exploring':
+    case 'planning':
+    case 'reviewing':
+    case 'answering':
+    case 'recovering':
+      return status;
+    default:
+      return undefined;
+  }
 }
 
 type VoiceActionPlanPhotoRetry = {

@@ -115,7 +115,9 @@ export function VoiceInteractionStateProvider({
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
         try {
-          const next = await realtimeController.start();
+          const next = realtime?.status === 'completed' && realtime.responseKind === 'clarification' && realtimeController.canSendFollowUpAudio()
+            ? await realtimeController.startFollowUp()
+            : await realtimeController.start();
           if (sessionGeneration.current !== generation) {
             return;
           }
@@ -133,7 +135,8 @@ export function VoiceInteractionStateProvider({
         const generation = sessionGeneration.current;
         setStage('processing');
         try {
-          const states = await realtimeController.stop((nextState) => {
+          const shouldSendFollowUp = realtime?.responseKind === 'clarification' && realtimeController.canSendFollowUpAudio();
+          const states = await (shouldSendFollowUp ? realtimeController.stopFollowUp : realtimeController.stop).call(realtimeController, (nextState: VoiceRealtimeState) => {
             if (sessionGeneration.current !== generation) {
               return;
             }

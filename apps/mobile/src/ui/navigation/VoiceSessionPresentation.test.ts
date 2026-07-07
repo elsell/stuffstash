@@ -131,6 +131,31 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('labels completed clarification responses as needing detail', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'completed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Needs detail',
+        responseKind: 'clarification',
+        spokenResponse: 'Which item should I update?',
+        debugEvents: []
+      },
+      stage: 'completed',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.title).toBe('Needs detail');
+    expect(session.bottomAction).toMatchObject({
+      kind: 'session_controls',
+      mic: { accessibilityLabel: 'Answer follow-up' }
+    });
+  });
+
   it('does not leak raw realtime details into the collapsed accessory', () => {
     const unsafeText = 'raw prompt bearer secret stack trace provider id transcript';
 

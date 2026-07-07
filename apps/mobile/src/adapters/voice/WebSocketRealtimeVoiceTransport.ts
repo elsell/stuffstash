@@ -22,6 +22,11 @@ type ActiveRealtimeReviewSession = {
   readonly sendDecision: (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]) => void;
 };
 
+type ActiveRealtimeFollowUpSession = {
+  readonly sendAudio: (audioChunksBase64: readonly string[]) => Promise<void>;
+  readonly close: () => void;
+};
+
 export type WebSocketRealtimeVoiceTransportOptions = {
   readonly apiBaseUrl: string;
   readonly tokenProvider: () => string | Promise<string>;
@@ -35,6 +40,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
   private readonly diagnosticsEnabled: boolean;
   private readonly webSocketFactory: VoiceWebSocketFactory;
   private activeReviewSession: ActiveRealtimeReviewSession | null = null;
+  private activeFollowUpSession: ActiveRealtimeFollowUpSession | null = null;
 
   constructor(options: WebSocketRealtimeVoiceTransportOptions) {
     this.apiBaseUrl = options.apiBaseUrl.replace(/\/+$/, '');
@@ -64,9 +70,25 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let lastServerSeq = 0;
       let completed = false;
       let hasPendingActionPlan = false;
+      let lastResponseKind = '';
+      let followUpPending = false;
+      let followUpResolve: (() => void) | null = null;
       let settled = false;
       let decisionSent = false;
       let messageChain = Promise.resolve();
+      const sendAudioTurn = (audioChunksBase64: readonly string[]) => {
+        audioChunksBase64.forEach((audioBase64, index) => {
+          socket.send(JSON.stringify({
+            type: 'audio.chunk',
+            seq: seq++,
+            sessionId,
+            chunkId: `mobile-${seq}-${index + 1}`,
+            audioBase64,
+            isFinalChunk: index === audioChunksBase64.length - 1
+          }));
+        });
+        socket.send(JSON.stringify({ type: 'audio.end', seq: seq++, sessionId }));
+      };
       const sendDecision = (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []) => {
         if (!sessionId || settled) {
           throw new Error('Voice review session is not active.');
@@ -119,10 +141,18 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         if (!settled) {
           settled = true;
           thisTransport.activeReviewSession = null;
+          if (thisTransport.activeFollowUpSession?.close === closeFollowUpSession) {
+            thisTransport.activeFollowUpSession = null;
+          }
           options.signal?.removeEventListener('abort', abortHandler);
           reject(error);
         }
       }
+
+      const closeFollowUpSession = () => {
+        thisTransport.activeFollowUpSession = null;
+        socket.close();
+      };
 
       if (options.signal?.aborted) {
         abortHandler();
@@ -155,7 +185,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       socket.onmessage = (event) => {
         messageChain = messageChain.then(async () => {
           if (settled) {
-            return;
+            if (!followUpPending) {
+              return;
+            }
           }
           const message = parseServerMessage(event.data);
           validateServerMessage(message, sessionId, lastServerSeq);
@@ -168,17 +200,10 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             if (settled || options.signal?.aborted) {
               return;
             }
-            input.audioChunksBase64.forEach((audioBase64, index) => {
-              socket.send(JSON.stringify({
-                type: 'audio.chunk',
-                seq: seq++,
-                sessionId,
-                chunkId: `mobile-${index + 1}`,
-                audioBase64,
-                isFinalChunk: index === input.audioChunksBase64.length - 1
-              }));
-            });
-            socket.send(JSON.stringify({ type: 'audio.end', seq: seq++, sessionId }));
+            sendAudioTurn(input.audioChunksBase64);
+          }
+          if (message.type === 'assistant.response.completed') {
+            lastResponseKind = message.response.kind;
           }
           if (message.type === 'action.plan.proposed') {
             hasPendingActionPlan = true;
@@ -186,30 +211,68 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           }
           if (message.type === 'session.completed' && !hasPendingActionPlan) {
             completed = true;
-            socket.close();
+            if (lastResponseKind === 'clarification') {
+              this.activeFollowUpSession = {
+                sendAudio: (audioChunksBase64) => {
+                  followUpPending = true;
+                  const promise = new Promise<void>((resolveFollowUp) => {
+                    followUpResolve = resolveFollowUp;
+                  });
+                  sendAudioTurn(audioChunksBase64);
+                  return promise;
+                },
+                close: closeFollowUpSession
+              };
+            } else {
+              followUpPending = false;
+              socket.close();
+              this.activeFollowUpSession = null;
+              followUpResolve?.();
+              followUpResolve = null;
+            }
             settleResolve();
           }
           if (message.type === 'action.plan.cancelled' || message.type === 'action.plan.executed' || message.type === 'action.plan.failed') {
             completed = true;
             this.activeReviewSession = null;
+            this.activeFollowUpSession = null;
+            followUpResolve?.();
+            followUpResolve = null;
             socket.close();
             settleResolve();
           }
           if (message.type === 'session.cancelled') {
             completed = true;
             this.activeReviewSession = null;
+            this.activeFollowUpSession = null;
+            followUpResolve?.();
+            followUpResolve = null;
             socket.close();
             settleResolve();
           }
           if (message.type === 'session.failed') {
             completed = true;
             this.activeReviewSession = null;
+            this.activeFollowUpSession = null;
+            followUpResolve?.();
+            followUpResolve = null;
             socket.close();
             settleResolve();
           }
         }).catch(settleReject);
       };
     });
+  }
+
+  canSendFollowUpAudio(): boolean {
+    return this.activeFollowUpSession !== null;
+  }
+
+  async sendFollowUpAudio(audioChunksBase64: readonly string[]): Promise<void> {
+    if (!this.activeFollowUpSession) {
+      throw new Error('Voice follow-up session is not active.');
+    }
+    await this.activeFollowUpSession.sendAudio(audioChunksBase64);
   }
 
   async approveActionPlan(planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []): Promise<void> {

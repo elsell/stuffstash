@@ -134,7 +134,7 @@ describe('RealtimeVoiceSessionController', () => {
       'processing:Sending audio::',
       'processing:Connected::',
       'processing:Transcribing:Where is:',
-      'processing:Thinking:Where is the drill?:',
+      'processing:Understanding request:Where is the drill?:',
       'processing:Searching visible inventory:Where is the drill?:',
       'processing:Preparing speech:Where is the drill?:The drill is in the garage.',
       'completed:Done:Where is the drill?:The drill is in the garage.'
@@ -147,12 +147,49 @@ describe('RealtimeVoiceSessionController', () => {
         'Sending audio',
         'Connected',
         'Transcribing',
-        'Thinking',
+        'Understanding request',
         'Searching visible inventory',
         'Preparing speech',
         'Done'
       ]
     });
+  });
+
+  it('records and sends follow-up audio after a clarification completion', async () => {
+    const recorder = new FakeRecorder();
+    const transport = new FakeTransport([
+      {
+        type: 'assistant.response.completed',
+        seq: 1,
+        sessionId: 'session-1',
+        response: {
+          spokenResponse: 'Which item should I update?',
+          displayResponse: 'Which item should I update?',
+          kind: 'clarification'
+        }
+      },
+      { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+    ]);
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      responseKind: 'clarification',
+      progressLabel: 'Needs detail'
+    });
+
+    const followUp = await controller.startFollowUp();
+    expect(followUp).toMatchObject({ status: 'listening', progressLabel: 'Listening' });
+    const followUpStates = await controller.stopFollowUp();
+    expect(transport.followUpAudio).toEqual([['ZmFrZS1hdWRpbw==']]);
+    expect(followUpStates.at(-1)).toMatchObject({ status: 'completed' });
   });
 
   it('bounds progress steps and collapses adjacent duplicate labels', async () => {
@@ -1031,6 +1068,7 @@ class FakeRecorder implements VoiceAudioRecorder {
 
 class FakeTransport implements RealtimeVoiceTransport {
   lastInput: unknown;
+  followUpAudio: readonly string[][] = [];
 
   constructor(private readonly events: readonly VoiceRealtimeEvent[]) {}
 
@@ -1038,6 +1076,17 @@ class FakeTransport implements RealtimeVoiceTransport {
     this.lastInput = input;
     for (const event of this.events) {
       await onEvent(event);
+    }
+  }
+
+  canSendFollowUpAudio(): boolean {
+    return true;
+  }
+
+  async sendFollowUpAudio(audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void> {
+    this.followUpAudio = [...this.followUpAudio, [...audioChunksBase64]];
+    for (const event of this.events) {
+      await onEvent?.(event);
     }
   }
 
@@ -1128,6 +1177,14 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
     this.finishResolve?.();
   }
 
+  canSendFollowUpAudio(): boolean {
+    return false;
+  }
+
+  async sendFollowUpAudio(): Promise<void> {
+    throw new Error('Voice follow-up session is not active.');
+  }
+
   protected async emitReviewEvent(event: VoiceRealtimeEvent): Promise<void> {
     await this.onEvent?.(event);
   }
@@ -1209,6 +1266,14 @@ class DelayedEventTransport implements RealtimeVoiceTransport {
   async approveActionPlan(_planId: string): Promise<void> {}
 
   async cancelActionPlan(_planId: string): Promise<void> {}
+
+  canSendFollowUpAudio(): boolean {
+    return false;
+  }
+
+  async sendFollowUpAudio(): Promise<void> {
+    throw new Error('Voice follow-up session is not active.');
+  }
 }
 
 class CancellableTransport implements RealtimeVoiceTransport {
@@ -1235,6 +1300,14 @@ class CancellableTransport implements RealtimeVoiceTransport {
   async approveActionPlan(_planId: string): Promise<void> {}
 
   async cancelActionPlan(_planId: string): Promise<void> {}
+
+  canSendFollowUpAudio(): boolean {
+    return false;
+  }
+
+  async sendFollowUpAudio(): Promise<void> {
+    throw new Error('Voice follow-up session is not active.');
+  }
 }
 
 class FakePlayer implements VoiceAudioPlayer {
