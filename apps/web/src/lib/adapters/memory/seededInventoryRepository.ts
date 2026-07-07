@@ -5,6 +5,9 @@ import {
   type AddAssetDraft,
   type Asset,
   type AssetAttachment,
+  type AssetCheckout,
+  type AssetCheckoutDraft,
+  type CheckedOutAsset,
   type AuditRecord,
   type CreatedInventoryAccessInvitation,
   type CustomAssetType,
@@ -46,6 +49,7 @@ export class SeededInventoryRepository
 {
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
+  private checkoutRecords: AssetCheckout[] = [];
   private auditRecords: AuditRecord[] = [];
   private grants: InventoryAccessGrant[] = [];
   private invitations: InventoryAccessInvitation[] = [];
@@ -247,6 +251,85 @@ export class SeededInventoryRepository
     this.recordAssetAudit(asset, 'asset.deleted');
   }
 
+  async checkoutAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    if (asset.lifecycleState !== 'active') {
+      throw new Error('Archived assets cannot be checked out.');
+    }
+    if (asset.currentCheckout) {
+      throw new Error('Asset is already checked out.');
+    }
+    const now = new Date().toISOString();
+    const checkout: AssetCheckout = {
+      id: `checkout-local-${this.checkoutRecords.length + 1}-${Date.now()}`,
+      tenantId,
+      inventoryId,
+      assetId,
+      state: 'open',
+      checkedOutAt: now,
+      checkedOutByPrincipalId: this.seed.principal.id,
+      checkoutDetails: draft.details?.trim() || undefined,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.checkoutRecords = [checkout, ...this.checkoutRecords];
+    this.replaceAsset({
+      ...asset,
+      currentCheckout: {
+        id: checkout.id,
+        state: checkout.state,
+        checkedOutAt: checkout.checkedOutAt,
+        checkedOutByPrincipalId: checkout.checkedOutByPrincipalId
+      },
+      updatedAt: now
+    });
+    this.recordAssetAudit(asset, 'asset.checked_out');
+    return checkout;
+  }
+
+  async returnAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    const openCheckout = this.checkoutRecords.find(
+      (record) =>
+        record.tenantId === tenantId &&
+        record.inventoryId === inventoryId &&
+        record.assetId === assetId &&
+        record.state === 'open'
+    );
+    if (!asset.currentCheckout || !openCheckout) {
+      throw new Error('Asset is not checked out.');
+    }
+    const now = new Date().toISOString();
+    const returned: AssetCheckout = {
+      ...openCheckout,
+      state: 'returned',
+      returnedAt: now,
+      returnedByPrincipalId: this.seed.principal.id,
+      returnDetails: draft.details?.trim() || undefined,
+      updatedAt: now
+    };
+    this.checkoutRecords = this.checkoutRecords.map((record) => (record === openCheckout ? returned : record));
+    this.replaceAsset({
+      ...asset,
+      currentCheckout: undefined,
+      updatedAt: now
+    });
+    this.recordAssetAudit(asset, 'asset.returned');
+    return returned;
+  }
+
+  async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]> {
+    return this.checkoutRecords.filter(
+      (record) => record.tenantId === tenantId && record.inventoryId === inventoryId && record.assetId === assetId
+    );
+  }
+
+  async listCheckedOutAssets(tenantId: string, inventoryId: string): Promise<CheckedOutAsset[]> {
+    return this.seed.assets
+      .filter((asset) => asset.tenantId === tenantId && asset.inventoryId === inventoryId && asset.currentCheckout)
+      .map((asset) => ({ asset, checkout: asset.currentCheckout! }));
+  }
+
   async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]> {
     return this.attachments.filter(
       (attachment) =>
@@ -351,7 +434,11 @@ export class SeededInventoryRepository
       (asset) =>
         asset.tenantId === request.tenantId &&
         asset.inventoryId === request.inventoryId &&
-        (request.lifecycleState === 'all' || asset.lifecycleState === request.lifecycleState)
+        (request.lifecycleState === 'all' || asset.lifecycleState === request.lifecycleState) &&
+        (request.checkoutState === undefined ||
+          request.checkoutState === 'any' ||
+          (request.checkoutState === 'checked_out' && !!asset.currentCheckout) ||
+          (request.checkoutState === 'available' && !asset.currentCheckout))
     );
     const matches = request.mode === 'exact' ? exactAssets(searchableAssets, request.query) : filterAssets(searchableAssets, request.query);
     return matches.map((asset) => ({
@@ -796,8 +883,26 @@ export class SeededInventoryRepository
         customFieldDefinitions: this.effectiveCustomFieldDefinitions(this.selectedTenantId, this.selectedInventoryId),
         capability: capabilityForInventory(selectedInventory)
       },
-      assets: this.workspaceAssets()
+      assets: this.workspaceAssets(),
+      checkedOutAssets: this.listCheckedOutAssetsSync(this.selectedTenantId, this.selectedInventoryId)
     };
+  }
+
+  private replaceAsset(updated: Asset): void {
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.map((candidate) =>
+        candidate.tenantId === updated.tenantId && candidate.inventoryId === updated.inventoryId && candidate.id === updated.id
+        ? updated
+        : candidate
+      )
+    };
+  }
+
+  private listCheckedOutAssetsSync(tenantId: string, inventoryId: string): CheckedOutAsset[] {
+    return this.seed.assets
+      .filter((asset) => asset.tenantId === tenantId && asset.inventoryId === inventoryId && asset.currentCheckout)
+      .map((asset) => ({ asset, checkout: asset.currentCheckout! }));
   }
 
   private recordAssetAudit(asset: Asset, action: string): void {

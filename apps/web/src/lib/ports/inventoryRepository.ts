@@ -2,7 +2,10 @@ import type {
   AddAssetDraft,
   Asset,
   AssetAttachment,
+  AssetCheckout,
+  AssetCheckoutDraft,
   AssetLifecycleFilter,
+  CheckedOutAsset,
   CustomAssetType,
   CustomFieldDefinition,
   Inventory,
@@ -32,6 +35,10 @@ export interface InventoryRepository {
   archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   restoreAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void>;
+  checkoutAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout>;
+  returnAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout>;
+  listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]>;
+  listCheckedOutAssets(tenantId: string, inventoryId: string): Promise<CheckedOutAsset[]>;
   listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]>;
   uploadAssetAttachment(
     tenantId: string,

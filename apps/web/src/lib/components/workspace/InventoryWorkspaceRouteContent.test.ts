@@ -294,9 +294,10 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       selectedInventory,
       selectedLocation: null,
       selectedAsset: null,
-      assets: data.assets,
-      detailAssets: data.assets,
-      selectedAssetAttachments: []
+	      assets: data.assets,
+	      detailAssets: data.assets,
+	      selectedAssetAttachments: [],
+	      selectedAssetCheckoutHistory: []
     },
     status: {
       busy: false,
@@ -329,8 +330,9 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       assetDetailBackHref: '/tenants/tenant-home/inventories/inventory-household'
     },
     searchQuery: '',
-    searchLifecycleState: 'active' as SearchLifecycleFilter,
-    searchMode: 'fuzzy' as SearchMode,
+	    searchLifecycleState: 'active' as SearchLifecycleFilter,
+	    searchMode: 'fuzzy' as SearchMode,
+	    searchCheckoutState: 'any',
     handlers: {
       onHome: () => {},
       onCreateStarterInventory: async () => {},
@@ -343,10 +345,12 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       onAssetActionOpen: () => {},
       onAssetActionClose: () => {},
       onAssetSave: async () => {},
-      onAssetArchive: async () => {},
-      onAssetRestore: async () => {},
-      onAssetDelete: async () => {},
-      onAssetUploadAttachment: async () => {},
+	      onAssetArchive: async () => {},
+	      onAssetRestore: async () => {},
+	      onAssetDelete: async () => {},
+	      onAssetCheckout: async () => {},
+	      onAssetReturn: async () => {},
+	      onAssetUploadAttachment: async () => {},
       onAssetArchiveAttachment: async () => {},
       onAttachmentDeleteOpen: () => {},
       onAttachmentDeleteClose: () => {},

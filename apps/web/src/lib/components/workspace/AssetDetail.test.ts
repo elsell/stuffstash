@@ -647,7 +647,7 @@ describe('AssetDetail', () => {
 function mountAssetDetail(
   props: Partial<{
     asset: AssetViewModel;
-    action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
+    action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
     attachmentId: string | null;
     attachmentAction: 'delete' | null;
     canEdit: boolean;
@@ -658,12 +658,14 @@ function mountAssetDetail(
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete') => void;
+    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
     onActionClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
     onDelete: () => Promise<void>;
+    onCheckout: (details: string) => Promise<void>;
+    onReturn: (details: string) => Promise<void>;
     onUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
     onAttachmentDeleteOpen: (attachmentId: string) => void;
@@ -678,8 +680,9 @@ function mountAssetDetail(
       canEdit: true,
       parentTargets: [],
       customFieldDefinitions: [],
-      saving: false,
-      attachments: [],
+	      saving: false,
+	      attachments: [],
+	      checkoutHistory: [],
       mediaPolicy: {
         supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
         maxBytes: 5 * 1024 * 1024
@@ -690,9 +693,11 @@ function mountAssetDetail(
       onActionClose: () => {},
       onSave: async () => {},
       onArchive: async () => {},
-      onRestore: async () => {},
-      onDelete: async () => {},
-      onUploadAttachment: async () => {},
+	      onRestore: async () => {},
+	      onDelete: async () => {},
+	      onCheckout: async () => {},
+	      onReturn: async () => {},
+	      onUploadAttachment: async () => {},
       onArchiveAttachment: async () => {},
       onAttachmentDeleteOpen: () => {},
       onAttachmentDeleteClose: () => {},

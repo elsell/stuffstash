@@ -1,4 +1,4 @@
-import type { Asset, SearchLifecycleFilter, SearchMode, SearchRequest, SearchResult } from '$lib/domain/inventory';
+import type { Asset, SearchCheckoutFilter, SearchLifecycleFilter, SearchMode, SearchRequest, SearchResult } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import { workspaceRouteHref } from './workspaceRoute';
 import { filterAssets } from './workspace';
@@ -12,6 +12,7 @@ export interface ExecuteWorkspaceSearchInput {
   query: string;
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
+  checkoutState: SearchCheckoutFilter;
 }
 
 export interface WorkspaceSearchResultState {
@@ -38,6 +39,7 @@ export interface SearchPanelStatusPresentation {
 
 const searchLifecycleFilters: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
 const searchModes: SearchMode[] = ['fuzzy', 'exact'];
+const searchCheckoutFilters: SearchCheckoutFilter[] = ['any', 'checked_out', 'available'];
 
 export function buildSearchSuggestions(assets: Asset[], query: string, limit = 6): Asset[] {
   return filterAssets(assets, query).slice(0, limit);
@@ -60,9 +62,14 @@ export function searchFilterHref(
   inventoryId: string,
   query: string,
   lifecycleState: SearchLifecycleFilter,
-  mode: SearchMode
+  mode: SearchMode,
+  checkoutState: SearchCheckoutFilter
 ): string {
-  return workspaceRouteHref({ mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode }, tenantId, inventoryId);
+  return workspaceRouteHref(
+    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
+    tenantId,
+    inventoryId
+  );
 }
 
 export function searchLifecycleFilterOptions(input: {
@@ -70,11 +77,12 @@ export function searchLifecycleFilterOptions(input: {
   inventoryId: string;
   query: string;
   mode: SearchMode;
+  checkoutState: SearchCheckoutFilter;
 }): SearchFilterOption<SearchLifecycleFilter>[] {
   return searchLifecycleFilters.map((lifecycleState) => ({
     value: lifecycleState,
     label: searchLifecycleFilterLabel(lifecycleState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode, input.checkoutState)
   }));
 }
 
@@ -83,11 +91,26 @@ export function searchModeFilterOptions(input: {
   inventoryId: string;
   query: string;
   lifecycleState: SearchLifecycleFilter;
+  checkoutState: SearchCheckoutFilter;
 }): SearchFilterOption<SearchMode>[] {
   return searchModes.map((mode) => ({
     value: mode,
     label: searchModeLabel(mode),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode, input.checkoutState)
+  }));
+}
+
+export function searchCheckoutFilterOptions(input: {
+  tenantId: string;
+  inventoryId: string;
+  query: string;
+  lifecycleState: SearchLifecycleFilter;
+  mode: SearchMode;
+}): SearchFilterOption<SearchCheckoutFilter>[] {
+  return searchCheckoutFilters.map((checkoutState) => ({
+    value: checkoutState,
+    label: searchCheckoutFilterLabel(checkoutState),
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, input.mode, checkoutState)
   }));
 }
 
@@ -138,7 +161,8 @@ export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput)
     inventoryId: input.inventoryId,
     query,
     lifecycleState: input.lifecycleState,
-    mode: input.mode
+    mode: input.mode,
+    checkoutState: input.checkoutState
   };
 
   try {
@@ -170,4 +194,14 @@ function searchLifecycleFilterLabel(lifecycleState: SearchLifecycleFilter): stri
 
 function searchModeLabel(mode: SearchMode): string {
   return mode === 'exact' ? 'Exact' : 'Contains';
+}
+
+function searchCheckoutFilterLabel(checkoutState: SearchCheckoutFilter): string {
+  if (checkoutState === 'checked_out') {
+    return 'Checked out';
+  }
+  if (checkoutState === 'available') {
+    return 'Available';
+  }
+  return 'Any';
 }

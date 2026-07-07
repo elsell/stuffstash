@@ -3,8 +3,9 @@ import type { Asset, SearchRequest, SearchResult } from '$lib/domain/inventory';
 import {
   buildSearchSuggestions,
   executeWorkspaceSearch,
-  searchAssetHref,
-  searchFilterHref,
+	  searchAssetHref,
+	  searchCheckoutFilterOptions,
+	  searchFilterHref,
   searchLifecycleFilterOptions,
   searchModeFilterOptions,
   searchPanelStatus
@@ -70,13 +71,16 @@ describe('workspace search helpers', () => {
   });
 
   it('derives canonical hrefs for search filters', () => {
-    expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'archived', 'fuzzy')).toBe(
+    expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'archived', 'fuzzy', 'any')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
     );
-    expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'active', 'exact')).toBe(
+    expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'active', 'exact', 'any')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&mode=exact'
     );
-    expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy')).toBe(
+    expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy', 'checked_out')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/search?lifecycle=all&checkout=checked_out'
+    );
+    expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy', 'any')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/search?lifecycle=all'
     );
   });
@@ -85,9 +89,10 @@ describe('workspace search helpers', () => {
     expect(
       searchLifecycleFilterOptions({
         tenantId: 'tenant-home',
-        inventoryId: 'inventory-household',
-        query: 'garage shelf',
-        mode: 'fuzzy'
+	        inventoryId: 'inventory-household',
+	        query: 'garage shelf',
+	        mode: 'fuzzy',
+	        checkoutState: 'any'
       })
     ).toEqual([
       {
@@ -109,9 +114,10 @@ describe('workspace search helpers', () => {
     expect(
       searchModeFilterOptions({
         tenantId: 'tenant-home',
-        inventoryId: 'inventory-household',
-        query: 'garage shelf',
-        lifecycleState: 'archived'
+	        inventoryId: 'inventory-household',
+	        query: 'garage shelf',
+	        lifecycleState: 'archived',
+	        checkoutState: 'any'
       })
     ).toEqual([
       {
@@ -123,6 +129,31 @@ describe('workspace search helpers', () => {
         value: 'exact',
         label: 'Exact',
         href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact'
+	      }
+	    ]);
+    expect(
+      searchCheckoutFilterOptions({
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        query: 'garage shelf',
+        lifecycleState: 'archived',
+        mode: 'exact'
+      })
+    ).toEqual([
+      {
+        value: 'any',
+        label: 'Any',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact'
+      },
+      {
+        value: 'checked_out',
+        label: 'Checked out',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact&checkout=checked_out'
+      },
+      {
+        value: 'available',
+        label: 'Available',
+        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact&checkout=available'
       }
     ]);
   });
@@ -169,7 +200,8 @@ describe('workspace search helpers', () => {
       inventoryId: 'inventory-household',
       query: '   ',
       lifecycleState: 'active',
-      mode: 'fuzzy'
+      mode: 'fuzzy',
+      checkoutState: 'any'
     });
 
     expect(result).toEqual({ query: '', results: [], submitted: false, error: '' });
@@ -188,7 +220,8 @@ describe('workspace search helpers', () => {
       inventoryId: 'inventory-household',
       query: ' tape ',
       lifecycleState: 'all',
-      mode: 'exact'
+      mode: 'exact',
+      checkoutState: 'checked_out'
     });
 
     expect(requests).toEqual([
@@ -197,7 +230,8 @@ describe('workspace search helpers', () => {
         inventoryId: 'inventory-household',
         query: 'tape',
         lifecycleState: 'all',
-        mode: 'exact'
+        mode: 'exact',
+        checkoutState: 'checked_out'
       }
     ]);
     expect(result).toMatchObject({ query: 'tape', results: [searchResult(assets[0]!)], submitted: true, error: '' });
@@ -214,7 +248,8 @@ describe('workspace search helpers', () => {
       inventoryId: 'inventory-household',
       query: 'drill',
       lifecycleState: 'active',
-      mode: 'fuzzy'
+      mode: 'fuzzy',
+      checkoutState: 'any'
     });
 
     expect(result).toEqual({

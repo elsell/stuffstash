@@ -37,7 +37,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-cabin/inventories?limit=50',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-field-definitions?limit=100',
-      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active'
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets?limit=50'
     ]);
   });
 
@@ -155,7 +156,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-empty/inventories?limit=50',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-field-definitions?limit=100',
-      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active'
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/checked-out-assets?limit=50'
     ]);
   });
 
@@ -261,8 +263,54 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-home/inventories?limit=50',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-field-definitions?limit=100',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived'
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/checked-out-assets?limit=50'
     ]);
+  });
+
+  it('loads checked-out assets regardless of lifecycle during workspace load', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.loadWorkspace();
+
+    expect(data.checkedOutAssets).toMatchObject([
+      {
+        asset: { id: 'asset-archived', lifecycleState: 'archived' },
+        checkout: { id: 'checkout-open', state: 'open' }
+      }
+    ]);
+  });
+
+  it('checks out, returns, and lists checkout history through generated client paths', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(
+      repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-passport', { details: 'using at desk' })
+    ).resolves.toMatchObject({
+      id: 'checkout-open',
+      checkoutDetails: 'using at desk',
+      state: 'open'
+    });
+    await expect(repository.returnAsset('tenant-home', 'inventory-household', 'asset-passport', { details: 'back in bin' })).resolves.toMatchObject({
+      id: 'checkout-open',
+      state: 'returned',
+      returnDetails: 'back in bin'
+    });
+    await expect(repository.listAssetCheckoutHistory('tenant-home', 'inventory-household', 'asset-passport')).resolves.toMatchObject([
+      { id: 'checkout-open', state: 'open', checkoutDetails: 'using at desk' }
+    ]);
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/checkout',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/return',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/checkouts?limit=50'
+    ]);
+    expect(await requests[0]?.json()).toEqual({ details: 'using at desk' });
+    expect(await requests[1]?.json()).toEqual({ details: 'back in bin' });
   });
 
   it('archives, restores, and deletes assets through generated client lifecycle paths', async () => {
@@ -425,12 +473,13 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       inventoryId: 'inventory-household',
       query: 'Passport',
       lifecycleState: 'archived',
-      mode: 'exact'
+      mode: 'exact',
+      checkoutState: 'checked_out'
     });
 
     expect(results).toMatchObject([{ asset: { id: 'asset-passport', lifecycleState: 'archived' } }]);
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&inventoryId=inventory-household&lifecycleState=archived&mode=exact'
+      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&inventoryId=inventory-household&lifecycleState=archived&mode=exact&checkoutState=checked_out'
     ]);
   });
 

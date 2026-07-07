@@ -10,8 +10,9 @@ interface SearchPanelProps {
   tenantId: string;
   inventoryId: string;
   query: string;
-  lifecycleState: 'active' | 'archived' | 'all';
-  searchMode: 'fuzzy' | 'exact';
+	  lifecycleState: 'active' | 'archived' | 'all';
+	  searchMode: 'fuzzy' | 'exact';
+	  checkoutState: 'any' | 'checked_out' | 'available';
   results: SearchResult[];
   suggestions: Asset[];
   submitted: boolean;
@@ -45,8 +46,9 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
       query: 'ta',
-      lifecycleState: 'active',
-      searchMode: 'fuzzy',
+	      lifecycleState: 'active',
+	      searchMode: 'fuzzy',
+	      checkoutState: 'any',
       results: [],
       suggestions: [asset('tape', 'Tape measure'), asset('tags', 'Gift tags'), asset('table', 'Hall table', 'container')],
       submitted: false,

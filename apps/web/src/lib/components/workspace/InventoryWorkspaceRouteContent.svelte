@@ -1,13 +1,15 @@
 <script lang="ts" module>
   import type {
-    Asset,
-    AssetAttachment,
+	    Asset,
+	    AssetAttachment,
+	    AssetCheckout,
     AssetKind,
     CustomAssetType,
     CustomFieldDefinition,
     Inventory,
-    LocationAsset,
-    SearchLifecycleFilter,
+	    LocationAsset,
+	    SearchCheckoutFilter,
+	    SearchLifecycleFilter,
     SearchMode,
     SearchResult,
     SelectedAttachment,
@@ -37,6 +39,7 @@
     assets: Asset[];
     detailAssets: Asset[];
     selectedAssetAttachments: AssetAttachment[];
+    selectedAssetCheckoutHistory: AssetCheckout[];
   };
 
   export type RouteContentStatus = {
@@ -87,6 +90,8 @@
     onAssetArchive: () => Promise<void>;
     onAssetRestore: () => Promise<void>;
     onAssetDelete: () => Promise<void>;
+    onAssetCheckout: (details: string) => Promise<void>;
+    onAssetReturn: (details: string) => Promise<void>;
     onAssetUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onAssetArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
     onAttachmentDeleteOpen: (attachmentId: string) => void;
@@ -116,6 +121,7 @@
     searchQuery: string;
     searchLifecycleState: SearchLifecycleFilter;
     searchMode: SearchMode;
+    searchCheckoutState: SearchCheckoutFilter;
   };
 </script>
 
@@ -141,7 +147,8 @@
     handlers,
     searchQuery = $bindable(),
     searchLifecycleState = $bindable(),
-    searchMode = $bindable()
+    searchMode = $bindable(),
+    searchCheckoutState = $bindable()
   }: InventoryWorkspaceRouteContentProps = $props();
 
   let routeUnavailablePresentation = $derived(workspaceUnavailableRoutePresentation(route.routeUnavailable));
@@ -190,6 +197,7 @@
     customFieldDefinitions={workspace.data.context.customFieldDefinitions}
     saving={status.busy}
     attachments={workspace.selectedAssetAttachments}
+    checkoutHistory={workspace.selectedAssetCheckoutHistory}
     mediaPolicy={workspace.data.context.mediaUploadPolicy}
     action={route.assetAction}
     attachmentId={route.attachmentId}
@@ -202,6 +210,8 @@
     onArchive={handlers.onAssetArchive}
     onRestore={handlers.onAssetRestore}
     onDelete={handlers.onAssetDelete}
+    onCheckout={handlers.onAssetCheckout}
+    onReturn={handlers.onAssetReturn}
     onUploadAttachment={(attachment: SelectedAttachment) => handlers.onAssetUploadAttachment(attachment)}
     onArchiveAttachment={handlers.onAssetArchiveAttachment}
     onAttachmentDeleteOpen={handlers.onAttachmentDeleteOpen}
@@ -215,6 +225,7 @@
     bind:query={searchQuery}
     bind:lifecycleState={searchLifecycleState}
     bind:searchMode={searchMode}
+    bind:checkoutState={searchCheckoutState}
     results={route.searchResults}
     suggestions={route.searchSuggestions}
     submitted={route.searchSubmitted}
@@ -268,6 +279,7 @@
     locations={topLevelLocations(workspace.assets)}
     recentAssets={recentlyAddedAssets(workspace.assets)}
     archivedAssets={workspace.assets}
+    checkedOutAssets={workspace.data.checkedOutAssets.map((entry) => entry.asset)}
     canCreateAsset={status.createAssetAllowed}
     onOpenLocation={handlers.onOpenLocation}
     onOpenAsset={handlers.onOpenAsset}

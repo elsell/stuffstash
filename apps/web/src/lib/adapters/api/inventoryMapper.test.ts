@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapAsset, mapCapability, mapInventory, mapSearchResult, mapTenant } from './inventoryMapper';
+import { mapAsset, mapAssetCheckout, mapCapability, mapCheckedOutAsset, mapInventory, mapSearchResult, mapTenant } from './inventoryMapper';
 
 describe('inventory API mapper', () => {
   it('maps generated asset DTOs into frontend domain assets', () => {
@@ -13,7 +13,13 @@ describe('inventory API mapper', () => {
         description: 'Main storage',
         parentAssetId: null,
         lifecycleState: 'active',
-        customFields: {}
+        customFields: {},
+        currentCheckout: {
+          id: 'checkout-one',
+          state: 'open',
+          checkedOutAt: '2026-06-24T11:00:00Z',
+          checkedOutByPrincipalId: 'principal-one'
+        }
       } as any)
     ).toEqual({
       id: 'asset-one',
@@ -25,7 +31,62 @@ describe('inventory API mapper', () => {
       parentAssetId: null,
       lifecycleState: 'active',
       customFields: {},
+      currentCheckout: {
+        id: 'checkout-one',
+        state: 'open',
+        checkedOutAt: '2026-06-24T11:00:00Z',
+        checkedOutByPrincipalId: 'principal-one'
+      },
       updatedAt: undefined
+    });
+  });
+
+  it('maps checkout history and checked-out asset DTOs', () => {
+    const checkout = mapAssetCheckout({
+      id: 'checkout-one',
+      tenantId: 'tenant-one',
+      inventoryId: 'inventory-one',
+      assetId: 'asset-one',
+      state: 'returned',
+      checkedOutAt: '2026-06-24T11:00:00Z',
+      checkedOutByPrincipalId: 'principal-one',
+      checkoutDetails: 'using at desk',
+      returnedAt: '2026-06-24T12:00:00Z',
+      returnedByPrincipalId: 'principal-two',
+      returnDetails: 'back in bin',
+      createdAt: '2026-06-24T11:00:00Z',
+      updatedAt: '2026-06-24T12:00:00Z'
+    } as any);
+
+    expect(checkout).toMatchObject({
+      id: 'checkout-one',
+      state: 'returned',
+      checkoutDetails: 'using at desk',
+      returnDetails: 'back in bin'
+    });
+    expect(
+      mapCheckedOutAsset({
+        asset: {
+          id: 'asset-one',
+          tenantId: 'tenant-one',
+          inventoryId: 'inventory-one',
+          kind: 'item',
+          title: 'Socket set',
+          description: '',
+          parentAssetId: null,
+          lifecycleState: 'archived',
+          customFields: {}
+        },
+        checkout: {
+          id: 'checkout-open',
+          state: 'open',
+          checkedOutAt: '2026-06-24T11:00:00Z',
+          checkedOutByPrincipalId: 'principal-one'
+        }
+      } as any)
+    ).toMatchObject({
+      asset: { id: 'asset-one', lifecycleState: 'archived' },
+      checkout: { id: 'checkout-open', state: 'open' }
     });
   });
 

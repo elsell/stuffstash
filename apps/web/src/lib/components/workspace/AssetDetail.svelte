@@ -3,9 +3,11 @@
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
   import Image from '@lucide/svelte/icons/image';
+  import LogOut from '@lucide/svelte/icons/log-out';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+  import Undo2 from '@lucide/svelte/icons/undo-2';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
@@ -26,9 +28,10 @@
     unsupportedImageTypeMessage
   } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
-  import type {
-    AssetAttachment,
-    AssetViewModel,
+	  import type {
+	    AssetAttachment,
+	    AssetCheckout,
+	    AssetViewModel,
     CustomFieldDefinition,
     MediaUploadPolicy,
     ParentTargetViewModel,
@@ -39,6 +42,7 @@
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
   import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID } from './AssetDetailHero.svelte';
   import AssetFilesSection from './AssetFilesSection.svelte';
+  import CheckoutBadge from './CheckoutBadge.svelte';
   import { formatBytes } from './formatBytes';
 
   let {
@@ -51,6 +55,7 @@
     customFieldDefinitions,
     saving,
     attachments,
+    checkoutHistory,
     mediaPolicy,
     backHref,
     onBack,
@@ -60,6 +65,8 @@
     onArchive,
     onRestore,
     onDelete,
+    onCheckout,
+    onReturn,
     onUploadAttachment,
     onArchiveAttachment,
     onAttachmentDeleteOpen,
@@ -75,15 +82,18 @@
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
     attachments: AssetAttachment[];
+    checkoutHistory: AssetCheckout[];
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete') => void;
+    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
     onActionClose: () => void;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
     onDelete: () => Promise<void>;
+    onCheckout: (details: string) => Promise<void>;
+    onReturn: (details: string) => Promise<void>;
     onUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
     onAttachmentDeleteOpen: (attachmentId: string) => void;
@@ -96,6 +106,7 @@
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
   let moveParentSearch = $state('');
+  let checkoutDetails = $state('');
   let customFieldValues = $state<Record<string, string>>({});
   let saveError = $state('');
   let uploadError = $state('');
@@ -166,6 +177,14 @@
     } else if (action === 'delete' && canEdit) {
       shouldScrollRouteActionPanel = routeOpenedActionPanel;
       panel = 'delete';
+    } else if (action === 'checkout' && actionIsAvailable('checkout')) {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      checkoutDetails = '';
+      panel = 'checkout';
+    } else if (action === 'return' && actionIsAvailable('return')) {
+      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      checkoutDetails = '';
+      panel = 'return';
     } else if (!action && !attachmentAction && !initializingWithoutRouteAction) {
       panel = 'none';
       selectedAttachment = null;
@@ -180,6 +199,8 @@
         panel === 'archive' ||
         panel === 'restore' ||
         panel === 'delete' ||
+        panel === 'checkout' ||
+        panel === 'return' ||
         panel === 'attachment-delete') &&
       actionPanelElement
     ) {
@@ -252,6 +273,14 @@
       openArchive();
     } else if (nextAction === 'restore') {
       openRestore();
+    } else if (nextAction === 'checkout') {
+      checkoutDetails = '';
+      panel = 'checkout';
+      onActionOpen('checkout');
+    } else if (nextAction === 'return') {
+      checkoutDetails = '';
+      panel = 'return';
+      onActionOpen('return');
     } else {
       panel = 'delete';
       onActionOpen('delete');
@@ -301,7 +330,9 @@
       previousPanel === 'move' ||
       previousPanel === 'archive' ||
       previousPanel === 'restore' ||
-      previousPanel === 'delete'
+      previousPanel === 'delete' ||
+      previousPanel === 'checkout' ||
+      previousPanel === 'return'
     ) {
       onActionClose();
     } else if (previousPanel === 'attachment-delete') {
@@ -341,6 +372,26 @@
       await onDelete();
     } catch (caught) {
       saveError = caught instanceof Error ? caught.message : 'Unable to delete asset.';
+    }
+  }
+
+  async function checkout(): Promise<void> {
+    saveError = '';
+    try {
+      await onCheckout(checkoutDetails.trim());
+      closePanel();
+    } catch (caught) {
+      saveError = caught instanceof Error ? caught.message : 'Unable to checkout asset.';
+    }
+  }
+
+  async function returnAsset(): Promise<void> {
+    saveError = '';
+    try {
+      await onReturn(checkoutDetails.trim());
+      closePanel();
+    } catch (caught) {
+      saveError = caught instanceof Error ? caught.message : 'Unable to return asset.';
     }
   }
 
@@ -507,23 +558,46 @@
             <h1 id="asset-title">{asset.title}</h1>
             <p>{asset.containmentTrail}</p>
           </div>
-          <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
+	          <span class="detail-title-badges">
+	            {#if asset.currentCheckout}
+	              <CheckoutBadge checkout={asset.currentCheckout} />
+	            {/if}
+	            <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
+	          </span>
         </div>
         <dl class="detail-list">
-          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
-          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
-          <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
+	          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
+	          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
+	          {#if asset.currentCheckout}
+	            <div><dt>Checkout</dt><dd>{new Date(asset.currentCheckout.checkedOutAt).toLocaleString()}</dd></div>
+	          {/if}
+	          <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
         </dl>
         <div class="detail-actions">
           <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
-          <Button.Root
-            href={actionHref('move')}
-            variant="outline"
-            disabled={!actionIsAvailable('move')}
-            onclick={(event) => openAction(event, 'move')}
-          ><MoveRight /> Move</Button.Root>
-          <Button.Root
-            variant="outline"
+	          <Button.Root
+	            href={actionHref('move')}
+	            variant="outline"
+	            disabled={!actionIsAvailable('move')}
+	            onclick={(event) => openAction(event, 'move')}
+	          ><MoveRight /> Move</Button.Root>
+	          {#if asset.currentCheckout}
+	            <Button.Root
+	              href={actionHref('return')}
+	              variant="outline"
+	              disabled={!actionIsAvailable('return')}
+	              onclick={(event) => openAction(event, 'return')}
+	            ><Undo2 /> Return</Button.Root>
+	          {:else}
+	            <Button.Root
+	              href={actionHref('checkout')}
+	              variant="outline"
+	              disabled={!actionIsAvailable('checkout')}
+	              onclick={(event) => openAction(event, 'checkout')}
+	            ><LogOut /> Checkout</Button.Root>
+	          {/if}
+	          <Button.Root
+	            variant="outline"
             disabled={!canAddPhoto}
             aria-describedby={photoUploadDescribedBy || undefined}
             onclick={() => photoInput?.click()}
@@ -566,12 +640,15 @@
         bind:description
         bind:parentAssetId
         bind:moveParentSearch
+        bind:checkoutDetails
         {customFieldValues}
         onClose={closeAction}
         onSave={save}
         onArchive={archive}
         onRestore={restore}
         onDelete={remove}
+        onCheckout={checkout}
+        onReturn={returnAsset}
         onDeleteAttachment={removeAttachment}
         onParentSelect={selectMoveParent}
         onCustomFieldValueChange={setCustomFieldValue}
@@ -600,6 +677,32 @@
       onOpenAttachmentDelete={openAttachmentDelete}
       {attachmentDeleteHref}
     />
+    <section class="detail-section" aria-labelledby="asset-checkout-history-title">
+      <h2 id="asset-checkout-history-title">Checkout history</h2>
+      {#if checkoutHistory.length === 0}
+        <p>No checkout history.</p>
+      {:else}
+        <div class="asset-list compact-list" aria-label="Checkout history">
+          {#each checkoutHistory as checkout}
+            <div class="history-row">
+              <div>
+                <strong>{checkout.state === 'returned' ? 'Returned' : checkout.state === 'undone' ? 'Undone' : 'Checked out'}</strong>
+                <small>{new Date(checkout.checkedOutAt).toLocaleString()} by {checkout.checkedOutByPrincipalId}</small>
+                {#if checkout.checkoutDetails}
+                  <small>{checkout.checkoutDetails}</small>
+                {/if}
+                {#if checkout.returnedAt}
+                  <small>Returned {new Date(checkout.returnedAt).toLocaleString()} by {checkout.returnedByPrincipalId}</small>
+                {/if}
+                {#if checkout.returnDetails}
+                  <small>{checkout.returnDetails}</small>
+                {/if}
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </section>
       <div class="danger-zone" aria-label="Danger area">
         <div>
           <strong>Permanent deletion</strong>
@@ -614,3 +717,26 @@
       </div>
   </div>
 </section>
+
+<style>
+  .detail-title-badges {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: flex-end;
+  }
+
+  .history-row {
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    padding: 0.75rem 0;
+  }
+
+  .history-row > div {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .history-row small {
+    color: var(--color-muted-foreground, #64748b);
+  }
+</style>

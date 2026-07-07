@@ -41,7 +41,8 @@ const workspaceData: WorkspaceData = {
     mediaUploadPolicy: { supportedContentTypes: ['image/jpeg'], maxBytes: 1024 },
     capability: 'editor'
   },
-  assets: []
+  assets: [],
+  checkedOutAssets: []
 };
 
 function asset(lifecycleState: Asset['lifecycleState']): Asset {

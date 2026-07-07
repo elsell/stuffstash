@@ -52,11 +52,13 @@
     type AddAssetSubmission,
     type Asset,
     type AssetAttachment,
+    type AssetCheckout,
     type AssetKind,
     type AssetLifecycleFilter,
     type CustomAssetType,
     type CustomFieldDefinition,
     type LocationAsset,
+    type SearchCheckoutFilter,
     type SearchLifecycleFilter,
     type SearchMode,
     type SearchResult,
@@ -105,6 +107,7 @@
   let searchQuery = $state('');
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
   let searchMode = $state<SearchMode>('fuzzy');
+  let searchCheckoutState = $state<SearchCheckoutFilter>('any');
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let accessInvitationAction = $state<WorkspaceRouteState['accessInvitationAction']>(null);
@@ -119,6 +122,7 @@
   let searchError = $state('');
   let loadedAssetDetail = $state<Asset | null>(null);
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
+  let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
   let assetDetailRequestId = 0;
   let applyingRoute = false;
   let routeUnavailable = $state('');
@@ -160,6 +164,7 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      selectedAssetCheckoutHistory = [];
       attachmentId = null;
       attachmentAction = null;
       if (!applyingRoute) {
@@ -179,6 +184,7 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      selectedAssetCheckoutHistory = [];
       attachmentId = null;
       attachmentAction = null;
       if (!applyingRoute) {
@@ -236,6 +242,7 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        selectedAssetCheckoutHistory = [];
         attachmentId = null;
         attachmentAction = null;
       }
@@ -244,6 +251,7 @@
         selectedAssetId = result.selectedAsset.kind === 'location' ? null : result.selectedAsset.id;
         loadedAssetDetail = result.selectedAsset;
         selectedAssetAttachments = [];
+        selectedAssetCheckoutHistory = [];
         attachmentId = null;
         attachmentAction = null;
       }
@@ -307,7 +315,8 @@
         inventoryId: data.context.selectedInventoryId,
         query: searchQuery,
         lifecycleState: searchLifecycleState,
-        mode: searchMode
+        mode: searchMode,
+        checkoutState: searchCheckoutState
       });
       searchQuery = result.query;
       searchResults = result.results;
@@ -322,7 +331,8 @@
           inventoryId: data.context.selectedInventoryId,
           searchQuery: result.query,
           searchLifecycleState,
-          searchMode
+          searchMode,
+          searchCheckoutState
         });
       }
       if (!result.query) {
@@ -350,6 +360,7 @@
       selectedAssetId = null;
       loadedAssetDetail = null;
       selectedAssetAttachments = [];
+      selectedAssetCheckoutHistory = [];
       if (!applyingRoute) {
         replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: selectedInventory.id, lifecycleState });
       }
@@ -404,6 +415,46 @@
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
       message = `Deleted ${asset.title}.`;
+    });
+  }
+
+  async function checkoutSelectedAsset(details: string): Promise<void> {
+    const asset = selectedAsset;
+    if (!asset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.checkoutAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
+      selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
+      data = replaceWorkspaceAsset(data, refreshed);
+      loadedAssetDetail = refreshed;
+      selectedAssetId = refreshed.id;
+      message = `Checked out ${refreshed.title}.`;
+    });
+  }
+
+  async function returnSelectedAsset(details: string): Promise<void> {
+    const asset = selectedAsset;
+    if (!asset || !selectedInventory) {
+      return;
+    }
+    if (!editAssetAllowed) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      throw new Error(error);
+    }
+    await run(async () => {
+      await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
+      selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
+      data = replaceWorkspaceAsset(data, refreshed);
+      loadedAssetDetail = refreshed;
+      selectedAssetId = refreshed.id;
+      message = `Returned ${refreshed.title}.`;
     });
   }
 
@@ -508,6 +559,7 @@
     searchError = '';
     searchLifecycleState = 'active';
     searchMode = 'fuzzy';
+    searchCheckoutState = 'any';
   }
 
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
@@ -524,6 +576,7 @@
       searchQuery = route.searchQuery;
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
+      searchCheckoutState = route.searchCheckoutState;
       settingsSection = route.settingsSection;
       invitationStatus = route.invitationStatus;
       accessInvitationAction = route.accessInvitationAction;
@@ -589,6 +642,7 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        selectedAssetCheckoutHistory = [];
         attachmentId = null;
         attachmentAction = null;
         mode = 'locations';
@@ -604,6 +658,7 @@
           selectedAssetId = null;
           loadedAssetDetail = null;
           selectedAssetAttachments = [];
+          selectedAssetCheckoutHistory = [];
           attachmentId = null;
           attachmentAction = null;
           mode = 'location';
@@ -682,6 +737,8 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        selectedAssetCheckoutHistory = [];
+        selectedAssetCheckoutHistory = [];
         if (route.searchQuery.trim()) {
           await search();
         } else {
@@ -700,6 +757,7 @@
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
+        selectedAssetCheckoutHistory = [];
         normalizeSettingsOverviewRoute(route);
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
@@ -745,6 +803,8 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    selectedAssetCheckoutHistory = [];
+    selectedAssetCheckoutHistory = [];
     searchResults = [];
     searchSubmitted = false;
   }
@@ -1050,6 +1110,7 @@
       loadedAssetDetail = detailState.loadedAssetDetail;
       selectedAssetId = detailState.selectedAssetId;
       selectedAssetAttachments = detailState.selectedAssetAttachments;
+      selectedAssetCheckoutHistory = detailState.selectedAssetCheckoutHistory;
       mode = detailState.mode;
       return true;
     } catch (caught) {
@@ -1100,6 +1161,7 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    selectedAssetCheckoutHistory = [];
     if (!applyingRoute) {
       replaceRoute({
         mode: 'home',
@@ -1120,6 +1182,7 @@
     selectedAssetId = null;
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
+    selectedAssetCheckoutHistory = [];
     if (!applyingRoute) {
       replaceRoute(assetDetailBackRoute(data.context, selectedLocationId));
     }
@@ -1177,7 +1240,8 @@
       selectedAsset,
       assets,
       detailAssets,
-      selectedAssetAttachments
+      selectedAssetAttachments,
+      selectedAssetCheckoutHistory
     }}
     status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed }}
     route={{
@@ -1204,6 +1268,7 @@
     bind:searchQuery
     bind:searchLifecycleState
     bind:searchMode
+    bind:searchCheckoutState
     handlers={{
       onHome: openHome,
       onCreateStarterInventory: createStarterInventory,
@@ -1219,6 +1284,8 @@
       onAssetArchive: archiveSelectedAsset,
       onAssetRestore: restoreSelectedAsset,
       onAssetDelete: deleteSelectedAsset,
+      onAssetCheckout: checkoutSelectedAsset,
+      onAssetReturn: returnSelectedAsset,
       onAssetUploadAttachment: uploadSelectedAttachment,
       onAssetArchiveAttachment: archiveSelectedAttachment,
       onAttachmentDeleteOpen: openAttachmentDeleteRoute,

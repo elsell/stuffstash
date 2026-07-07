@@ -31,7 +31,8 @@ function workspaceData(assets: Asset[] = [], lifecycleState: WorkspaceData['cont
       customFieldDefinitions: [],
       capability: 'editor'
     },
-    assets
+    assets,
+    checkedOutAssets: []
   };
 }
 

@@ -4,6 +4,7 @@ export type AssetLifecycleFilter = AssetLifecycleState;
 export type SearchLifecycleFilter = AssetLifecycleFilter | 'all';
 export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
 export type SearchMode = 'fuzzy' | 'exact';
+export type SearchCheckoutFilter = 'any' | 'checked_out' | 'available';
 export type WorkspaceMode = 'home' | 'locations' | 'location' | 'asset' | 'search' | 'import' | 'settings';
 export type Capability = 'editor' | 'viewer';
 export const inventoryAccessRelationships = ['viewer', 'editor'] as const;
@@ -146,10 +147,41 @@ export interface Asset {
   customAssetTypeLabel?: string;
   photo?: AssetPhoto;
   photoUnavailable?: boolean;
+  currentCheckout?: CurrentCheckout;
   updatedAt?: string;
 }
 
 export type LocationAsset = Asset & { kind: 'location' };
+
+export type AssetCheckoutState = 'open' | 'returned' | 'undone';
+
+export interface CurrentCheckout {
+  id: string;
+  state: AssetCheckoutState;
+  checkedOutAt: string;
+  checkedOutByPrincipalId: string;
+}
+
+export interface AssetCheckout extends CurrentCheckout {
+  tenantId: string;
+  inventoryId: string;
+  assetId: string;
+  checkoutDetails?: string;
+  returnedAt?: string;
+  returnedByPrincipalId?: string;
+  returnDetails?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CheckedOutAsset {
+  asset: Asset;
+  checkout: CurrentCheckout;
+}
+
+export interface AssetCheckoutDraft {
+  details?: string;
+}
 
 export interface SearchResult {
   type: 'asset';
@@ -167,6 +199,7 @@ export interface SearchRequest {
   query: string;
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
+  checkoutState?: SearchCheckoutFilter;
 }
 
 export type ImportSourceType = 'legacy_homebox' | 'legacy_homebox_csv';
@@ -369,6 +402,7 @@ export interface WorkspaceContext {
 export interface WorkspaceData {
   context: WorkspaceContext;
   assets: Asset[];
+  checkedOutAssets: CheckedOutAsset[];
 }
 
 export interface LocationSummary {

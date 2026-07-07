@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Asset, AssetAttachment } from '$lib/domain/inventory';
+import type { Asset, AssetAttachment, AssetCheckout } from '$lib/domain/inventory';
 import {
   applyLoadedWorkspaceAssetDetail,
   assetDescriptionText,
@@ -41,7 +41,7 @@ describe('workspace asset detail helpers', () => {
     const updated = { ...asset('asset-one'), title: 'Updated passport' };
     const calls: string[] = [];
     const result = await loadWorkspaceAssetDetail(
-      repository({ asset: updated, attachments: [attachment('photo-one')], calls }),
+      repository({ asset: updated, attachments: [attachment('photo-one')], checkoutHistory: [checkout('checkout-one')], calls }),
       'tenant-home',
       'inventory-household',
       'asset-one'
@@ -51,11 +51,13 @@ describe('workspace asset detail helpers', () => {
       loaded: true,
       asset: updated,
       attachments: [attachment('photo-one')],
+      checkoutHistory: [checkout('checkout-one')],
       error: ''
     });
     expect(calls).toEqual([
       'get:tenant-home:inventory-household:asset-one',
-      'attachments:tenant-home:inventory-household:asset-one'
+      'attachments:tenant-home:inventory-household:asset-one',
+      'checkouts:tenant-home:inventory-household:asset-one'
     ]);
   });
 
@@ -71,6 +73,7 @@ describe('workspace asset detail helpers', () => {
       loaded: false,
       asset: null,
       attachments: [],
+      checkoutHistory: [],
       error: 'Asset not found.'
     });
   });
@@ -91,12 +94,14 @@ describe('workspace asset detail helpers', () => {
     const original = asset('asset-one');
     const updated = { ...original, title: 'Updated detail title' };
     const detailAttachments = [attachment('photo-one')];
+    const checkoutHistory = [checkout('checkout-one')];
 
     expect(
       applyLoadedWorkspaceAssetDetail(workspaceData([original]), {
         loaded: true,
         asset: updated,
         attachments: detailAttachments,
+        checkoutHistory,
         error: ''
       })
     ).toEqual({
@@ -104,6 +109,7 @@ describe('workspace asset detail helpers', () => {
       loadedAssetDetail: updated,
       selectedAssetId: 'asset-one',
       selectedAssetAttachments: detailAttachments,
+      selectedAssetCheckoutHistory: checkoutHistory,
       mode: 'asset'
     });
   });
@@ -145,13 +151,15 @@ function workspaceData(assets: Asset[]): import('$lib/domain/inventory').Workspa
       customFieldDefinitions: [],
       capability: 'editor'
     },
-    assets
+    assets,
+    checkedOutAssets: []
   };
 }
 
 interface RepositoryOptions {
   asset?: Asset;
   attachments?: AssetAttachment[];
+  checkoutHistory?: AssetCheckout[];
   failure?: Error;
   calls?: string[];
 }
@@ -171,6 +179,27 @@ function repository(options: RepositoryOptions) {
         throw options.failure;
       }
       return options.attachments ?? [];
+    },
+    async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]> {
+      options.calls?.push(`checkouts:${tenantId}:${inventoryId}:${assetId}`);
+      if (options.failure) {
+        throw options.failure;
+      }
+      return options.checkoutHistory ?? [];
     }
+  };
+}
+
+function checkout(id: string): AssetCheckout {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    assetId: 'asset-one',
+    state: 'open',
+    checkedOutAt: '2026-06-24T11:00:00Z',
+    checkedOutByPrincipalId: 'principal-one',
+    createdAt: '2026-06-24T11:00:00Z',
+    updatedAt: '2026-06-24T11:00:00Z'
   };
 }

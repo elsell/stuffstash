@@ -133,8 +133,14 @@ export function replaceWorkspaceAsset(data: WorkspaceData, asset: Asset): Worksp
   if (asset.tenantId !== data.context.selectedTenantId || asset.inventoryId !== data.context.selectedInventoryId) {
     return data;
   }
+  const checkedOutAssets = asset.currentCheckout
+    ? upsertCheckedOutAsset(data, asset)
+    : data.checkedOutAssets.filter((entry) => entry.asset.id !== asset.id);
   if (asset.lifecycleState !== data.context.assetLifecycleState) {
-    return data;
+    return {
+      ...data,
+      checkedOutAssets
+    };
   }
   const existing = data.assets.some(
     (candidate) =>
@@ -142,6 +148,7 @@ export function replaceWorkspaceAsset(data: WorkspaceData, asset: Asset): Worksp
   );
   return {
     ...data,
+    checkedOutAssets,
     assets: existing
       ? data.assets.map((candidate) =>
           candidate.tenantId === asset.tenantId && candidate.inventoryId === asset.inventoryId && candidate.id === asset.id
@@ -154,6 +161,15 @@ export function replaceWorkspaceAsset(data: WorkspaceData, asset: Asset): Worksp
 
 function prependCreatedAssets(data: WorkspaceData, asset: Asset, createdParent: Asset | null): WorkspaceData {
   return { ...data, assets: createdParent ? [asset, createdParent, ...data.assets] : [asset, ...data.assets] };
+}
+
+function upsertCheckedOutAsset(data: WorkspaceData, asset: Asset): WorkspaceData['checkedOutAssets'] {
+  if (!asset.currentCheckout) {
+    return data.checkedOutAssets;
+  }
+  const entry = { asset, checkout: asset.currentCheckout };
+  const existing = data.checkedOutAssets.some((candidate) => candidate.asset.id === asset.id);
+  return existing ? data.checkedOutAssets.map((candidate) => (candidate.asset.id === asset.id ? entry : candidate)) : [entry, ...data.checkedOutAssets];
 }
 
 function createdAssetRoute(asset: Asset): Partial<WorkspaceRouteState> {

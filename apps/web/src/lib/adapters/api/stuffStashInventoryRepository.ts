@@ -5,7 +5,10 @@ import type {
   AddAssetDraft,
   Asset,
   AssetAttachment,
+  AssetCheckout,
+  AssetCheckoutDraft,
   AssetLifecycleFilter,
+  CheckedOutAsset,
   InventoryAccessRelationship,
   ImportJob,
   ImportJobCancellationMode,
@@ -32,12 +35,14 @@ import type {
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import {
   mapAsset,
+  mapAssetCheckout,
   mapAttachment,
   mapAuditRecord,
   mapCapability,
   mapCreatedInventoryAccessInvitation,
   mapCustomAssetType,
   mapCustomFieldDefinition,
+  mapCheckedOutAsset,
   mapInventory,
   mapPrincipal,
   mapSearchResult,
@@ -90,7 +95,8 @@ export class StuffStashInventoryRepository
             customFieldDefinitions: [],
             capability: 'viewer'
           },
-          assets: []
+          assets: [],
+          checkedOutAssets: []
         };
       }
       return await this.loadTenantWorkspace(principal, tenants, selectedTenant.id, this.selectedInventoryId);
@@ -119,7 +125,8 @@ export class StuffStashInventoryRepository
         customFieldDefinitions: [],
         capability: mapCapability(inventory)
       },
-      assets: []
+      assets: [],
+      checkedOutAssets: []
     };
   }
 
@@ -239,6 +246,64 @@ export class StuffStashInventoryRepository
     }
   }
 
+  async checkoutAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout> {
+    this.observer.record('workspace.asset_checkout_started');
+    try {
+      const checkout = mapAssetCheckout(await this.client.checkoutAsset(tenantId, inventoryId, assetId, draft));
+      this.observer.record('workspace.asset_checked_out');
+      return checkout;
+    } catch (error) {
+      this.observer.record('workspace.asset_checkout_failed');
+      throw safeError(error);
+    }
+  }
+
+  async returnAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout> {
+    this.observer.record('workspace.asset_return_started');
+    try {
+      const checkout = mapAssetCheckout(await this.client.returnAsset(tenantId, inventoryId, assetId, draft));
+      this.observer.record('workspace.asset_returned');
+      return checkout;
+    } catch (error) {
+      this.observer.record('workspace.asset_return_failed');
+      throw safeError(error);
+    }
+  }
+
+  async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]> {
+    this.observer.record('workspace.asset_checkout_history_load_started');
+    try {
+      const page = await this.client.listAssetCheckoutHistory(tenantId, inventoryId, assetId, 50);
+      const items = page.items.map(mapAssetCheckout);
+      this.observer.record('workspace.asset_checkout_history_loaded', { recordCount: items.length });
+      return items;
+    } catch (error) {
+      this.observer.record('workspace.asset_checkout_history_load_failed');
+      throw safeError(error);
+    }
+  }
+
+  async listCheckedOutAssets(tenantId: string, inventoryId: string): Promise<CheckedOutAsset[]> {
+    this.observer.record('workspace.checked_out_assets_load_started');
+    try {
+      const page = await this.client.listCheckedOutAssets(tenantId, inventoryId, 50);
+      const checkedOutAssets = await Promise.all(
+        page.items.map(async (item) => {
+          const mapped = mapCheckedOutAsset(item);
+          return {
+            ...mapped,
+            asset: await this.mapAssetWithPrimaryPhoto(item.asset)
+          };
+        })
+      );
+      this.observer.record('workspace.checked_out_assets_loaded', { assetCount: checkedOutAssets.length });
+      return checkedOutAssets;
+    } catch (error) {
+      this.observer.record('workspace.checked_out_assets_load_failed');
+      throw safeError(error);
+    }
+  }
+
   async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]> {
     this.observer.record('workspace.asset_attachments_load_started');
     try {
@@ -350,7 +415,8 @@ export class StuffStashInventoryRepository
       const page = await this.client.searchAssets(request.tenantId, request.query, {
         inventoryId: request.inventoryId,
         lifecycleState: request.lifecycleState,
-        mode: request.mode
+        mode: request.mode,
+        checkoutState: request.checkoutState ?? 'any'
       });
       this.observer.record('workspace.search_completed', { resultCount: page.items.length });
       return Promise.all(
@@ -679,10 +745,12 @@ export class StuffStashInventoryRepository
           )
         )
       : [];
+    const checkedOutAssets = selectedInventory ? await this.listCheckedOutAssets(tenantId, selectedInventory.id) : [];
     this.observer.record('workspace.loaded', {
       tenantCount: tenants.length,
       inventoryCount: inventories.length,
-      assetCount: assets.length
+      assetCount: assets.length,
+      checkedOutAssetCount: checkedOutAssets.length
     });
     return {
       context: {
@@ -697,7 +765,8 @@ export class StuffStashInventoryRepository
         customFieldDefinitions,
         capability: mapCapability(selectedInventory)
       },
-      assets
+      assets,
+      checkedOutAssets
     };
   }
 

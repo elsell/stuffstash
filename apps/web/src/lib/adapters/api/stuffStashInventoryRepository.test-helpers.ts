@@ -60,6 +60,9 @@ export function fakeFetch(
       if (request.method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
         return envelope([asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets') {
+        return envelope([]);
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets') {
         const assets = [
           asset(
@@ -80,7 +83,22 @@ export function fakeFetch(
         }
         return envelope(assets);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/checked-out-assets') {
+        const checkout = currentCheckout('checkout-open');
+        return envelope([
+          {
+            asset: {
+              ...asset('asset-archived', 'tenant-home', 'inventory-household', 'Archived Passport', null, 'archived'),
+              currentCheckout: checkout
+            },
+            checkout
+          }
+        ]);
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/assets') {
+        return envelope([]);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/checked-out-assets') {
         return envelope([]);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
@@ -95,6 +113,23 @@ export function fakeFetch(
             options.primaryPhotoAssetIds?.includes('asset-passport') ?? false
           )
         );
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/checkout') {
+        const body = (await request.clone().json()) as { details?: string };
+        return envelope(assetCheckout('checkout-open', 'open', body.details), 201);
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/return') {
+        const body = (await request.clone().json()) as { details?: string };
+        return envelope({
+          ...assetCheckout('checkout-open', 'returned', 'using at desk'),
+          returnedAt: '2026-06-24T12:00:00Z',
+          returnedByPrincipalId: 'principal-one',
+          returnDetails: body.details,
+          updatedAt: '2026-06-24T12:00:00Z'
+        });
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/checkouts') {
+        return envelope([assetCheckout('checkout-open', 'open', 'using at desk')]);
       }
       if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
         const body = (await request.clone().json()) as { title: string; description?: string; parentAssetId?: string | null };
@@ -373,6 +408,30 @@ function asset(
           }
         }
       : undefined
+  };
+}
+
+function currentCheckout(id: string): object {
+  return {
+    id,
+    state: 'open',
+    checkedOutAt: '2026-06-24T11:00:00Z',
+    checkedOutByPrincipalId: 'principal-one'
+  };
+}
+
+function assetCheckout(id: string, state: string, checkoutDetails?: string): object {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    assetId: 'asset-passport',
+    state,
+    checkedOutAt: '2026-06-24T11:00:00Z',
+    checkedOutByPrincipalId: 'principal-one',
+    checkoutDetails,
+    createdAt: '2026-06-24T11:00:00Z',
+    updatedAt: '2026-06-24T11:00:00Z'
   };
 }
 

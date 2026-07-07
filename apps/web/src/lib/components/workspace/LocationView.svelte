@@ -15,6 +15,7 @@
   import type { Asset, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
+  import CheckoutBadge from './CheckoutBadge.svelte';
 
   let {
     location,
@@ -113,6 +114,9 @@
             <strong>{asset.title}</strong>
             {#if asset.description}
               <small>{asset.description}</small>
+            {/if}
+            {#if asset.currentCheckout}
+              <CheckoutBadge checkout={asset.currentCheckout} compact />
             {/if}
           </span>
           <span class="asset-row-meta">

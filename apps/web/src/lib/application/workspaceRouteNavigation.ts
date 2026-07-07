@@ -99,6 +99,12 @@ export function assetRouteActionIsAvailable(
   if (action === 'delete') {
     return true;
   }
+  if (action === 'checkout') {
+    return asset?.lifecycleState === 'active' && !asset.currentCheckout;
+  }
+  if (action === 'return') {
+    return !!asset?.currentCheckout;
+  }
   if (action === 'restore') {
     return asset?.lifecycleState === 'archived';
   }

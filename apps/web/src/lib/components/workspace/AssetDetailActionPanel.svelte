@@ -1,7 +1,7 @@
 <script lang="ts" module>
   import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
 
-  export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'attachment-delete';
+  export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | 'attachment-delete';
 
   export type AssetDetailActionPanelProps = {
     panel: AssetDetailPanel;
@@ -17,12 +17,15 @@
     description: string;
     parentAssetId: string | null;
     moveParentSearch: string;
+    checkoutDetails: string;
     customFieldValues: Record<string, string>;
     onClose: (event: MouseEvent) => void;
     onSave: () => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
     onDelete: () => Promise<void>;
+    onCheckout: () => Promise<void>;
+    onReturn: () => Promise<void>;
     onDeleteAttachment: () => Promise<void>;
     onParentSelect: (id: string | null) => void;
     onCustomFieldValueChange: (key: string, value: string) => void;
@@ -51,12 +54,15 @@
     description = $bindable(),
     parentAssetId = $bindable(),
     moveParentSearch = $bindable(),
+    checkoutDetails = $bindable(),
     customFieldValues,
     onClose,
     onSave,
     onArchive,
     onRestore,
     onDelete,
+    onCheckout,
+    onReturn,
     onDeleteAttachment,
     onParentSelect,
     onCustomFieldValueChange
@@ -165,6 +171,48 @@
     <div class="tray-actions">
       <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
       <Button.Root variant="destructive" disabled={saving} onclick={() => { void onDelete(); }}>Delete</Button.Root>
+    </div>
+    {#if saveError}
+      <p class="denied-note" role="alert">{saveError}</p>
+    {/if}
+  </section>
+{:else if panel === 'checkout'}
+  <section
+    bind:this={panelElement}
+    class="detail-action-panel"
+    aria-labelledby="checkout-asset-panel-title"
+    tabindex="-1"
+  >
+    <h2 id="checkout-asset-panel-title">Checkout asset</h2>
+    <p>{asset.title} will stay in its home location and be marked as checked out.</p>
+    <div class="field-stack">
+      <Label for="checkout-asset-details">Details</Label>
+      <Textarea id="checkout-asset-details" bind:value={checkoutDetails} placeholder="Optional: using at desk, loaned to Sam" />
+    </div>
+    <div class="tray-actions">
+      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
+      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>Checkout</Button.Root>
+    </div>
+    {#if saveError}
+      <p class="denied-note" role="alert">{saveError}</p>
+    {/if}
+  </section>
+{:else if panel === 'return'}
+  <section
+    bind:this={panelElement}
+    class="detail-action-panel"
+    aria-labelledby="return-asset-panel-title"
+    tabindex="-1"
+  >
+    <h2 id="return-asset-panel-title">Return asset</h2>
+    <p>Mark {asset.title} as returned.</p>
+    <div class="field-stack">
+      <Label for="return-asset-details">Details</Label>
+      <Textarea id="return-asset-details" bind:value={checkoutDetails} placeholder="Optional: back in bin, returned by Alex" />
+    </div>
+    <div class="tray-actions">
+      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
+      <Button.Root disabled={saving} onclick={() => { void onReturn(); }}>Return</Button.Root>
     </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>

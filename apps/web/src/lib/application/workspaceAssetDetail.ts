@@ -1,13 +1,14 @@
-import type { Asset, AssetAttachment, WorkspaceData } from '$lib/domain/inventory';
+import type { Asset, AssetAttachment, AssetCheckout, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import { replaceWorkspaceAsset } from './workspaceAssetWorkflow';
 
-type AssetDetailRepository = Pick<InventoryRepository, 'getAsset' | 'listAssetAttachments'>;
+type AssetDetailRepository = Pick<InventoryRepository, 'getAsset' | 'listAssetAttachments' | 'listAssetCheckoutHistory'>;
 
 export interface LoadWorkspaceAssetDetailResult {
   loaded: boolean;
   asset: Asset | null;
   attachments: AssetAttachment[];
+  checkoutHistory: AssetCheckout[];
   error: string;
 }
 
@@ -22,6 +23,7 @@ export interface WorkspaceAssetDetailState {
   loadedAssetDetail: Asset;
   selectedAssetId: string;
   selectedAssetAttachments: AssetAttachment[];
+  selectedAssetCheckoutHistory: AssetCheckout[];
   mode: 'asset';
 }
 
@@ -39,10 +41,12 @@ export async function loadWorkspaceAssetDetail(
   try {
     const asset = await repository.getAsset(tenantId, inventoryId, assetId);
     const attachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
+    const checkoutHistory = await repository.listAssetCheckoutHistory(tenantId, inventoryId, assetId);
     return {
       loaded: true,
       asset,
       attachments,
+      checkoutHistory,
       error: ''
     };
   } catch (caught) {
@@ -50,6 +54,7 @@ export async function loadWorkspaceAssetDetail(
       loaded: false,
       asset: null,
       attachments: [],
+      checkoutHistory: [],
       error: caught instanceof Error ? caught.message : 'Asset could not be loaded.'
     };
   }
@@ -68,6 +73,7 @@ export function applyLoadedWorkspaceAssetDetail(data: WorkspaceData, result: Loa
     loadedAssetDetail: result.asset,
     selectedAssetId: result.asset.id,
     selectedAssetAttachments: result.attachments,
+    selectedAssetCheckoutHistory: result.checkoutHistory,
     mode: 'asset'
   };
 }

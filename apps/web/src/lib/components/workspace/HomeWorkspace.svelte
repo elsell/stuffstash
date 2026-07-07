@@ -18,6 +18,7 @@
   import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
+  import CheckoutBadge from './CheckoutBadge.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -27,6 +28,7 @@
     locations,
     recentAssets,
     archivedAssets,
+    checkedOutAssets = [],
     browseMode = 'home',
     canCreateAsset = true,
     onOpenLocation,
@@ -40,6 +42,7 @@
     locations: LocationSummary[];
     recentAssets: AssetViewModel[];
     archivedAssets: Asset[];
+    checkedOutAssets?: Asset[];
     browseMode?: 'home' | 'locations';
     canCreateAsset?: boolean;
     onOpenLocation: (asset: Asset) => void;
@@ -145,12 +148,37 @@
                 <strong>{asset.title}</strong>
                 <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                 <small>{asset.containmentTrail}</small>
+                {#if asset.currentCheckout}
+                  <CheckoutBadge checkout={asset.currentCheckout} compact />
+                {/if}
               </span>
             </Button.Root>
           {/each}
         </div>
       {/if}
     </section>
+    {#if checkedOutAssets.length > 0}
+      <section class="recent-section" aria-labelledby="checked-out-title">
+        <div class="section-heading compact">
+          <h2 id="checked-out-title">Checked out</h2>
+        </div>
+        <div class="asset-list compact-list">
+          {#each checkedOutAssets as asset}
+            <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, asset)}>
+              <AssetThumb {asset} />
+              <span class="asset-row-main">
+                <strong>{asset.title}</strong>
+                <small>{asset.description || assetKindLabel(asset.kind)}</small>
+                {#if asset.currentCheckout}
+                  <CheckoutBadge checkout={asset.currentCheckout} compact />
+                {/if}
+              </span>
+              <Badge variant="outline">{asset.lifecycleState}</Badge>
+            </Button.Root>
+          {/each}
+        </div>
+      </section>
+    {/if}
   {/if}
 
   {#if lifecycleState === 'archived'}
@@ -166,6 +194,9 @@
             <span class="asset-row-main">
               <strong>{asset.title}</strong>
               <small>{asset.description || assetKindLabel(asset.kind)}</small>
+              {#if asset.currentCheckout}
+                <CheckoutBadge checkout={asset.currentCheckout} compact />
+              {/if}
             </span>
             <Badge variant="outline">{assetKindLabel(asset.kind)}</Badge>
           </Button.Root>

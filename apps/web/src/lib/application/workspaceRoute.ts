@@ -3,13 +3,14 @@ import type {
   AssetLifecycleFilter,
   AuditScope,
   InvitationStatusFilter,
+  SearchCheckoutFilter,
   SearchLifecycleFilter,
   SearchMode,
   WorkspaceMode
 } from '$lib/domain/inventory';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
-export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | null;
+export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
 export type AttachmentRouteAction = 'delete' | null;
 export type AccessInvitationRouteAction = 'expire' | 'cancel' | 'delete' | null;
 export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
@@ -41,6 +42,7 @@ export interface WorkspaceRouteState {
   searchQuery: string;
   searchLifecycleState: SearchLifecycleFilter;
   searchMode: SearchMode;
+  searchCheckoutState: SearchCheckoutFilter;
 }
 
 export const defaultWorkspaceRoute: WorkspaceRouteState = {
@@ -67,11 +69,12 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   lifecycleState: 'active',
   searchQuery: '',
   searchLifecycleState: 'active',
-  searchMode: 'fuzzy'
+  searchMode: 'fuzzy',
+  searchCheckoutState: 'any'
 };
 
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
-const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete']);
+const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete', 'checkout', 'return']);
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 'cancel', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
@@ -81,6 +84,7 @@ const importSources = new Set<Exclude<ImportSourceRoute, null>>(['homebox', 'hom
 const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
+const searchCheckoutFilters = new Set<SearchCheckoutFilter>(['any', 'checked_out', 'available']);
 
 export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
   const segments = safePathSegments(url.pathname);
@@ -92,7 +96,8 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     lifecycleState: parseLifecycle(url.searchParams.get('lifecycle')),
     searchLifecycleState: parseSearchLifecycle(url.searchParams.get('lifecycle')),
     searchQuery: url.searchParams.get('q') ?? '',
-    searchMode: parseSearchMode(url.searchParams.get('mode'))
+    searchMode: parseSearchMode(url.searchParams.get('mode')),
+    searchCheckoutState: parseSearchCheckout(url.searchParams.get('checkout'))
   };
 
   if (segments.length === 0) {
@@ -339,6 +344,9 @@ export function workspaceRouteHref(
     if (next.searchMode !== 'fuzzy') {
       search.set('mode', next.searchMode);
     }
+    if (next.searchCheckoutState !== 'any') {
+      search.set('checkout', next.searchCheckoutState);
+    }
   } else if (inventoryId && next.mode === 'settings') {
     path += '/settings';
     if (next.settingsSection !== 'overview') {
@@ -391,6 +399,10 @@ function parseSearchLifecycle(value: string | null): SearchLifecycleFilter {
 
 function parseSearchMode(value: string | null): SearchMode {
   return searchModes.has(value as SearchMode) ? (value as SearchMode) : 'fuzzy';
+}
+
+function parseSearchCheckout(value: string | null): SearchCheckoutFilter {
+  return searchCheckoutFilters.has(value as SearchCheckoutFilter) ? (value as SearchCheckoutFilter) : 'any';
 }
 
 function parseInvitationStatus(value: string | null): InvitationStatusFilter {

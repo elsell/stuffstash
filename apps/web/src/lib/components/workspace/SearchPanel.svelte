@@ -4,9 +4,16 @@
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
-  import { searchAssetHref, searchLifecycleFilterOptions, searchModeFilterOptions, searchPanelStatus } from '$lib/application/workspaceSearch';
-  import type { Asset, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
+  import {
+    searchAssetHref,
+    searchCheckoutFilterOptions,
+    searchLifecycleFilterOptions,
+    searchModeFilterOptions,
+    searchPanelStatus
+  } from '$lib/application/workspaceSearch';
+  import type { Asset, SearchCheckoutFilter, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetThumb from './AssetThumb.svelte';
+  import CheckoutBadge from './CheckoutBadge.svelte';
   import SearchSuggestions from './SearchSuggestions.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -16,6 +23,7 @@
     query = $bindable(''),
     lifecycleState = $bindable<SearchLifecycleFilter>('active'),
     searchMode = $bindable<SearchMode>('fuzzy'),
+    checkoutState = $bindable<SearchCheckoutFilter>('any'),
     results,
     suggestions,
     submitted,
@@ -29,6 +37,7 @@
     query: string;
     lifecycleState: SearchLifecycleFilter;
     searchMode: SearchMode;
+    checkoutState: SearchCheckoutFilter;
     results: SearchResult[];
     suggestions: Asset[];
     submitted: boolean;
@@ -43,7 +52,8 @@
       tenantId,
       inventoryId,
       query,
-      mode: searchMode
+      mode: searchMode,
+      checkoutState
     })
   );
   let modeControlOptions = $derived(
@@ -51,7 +61,17 @@
       tenantId,
       inventoryId,
       query,
-      lifecycleState
+      lifecycleState,
+      checkoutState
+    })
+  );
+  let checkoutControlOptions = $derived(
+    searchCheckoutFilterOptions({
+      tenantId,
+      inventoryId,
+      query,
+      lifecycleState,
+      mode: searchMode
     })
   );
   let searchFocused = $state(false);
@@ -229,6 +249,12 @@
       options={modeControlOptions}
       onSelect={(value) => { searchMode = value as SearchMode; onSearch(); }}
     />
+    <SegmentedControl
+      label="Checkout state"
+      value={checkoutState}
+      options={checkoutControlOptions}
+      onSelect={(value) => { checkoutState = value as SearchCheckoutFilter; onSearch(); }}
+    />
   </div>
 
   {#if statusPresentation.kind !== 'none'}
@@ -252,6 +278,9 @@
           <span class="asset-row-main">
             <strong>{result.asset.title}</strong>
             <small>{result.inventory.name} / {result.asset.lifecycleState}</small>
+            {#if result.asset.currentCheckout}
+              <CheckoutBadge checkout={result.asset.currentCheckout} compact />
+            {/if}
             {#if result.asset.photoUnavailable}
               <small id={resultPhotoUnavailableId(result.asset)} class="visually-hidden">Photo unavailable</small>
             {/if}
