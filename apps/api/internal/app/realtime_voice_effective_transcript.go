@@ -48,7 +48,7 @@ func realtimeVoiceEffectiveTranscript(current string, turns []ports.AgentConvers
 	for _, turn := range safeTurns {
 		switch turn.Role {
 		case ports.AgentConversationRoleUser:
-			if realtimeVoiceLooksLikeWriteRequest(turn.Text) {
+			if realtimeVoiceLooksLikeConversationIntent(turn.Text) {
 				pendingUserIntent = strings.TrimSpace(turn.Text)
 			} else {
 				pendingUserIntent = ""
@@ -63,4 +63,10 @@ func realtimeVoiceEffectiveTranscript(current string, turns []ports.AgentConvers
 		return current
 	}
 	return safeRealtimeVoiceDiagnosticText(latestUserIntent+" Follow-up answer: "+current, 1000)
+}
+
+func realtimeVoiceLooksLikeConversationIntent(transcript string) bool {
+	return realtimeVoiceLooksLikeWriteRequest(transcript) ||
+		realtimeVoiceLooksLikeReadQuestion(transcript) ||
+		realtimeVoiceLooksLikeContentsQuestion(transcript)
 }

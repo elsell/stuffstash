@@ -632,6 +632,46 @@ func TestRealtimeVoiceDerivesEffectiveTranscriptForClarificationFollowUp(t *test
 	}
 }
 
+func TestRealtimeVoiceDerivesEffectiveTranscriptForReadClarificationFollowUp(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "I understand the read follow-up.",
+				DisplayResponse: "I understand the read follow-up.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Water bottle."}
+	resolver.providers.LanguageInference = language
+	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{
+		Session:                    session,
+		AudioChunks:                [][]byte{[]byte("audio")},
+		ContinueAfterClarification: true,
+		ConversationTurns: []ports.AgentConversationTurn{
+			{Role: ports.AgentConversationRoleUser, Text: "Where is it?"},
+			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Which item should I find?"},
+		},
+	}, func(RealtimeVoiceEvent) error {
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	if len(language.seenTranscripts) == 0 || language.seenTranscripts[0] != "Where is it? Follow-up answer: Water bottle." {
+		t.Fatalf("expected model to receive effective read follow-up transcript, got %+v", language.seenTranscripts)
+	}
+}
+
 func seedRealtimeVoiceLoopAsset(t *testing.T, store interface {
 	CreateAsset(context.Context, asset.Asset, audit.Record, *ports.UndoableOperation) error
 }, item asset.Asset, auditID string) {
