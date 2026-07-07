@@ -19,7 +19,7 @@ type importJobModel struct {
 	SourceAllowInsecureTLS    bool           `gorm:"not null;default:false"`
 	SourceFingerprint         string         `gorm:"not null;size:128"`
 	Fields                    int            `gorm:"not null"`
-	Tags                      int            `gorm:"not null"`
+	Tags                      int            `gorm:"not null;default:0"`
 	Locations                 int            `gorm:"not null"`
 	Assets                    int            `gorm:"not null"`
 	Attachments               int            `gorm:"not null"`
@@ -27,8 +27,8 @@ type importJobModel struct {
 	Errors                    int            `gorm:"not null"`
 	FieldsCreated             int            `gorm:"not null"`
 	FieldsExisting            int            `gorm:"not null"`
-	TagsCreated               int            `gorm:"not null"`
-	TagsExisting              int            `gorm:"not null"`
+	TagsCreated               int            `gorm:"not null;default:0"`
+	TagsExisting              int            `gorm:"not null;default:0"`
 	LocationsCreated          int            `gorm:"not null"`
 	AssetsCreated             int            `gorm:"not null"`
 	AssetsSkipped             int            `gorm:"not null"`

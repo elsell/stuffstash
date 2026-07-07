@@ -508,6 +508,7 @@ describe('StuffStashClient', () => {
       'PATCH /tenants/tenant-one/inventories/inventory-one/tags/tag-one',
       'DELETE /tenants/tenant-one/inventories/inventory-one/tags/tag-one'
     ]);
+    expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/tags?limit=10');
     expect(await requests[1]?.json()).toEqual({ displayName: 'Workshop', color: '#2f80ed' });
     expect(await requests[2]?.json()).toEqual({ displayName: 'Shop' });
   });
