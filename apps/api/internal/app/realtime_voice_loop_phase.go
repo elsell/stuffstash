@@ -57,12 +57,22 @@ func realtimeVoiceServerSelectedReadCall(transcript string, turn int, toolResult
 	if query := realtimeVoiceRequiredNestedCreateParentQuery(transcript, turn, toolResults); query != "" {
 		return realtimeVoiceSearchCallWithQuery(call, query), "Server-selected parent read"
 	}
-	if args, ok := realtimeVoiceCheckoutHistoryArgs(transcript, toolResults); ok {
+	if args, ok := realtimeVoiceCheckoutHistoryArgs(transcript, toolResults); ok && !realtimeVoiceHasAssetCheckoutHistoryResult(toolResults) {
 		call.Name = RealtimeVoiceToolListAssetCheckoutHistory
 		call.Arguments = args
 		return call, "Server-selected checkout history"
 	}
 	return call, ""
+}
+
+func realtimeVoiceServerSelectedReadBeforeFinalCall(transcript string, toolResults []ports.AgentToolResult) (ports.AgentToolCall, string, bool) {
+	if args, ok := realtimeVoiceCheckoutHistoryArgs(transcript, toolResults); ok && !realtimeVoiceHasAssetCheckoutHistoryResult(toolResults) {
+		return ports.AgentToolCall{
+			Name:      RealtimeVoiceToolListAssetCheckoutHistory,
+			Arguments: args,
+		}, "Server-selected checkout history", true
+	}
+	return ports.AgentToolCall{}, "", false
 }
 
 func realtimeVoiceShouldRequireContentsList(transcript string, toolResults []ports.AgentToolResult) bool {

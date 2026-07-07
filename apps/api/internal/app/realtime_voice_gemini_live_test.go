@@ -299,6 +299,12 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 			assertPlan: assertLiveGeminiVoiceSingleExistingAssetPlan(actionplan.CommandKindReturnAsset, "return", "Loaner flashlight", asset.KindItem.String()),
 		},
 		{
+			name:       "checkout history answer",
+			transcript: "Who has the loaner flashlight?",
+			expect:     liveGeminiVoiceExpectAnswer,
+			terms:      []string{"loaner", "sam"},
+		},
+		{
 			name:       "missing source item falls forward",
 			transcript: "Move my passport to the office.",
 			expect:     liveGeminiVoiceExpectFallForward,

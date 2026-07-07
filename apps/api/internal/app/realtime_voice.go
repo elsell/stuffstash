@@ -371,6 +371,26 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			}
 		}
 		if modelTurn.Final != nil {
+			if call, diagnosticTitle, ok := realtimeVoiceServerSelectedReadBeforeFinalCall(effectiveTranscript, toolResults); ok {
+				call.ID = a.newRealtimeVoiceID()
+				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
+					return err
+				}
+				proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, effectiveTranscript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
+				if err != nil {
+					return err
+				}
+				if proposal != nil {
+					if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
+						return err
+					}
+					if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
+						return err
+					}
+					return nil
+				}
+				continue
+			}
 			if realtimeVoiceShouldRepairCreateClarification(effectiveTranscript, *modelTurn.Final, toolResults) {
 				result, resultErr := realtimeVoiceFinalClarificationRepairResult(a.newRealtimeVoiceID())
 				if resultErr != nil {

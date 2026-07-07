@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -166,6 +167,104 @@ func TestRealtimeVoiceListAssetCheckoutHistoryToolReturnsBoundedCheckoutRecords(
 		if !strings.Contains(result.Content, required) {
 			t.Fatalf("expected checkout history tool result to include %q, got %s", required, result.Content)
 		}
+	}
+}
+
+func TestRealtimeVoiceRunsRequiredCheckoutHistoryBeforeAcceptingFinalAnswer(t *testing.T) {
+	t.Parallel()
+
+	args, ok := realtimeVoiceCheckoutHistoryArgs("Who checked out the loaner flashlight?", []ports.AgentToolResult{{
+		Name:    RealtimeVoiceToolSearchAuthorizedAssets,
+		Content: `{"tool":"search_authorized_assets","query":"loaner flashlight","count":1,"items":[{"assetId":"loaner-flashlight-1","title":"Loaner flashlight","kind":"item"}]}`,
+	}})
+	if !ok || args["assetId"] != "loaner-flashlight-1" {
+		t.Fatalf("expected checkout history args to use visible asset, ok=%v args=%+v", ok, args)
+	}
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-loaner-flashlight",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "loaner flashlight"},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "Sam has the loaner flashlight.",
+				DisplayResponse: "Sam has the loaner flashlight.",
+			},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "Sam has the loaner flashlight.",
+				DisplayResponse: "Sam has the loaner flashlight.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Who checked out the loaner flashlight?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	loaner := assetItem("loaner-flashlight-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	loanerTitle, _ := asset.NewTitle("Loaner flashlight")
+	loaner.Title = loanerTitle
+	seedRealtimeVoiceLoopAsset(t, store, loaner, "audit-loaner-flashlight")
+	details, _ := asset.NewCheckoutDetails("Loaned to Sam")
+	if err := store.CheckOutAsset(context.Background(), asset.Checkout{
+		ID:                    asset.CheckoutID("checkout-loaner-flashlight"),
+		TenantID:              asset.TenantID("tenant-home"),
+		InventoryID:           asset.InventoryID("inventory-home"),
+		AssetID:               loaner.ID,
+		State:                 asset.CheckoutStateOpen,
+		CheckedOutAt:          time.Date(2026, 6, 29, 13, 8, 30, 0, time.UTC),
+		CheckedOutByPrincipal: "principal-home",
+		CheckoutDetails:       details,
+		CreatedAt:             time.Date(2026, 6, 29, 13, 8, 30, 0, time.UTC),
+		UpdatedAt:             time.Date(2026, 6, 29, 13, 8, 30, 0, time.UTC),
+	}, audit.Record{
+		ID:          audit.ID("audit-checkout-loaner-flashlight"),
+		TenantID:    audit.TenantID("tenant-home"),
+		InventoryID: audit.InventoryID("inventory-home"),
+		Action:      audit.ActionAssetCheckedOut,
+		TargetType:  audit.TargetAsset,
+		TargetID:    "loaner-flashlight-1",
+		OccurredAt:  time.Date(2026, 6, 29, 13, 8, 30, 0, time.UTC),
+	}, nil); err != nil {
+		t.Fatalf("seed checkout: %v", err)
+	}
+	directHistory, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+		ID:        "direct-history",
+		Name:      RealtimeVoiceToolListAssetCheckoutHistory,
+		Arguments: map[string]any{"assetId": "loaner-flashlight-1"},
+	}, map[string]struct{}{"loaner-flashlight-1": {}})
+	if err != nil || !strings.Contains(directHistory.Content, "Loaned to Sam") {
+		t.Fatalf("expected direct checkout history to work, result=%+v err=%v", directHistory, err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error {
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %T %[1]v toolResults=%+v", err, language.seenToolResults)
+	}
+
+	if len(language.seenToolResults) < 3 {
+		t.Fatalf("expected search, required checkout history, and final turn, got %+v", language.seenToolResults)
+	}
+	finalTurnResults := language.seenToolResults[len(language.seenToolResults)-1]
+	if len(finalTurnResults) < 2 || finalTurnResults[1].Name != RealtimeVoiceToolListAssetCheckoutHistory || !strings.Contains(finalTurnResults[1].Content, "Loaned to Sam") {
+		t.Fatalf("expected checkout history before final answer, got %+v", finalTurnResults)
+	}
+	if tts.lastText != "Sam has the loaner flashlight." {
+		t.Fatalf("expected final response after required checkout history, got %q", tts.lastText)
 	}
 }
 

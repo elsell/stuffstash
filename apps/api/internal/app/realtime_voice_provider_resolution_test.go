@@ -151,6 +151,7 @@ func newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t *testing.T, reso
 		Assets:                        store,
 		Search:                        store,
 		Audit:                         store,
+		Checkouts:                     store,
 		Observer:                      &fakeObserver{},
 		ActionPlans:                   store,
 		RealtimeVoiceProviderResolver: resolver,
