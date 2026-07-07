@@ -13,7 +13,7 @@
 <td
   bind:this={ref}
   data-slot="table-cell"
-  class={cn('border-border text-muted-foreground min-w-32 border-t px-3 py-2 align-top break-words', className)}
+  class={cn('border-border text-muted-foreground min-w-32 border-t px-3 py-2 align-top break-words [overflow-wrap:anywhere]', className)}
   {...restProps}
 >
   {@render children?.()}
