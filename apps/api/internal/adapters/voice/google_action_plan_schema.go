@@ -44,6 +44,8 @@ func geminiActionPlanCommandSchema() *geminiSchema {
 			geminiMoveAssetCommandSchema(),
 			geminiAssetIDOnlyCommandSchema("archive_asset", "Archive an existing asset returned by a read tool."),
 			geminiAssetIDOnlyCommandSchema("restore_asset", "Restore an existing asset returned by a read tool."),
+			geminiCheckoutCommandSchema("checkout_asset", "Mark an existing visible asset as checked out so it can be returned later."),
+			geminiCheckoutCommandSchema("return_asset", "Mark an existing visible checked-out asset as returned."),
 		},
 	}
 }
@@ -145,6 +147,24 @@ func geminiAssetIDOnlyCommandSchema(kind string, description string) geminiSchem
 			"assetId": {
 				Type:        "string",
 				Description: "Existing asset id copied exactly from a read-tool result.",
+			},
+		},
+		Required: []string{"assetId"},
+	})
+}
+
+func geminiCheckoutCommandSchema(kind string, description string) geminiSchema {
+	return geminiActionPlanCommandBranch(kind, description, geminiSchema{
+		Type:        "object",
+		Description: "Arguments for " + kind + ".",
+		Properties: map[string]geminiSchema{
+			"assetId": {
+				Type:        "string",
+				Description: "Existing asset id copied exactly from a read-tool result.",
+			},
+			"details": {
+				Type:        "string",
+				Description: "Optional safe user-provided checkout or return details.",
 			},
 		},
 		Required: []string{"assetId"},

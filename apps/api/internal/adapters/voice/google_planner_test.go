@@ -101,7 +101,7 @@ func TestGoogleGeminiActionPlanSchemaDoesNotUseLegacyToolArgumentShape(t *testin
 	if commands.Items == nil {
 		t.Fatalf("expected typed command items in planner schema: %+v", commands)
 	}
-	if len(commands.Items.AnyOf) != 5 {
+	if len(commands.Items.AnyOf) != 7 {
 		t.Fatalf("expected command-specific schema branches, got %+v", commands.Items)
 	}
 	createAsset := commands.Items.AnyOf[0]
@@ -127,6 +127,28 @@ func TestGoogleGeminiActionPlanSchemaDoesNotUseLegacyToolArgumentShape(t *testin
 		moveArgs.Properties["title"].Type != "" {
 		t.Fatalf("expected constrained move_asset arguments, got %+v", moveArgs)
 	}
+	checkoutAsset := commands.Items.AnyOf[5]
+	if !sameStrings(checkoutAsset.Properties["kind"].Enum, []string{"checkout_asset"}) {
+		t.Fatalf("expected checkout_asset branch, got %+v", checkoutAsset)
+	}
+	checkoutArgs := checkoutAsset.Properties["arguments"]
+	if !sameStrings(checkoutArgs.Required, []string{"assetId"}) ||
+		checkoutArgs.Properties["assetId"].Type != "string" ||
+		checkoutArgs.Properties["details"].Type != "string" ||
+		checkoutArgs.Properties["parentAssetId"].Type != "" {
+		t.Fatalf("expected constrained checkout_asset arguments, got %+v", checkoutArgs)
+	}
+	returnAsset := commands.Items.AnyOf[6]
+	if !sameStrings(returnAsset.Properties["kind"].Enum, []string{"return_asset"}) {
+		t.Fatalf("expected return_asset branch, got %+v", returnAsset)
+	}
+	returnArgs := returnAsset.Properties["arguments"]
+	if !sameStrings(returnArgs.Required, []string{"assetId"}) ||
+		returnArgs.Properties["assetId"].Type != "string" ||
+		returnArgs.Properties["details"].Type != "string" ||
+		returnArgs.Properties["parentAssetId"].Type != "" {
+		t.Fatalf("expected constrained return_asset arguments, got %+v", returnArgs)
+	}
 }
 
 func TestGoogleGeminiLanguageInferencePassesMalformedPlannerCommandsToAppRepair(t *testing.T) {
@@ -139,6 +161,14 @@ func TestGoogleGeminiLanguageInferencePassesMalformedPlannerCommandsToAppRepair(
 		{
 			name: "semantically invalid move id",
 			body: `{"actionPlan":{"intentSummary":"Move a bottle.","modelInterpretationSummary":"Move it.","confirmationSummary":"Move it?","commands":[{"id":"cmd-1","kind":"move_asset","summary":"Move it","arguments":{"assetId":"water bottle","parentAssetId":"kitchen"}}]}}`,
+		},
+		{
+			name: "checkout asset with visible id",
+			body: `{"actionPlan":{"intentSummary":"Check out the drill.","modelInterpretationSummary":"Mark the visible drill as checked out.","confirmationSummary":"Check out the drill?","commands":[{"id":"cmd-checkout-drill","kind":"checkout_asset","summary":"Check out drill","arguments":{"assetId":"drill-1","details":"using it at the bench"}}]}}`,
+		},
+		{
+			name: "return asset with visible id",
+			body: `{"actionPlan":{"intentSummary":"Return the drill.","modelInterpretationSummary":"Mark the visible drill as returned.","confirmationSummary":"Return the drill?","commands":[{"id":"cmd-return-drill","kind":"return_asset","summary":"Return drill","arguments":{"assetId":"drill-1","details":"back in the tool bin"}}]}}`,
 		},
 	}
 	for _, tt := range tests {
