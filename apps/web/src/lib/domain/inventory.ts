@@ -61,6 +61,27 @@ export interface AssetTagDraft {
   color?: string;
 }
 
+export function assetTagKeyFromDisplayName(value: string): string {
+  let key = '';
+  let lastHyphen = false;
+  for (const character of value.trim().toLowerCase()) {
+    if ((character >= 'a' && character <= 'z') || (character >= '0' && character <= '9')) {
+      key += character;
+      lastHyphen = false;
+      continue;
+    }
+    if (key.length > 0 && !lastHyphen) {
+      key += '-';
+      lastHyphen = true;
+    }
+  }
+  key = key.replace(/^-+|-+$/g, '');
+  if (key.length > 80) {
+    key = key.slice(0, 80).replace(/-+$/g, '');
+  }
+  return key;
+}
+
 export interface AssetAttachment {
   id: string;
   tenantId: string;

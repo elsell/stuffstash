@@ -39,6 +39,59 @@ describe('AssetTagSelector', () => {
     expect(newTags).toEqual([]);
   });
 
+  it('selects an existing tag even when the color field is invalid', async () => {
+    let selectedIds: string[] = [];
+    let newTags: AssetTagDraft[] = [];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        tags: [tag('tag-workshop', 'Workshop')],
+        onSelectedIdsChange: (ids) => {
+          selectedIds = ids;
+        },
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', 'Workshop');
+    input('new-tag-color', 'blue');
+    await tick();
+
+    expect(button('Add').disabled).toBe(false);
+    button('Add').click();
+    await tick();
+
+    expect(selectedIds).toEqual(['tag-workshop']);
+    expect(newTags).toEqual([]);
+  });
+
+  it('matches existing tags by generated tag key', async () => {
+    let selectedIds: string[] = [];
+    let newTags: AssetTagDraft[] = [];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        tags: [{ id: 'tag-camp-kitchen', key: 'camp-kitchen', displayName: 'Camp Kitchen' }],
+        onSelectedIdsChange: (ids) => {
+          selectedIds = ids;
+        },
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', 'Camp / Kitchen');
+    await tick();
+    button('Add').click();
+    await tick();
+
+    expect(selectedIds).toEqual(['tag-camp-kitchen']);
+    expect(newTags).toEqual([]);
+  });
+
   it('does not stage duplicate pending tag names', async () => {
     let newTags: AssetTagDraft[] = [{ displayName: 'Workshop' }];
     component = mount(AssetTagSelector, {
@@ -107,7 +160,7 @@ function props(
 function tag(id: string, displayName: string): AssetTag {
   return {
     id,
-    key: displayName.toLowerCase(),
+    key: displayName.toLowerCase().replaceAll(' ', '-'),
     displayName
   };
 }

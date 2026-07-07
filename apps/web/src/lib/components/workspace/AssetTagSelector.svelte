@@ -4,7 +4,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import type { AssetTag, AssetTagDraft } from '$lib/domain/inventory';
+  import { assetTagKeyFromDisplayName, type AssetTag, type AssetTagDraft } from '$lib/domain/inventory';
   import AssetTagChips from './AssetTagChips.svelte';
 
   let {
@@ -27,13 +27,23 @@
   let selectedExistingTags = $derived(tags.filter((tag) => selected.has(tag.id)));
   let hasSelection = $derived(selectedExistingTags.length > 0 || newTags.length > 0);
   let normalizedNewTagColor = $derived(normalizeColor(newTagColor));
-  let canAddTag = $derived(newTagName.trim().length > 0 && (newTagColor.trim().length === 0 || normalizedNewTagColor !== undefined));
+  let newTagKey = $derived(assetTagKeyFromDisplayName(newTagName));
+  let matchingExistingTag = $derived(tags.find((tag) => tag.key === newTagKey));
+  let matchingPendingTag = $derived(newTags.find((tag) => assetTagKeyFromDisplayName(tag.displayName) === newTagKey));
+  let canAddTag = $derived(
+    newTagKey.length > 0 &&
+      (matchingExistingTag !== undefined ||
+        matchingPendingTag !== undefined ||
+        newTagColor.trim().length === 0 ||
+        normalizedNewTagColor !== undefined)
+  );
 
   $effect(() => {
     const reconciledIds: string[] = [];
     const remainingTags: AssetTagDraft[] = [];
     for (const tag of newTags) {
-      const existing = tags.find((candidate) => sameTagName(candidate.displayName, tag.displayName));
+      const tagKey = assetTagKeyFromDisplayName(tag.displayName);
+      const existing = tags.find((candidate) => candidate.key === tagKey);
       if (existing) {
         reconciledIds.push(existing.id);
       } else {
@@ -62,14 +72,13 @@
     if (!displayName) {
       return;
     }
-    const existing = tags.find((tag) => sameTagName(tag.displayName, displayName));
-    if (existing) {
-      onSelectedIdsChange(Array.from(new Set([...selectedIds, existing.id])));
+    if (matchingExistingTag) {
+      onSelectedIdsChange(Array.from(new Set([...selectedIds, matchingExistingTag.id])));
       newTagName = '';
       newTagColor = '';
       return;
     }
-    if (newTags.some((tag) => sameTagName(tag.displayName, displayName))) {
+    if (matchingPendingTag) {
       newTagName = '';
       newTagColor = '';
       return;
@@ -96,13 +105,6 @@
     return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toUpperCase() : undefined;
   }
 
-  function sameTagName(left: string, right: string): boolean {
-    return tagNameKey(left) === tagNameKey(right);
-  }
-
-  function tagNameKey(value: string): string {
-    return value.trim().toLocaleLowerCase();
-  }
 </script>
 
 <fieldset class="tag-selector">

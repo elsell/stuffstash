@@ -1159,6 +1159,15 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Update failed.');
     });
     expect(repository.createdTagCount).toBe(1);
+    await waitFor(() => {
+      expect(document.body.querySelector('.pending-tag')).toBeNull();
+      expect(selectedTagOption('Workshop')).toBeTruthy();
+    });
+    saveButton.click();
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Update failed.');
+    });
+    expect(repository.createdTagCount).toBe(1);
     controlContaining('Cancel').click();
     await waitFor(() => {
       expect(document.body.textContent).not.toContain('Edit asset');
@@ -1431,6 +1440,12 @@ function tagAddButton(): HTMLButtonElement {
     throw new Error('Missing tag Add button');
   }
   return button;
+}
+
+function selectedTagOption(text: string): HTMLButtonElement | undefined {
+  return Array.from(document.body.querySelectorAll<HTMLButtonElement>('.tag-options button')).find(
+    (candidate) => candidate.textContent?.includes(text) && candidate.getAttribute('aria-pressed') === 'true'
+  );
 }
 
 function controlContaining(text: string): HTMLElement {
