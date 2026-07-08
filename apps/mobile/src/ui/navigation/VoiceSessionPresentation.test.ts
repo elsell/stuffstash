@@ -481,7 +481,10 @@ describe('VoiceSessionPresentation', () => {
     });
 
     const visibleText = `${session.progressLabel} ${session.progressSteps.join(' ')} ${session.progressTrace.join(' ')}`;
-    expect(visibleText).toContain('[redacted]');
+    expect(visibleText).toContain('Working safely');
+    expect(visibleText).not.toContain('Authorization');
+    expect(visibleText).not.toContain('parentAssetId');
+    expect(visibleText).not.toContain('bearer');
     expect(visibleText).not.toContain('raw prompt');
     expect(visibleText).not.toContain('abc/def');
     expect(visibleText).not.toContain('tok+en');
