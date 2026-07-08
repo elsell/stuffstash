@@ -91,6 +91,28 @@ describe('AssetTagChips', () => {
 
     expect(selected).toEqual([tag('tools', 'Tools')]);
   });
+
+  it('can render row-safe inline search actions with keyboard support', () => {
+    const selected: AssetTag[] = [];
+    component = mount(AssetTagChips, {
+      target: document.body,
+      props: {
+        tags: [tag('tools', 'Tools')],
+        actionMode: 'inline',
+        onTagSelect: (tag) => selected.push(tag)
+      }
+    });
+
+    const chip = document.body.querySelector<HTMLElement>('[role="button"].tag-chip');
+    expect(chip?.tagName).toBe('SPAN');
+    expect(chip?.getAttribute('tabindex')).toBe('0');
+    expect(chip?.getAttribute('aria-label')).toBe('Search for tag Tools');
+
+    chip?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter' }));
+    chip?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: ' ' }));
+
+    expect(selected).toEqual([tag('tools', 'Tools'), tag('tools', 'Tools')]);
+  });
 });
 
 function tag(key: string, displayName: string): AssetTag {

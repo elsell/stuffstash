@@ -1,14 +1,15 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
+import type { AssetCardViewModel, AssetTagViewModel } from '../../application/assets/AssetViewModels';
 import { colors, radius, spacing } from '../theme/tokens';
 import { AssetTagChips } from './AssetTagChips';
 
 type AssetCardProps = {
   readonly asset: AssetCardViewModel;
   readonly onPress: () => void;
+  readonly onTagPress?: (tag: AssetTagViewModel) => void;
 };
 
-export function AssetCard({ asset, onPress }: AssetCardProps) {
+export function AssetCard({ asset, onPress, onTagPress }: AssetCardProps) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.card}>
       <View style={styles.imageFrame}>
@@ -42,7 +43,7 @@ export function AssetCard({ asset, onPress }: AssetCardProps) {
             Matched {asset.searchMatchLabels.join(', ')}
           </Text>
         ) : null}
-        <AssetTagChips tags={asset.tags} compact overflowLimit={2} />
+        <AssetTagChips tags={asset.tags} compact overflowLimit={2} onTagPress={onTagPress} />
         <View style={styles.footer}>
           <Text style={asset.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
             {asset.photoLabel}

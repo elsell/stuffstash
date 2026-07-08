@@ -12,7 +12,7 @@
     locationEmptyState,
     locationRowHref
   } from '$lib/application/workspaceBrowseNavigation';
-  import type { Asset, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
+  import type { Asset, AssetTag, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
@@ -27,7 +27,8 @@
     onOpenLocation,
     onEditLocation,
     onOpenAsset,
-    onOpenAdd = () => {}
+    onOpenAdd = () => {},
+    onTagSearch
   }: {
     location: LocationAsset;
     assets: AssetViewModel[];
@@ -38,6 +39,7 @@
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
+    onTagSearch?: (tag: AssetTag) => void;
   } = $props();
 
   let emptyState = $derived(locationEmptyState(canCreateAsset));
@@ -116,7 +118,7 @@
             {#if asset.description}
               <small>{asset.description}</small>
             {/if}
-            <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
+            <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
             {#if asset.currentCheckout}
               <CheckoutBadge checkout={asset.currentCheckout} compact />
             {/if}

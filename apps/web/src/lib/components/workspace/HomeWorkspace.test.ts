@@ -327,6 +327,49 @@ describe('HomeWorkspace', () => {
     expect(openedAssetId).toBe('');
     expect(componentPreventedModifiedClick).toBe(false);
   });
+
+  it('searches by a recent asset tag without opening the asset row', () => {
+    let openedAssetId = '';
+    const searchedTags: string[] = [];
+    const asset: AssetViewModel = {
+      id: 'tent',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'item',
+      title: 'Family tent',
+      description: '',
+      parentAssetId: 'garage',
+      lifecycleState: 'active',
+      containmentTrail: 'Garage',
+      tags: [{ id: 'tag-camping', key: 'camping', displayName: 'Camping', color: '#2F80ED' }]
+    };
+
+    component = mount(HomeWorkspace, {
+      target: document.body,
+      props: {
+        lifecycleState: 'active',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        locations: [],
+        recentAssets: [asset],
+        archivedAssets: [],
+        onOpenLocation: () => {},
+        onOpenAsset: (selected) => {
+          openedAssetId = selected.id;
+        },
+        onOpenAdd: () => {},
+        onSelectLifecycle: () => {},
+        onTagSearch: (tag) => {
+          searchedTags.push(tag.displayName);
+        }
+      }
+    });
+
+    controlWithLabel('Search for tag Camping').click();
+
+    expect(searchedTags).toEqual(['Camping']);
+    expect(openedAssetId).toBe('');
+  });
 });
 
 function link(text: string): HTMLAnchorElement {
@@ -345,6 +388,14 @@ function disabledLink(text: string): HTMLAnchorElement {
   );
   if (!target) {
     throw new Error(`Missing disabled link ${text}`);
+  }
+  return target;
+}
+
+function controlWithLabel(label: string): HTMLElement {
+  const target = document.body.querySelector<HTMLElement>(`[aria-label="${label}"]`);
+  if (!target) {
+    throw new Error(`Missing control ${label}`);
   }
   return target;
 }

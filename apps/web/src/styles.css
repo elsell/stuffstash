@@ -1967,19 +1967,19 @@ dd {
   color: var(--foreground);
 }
 
-button.tag-chip,
+.tag-chip-action,
 .tag-option {
   cursor: pointer;
   font-family: inherit;
 }
 
-button.tag-chip:hover,
+.tag-chip-action:hover,
 .tag-option.tag-chip-colored:hover {
   border-color: color-mix(in oklab, var(--tag-color, var(--primary)) 70%, var(--border));
   background: color-mix(in oklab, var(--tag-color, var(--primary)) 20%, white);
 }
 
-button.tag-chip:focus-visible,
+.tag-chip-action:focus-visible,
 .tag-option.tag-chip-colored:focus-visible {
   outline: 2px solid color-mix(in oklab, var(--tag-color, var(--ring)) 70%, var(--ring));
   outline-offset: 2px;

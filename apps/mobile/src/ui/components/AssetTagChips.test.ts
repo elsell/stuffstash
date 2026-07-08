@@ -1,5 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { TagChip } from './AssetTagChips';
 import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
+
+vi.mock('react-native', () => ({
+  Pressable: 'Pressable',
+  StyleSheet: {
+    create: (styles: unknown) => styles
+  },
+  Text: 'Text',
+  View: 'View'
+}));
 
 describe('assetTagChipPresentation', () => {
   it('shows every tag in full detail contexts', () => {
@@ -76,6 +86,28 @@ describe('assetTagChipPresentation', () => {
       borderColor: '#D9E1E6'
     });
   });
+
+  it('renders pressable tag chips when a tag press handler is supplied', () => {
+    const pressed: string[] = [];
+    const chip = TagChip({
+      style: [],
+      tag: tag('tools'),
+      onTagPress: (selected) => pressed.push(selected.label)
+    }) as ElementNode;
+
+    expect(chip?.props?.accessibilityLabel).toBe('Search for tag tools');
+    expect(chip?.props?.accessibilityRole).toBe('button');
+    (chip?.props?.onPress as () => void)();
+
+    expect(pressed).toEqual(['tools']);
+  });
+
+  it('keeps tag chips presentational when no tag press handler is supplied', () => {
+    const chip = TagChip({ style: [], tag: tag('tools') }) as ElementNode;
+
+    expect(chip.type).toBe('View');
+    expect(findFirstByType(chip, 'Text')).not.toBeUndefined();
+  });
 });
 
 function tag(id: string) {
@@ -84,4 +116,32 @@ function tag(id: string) {
     label: id,
     color: '#2F80ED'
   };
+}
+
+type ElementNode = {
+  readonly type?: unknown;
+  readonly props?: {
+    readonly children?: unknown;
+    readonly [key: string]: unknown;
+  };
+};
+
+function findFirstByType(node: unknown, type: unknown): ElementNode | undefined {
+  if (!node || typeof node !== 'object') {
+    return undefined;
+  }
+  const element = node as ElementNode;
+  if (element.type === type) {
+    return element;
+  }
+  const children = element.props?.children;
+  if (Array.isArray(children)) {
+    for (const child of children) {
+      const match = findFirstByType(child, type);
+      if (match) {
+        return match;
+      }
+    }
+  }
+  return findFirstByType(children, type);
 }

@@ -15,11 +15,12 @@ export default function SearchRoute() {
     photoSelectionQuery,
     searchAssetsQuery
   } = useAppServices();
-  const params = useLocalSearchParams<{ readonly scope?: string }>();
+  const params = useLocalSearchParams<{ readonly query?: string; readonly scope?: string }>();
 
   return (
     <SearchScreen
       initialScope={parseBrowseScope(params.scope)}
+      initialQuery={Array.isArray(params.query) ? params.query[0] ?? '' : params.query ?? ''}
       addAssetPhotosCommand={addAssetPhotosCommand}
       assetCheckoutCommand={assetCheckoutCommand}
       assetDetailQuery={assetDetailQuery}

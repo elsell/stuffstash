@@ -245,6 +245,38 @@ describe('LocationView', () => {
     expect(document.body.textContent).toContain('Adding items is unavailable for this inventory.');
     expect(document.body.textContent).not.toContain('Add item here');
   });
+
+  it('searches by contained asset tag without opening the contained asset row', () => {
+    let openedAssetId = '';
+    const searchedTags: string[] = [];
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location,
+        assets: [
+          {
+            ...item,
+            tags: [{ id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' }]
+          }
+        ],
+        canEdit: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: (asset) => {
+          openedAssetId = asset.id;
+        },
+        onTagSearch: (tag) => {
+          searchedTags.push(tag.displayName);
+        }
+      }
+    });
+
+    controlWithLabel('Search for tag Tools').click();
+
+    expect(searchedTags).toEqual(['Tools']);
+    expect(openedAssetId).toBe('');
+  });
 });
 
 function clickLink(text: string): void {
@@ -256,5 +288,11 @@ function link(text: string): HTMLAnchorElement {
     candidate.textContent?.includes(text)
   );
   if (!target) throw new Error(`Missing link ${text}`);
+  return target;
+}
+
+function controlWithLabel(label: string): HTMLElement {
+  const target = document.body.querySelector<HTMLElement>(`[aria-label="${label}"]`);
+  if (!target) throw new Error(`Missing control ${label}`);
   return target;
 }

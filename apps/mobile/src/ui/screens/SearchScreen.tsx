@@ -47,6 +47,7 @@ import type { InventoryMapSurface } from './InventoryMapPresentation';
 
 type SearchScreenProps = {
   readonly initialScope?: BrowseScope;
+  readonly initialQuery?: string;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
@@ -88,6 +89,7 @@ const emptyResults: BrowseResults = {
 
 export function SearchScreen({
   initialScope = 'all',
+  initialQuery = '',
   addAssetPhotosCommand,
   assetCheckoutCommand,
   assetDetailQuery,
@@ -98,7 +100,7 @@ export function SearchScreen({
   photoSelectionQuery,
   searchAssetsQuery
 }: SearchScreenProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<BrowseScope>(initialScope);
   const mapPathStore = useRef(new Map<string, readonly string[]>());
   const [surface, setSurface] = useState<InventoryMapSurface>('list');
@@ -125,10 +127,11 @@ export function SearchScreen({
   );
 
   useEffect(() => {
+    const nextQuery = initialQuery.trim();
     setScope(initialScope);
-    setQuery('');
-    void loadFirstPage({ query: '', scope: initialScope });
-  }, [initialScope, locationsQuery, searchAssetsQuery]);
+    setQuery(nextQuery);
+    void loadFirstPage({ query: nextQuery, scope: initialScope });
+  }, [initialQuery, initialScope, locationsQuery, searchAssetsQuery]);
 
   async function loadFirstPage(next: {
     readonly query?: string;
@@ -423,7 +426,13 @@ export function SearchScreen({
             return <PlaceRow location={item.location} />;
           }
 
-          return <AssetCard asset={item.asset} onPress={() => router.push(`/assets/${item.asset.id}`)} />;
+          return (
+            <AssetCard
+              asset={item.asset}
+              onPress={() => router.push(`/assets/${item.asset.id}`)}
+              onTagPress={(tag) => router.push(`/search?query=${encodeURIComponent(tag.label)}`)}
+            />
+          );
         }}
       />
     </SafeAreaView>

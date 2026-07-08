@@ -9,7 +9,7 @@ import {
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import { Camera, CheckCircle2, ChevronRight, MoreHorizontal, MoveRight, Pencil, Plus } from 'lucide-react-native';
-import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import type { AssetDetailViewModel, AssetTagViewModel } from '../../application/assets/AssetViewModels';
 import {
   assetPhotoStatusLabel
 } from './AssetPhotoWorkspacePresentation';
@@ -52,6 +52,7 @@ type AssetDetailViewProps = {
   readonly onMove?: () => void;
   readonly onCheckout?: () => void;
   readonly onReturn?: () => void;
+  readonly onTagPress?: (tag: AssetTagViewModel) => void;
   readonly onAddPhotos?: () => void;
   readonly onPhotoPress?: (photoId: string) => void;
   readonly onRetryPhotos?: () => void;
@@ -78,6 +79,7 @@ export function AssetDetailView({
   onPhotoPress,
   onMoveThingsHere,
   onRetryPhotos,
+  onTagPress,
   photoUploads = [],
   photoStatusMessage,
   workspaceStatusKind = 'success',
@@ -116,6 +118,7 @@ export function AssetDetailView({
                   asset={asset}
                   isActionPending={isActionPending}
                   onMoreActions={onMoreActions}
+                  onTagPress={onTagPress}
                 />
               );
             case 'status':
@@ -166,11 +169,13 @@ export function AssetDetailView({
 function IdentitySection({
   asset,
   isActionPending,
-  onMoreActions
+  onMoreActions,
+  onTagPress
 }: {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending: boolean;
   readonly onMoreActions?: () => void;
+  readonly onTagPress?: (tag: AssetTagViewModel) => void;
 }) {
   const description = visibleAssetDescription(asset);
   return (
@@ -183,7 +188,7 @@ function IdentitySection({
             ))}
           </View>
           <Text style={styles.title}>{asset.title}</Text>
-          <AssetTagChips tags={asset.tags} />
+          <AssetTagChips tags={asset.tags} onTagPress={onTagPress} />
         </View>
         {onMoreActions ? (
           <Pressable

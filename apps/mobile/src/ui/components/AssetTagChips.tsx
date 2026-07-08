@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import type { AssetTagViewModel } from '../../application/assets/AssetViewModels';
 import { colors, radius, spacing } from '../theme/tokens';
 import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
@@ -7,9 +8,10 @@ type AssetTagChipsProps = {
   readonly tags?: readonly AssetTagViewModel[];
   readonly compact?: boolean;
   readonly overflowLimit?: number;
+  readonly onTagPress?: (tag: AssetTagViewModel) => void;
 };
 
-export function AssetTagChips({ tags, compact = false, overflowLimit }: AssetTagChipsProps) {
+export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress }: AssetTagChipsProps) {
   const presentation = assetTagChipPresentation(tags, overflowLimit);
   const layout = assetTagChipLayoutPresentation(compact);
   if (!presentation.shouldRender) {
@@ -21,16 +23,16 @@ export function AssetTagChips({ tags, compact = false, overflowLimit }: AssetTag
       {presentation.visibleTags.map((tag) => {
         const colorStyle = assetTagChipStylePresentation(tag);
         return (
-          <View
+          <TagChip
             key={tag.id}
+            tag={tag}
+            onTagPress={onTagPress}
             style={[
               styles.tagChip,
               colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
               layout.shrinkVisibleChips ? styles.compactTagChip : null
             ]}
-          >
-            <Text numberOfLines={1} style={styles.tagLabel}>{tag.label}</Text>
-          </View>
+          />
         );
       })}
       {presentation.hiddenCount > 0 ? (
@@ -39,6 +41,36 @@ export function AssetTagChips({ tags, compact = false, overflowLimit }: AssetTag
         </View>
       ) : null}
     </View>
+  );
+}
+
+export function TagChip({
+  tag,
+  onTagPress,
+  style
+}: {
+  readonly tag: AssetTagViewModel;
+  readonly onTagPress?: (tag: AssetTagViewModel) => void;
+  readonly style: StyleProp<ViewStyle>;
+}) {
+  if (!onTagPress) {
+    return (
+      <View style={style}>
+        <Text numberOfLines={1} style={styles.tagLabel}>{tag.label}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      accessibilityLabel={`Search for tag ${tag.label}`}
+      accessibilityRole="button"
+      hitSlop={6}
+      onPress={() => onTagPress(tag)}
+      style={style}
+    >
+      <Text numberOfLines={1} style={styles.tagLabel}>{tag.label}</Text>
+    </Pressable>
   );
 }
 

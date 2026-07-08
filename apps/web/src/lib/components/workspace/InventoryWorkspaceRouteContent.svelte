@@ -196,6 +196,7 @@
     onEditLocation={handlers.onEditLocation}
     onOpenAsset={handlers.onOpenAsset}
     onOpenAdd={handlers.onOpenAdd}
+    onTagSearch={handlers.onAssetTagSearch}
   />
 {:else if route.mode === 'asset' && workspace.selectedAsset}
   <AssetDetail
@@ -243,6 +244,7 @@
     busy={status.busy}
     onSearch={() => { void handlers.onSearch(); }}
     onOpenAsset={handlers.onOpenSearchAsset}
+    onTagSearch={handlers.onAssetTagSearch}
   />
 {:else if route.mode === 'import'}
   <InventoryImportWorkspace
@@ -302,5 +304,6 @@
     onOpenAsset={handlers.onOpenAsset}
     onOpenAdd={(kind = 'location') => handlers.onOpenAdd(kind)}
     onSelectLifecycle={(lifecycleState) => { void handlers.onSelectLifecycle(lifecycleState); }}
+    onTagSearch={handlers.onAssetTagSearch}
   />
 {/if}

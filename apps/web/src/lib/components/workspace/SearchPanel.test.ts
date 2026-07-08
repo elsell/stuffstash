@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Asset, SearchResult } from '$lib/domain/inventory';
+import type { Asset, AssetTag, SearchResult } from '$lib/domain/inventory';
 import SearchPanel from './SearchPanel.svelte';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -20,6 +20,7 @@ interface SearchPanelProps {
   busy: boolean;
   onSearch: () => void;
   onOpenAsset: (asset: Asset) => void;
+  onTagSearch?: (tag: AssetTag) => void;
 }
 
 function asset(id: string, title: string, kind: Asset['kind'] = 'item', photoUrl?: string): Asset {
@@ -39,6 +40,7 @@ function asset(id: string, title: string, kind: Asset['kind'] = 'item', photoUrl
 function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
   const openedAssetIds: string[] = [];
   const searches: string[] = [];
+  const searchedTags: string[] = [];
 
   component = mount(SearchPanel, {
     target: document.body,
@@ -60,11 +62,14 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
       onOpenAsset: (selected) => {
         openedAssetIds.push(selected.id);
       },
+      onTagSearch: (tag) => {
+        searchedTags.push(tag.displayName);
+      },
       ...props
     }
   });
 
-  return { openedAssetIds, searches };
+  return { openedAssetIds, searches, searchedTags };
 }
 
 afterEach(() => {
@@ -339,6 +344,28 @@ describe('SearchPanel', () => {
     expect(document.body.querySelector('.asset-row-meta')?.textContent).not.toContain('tag_display_name');
   });
 
+  it('searches by result tag without opening the result row', async () => {
+    const resultAsset = {
+      ...asset('tent', 'Family tent'),
+      tags: [{ id: 'tag-camping', key: 'camping', displayName: 'Camping', color: '#2F80ED' }]
+    };
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: resultAsset,
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'title', value: 'Family tent' }]
+      }
+    ];
+    const { openedAssetIds, searchedTags } = mountSearchPanel({ query: 'tent', results, suggestions: [], submitted: true });
+
+    buttonWithLabel('Search for tag Camping').click();
+    await flush();
+
+    expect(searchedTags).toEqual(['Camping']);
+    expect(openedAssetIds).toEqual([]);
+  });
+
   it('routes location suggestions and results to the focused location surface', async () => {
     const locationAsset = asset('garage', 'Garage', 'location');
     const results: SearchResult[] = [
@@ -440,6 +467,14 @@ function linkWithText(text: string): HTMLAnchorElement {
     throw new Error(`Missing link containing ${text}`);
   }
   return link;
+}
+
+function buttonWithLabel(label: string): HTMLElement {
+  const button = document.body.querySelector<HTMLElement>(`[aria-label="${label}"]`);
+  if (!button) {
+    throw new Error(`Missing button labelled ${label}`);
+  }
+  return button;
 }
 
 async function flush(): Promise<void> {

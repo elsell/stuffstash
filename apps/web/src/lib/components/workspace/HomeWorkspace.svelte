@@ -15,7 +15,7 @@
     homeLocationsEmptyState,
     homeRecentEmptyState
   } from '$lib/application/workspaceBrowseNavigation';
-  import type { Asset, AssetLifecycleFilter, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
+  import type { Asset, AssetLifecycleFilter, AssetTag, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
@@ -35,7 +35,8 @@
     onOpenLocation,
     onOpenAsset,
     onOpenAdd,
-    onSelectLifecycle
+    onSelectLifecycle,
+    onTagSearch
   }: {
     tenantId: string;
     inventoryId: string;
@@ -50,6 +51,7 @@
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd: (kind?: 'item' | 'location') => void;
     onSelectLifecycle: (lifecycleState: AssetLifecycleFilter) => void;
+    onTagSearch?: (tag: AssetTag) => void;
   } = $props();
 
   let routeTenantId = $derived(
@@ -149,7 +151,7 @@
                 <strong>{asset.title}</strong>
                 <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                 <small>{asset.containmentTrail}</small>
-                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
+                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />
                 {/if}
@@ -171,7 +173,7 @@
               <span class="asset-row-main">
                 <strong>{asset.title}</strong>
                 <small>{asset.description || assetKindLabel(asset.kind)}</small>
-                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
+                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />
                 {/if}
@@ -197,7 +199,7 @@
             <span class="asset-row-main">
               <strong>{asset.title}</strong>
               <small>{asset.description || assetKindLabel(asset.kind)}</small>
-              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
+              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
               {#if asset.currentCheckout}
                 <CheckoutBadge checkout={asset.currentCheckout} compact />
               {/if}

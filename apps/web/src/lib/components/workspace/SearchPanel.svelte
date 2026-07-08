@@ -12,7 +12,7 @@
     searchModeFilterOptions,
     searchPanelStatus
   } from '$lib/application/workspaceSearch';
-  import type { Asset, SearchCheckoutFilter, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
+  import type { Asset, AssetTag, SearchCheckoutFilter, SearchLifecycleFilter, SearchMode, SearchResult } from '$lib/domain/inventory';
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
@@ -32,7 +32,8 @@
     error,
     busy,
     onSearch,
-    onOpenAsset
+    onOpenAsset,
+    onTagSearch
   }: {
     tenantId: string;
     inventoryId: string;
@@ -47,6 +48,7 @@
     busy: boolean;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
+    onTagSearch?: (tag: AssetTag) => void;
   } = $props();
 
   let lifecycleControlOptions = $derived(
@@ -283,7 +285,7 @@
             {#if result.asset.currentCheckout}
               <CheckoutBadge checkout={result.asset.currentCheckout} compact />
             {/if}
-            <AssetTagChips tags={result.asset.tags ?? []} compact overflowLimit={2} />
+            <AssetTagChips tags={result.asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
             {#if result.asset.photoUnavailable}
               <small id={resultPhotoUnavailableId(result.asset)} class="visually-hidden">Photo unavailable</small>
             {/if}
