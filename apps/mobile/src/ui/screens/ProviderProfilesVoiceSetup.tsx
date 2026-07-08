@@ -78,7 +78,7 @@ function VoiceSlotCard({
 }) {
   const selectedProfile = slot.selectedProfile;
   const alternatives = profiles.filter((profile) => profile.id !== slot.selectedProfileId);
-  const issueLabels = voiceProviderSetupIssueLabels(slot.readiness);
+  const issueLabels = voiceProviderSetupIssueLabels(slot.readiness, slot.recommendedAction);
 
   return (
     <View style={styles.slotCard}>

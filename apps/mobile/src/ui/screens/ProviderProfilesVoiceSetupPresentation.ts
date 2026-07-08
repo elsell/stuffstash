@@ -75,7 +75,26 @@ export function formatProviderProfileTestStatusLabel(lastTestedAt?: string): str
   return lastTestedAt ? 'Tested' : 'Needs test';
 }
 
-export function voiceProviderSetupIssueLabels(readiness: string): readonly string[] {
+export function voiceProviderSetupIssueLabels(readiness: string, recommendedAction: string): readonly string[] {
+  switch (recommendedAction) {
+    case 'none':
+      return readiness === 'ready' ? [] : voiceProviderSetupIssueLabelsForReadiness(readiness);
+    case 'add_profile':
+      return ['Choose a provider profile for this slot.'];
+    case 'choose_profile':
+      return ['Choose which profile this voice slot should use.'];
+    case 'replace_credential':
+      return ['Add a credential for the selected profile.'];
+    case 'enable_profile':
+      return ['Enable the selected provider profile.'];
+    case 'test_profile':
+      return ['Test the selected profile before using voice.'];
+    default:
+      return voiceProviderSetupIssueLabelsForReadiness(readiness);
+  }
+}
+
+function voiceProviderSetupIssueLabelsForReadiness(readiness: string): readonly string[] {
   switch (readiness) {
     case 'ready':
       return [];

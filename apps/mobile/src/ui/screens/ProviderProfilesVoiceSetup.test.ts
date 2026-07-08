@@ -60,7 +60,7 @@ describe('VoiceSetupPanel', () => {
             selectionSource: 'providerSessionId:abc123',
             readiness: 'raw_prompt_injected',
             issues: ['bearer secret stack_trace_here'],
-            recommendedAction: 'none',
+            recommendedAction: 'providerSessionId:action',
             duplicateProfiles: []
           }
         ]
@@ -176,7 +176,17 @@ describe('voice provider setup labels', () => {
   });
 
   it.each([
-    ['ready', []],
+    ['ready', 'none', []],
+    ['missing', 'add_profile', ['Choose a provider profile for this slot.']],
+    ['invalid_selection', 'choose_profile', ['Choose which profile this voice slot should use.']],
+    ['credential_missing', 'replace_credential', ['Add a credential for the selected profile.']],
+    ['disabled', 'enable_profile', ['Enable the selected provider profile.']],
+    ['untested', 'test_profile', ['Test the selected profile before using voice.']]
+  ])('derives safe issue labels from recommended action %s', (readiness, recommendedAction, labels) => {
+    expect(voiceProviderSetupIssueLabels(readiness, recommendedAction)).toEqual(labels);
+  });
+
+  it.each([
     ['missing', ['Choose a provider profile for this slot.']],
     ['disabled', ['Enable the selected provider profile.']],
     ['archived', ['Choose an active provider profile.']],
@@ -185,8 +195,8 @@ describe('voice provider setup labels', () => {
     ['duplicate_candidates', ['Choose which ready profile this voice slot should use.']],
     ['invalid_selection', ['Choose a valid profile for this slot.']],
     ['raw_prompt_injected', ['Review this voice provider slot.']]
-  ])('derives safe issue labels from readiness %s', (readiness, labels) => {
-    expect(voiceProviderSetupIssueLabels(readiness)).toEqual(labels);
+  ])('falls back to safe readiness labels for unknown action keys on %s', (readiness, labels) => {
+    expect(voiceProviderSetupIssueLabels(readiness, 'providerSessionId:action')).toEqual(labels);
   });
 
   it('uses safe fallbacks for unknown setup metadata', () => {
