@@ -28,10 +28,17 @@ The persona should be skeptical, practical, and intolerant of avoidable friction
 - The agent must not inspect Stuff Stash source code while executing the audit.
 - The agent may use only the public GitHub Pages documentation site, the public README, release artifacts, and commands linked from those public sources.
 - The canonical public documentation site is `https://elsell.github.io/stuffstash/`.
-- The audit must exercise Docker Compose self-hosting with SQLite persistence.
-- The audit must exercise Docker Compose self-hosting with Postgres persistence.
-- The audit must include Dex OIDC authentication as a verification fixture rather than accepting a development-only unauthenticated path.
-- The audit must check whether the public docs distinguish local Dex verification from production OIDC provider configuration.
+- The audit must exercise the documented Docker Compose self-hosting happy path
+  with Postgres metadata persistence, datastore-backed SpiceDB authorization,
+  Garage media storage, the static web container, and bundled Dex OIDC sign-in.
+- The audit must not require a SQLite Docker Compose path. SQLite may remain an
+  API runtime mode, but it is not a public self-hosting happy path unless a
+  future spec creates a dedicated topology for it.
+- The audit must include Dex OIDC authentication rather than accepting a
+  development-only unauthenticated path.
+- The audit must check whether the public docs make replacement of local Dex
+  users, static clients, fixture passwords, and local HTTP origins clear before a
+  household relies on the deployment.
 - The audit must use a real browser automation flow, such as Playwright, for the user-facing web application.
 - The browser flow must sign in, create or select a tenant, create or select an inventory, create items, and upload at least one image.
 - Test images may come from public placeholder image services or generated local placeholder files when public services are unavailable.

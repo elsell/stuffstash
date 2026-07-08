@@ -7,8 +7,9 @@ The first good Stuff Stash session should end with one thing you can find again.
 
 ## 1. Sign In
 
-Open the web app and sign in with SSO. In the local Compose stack, use the Dex
-test account from [Run Stuff Stash](../self-hosting/).
+Open the web app and sign in with SSO. In the Docker Compose self-host stack,
+use the first-run Dex account from [Run Stuff Stash](../self-hosting/), then
+replace that account before relying on the deployment.
 
 ## 2. Create An Inventory
 

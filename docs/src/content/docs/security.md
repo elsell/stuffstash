@@ -13,9 +13,9 @@ Stuff Stash treats that data like it matters.
 Stuff Stash uses OIDC for SSO. The API verifies bearer ID tokens and fails closed
 when issuer, audience, signature, expiry, or token shape is wrong.
 
-The local stack uses Dex so the OIDC path can be tested without wiring a real
-provider. Google is the first planned external provider profile, and the same
-adapter shape supports standards-compliant OIDC issuers.
+The Docker Compose self-host stack includes Dex so sign-in uses the same OIDC
+boundary from the first run. Google is the first planned external provider
+profile, and the same adapter shape supports standards-compliant OIDC issuers.
 
 ## Scoped Household Access
 
@@ -41,23 +41,21 @@ Stash keeps that chain tight:
 - Release images are signed and verified in the pipeline.
 - Build provenance attestations are published for release images.
 
-## Local Fixtures Stay Local
+## First-Run Secrets Are Not Household Secrets
 
-The Compose stack includes local-only Dex users, local Postgres credentials, and
-SpiceDB `serve-testing` configuration. They exist so you can evaluate the app
-without setting up production identity infrastructure first.
+The Compose self-host stack includes first-run Dex users, local Postgres
+passwords, Garage keys, and SpiceDB credentials so you can start the product
+without wiring outside infrastructure first.
 
 Do not reuse those values in a deployed system.
 
-The local SpiceDB fixture is not a durable authorization datastore. Postgres may
-keep tenant and inventory rows after a restart, but the local authorization
-relationships can disappear when the SpiceDB fixture restarts. A household
-self-hosting setup needs persistent SpiceDB storage before it can be treated as
-restart-durable.
+The self-host stack uses datastore-backed SpiceDB, Postgres, and Garage volumes.
+That makes normal container restarts durable when volumes are kept, but it does
+not make the example secrets safe.
 
-Replace local fixture secrets before relying on a deployment:
+Replace first-run secrets before relying on a deployment:
 
-- Dex test users and static clients.
+- Dex users and static clients.
 - Postgres password.
 - Garage/S3 access and secret keys.
 - Provider credential encryption key.

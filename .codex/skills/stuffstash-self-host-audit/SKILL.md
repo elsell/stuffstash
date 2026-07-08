@@ -1,6 +1,6 @@
 ---
 name: stuffstash-self-host-audit
-description: Audit the public Stuff Stash self-hosting journey from the perspective of a technically capable homeowner. Use when Codex is asked to test, critique, or report on Stuff Stash public documentation, README, Docker Compose setup, SQLite or Postgres self-hosting, Dex OIDC sign-in, browser onboarding, image upload, and setup friction on a user-provided SSH target without inspecting source code.
+description: Audit the public Stuff Stash self-hosting journey from the perspective of a technically capable homeowner. Use when Codex is asked to test, critique, or report on Stuff Stash public documentation, README, durable Docker Compose setup, bundled Dex OIDC sign-in, Postgres/SpiceDB/Garage persistence, browser onboarding, image upload, and setup friction on a user-provided SSH target without inspecting source code.
 ---
 
 # Stuff Stash Self-Host Audit
@@ -31,7 +31,8 @@ Do not start local setup. All setup, execution, hosting, cloning, downloads, dep
 - Do not patch Stuff Stash, edit compose files beyond documented user configuration, or infer private repository knowledge.
 - Do not accept a development-only unauthenticated path as success.
 - Include Dex OIDC sign-in in the verification.
-- Exercise Docker Compose with SQLite persistence and Docker Compose with Postgres persistence.
+- Exercise the documented Docker Compose self-host path with Postgres metadata persistence, datastore-backed SpiceDB authorization, Garage media storage, the static web container, and bundled Dex OIDC sign-in.
+- Do not require or invent a SQLite Compose path. Treat any public documentation that presents SQLite as the self-host happy path as a finding.
 - Use browser automation, preferably Playwright running against the remote-hosted app, for the end-user flow.
 - Return the final report in chat. Do not commit it.
 - If notes, screenshots, logs, or Playwright artifacts are written, place them outside the repository or in a gitignored scratch location and mention where they are.
@@ -61,7 +62,7 @@ Before installing anything or changing the host, pause for user approval unless 
 From the remote machine, read the public docs and README as a self-hoster would:
 
 - Open or fetch the public documentation site.
-- Locate self-hosting, Docker Compose, SQLite, Postgres, OIDC/Dex, web app, media upload, backup, upgrade, and troubleshooting guidance.
+- Locate self-hosting, Docker Compose, Postgres, datastore-backed SpiceDB, Garage, OIDC/Dex, web app, media upload, backup, upgrade, and troubleshooting guidance.
 - Use the README only if the docs are incomplete or explicitly direct the user there.
 
 Capture every place where the public path is ambiguous, missing, stale, internally inconsistent, or requires guessing.
@@ -76,7 +77,7 @@ Record reproducibility inputs:
 
 ### 3. Prepare A Clean Workspace
 
-Create a disposable remote working directory outside any existing repository checkout. Keep separate directories or clearly reset state between SQLite and Postgres attempts.
+Create a disposable remote working directory outside any existing repository checkout. Clearly reset state between first-run and restart-durability attempts.
 
 If the documented flow requires cloning the repository:
 
@@ -86,16 +87,16 @@ If the documented flow requires cloning the repository:
 - Do not run exploratory file-tree inspection, `rg`, source browsing, package-manifest inspection, migration inspection, test inspection, or app/internal package inspection.
 - Treat every need to inspect a repository file that was not explicitly named by public docs as a documentation failure.
 
-### 4. SQLite Compose Path
+### 4. Durable Compose Self-Host Path
 
-Follow the public instructions to run Stuff Stash with Docker Compose and SQLite persistence.
+Follow the public instructions to run Stuff Stash with Docker Compose, bundled Dex, Postgres, datastore-backed SpiceDB, Garage, the API, and the static web container.
 
 Verify:
 
 - Required environment variables are documented and understandable.
 - Secrets and callback URLs are explained.
-- Dex OIDC is configured and reachable as an audit verification fixture.
-- Public docs distinguish local Dex verification from production OIDC provider configuration.
+- Dex OIDC is configured and reachable as the default self-host identity provider.
+- Public docs explain how to replace first-run Dex users, static clients, fixture passwords, and local HTTP origins before a household relies on the deployment.
 - API and web services start reliably.
 - Health or readiness checks are documented or discoverable from public docs.
 - Data persists after container restart.
@@ -104,19 +105,21 @@ Verify:
 
 Record exact commands used, where docs supplied them, and where you had to invent or repair anything.
 
-### 5. Postgres Compose Path
+### 5. Restart Durability Path
 
-Repeat the setup with Postgres persistence using the public instructions.
+Restart the documented self-host stack without deleting volumes.
 
 Verify:
 
+- The same Dex user can sign back in.
+- The tenant, inventory, location/container structure, item, and uploaded media remain visible.
 - Postgres service configuration is documented.
 - Migrations or schema setup are documented.
 - Connection settings, credentials, volume persistence, and startup ordering are clear.
 - Data persists after container restart.
-- The Postgres path does not accidentally rely on leftover SQLite state.
+- The self-host path does not accidentally rely on a contributor-only Vite server, `serve-testing` SpiceDB, in-memory auth, or hidden local state.
 
-Treat hidden coupling between the SQLite and Postgres flows as a finding.
+Treat hidden coupling between contributor evaluation commands and the self-host path as a finding.
 
 ### 6. Browser User Journey
 

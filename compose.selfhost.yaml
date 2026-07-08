@@ -51,9 +51,13 @@ services:
       STUFF_STASH_S3_BUCKET: ${STUFF_STASH_S3_BUCKET:?set STUFF_STASH_S3_BUCKET in .env}
       STUFF_STASH_S3_REGION: ${STUFF_STASH_S3_REGION:-garage}
       STUFF_STASH_S3_SECURE: ${STUFF_STASH_S3_SECURE:-false}
+    extra_hosts:
+      - "${STUFF_STASH_SELFHOST_HOSTNAME:-stuffstash.localhost}:host-gateway"
     ports:
       - "${STUFF_STASH_HTTP_PORT:?set STUFF_STASH_HTTP_PORT in .env}:8080"
     depends_on:
+      dex:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       spicedb:
@@ -95,6 +99,25 @@ services:
         condition: service_started
       garage-cors:
         condition: service_completed_successfully
+
+  dex:
+    image: ${DEX_IMAGE:-dexidp/dex:v2.44.0@sha256:5d0656fce7d453c0e3b2706abf40c0d0ce5b371fb0b73b3cf714d05f35fa5f86}
+    command:
+      - dex
+      - serve
+      - /etc/dex/config.yaml
+    ports:
+      - "${DEX_HTTP_PORT:?set DEX_HTTP_PORT in .env}:5556"
+    volumes:
+      - ${DEX_CONFIG_PATH:-./deploy/selfhost/dex/config.yaml}:/etc/dex/config.yaml:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O /dev/null http://127.0.0.1:5556/dex/.well-known/openid-configuration
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
 
   postgres:
     image: ${POSTGRES_IMAGE:?set POSTGRES_IMAGE in .env}
@@ -169,7 +192,7 @@ services:
     ports:
       - "${GARAGE_S3_PORT:?set GARAGE_S3_PORT in .env}:3900"
     volumes:
-      - ./deploy/local/garage/garage.toml:/etc/garage.toml:ro
+      - ./deploy/selfhost/garage/garage.toml:/etc/garage.toml:ro
       - selfhost-garage-meta:/var/lib/garage/meta
       - selfhost-garage-data:/var/lib/garage/data
     healthcheck:

@@ -1,4 +1,4 @@
-.PHONY: test api-release-build run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check release-plan-test scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
+.PHONY: test api-release-build run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check release-plan-test selfhost-happy-path-check scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -168,7 +168,10 @@ dependency-age-check:
 release-plan-test:
 	scripts/test-release-planner.sh
 
-scripts-test: release-plan-test
+selfhost-happy-path-check:
+	scripts/check-selfhost-happy-path.sh
+
+scripts-test: release-plan-test selfhost-happy-path-check
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs

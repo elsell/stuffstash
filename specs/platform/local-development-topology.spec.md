@@ -24,7 +24,8 @@ It does not define Kubernetes production deployment, external Google OIDC rollou
 - Local authorization replay must use project-owned authorization/outbox ports. It must not read database tables directly from bootstrap code, must not bypass authorization adapters, and must not run when a production authorization adapter such as SpiceDB is selected.
 - Local authorization replay must apply durable tenant-owner, inventory-owner, viewer, editor, and revoke intent in deterministic creation order and ignore dead-lettered authorization intent. Replayed grants and revokes must remain idempotent.
 - Local development must also support Dex as a deterministic OIDC issuer so the API can be verified with real OIDC discovery and token verification.
-- The Docker Compose self-host/evaluation topology must include Garage as the default blob storage service so media behavior is production-shaped by default.
+- The Docker Compose self-host topology must include Dex, Postgres, datastore-backed SpiceDB, Garage, the API, and the static web container so the documented path is production-shaped by default.
+- The Docker Compose contributor evaluation topology may remain separate for fast local API development, but public self-hosting documentation must not present it as the user-facing happy path.
 - The Compose self-host/evaluation topology must be runnable with plain `docker compose` commands. Make targets may remain contributor conveniences, but public self-host documentation must not require GNU Make.
 - Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
 - Local Compose must provide enough SpiceDB configuration for the API to connect to SpiceDB when `STUFF_STASH_AUTHZ_MODE=spicedb`.
@@ -99,14 +100,17 @@ self-hosted deployment, not with contributor convenience commands.
 
 The self-hosting path must make these boundaries explicit:
 
-- Evaluation-only fixtures are allowed, but they must be labeled as
-  evaluation-only before the first command.
-- A self-hosted setup must use OIDC, Postgres metadata persistence, durable blob
-  storage, and a durable authorization store.
-- The current Docker Compose OIDC stack uses local Dex fixtures and SpiceDB
-  `serve-testing`. Until the SpiceDB Compose topology is backed by durable
-  persistence, public docs must not promise that the Compose stack is restart
-  durable for authenticated inventory access.
+- The happy path must start with one durable Compose command. It must not ask
+  self-hosters to start a host Vite development server, wire a separate OIDC
+  provider, or choose between SQLite and Postgres before they have seen the app.
+- A self-hosted setup must use Dex OIDC, Postgres metadata persistence,
+  datastore-backed SpiceDB authorization, durable blob storage, and the static
+  web container.
+- Bundled Dex is the default OIDC provider for Docker Compose self-hosting.
+  Operators may replace Dex with another standards-compliant OIDC provider
+  later, but that is an advanced configuration rather than the first-run path.
+- The self-host happy path must be restart-durable for authenticated inventory
+  access when containers are stopped without removing volumes.
 - SQLite is an API runtime mode. It is not a Docker Compose self-hosting path
   unless a dedicated Compose topology wires the API, schema setup, durable file
   mount, and authorization behavior for SQLite.
@@ -125,16 +129,21 @@ The self-hosting path must make these boundaries explicit:
   name which volumes contain metadata, authorization state, object metadata, and
   object data.
 
-## Production-Like Compose Topology
+## Durable Self-Host Compose Topology
 
-The repository must provide a separate production-like Docker Compose file for
-self-hosted evaluation. It must not replace the contributor local Compose path.
+The repository must provide a durable Docker Compose file for self-hosting. It
+must not replace the contributor local Compose path, but public documentation
+must lead with the durable self-host path.
 
-The production-like Compose topology must:
+The durable self-host Compose topology must:
 
 - Be started with `docker compose -f compose.selfhost.yaml up --build`.
 - Read operator-provided runtime values from a private `.env` file copied from
   the committed `.env.example`.
+- Run Dex as the default OIDC provider for browser, API, and mobile metadata.
+- Treat Dex readiness as OIDC discovery readiness. The API must not start from
+  the self-host Compose dependency graph until Dex's discovery document is
+  reachable, because the API validates the issuer during startup.
 - Run the API with OIDC authentication, SpiceDB authorization, Postgres
   persistence, and Garage/S3-compatible blob storage.
 - Run the static web image as a Compose service instead of requiring a host
@@ -154,7 +163,9 @@ The production-like Compose topology must:
   concrete distributed cache, queue, or rate-limiter adapter need. The existing
   in-memory rate limiter remains acceptable for single-replica self-hosted
   Compose.
-
-The production-like Compose topology may still rely on a user-provided OIDC
-issuer. It must document that local Dex fixture users and password grants are
-not part of the production-like path.
+- Use one browser-and-container-reachable hostname for the web origin, API
+  origin, Dex issuer, and Garage public endpoint. The default single-machine
+  hostname is `stuffstash.localhost`; LAN and reverse-proxy operators must
+  update the hostname consistently before starting the stack.
+- Allow operators to provide a private Dex config for household users while
+  keeping the committed Dex config suitable only as a first-run local example.

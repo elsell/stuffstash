@@ -1,91 +1,29 @@
 ---
 title: Self-Host Stuff Stash
-description: Set up Stuff Stash with Docker Compose, OIDC, Postgres, SpiceDB, and Garage.
+description: Set up Stuff Stash with Docker Compose, Dex OIDC, Postgres, SpiceDB, and Garage.
 ---
 
-Stuff Stash is designed to run as separate services: a web app, an API,
-Postgres, SpiceDB, an OIDC provider, and S3-compatible media storage.
+This is the main way to run Stuff Stash yourself.
 
-The goal is a Docker Compose path that a homeowner can run on a home server and
-trust after restarts. Use the production-like Compose path for that shape. The
-older local Compose path remains useful for contributor evaluation with local
-Dex fixtures.
+Docker Compose starts the web app, API, Dex sign-in, Postgres, SpiceDB, Garage,
+migrations, and Garage CORS setup. The stack is designed to survive normal
+container restarts as long as you keep the Docker volumes.
 
-Use this page in two ways:
-
-- If you are preparing a real household deployment, start with the
-  production-like Compose path.
-- If you want the local Dex test accounts and a Vite development server, use the
-  Compose evaluation path.
-
-## Target Self-Hosted Shape
-
-A real self-hosted deployment needs these pieces:
+## What Runs
 
 | Service | Purpose | Durable state |
 | --- | --- | --- |
-| Web | SvelteKit static app | Runtime `config.json` |
+| Web | Static SvelteKit app served by the web container | Runtime `config.json` |
 | API | REST API, auth checks, audit, workers | None by itself |
-| Postgres | Inventory metadata, audit, outboxes | Postgres data volume |
-| SpiceDB | Relationship-based authorization | SpiceDB Postgres datastore |
-| OIDC provider | Sign-in | Provider-specific |
-| Garage | S3-compatible media storage | Garage metadata and data volumes |
+| Dex | OIDC sign-in | User config file |
+| Postgres | Inventory metadata, audit, outboxes | `selfhost-postgres-data` |
+| SpiceDB | Relationship-based authorization | `selfhost-spicedb-postgres-data` |
+| Garage | S3-compatible media storage | `selfhost-garage-meta`, `selfhost-garage-data` |
 
-All browser-visible URLs must agree:
+The web app is served by Docker Compose. You do not need to run a Vite
+development server for self-hosting.
 
-- `STUFF_STASH_WEB_ORIGIN`: where the browser opens the web app.
-- `STUFF_STASH_API_ORIGIN`: where the browser reaches the API.
-- `STUFF_STASH_DEX_ISSUER` or your external OIDC issuer: the issuer both the
-  browser and API can reach.
-- `STUFF_STASH_S3_PUBLIC_ENDPOINT`: the Garage or S3 endpoint the browser can
-  reach for direct uploads.
-
-For local LAN testing, these are usually based on your server IP, such as
-`http://192.168.1.50:5173`, not `localhost`.
-
-## Before You Rely On It
-
-Change these before a household relies on the deployment:
-
-| Setting | Why it matters |
-| --- | --- |
-| `POSTGRES_PASSWORD` | Protects the metadata database. |
-| `STUFF_STASH_S3_ACCESS_KEY` | Garage/S3 access key used by the API. |
-| `STUFF_STASH_S3_SECRET_KEY` | Garage/S3 secret key used by the API. |
-| `STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID` | Labels the active credential encryption key. |
-| `STUFF_STASH_PROVIDER_CREDENTIAL_KEY` | Base64-encoded 32-byte AES-GCM key for provider credentials and temporary import material. |
-| OIDC clients and users | Local Dex users are fixtures, not household accounts. |
-| Evaluation SpiceDB credentials and datastore | `serve-testing` is local-only and not durable. |
-| Public origins and callback URLs | OIDC fails when issuer, redirect URI, API origin, or web origin disagree. |
-
-Generate the provider credential key with:
-
-```sh
-openssl rand -base64 32
-```
-
-Store secrets in a private `.env` file or your secret manager. Do not commit
-household secrets.
-
-The self-host Compose file builds Postgres connection strings from the database
-password variables. Use URL-safe password characters, or update the Compose file
-with a percent-encoded connection string if your database password contains URI
-reserved characters such as `@`, `/`, `:`, or `?`.
-
-## Production-Like Compose
-
-This path runs the API, web app, Postgres metadata database, datastore-backed
-SpiceDB, Garage, migrations, and Garage CORS setup from Docker Compose.
-
-It does not run an OIDC provider for you. Use a real OIDC issuer, such as your
-existing identity provider, and create a public web client with this redirect
-URI:
-
-```text
-http://localhost:8081/callback
-```
-
-For a LAN or reverse-proxied setup, use the matching public web origin instead.
+## Quick Start
 
 Clone the repository:
 
@@ -100,141 +38,19 @@ Create a private environment file:
 cp .env.example .env
 ```
 
-Edit `.env` before starting. At minimum, replace:
-
-- `STUFF_STASH_OIDC_ISSUER`
-- `STUFF_STASH_OIDC_CLIENT_ID`
-- `STUFF_STASH_WEB_OIDC_CLIENT_ID`
-- `STUFF_STASH_WEB_OIDC_REDIRECT_URI`
-- `STUFF_STASH_OIDC_CLIENT_IDS`
-- `POSTGRES_PASSWORD`
-- `STUFF_STASH_SPICEDB_PRESHARED_KEY`
-- `SPICEDB_POSTGRES_PASSWORD`
-- `STUFF_STASH_S3_ACCESS_KEY`
-- `STUFF_STASH_S3_SECRET_KEY`
-- `STUFF_STASH_PROVIDER_CREDENTIAL_KEY`
-
-Generate the provider credential key with:
-
-```sh
-openssl rand -base64 32
-```
-
 Start the stack:
 
 ```sh
 docker compose -f compose.selfhost.yaml up --build
 ```
 
-Open the configured `STUFF_STASH_WEB_ORIGIN`.
-
-The web container generates `/config.json` at startup from `.env`, including the
-public API URL, OIDC issuer, web client ID, redirect URI, and upload limit. It
-also renders its CSP from the configured API, OIDC, and browser-reachable
-Garage/S3 origins.
-
-The API allows browser CORS only from `STUFF_STASH_WEB_ORIGIN`. The
-`garage-cors` service configures the Garage bucket CORS policy for the same
-origin before the web service is started.
-
-For a trusted LAN test with plain HTTP, the default Garage settings use:
+Open:
 
 ```text
-STUFF_STASH_S3_PUBLIC_ENDPOINT=localhost:3900
-STUFF_STASH_S3_SECURE=false
+http://stuffstash.localhost:8081
 ```
 
-For a reverse-proxied setup, put Garage behind HTTPS and set:
-
-```text
-STUFF_STASH_S3_PUBLIC_ENDPOINT=storage.example.test
-STUFF_STASH_S3_SECURE=true
-```
-
-Stop containers but keep volumes:
-
-```sh
-docker compose -f compose.selfhost.yaml down
-```
-
-Remove containers and self-host data volumes:
-
-```sh
-docker compose -f compose.selfhost.yaml down -v
-```
-
-The self-host volumes are:
-
-| Volume | Contains |
-| --- | --- |
-| `selfhost-postgres-data` | Stuff Stash metadata, audit, and outboxes. |
-| `selfhost-spicedb-postgres-data` | SpiceDB authorization datastore. |
-| `selfhost-garage-meta` | Garage object metadata. |
-| `selfhost-garage-data` | Garage object data. |
-
-Redis and Valkey are intentionally not part of this stack. The current
-in-memory rate limiter is enough for a single API replica.
-
-## Compose Evaluation
-
-This path proves the API, web app, Postgres, Dex OIDC, SpiceDB authorization,
-and Garage media storage on one machine. It builds from source and runs the web
-app with Vite.
-
-It is not a complete self-hosting runbook yet because:
-
-- SpiceDB uses `serve-testing`, so authorization state is not durable.
-- SQLite is supported by the API runtime, but there is no SQLite Compose
-  self-hosting topology.
-
-You need Docker with Compose, Node.js, and pnpm through Corepack or an existing
-pnpm install.
-
-Clone the repository:
-
-```sh
-git clone https://github.com/elsell/stuffstash.git
-cd stuffstash
-```
-
-Start the current evaluation stack:
-
-```sh
-docker compose -f compose.yaml -f compose.oidc.yaml up --build
-```
-
-This starts the API, Postgres, SpiceDB, Garage, Dex, and the migration job.
-Garage is the local S3-compatible media store.
-
-If a port is already in use, choose alternate host ports:
-
-```sh
-STUFF_STASH_HTTP_PORT=18080 \
-DEX_HTTP_PORT=15556 \
-GARAGE_S3_PORT=13900 \
-STUFF_STASH_S3_PUBLIC_ENDPOINT=localhost:13900 \
-POSTGRES_PORT=15432 \
-SPICEDB_GRPC_PORT=15051 \
-docker compose -f compose.yaml -f compose.oidc.yaml up --build
-```
-
-If you change the API or Dex port, update `apps/web/static/config.json` before
-starting the web app. If you change the Garage browser-facing port, set
-`STUFF_STASH_S3_PUBLIC_ENDPOINT` to the same host and port before starting the
-API and before applying the Garage CORS policy below.
-
-Start the web app in another terminal:
-
-```sh
-corepack pnpm install --frozen-lockfile
-corepack pnpm --dir apps/web dev --host 0.0.0.0
-```
-
-If `corepack enable` fails on your machine, it usually means Corepack tried to
-write global shims under a system directory. You can skip that step when
-`corepack pnpm --version` or `pnpm --version` already returns `11.0.7`.
-
-Open `http://localhost:5173` and sign in:
+Sign in with the first-run Dex account:
 
 ```text
 Email: owner@example.com
@@ -243,166 +59,91 @@ Password: password
 
 Then follow [First Inventory](../first-inventory/).
 
-## LAN OIDC Evaluation
+## Hostnames And Ports
 
-Use this when the browser or mobile app is not running on the same machine as
-Docker. Replace `192.168.1.50` with your server's LAN IP:
+The default `.env.example` uses `stuffstash.localhost` so the browser and Docker
+containers can agree on the same OIDC issuer:
 
-```sh
-export STUFF_STASH_WEB_ORIGIN=http://192.168.1.50:5173
-export STUFF_STASH_API_ORIGIN=http://192.168.1.50:8080
-export STUFF_STASH_DEX_ISSUER=http://192.168.1.50:5556/dex
-export STUFF_STASH_DEX_HTTP_ADDR=0.0.0.0:5556
-export STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback
-node scripts/render-local-dex-config.mjs
-```
+| URL | Service |
+| --- | --- |
+| `http://stuffstash.localhost:8081` | Web app |
+| `http://stuffstash.localhost:8080` | API |
+| `http://stuffstash.localhost:5556/dex` | Dex issuer |
+| `http://stuffstash.localhost:3900` | Garage S3 API |
 
-Start Compose with the generated Dex config and matching API issuer:
+If you run Stuff Stash from another device on your LAN, replace every
+`stuffstash.localhost` value in `.env` and your Dex config with the same LAN IP
+or DNS name before starting the stack. OIDC is strict: the issuer, web redirect
+URI, API origin, and browser-visible URLs must agree.
 
-```sh
-DEX_CONFIG_PATH=.stuffstash/local/dex/config.yaml \
-STUFF_STASH_CORS_ALLOWED_ORIGINS="$STUFF_STASH_WEB_ORIGIN" \
-STUFF_STASH_OIDC_ISSUER="$STUFF_STASH_DEX_ISSUER" \
-docker compose -f compose.yaml -f compose.oidc.yaml up --build
-```
+For a reverse proxy, use HTTPS origins and route the web app, API, Dex issuer,
+and Garage endpoint through the proxy.
 
-Start the web app for the same LAN origin:
+## Before Relying On It
 
-```sh
-VITE_STUFF_STASH_WEB_ORIGIN="$STUFF_STASH_WEB_ORIGIN" \
-corepack pnpm --dir apps/web dev --host 0.0.0.0
-```
+The defaults are meant to get you running. Replace these before a household
+relies on the deployment:
 
-Check mobile auth metadata before opening a mobile app:
+| Setting | Why it matters |
+| --- | --- |
+| Dex users and static clients | The committed Dex config has first-run accounts only. |
+| `POSTGRES_PASSWORD` | Protects inventory metadata. |
+| `SPICEDB_POSTGRES_PASSWORD` | Protects authorization state. |
+| `STUFF_STASH_SPICEDB_PRESHARED_KEY` | Protects the SpiceDB API. |
+| `STUFF_STASH_S3_ACCESS_KEY` | Garage/S3 access key used by the API. |
+| `STUFF_STASH_S3_SECRET_KEY` | Garage/S3 secret key used by the API. |
+| `STUFF_STASH_PROVIDER_CREDENTIAL_KEY` | Encrypts provider credentials and temporary import material. |
 
-```sh
-curl "$STUFF_STASH_API_ORIGIN/.well-known/stuff-stash/mobile-auth"
-```
-
-The response should advertise the same issuer you configured in
-`STUFF_STASH_DEX_ISSUER`.
-
-## Garage Browser Uploads
-
-Browser direct upload needs two things:
-
-- `STUFF_STASH_S3_PUBLIC_ENDPOINT` must be reachable from the browser.
-- The Garage bucket must allow CORS for the web origin.
-
-For local Garage, configure CORS with an S3-compatible CLI after Garage is
-running. Use the same browser-facing endpoint that the API uses in
-`STUFF_STASH_S3_PUBLIC_ENDPOINT`:
+Generate the provider credential key with:
 
 ```sh
-export STUFF_STASH_S3_ACCESS_KEY="${STUFF_STASH_S3_ACCESS_KEY:-GK0123456789abcdef0123456789abcdef}"
-export STUFF_STASH_S3_SECRET_KEY="${STUFF_STASH_S3_SECRET_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}"
-export AWS_DEFAULT_REGION="${STUFF_STASH_S3_REGION:-garage}"
-export STUFF_STASH_WEB_ORIGIN="${STUFF_STASH_WEB_ORIGIN:-http://localhost:5173}"
-export STUFF_STASH_S3_PUBLIC_ENDPOINT="${STUFF_STASH_S3_PUBLIC_ENDPOINT:-localhost:3900}"
-export STUFF_STASH_S3_BUCKET="${STUFF_STASH_S3_BUCKET:-stuffstash}"
-export AWS_ACCESS_KEY_ID="$STUFF_STASH_S3_ACCESS_KEY"
-export AWS_SECRET_ACCESS_KEY="$STUFF_STASH_S3_SECRET_KEY"
-
-cat > /tmp/stuffstash-garage-cors.json <<EOF
-{
-  "CORSRules": [
-    {
-      "AllowedHeaders": ["*"],
-      "AllowedMethods": ["GET", "POST"],
-      "AllowedOrigins": ["$STUFF_STASH_WEB_ORIGIN"],
-      "ExposeHeaders": ["ETag"]
-    }
-  ]
-}
-EOF
-
-aws --endpoint-url "http://$STUFF_STASH_S3_PUBLIC_ENDPOINT" \
-  s3api put-bucket-cors \
-  --bucket "$STUFF_STASH_S3_BUCKET" \
-  --cors-configuration file:///tmp/stuffstash-garage-cors.json
+openssl rand -base64 32
 ```
 
-For production, put Garage or your S3-compatible storage behind TLS and use the
-public HTTPS storage endpoint in `STUFF_STASH_S3_PUBLIC_ENDPOINT`.
+Store secrets in `.env` or your secret manager. Do not commit household secrets.
 
-## Verify The Stack
-
-For the production-like Compose path, check API health:
+To customize Dex users, copy the bundled config to a private path and point
+`.env` at it:
 
 ```sh
-curl http://localhost:8080/healthz
+mkdir -p .stuffstash/selfhost/dex
+cp deploy/selfhost/dex/config.yaml .stuffstash/selfhost/dex/config.yaml
 ```
 
-Then sign in through your configured OIDC provider, create a household, create
-an inventory, add a location, add an item, upload a small JPEG or PNG, reload
-the page, and restart the stack:
+Set:
+
+```text
+DEX_CONFIG_PATH=.stuffstash/selfhost/dex/config.yaml
+```
+
+Then edit the copied Dex config. If you change the hostname, update the Dex
+`issuer`, `allowedOrigins`, and redirect URIs to match `.env`.
+
+## Verify Persistence
+
+After creating a household, inventory, item, and photo, restart without deleting
+volumes:
 
 ```sh
 docker compose -f compose.selfhost.yaml down
 docker compose -f compose.selfhost.yaml up --build
 ```
 
-The inventory and uploaded media should still be available after sign-in. The
-production-like path uses datastore-backed SpiceDB and durable Postgres/Garage
-volumes, so restart durability is expected unless volumes are removed.
+Sign in again. Your inventory and uploaded media should still be available.
 
-For the Compose evaluation path with local Dex fixtures, check OIDC/API
-authorization with:
+To remove containers and all self-host data volumes:
 
 ```sh
-scripts/verify-dex-oidc-api.sh
+docker compose -f compose.selfhost.yaml down -v
 ```
 
-Do not use the evaluation path as restart-durability proof. It uses SpiceDB
-`serve-testing`, so a full restart can make previously created inventories
-inaccessible to the same user.
+## Operations Notes
 
-Check browser behavior. These commands are contributor checks for the web app;
-they are useful before treating a local setup guide change as verified, but they
-are not required to run Stuff Stash:
-
-```sh
-corepack pnpm --dir apps/web test
-corepack pnpm --dir apps/web check:shadcn
-corepack pnpm --dir apps/web check
-corepack pnpm --dir apps/web build
-```
-
-## Stop And Clean Up Evaluation Stack
-
-Stop containers but keep volumes:
-
-```sh
-docker compose -f compose.yaml -f compose.oidc.yaml down
-```
-
-Remove containers and local data volumes:
-
-```sh
-docker compose -f compose.yaml -f compose.oidc.yaml down -v
-```
-
-The main local evaluation volumes are:
-
-| Volume | Contains |
-| --- | --- |
-| `postgres-data` | Stuff Stash metadata, audit, and outboxes. |
-| `garage-meta` | Garage object metadata. |
-| `garage-data` | Garage object data. |
-
-The production-like Compose path uses a separate durable SpiceDB datastore
-volume.
-
-## Production Readiness
-
-Before publishing Stuff Stash beyond a trusted LAN, add:
-
-- TLS and a reverse proxy for the web app, API, OIDC issuer, and Garage/S3
-  endpoint.
-- Real OIDC provider configuration and reviewed callback URLs.
-- Private, rotated secrets.
-- Backups for Postgres, SpiceDB, and Garage.
-- An upgrade process that records image versions and runs migrations.
-
-The split-container deployment shape is the long-term target, but a complete
-production runbook is still in progress.
+- Back up Postgres, SpiceDB Postgres, and Garage volumes.
+- Keep `.env` and your private Dex config out of Git.
+- Use URL-safe database passwords, or percent-encode reserved characters in
+  connection strings.
+- Put the web app, API, Dex, and Garage behind TLS before exposing them beyond a
+  trusted LAN.
+- Record image versions before upgrades and run the stack after each upgrade so
+  migrations can complete.

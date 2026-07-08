@@ -50,6 +50,9 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - The local-cluster production-style API hostname is `api.stuffstash.jsksell.com`.
 - The production-style web static runtime must use a pinned Red Hat hardened or UBI nginx image when available.
 - The web runtime container must run without root privileges, with a read-only root filesystem, dropped Linux capabilities, and a runtime-mounted `config.json`.
+- The web runtime must direct nginx access logs to stdout and error logs to
+  stderr before nginx opens its compiled default log paths, so the read-only
+  root filesystem does not produce startup log alerts.
 - Static web responses must include conservative browser security headers, including content type sniffing protection, frame denial, a restrictive referrer policy, a restrictive permissions policy, and a content security policy that only permits the configured API and OIDC issuer origins.
 - The web static image build must derive a CSP hash for SvelteKit's generated bootstrap script from the built `index.html` and must not use a broad `script-src 'unsafe-inline'` policy.
 - The web static runtime must support self-hosted API, OIDC, and media origins

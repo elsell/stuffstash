@@ -30,5 +30,5 @@ pre-commit:
       glob: "{**/go.mod,**/go.sum,**/package.json,**/pnpm-lock.yaml}"
       run: make dependency-age-check
     scripts-test:
-      glob: "scripts/{plan-release.sh,check-dependency-age.py,render-local-dex-config.mjs,test-dependency-age.py,test-release-planner.sh,verify-mobile-oidc-pkce.mjs}"
+      glob: "{scripts/**,compose.selfhost.yaml,.env.example,docs/src/content/docs/self-hosting.md,specs/platform/local-development-topology.spec.md}"
       run: make scripts-test
