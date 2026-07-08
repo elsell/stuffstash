@@ -236,6 +236,13 @@ func TestRealtimeVoicePlannerOnlySafeFailureDoesNotClaimReversedPlacementMutatio
 	}) {
 		t.Fatalf("expected harmless safe failure copy not to count as a planner mutation claim")
 	}
+	if realtimeVoicePlannerFinalClaimsMutation(ports.StructuredAgentResponse{
+		Kind:            ports.StructuredAgentResponseKindSafeFailure,
+		SpokenResponse:  "John's item cannot be handled in voice now.",
+		DisplayResponse: "John's item cannot be handled in voice now.",
+	}) {
+		t.Fatalf("expected possessive safe failure copy not to count as a planner mutation claim")
+	}
 
 	tts := &resolvedTextToSpeech{}
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
