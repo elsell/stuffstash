@@ -128,7 +128,9 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Release image publication must produce immutable image digests. GitOps deployment state must prefer digests over mutable tags.
 - Release builds must publish build provenance attestations for the container image before deployment automation consumes the image.
 - Release validation must build the API release binary from the `apps/api` module with workspace mode disabled before any image publication job runs.
-- Pull requests targeting `main` must run a blocking CI gate before merge. The gate must include dependency age checking, repository script tests, API tests, API release build validation, web tests, web static checks, generated API client tests, generated API client static checks, and generated API client drift checks.
+- Pull requests targeting `main` must run a blocking CI gate before merge. The gate must include dependency age checking, repository script tests, Go formatting and structural boundary checks for changed Go files, API tests, API release build validation, web tests, web static checks, web build validation, mobile tests, mobile static checks, generated API client tests, generated API client static checks, generated API client drift checks, documentation dependency installation, and documentation build validation.
+- Web browser E2E smoke tests may remain outside the blocking gate until the suite is made deterministic and green enough for routine pull request use.
+- The `main` branch protection rule must require the `Required checks` status, require branches to be up to date before merging, and include administrators.
 - Dependency freshness must be checked mechanically for npm and Go modules.
 - npm package versions and Go module versions must be at least fourteen days old before they are accepted into the committed dependency graph.
 - Dependency age checks must fail closed when package metadata cannot be retrieved or parsed, except for Go pseudo versions where the timestamp embedded in the version is available.
