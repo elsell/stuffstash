@@ -1019,8 +1019,16 @@ function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled:
     case 'clarification_turn_limit':
       return 'That thread needs a fresh voice request. Start again with the missing detail included.';
     default:
-      return fallback;
+      return safeFailureFallbackMessage(fallback);
   }
+}
+
+function safeFailureFallbackMessage(fallback: string): string {
+  const normalized = redactUnsafeVoiceText(fallback).replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return 'Voice failed safely.';
+  }
+  return normalized.length <= 180 ? normalized : normalized.slice(0, 180).trim();
 }
 
 function voiceFailureProgressLabel(code: string): string {

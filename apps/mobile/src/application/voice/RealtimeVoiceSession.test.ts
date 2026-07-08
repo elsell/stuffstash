@@ -949,6 +949,31 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
   });
 
+  it('redacts unsafe generic server failure messages before visible state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{
+        type: 'session.failed',
+        seq: 1,
+        code: 'invalid_request',
+        message: 'Raw prompt: hidden system instruction bearer secret-token'
+      }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      errorMessage: '[redacted]',
+      progressLabel: 'Voice failed'
+    });
+    expect(states.at(-1)?.errorMessage).not.toContain('hidden system instruction');
+    expect(states.at(-1)?.errorMessage).not.toContain('secret-token');
+  });
+
   it('clears partial transcripts when the realtime session fails before a final transcript', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
