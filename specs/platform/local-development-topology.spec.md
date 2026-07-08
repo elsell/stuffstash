@@ -91,3 +91,70 @@ The OIDC Compose override adds:
   the HTTP boundary.
 - The repository must provide an explicit real-SpiceDB adapter verification command that starts pinned local SpiceDB, runs the adapter integration tests, and cleans up.
 - The repository must provide an explicit Garage blob storage verification command that starts a digest-pinned Garage image, runs the S3-compatible blob adapter integration test, and cleans up. Any custom image override must also be pinned with `@sha256:`.
+
+## Self-Hosting Documentation Contract
+
+The public documentation must lead with the lowest-friction path toward a real
+self-hosted deployment, not with contributor convenience commands.
+
+The self-hosting path must make these boundaries explicit:
+
+- Evaluation-only fixtures are allowed, but they must be labeled as
+  evaluation-only before the first command.
+- A self-hosted setup must use OIDC, Postgres metadata persistence, durable blob
+  storage, and a durable authorization store.
+- The current Docker Compose OIDC stack uses local Dex fixtures and SpiceDB
+  `serve-testing`. Until the SpiceDB Compose topology is backed by durable
+  persistence, public docs must not promise that the Compose stack is restart
+  durable for authenticated inventory access.
+- SQLite is an API runtime mode. It is not a Docker Compose self-hosting path
+  unless a dedicated Compose topology wires the API, schema setup, durable file
+  mount, and authorization behavior for SQLite.
+- The documentation must distinguish browser origins, API origins, OIDC issuer
+  URLs, and object-storage endpoints. For OIDC, the issuer used by the browser,
+  API, and mobile metadata must be the same reachable issuer for the intended
+  client.
+- Browser media upload with S3-compatible storage requires a browser-reachable
+  `STUFF_STASH_S3_PUBLIC_ENDPOINT` and bucket CORS policy that permits the web
+  origin to upload through the S3 API.
+- Local fixture secrets, static passwords, provider credential encryption keys,
+  database passwords, object-storage keys, OIDC client configuration, and
+  SpiceDB credentials must be listed in one operator checklist with guidance to
+  replace them before a household relies on the deployment.
+- Volume ownership and purpose must be obvious to an operator. The docs must
+  name which volumes contain metadata, authorization state, object metadata, and
+  object data.
+
+## Production-Like Compose Topology
+
+The repository must provide a separate production-like Docker Compose file for
+self-hosted evaluation. It must not replace the contributor local Compose path.
+
+The production-like Compose topology must:
+
+- Be started with `docker compose -f compose.selfhost.yaml up --build`.
+- Read operator-provided runtime values from a private `.env` file copied from
+  the committed `.env.example`.
+- Run the API with OIDC authentication, SpiceDB authorization, Postgres
+  persistence, and Garage/S3-compatible blob storage.
+- Run the static web image as a Compose service instead of requiring a host
+  Vite development server.
+- Generate the web runtime `config.json` from environment values at container
+  startup so API base URL, OIDC issuer, web OIDC client ID, redirect URI, and
+  media upload policy can change without rebuilding source.
+- Generate web CSP values from the configured API, OIDC, and browser-reachable
+  Garage/S3 origins at container startup.
+- Configure API CORS from the configured web origin.
+- Configure the Garage bucket CORS policy for the configured web origin before
+  the web service is considered ready for browser upload testing.
+- Persist API Postgres data, SpiceDB datastore data, Garage metadata, and Garage
+  object data in named volumes.
+- Use a datastore-backed SpiceDB service rather than `serve-testing`.
+- Keep Redis and Valkey out of this topology until a future spec defines a
+  concrete distributed cache, queue, or rate-limiter adapter need. The existing
+  in-memory rate limiter remains acceptable for single-replica self-hosted
+  Compose.
+
+The production-like Compose topology may still rely on a user-provided OIDC
+issuer. It must document that local Dex fixture users and password grants are
+not part of the production-like path.

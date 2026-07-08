@@ -52,6 +52,15 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - The web runtime container must run without root privileges, with a read-only root filesystem, dropped Linux capabilities, and a runtime-mounted `config.json`.
 - Static web responses must include conservative browser security headers, including content type sniffing protection, frame denial, a restrictive referrer policy, a restrictive permissions policy, and a content security policy that only permits the configured API and OIDC issuer origins.
 - The web static image build must derive a CSP hash for SvelteKit's generated bootstrap script from the built `index.html` and must not use a broad `script-src 'unsafe-inline'` policy.
+- The web static runtime must support self-hosted API, OIDC, and media origins
+  without rebuilding source for each household deployment. If CSP values are
+  rendered at image build time, the self-hosting documentation must not present
+  the static web image as a generic drop-in deployment until the CSP can be
+  generated from mounted runtime configuration or explicit runtime environment.
+- The self-hosted Docker Compose web service must generate runtime `config.json`
+  and CSP origin values from environment at container startup so the same image
+  can be used for different household API, OIDC, and S3-compatible media
+  endpoints.
 - The web image must be built and published separately from the API image and must receive the same provenance, signature, and registry attestation treatment as the API image.
 
 ## Local OIDC Shape

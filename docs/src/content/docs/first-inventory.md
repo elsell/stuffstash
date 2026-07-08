@@ -39,6 +39,11 @@ model the whole house before adding the first useful record.
 Add the thing you are likely to look for later. Include a photo if it helps you
 recognize it quickly.
 
+Direct browser upload depends on media storage being reachable from the browser.
+The web app can fall back to the API attachment route when direct upload is not
+available. In the local Garage setup, make sure the web origin is allowed by the
+bucket CORS policy before using photo upload as a direct-upload setup check.
+
 Good first items:
 
 - a tool in a storage bin,

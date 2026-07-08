@@ -49,6 +49,20 @@ without setting up production identity infrastructure first.
 
 Do not reuse those values in a deployed system.
 
+The local SpiceDB fixture is not a durable authorization datastore. Postgres may
+keep tenant and inventory rows after a restart, but the local authorization
+relationships can disappear when the SpiceDB fixture restarts. A household
+self-hosting setup needs persistent SpiceDB storage before it can be treated as
+restart-durable.
+
+Replace local fixture secrets before relying on a deployment:
+
+- Dex test users and static clients.
+- Postgres password.
+- Garage/S3 access and secret keys.
+- Provider credential encryption key.
+- SpiceDB credentials and datastore configuration.
+
 ## Exit Is Part Of Trust
 
 Stuff Stash is designed for JSON and CSV import/export behind project-owned

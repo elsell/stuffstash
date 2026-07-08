@@ -79,6 +79,11 @@ invalid enabled provider settings fail startup.
 `postgres` and `sqlite` require `STUFF_STASH_DATABASE_DSN`. SQLite will create
 the parent directory for file-backed database paths.
 
+SQLite is an API runtime mode, not the current Docker Compose self-hosting
+topology. The Compose stack uses the Postgres migration job and Postgres service
+unless a future SQLite-specific Compose file wires schema setup and a durable
+SQLite file mount explicitly.
+
 ## API: Workers And Pagination
 
 | Variable | Default | Purpose |
@@ -114,6 +119,16 @@ the parent directory for file-backed database paths.
 Set `STUFF_STASH_S3_SECURE=false` only for trusted local plain-HTTP storage,
 such as local Garage verification.
 
+When browser clients upload directly to S3-compatible storage, the public
+endpoint must be reachable from the browser and the bucket must allow CORS for
+the web origin. For local Garage this usually means:
+
+- `STUFF_STASH_S3_ENDPOINT=garage:3900` for API-to-Garage traffic.
+- `STUFF_STASH_S3_PUBLIC_ENDPOINT=localhost:3900` or
+  `<server-lan-ip>:3900` for browser-to-Garage traffic.
+- a bucket CORS rule that allows the web origin to use `GET` and `POST` and
+  exposes `ETag`.
+
 ## API: Realtime Voice Providers
 
 | Variable | Default | Purpose |
@@ -142,6 +157,10 @@ both are enabled.
 
 If active provider credentials exist, startup fails closed unless a valid
 provider credential sealing key is configured.
+
+Generate a key with `openssl rand -base64 32`. Keep the key stable for a given
+deployment. Rotating or losing it can make stored provider credentials
+unreadable.
 
 ## Web Runtime Config
 
