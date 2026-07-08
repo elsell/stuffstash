@@ -42,6 +42,23 @@ func TestGoogleGeminiLanguageInferenceRequestsJSONForFinalOnlyTurns(t *testing.T
 	}
 }
 
+func TestGoogleGeminiLanguageInferenceRejectsTrailingStructuredOutput(t *testing.T) {
+	t.Parallel()
+
+	valid := `{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}}`
+	if _, err := parseLanguageTurn(valid, nil, false); err != nil {
+		t.Fatalf("expected single structured final object to parse: %v", err)
+	}
+	for _, body := range []string{
+		`{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}} {"final":{"kind":"answer","spokenResponse":"again","displayResponse":"again"}}`,
+		`{"final":{"kind":"answer","spokenResponse":"Ready.","displayResponse":"Ready."}} extra text`,
+	} {
+		if _, err := parseLanguageTurn(body, nil, false); err == nil {
+			t.Fatalf("expected trailing provider output to be rejected: %s", body)
+		}
+	}
+}
+
 func TestGoogleGeminiLanguageInferenceRetriesRateLimitedFinalOnlyTurn(t *testing.T) {
 	t.Parallel()
 
