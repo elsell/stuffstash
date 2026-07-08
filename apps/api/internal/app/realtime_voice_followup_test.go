@@ -83,8 +83,8 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Old clarification."},
 			{Role: ports.AgentConversationRoleUser, Text: "Older two."},
 			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Older clarification."},
-			{Role: ports.AgentConversationRoleUser, Text: "Move my water bottle. bearer abc/def==", Kind: "apiKey: should-redact"},
-			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Where should I move it? providerSessionId: live-1"},
+			{Role: ports.AgentConversationRoleUser, Text: "Move my water bottle. bearer abc/def== https://provider.example.test/raw raw model response: {\"error\":\"provider internals\"}", Kind: "apiKey: should-redact"},
+			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Where should I move it? providerSessionId: live-1 endpoint URL wss://provider.example.test/session"},
 			{Role: ports.AgentConversationRole("tool"), Text: "ignored bad role", Kind: "clarification"},
 			{Role: ports.AgentConversationRoleUser, Text: strings.Repeat("garage ", 120)},
 		},
@@ -108,8 +108,8 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 	}{
 		{role: ports.AgentConversationRoleUser, text: "Older two."},
 		{role: ports.AgentConversationRoleAssistant, kind: string(ports.StructuredAgentResponseKindClarification), text: "Older clarification."},
-		{role: ports.AgentConversationRoleUser, kind: "[redacted-key][redacted]", text: "Move my water bottle. [redacted-bearer] [redacted]"},
-		{role: ports.AgentConversationRoleAssistant, kind: string(ports.StructuredAgentResponseKindClarification), text: "Where should I move it? [redacted-provider-session][redacted]"},
+		{role: ports.AgentConversationRoleUser, kind: "[redacted-key][redacted]", text: "Move my water bottle. [redacted-bearer] [redacted] [redacted-url] [redacted]"},
+		{role: ports.AgentConversationRoleAssistant, kind: string(ports.StructuredAgentResponseKindClarification), text: "Where should I move it? [redacted-provider-session][redacted] endpoint URL [redacted-url]"},
 	}
 	for index, expectedTurn := range expected {
 		if turns[index].Role != expectedTurn.role || turns[index].Kind != expectedTurn.kind || turns[index].Text != expectedTurn.text {
@@ -129,12 +129,12 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 		}
 		joined += string(turn.Role) + " " + turn.Kind + " " + turn.Text + "\n"
 	}
-	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1", "ignored bad role", "Old one", "Old clarification"} {
+	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1", "https://provider.example.test", "wss://provider.example.test", "raw model response", "provider internals", "ignored bad role", "Old one", "Old clarification"} {
 		if strings.Contains(joined, unsafe) {
 			t.Fatalf("unsafe or out-of-window conversation context reached provider: %q", joined)
 		}
 	}
-	for _, expected := range []string{"[redacted-bearer]", "[redacted-key]", "[redacted-provider-session]"} {
+	for _, expected := range []string{"[redacted-bearer]", "[redacted-key]", "[redacted-provider-session]", "[redacted-url]"} {
 		if !strings.Contains(joined, expected) {
 			t.Fatalf("expected redacted marker %q in provider context, got %q", expected, joined)
 		}
@@ -143,12 +143,12 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 		t.Fatalf("expected language provider to receive effective transcript")
 	}
 	effectiveTranscript := language.seenTranscripts[0]
-	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1"} {
+	for _, unsafe := range []string{"abc/def", "should-redact", "providerSessionId", "live-1", "https://provider.example.test", "wss://provider.example.test", "raw model response", "provider internals"} {
 		if strings.Contains(effectiveTranscript, unsafe) {
 			t.Fatalf("unsafe conversation text reached effective transcript: %q", effectiveTranscript)
 		}
 	}
-	if !strings.Contains(effectiveTranscript, "Move my water bottle. [redacted-bearer] [redacted] Follow-up answer: Kitchen.") {
+	if !strings.Contains(effectiveTranscript, "Move my water bottle. [redacted-bearer] [redacted] [redacted-url] [redacted] Follow-up answer: Kitchen.") {
 		t.Fatalf("expected safe prior intent in effective transcript, got %q", effectiveTranscript)
 	}
 }
