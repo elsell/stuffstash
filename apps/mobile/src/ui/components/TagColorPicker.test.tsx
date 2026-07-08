@@ -54,6 +54,7 @@ describe('TagColorPicker', () => {
 
     const clear = findFirstByProp(picker, 'accessibilityLabel', 'No tag color');
     expect(clear?.props?.accessibilityState).toMatchObject({ selected: false });
+    expect(clear?.props?.style).not.toContainEqual(expect.objectContaining({ borderWidth: 2 }));
     expect(collectText(picker)).toContain('Enter a #RRGGBB color');
   });
 });

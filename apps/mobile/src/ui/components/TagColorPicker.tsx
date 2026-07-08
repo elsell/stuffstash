@@ -30,7 +30,7 @@ export function TagColorPicker({ value, disabled = false, onChange }: TagColorPi
           accessibilityState={{ disabled, selected: !hasTypedColor }}
           disabled={disabled}
           onPress={() => onChange('')}
-          style={[styles.clearSwatch, normalizedValue === undefined ? styles.selectedSwatch : null, disabled ? styles.disabled : null]}
+          style={[styles.clearSwatch, !hasTypedColor ? styles.selectedSwatch : null, disabled ? styles.disabled : null]}
         >
           <X color={colors.textMuted} size={15} strokeWidth={2.6} />
         </Pressable>
