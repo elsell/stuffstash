@@ -187,6 +187,20 @@ func TestAssetSearchFiltersByAuthorization(t *testing.T) {
 	}
 }
 
+func TestAssetSearchDoesNotMatchArchivedTags(t *testing.T) {
+	fixture := newAssetSearchFixture(t)
+
+	archiveTag := performRequest(fixture.server, http.MethodDelete, "/tenants/"+fixture.tenantID+"/inventories/"+fixture.toolsInventoryID+"/tags/"+fixture.workshopTagID, "Bearer dev:owner", nil)
+	if archiveTag.Code != http.StatusOK {
+		t.Fatalf("expected archived tag status %d, got %d with body %s", http.StatusOK, archiveTag.Code, archiveTag.Body.String())
+	}
+
+	archivedTagSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Workshop", "exact", "", "")
+	if len(archivedTagSearch.Data) != 0 {
+		t.Fatalf("expected archived tag not to contribute to search, got %+v", archivedTagSearch.Data)
+	}
+}
+
 func TestAssetSearchFiltersLifecycle(t *testing.T) {
 	fixture := newAssetSearchFixture(t)
 
@@ -212,6 +226,7 @@ type assetSearchFixture struct {
 	otherTenantID       string
 	medicineTypeID      string
 	drillAssetID        string
+	workshopTagID       string
 }
 
 func newAssetSearchFixture(t *testing.T) assetSearchFixture {
@@ -246,6 +261,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"drill-checkout", "op-drill-checkout", "audit-drill-checkout",
 			"viewer-grant-event", "audit-viewer-grant", "viewer-claim",
 			"archive-drill-audit",
+			"audit-archive-workshop-tag",
 		},
 	}))
 
@@ -365,6 +381,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 		otherTenantID:       otherTenantID,
 		medicineTypeID:      medicineType.Data.ID,
 		drillAssetID:        drill.Data.ID,
+		workshopTagID:       workshopTag.Data.ID,
 	}
 }
 
