@@ -200,7 +200,7 @@ export function VoiceInteractionStateProvider({
         }
       },
       approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts) => {
-        setRealtime(markReviewDecisionPending(realtime, 'Approving change'));
+        setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
         try {
           await realtimeController.approveActionPlan(planId, photoDrafts);
         } catch (error) {
@@ -209,7 +209,7 @@ export function VoiceInteractionStateProvider({
         }
       },
       cancelRealtimeActionPlan: async (planId: string) => {
-        setRealtime(markReviewDecisionPending(realtime, 'Cancelling change'));
+        setRealtime((current) => markReviewDecisionPending(current, 'Cancelling change'));
         try {
           await realtimeController.cancelActionPlan(planId);
         } catch (error) {
@@ -218,7 +218,7 @@ export function VoiceInteractionStateProvider({
         }
       },
       retryRealtimeActionPlanPhotos: async (planId: string) => {
-        setRealtime(markPhotoRetryInProgress(realtime));
+        setRealtime((current) => markPhotoRetryInProgress(current));
         try {
           const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
           setRealtime((current) => markPhotoRetryResult(current, photoAttachmentStatus));
@@ -251,7 +251,7 @@ export function VoiceInteractionStateProvider({
   );
 }
 
-function markReviewDecisionPending(state: VoiceRealtimeState | null, progressLabel: string): VoiceRealtimeState | null {
+export function markReviewDecisionPending(state: VoiceRealtimeState | null, progressLabel: string): VoiceRealtimeState | null {
   if (!state?.actionPlan || state.actionPlan.status !== 'proposed' || state.reviewDecisionPending) {
     return state;
   }

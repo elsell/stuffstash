@@ -3,6 +3,7 @@ import { VoiceProviderReadinessError } from '../../application/providerProfiles/
 import {
   applyRecordingLevelToRealtime,
   buildFailedVoiceRealtimeState,
+  markReviewDecisionPending,
   markPhotoRetryFailure,
   markPhotoRetryInProgress,
   markPhotoRetryResult,
@@ -106,6 +107,43 @@ describe('buildFailedVoiceRealtimeState', () => {
       debugEvents: []
     };
     expect(refreshClarificationFollowUpAvailability(answerState, false)).toBe(answerState);
+  });
+
+  it('marks only active proposed review plans as decision pending', () => {
+    expect(markReviewDecisionPending({
+      status: 'review',
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Review needed',
+      debugEvents: [],
+      actionPlan: {
+        planId: 'plan-1',
+        status: 'proposed',
+        confirmationSummary: 'Create item water bottle?',
+        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        risks: []
+      }
+    }, 'Approving change')).toMatchObject({
+      status: 'review',
+      progressLabel: 'Approving change',
+      reviewDecisionPending: true
+    });
+
+    const executed = {
+      status: 'completed' as const,
+      tenantName: 'Home tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Change applied',
+      debugEvents: [],
+      actionPlan: {
+        planId: 'plan-1',
+        status: 'executed' as const,
+        confirmationSummary: 'Create item water bottle?',
+        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        risks: []
+      }
+    };
+    expect(markReviewDecisionPending(executed, 'Approving change')).toBe(executed);
   });
 
   it('marks voice photo retry progress without changing the session outcome', () => {
