@@ -148,6 +148,34 @@ describe('SearchPanel', () => {
     expect(document.body.querySelector<HTMLImageElement>('.asset-list img')).toBeNull();
   });
 
+  it('shows assigned tag chips on search result rows without overwhelming the row', () => {
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: {
+          ...asset('tape', 'Tape measure'),
+          tags: [
+            { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' },
+            { id: 'tag-camping', key: 'camping', displayName: 'Camping', color: '#2E7D32' },
+            { id: 'tag-kids', key: 'kids', displayName: 'Kids', color: '#7C3AED' }
+          ]
+        },
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'tag_display_name', value: 'Tools' }]
+      }
+    ];
+
+    mountSearchPanel({ query: 'tools', results, submitted: true });
+
+    const tagList = document.body.querySelector<HTMLElement>('.asset-list [aria-label="Asset tags"]');
+    expect(tagList).not.toBeNull();
+    expect(tagList?.textContent).toContain('Tools');
+    expect(tagList?.textContent).toContain('Camping');
+    expect(tagList?.textContent).not.toContain('Kids');
+    expect(tagList?.querySelector('.tag-chip-overflow')?.textContent).toBe('+1');
+    expect(document.body.textContent).toContain('Tag');
+  });
+
   it('supports keyboard traversal for autocomplete suggestions', async () => {
     const { openedAssetIds } = mountSearchPanel();
     const input = searchInput();
