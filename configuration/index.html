@@ -283,6 +283,10 @@ invalid enabled provider settings fail startup.</p>
 <table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_REPOSITORY_MODE</code></td><td><code dir="auto">memory</code></td><td>Repository adapter. Use <code dir="auto">memory</code>, <code dir="auto">postgres</code>, or <code dir="auto">sqlite</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_DATABASE_DSN</code></td><td>empty</td><td>Postgres DSN or SQLite file path/DSN when using durable repository modes.</td></tr></tbody></table>
 <p><code dir="auto">postgres</code> and <code dir="auto">sqlite</code> require <code dir="auto">STUFF_STASH_DATABASE_DSN</code>. SQLite will create
 the parent directory for file-backed database paths.</p>
+<p>SQLite is an API runtime mode, not the current Docker Compose self-hosting
+topology. The Compose stack uses the Postgres migration job and Postgres service
+unless a future SQLite-specific Compose file wires schema setup and a durable
+SQLite file mount explicitly.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="api-workers-and-pagination">API: Workers And Pagination</h2><a class="sl-anchor-link" href="#api-workers-and-pagination"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Workers And Pagination”</span></a></div>
 
 
@@ -419,6 +423,16 @@ the parent directory for file-backed database paths.</p>
 <table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_BLOB_STORAGE_MODE</code></td><td><code dir="auto">filesystem</code></td><td>Blob storage adapter. Use <code dir="auto">filesystem</code> or <code dir="auto">s3</code>.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_STORAGE_PATH</code></td><td><code dir="auto">.stuffstash/blobs</code></td><td>Local filesystem blob path.</td></tr><tr><td><code dir="auto">STUFF_STASH_MAX_ATTACHMENT_BYTES</code></td><td><code dir="auto">26214400</code></td><td>Maximum attachment size in bytes.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_ENDPOINT</code></td><td>empty</td><td>S3-compatible endpoint host and port, without scheme.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_PUBLIC_ENDPOINT</code></td><td>empty</td><td>Browser-reachable S3-compatible endpoint for direct uploads. Defaults to <code dir="auto">STUFF_STASH_S3_ENDPOINT</code> when empty.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_ACCESS_KEY</code></td><td>empty</td><td>S3 access key.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_SECRET_KEY</code></td><td>empty</td><td>S3 secret key.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_BUCKET</code></td><td>empty</td><td>S3 bucket name.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_REGION</code></td><td><code dir="auto">garage</code></td><td>S3 region value.</td></tr><tr><td><code dir="auto">STUFF_STASH_S3_SECURE</code></td><td><code dir="auto">true</code></td><td>Uses HTTPS for S3-compatible storage when true.</td></tr></tbody></table>
 <p>Set <code dir="auto">STUFF_STASH_S3_SECURE=false</code> only for trusted local plain-HTTP storage,
 such as local Garage verification.</p>
+<p>When browser clients upload directly to S3-compatible storage, the public
+endpoint must be reachable from the browser and the bucket must allow CORS for
+the web origin. For local Garage this usually means:</p>
+<ul>
+<li><code dir="auto">STUFF_STASH_S3_ENDPOINT=garage:3900</code> for API-to-Garage traffic.</li>
+<li><code dir="auto">STUFF_STASH_S3_PUBLIC_ENDPOINT=localhost:3900</code> or
+<code dir="auto">&#x3C;server-lan-ip>:3900</code> for browser-to-Garage traffic.</li>
+<li>a bucket CORS rule that allows the web origin to use <code dir="auto">GET</code> and <code dir="auto">POST</code> and
+exposes <code dir="auto">ETag</code>.</li>
+</ul>
 <div class="sl-heading-wrapper level-h2"><h2 id="api-realtime-voice-providers">API: Realtime Voice Providers</h2><a class="sl-anchor-link" href="#api-realtime-voice-providers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Realtime Voice Providers”</span></a></div>
 
 
@@ -508,6 +522,9 @@ both are enabled.</p>
 <table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID</code></td><td>empty</td><td>Identifier stored with sealed tenant provider credentials.</td></tr><tr><td><code dir="auto">STUFF_STASH_PROVIDER_CREDENTIAL_KEY</code></td><td>empty</td><td>Base64-encoded 32-byte AES-GCM key for sealing provider credentials and temporary import source material.</td></tr></tbody></table>
 <p>If active provider credentials exist, startup fails closed unless a valid
 provider credential sealing key is configured.</p>
+<p>Generate a key with <code dir="auto">openssl rand -base64 32</code>. Keep the key stable for a given
+deployment. Rotating or losing it can make stored provider credentials
+unreadable.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="web-runtime-config">Web Runtime Config</h2><a class="sl-anchor-link" href="#web-runtime-config"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Web Runtime Config”</span></a></div>
 <p>The web app reads <code dir="auto">/config.json</code> at runtime. It is not configured through
 <code dir="auto">STUFF_STASH_*</code> environment variables inside the browser bundle.</p>
