@@ -438,7 +438,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async approveActionPlan(planId: string, photoDrafts: VoiceActionPlanPhotoDrafts = {}): Promise<void> {
-    const safePlanId = safeBoundedText(planId, 80);
+    const safePlanId = usableActionPlanId(planId);
     const boundedDrafts = boundedPhotoDrafts(photoDrafts);
     validatePhotoApprovalMetadata(boundedDrafts);
     if (Object.keys(boundedDrafts).length > 0) {
@@ -453,7 +453,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async cancelActionPlan(planId: string): Promise<void> {
-    await this.transport.cancelActionPlan(safeBoundedText(planId, 80));
+    await this.transport.cancelActionPlan(usableActionPlanId(planId));
   }
 
   async retryPhotoAttachments(planId: string): Promise<VoicePhotoAttachmentStatus> {
@@ -946,6 +946,14 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedActionPlanText(risk, 180)).filter(Boolean)
   };
+}
+
+function usableActionPlanId(planId: string): string {
+  const safePlanId = safeBoundedText(planId, 80);
+  if (!safePlanId) {
+    throw new Error('Action plan review is no longer available.');
+  }
+  return safePlanId;
 }
 
 function boundedPhotoDrafts(drafts: VoiceActionPlanPhotoDrafts): VoiceActionPlanPhotoDrafts {

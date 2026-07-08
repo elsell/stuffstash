@@ -578,6 +578,22 @@ describe('RealtimeVoiceSessionController', () => {
     expect(observed.at(-1)).toBe('completed:Change applied:executed');
   });
 
+  it('rejects empty action plan review decisions before they reach the transport', async () => {
+    const transport = new ReviewDecisionTransport();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await expect(controller.approveActionPlan('   ')).rejects.toThrow('Action plan review is no longer available.');
+    await expect(controller.cancelActionPlan('\n')).rejects.toThrow('Action plan review is no longer available.');
+
+    expect(transport.approvedPlanIds).toEqual([]);
+    expect(transport.cancelledPlanIds).toEqual([]);
+  });
+
   it('attaches staged photos to executed command result assets after approval', async () => {
     const transport = new ReviewDecisionTransport({
       commandResults: [{
