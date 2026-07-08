@@ -295,6 +295,10 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "office" {
 		t.Fatalf("expected proactive office search, got ok=%v call=%+v", ok, call)
 	}
+	call, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel("I got a phone charger and put it in the office.", 0, nil, "read-casual-create")
+	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "office" {
+		t.Fatalf("expected proactive casual-create destination search, got ok=%v call=%+v", ok, call)
+	}
 	if query := realtimeVoiceSpecificLookupObjectQuery("Where is it? Follow-up answer: Water bottle."); query != "water bottle" {
 		t.Fatalf("expected follow-up read query to use concrete answer, got %q", query)
 	}

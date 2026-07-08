@@ -30,7 +30,46 @@ func realtimeVoiceLooksLikeSimpleCreateOrAddRequest(transcript string) bool {
 		return false
 	}
 	text := normalizedRealtimeVoiceVerbText(transcript)
-	return strings.Contains(text, " add ") || strings.Contains(text, " create ")
+	return strings.Contains(text, " add ") ||
+		strings.Contains(text, " create ") ||
+		realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(text)
+}
+
+func realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(normalizedText string) bool {
+	acquisitionIndex := -1
+	for _, marker := range []string{
+		" i got ",
+		" we got ",
+		" i bought ",
+		" we bought ",
+		" i picked up ",
+		" we picked up ",
+	} {
+		if index := strings.Index(normalizedText, marker); index >= 0 && (acquisitionIndex == -1 || index < acquisitionIndex) {
+			acquisitionIndex = index
+		}
+	}
+	if acquisitionIndex == -1 {
+		return false
+	}
+	placementIndex := -1
+	for _, marker := range []string{
+		" put it in ",
+		" put it into ",
+		" put it inside ",
+		" put it on ",
+		" placed it in ",
+		" placed it into ",
+		" stored it in ",
+		" stored it inside ",
+		" stashed it in ",
+		" stashed it inside ",
+	} {
+		if index := strings.Index(normalizedText, marker); index >= 0 && index > acquisitionIndex && (placementIndex == -1 || index < placementIndex) {
+			placementIndex = index
+		}
+	}
+	return placementIndex != -1
 }
 
 func realtimeVoiceContentsQuestionTargetQuery(transcript string) string {
