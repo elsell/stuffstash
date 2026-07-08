@@ -847,9 +847,9 @@ export class StuffStashInventoryRepository
       for (const [key, value] of Object.entries(upload.formFields)) {
         body.append(key, value);
       }
-      body.append('file', file);
+      body.append('file', await filePart(file), file.name);
       init.body = body;
-      init.headers = upload.headers;
+      init.headers = withoutContentType(upload.headers);
     } else {
       init.body = file;
     }
@@ -857,10 +857,10 @@ export class StuffStashInventoryRepository
     try {
       response = await this.uploadFetch(upload.url, init);
     } catch {
-      throw new DirectUploadTargetUnavailableError();
+      throw new DirectUploadFailedError();
     }
     if (!response.ok) {
-      throw new DirectUploadTargetUnavailableError();
+      throw new DirectUploadFailedError();
     }
   }
 
@@ -918,8 +918,24 @@ class DirectUploadTargetUnavailableError extends Error {
   }
 }
 
+class DirectUploadFailedError extends Error {
+  safeForUser = true as const;
+
+  constructor() {
+    super('Direct upload to media storage failed.');
+  }
+}
+
 function isDirectUploadTargetUnavailable(error: unknown): boolean {
   return error instanceof DirectUploadTargetUnavailableError;
+}
+
+function withoutContentType(headers: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(headers).filter(([key]) => key.toLowerCase() !== 'content-type'));
+}
+
+async function filePart(file: File): Promise<File> {
+  return file;
 }
 
 function isAbortError(error: unknown): boolean {

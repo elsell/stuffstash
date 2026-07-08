@@ -42,13 +42,7 @@ services:
         condition: service_started
 
   migration:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:?set GO_BUILDER_IMAGE in .env}
-        RUNTIME_IMAGE: ${RUNTIME_IMAGE:?set RUNTIME_IMAGE in .env}
-    image: ${STUFF_STASH_API_IMAGE:-stuff-stash:local}
+    image: ${STUFF_STASH_API_IMAGE:?set STUFF_STASH_API_IMAGE in .env}
     command:
       - migrate
       - up
@@ -61,13 +55,7 @@ services:
         condition: service_healthy
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:?set GO_BUILDER_IMAGE in .env}
-        RUNTIME_IMAGE: ${RUNTIME_IMAGE:?set RUNTIME_IMAGE in .env}
-    image: ${STUFF_STASH_API_IMAGE:-stuff-stash:local}
+    image: ${STUFF_STASH_API_IMAGE:?set STUFF_STASH_API_IMAGE in .env}
     env_file:
       - .env
     environment:
@@ -109,14 +97,7 @@ services:
         condition: service_healthy
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      args:
-        NODE_BUILDER_IMAGE: ${NODE_BUILDER_IMAGE:?set NODE_BUILDER_IMAGE in .env}
-        WEB_RUNTIME_IMAGE: ${WEB_RUNTIME_IMAGE:?set WEB_RUNTIME_IMAGE in .env}
-        PNPM_VERSION: ${PNPM_VERSION:?set PNPM_VERSION in .env}
-    image: ${STUFF_STASH_WEB_IMAGE:-stuff-stash-web:local}
+    image: ${STUFF_STASH_WEB_IMAGE:?set STUFF_STASH_WEB_IMAGE in .env}
     env_file:
       - .env
     environment:
@@ -159,6 +140,7 @@ services:
   postgres:
     image: ${POSTGRES_IMAGE:?set POSTGRES_IMAGE in .env}
     environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
@@ -202,6 +184,7 @@ services:
   spicedb-postgres:
     image: ${POSTGRES_IMAGE:?set POSTGRES_IMAGE in .env}
     environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_DB: ${SPICEDB_POSTGRES_DB:?set SPICEDB_POSTGRES_DB in .env}
       POSTGRES_USER: ${SPICEDB_POSTGRES_USER:?set SPICEDB_POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${SPICEDB_POSTGRES_PASSWORD:?set SPICEDB_POSTGRES_PASSWORD in .env}

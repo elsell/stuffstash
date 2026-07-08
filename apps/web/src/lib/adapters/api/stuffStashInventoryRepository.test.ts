@@ -393,6 +393,50 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     expect(requests[3]?.headers.get('Authorization')).toBe('Bearer id-token');
   });
 
+  it('sends presigned POST form fields to browser direct upload targets', async () => {
+    const { fetch, requests } = fakeFetch({
+      directUploadMethod: 'POST',
+      directUploadHeaders: { 'Content-Type': 'image/jpeg', 'X-Test-Header': 'one' },
+      directUploadFormFields: {
+        key: 'tenant/inventory/asset/attachment',
+        policy: 'encoded-policy',
+        'x-amz-signature': 'signature'
+      }
+    });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
+
+    await expect(
+      repository.uploadAssetPhoto('tenant-home', 'inventory-household', 'asset-passport', {
+        id: 'photo-one',
+        name: 'photo.jpg',
+        sizeBytes: file.size,
+        contentType: 'image/jpeg',
+        previewUrl: 'blob:photo-one',
+        file
+      })
+    ).resolves.toMatchObject({ id: 'attachment-one' });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
+      'POST https://uploads.local/object-one',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads/upload-one/complete',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small'
+    ]);
+    expect(requests[1]?.headers.get('Content-Type')).toContain('multipart/form-data');
+    expect(requests[1]?.headers.get('X-Test-Header')).toBe('one');
+    const uploadForm = (requests[1] as (Request & { capturedFormData?: FormData }) | undefined)?.capturedFormData;
+    expect(uploadForm).toBeDefined();
+    expect(Array.from(uploadForm?.keys() ?? [])).toEqual(['key', 'policy', 'x-amz-signature', 'file']);
+    expect(uploadForm?.get('key')).toBe('tenant/inventory/asset/attachment');
+    expect(uploadForm?.get('policy')).toBe('encoded-policy');
+    expect(uploadForm?.get('x-amz-signature')).toBe('signature');
+    const uploadedFile = uploadForm?.get('file');
+    expect(uploadedFile).toBeInstanceOf(File);
+    expect((uploadedFile as File).name).toBe('photo.jpg');
+    expect((uploadedFile as File).type).toBe('image/jpeg');
+  });
+
   it('falls back to the JSON attachment upload route when direct targets are not browser-fetchable', async () => {
     const { fetch, requests } = fakeFetch({ directUploadUrl: 'stuffstash-local://direct-uploads/upload-one' });
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
@@ -420,7 +464,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     });
   });
 
-  it('falls back to the JSON attachment upload route when a browser direct upload target rejects the upload', async () => {
+  it('surfaces browser direct upload target rejection instead of hiding Garage failures behind fallback', async () => {
     const { fetch, requests } = fakeFetch({ directUploadRejected: true });
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
     const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
@@ -434,21 +478,14 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
         previewUrl: 'blob:photo-one',
         file
       })
-    ).resolves.toMatchObject({ id: 'attachment-one', fileName: 'photo.jpg' });
+    ).rejects.toThrow('Direct upload to media storage failed.');
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
-      'PUT https://uploads.local/object-one',
-      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small'
+      'PUT https://uploads.local/object-one'
     ]);
-    expect(await requests[2]?.json()).toEqual({
-      fileName: 'photo.jpg',
-      contentType: 'image/jpeg',
-      contentBase64: 'ZmFrZSBpbWFnZQ=='
-    });
   });
 
-  it('falls back to the JSON attachment upload route when browser direct upload fetch fails', async () => {
+  it('surfaces browser direct upload fetch failure instead of hiding Garage failures behind fallback', async () => {
     const { fetch, requests } = fakeFetch({ directUploadThrows: true });
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
     const file = new File(['fake image'], 'photo.jpg', { type: 'image/jpeg' });
@@ -462,12 +499,10 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
         previewUrl: 'blob:photo-one',
         file
       })
-    ).resolves.toMatchObject({ id: 'attachment-one', fileName: 'photo.jpg' });
+    ).rejects.toThrow('Direct upload to media storage failed.');
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
-      'PUT https://uploads.local/object-one',
-      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small'
+      'PUT https://uploads.local/object-one'
     ]);
   });
 

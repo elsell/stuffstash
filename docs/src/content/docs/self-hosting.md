@@ -27,7 +27,7 @@ Stash.
 Start the stack:
 
 ```sh
-docker compose -f compose.selfhost.yaml up --build
+docker compose -f compose.selfhost.yaml up
 ```
 
 Open [https://stuffstash.localhost:8081](https://stuffstash.localhost:8081).
@@ -44,6 +44,13 @@ Password: password
 ```
 
 Then follow [First Inventory](../first-inventory/).
+
+To build API and web images from your checkout instead of using published
+release images, use the contributor override:
+
+```sh
+docker compose -f compose.selfhost.yaml -f compose.selfhost.build.yaml up --build
+```
 
 ## Hostnames And Ports
 
@@ -85,7 +92,7 @@ Do not run with the checked-in defaults outside a first local trial. Replace:
 
 | Setting | Why it matters |
 | --- | --- |
-| Dex users and static clients | The committed Dex config has first-run accounts only. |
+| Dex users and static clients | The committed Dex config has first-run accounts only. See [Dex Users And Clients](../dex-users/). |
 | `POSTGRES_PASSWORD` | Protects inventory metadata. |
 | `SPICEDB_POSTGRES_PASSWORD` | Protects authorization state. |
 | `STUFF_STASH_SPICEDB_PRESHARED_KEY` | Protects the SpiceDB API. |
@@ -101,22 +108,9 @@ openssl rand -base64 32
 
 Store secrets in `.env` or your secret manager. Do not commit household secrets.
 
-To customize Dex users, copy the bundled config to a private path and point
-`.env` at it:
-
-```sh
-mkdir -p .stuffstash/selfhost/dex
-cp deploy/selfhost/dex/config.yaml .stuffstash/selfhost/dex/config.yaml
-```
-
-Set:
-
-```text
-DEX_CONFIG_PATH=.stuffstash/selfhost/dex/config.yaml
-```
-
-Then edit the copied Dex config. If you change the hostname, update the Dex
-`issuer`, `allowedOrigins`, and redirect URIs to match `.env`.
+Follow [Dex Users And Clients](../dex-users/) before you rely on the deployment.
+The bundled Compose topology uses Dex static users from a private config file;
+it does not include a Dex user-management UI.
 
 ## Verify Persistence
 
@@ -125,7 +119,7 @@ volumes:
 
 ```sh
 docker compose -f compose.selfhost.yaml down
-docker compose -f compose.selfhost.yaml up --build
+docker compose -f compose.selfhost.yaml up
 ```
 
 Sign in again. Your inventory and uploaded media should still be available.
@@ -140,6 +134,12 @@ docker compose -f compose.selfhost.yaml down -v
 
 - Back up `selfhost-postgres-data`, `selfhost-spicedb-postgres-data`,
   `selfhost-garage-meta`, and `selfhost-garage-data`.
+- `selfhost-postgres-data` contains Stuff Stash metadata.
+- `selfhost-spicedb-postgres-data` contains authorization relationships.
+- `selfhost-garage-meta` and `selfhost-garage-data` contain uploaded media
+  metadata and object bytes.
+- `selfhost-caddy-data` contains the local Caddy certificate authority and
+  certificates.
 - Keep `.env` and your private Dex config out of Git.
 - Use URL-safe database passwords, or percent-encode reserved characters in
   connection strings.
