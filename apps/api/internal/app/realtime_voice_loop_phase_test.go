@@ -605,6 +605,40 @@ func TestRealtimeVoiceContentsListPrefersNamedContainerOverOverlappingLocation(t
 	}
 }
 
+func TestRealtimeVoiceProgressEventsUseSafeBoundedVocabulary(t *testing.T) {
+	t.Parallel()
+
+	session := RealtimeVoiceSession{ID: "voice-session-id"}
+	events := []RealtimeVoiceEvent{}
+
+	if err := emitRealtimeVoiceProgress(session, "thinking", "Raw Transcript: passport is in the bedroom drawer. bearer abc/def==", func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	}); err != nil {
+		t.Fatalf("emit progress: %v", err)
+	}
+
+	if len(events) != 1 {
+		t.Fatalf("expected one progress event, got %+v", events)
+	}
+	progress := events[0]
+	if progress.Type != RealtimeVoiceEventAgentProgress || progress.Status != realtimeVoiceProgressRecovering {
+		t.Fatalf("expected unknown status to fall back to recovering, got %+v", progress)
+	}
+	if progress.Message != "Working safely." {
+		t.Fatalf("expected raw-debug progress marker to fall back to generic copy, got %q", progress.Message)
+	}
+	unsafeTerms := []string{"Raw Transcript", "passport", "bedroom drawer", "abc/def"}
+	for _, unsafe := range unsafeTerms {
+		if strings.Contains(progress.Message, unsafe) {
+			t.Fatalf("progress message leaked unsafe detail %q in %q", unsafe, progress.Message)
+		}
+	}
+	if strings.Contains(strings.ToLower(progress.Message), "raw transcript") {
+		t.Fatalf("progress message leaked unsafe detail: %q", progress.Message)
+	}
+}
+
 func TestRealtimeVoiceReadsDestinationBeforePlanningCreateInNamedParent(t *testing.T) {
 	t.Parallel()
 

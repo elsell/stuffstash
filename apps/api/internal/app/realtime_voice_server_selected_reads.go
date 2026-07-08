@@ -320,5 +320,31 @@ func realtimeVoiceToolCompletionStatus(result ports.AgentToolResult) string {
 }
 
 func emitRealtimeVoiceProgress(session RealtimeVoiceSession, status string, message string, emit RealtimeVoiceEventSink) error {
-	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentProgress, SessionID: session.ID, Status: status, Message: message})
+	safeMessage := safeRealtimeVoiceProgressMessage(message)
+	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentProgress, SessionID: session.ID, Status: safeRealtimeVoiceProgressStatus(status), Message: safeMessage})
+}
+
+func safeRealtimeVoiceProgressMessage(message string) string {
+	if realtimeVoiceDiagnosticUnsafePhrasePattern.MatchString(message) {
+		return "Working safely."
+	}
+	safeMessage := safeRealtimeVoiceDiagnosticText(message, 160)
+	if safeMessage == "" {
+		return "Working safely."
+	}
+	return safeMessage
+}
+
+func safeRealtimeVoiceProgressStatus(status string) string {
+	switch status {
+	case realtimeVoiceProgressUnderstanding,
+		realtimeVoiceProgressExploring,
+		realtimeVoiceProgressPlanning,
+		realtimeVoiceProgressReviewing,
+		realtimeVoiceProgressAnswering,
+		realtimeVoiceProgressRecovering:
+		return status
+	default:
+		return realtimeVoiceProgressRecovering
+	}
 }

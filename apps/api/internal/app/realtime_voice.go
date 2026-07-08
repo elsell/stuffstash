@@ -579,6 +579,7 @@ func safeRealtimeVoiceDiagnosticText(value string, maxLength int) string {
 func redactRealtimeVoiceDiagnosticString(value string) string {
 	value = realtimeVoiceDiagnosticBearerPattern.ReplaceAllString(value, "[redacted-bearer] [redacted]")
 	value = realtimeVoiceDiagnosticAssignmentPattern.ReplaceAllString(value, "$1[redacted]")
+	value = realtimeVoiceDiagnosticUnsafePhrasePattern.ReplaceAllString(value, "[redacted]")
 	replacer := strings.NewReplacer(
 		"apiKey", "[redacted-key]",
 		"api_key", "[redacted-key]",
@@ -594,6 +595,7 @@ func redactRealtimeVoiceDiagnosticString(value string) string {
 
 var realtimeVoiceDiagnosticAssignmentPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+`)
 var realtimeVoiceDiagnosticBearerPattern = regexp.MustCompile(`(?i)\b(bearer)\s+[a-z0-9._~+/=-]+`)
+var realtimeVoiceDiagnosticUnsafePhrasePattern = regexp.MustCompile(`(?i)\b(raw[-_ ]?(prompt|query|transcript)|stack[-_ ]?trace|provider[-_ ]+session[-_ ]+id)\b`)
 
 func redactRealtimeVoiceDiagnosticValue(value any) any {
 	switch typed := value.(type) {
