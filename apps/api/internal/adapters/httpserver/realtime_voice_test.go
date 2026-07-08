@@ -13,17 +13,22 @@ import (
 
 	"nhooyr.io/websocket"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *testing.T) {
 	t.Parallel()
 
-	application := newSeededTestAppWithVoice(t, seededState{
+	store := memory.NewStore()
+	authorizer := memory.NewAuthorizer()
+	application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
 		ids:         []string{"garage-id", "tools-id", "voice-session-id", "tool-call-id", "response-id"},
-	}, fakeSpeechToText{transcript: "Where are my tools?"}, scriptedLanguageModel{}, fakeTextToSpeech{
+	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Where are my tools?"}, scriptedLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio-1"), []byte("spoken-audio-2")},
 	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Garage", "")
@@ -114,6 +119,13 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 	}
 	if speechChunks != 2 {
 		t.Fatalf("expected two streamed speech chunks, got %d", speechChunks)
+	}
+	record, found, err := store.RealtimeSessionByID(ctx, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home"), sessionID)
+	if err != nil || !found {
+		t.Fatalf("load realtime session record: found=%v err=%v", found, err)
+	}
+	if record.State != ports.RealtimeSessionStateCompleted || record.EndedAt.IsZero() || record.SafeFailureCode != "" {
+		t.Fatalf("expected direct answer websocket session to be marked completed, got %+v", record)
 	}
 }
 
