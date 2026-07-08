@@ -242,6 +242,22 @@ func (f *fakeAssetRepository) ReturnAsset(_ context.Context, expectedCurrent ass
 	return nil
 }
 
+func (f *fakeAssetRepository) UpdateAssetCheckoutReturnDetails(_ context.Context, expectedCurrent asset.Checkout, updated asset.Checkout, auditRecord audit.Record) error {
+	if f.checkouts == nil {
+		return ports.ErrForbidden
+	}
+	current, ok := f.checkouts[expectedCurrent.ID]
+	if !ok || !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+		return ports.ErrConflict
+	}
+	if current.State != asset.CheckoutStateReturned || updated.ID != current.ID || updated.State != asset.CheckoutStateReturned {
+		return ports.ErrForbidden
+	}
+	f.checkouts[updated.ID] = updated
+	f.auditRecords = append(f.auditRecords, auditRecord)
+	return nil
+}
+
 func (f *fakeAssetRepository) CreateAssetWithParentPromotion(_ context.Context, promotedParent asset.Asset, parentAuditRecord audit.Record, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	if f.items == nil {
 		f.items = map[asset.ID]asset.Asset{}

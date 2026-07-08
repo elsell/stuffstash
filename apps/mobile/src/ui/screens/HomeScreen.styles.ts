@@ -166,6 +166,87 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22
   },
+  checkedOutEmpty: {
+    paddingBottom: spacing.md
+  },
+  returnButton: {
+    alignItems: 'center',
+    backgroundColor: colors.action,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    margin: spacing.sm,
+    minHeight: 40
+  },
+  returnButtonText: {
+    color: colors.surface,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  returnSheet: {
+    backgroundColor: colors.background,
+    flex: 1,
+    gap: spacing.md,
+    padding: spacing.lg
+  },
+  returnSheetHeader: {
+    gap: spacing.xs
+  },
+  returnSheetTitle: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  returnSheetSubtitle: {
+    color: colors.textMuted,
+    fontSize: 15,
+    lineHeight: 22
+  },
+  returnDetailsInput: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    color: colors.text,
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 22,
+    minHeight: 160,
+    padding: spacing.md
+  },
+  returnSheetActions: {
+    flexDirection: 'row',
+    gap: spacing.sm
+  },
+  returnSheetButton: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 52,
+    paddingHorizontal: spacing.md
+  },
+  returnSheetCancelButton: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1
+  },
+  returnSheetSaveButton: {
+    backgroundColor: colors.action
+  },
+  returnSheetCancelText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  returnSheetSaveText: {
+    color: colors.surface,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
   locationGrid: {
     gap: spacing.sm,
     marginBottom: spacing.lg

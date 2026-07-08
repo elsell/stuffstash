@@ -15,6 +15,7 @@ import { AssetCheckoutCommand } from './AssetCheckoutCommand';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
   readonly checkoutCalls: Array<{ readonly action: string; readonly assetId: string; readonly details?: string }> = [];
+  readonly undoCalls: string[] = [];
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
@@ -52,12 +53,23 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   async deleteAsset(): Promise<void> {}
 
-  async checkoutAsset(assetIdValue: AssetSummary['id'], input: AssetCheckoutInput = {}): Promise<void> {
+  async checkoutAsset(assetIdValue: AssetSummary['id'], input: AssetCheckoutInput = {}) {
     this.checkoutCalls.push({ action: 'checkout', assetId: assetIdValue, details: input.details });
+    return { id: 'checkout-one', assetId: assetIdValue, undoableOperationId: 'operation-checkout-one' };
   }
 
-  async returnAsset(assetIdValue: AssetSummary['id'], input: AssetCheckoutInput = {}): Promise<void> {
+  async returnAsset(assetIdValue: AssetSummary['id'], input: AssetCheckoutInput = {}) {
     this.checkoutCalls.push({ action: 'return', assetId: assetIdValue, details: input.details });
+    return { id: 'checkout-one', assetId: assetIdValue, undoableOperationId: 'operation-return-one' };
+  }
+
+  async updateReturnedCheckoutDetails(assetIdValue: AssetSummary['id'], checkoutId: string, input: AssetCheckoutInput = {}) {
+    this.checkoutCalls.push({ action: `details:${checkoutId}`, assetId: assetIdValue, details: input.details });
+    return { id: checkoutId, assetId: assetIdValue };
+  }
+
+  async undoInventoryOperation(operationId: string): Promise<void> {
+    this.undoCalls.push(operationId);
   }
 
   async browseAssets() {
@@ -91,13 +103,34 @@ describe('AssetCheckoutCommand', () => {
     const repository = new FakeInventorySummaryRepository();
     const command = new AssetCheckoutCommand(repository);
 
-    await command.execute({ action: 'checkout', assetId: 'asset-drill', details: 'using at bench' });
-    await command.execute({ action: 'return', assetId: 'asset-drill' });
+    await expect(command.execute({ action: 'checkout', assetId: 'asset-drill', details: 'using at bench' })).resolves.toEqual({
+      id: 'checkout-one',
+      assetId: 'asset-drill',
+      undoableOperationId: 'operation-checkout-one'
+    });
+    await expect(command.execute({ action: 'return', assetId: 'asset-drill' })).resolves.toEqual({
+      id: 'checkout-one',
+      assetId: 'asset-drill',
+      undoableOperationId: 'operation-return-one'
+    });
 
     expect(repository.checkoutCalls).toEqual([
       { action: 'checkout', assetId: 'asset-drill', details: 'using at bench' },
       { action: 'return', assetId: 'asset-drill', details: undefined }
     ]);
+  });
+
+  it('updates return details and applies undo through the inventory repository port', async () => {
+    const repository = new FakeInventorySummaryRepository();
+    const command = new AssetCheckoutCommand(repository);
+
+    await command.updateReturnedCheckoutDetails({ assetId: 'asset-drill', checkoutId: 'checkout-one', details: 'back in bin' });
+    await command.undoOperation({ operationId: 'operation-return-one' });
+
+    expect(repository.checkoutCalls).toEqual([
+      { action: 'details:checkout-one', assetId: 'asset-drill', details: 'back in bin' }
+    ]);
+    expect(repository.undoCalls).toEqual(['operation-return-one']);
   });
 
   it('rejects unsupported checkout actions', async () => {

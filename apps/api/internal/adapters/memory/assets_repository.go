@@ -345,6 +345,28 @@ func (s *Store) returnAssetLocked(expectedCurrent asset.Checkout, returned asset
 	return nil
 }
 
+func (s *Store) UpdateAssetCheckoutReturnDetails(_ context.Context, expectedCurrent asset.Checkout, updated asset.Checkout, auditRecord audit.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	current, ok := s.checkouts[expectedCurrent.ID]
+	if !ok || !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+		return ports.ErrConflict
+	}
+	if current.State != asset.CheckoutStateReturned || updated.ID != current.ID || updated.TenantID != current.TenantID || updated.InventoryID != current.InventoryID || updated.AssetID != current.AssetID || updated.State != asset.CheckoutStateReturned || updated.ReturnedAt.IsZero() || updated.ReturnedByPrincipal == "" {
+		return ports.ErrForbidden
+	}
+	if _, ok := s.assets[current.AssetID]; !ok {
+		return ports.ErrForbidden
+	}
+	if _, exists := s.auditRecords[auditRecord.ID]; exists {
+		return ports.ErrConflict
+	}
+	s.checkouts[updated.ID] = updated
+	s.auditRecords[auditRecord.ID] = auditRecord
+	return nil
+}
+
 func (s *Store) CurrentAssetCheckout(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Checkout, bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

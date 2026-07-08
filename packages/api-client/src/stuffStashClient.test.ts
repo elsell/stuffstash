@@ -135,6 +135,7 @@ describe('StuffStashClient', () => {
         checkedOutAt: '2026-06-24T11:00:00Z',
         checkedOutByPrincipalId: 'user-one',
         checkoutDetails: 'using at bench',
+        undoableOperationId: 'operation-checkout-one',
         createdAt: '2026-06-24T11:00:00Z',
         updatedAt: '2026-06-24T11:00:00Z'
       },
@@ -155,18 +156,73 @@ describe('StuffStashClient', () => {
     ).resolves.toMatchObject({
       id: 'checkout-one',
       assetId: 'asset-one',
-      checkoutDetails: 'using at bench'
+      checkoutDetails: 'using at bench',
+      undoableOperationId: 'operation-checkout-one'
     });
     await expect(client.returnAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
-      id: 'checkout-one'
+      id: 'checkout-one',
+      undoableOperationId: 'operation-checkout-one'
+    });
+    await expect(
+      client.updateReturnedCheckoutDetails('tenant-one', 'inventory-one', 'asset-one', 'checkout-one', { details: 'back in bin' })
+    ).resolves.toMatchObject({
+      id: 'checkout-one',
+      undoableOperationId: 'operation-checkout-one'
     });
 
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/checkout',
-      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/return'
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/return',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/checkouts/checkout-one/return-details'
     ]);
     expect(await requests[0]?.json()).toEqual({ details: 'using at bench' });
     expect(await requests[1]?.json()).toEqual({});
+    expect(await requests[2]?.json()).toEqual({ details: 'back in bin' });
+  });
+
+  it('applies undoable operations through generated inventory routes', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({
+          data: {
+            id: 'asset-one',
+            tenantId: 'tenant-one',
+            inventoryId: 'inventory-one',
+            kind: 'item',
+            title: 'Socket set',
+            description: '',
+            customFields: {},
+            tags: [],
+            lifecycleState: 'active',
+            createdAt: '2026-06-24T10:00:00Z',
+            updatedAt: '2026-06-24T12:00:00Z',
+            currentCheckout: {
+              id: 'checkout-one',
+              state: 'open',
+              checkedOutAt: '2026-06-24T11:00:00Z',
+              checkedOutByPrincipalId: 'user-one'
+            }
+          },
+          meta: {}
+        });
+      }
+    });
+
+    await expect(
+      client.applyUndoableOperation('tenant-one', 'inventory-one', 'operation-return-one', 'undo')
+    ).resolves.toMatchObject({
+      id: 'asset-one',
+      currentCheckout: { id: 'checkout-one' }
+    });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/undoable-operations/operation-return-one/undo'
+    ]);
   });
 
   it('lists checkout history and checked-out assets through inventory scoped routes', async () => {

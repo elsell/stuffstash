@@ -670,6 +670,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID checkouts by checkout ID return details */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts-by-checkout-id-return-details"];
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
         parameters: {
             query?: never;
@@ -1261,6 +1278,7 @@ export interface components {
             returnedByPrincipalId?: string;
             state: string;
             tenantId: string;
+            undoableOperationId?: string;
             updatedAt: string;
         };
         AssetPhotoThumbnails: {
@@ -2396,6 +2414,16 @@ export interface components {
             runtimeOptions?: {
                 [key: string]: unknown;
             };
+        };
+        UpdateReturnedCheckoutDetailsBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateReturnedCheckoutDetailsBody.json
+             */
+            readonly $schema?: string;
+            /** @description Optional return details */
+            details?: string;
         };
         UpdateTenantBody: {
             /**
@@ -4857,6 +4885,53 @@ export interface operations {
             };
         };
     };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts-by-checkout-id-return-details": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+                /** @description Checkout ID */
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReturnedCheckoutDetailsBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetCheckoutResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
         parameters: {
             query?: never;
@@ -6557,13 +6632,15 @@ export interface operations {
     };
     "get-tenants-by-tenant-id-search-assets": {
         parameters: {
-            query: {
+            query?: {
                 /** @description Optional inventory ID scope */
                 inventoryId?: string;
                 /** @description Search query */
-                q: string;
+                q?: string;
                 /** @description Search mode; defaults to fuzzy */
                 mode?: "fuzzy" | "exact";
+                /** @description Optional assigned tag filters */
+                tagIds?: string[] | null;
                 /** @description Custom asset type filter */
                 customAssetTypeId?: string;
                 /** @description Lifecycle filter; defaults to active */

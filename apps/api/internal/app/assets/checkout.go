@@ -16,19 +16,27 @@ import (
 )
 
 func (s Service) CheckoutAsset(ctx context.Context, input CheckoutAssetInput) (asset.Checkout, error) {
-	prepared, err := s.PrepareCheckoutAsset(ctx, input)
+	result, err := s.CheckoutAssetWithOperation(ctx, input)
 	if err != nil {
 		return asset.Checkout{}, err
+	}
+	return result.Checkout, nil
+}
+
+func (s Service) CheckoutAssetWithOperation(ctx context.Context, input CheckoutAssetInput) (CheckoutOperationResult, error) {
+	prepared, err := s.PrepareCheckoutAsset(ctx, input)
+	if err != nil {
+		return CheckoutOperationResult{}, err
 	}
 	operation := prepared.UndoableOperation
 	if err := s.assetUnitOfWork.CheckOutAsset(ctx, prepared.Checkout, prepared.AuditRecord, &operation); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
-			return asset.Checkout{}, apperrors.ErrInvalidInput
+			return CheckoutOperationResult{}, apperrors.ErrInvalidInput
 		}
-		return asset.Checkout{}, err
+		return CheckoutOperationResult{}, err
 	}
 	s.RecordAssetCheckedOut(ctx, prepared.Checkout, input.Principal.ID)
-	return prepared.Checkout, nil
+	return CheckoutOperationResult{Checkout: prepared.Checkout, UndoableOperationID: operation.ID}, nil
 }
 
 func (s Service) PrepareCheckoutAsset(ctx context.Context, input CheckoutAssetInput) (PreparedCheckoutOperation, error) {
@@ -104,22 +112,30 @@ func (s Service) PrepareCheckoutAsset(ctx context.Context, input CheckoutAssetIn
 }
 
 func (s Service) ReturnAsset(ctx context.Context, input ReturnAssetInput) (asset.Checkout, error) {
-	prepared, err := s.PrepareReturnAsset(ctx, input)
+	result, err := s.ReturnAssetWithOperation(ctx, input)
 	if err != nil {
 		return asset.Checkout{}, err
 	}
+	return result.Checkout, nil
+}
+
+func (s Service) ReturnAssetWithOperation(ctx context.Context, input ReturnAssetInput) (CheckoutOperationResult, error) {
+	prepared, err := s.PrepareReturnAsset(ctx, input)
+	if err != nil {
+		return CheckoutOperationResult{}, err
+	}
 	if prepared.ExpectedCurrent == nil {
-		return asset.Checkout{}, apperrors.ErrInvalidInput
+		return CheckoutOperationResult{}, apperrors.ErrInvalidInput
 	}
 	operation := prepared.UndoableOperation
 	if err := s.assetUnitOfWork.ReturnAsset(ctx, *prepared.ExpectedCurrent, prepared.Checkout, prepared.AuditRecord, &operation); err != nil {
 		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
-			return asset.Checkout{}, apperrors.ErrInvalidInput
+			return CheckoutOperationResult{}, apperrors.ErrInvalidInput
 		}
-		return asset.Checkout{}, err
+		return CheckoutOperationResult{}, err
 	}
 	s.RecordAssetReturned(ctx, prepared.Checkout, input.Principal.ID)
-	return prepared.Checkout, nil
+	return CheckoutOperationResult{Checkout: prepared.Checkout, UndoableOperationID: operation.ID}, nil
 }
 
 func (s Service) PrepareReturnAsset(ctx context.Context, input ReturnAssetInput) (PreparedCheckoutOperation, error) {
@@ -177,6 +193,76 @@ func (s Service) PrepareReturnAsset(ctx context.Context, input ReturnAssetInput)
 		return PreparedCheckoutOperation{}, err
 	}
 	return PreparedCheckoutOperation{Checkout: returned, ExpectedCurrent: &current, AuditRecord: auditRecord, UndoableOperation: operation}, nil
+}
+
+func (s Service) UpdateReturnedCheckoutDetails(ctx context.Context, input UpdateReturnedCheckoutDetailsInput) (asset.Checkout, error) {
+	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return asset.Checkout{}, err
+	}
+	if err := s.ensureCheckoutDependencies(); err != nil {
+		return asset.Checkout{}, err
+	}
+	if input.AssetID.String() == "" || input.CheckoutID.String() == "" {
+		return asset.Checkout{}, apperrors.ErrInvalidInput
+	}
+	current, found, err := s.checkouts.AssetCheckoutByID(ctx, input.TenantID, input.InventoryID, input.CheckoutID)
+	if err != nil {
+		return asset.Checkout{}, err
+	}
+	if !found {
+		return asset.Checkout{}, apperrors.ErrNotFound
+	}
+	if current.AssetID != input.AssetID {
+		return asset.Checkout{}, apperrors.ErrNotFound
+	}
+	if _, found, err := s.assets.AssetByID(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+		return asset.Checkout{}, err
+	} else if !found {
+		return asset.Checkout{}, apperrors.ErrNotFound
+	}
+	if current.State != asset.CheckoutStateReturned || current.ReturnedAt.IsZero() || current.ReturnedByPrincipal == "" {
+		return asset.Checkout{}, apperrors.ErrInvalidInput
+	}
+	details, ok := asset.NewCheckoutDetails(input.Details)
+	if !ok {
+		return asset.Checkout{}, apperrors.ErrInvalidInput
+	}
+	updated := current
+	updated.ReturnDetails = details
+	updated.UpdatedAt = s.now().UTC()
+	auditRecord, err := s.newAuditRecord(auditRecordInput{
+		Principal:   input.Principal,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAssetReturnDetailsUpdated,
+		TargetType:  audit.TargetAsset,
+		TargetID:    input.AssetID.String(),
+		Metadata: map[string]string{
+			"asset_id":              input.AssetID.String(),
+			"checkout_id":           current.ID.String(),
+			"details_present":       boolMetadata(!details.IsEmpty()),
+			"return_details_update": "true",
+		},
+	})
+	if err != nil {
+		return asset.Checkout{}, err
+	}
+	if err := s.assetUnitOfWork.UpdateAssetCheckoutReturnDetails(ctx, current, updated, auditRecord); err != nil {
+		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
+			return asset.Checkout{}, apperrors.ErrInvalidInput
+		}
+		return asset.Checkout{}, err
+	}
+	s.observer.Record(ctx, ports.Event{Name: ports.EventAssetReturnDetailsUpdated, Message: "asset return details updated", Fields: map[string]string{
+		"tenant_id":    input.TenantID.String(),
+		"inventory_id": input.InventoryID.String(),
+		"asset_id":     input.AssetID.String(),
+		"checkout_id":  current.ID.String(),
+		"principal_id": input.Principal.ID.String(),
+	}})
+	return updated, nil
 }
 
 func (s Service) ListAssetCheckoutHistory(ctx context.Context, input ListAssetCheckoutHistoryInput) (AssetCheckoutHistoryResult, error) {

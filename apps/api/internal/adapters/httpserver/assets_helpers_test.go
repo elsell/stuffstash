@@ -79,6 +79,7 @@ type assetCheckoutResponse struct {
 	ReturnedAt              string `json:"returnedAt,omitempty"`
 	ReturnedByPrincipalID   string `json:"returnedByPrincipalId,omitempty"`
 	ReturnDetails           string `json:"returnDetails,omitempty"`
+	UndoableOperationID     string `json:"undoableOperationId,omitempty"`
 	CreatedAt               string `json:"createdAt"`
 	UpdatedAt               string `json:"updatedAt"`
 }

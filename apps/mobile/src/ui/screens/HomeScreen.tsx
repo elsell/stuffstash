@@ -4,13 +4,16 @@ import { Settings } from 'lucide-react-native';
 import {
   ActivityIndicator,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import {
   HomeDashboardLocationViewModel,
   HomeDashboardQuery,
@@ -27,6 +30,7 @@ import { styles } from './HomeScreen.styles';
 
 type HomeScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
 };
 
 type ScreenState =
@@ -34,7 +38,7 @@ type ScreenState =
   | { readonly status: 'ready'; readonly dashboard: HomeDashboardViewModel }
   | { readonly status: 'error'; readonly message: string };
 
-export function HomeScreen({ dashboardQuery }: HomeScreenProps) {
+export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenProps) {
   const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -119,6 +123,7 @@ export function HomeScreen({ dashboardQuery }: HomeScreenProps) {
       {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
       {screenState.status === 'ready' ? (
         <Dashboard
+          assetCheckoutCommand={assetCheckoutCommand}
           dashboard={screenState.dashboard}
           isRefreshing={isRefreshing}
           onRefresh={refreshDashboard}
@@ -151,13 +156,15 @@ function readableError(error: unknown, fallback: string): string {
 }
 
 function Dashboard({
+  assetCheckoutCommand,
   dashboard,
   isRefreshing,
   onRefresh
 }: {
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
   readonly isRefreshing: boolean;
-  readonly onRefresh: () => void;
+  readonly onRefresh: () => void | Promise<void>;
 }) {
   return (
     <ScrollView
@@ -170,14 +177,107 @@ function Dashboard({
         />
       }
     >
-      <DashboardHeader dashboard={dashboard} />
+      <DashboardHeader
+        assetCheckoutCommand={assetCheckoutCommand}
+        dashboard={dashboard}
+        onDashboardChanged={onRefresh}
+      />
     </ScrollView>
   );
 }
 
-function DashboardHeader({ dashboard }: {
+type PendingReturnState = {
+  readonly asset: AssetCardViewModel;
+  readonly checkoutId: string;
+  readonly undoableOperationId: string;
+  readonly details: string;
+  readonly isSaving: boolean;
+};
+
+function DashboardHeader({
+  assetCheckoutCommand,
+  dashboard,
+  onDashboardChanged
+}: {
+  readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
+  readonly onDashboardChanged: () => void | Promise<void>;
 }) {
+  const feedback = useAppFeedback();
+  const [returningAssetId, setReturningAssetId] = useState<string | undefined>();
+  const [pendingReturn, setPendingReturn] = useState<PendingReturnState | undefined>();
+
+  async function returnAsset(asset: AssetCardViewModel): Promise<void> {
+    setReturningAssetId(asset.id);
+
+    try {
+      const checkout = await assetCheckoutCommand.execute({ action: 'return', assetId: asset.id });
+      if (!checkout.undoableOperationId) {
+        throw new Error('Return could not be undone because the API did not provide an undo operation.');
+      }
+      await onDashboardChanged();
+      setPendingReturn({
+        asset,
+        checkoutId: checkout.id,
+        undoableOperationId: checkout.undoableOperationId,
+        details: '',
+        isSaving: false
+      });
+    } catch (error) {
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not return asset',
+        message: readableError(error, 'The asset was not returned.')
+      });
+    } finally {
+      setReturningAssetId(undefined);
+    }
+  }
+
+  async function saveReturnDetails(): Promise<void> {
+    if (!pendingReturn) {
+      return;
+    }
+    setPendingReturn({ ...pendingReturn, isSaving: true });
+
+    try {
+      await assetCheckoutCommand.updateReturnedCheckoutDetails({
+        assetId: pendingReturn.asset.id,
+        checkoutId: pendingReturn.checkoutId,
+        details: pendingReturn.details
+      });
+      setPendingReturn(undefined);
+      await onDashboardChanged();
+    } catch (error) {
+      setPendingReturn({ ...pendingReturn, isSaving: false });
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not save return details',
+        message: readableError(error, 'Return details were not saved.')
+      });
+    }
+  }
+
+  async function cancelReturn(): Promise<void> {
+    if (!pendingReturn) {
+      return;
+    }
+    setPendingReturn({ ...pendingReturn, isSaving: true });
+
+    try {
+      await assetCheckoutCommand.undoOperation({ operationId: pendingReturn.undoableOperationId });
+      setPendingReturn(undefined);
+      await onDashboardChanged();
+    } catch (error) {
+      setPendingReturn({ ...pendingReturn, isSaving: false });
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Could not cancel return',
+        message: readableError(error, 'The asset is still returned.')
+      });
+    }
+  }
+
   return (
     <View>
       <View style={styles.homeTopBar}>
@@ -232,6 +332,45 @@ function DashboardHeader({ dashboard }: {
           <Text style={styles.emptyText}>No assets yet.</Text>
         ) : null}
       </ScrollView>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Checked out</Text>
+        <Pressable accessibilityRole="button" onPress={() => router.navigate({ pathname: '/search', params: { checkoutState: 'checked_out' } })}>
+          <Text style={styles.sectionAction}>View all</Text>
+        </Pressable>
+      </View>
+      {dashboard.checkedOutAssets.length > 0 ? (
+        <ScrollView
+          contentContainerStyle={styles.recentTicker}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {dashboard.checkedOutAssets.map((asset) => (
+            <CheckedOutAssetCard
+              asset={asset}
+              isReturning={returningAssetId === asset.id}
+              key={asset.id}
+              onPress={() => router.push(assetDetailHref(asset.id))}
+              onReturn={() => void returnAsset(asset)}
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.checkedOutEmpty}>
+          <Text style={styles.emptyText}>Nothing checked out.</Text>
+        </View>
+      )}
+
+      <ReturnDetailsSheet
+        pendingReturn={pendingReturn}
+        onCancel={() => void cancelReturn()}
+        onChangeDetails={(details) => {
+          if (pendingReturn) {
+            setPendingReturn({ ...pendingReturn, details });
+          }
+        }}
+        onSave={() => void saveReturnDetails()}
+      />
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Locations</Text>
@@ -324,5 +463,117 @@ export function RecentAssetCard({
         <AssetTagChips tags={asset.tags} compact overflowLimit={2} />
       </View>
     </Pressable>
+  );
+}
+
+export function CheckedOutAssetCard({
+  asset,
+  isReturning,
+  onPress,
+  onReturn
+}: {
+  readonly asset: AssetCardViewModel;
+  readonly isReturning: boolean;
+  readonly onPress: () => void;
+  readonly onReturn: () => void;
+}) {
+  return (
+    <View style={styles.recentCard}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+      >
+        <View style={styles.recentImageFrame}>
+          {asset.photo ? (
+            <Image
+              accessibilityIgnoresInvertColors
+              source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
+              style={styles.recentImage}
+            />
+          ) : (
+            <Text style={styles.recentImagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
+          )}
+        </View>
+        <View style={styles.recentBody}>
+          <View style={styles.badgeRow}>
+            <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
+            {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
+          </View>
+          <Text numberOfLines={2} style={styles.assetTitle}>
+            {asset.title}
+          </Text>
+          <Text numberOfLines={1} style={styles.assetMeta}>
+            {asset.locationTrailLabel}
+          </Text>
+        </View>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        disabled={isReturning}
+        onPress={onReturn}
+        style={styles.returnButton}
+      >
+        <Text style={styles.returnButtonText}>{isReturning ? 'Returning...' : 'Return'}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function ReturnDetailsSheet({
+  pendingReturn,
+  onCancel,
+  onChangeDetails,
+  onSave
+}: {
+  readonly pendingReturn: PendingReturnState | undefined;
+  readonly onCancel: () => void;
+  readonly onChangeDetails: (details: string) => void;
+  readonly onSave: () => void;
+}) {
+  return (
+    <Modal
+      animationType="slide"
+      onRequestClose={onCancel}
+      presentationStyle="pageSheet"
+      transparent={false}
+      visible={pendingReturn !== undefined}
+    >
+      <SafeAreaView style={styles.returnSheet} edges={['top', 'left', 'right', 'bottom']}>
+        <View style={styles.returnSheetHeader}>
+          <Text style={styles.returnSheetTitle}>Return details</Text>
+          <Text style={styles.returnSheetSubtitle} numberOfLines={2}>
+            {pendingReturn?.asset.title}
+          </Text>
+        </View>
+        <TextInput
+          multiline
+          editable={!pendingReturn?.isSaving}
+          onChangeText={onChangeDetails}
+          placeholder="Optional details"
+          placeholderTextColor={colors.textMuted}
+          style={styles.returnDetailsInput}
+          textAlignVertical="top"
+          value={pendingReturn?.details ?? ''}
+        />
+        <View style={styles.returnSheetActions}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={pendingReturn?.isSaving}
+            onPress={onCancel}
+            style={[styles.returnSheetButton, styles.returnSheetCancelButton]}
+          >
+            <Text style={styles.returnSheetCancelText}>Cancel return</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={pendingReturn?.isSaving}
+            onPress={onSave}
+            style={[styles.returnSheetButton, styles.returnSheetSaveButton]}
+          >
+            <Text style={styles.returnSheetSaveText}>{pendingReturn?.isSaving ? 'Saving...' : 'Save'}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </Modal>
   );
 }

@@ -177,11 +177,18 @@ class FakeInventoryApiClient {
     readonly assetId: string;
   }> = [];
   checkoutInputs: Array<{
-    readonly action: 'checkout' | 'return';
+    readonly action: 'checkout' | 'return' | 'return_details';
     readonly tenantId: string;
     readonly inventoryId: string;
     readonly assetId: string;
+    readonly checkoutId?: string;
     readonly details?: string;
+  }> = [];
+  undoInputs: Array<{
+    readonly tenantId: string;
+    readonly inventoryId: string;
+    readonly operationId: string;
+    readonly direction: 'undo' | 'redo';
   }> = [];
   searchedQuery: string | undefined;
   searchAssetRequests: Array<{
@@ -594,6 +601,34 @@ class FakeInventoryApiClient {
       details: input.details
     });
     return checkoutRecord(assetIdValue, 'returned', input.details);
+  }
+
+  async updateReturnedCheckoutDetails(
+    tenantId: string,
+    inventoryId: string,
+    assetIdValue: string,
+    checkoutId: string,
+    input: { readonly details?: string } = {}
+  ): Promise<AssetCheckout> {
+    this.checkoutInputs.push({
+      action: 'return_details',
+      tenantId,
+      inventoryId,
+      assetId: assetIdValue,
+      checkoutId,
+      details: input.details
+    });
+    return checkoutRecord(assetIdValue, 'returned', input.details);
+  }
+
+  async applyUndoableOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: 'undo' | 'redo'
+  ): Promise<Asset> {
+    this.undoInputs.push({ tenantId, inventoryId, operationId, direction });
+    return this.assets.find((asset) => asset.id === 'asset-filters') ?? this.assets[0]!;
   }
 
   async searchAssets(
@@ -1733,8 +1768,22 @@ describe('ApiInventorySummaryRepository', () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
 
-    await repository.checkoutAsset(assetId('asset-filters'), { details: 'using at desk' });
-    await repository.returnAsset(assetId('asset-filters'));
+    await expect(repository.checkoutAsset(assetId('asset-filters'), { details: 'using at desk' })).resolves.toEqual({
+      id: 'checkout-fake',
+      assetId: 'asset-filters',
+      undoableOperationId: 'operation-checkout-fake'
+    });
+    await expect(repository.returnAsset(assetId('asset-filters'))).resolves.toEqual({
+      id: 'checkout-fake',
+      assetId: 'asset-filters',
+      undoableOperationId: 'operation-checkout-fake'
+    });
+    await expect(repository.updateReturnedCheckoutDetails(assetId('asset-filters'), 'checkout-fake', { details: 'back in bin' })).resolves.toEqual({
+      id: 'checkout-fake',
+      assetId: 'asset-filters',
+      undoableOperationId: 'operation-checkout-fake'
+    });
+    await repository.undoInventoryOperation('operation-return-fake');
 
     expect(client.checkoutInputs).toEqual([
       {
@@ -1750,8 +1799,60 @@ describe('ApiInventorySummaryRepository', () => {
         inventoryId: 'inventory-home',
         assetId: 'asset-filters',
         details: undefined
+      },
+      {
+        action: 'return_details',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        assetId: 'asset-filters',
+        checkoutId: 'checkout-fake',
+        details: 'back in bin'
       }
     ]);
+    expect(client.undoInputs).toEqual([
+      {
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        operationId: 'operation-return-fake',
+        direction: 'undo'
+      }
+    ]);
+  });
+
+  it('loads checked-out Home summaries from the checked-out inventory endpoint', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      client.assets[0]!,
+      {
+        ...client.assets[1]!,
+        primaryPhoto: undefined,
+        currentCheckout: {
+          id: 'checkout-filters',
+          state: 'open',
+          checkedOutAt: '2026-06-25T12:00:00Z',
+          checkedOutByPrincipalId: 'principal-home'
+        }
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getCheckedOutAssetSummaries()).resolves.toMatchObject([
+      {
+        id: 'asset-filters',
+        hasPhoto: true,
+        photo: {
+          uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small'
+        },
+        currentCheckout: {
+          id: 'checkout-filters'
+        }
+      }
+    ]);
+    expect(client.listCheckedOutAssetRequests).toContainEqual({
+      inventoryId: 'inventory-home',
+      limit: 10,
+      cursor: undefined
+    });
   });
 
   it('continues paged tenant search until selected-inventory asset results are found', async () => {
@@ -1983,6 +2084,7 @@ function checkoutRecord(
     checkedOutByPrincipalId: 'principal-mobile',
     returnedAt: state === 'returned' ? '2026-06-24T10:05:00Z' : undefined,
     returnedByPrincipalId: state === 'returned' ? 'principal-mobile' : undefined,
+    undoableOperationId: 'operation-checkout-fake',
     createdAt: '2026-06-24T10:00:00Z',
     updatedAt: '2026-06-24T10:05:00Z'
   };

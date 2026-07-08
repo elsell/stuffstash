@@ -21,6 +21,7 @@ export type InventoryWorkspace = {
 export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
+  getCheckedOutAssetSummaries?(): Promise<readonly AssetSummary[]>;
   getAssetDetail?(input: GetInventoryAssetDetailInput): Promise<AssetSummary>;
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
@@ -30,8 +31,10 @@ export interface InventorySummaryRepository {
   archiveAsset(assetId: AssetId): Promise<void>;
   restoreAsset(assetId: AssetId): Promise<void>;
   deleteAsset(assetId: AssetId): Promise<void>;
-  checkoutAsset?(assetId: AssetId, input?: AssetCheckoutInput): Promise<void>;
-  returnAsset?(assetId: AssetId, input?: AssetCheckoutInput): Promise<void>;
+  checkoutAsset?(assetId: AssetId, input?: AssetCheckoutInput): Promise<AssetCheckoutResult>;
+  returnAsset?(assetId: AssetId, input?: AssetCheckoutInput): Promise<AssetCheckoutResult>;
+  updateReturnedCheckoutDetails?(assetId: AssetId, checkoutId: string, input?: AssetCheckoutInput): Promise<AssetCheckoutResult>;
+  undoInventoryOperation?(operationId: string): Promise<void>;
   browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage>;
   searchAssets(query: string): Promise<readonly AssetSummary[]>;
   searchLocations(query: string): Promise<readonly LocationSummary[]>;
@@ -109,6 +112,12 @@ export type CreateInventoryAssetTagInput = {
 
 export type AssetCheckoutInput = {
   readonly details?: string;
+};
+
+export type AssetCheckoutResult = {
+  readonly id: string;
+  readonly assetId: AssetId;
+  readonly undoableOperationId?: string;
 };
 
 export type CreateInventoryAssetPhotoInput = {

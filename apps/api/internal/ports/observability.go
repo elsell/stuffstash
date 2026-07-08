@@ -60,6 +60,7 @@ const (
 	EventAssetDeleted                         EventName = "asset.deleted"
 	EventAssetCheckedOut                      EventName = "asset.checked_out"
 	EventAssetCheckoutReturned                EventName = "asset.returned"
+	EventAssetReturnDetailsUpdated            EventName = "asset.return_details_updated"
 	EventAssetCheckoutHistoryListed           EventName = "asset_checkout.history_listed"
 	EventCheckedOutAssetsListed               EventName = "asset_checkout.checked_out_listed"
 	EventAssetsListed                         EventName = "asset.listed"

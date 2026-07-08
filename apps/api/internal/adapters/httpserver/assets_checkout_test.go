@@ -20,6 +20,7 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 			"socket-set", "op-socket-set", "audit-socket-set",
 			"checkout-socket-set", "op-checkout-socket-set", "audit-checkout-socket-set",
 			"op-return-socket-set", "audit-return-socket-set",
+			"op-return-socket-set-two", "audit-return-socket-set-two", "audit-return-details-socket-set",
 		},
 	}))
 	grantEditor := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/access-grants", "Bearer dev:owner", map[string]any{"principalId": "editor-user", "relationship": "editor"})
@@ -48,6 +49,9 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	checkedOut := decodeAssetCheckout(t, checkout)
 	if checkedOut.Data.State != "open" || checkedOut.Data.CheckedOutByPrincipalID != "owner" || checkedOut.Data.CheckoutDetails != "using at my desk" {
 		t.Fatalf("unexpected checkout response: %+v", checkedOut.Data)
+	}
+	if checkedOut.Data.UndoableOperationID == "" {
+		t.Fatalf("expected checkout response to include undoable operation ID")
 	}
 
 	duplicate := performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", nil)
@@ -110,21 +114,54 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 		t.Fatalf("expected delete open checkout status %d, got %d with body %s", http.StatusForbidden, deleteOpen.Code, deleteOpen.Body.String())
 	}
 
-	returned := performRequest(server, http.MethodPost, assetPath+"/return", "Bearer dev:editor-user", map[string]any{"details": "back in drawer"})
+	returned := performRequest(server, http.MethodPost, assetPath+"/return", "Bearer dev:editor-user", map[string]any{})
 	if returned.Code != http.StatusOK {
 		t.Fatalf("expected return status %d, got %d with body %s", http.StatusOK, returned.Code, returned.Body.String())
 	}
 	returnedBody := decodeAssetCheckout(t, returned)
-	if returnedBody.Data.State != "returned" || returnedBody.Data.ReturnedByPrincipalID != "editor-user" || returnedBody.Data.ReturnDetails != "back in drawer" {
+	if returnedBody.Data.State != "returned" || returnedBody.Data.ReturnedByPrincipalID != "editor-user" || returnedBody.Data.ReturnDetails != "" {
 		t.Fatalf("unexpected return response: %+v", returnedBody.Data)
+	}
+	if returnedBody.Data.UndoableOperationID == "" {
+		t.Fatalf("expected return response to include undoable operation ID")
+	}
+
+	undoReturn := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/undoable-operations/"+returnedBody.Data.UndoableOperationID+"/undo", "Bearer dev:editor-user", nil)
+	if undoReturn.Code != http.StatusOK {
+		t.Fatalf("expected undo return status %d, got %d with body %s", http.StatusOK, undoReturn.Code, undoReturn.Body.String())
+	}
+	checkedOutAgain := performRequest(server, http.MethodGet, assetPath, "Bearer dev:editor-user", nil)
+	requireStatus(t, checkedOutAgain, http.StatusOK)
+	if decodeAsset(t, checkedOutAgain).Data.CurrentCheckout == nil {
+		t.Fatalf("expected undoing return to restore current checkout")
 	}
 
 	emptyCheckedOutList := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/checked-out-assets?limit=10", "Bearer dev:owner", nil)
 	if emptyCheckedOutList.Code != http.StatusOK {
-		t.Fatalf("expected empty checked-out list status %d, got %d with body %s", http.StatusOK, emptyCheckedOutList.Code, emptyCheckedOutList.Body.String())
+		t.Fatalf("expected checked-out list status %d, got %d with body %s", http.StatusOK, emptyCheckedOutList.Code, emptyCheckedOutList.Body.String())
 	}
+	if len(decodeCheckedOutAssetList(t, emptyCheckedOutList).Data) != 1 {
+		t.Fatalf("expected checked-out asset after undoing return")
+	}
+
+	returnedAgain := performRequest(server, http.MethodPost, assetPath+"/return", "Bearer dev:editor-user", map[string]any{})
+	if returnedAgain.Code != http.StatusOK {
+		t.Fatalf("expected second return status %d, got %d with body %s", http.StatusOK, returnedAgain.Code, returnedAgain.Body.String())
+	}
+	returnedAgainBody := decodeAssetCheckout(t, returnedAgain)
+	updatedReturnDetails := performRequest(server, http.MethodPatch, assetPath+"/checkouts/"+returnedAgainBody.Data.ID+"/return-details", "Bearer dev:editor-user", map[string]any{"details": "  back in the socket drawer  "})
+	if updatedReturnDetails.Code != http.StatusOK {
+		t.Fatalf("expected update return details status %d, got %d with body %s", http.StatusOK, updatedReturnDetails.Code, updatedReturnDetails.Body.String())
+	}
+	updatedReturnDetailsBody := decodeAssetCheckout(t, updatedReturnDetails)
+	if updatedReturnDetailsBody.Data.ID != returnedAgainBody.Data.ID || updatedReturnDetailsBody.Data.ReturnDetails != "back in the socket drawer" {
+		t.Fatalf("unexpected updated return details response: %+v", updatedReturnDetailsBody.Data)
+	}
+
+	emptyCheckedOutList = performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/checked-out-assets?limit=10", "Bearer dev:owner", nil)
+	requireStatus(t, emptyCheckedOutList, http.StatusOK)
 	if len(decodeCheckedOutAssetList(t, emptyCheckedOutList).Data) != 0 {
-		t.Fatalf("expected no checked-out assets after return")
+		t.Fatalf("expected no checked-out assets after saved return")
 	}
 }
 
@@ -147,6 +184,9 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 		ids: []string{
 			"checkout-security-asset", "op-checkout-security-asset", "audit-checkout-security-asset",
 			"checkout-security-record", "op-checkout-security-record", "audit-checkout-security-record",
+			"checkout-returned-security-asset", "op-checkout-returned-security-asset", "audit-checkout-returned-security-asset",
+			"checkout-returned-security-record", "op-checkout-returned-security-record", "audit-checkout-returned-security-record",
+			"op-return-returned-security-record", "audit-return-returned-security-record",
 			"checkout-smuggle-asset", "op-checkout-smuggle-asset", "audit-checkout-smuggle-asset",
 			"checkout-smuggle-record", "op-checkout-smuggle-record", "audit-checkout-smuggle-record",
 			"op-return-smuggle-record", "audit-return-smuggle-record",
@@ -163,6 +203,18 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 	assetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + created.Data.ID
 	requireStatus(t, performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "borrowed"}), http.StatusCreated)
 
+	returnedCreate := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "item",
+		"title": "Returned Checkout Security Asset",
+	})
+	requireStatus(t, returnedCreate, http.StatusCreated)
+	returnedAsset := decodeAsset(t, returnedCreate)
+	returnedAssetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + returnedAsset.Data.ID
+	requireStatus(t, performRequest(server, http.MethodPost, returnedAssetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "borrowed"}), http.StatusCreated)
+	returnedCheckout := performRequest(server, http.MethodPost, returnedAssetPath+"/return", "Bearer dev:owner", map[string]any{"details": "back"})
+	requireStatus(t, returnedCheckout, http.StatusOK)
+	returnedCheckoutID := decodeAssetCheckout(t, returnedCheckout).Data.ID
+
 	mutationCases := []struct {
 		name          string
 		method        string
@@ -177,11 +229,18 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 		{name: "checkout malformed auth", method: http.MethodPost, path: assetPath + "/checkout", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
 		{name: "return missing auth", method: http.MethodPost, path: assetPath + "/return", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
 		{name: "return malformed auth", method: http.MethodPost, path: assetPath + "/return", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "update return details missing auth", method: http.MethodPatch, path: returnedAssetPath + "/checkouts/" + returnedCheckoutID + "/return-details", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "update return details malformed auth", method: http.MethodPatch, path: returnedAssetPath + "/checkouts/" + returnedCheckoutID + "/return-details", authorization: "Bearer nope", status: http.StatusUnauthorized, code: "authentication_required", message: "Authentication required."},
+		{name: "viewer update return details", method: http.MethodPatch, path: returnedAssetPath + "/checkouts/" + returnedCheckoutID + "/return-details", authorization: "Bearer dev:viewer-user", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
 		{name: "viewer return", method: http.MethodPost, path: assetPath + "/return", authorization: "Bearer dev:viewer-user", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
 		{name: "intruder checkout", method: http.MethodPost, path: assetPath + "/checkout", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
+		{name: "intruder update return details", method: http.MethodPatch, path: returnedAssetPath + "/checkouts/" + returnedCheckoutID + "/return-details", authorization: "Bearer dev:intruder", status: http.StatusForbidden, code: "forbidden", message: "Forbidden."},
 		{name: "cross tenant checkout", method: http.MethodPost, path: "/tenants/" + otherTenantID + "/inventories/" + otherInventoryID + "/assets/" + created.Data.ID + "/checkout", authorization: "Bearer dev:other-owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
+		{name: "cross tenant update return details", method: http.MethodPatch, path: "/tenants/" + otherTenantID + "/inventories/" + otherInventoryID + "/assets/" + returnedAsset.Data.ID + "/checkouts/" + returnedCheckoutID + "/return-details", authorization: "Bearer dev:other-owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
 		{name: "wrong inventory checkout", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + sameTenantOtherInventoryID + "/assets/" + created.Data.ID + "/checkout", authorization: "Bearer dev:owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
 		{name: "wrong inventory return", method: http.MethodPost, path: "/tenants/" + tenantID + "/inventories/" + sameTenantOtherInventoryID + "/assets/" + created.Data.ID + "/return", authorization: "Bearer dev:owner", status: http.StatusBadRequest, code: "invalid_request", message: "Invalid request."},
+		{name: "wrong inventory update return details", method: http.MethodPatch, path: "/tenants/" + tenantID + "/inventories/" + sameTenantOtherInventoryID + "/assets/" + returnedAsset.Data.ID + "/checkouts/" + returnedCheckoutID + "/return-details", authorization: "Bearer dev:owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
+		{name: "wrong asset update return details", method: http.MethodPatch, path: assetPath + "/checkouts/" + returnedCheckoutID + "/return-details", authorization: "Bearer dev:owner", status: http.StatusNotFound, code: "resource_not_found", message: "Resource not found."},
 	}
 	for _, tc := range mutationCases {
 		t.Run(tc.name, func(t *testing.T) {

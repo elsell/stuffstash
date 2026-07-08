@@ -1,6 +1,7 @@
 import type {
   Asset,
   AssetTag,
+  CheckedOutAsset,
   AssetPhotoReference,
   AssetSearchResult,
   Inventory,
@@ -49,6 +50,8 @@ type InventoryApiClient = Pick<
   | 'updateAsset'
   | 'checkoutAsset'
   | 'returnAsset'
+  | 'updateReturnedCheckoutDetails'
+  | 'applyUndoableOperation'
   | 'archiveAsset'
   | 'restoreAsset'
   | 'deleteAsset'
@@ -138,6 +141,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     }
 
     return inventory;
+  }
+
+  async getCheckedOutAssetSummaries(): Promise<readonly AssetSummary[]> {
+    const inventory = await this.getDefaultInventorySummary();
+    const checkedOutAssets = await this.listCheckedOutInventoryAssets(inventory.tenantId, inventory.id);
+    const assets = checkedOutAssets.map((item) => item.asset);
+
+    return await Promise.all(
+      checkedOutAssets.map((item) => this.mapAssetWithPhoto(inventory.name, item.asset, assets))
+    );
   }
 
   async getAssetDetail(input: GetInventoryAssetDetailInput): Promise<AssetSummary> {
@@ -266,14 +279,39 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     await this.client.deleteAsset(inventory.tenantId, inventory.id, assetIdValue);
   }
 
-  async checkoutAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}): Promise<void> {
+  async checkoutAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}) {
     const inventory = await this.getDefaultInventorySummary();
-    await this.client.checkoutAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+    const checkout = await this.client.checkoutAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+    return {
+      id: checkout.id,
+      assetId: assetId(checkout.assetId),
+      undoableOperationId: checkout.undoableOperationId
+    };
   }
 
-  async returnAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}): Promise<void> {
+  async returnAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}) {
     const inventory = await this.getDefaultInventorySummary();
-    await this.client.returnAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+    const checkout = await this.client.returnAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+    return {
+      id: checkout.id,
+      assetId: assetId(checkout.assetId),
+      undoableOperationId: checkout.undoableOperationId
+    };
+  }
+
+  async updateReturnedCheckoutDetails(assetIdValue: AssetSummary['id'], checkoutId: string, input: { readonly details?: string } = {}) {
+    const inventory = await this.getDefaultInventorySummary();
+    const checkout = await this.client.updateReturnedCheckoutDetails(inventory.tenantId, inventory.id, assetIdValue, checkoutId, input);
+    return {
+      id: checkout.id,
+      assetId: assetId(checkout.assetId),
+      undoableOperationId: checkout.undoableOperationId
+    };
+  }
+
+  async undoInventoryOperation(operationId: string): Promise<void> {
+    const inventory = await this.getDefaultInventorySummary();
+    await this.client.applyUndoableOperation(inventory.tenantId, inventory.id, operationId, 'undo');
   }
 
   async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
@@ -414,6 +452,22 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       'updated_desc'
     );
     return page.items;
+  }
+
+  private async listCheckedOutInventoryAssets(
+    tenantID: string,
+    inventoryID: string
+  ): Promise<readonly CheckedOutAsset[]> {
+    const checkedOutAssets: CheckedOutAsset[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const page = await this.client.listCheckedOutAssets(tenantID, inventoryID, 10, cursor);
+      checkedOutAssets.push(...page.items);
+      cursor = page.pagination.nextCursor ?? undefined;
+    } while (cursor && checkedOutAssets.length < 10);
+
+    return checkedOutAssets.slice(0, 10);
   }
 
   private async listAllInventoryTags(

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { RecentAssetCard } from './HomeScreen';
+import { CheckedOutAssetCard, RecentAssetCard } from './HomeScreen';
 
 vi.mock('expo-router', () => ({
   router: {
@@ -27,6 +27,8 @@ vi.mock('react-native', () => ({
     create: (styles: unknown) => styles
   },
   Text: 'Text',
+  TextInput: 'TextInput',
+  Modal: 'Modal',
   View: 'View'
 }));
 
@@ -52,6 +54,37 @@ describe('RecentAssetCard', () => {
     });
 
     expect(collectText(card)).toEqual(expect.arrayContaining(['Tools', 'Camping']));
+  });
+});
+
+describe('CheckedOutAssetCard', () => {
+  it('exposes a one-tap return action without hiding the asset state', () => {
+    const onReturn = vi.fn();
+    const card = CheckedOutAssetCard({
+      asset: {
+        id: 'asset-drill',
+        title: 'Cordless drill',
+        kindLabel: 'Item',
+        customTypeLabel: undefined,
+        description: 'Garage drill',
+        locationTrailLabel: 'Garage / Tools',
+        updatedAtLabel: 'Updated today',
+        photoLabel: 'Needs photo',
+        imagePlaceholderLabel: 'Item',
+        checkedOutLabel: 'Checked out',
+        tags: []
+      },
+      isReturning: false,
+      onPress: vi.fn(),
+      onReturn
+    });
+
+    expect(collectText(card)).toEqual(expect.arrayContaining(['Cordless drill', 'Checked out', 'Return']));
+
+    const returnButton = findPressableWithText(card, 'Return');
+    (returnButton?.props?.onPress as (() => void) | undefined)?.();
+
+    expect(onReturn).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -90,4 +123,23 @@ function childrenOf(node: ElementNode): readonly unknown[] {
 
 function isElementNode(node: unknown): node is ElementNode {
   return Boolean(node && typeof node === 'object' && 'props' in node);
+}
+
+function findPressableWithText(node: unknown, text: string): ElementNode | undefined {
+  if (!isElementNode(node)) {
+    return undefined;
+  }
+
+  if (node.type === 'Pressable' && collectText(node).includes(text)) {
+    return node;
+  }
+
+  for (const child of childrenOf(node)) {
+    const match = findPressableWithText(child, text);
+    if (match) {
+      return match;
+    }
+  }
+
+  return undefined;
 }

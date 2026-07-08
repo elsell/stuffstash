@@ -24,6 +24,7 @@ type AssetUnitOfWork interface {
 	UpdateAssetLifecycle(ctx context.Context, asset asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	CheckOutAsset(ctx context.Context, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *UndoableOperation) error
 	ReturnAsset(ctx context.Context, expectedCurrent asset.Checkout, returned asset.Checkout, auditRecord audit.Record, undoableOperation *UndoableOperation) error
+	UpdateAssetCheckoutReturnDetails(ctx context.Context, expectedCurrent asset.Checkout, updated asset.Checkout, auditRecord audit.Record) error
 	DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error
 }
 

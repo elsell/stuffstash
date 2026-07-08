@@ -96,6 +96,17 @@ type ReturnAssetInput struct {
 	Details     string
 }
 
+type UpdateReturnedCheckoutDetailsInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	CheckoutID  asset.CheckoutID
+	Details     string
+}
+
 type ListAssetCheckoutHistoryInput struct {
 	Principal   identity.Principal
 	Source      audit.Source
@@ -146,6 +157,11 @@ type PreparedCheckoutOperation struct {
 	ExpectedCurrent   *asset.Checkout
 	AuditRecord       audit.Record
 	UndoableOperation ports.UndoableOperation
+}
+
+type CheckoutOperationResult struct {
+	Checkout            asset.Checkout
+	UndoableOperationID string
 }
 
 type GetAssetResult struct {

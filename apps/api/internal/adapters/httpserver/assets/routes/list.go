@@ -53,6 +53,7 @@ func Register(api huma.API, application app.App) {
 	RegisterDelete(api, application)
 	RegisterCheckout(api, application)
 	RegisterReturn(api, application)
+	RegisterUpdateReturnedCheckoutDetails(api, application)
 	RegisterCheckoutHistory(api, application)
 	RegisterCheckedOutAssets(api, application)
 	RegisterList(api, application)

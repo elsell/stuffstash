@@ -91,6 +91,7 @@ const (
 	ActionAssetDeleted                         Action = "asset.deleted"
 	ActionAssetCheckedOut                      Action = "asset.checked_out"
 	ActionAssetReturned                        Action = "asset.returned"
+	ActionAssetReturnDetailsUpdated            Action = "asset.return_details_updated"
 	ActionAssetTagCreated                      Action = "asset_tag.created"
 	ActionAssetTagListed                       Action = "asset_tag.listed"
 	ActionAssetTagUpdated                      Action = "asset_tag.updated"
@@ -179,6 +180,7 @@ func NewAction(value string) (Action, bool) {
 		ActionAssetDeleted,
 		ActionAssetCheckedOut,
 		ActionAssetReturned,
+		ActionAssetReturnDetailsUpdated,
 		ActionAssetTagCreated,
 		ActionAssetTagListed,
 		ActionAssetTagUpdated,

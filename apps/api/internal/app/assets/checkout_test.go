@@ -155,6 +155,67 @@ func TestReturnAssetClosesOpenCheckoutByDifferentEditor(t *testing.T) {
 	}
 }
 
+func TestUpdateReturnedCheckoutDetailsUpdatesDetailsOnly(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC)
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	assetID := asset.ID("asset-one")
+	returnDetails, ok := asset.NewCheckoutDetails("back on shelf")
+	if !ok {
+		t.Fatal("expected valid return details")
+	}
+	checkout := asset.Checkout{
+		ID:                    asset.CheckoutID("checkout-one"),
+		TenantID:              asset.TenantID(tenantID.String()),
+		InventoryID:           asset.InventoryID(inventoryID.String()),
+		AssetID:               assetID,
+		State:                 asset.CheckoutStateReturned,
+		CheckedOutAt:          now.Add(-time.Hour),
+		CheckedOutByPrincipal: "editor-one",
+		ReturnedAt:            now.Add(-time.Minute),
+		ReturnedByPrincipal:   "editor-two",
+		ReturnDetails:         returnDetails,
+		CreatedAt:             now.Add(-time.Hour),
+		UpdatedAt:             now.Add(-time.Minute),
+	}
+	repository := newFakeCheckoutAssetRepository(activeCheckoutTestAsset(tenantID, inventoryID, assetID))
+	repository.history = []asset.Checkout{checkout}
+	unitOfWork := &fakeCheckoutUnitOfWork{repository: repository}
+	service := New(Dependencies{
+		Observer:        noopObserver{},
+		Authorizer:      allowAuthorizer{},
+		Tenants:         tenantExistsRepository{},
+		Inventories:     inventoryRepository{item: activeCheckoutTestInventory(tenantID, inventoryID)},
+		Assets:          repository,
+		Checkouts:       repository,
+		AssetUnitOfWork: unitOfWork,
+		Undoables:       fakeCheckoutUndoables{},
+		Audit:           auditRepository{},
+		IDs:             &sequenceIDGenerator{ids: []string{"01ARZ3NDEKTSV4RRFFQ69G5FA1"}},
+		Clock:           staticClock{now: now},
+	})
+
+	updated, err := service.UpdateReturnedCheckoutDetails(ctx, UpdateReturnedCheckoutDetailsInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor-three")},
+		Source:      audit.SourceAPI,
+		TenantID:    tenantID,
+		InventoryID: inventoryID,
+		AssetID:     assetID,
+		CheckoutID:  checkout.ID,
+		Details:     "  back in the drawer  ",
+	})
+	if err != nil {
+		t.Fatalf("UpdateReturnedCheckoutDetails returned error: %v", err)
+	}
+	if updated.ID != checkout.ID || updated.State != asset.CheckoutStateReturned || updated.ReturnedByPrincipal != "editor-two" || updated.ReturnDetails.String() != "back in the drawer" {
+		t.Fatalf("unexpected updated checkout: %+v", updated)
+	}
+	if len(unitOfWork.auditRecords) != 1 || unitOfWork.auditRecords[0].Action != audit.ActionAssetReturnDetailsUpdated {
+		t.Fatalf("expected return details audit action, got %+v", unitOfWork.auditRecords)
+	}
+}
+
 func TestListAssetCheckoutHistoryRejectsUnknownAsset(t *testing.T) {
 	ctx := context.Background()
 	tenantID := tenant.ID("tenant-one")
@@ -317,6 +378,19 @@ func (u *fakeCheckoutUnitOfWork) ReturnAsset(_ context.Context, _ asset.Checkout
 	if undoableOperation != nil {
 		u.undoables = append(u.undoables, *undoableOperation)
 	}
+	return nil
+}
+
+func (u *fakeCheckoutUnitOfWork) UpdateAssetCheckoutReturnDetails(_ context.Context, _ asset.Checkout, updated asset.Checkout, auditRecord audit.Record) error {
+	for index, checkout := range u.repository.history {
+		if checkout.ID == updated.ID {
+			u.repository.history[index] = updated
+			u.auditRecords = append(u.auditRecords, auditRecord)
+			return nil
+		}
+	}
+	u.repository.history = append(u.repository.history, updated)
+	u.auditRecords = append(u.auditRecords, auditRecord)
 	return nil
 }
 

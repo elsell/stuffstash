@@ -139,6 +139,7 @@ export interface AssetCheckout extends CurrentCheckout {
   returnedAt?: string;
   returnedByPrincipalId?: string;
   returnDetails?: string;
+  undoableOperationId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -146,6 +147,8 @@ export interface AssetCheckout extends CurrentCheckout {
 export interface AssetCheckoutInput {
   details?: string;
 }
+
+export type UndoableOperationDirection = 'undo' | 'redo';
 
 export interface CheckedOutAsset {
   asset: Asset;
@@ -825,6 +828,30 @@ export class StuffStashClient {
     return mapAssetCheckout(envelope.data);
   }
 
+  async updateReturnedCheckoutDetails(tenantId: string, inventoryId: string, assetId: string, checkoutId: string, input: AssetCheckoutInput = {}): Promise<AssetCheckout> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, assetId, checkoutId } },
+        body: input
+      })
+    );
+    return mapAssetCheckout(envelope.data);
+  }
+
+  async applyUndoableOperation(tenantId: string, inventoryId: string, operationId: string, direction: UndoableOperationDirection): Promise<Asset> {
+    const endpoint = direction === 'undo'
+      ? '/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo'
+      : '/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo';
+    const envelope = await this.unwrap(
+      this.client.POST(endpoint, {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, operationId } }
+      })
+    );
+    return mapAsset(envelope.data);
+  }
+
   async listAssetCheckoutHistory(
     tenantId: string,
     inventoryId: string,
@@ -869,7 +896,7 @@ export class StuffStashClient {
             limit,
             cursor: options.cursor,
             inventoryId: options.inventoryId,
-            tagIds: options.tagIds,
+            tagIds: options.tagIds ? [...options.tagIds] : undefined,
             lifecycleState: options.lifecycleState ?? 'active',
             mode: options.mode ?? 'fuzzy',
             checkoutState: options.checkoutState
@@ -1910,6 +1937,7 @@ function mapAssetCheckout(response: components['schemas']['AssetCheckoutResponse
     returnedAt: response.returnedAt,
     returnedByPrincipalId: response.returnedByPrincipalId,
     returnDetails: response.returnDetails,
+    undoableOperationId: response.undoableOperationId,
     createdAt: response.createdAt,
     updatedAt: response.updatedAt
   };

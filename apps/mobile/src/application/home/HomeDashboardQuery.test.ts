@@ -139,7 +139,13 @@ describe('HomeDashboardQuery', () => {
                 locationTrail: ['Home', 'Hall closet'],
                 description: 'Camera kit and accessories.',
                 updatedAtLabel: 'Updated yesterday',
-                hasPhoto: false
+                hasPhoto: false,
+                currentCheckout: {
+                  id: 'checkout-camera-bag',
+                  state: 'open',
+                  checkedOutAt: '2026-06-24T11:00:00Z',
+                  checkedOutByPrincipalId: 'user-one'
+                }
               },
               {
                 id: assetId('asset-old-router'),
@@ -259,7 +265,8 @@ describe('HomeDashboardQuery', () => {
         locationTrailLabel: 'Hall closet',
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
-        imagePlaceholderLabel: 'Box'
+        imagePlaceholderLabel: 'Box',
+        checkedOutLabel: 'Checked out'
       },
       {
         id: 'asset-old-router',
@@ -271,6 +278,20 @@ describe('HomeDashboardQuery', () => {
         updatedAtLabel: 'Updated last week',
         photoLabel: 'Photo ready',
         imagePlaceholderLabel: 'Item'
+      }
+    ]);
+    expect(dashboard.checkedOutAssets).toEqual([
+      {
+        id: 'asset-camera-bag',
+        title: 'Camera bag',
+        kindLabel: 'Container',
+        customTypeLabel: undefined,
+        description: 'Camera kit and accessories.',
+        locationTrailLabel: 'Hall closet',
+        updatedAtLabel: 'Updated yesterday',
+        photoLabel: 'Needs photo',
+        imagePlaceholderLabel: 'Box',
+        checkedOutLabel: 'Checked out'
       }
     ]);
   });

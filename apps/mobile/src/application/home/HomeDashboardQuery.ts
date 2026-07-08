@@ -43,6 +43,7 @@ export type HomeDashboardViewModel = {
   readonly topLocations: readonly HomeDashboardLocationViewModel[];
   readonly locations: readonly HomeDashboardLocationViewModel[];
   readonly recentAssets: readonly AssetCardViewModel[];
+  readonly checkedOutAssets: readonly AssetCardViewModel[];
   readonly assetTags: readonly {
     readonly id: string;
     readonly key: string;
@@ -72,6 +73,10 @@ export class HomeDashboardQuery {
 
     const overview = createInventoryOverview(tenant, inventory, workspace.inventories);
 
+    const checkedOutAssets = this.inventories.getCheckedOutAssetSummaries
+      ? await this.inventories.getCheckedOutAssetSummaries()
+      : inventory.assets.filter((item) => item.currentCheckout);
+
     return {
       tenantId: tenant.id,
       tenantName: overview.tenantName,
@@ -95,6 +100,7 @@ export class HomeDashboardQuery {
       topLocations: overview.locations.slice(0, 3).map(toLocationViewModel),
       locations: overview.locations.map(toLocationViewModel),
       recentAssets: inventory.assets.slice(0, 10).map(toAssetCardViewModel),
+      checkedOutAssets: checkedOutAssets.slice(0, 10).map(toAssetCardViewModel),
       assetTags: [...(inventory.assetTags ?? [])]
     };
   }

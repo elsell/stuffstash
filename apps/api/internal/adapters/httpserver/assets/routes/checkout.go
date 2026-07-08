@@ -20,7 +20,7 @@ func RegisterCheckout(api huma.API, application app.App) {
 		if err != nil {
 			return nil, err
 		}
-		checkout, err := application.CheckoutAsset(ctx, app.CheckoutAssetInput{
+		result, err := application.CheckoutAssetWithOperation(ctx, app.CheckoutAssetInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
 			RequestID:   input.RequestID,
@@ -32,8 +32,10 @@ func RegisterCheckout(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
+		response := mapper.CheckoutToResponse(result.Checkout)
+		response.UndoableOperationID = result.UndoableOperationID
 		return &dto.CheckoutAssetOutput{Body: shared.SuccessEnvelope[dto.AssetCheckoutResponse]{
-			Data: mapper.CheckoutToResponse(checkout),
+			Data: response,
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("assets"), shared.CreatedOperation, shared.SecuredOperation)
@@ -45,7 +47,7 @@ func RegisterReturn(api huma.API, application app.App) {
 		if err != nil {
 			return nil, err
 		}
-		checkout, err := application.ReturnAsset(ctx, app.ReturnAssetInput{
+		result, err := application.ReturnAssetWithOperation(ctx, app.ReturnAssetInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
 			RequestID:   input.RequestID,
@@ -57,7 +59,35 @@ func RegisterReturn(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
+		response := mapper.CheckoutToResponse(result.Checkout)
+		response.UndoableOperationID = result.UndoableOperationID
 		return &dto.ReturnAssetOutput{Body: shared.SuccessEnvelope[dto.AssetCheckoutResponse]{
+			Data: response,
+			Meta: shared.Meta{TenantID: input.TenantID},
+		}}, nil
+	}, huma.OperationTags("assets"), shared.SecuredOperation)
+}
+
+func RegisterUpdateReturnedCheckoutDetails(api huma.API, application app.App) {
+	huma.Patch(api, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details", func(ctx context.Context, input *dto.UpdateReturnedCheckoutDetailsInput) (*dto.UpdateReturnedCheckoutDetailsOutput, error) {
+		principal, err := shared.Authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+		checkout, err := application.UpdateReturnedCheckoutDetails(ctx, app.UpdateReturnedCheckoutDetailsInput{
+			Principal:   principal,
+			Source:      audit.SourceAPI,
+			RequestID:   input.RequestID,
+			TenantID:    tenant.ID(input.TenantID),
+			InventoryID: inventory.InventoryID(input.InventoryID),
+			AssetID:     asset.ID(input.AssetID),
+			CheckoutID:  asset.CheckoutID(input.CheckoutID),
+			Details:     input.Body.Details,
+		})
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+		return &dto.UpdateReturnedCheckoutDetailsOutput{Body: shared.SuccessEnvelope[dto.AssetCheckoutResponse]{
 			Data: mapper.CheckoutToResponse(checkout),
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil

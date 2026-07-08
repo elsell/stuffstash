@@ -105,6 +105,24 @@ type ReturnAssetOutput struct {
 	Body shared.SuccessEnvelope[AssetCheckoutResponse]
 }
 
+type UpdateReturnedCheckoutDetailsInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	AssetID       string `path:"assetId" doc:"Asset ID"`
+	CheckoutID    string `path:"checkoutId" doc:"Checkout ID"`
+	Body          UpdateReturnedCheckoutDetailsBody
+}
+
+type UpdateReturnedCheckoutDetailsBody struct {
+	Details string `json:"details,omitempty" maxLength:"1000" doc:"Optional return details"`
+}
+
+type UpdateReturnedCheckoutDetailsOutput struct {
+	Body shared.SuccessEnvelope[AssetCheckoutResponse]
+}
+
 type ListAssetCheckoutHistoryInput struct {
 	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
 	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
@@ -200,6 +218,7 @@ type AssetCheckoutResponse struct {
 	ReturnedAt              string `json:"returnedAt,omitempty"`
 	ReturnedByPrincipalID   string `json:"returnedByPrincipalId,omitempty"`
 	ReturnDetails           string `json:"returnDetails,omitempty"`
+	UndoableOperationID     string `json:"undoableOperationId,omitempty"`
 	CreatedAt               string `json:"createdAt"`
 	UpdatedAt               string `json:"updatedAt"`
 }

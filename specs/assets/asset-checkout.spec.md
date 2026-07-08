@@ -92,10 +92,16 @@ Required commands:
 
 - `CheckoutAsset`
   - Inputs: tenant ID, inventory ID, asset ID, authenticated principal, optional checkout details, source, request ID when available.
-  - Output: the checked-out asset or checkout record, plus current checkout state needed by clients.
+  - Output: the checked-out asset or checkout record, the undoable operation ID, plus current checkout state needed by clients.
 - `ReturnAsset`
   - Inputs: tenant ID, inventory ID, asset ID, authenticated principal, optional return details, source, request ID when available.
-  - Output: the returned asset or checkout record, plus current checkout state needed by clients.
+  - Output: the returned asset or checkout record, the undoable operation ID, plus current checkout state needed by clients.
+- `UpdateReturnedCheckoutDetails`
+  - Inputs: tenant ID, inventory ID, asset ID, checkout ID, authenticated principal, optional return details, source, request ID when available.
+  - Output: the returned checkout record.
+  - This operation may only update a checkout that is already in the `returned` state for the requested asset.
+  - This operation must not reopen the checkout, move the asset, or change checkout/return principals or timestamps.
+  - This operation must produce a distinct return-details-updated audit action, not a second asset-returned action.
 
 Required queries:
 
@@ -122,6 +128,7 @@ The first REST endpoints are:
 
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkout`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/return`
+- `PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/checked-out-assets`
 
@@ -130,6 +137,10 @@ Checkout request:
 - `details`: optional string.
 
 Return request:
+
+- `details`: optional string.
+
+Update returned checkout details request:
 
 - `details`: optional string.
 
@@ -145,6 +156,7 @@ Endpoint rules:
 
 - All endpoints require authentication.
 - Checkout and return require `inventory.edit_asset`.
+- Updating returned checkout details requires `inventory.edit_asset`.
 - Checkout history and checked-out listing require `inventory.view`.
 - Endpoints must use standard Stuff Stash success and error envelopes.
 - Endpoints must be represented in the generated OpenAPI contract.
@@ -160,6 +172,7 @@ Asset read responses:
 - Asset list responses should include current checkout state when available without requiring clients to make per-asset checkout calls.
 - Location/container contents must include current checkout state for contained assets.
 - Existing clients that do not understand checkout state must still be able to render assets normally.
+- Checkout and return mutation responses must include the undoable operation ID so clients can present immediate undo flows without guessing from audit history.
 
 ## Search
 
@@ -205,6 +218,8 @@ Mobile requirements:
 - Asset cards, recent assets, search results, location lists, map rows, and asset detail must show a compact checked-out indicator when an asset has an open checkout.
 - The checked-out indicator must not hide the asset's normal location or imply that the asset moved.
 - The selected-inventory browsing experience must provide a checked-out filter or surface.
+- The mobile Home screen must show a checked-out row directly under the recently changed row using the same card mechanics as recent assets. When no assets are checked out, this row must collapse into a compact, low-prominence empty state that does not consume recent-asset-card vertical space.
+- Checked-out cards on the mobile Home screen must include a one-tap `Return` action. Pressing it must immediately return the asset, then open a native sheet for optional return details. Saving the sheet updates the returned checkout details. Canceling the sheet undoes the return through the returned undoable operation ID, restoring the asset to checked-out state.
 - The mobile asset detail workspace must expose checkout history through the same safe-history design principles used for audit history: compact rows, safe actor labels, timestamps, and bounded details.
 
 Permission behavior:

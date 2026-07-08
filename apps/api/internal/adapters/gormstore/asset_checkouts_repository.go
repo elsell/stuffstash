@@ -95,6 +95,36 @@ func returnAssetInTx(tx *gorm.DB, expectedCurrent asset.Checkout, returned asset
 	return createUndoableOperation(tx, undoableOperation)
 }
 
+func (s Store) UpdateAssetCheckoutReturnDetails(ctx context.Context, expectedCurrent asset.Checkout, updated asset.Checkout, auditRecord audit.Record) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var model assetCheckoutModel
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetCheckoutModel{ID: expectedCurrent.ID.String(), TenantID: expectedCurrent.TenantID.String(), InventoryID: expectedCurrent.InventoryID.String()}).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrConflict
+		}
+		if err != nil {
+			return err
+		}
+		current, ok := model.toDomain()
+		if !ok {
+			return fmt.Errorf("invalid asset checkout row %q", model.ID)
+		}
+		if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+			return ports.ErrConflict
+		}
+		if current.State != asset.CheckoutStateReturned || updated.ID != current.ID || updated.TenantID != current.TenantID || updated.InventoryID != current.InventoryID || updated.AssetID != current.AssetID || updated.State != asset.CheckoutStateReturned || updated.ReturnedAt.IsZero() || updated.ReturnedByPrincipal == "" {
+			return ports.ErrForbidden
+		}
+		if err := tx.Model(&model).Updates(map[string]any{
+			"return_details": updated.ReturnDetails.String(),
+			"updated_at":     updated.UpdatedAt,
+		}).Error; err != nil {
+			return err
+		}
+		return createAuditRecord(tx, auditRecord)
+	})
+}
+
 func (s Store) CurrentAssetCheckout(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Checkout, bool, error) {
 	var model assetCheckoutModel
 	err := s.db.WithContext(ctx).Where(&assetCheckoutModel{
