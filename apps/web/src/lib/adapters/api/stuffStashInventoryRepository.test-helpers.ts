@@ -14,6 +14,9 @@ export const config: RuntimeConfig = {
 export function fakeFetch(
   options: {
     directUploadUrl?: string;
+    directUploadMethod?: string;
+    directUploadHeaders?: Record<string, string>;
+    directUploadFormFields?: Record<string, string>;
     directUploadRejected?: boolean;
     directUploadThrows?: boolean;
     primaryPhotoAssetIds?: string[];
@@ -27,6 +30,20 @@ export function fakeFetch(
   return {
     requests,
     fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      const inputUrl = input instanceof Request ? input.url : input.toString();
+      if ((init?.body instanceof FormData) && inputUrl === 'https://uploads.local/object-one') {
+        const headers = new Headers(init.headers);
+        if (!headers.has('Content-Type')) {
+          headers.set('Content-Type', 'multipart/form-data; boundary=stuffstash-test');
+        }
+        const request = new Request(input, { ...init, body: undefined, headers });
+        Object.defineProperty(request, 'capturedFormData', { value: init.body });
+        requests.push(request);
+        if (options.directUploadThrows) {
+          throw new TypeError('Failed to fetch');
+        }
+        return new Response(null, { status: options.directUploadRejected ? 403 : 204 });
+      }
       const request = new Request(input, init);
       requests.push(request);
       const url = new URL(request.url);
@@ -165,16 +182,16 @@ export function fakeFetch(
           {
             uploadId: 'upload-one',
             attachmentId: 'attachment-one',
-            method: 'PUT',
+            method: options.directUploadMethod ?? 'PUT',
             url: options.directUploadUrl ?? 'https://uploads.local/object-one',
-            headers: { 'Content-Type': 'image/jpeg' },
-            formFields: {},
+            headers: options.directUploadHeaders ?? { 'Content-Type': 'image/jpeg' },
+            formFields: options.directUploadFormFields ?? {},
             expiresAt: '2026-06-23T00:15:00Z'
           },
           201
         );
       }
-      if (request.method === 'PUT' && request.url === 'https://uploads.local/object-one') {
+      if ((request.method === 'PUT' || request.method === 'POST') && request.url === 'https://uploads.local/object-one') {
         if (options.directUploadThrows) {
           throw new TypeError('Failed to fetch');
         }

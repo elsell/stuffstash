@@ -197,6 +197,24 @@ jobs:
           subject-digest: ${{ steps.web_image.outputs.digest }}
           push-to-registry: true
 
+      - name: Update self-host image digests
+        run: |
+          node scripts/update-selfhost-image-refs.mjs \
+            --api-image "${{ steps.api_image.outputs.image_ref }}" \
+            --web-image "${{ steps.web_image.outputs.image_ref }}"
+
+      - name: Commit self-host image digests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .env.example
+          if git diff --cached --quiet; then
+            echo "Self-host image digests are already current."
+            exit 0
+          fi
+          git commit -m "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}"
+          git push origin HEAD:main
+
       - name: Create release tag
         run: |
           git config user.name "github-actions[bot]"
@@ -206,11 +224,12 @@ jobs:
 
       - name: Create GitHub release
         run: |
+          release_ref="${GITHUB_SHA}"
           previous="${{ needs.validate.outputs.previous_tag }}"
           if [ "$previous" = "none" ]; then
-            range="${GITHUB_SHA}"
+            range="$release_ref"
           else
-            range="${previous}..${GITHUB_SHA}"
+            range="${previous}..${release_ref}"
           fi
 
           {
@@ -223,7 +242,7 @@ jobs:
           } > release-notes.md
 
           gh release create "${{ needs.validate.outputs.next_tag }}" \
-            --target "${GITHUB_SHA}" \
+            --target "$release_ref" \
             --title "${{ needs.validate.outputs.next_tag }}" \
             --notes-file release-notes.md
         env:

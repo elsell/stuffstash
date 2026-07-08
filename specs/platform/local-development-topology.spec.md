@@ -139,7 +139,10 @@ must lead with the durable self-host path.
 
 The durable self-host Compose topology must:
 
-- Be started with `docker compose -f compose.selfhost.yaml up --build`.
+- Be started with `docker compose -f compose.selfhost.yaml up` from published
+  digest-pinned API and web images. Source builds may remain available through a
+  separate contributor override file or explicit Compose profile, but they must
+  not be the public self-host happy path.
 - Read operator-provided runtime values from a private `.env` file copied from
   the committed `.env.example`.
 - Run Dex as the default OIDC provider for browser, API, and mobile metadata.
@@ -171,6 +174,9 @@ The durable self-host Compose topology must:
   the self-host defaults set browser S3 uploads to HTTPS.
 - Persist API Postgres data, SpiceDB datastore data, Garage metadata, and Garage
   object data in named volumes.
+- Set Postgres `PGDATA` under each mounted data volume so database files are not
+  written to container-local image paths that disappear after `docker compose
+  down`.
 - Use a datastore-backed SpiceDB service rather than `serve-testing`.
 - Keep Redis and Valkey out of this topology until a future spec defines a
   concrete distributed cache, queue, or rate-limiter adapter need. The existing

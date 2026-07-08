@@ -196,6 +196,7 @@ scripts-test: release-plan-test selfhost-happy-path-check
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs
+	PATH="$(DOCS_PATH)" node --check scripts/update-selfhost-image-refs.mjs
 	PATH="$(DOCS_PATH)" node --check scripts/verify-mobile-oidc-pkce.mjs
 
 docs-install:

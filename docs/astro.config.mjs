@@ -30,6 +30,7 @@ export default defineConfig({
           items: [
             { label: 'What It Does', slug: 'product' },
             { label: 'Run Stuff Stash', slug: 'self-hosting' },
+            { label: 'Dex Users And Clients', slug: 'dex-users' },
             { label: 'Configuration Reference', slug: 'configuration' },
             { label: 'First Inventory', slug: 'first-inventory' },
             { label: 'Concepts', slug: 'concepts' },

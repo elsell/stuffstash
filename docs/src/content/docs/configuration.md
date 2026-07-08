@@ -230,6 +230,8 @@ settings unless they map to a `STUFF_STASH_*` variable above.
 | `SPICEDB_GRPC_PORT` | `50051` | Host port mapped to SpiceDB. |
 | `DEX_HTTP_PORT` | `5556` | Host port mapped to Dex in the OIDC Compose override. |
 | `GARAGE_IMAGE` | pinned digest | Garage image override. Must stay digest-pinned. |
+| `STUFF_STASH_API_IMAGE` | pinned digest | Published API image used by self-host Compose. Release automation updates this digest. |
+| `STUFF_STASH_WEB_IMAGE` | pinned digest | Published static web image used by self-host Compose. Release automation updates this digest. |
 | `GARAGE_S3_PORT` | `3900` | Host port mapped to the Garage S3 API. |
 | `GO_BUILDER_IMAGE` | pinned digest | API builder image override. Must stay digest-pinned. |
 | `RUNTIME_IMAGE` | pinned digest | API runtime image override. Must stay digest-pinned. |
