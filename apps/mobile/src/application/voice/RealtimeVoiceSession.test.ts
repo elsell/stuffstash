@@ -1347,7 +1347,7 @@ describe('RealtimeVoiceSessionController', () => {
           seq: 2,
           sessionId: 'session-1',
           message: 'Language prompt bearer abc123 stack trace',
-          detail: 'Transcript: move water bottle\nbearer abc123'
+          detail: 'Transcript: move water bottle\nbearer abc123\n{"assetId":"water-bottle-1"}'
         },
         { type: 'session.completed', seq: 3, sessionId: 'session-1' }
       ]),
@@ -1370,7 +1370,7 @@ describe('RealtimeVoiceSessionController', () => {
       {
         label: 'Language prompt bearer [redacted] [redacted]',
         status: 'Details',
-        detail: 'Transcript: move water bottle\nbearer [redacted]'
+        detail: 'Transcript: move water bottle\nbearer [redacted]\n{assetId: [redacted]}'
       }
     ]);
     expect(visibleProgressLabels.join(' ')).not.toContain('bearer secret');
@@ -1394,7 +1394,7 @@ describe('RealtimeVoiceSessionController', () => {
           seq: 2,
           sessionId: 'session-1',
           status: 'answering',
-          message: 'Authorization: tok+en/with~punctuation bearer eyJhbGciOi.test.sig=='
+          message: 'Authorization: tok+en/with~punctuation bearer eyJhbGciOi.test.sig== {"parentAssetId":"kitchen-1"}'
         },
         { type: 'session.completed', seq: 3, sessionId: 'session-1' }
       ]),
@@ -1410,6 +1410,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(visibleText).not.toContain('abc/def');
     expect(visibleText).not.toContain('tok+en');
     expect(visibleText).not.toContain('eyJhbGciOi');
+    expect(visibleText).not.toContain('kitchen-1');
     expect(visibleText).not.toContain('stack trace');
     expect(visibleText).not.toContain('gemini-live-1');
   });
