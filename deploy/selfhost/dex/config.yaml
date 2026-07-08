@@ -1,7 +1,7 @@
 # Self-host first-run Dex config.
 # Copy this file to a private path and update users before a household relies on it.
 
-issuer: http://stuffstash.localhost:5556/dex
+issuer: https://stuffstash.localhost:5556/dex
 
 storage:
   type: memory
@@ -9,7 +9,7 @@ storage:
 web:
   http: 0.0.0.0:5556
   allowedOrigins:
-    - http://stuffstash.localhost:8081
+    - https://stuffstash.localhost:8081
 
 oauth2:
   passwordConnector: local
@@ -20,13 +20,13 @@ staticClients:
     name: Stuff Stash Local
     secret: stuff-stash-local-secret
     redirectURIs:
-      - http://stuffstash.localhost:8080/callback
-      - http://stuffstash.localhost:8081/callback
+      - https://stuffstash.localhost:8080/callback
+      - https://stuffstash.localhost:8081/callback
   - id: stuff-stash-web-local
     name: Stuff Stash Web Local
     public: true
     redirectURIs:
-      - http://stuffstash.localhost:8081/callback
+      - https://stuffstash.localhost:8081/callback
   - id: stuff-stash-mobile-local
     name: Stuff Stash Mobile Local
     public: true

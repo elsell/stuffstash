@@ -16,17 +16,35 @@ grep -qE '^[[:space:]]+dex:' "$compose_file" ||
 grep -q 'dexidp/dex:.*@sha256:' "$compose_file" ||
   fail "self-host Dex image must be digest-pinned"
 
+grep -qE '^[[:space:]]+caddy:' "$compose_file" ||
+  fail "compose.selfhost.yaml must include Caddy HTTPS edge"
+
+grep -q 'CADDY_IMAGE=caddy:.*@sha256:' .env.example ||
+  fail "self-host Caddy image must be digest-pinned"
+
+test -f deploy/selfhost/caddy/Caddyfile ||
+  fail "self-host Caddyfile must exist"
+
+grep -q 'tls internal' deploy/selfhost/caddy/Caddyfile ||
+  fail "self-host Caddyfile must use Caddy local HTTPS"
+
+grep -q 'aliases:' "$compose_file" && grep -q 'STUFF_STASH_SELFHOST_HOSTNAME' "$compose_file" ||
+  fail "Caddy must expose the self-host hostname as a Docker network alias"
+
 grep -q '127.0.0.1:5556/dex/.well-known/openid-configuration' "$compose_file" ||
   fail "self-host Dex healthcheck must verify OIDC discovery readiness"
 
 awk '
   /^[[:space:]]+app:$/ { in_app=1; next }
   /^[[:space:]][a-zA-Z0-9_-]+:$/ { if (in_app) exit }
-  in_app && /^[[:space:]]+dex:$/ { in_dex_dep=1; next }
-  in_dex_dep && /condition:[[:space:]]+service_healthy/ { found=1 }
+  in_app && /^[[:space:]]+caddy-bootstrap:$/ { in_caddy_bootstrap_dep=1; next }
+  in_caddy_bootstrap_dep && /condition:[[:space:]]+service_completed_successfully/ { found=1 }
   END { exit found ? 0 : 1 }
 ' "$compose_file" ||
-  fail "self-host API must wait for healthy Dex before OIDC startup"
+  fail "self-host API must wait for Caddy HTTPS OIDC bootstrap"
+
+grep -q 'well-known/openid-configuration' "$compose_file" ||
+  fail "Caddy bootstrap must verify HTTPS OIDC discovery"
 
 if awk '/^[[:space:]]+spicedb:/{in_spicedb=1; next} /^[[:space:]][a-zA-Z0-9_-]+:/{if(in_spicedb) exit} in_spicedb && /serve-testing/{found=1} END{exit found ? 0 : 1}' "$compose_file"; then
   fail "self-host SpiceDB must not use serve-testing"
@@ -47,10 +65,23 @@ test -f scripts/configure-garage-cors.mjs ||
 grep -q 'exec nginx -e /dev/stderr -c /tmp/nginx.conf -g "daemon off;"' deploy/web/start-web-runtime.sh ||
   fail "web runtime must send nginx startup errors to stderr for read-only containers"
 
+grep -q 'SSL_CERT_FILE: /caddy-data/stuffstash-ca-certificates.crt' "$compose_file" ||
+  fail "API must trust the Caddy local CA bundle for HTTPS OIDC discovery"
+
 set -a
 # shellcheck source=/dev/null
 source .env.example
 set +a
+
+case "$STUFF_STASH_WEB_ORIGIN:$STUFF_STASH_API_ORIGIN:$STUFF_STASH_OIDC_ISSUER:$STUFF_STASH_S3_SECURE" in
+  https://*:https://*:https://*:true) ;;
+  *) fail "default self-host browser origins and OIDC issuer must use HTTPS" ;;
+esac
+
+case "$STUFF_STASH_S3_ENDPOINT:$STUFF_STASH_S3_PUBLIC_ENDPOINT" in
+  "$STUFF_STASH_SELFHOST_HOSTNAME":*:"$STUFF_STASH_SELFHOST_HOSTNAME":*) ;;
+  *) fail "default self-host S3 endpoints must use the Caddy HTTPS hostname" ;;
+esac
 
 grep -q "issuer: ${STUFF_STASH_OIDC_ISSUER}" deploy/selfhost/dex/config.yaml ||
   fail "default Dex issuer must match .env.example"
@@ -80,12 +111,14 @@ if docker compose version >/dev/null 2>&1; then
     fail "rendered Compose config must keep Dex health dependency"
   grep -q 'spicedb-postgres' "$config_output" ||
     fail "rendered Compose config must include SpiceDB datastore Postgres"
+  grep -q 'caddy:2.10.2@sha256:' "$config_output" ||
+    fail "rendered Compose config must include pinned Caddy"
   cleanup_compose_config
   trap - EXIT
 fi
 
-grep -q 'Docker Compose, Dex OIDC, Postgres, SpiceDB, and Garage' "$self_host_doc" ||
-  fail "self-host docs must lead with durable Docker Compose plus bundled Dex"
+grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres, SpiceDB, and Garage' "$self_host_doc" ||
+  fail "self-host docs must lead with durable Docker Compose, HTTPS, and bundled Dex"
 
 if grep -q '^## Compose Evaluation' "$self_host_doc"; then
   fail "self-host docs must not present contributor evaluation as a public happy path"

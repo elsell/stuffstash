@@ -24,7 +24,7 @@ It does not define Kubernetes production deployment, external Google OIDC rollou
 - Local authorization replay must use project-owned authorization/outbox ports. It must not read database tables directly from bootstrap code, must not bypass authorization adapters, and must not run when a production authorization adapter such as SpiceDB is selected.
 - Local authorization replay must apply durable tenant-owner, inventory-owner, viewer, editor, and revoke intent in deterministic creation order and ignore dead-lettered authorization intent. Replayed grants and revokes must remain idempotent.
 - Local development must also support Dex as a deterministic OIDC issuer so the API can be verified with real OIDC discovery and token verification.
-- The Docker Compose self-host topology must include Dex, Postgres, datastore-backed SpiceDB, Garage, the API, and the static web container so the documented path is production-shaped by default.
+- The Docker Compose self-host topology must include Caddy, Dex, Postgres, datastore-backed SpiceDB, Garage, the API, and the static web container so the documented path is production-shaped by default.
 - The Docker Compose contributor evaluation topology may remain separate for fast local API development, but public self-hosting documentation must not present it as the user-facing happy path.
 - The Compose self-host/evaluation topology must be runnable with plain `docker compose` commands. Make targets may remain contributor conveniences, but public self-host documentation must not require GNU Make.
 - Developers may switch the API to production-shaped OIDC and SpiceDB adapters through environment variables without code changes.
@@ -104,8 +104,8 @@ The self-hosting path must make these boundaries explicit:
   self-hosters to start a host Vite development server, wire a separate OIDC
   provider, or choose between SQLite and Postgres before they have seen the app.
 - A self-hosted setup must use Dex OIDC, Postgres metadata persistence,
-  datastore-backed SpiceDB authorization, durable blob storage, and the static
-  web container.
+  datastore-backed SpiceDB authorization, durable blob storage, the static web
+  container, and an HTTPS edge proxy.
 - Bundled Dex is the default OIDC provider for Docker Compose self-hosting.
   Operators may replace Dex with another standards-compliant OIDC provider
   later, but that is an advanced configuration rather than the first-run path.
@@ -118,6 +118,8 @@ The self-hosting path must make these boundaries explicit:
   URLs, and object-storage endpoints. For OIDC, the issuer used by the browser,
   API, and mobile metadata must be the same reachable issuer for the intended
   client.
+- The default browser-facing self-host origins must use HTTPS, even when the
+  certificate is issued by a local self-host CA rather than a public CA.
 - Browser media upload with S3-compatible storage requires a browser-reachable
   `STUFF_STASH_S3_PUBLIC_ENDPOINT` and bucket CORS policy that permits the web
   origin to upload through the S3 API.
@@ -144,6 +146,15 @@ The durable self-host Compose topology must:
 - Treat Dex readiness as OIDC discovery readiness. The API must not start from
   the self-host Compose dependency graph until Dex's discovery document is
   reachable, because the API validates the issuer during startup.
+- Run Caddy as the self-host HTTPS edge for the web app, API, Dex issuer, and
+  Garage/S3 browser endpoint. Caddy must use a persistent data volume so its
+  local CA and certificates survive container restarts.
+- Give the Caddy service the default self-host hostname as a Docker network
+  alias so containers can use the same HTTPS origins as browsers without
+  host-gateway hairpin routing.
+- Start the API only after Caddy has produced its local CA root and the Dex
+  discovery document is reachable through the browser-facing HTTPS issuer. The
+  API must trust that local CA for OIDC discovery and token verification.
 - Run the API with OIDC authentication, SpiceDB authorization, Postgres
   persistence, and Garage/S3-compatible blob storage.
 - Run the static web image as a Compose service instead of requiring a host
@@ -156,6 +167,8 @@ The durable self-host Compose topology must:
 - Configure API CORS from the configured web origin.
 - Configure the Garage bucket CORS policy for the configured web origin before
   the web service is considered ready for browser upload testing.
+- Route the API's S3-compatible endpoint through the same HTTPS Caddy edge when
+  the self-host defaults set browser S3 uploads to HTTPS.
 - Persist API Postgres data, SpiceDB datastore data, Garage metadata, and Garage
   object data in named volumes.
 - Use a datastore-backed SpiceDB service rather than `serve-testing`.
