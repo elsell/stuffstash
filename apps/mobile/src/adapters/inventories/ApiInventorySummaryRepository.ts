@@ -14,6 +14,7 @@ import {
   CreateInventoryAssetTagInput,
   CreateInventoryAssetPhotoInput,
   AddInventoryAssetPhotoInput,
+  GetInventoryAssetDetailInput,
   InventoryAssetPhotoDirectUpload,
   InventorySummaryRepository,
   InventoryWorkspace,
@@ -129,6 +130,18 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     }
 
     return inventory;
+  }
+
+  async getAssetDetail(input: GetInventoryAssetDetailInput): Promise<AssetSummary> {
+    const asset = summaryToApiAsset(input.tenantId, input.inventoryId, input.asset);
+    const photos = await this.photosForAsset(asset, { allowAttachmentListFailure: false });
+
+    return {
+      ...input.asset,
+      hasPhoto: photos.length > 0,
+      photos,
+      photo: photos[0]
+    };
   }
 
   async selectInventory(selectedInventoryId: InventoryId): Promise<void> {
@@ -550,7 +563,10 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     };
   }
 
-  private async photosForAsset(asset: Asset): Promise<readonly NonNullable<AssetSummary['photo']>[]> {
+  private async photosForAsset(
+    asset: Asset,
+    options: { readonly allowAttachmentListFailure?: boolean } = {}
+  ): Promise<readonly NonNullable<AssetSummary['photo']>[]> {
     const attachments = [];
     let cursor: string | undefined;
 
@@ -567,47 +583,50 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         cursor = page.pagination.nextCursor ?? undefined;
       } while (cursor);
     } catch {
+      if (options.allowAttachmentListFailure === false) {
+        throw new Error('Asset attachments could not be loaded.');
+      }
       return [];
     }
 
-    return Promise.all(
-      attachments
-        .filter((item) => item.lifecycleState === 'active' && item.contentType.startsWith('image/'))
-        .map(async (attachment) => {
-          const smallReference = await this.client.assetAttachmentThumbnailReference(
-            asset.tenantId,
-            asset.inventoryId,
-            asset.id,
-            attachment.id,
-            'small'
-          );
-          const mediumReference = await this.client.assetAttachmentThumbnailReference(
-            asset.tenantId,
-            asset.inventoryId,
-            asset.id,
-            attachment.id,
-            'medium'
-          );
-          const largeReference = await this.client.assetAttachmentThumbnailReference(
-            asset.tenantId,
-            asset.inventoryId,
-            asset.id,
-            attachment.id,
-            'large'
-          );
-          return {
-            id: attachment.id,
-            fileName: attachment.fileName,
-            contentType: attachment.contentType,
-            sizeBytes: attachment.sizeBytes,
-            uri: smallReference.uri,
-            heroUri: mediumReference.uri,
-            heroHeaders: mediumReference.headers,
-            viewerUri: largeReference.uri,
-            viewerHeaders: largeReference.headers,
-            headers: smallReference.headers
-          };
-        })
+    return mapWithConcurrency(
+      attachments.filter((item) => item.lifecycleState === 'active' && item.contentType.startsWith('image/')),
+      4,
+      async (attachment) => {
+        const smallReference = await this.client.assetAttachmentThumbnailReference(
+          asset.tenantId,
+          asset.inventoryId,
+          asset.id,
+          attachment.id,
+          'small'
+        );
+        const mediumReference = await this.client.assetAttachmentThumbnailReference(
+          asset.tenantId,
+          asset.inventoryId,
+          asset.id,
+          attachment.id,
+          'medium'
+        );
+        const largeReference = await this.client.assetAttachmentThumbnailReference(
+          asset.tenantId,
+          asset.inventoryId,
+          asset.id,
+          attachment.id,
+          'large'
+        );
+        return {
+          id: attachment.id,
+          fileName: attachment.fileName,
+          contentType: attachment.contentType,
+          sizeBytes: attachment.sizeBytes,
+          uri: smallReference.uri,
+          heroUri: mediumReference.uri,
+          heroHeaders: mediumReference.headers,
+          viewerUri: largeReference.uri,
+          viewerHeaders: largeReference.headers,
+          headers: smallReference.headers
+        };
+      }
     );
   }
 

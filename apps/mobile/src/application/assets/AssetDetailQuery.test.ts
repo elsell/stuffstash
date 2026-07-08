@@ -7,6 +7,7 @@ import {
 } from '../../domain/inventories/InventorySummary';
 import type {
   CreateInventoryAssetInput,
+  GetInventoryAssetDetailInput,
   InventorySummaryRepository,
   InventoryWorkspace
 } from '../home/InventorySummaryRepository';
@@ -16,6 +17,7 @@ import { toAssetDetailViewModel } from './AssetViewModels';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
   private readonly inventory: InventorySummary;
+  private readonly detailAssets = new Map<string, AssetSummary>();
 
   constructor(permissions: InventorySummary['permissions'] = ['view', 'create_asset', 'edit_asset']) {
     this.inventory = {
@@ -57,6 +59,10 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
     };
   }
 
+  setDetailAsset(asset: AssetSummary): void {
+    this.detailAssets.set(asset.id, asset);
+  }
+
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
       tenants: [{ id: tenantId('tenant-home'), name: 'Home tenant' }],
@@ -67,6 +73,14 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   async getDefaultInventorySummary(): Promise<InventorySummary> {
     return this.inventory;
+  }
+
+  async getAssetDetail(input: GetInventoryAssetDetailInput): Promise<AssetSummary> {
+    const asset = this.detailAssets.get(input.asset.id);
+    if (asset) {
+      return asset;
+    }
+    return input.asset;
   }
 
   async selectInventory(): Promise<void> {}
@@ -165,9 +179,40 @@ describe('AssetDetailQuery', () => {
     );
   });
 
+  it('uses the detail asset photo list when the repository can load complete media', async () => {
+    const repository = new FakeInventorySummaryRepository();
+    repository.setDetailAsset({
+      id: assetId('asset-passport'),
+      title: 'Passport folder',
+      kind: 'container',
+      lifecycleState: 'active',
+      locationLabel: 'Office closet',
+      locationTrail: ['Home', 'Office closet', 'Passport folder'],
+      customType: 'Documents',
+      description: 'Travel documents and copies.',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: true,
+      photos: [
+        { id: 'attachment-front', fileName: 'front.jpg', uri: 'https://api.example.test/front-small.jpg' },
+        { id: 'attachment-back', fileName: 'back.jpg', uri: 'https://api.example.test/back-small.jpg' }
+      ]
+    });
+    const query = new AssetDetailQuery(repository);
+
+    await expect(query.execute('asset-passport')).resolves.toMatchObject({
+      id: 'asset-passport',
+      photos: [
+        { id: 'attachment-front', label: 'front.jpg' },
+        { id: 'attachment-back', label: 'back.jpg' }
+      ],
+      containedAssetsLabel: '1 thing inside'
+    });
+  });
+
   it('falls back to the selected active map tree when the summary page is missing a visible map row', async () => {
+    const repository = new FakeInventorySummaryRepository();
     const query = new AssetDetailQuery(
-      new FakeInventorySummaryRepository(),
+      repository,
       new FakeInventoryMapAssetRepository([
         {
           id: assetId('asset-living-room-table'),
@@ -188,6 +233,47 @@ describe('AssetDetailQuery', () => {
       title: 'Living room table',
       kind: 'location',
       canAddContainedAssets: true
+    });
+  });
+
+  it('uses the detail asset photo list for map-only assets', async () => {
+    const repository = new FakeInventorySummaryRepository();
+    repository.setDetailAsset({
+      id: assetId('asset-living-room-table'),
+      title: 'Living room table',
+      kind: 'location',
+      lifecycleState: 'active',
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home', 'Living room table'],
+      description: 'Temporary landing spot.',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: true,
+      photos: [
+        { id: 'attachment-table', fileName: 'table.jpg', uri: 'https://api.example.test/table-small.jpg' }
+      ]
+    });
+    const query = new AssetDetailQuery(
+      repository,
+      new FakeInventoryMapAssetRepository([
+        {
+          id: assetId('asset-living-room-table'),
+          title: 'Living room table',
+          kind: 'location',
+          lifecycleState: 'active',
+          locationLabel: 'Inventory root',
+          locationTrail: ['Home', 'Living room table'],
+          description: 'Temporary landing spot.',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        }
+      ])
+    );
+
+    await expect(query.execute('asset-living-room-table')).resolves.toMatchObject({
+      id: 'asset-living-room-table',
+      photos: [
+        { id: 'attachment-table', label: 'table.jpg' }
+      ]
     });
   });
 

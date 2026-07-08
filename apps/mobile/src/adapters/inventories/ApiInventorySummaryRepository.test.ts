@@ -13,7 +13,7 @@ import type {
   Tenant
 } from '@stuff-stash/api-client';
 import { assetId } from '../../domain/assets/AssetSummary';
-import { inventoryId } from '../../domain/inventories/InventorySummary';
+import { inventoryId, tenantId } from '../../domain/inventories/InventorySummary';
 import { ApiInventorySummaryRepository } from './ApiInventorySummaryRepository';
 
 class FakeInventoryApiClient {
@@ -894,6 +894,80 @@ describe('ApiInventorySummaryRepository', () => {
       ]
     });
     expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads the complete active image attachment set for asset detail', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getAssetDetail({
+      tenantId: tenantId('tenant-home'),
+      inventoryId: inventoryId('inventory-home'),
+      asset: {
+        id: assetId('asset-filters'),
+        title: 'Furnace filters',
+        kind: 'item',
+        lifecycleState: 'active',
+        parentAssetId: assetId('asset-garage'),
+        locationLabel: 'Garage',
+        locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
+        description: 'Three-pack of filters.',
+        updatedAtLabel: 'Updated today',
+        hasPhoto: true
+      }
+    })).resolves.toMatchObject({
+      id: 'asset-filters',
+      title: 'Furnace filters',
+      hasPhoto: true,
+      photos: [
+        {
+          id: 'attachment-filters-photo',
+          fileName: 'filters.jpg',
+          uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small',
+          heroUri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=medium',
+          viewerUri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=large'
+        },
+        {
+          id: 'attachment-filters-label',
+          fileName: 'filters-label.jpg'
+        }
+      ]
+    });
+    expect(client.listAttachmentRequests).toEqual([
+      { assetId: 'asset-filters', limit: 50, cursor: undefined }
+    ]);
+    const detailThumbnailRequests = client.thumbnailRequests.slice(-6);
+    expect(detailThumbnailRequests).toHaveLength(6);
+    expect(detailThumbnailRequests).toEqual(expect.arrayContaining([
+      { assetId: 'asset-filters', attachmentId: 'attachment-filters-photo', variant: 'small' },
+      { assetId: 'asset-filters', attachmentId: 'attachment-filters-photo', variant: 'medium' },
+      { assetId: 'asset-filters', attachmentId: 'attachment-filters-photo', variant: 'large' },
+      { assetId: 'asset-filters', attachmentId: 'attachment-filters-label', variant: 'small' },
+      { assetId: 'asset-filters', attachmentId: 'attachment-filters-label', variant: 'medium' },
+      { assetId: 'asset-filters', attachmentId: 'attachment-filters-label', variant: 'large' }
+    ]));
+  });
+
+  it('does not collapse asset detail attachment lookup failures into an empty photo set', async () => {
+    const client = new FakeInventoryApiClient();
+    client.shouldFailAttachmentLookup = true;
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getAssetDetail({
+      tenantId: tenantId('tenant-home'),
+      inventoryId: inventoryId('inventory-home'),
+      asset: {
+        id: assetId('asset-filters'),
+        title: 'Furnace filters',
+        kind: 'item',
+        lifecycleState: 'active',
+        locationLabel: 'Garage',
+        locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
+        description: 'Three-pack of filters.',
+        updatedAtLabel: 'Updated today',
+        hasPhoto: true
+      }
+    })).rejects.toThrow('Asset attachments could not be loaded.');
   });
 
   it('requests API-owned updated-descending asset order for mobile recency', async () => {

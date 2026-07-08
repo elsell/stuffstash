@@ -150,6 +150,7 @@ Asset summary media:
 - The first image summary must be assembled server-side using repository-level batch lookup for the returned assets. Clients must not need to issue one attachment-list request per asset to render Home or Browse cards.
 - After an authorized asset list or search builds primary image summaries, the API should best-effort warm a bounded number of `small` thumbnail derivatives for those primary images so first-visible Home and Browse cards do not each pay lazy thumbnail generation latency. Warm scheduling must not block the list or search response on image resizing, warm work must be concurrency bounded, and warm generation must share the same in-flight derivative coordination used by direct thumbnail downloads so immediate card image requests do not duplicate resize work. Warm limit, concurrency, and timeout must be configurable through environment-backed runtime config. Warm failures must be observed but must not fail the list or search response.
 - Mobile Home and Browse must prefer the asset summary image references for cards and only fall back to attachment listing when a detail/photo-management surface needs the complete attachment set or when the API summary does not include media.
+- Mobile asset detail and photo-management refreshes must load the complete active image attachment set for the selected asset, including after pull-to-refresh, app resume, upload completion, and upload retry. They must not rely only on the bounded primary photo carried by dense Home, Browse, or search summaries.
 
 Model image readiness:
 

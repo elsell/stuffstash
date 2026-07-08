@@ -21,6 +21,7 @@ export type InventoryWorkspace = {
 export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
+  getAssetDetail?(input: GetInventoryAssetDetailInput): Promise<AssetSummary>;
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   createAssetTag?(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary>;
@@ -35,6 +36,12 @@ export interface InventorySummaryRepository {
   searchAssets(query: string): Promise<readonly AssetSummary[]>;
   searchLocations(query: string): Promise<readonly LocationSummary[]>;
 }
+
+export type GetInventoryAssetDetailInput = {
+  readonly tenantId: TenantContext['id'];
+  readonly inventoryId: InventoryId;
+  readonly asset: AssetSummary;
+};
 
 export interface InventoryAssetUpdateRepository {
   updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary>;
