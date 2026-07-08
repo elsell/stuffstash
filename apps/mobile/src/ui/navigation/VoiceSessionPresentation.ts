@@ -417,7 +417,7 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     title,
     subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
     placement: placementLabel(command, titlesByID),
-    photoDraftEligible: isPhotoDraftEligible(command),
+    photoDraftEligible: isPhotoDraftEligible(command, title),
     tone
   };
 }
@@ -435,13 +435,14 @@ function neutralExistingAssetTitle(value: string | undefined): string {
   }
 }
 
-function isPhotoDraftEligible(command: VoiceActionPlanCommand): boolean {
+function isPhotoDraftEligible(command: VoiceActionPlanCommand, title: string): boolean {
   if (!command.id) {
     return false;
   }
   const assetKind = command.assetKind || command.kind;
   if (command.kind === 'move_asset' || command.operation === 'move') {
-    return assetKind === 'item' || assetKind === 'container' || assetKind === 'location';
+    const hasVerifiedTitle = Boolean(command.title && command.title === title);
+    return hasVerifiedTitle && (assetKind === 'item' || assetKind === 'container' || assetKind === 'location');
   }
   if (command.kind === 'create_asset' || command.kind === 'create_location' || command.operation === 'create') {
     return assetKind === 'item' || assetKind === 'container' || assetKind === 'location' || command.kind === 'create_asset' || command.kind === 'create_location';

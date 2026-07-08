@@ -790,6 +790,44 @@ describe('VoiceSessionPresentation', () => {
     expect(session.actionPlan?.commands[0]).toMatchObject({
       title: 'Selected item',
       subtitle: 'Move the shed to the backyard.',
+      photoDraftEligible: false,
+      tone: 'update'
+    });
+  });
+
+  it('allows photo drafts on reviewed move rows with verified asset titles', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Move the shed to the backyard?',
+          commands: [{
+            id: 'cmd-move-shed',
+            kind: 'move_asset',
+            operation: 'move',
+            title: 'Shed',
+            assetKind: 'item',
+            summary: 'Move Shed to Backyard'
+          }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan?.commands[0]).toMatchObject({
+      title: 'Shed',
+      subtitle: 'Move Shed to Backyard',
       photoDraftEligible: true,
       tone: 'update'
     });
