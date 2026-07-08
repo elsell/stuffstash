@@ -2,6 +2,7 @@ import type { InventorySummaryRepository } from '../home/InventorySummaryReposit
 import type { CreateInventoryAssetPhotoInput } from '../home/InventorySummaryRepository';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
+import { redactUnsafeVoiceText } from './VoiceTextSafety';
 
 export type RecordedVoiceAudio = {
   readonly mimeType: 'audio/mp4';
@@ -1066,13 +1067,4 @@ function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
     return normalized;
   }
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
-}
-
-function redactUnsafeVoiceText(value: string): string {
-  return value
-    .replace(/\bhttps?:\/\/[^\s"',\]}]+/gi, '[redacted-url]')
-    .replace(/\b(?:ph|file|content):\/\/[^\s"',\]}]+/gi, '[redacted-uri]')
-    .replace(/["']?\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token|asset[-_ ]?id|parent[-_ ]?asset[-_ ]?id|inventory[-_ ]?id|tenant[-_ ]?id|tool[-_ ]?call[-_ ]?id)\b["']?\s*[:=]\s*["']?[^"',\s}\n]+["']?/gi, '$1: [redacted]')
-    .replace(/bearer\s+[^"',\s}\]\)]+/gi, 'bearer [redacted]')
-    .replace(/\b(raw prompt|stack trace|raw query|raw transcript|provider session id)\b/gi, '[redacted]');
 }

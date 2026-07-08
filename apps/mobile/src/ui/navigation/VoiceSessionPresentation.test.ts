@@ -111,6 +111,40 @@ describe('VoiceSessionPresentation', () => {
       subtitle: 'Your water bottle is in the Office.'
     });
 
+    const unsafeAnswer = buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'completed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Done',
+        spokenResponse: 'Your water bottle is in the Office. {"assetId":"water-bottle-1"} bearer secret-token stack trace',
+        debugEvents: []
+      },
+      stage: 'completed',
+      status: 'ready'
+    });
+    expect(unsafeAnswer.subtitle).toBe('Your water bottle is in the Office. {assetId: [redacted]} bearer [redacted] [redacted]');
+    expect(unsafeAnswer.subtitle).not.toContain('water-bottle-1');
+    expect(unsafeAnswer.subtitle).not.toContain('secret-token');
+    expect(unsafeAnswer.subtitle).not.toContain('stack trace');
+
+    const unsafePayloadAnswer = buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'completed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Done',
+        spokenResponse: 'Raw prompt: hidden system instruction about the office',
+        debugEvents: []
+      },
+      stage: 'completed',
+      status: 'ready'
+    });
+    expect(unsafePayloadAnswer.subtitle).toBe('[redacted]');
+    expect(unsafePayloadAnswer.subtitle).not.toContain('hidden system instruction');
+
     expect(buildVoiceAccessoryPresentation({
       pathname: '/locations/location-1',
       realtime: {

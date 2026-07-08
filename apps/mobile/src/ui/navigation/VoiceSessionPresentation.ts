@@ -3,6 +3,7 @@ import type {
   VoiceRealtimeState,
   VoiceSafeDiagnosticEvent
 } from '../../application/voice/RealtimeVoiceSession';
+import { redactUnsafeVoiceText } from '../../application/voice/VoiceTextSafety';
 import type { VoiceInteractionStage } from './VoiceInteractionStateContext';
 
 export type VoiceAccessoryPrimaryAction = 'expand' | 'start' | 'stop';
@@ -139,7 +140,7 @@ export function buildVoiceAccessoryPresentation({
 }
 
 function safeAccessorySubtitle(value: string | undefined): string | undefined {
-  const normalized = value?.replace(/\s+/g, ' ').trim();
+  const normalized = redactUnsafeVoiceText(value ?? '').replace(/\s+/g, ' ').trim();
   if (!normalized) {
     return undefined;
   }
