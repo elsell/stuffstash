@@ -223,6 +223,9 @@ func realtimeVoiceShouldUseConstrainedPlanner(transcript string, turn int, toolR
 	if !realtimeVoiceLooksLikeWriteRequest(transcript) || turn == 0 {
 		return false
 	}
+	if realtimeVoiceReadToolResultCount(toolResults) == 0 {
+		return false
+	}
 	if realtimeVoiceShouldRequireCreateDestinationRead(transcript, turn, toolResults) {
 		return false
 	}
@@ -334,7 +337,7 @@ func realtimeVoiceHasAssetCheckoutHistoryResult(toolResults []ports.AgentToolRes
 func realtimeVoiceReadToolResultCount(toolResults []ports.AgentToolResult) int {
 	count := 0
 	for _, result := range toolResults {
-		if result.Name == RealtimeVoiceToolSearchAuthorizedAssets || result.Name == RealtimeVoiceToolListAuthorizedAssets {
+		if (result.Name == RealtimeVoiceToolSearchAuthorizedAssets || result.Name == RealtimeVoiceToolListAuthorizedAssets) && realtimeVoiceToolResultSucceeded(result) {
 			count++
 		}
 	}
@@ -343,7 +346,7 @@ func realtimeVoiceReadToolResultCount(toolResults []ports.AgentToolResult) int {
 
 func realtimeVoiceHasListResult(toolResults []ports.AgentToolResult) bool {
 	for _, result := range toolResults {
-		if result.Name == RealtimeVoiceToolListAuthorizedAssets {
+		if result.Name == RealtimeVoiceToolListAuthorizedAssets && realtimeVoiceToolResultSucceeded(result) {
 			return true
 		}
 	}

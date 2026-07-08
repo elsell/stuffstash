@@ -148,7 +148,10 @@ func TestRealtimeVoiceCheckoutAndReturnRequestsAreWriteRequests(t *testing.T) {
 		if !realtimeVoiceLooksLikeWriteRequest(transcript) {
 			t.Fatalf("expected %q to look like a write request", transcript)
 		}
-		if !realtimeVoiceShouldUseConstrainedPlanner(transcript, 1, []ports.AgentToolResult{{Name: RealtimeVoiceToolSearchAuthorizedAssets}}) {
+		if !realtimeVoiceShouldUseConstrainedPlanner(transcript, 1, []ports.AgentToolResult{{
+			Name:    RealtimeVoiceToolSearchAuthorizedAssets,
+			Content: `{"tool":"search_authorized_assets","items":[{"assetId":"drill-1","title":"Drill","kind":"item"}]}`,
+		}}) {
 			t.Fatalf("expected %q to enter planner mode after visible asset lookup", transcript)
 		}
 	}
