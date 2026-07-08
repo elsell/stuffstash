@@ -422,29 +422,44 @@ func TestGoogleGeminiLanguageInferenceExposesSafeDiagnostics(t *testing.T) {
 	if err != nil {
 		t.Fatalf("language inference: %v", err)
 	}
-	if len(turn.Diagnostics) != 2 {
-		t.Fatalf("expected prompt and model turn diagnostics, got %+v", turn.Diagnostics)
+	if len(turn.Diagnostics) != 3 {
+		t.Fatalf("expected prompt, tool catalog, and model turn diagnostics, got %+v", turn.Diagnostics)
 	}
 	if turn.Diagnostics[0].Title != "Language prompt (turn 1)" || !strings.Contains(turn.Diagnostics[0].Detail, "Move my water bottle to the kitchen.") {
 		t.Fatalf("unexpected prompt diagnostic: %+v", turn.Diagnostics[0])
 	}
-	if turn.Diagnostics[1].Title != "Language model turn (turn 1)" || !strings.Contains(turn.Diagnostics[1].Detail, "search_authorized_assets") {
-		t.Fatalf("unexpected model turn diagnostic: %+v", turn.Diagnostics[1])
+	if turn.Diagnostics[1].Title != "Language tool catalog (turn 1)" ||
+		!strings.Contains(turn.Diagnostics[1].Detail, `"requireToolCall": false`) ||
+		!strings.Contains(turn.Diagnostics[1].Detail, `"name": "search_authorized_assets"`) ||
+		!strings.Contains(turn.Diagnostics[1].Detail, `"readOnly": true`) {
+		t.Fatalf("unexpected tool catalog diagnostic: %+v", turn.Diagnostics[1])
+	}
+	if turn.Diagnostics[2].Title != "Language model turn (turn 1)" || !strings.Contains(turn.Diagnostics[2].Detail, "search_authorized_assets") {
+		t.Fatalf("unexpected model turn diagnostic: %+v", turn.Diagnostics[2])
 	}
 }
 
 func TestGoogleGeminiLanguageInferenceElidesRepeatedPromptDiagnostics(t *testing.T) {
 	t.Parallel()
 
-	diagnostics := languageInferenceDiagnostics(2, "Full repeated prompt.", `{"final":{"kind":"answer"}}`)
-	if len(diagnostics) != 2 {
-		t.Fatalf("expected prompt marker and model turn diagnostics, got %+v", diagnostics)
+	diagnostics := languageInferenceDiagnostics(ports.LanguageInferenceInput{
+		PreviousTurns: 2,
+		Tools: []ports.AgentToolDescriptor{{
+			Name:     "search_authorized_assets",
+			ReadOnly: true,
+		}},
+	}, "Full repeated prompt.", `{"final":{"kind":"answer"}}`)
+	if len(diagnostics) != 3 {
+		t.Fatalf("expected prompt marker, tool catalog, and model turn diagnostics, got %+v", diagnostics)
 	}
 	if diagnostics[0].Title != "Language prompt (turn 3)" || strings.Contains(diagnostics[0].Detail, "Full repeated prompt.") {
 		t.Fatalf("expected repeated prompt to be elided, got %+v", diagnostics[0])
 	}
-	if !strings.Contains(diagnostics[1].Title, "turn 3") || !strings.Contains(diagnostics[1].Detail, "answer") {
-		t.Fatalf("expected turn-labeled model diagnostic, got %+v", diagnostics[1])
+	if diagnostics[1].Title != "Language tool catalog (turn 3)" || !strings.Contains(diagnostics[1].Detail, "search_authorized_assets") {
+		t.Fatalf("expected turn-labeled tool catalog diagnostic, got %+v", diagnostics[1])
+	}
+	if !strings.Contains(diagnostics[2].Title, "turn 3") || !strings.Contains(diagnostics[2].Detail, "answer") {
+		t.Fatalf("expected turn-labeled model diagnostic, got %+v", diagnostics[2])
 	}
 }
 

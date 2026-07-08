@@ -144,7 +144,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 				continue
 			}
 			if input.IncludeDiagnostics {
-				turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, geminiFunctionCallDiagnostic(calls))
+				turn.Diagnostics = languageInferenceDiagnostics(input, prompt, geminiFunctionCallDiagnostic(calls))
 			}
 			return turn, nil
 		}
@@ -161,7 +161,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 			continue
 		}
 		if input.IncludeDiagnostics {
-			turn.Diagnostics = languageInferenceDiagnostics(input.PreviousTurns, prompt, rawText)
+			turn.Diagnostics = languageInferenceDiagnostics(input, prompt, rawText)
 		}
 		return turn, nil
 	}
@@ -439,20 +439,66 @@ func firstLanguagePromptText(contents []geminiContent) string {
 	return contents[0].Parts[0].Text
 }
 
-func languageInferenceDiagnostics(previousTurns int, prompt string, modelTurn string) []ports.LanguageInferenceDiagnostic {
+func languageInferenceDiagnostics(input ports.LanguageInferenceInput, prompt string, modelTurn string) []ports.LanguageInferenceDiagnostic {
 	diagnostics := []ports.LanguageInferenceDiagnostic{}
-	turnLabel := fmt.Sprintf("turn %d", previousTurns+1)
+	turnLabel := fmt.Sprintf("turn %d", input.PreviousTurns+1)
 	if strings.TrimSpace(prompt) != "" {
 		detail := prompt
-		if previousTurns > 0 {
+		if input.PreviousTurns > 0 {
 			detail = "Prompt scaffolding repeated from the first language-model turn; full prompt omitted to keep diagnostics readable."
 		}
 		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language prompt (" + turnLabel + ")", Detail: detail})
+	}
+	if detail := languageToolCatalogDiagnostic(input); detail != "" {
+		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language tool catalog (" + turnLabel + ")", Detail: detail})
 	}
 	if strings.TrimSpace(modelTurn) != "" {
 		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language model turn (" + turnLabel + ")", Detail: modelTurn})
 	}
 	return diagnostics
+}
+
+func languageToolCatalogDiagnostic(input ports.LanguageInferenceInput) string {
+	type toolDiagnostic struct {
+		Name             string   `json:"name"`
+		ReadOnly         bool     `json:"readOnly"`
+		ProviderCallable bool     `json:"providerCallable"`
+		RequiresApproval bool     `json:"requiresApproval"`
+		MutatesInventory bool     `json:"mutatesInventory"`
+		Required         []string `json:"required,omitempty"`
+	}
+	payload := struct {
+		FinalOnly       bool             `json:"finalOnly"`
+		PlanOnly        bool             `json:"planOnly"`
+		RequireToolCall bool             `json:"requireToolCall"`
+		ToolCount       int              `json:"toolCount"`
+		Tools           []toolDiagnostic `json:"tools,omitempty"`
+	}{
+		FinalOnly:       input.FinalOnly,
+		PlanOnly:        input.PlanOnly,
+		RequireToolCall: input.RequireToolCall,
+		ToolCount:       len(input.Tools),
+		Tools:           make([]toolDiagnostic, 0, len(input.Tools)),
+	}
+	for _, tool := range input.Tools {
+		name := strings.TrimSpace(tool.Name)
+		if name == "" {
+			continue
+		}
+		payload.Tools = append(payload.Tools, toolDiagnostic{
+			Name:             name,
+			ReadOnly:         tool.ReadOnly,
+			ProviderCallable: tool.ProviderCallable,
+			RequiresApproval: tool.RequiresApproval,
+			MutatesInventory: tool.MutatesInventory,
+			Required:         append([]string{}, tool.Parameters.Required...),
+		})
+	}
+	rendered, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return safeGoogleConversationPromptText(string(rendered), 4000)
 }
 
 func geminiFunctionCallDiagnostic(calls []geminiFunctionCall) string {
