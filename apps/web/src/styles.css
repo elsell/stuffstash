@@ -651,6 +651,22 @@ small {
   justify-content: space-between;
 }
 
+.search-tag-filter {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0 0;
+}
+
+.search-tag-filter > small {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
 .workspace-main {
   display: grid;
   gap: 20px;

@@ -239,6 +239,7 @@
     bind:checkoutState={searchCheckoutState}
     results={route.searchResults}
     suggestions={route.searchSuggestions}
+    assetTags={workspace.data.context.assetTags ?? []}
     submitted={route.searchSubmitted}
     error={route.searchError}
     busy={status.busy}

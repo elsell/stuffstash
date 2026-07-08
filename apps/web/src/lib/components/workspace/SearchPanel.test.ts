@@ -15,6 +15,7 @@ interface SearchPanelProps {
 	  checkoutState: 'any' | 'checked_out' | 'available';
   results: SearchResult[];
   suggestions: Asset[];
+  assetTags?: AssetTag[];
   submitted: boolean;
   error: string;
   busy: boolean;
@@ -53,6 +54,7 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
 	      checkoutState: 'any',
       results: [],
       suggestions: [asset('tape', 'Tape measure'), asset('tags', 'Gift tags'), asset('table', 'Hall table', 'container')],
+      assetTags: [],
       submitted: false,
       error: '',
       busy: false,
@@ -364,6 +366,28 @@ describe('SearchPanel', () => {
 
     expect(searchedTags).toEqual(['Camping']);
     expect(openedAssetIds).toEqual([]);
+  });
+
+  it('offers active inventory tags as browse filters', async () => {
+    const { searchedTags } = mountSearchPanel({
+      query: '',
+      suggestions: [],
+      assetTags: [
+        { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' },
+        { id: 'tag-camping', key: 'camping', displayName: 'Camping', color: '#2E7D32' }
+      ]
+    });
+
+    const filter = document.body.querySelector<HTMLElement>('[aria-label="Browse by tag"]');
+    expect(filter).not.toBeNull();
+    expect(filter?.textContent).toContain('Tags');
+    expect(filter?.textContent).toContain('Tools');
+    expect(filter?.querySelector<HTMLElement>('.tag-chip-colored')?.style.getPropertyValue('--tag-color')).toBe('#2F80ED');
+
+    buttonWithLabel('Search for tag Tools').click();
+    await flush();
+
+    expect(searchedTags).toEqual(['Tools']);
   });
 
   it('routes location suggestions and results to the focused location surface', async () => {

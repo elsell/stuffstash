@@ -132,6 +132,44 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(searched).toBe(true);
   });
 
+  it('threads active inventory tags into search browsing filters', async () => {
+    const searchedTags: string[] = [];
+    const props = await routeContentProps({
+      route: { mode: 'search' },
+      handlers: {
+        onAssetTagSearch: async (tag) => {
+          searchedTags.push(tag.displayName);
+        }
+      }
+    });
+
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: {
+        ...props,
+        workspace: {
+          ...props.workspace,
+          data: {
+            ...props.workspace.data,
+            context: {
+              ...props.workspace.data.context,
+              assetTags: [
+                { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' }
+              ]
+            }
+          }
+        }
+      }
+    });
+
+    const tagFilter = document.body.querySelector<HTMLElement>('[aria-label="Browse by tag"]');
+    expect(tagFilter?.textContent).toContain('Tools');
+    document.body.querySelector<HTMLButtonElement>('button[aria-label="Search for tag Tools"]')?.click();
+    await tick();
+
+    expect(searchedTags).toEqual(['Tools']);
+  });
+
   it('renders the no-inventory branch with starter inventory affordances', async () => {
     const props = await routeContentProps();
     component = mount(InventoryWorkspaceRouteContent, {

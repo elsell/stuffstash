@@ -28,6 +28,7 @@
     checkoutState = $bindable<SearchCheckoutFilter>('any'),
     results,
     suggestions,
+    assetTags = [],
     submitted,
     error,
     busy,
@@ -43,6 +44,7 @@
     checkoutState: SearchCheckoutFilter;
     results: SearchResult[];
     suggestions: Asset[];
+    assetTags?: AssetTag[];
     submitted: boolean;
     error: string;
     busy: boolean;
@@ -260,6 +262,13 @@
       onSelect={(value) => { checkoutState = value as SearchCheckoutFilter; onSearch(); }}
     />
   </div>
+
+  {#if assetTags.length > 0}
+    <div class="search-tag-filter" aria-label="Browse by tag">
+      <small>Tags</small>
+      <AssetTagChips tags={assetTags} compact onTagSelect={onTagSearch} />
+    </div>
+  {/if}
 
   {#if statusPresentation.kind !== 'none'}
     <div class="empty-state spacious" role={statusPresentation.role}>
