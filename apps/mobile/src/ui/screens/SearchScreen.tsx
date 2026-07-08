@@ -114,6 +114,7 @@ export function SearchScreen({
   const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
   const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
   const [tagFilters, setTagFilters] = useState<readonly AssetTagOptionViewModel[]>([]);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const requestSequence = useRef(0);
@@ -427,6 +428,7 @@ export function SearchScreen({
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}
             checkoutState={checkoutState}
+            filtersExpanded={filtersExpanded}
             query={query}
             resultCount={listItems.length}
             scope={scope}
@@ -448,6 +450,7 @@ export function SearchScreen({
             onSearchBlur={() => setIsSearchFocused(false)}
             onSearchFocus={() => setIsSearchFocused(true)}
             onSubmit={submitSearch}
+            onToggleFilters={setFiltersExpanded}
           />
         }
         ListEmptyComponent={
@@ -477,6 +480,7 @@ export function SearchHeader({
   isLoading,
   lifecycleState,
   checkoutState,
+  filtersExpanded,
   query,
   resultCount,
   scope,
@@ -497,11 +501,13 @@ export function SearchHeader({
   onSelectTag,
   onSearchBlur,
   onSearchFocus,
-  onSubmit
+  onSubmit,
+  onToggleFilters
 }: {
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
+  readonly filtersExpanded: boolean;
   readonly query: string;
   readonly resultCount: number;
   readonly scope: BrowseScope;
@@ -523,6 +529,7 @@ export function SearchHeader({
   readonly onSearchBlur: () => void;
   readonly onSearchFocus: () => void;
   readonly onSubmit: () => void;
+  readonly onToggleFilters: (expanded: boolean) => void;
 }) {
   const summaryLabel = searchResultSummaryLabel({
     lifecycleState,
@@ -531,6 +538,7 @@ export function SearchHeader({
     scope,
     sort
   });
+  const sortedTagFilters = [...(tagFilters ?? [])].sort(compareTagOptions);
 
   return (
     <View>
@@ -551,7 +559,7 @@ export function SearchHeader({
           onBlur={onSearchBlur}
           onFocus={onSearchFocus}
           onSubmitEditing={onSubmit}
-          placeholder="Search things, places, boxes"
+          placeholder="Search things, places, tags"
           placeholderTextColor={colors.textMuted}
           returnKeyType="search"
           style={styles.searchInput}
@@ -570,42 +578,83 @@ export function SearchHeader({
         ) : null}
         {isLoading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
       </View>
-      <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
-      {tagFilters && tagFilters.length > 0 && onSelectTag ? (
-        <View style={styles.tagFilterBlock} accessibilityLabel="Browse by tag">
-          <Text style={styles.tagFilterLabel}>Tags</Text>
-          <ScrollView
-            accessibilityLabel="Tag filters"
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tagFilterScroller}
-          >
-            <AssetTagChips
-              tags={tagFilters.map((tag) => ({ id: tag.id, label: tag.label, color: tag.color }))}
-              compact
-              onTagPress={(tag) => {
-                const selected = tagFilters.find((candidate) => candidate.id === tag.id);
-                if (selected) {
-                  onSelectTag(selected);
-                }
-              }}
-            />
-          </ScrollView>
+      <View style={styles.filterSummaryRow}>
+        <Pressable
+          accessibilityLabel={filtersExpanded ? 'Hide filters' : 'Show filters'}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: filtersExpanded }}
+          onPress={() => onToggleFilters(!filtersExpanded)}
+          style={styles.filterToggle}
+        >
+          <SlidersHorizontal color={colors.action} size={17} strokeWidth={2.5} />
+          <Text style={styles.filterToggleText}>Filters</Text>
+        </Pressable>
+        <Text numberOfLines={1} style={styles.filterSummaryText}>
+          {filterSummary({ checkoutState, lifecycleState, scope, sort })}
+        </Text>
+      </View>
+      {filtersExpanded ? (
+        <View>
+          <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
+          {sortedTagFilters.length > 0 && onSelectTag ? (
+            <View style={styles.tagFilterBlock} accessibilityLabel="Browse by tag">
+              <Text style={styles.tagFilterLabel}>Tags</Text>
+              <ScrollView
+                accessibilityLabel="Tag filters"
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.tagFilterScroller}
+              >
+                <AssetTagChips
+                  tags={sortedTagFilters.map((tag) => ({ id: tag.id, label: tag.label, color: tag.color }))}
+                  compact
+                  onTagPress={(tag) => {
+                    const selected = sortedTagFilters.find((candidate) => candidate.id === tag.id);
+                    if (selected) {
+                      onSelectTag(selected);
+                    }
+                  }}
+                />
+              </ScrollView>
+            </View>
+          ) : null}
+          <RefinementBar
+            lifecycleState={lifecycleState}
+            checkoutState={checkoutState}
+            scope={scope}
+            searchMode={submittedQuery.trim().length > 0}
+            sort={sort}
+            onChangeLifecycleState={onChangeLifecycleState}
+            onChangeCheckoutState={onChangeCheckoutState}
+            onChangeSort={onChangeSort}
+          />
         </View>
       ) : null}
-      <RefinementBar
-        lifecycleState={lifecycleState}
-        checkoutState={checkoutState}
-        scope={scope}
-        searchMode={submittedQuery.trim().length > 0}
-        sort={sort}
-        onChangeLifecycleState={onChangeLifecycleState}
-        onChangeCheckoutState={onChangeCheckoutState}
-        onChangeSort={onChangeSort}
-      />
       {statusMessage ? <Text style={styles.errorText}>{statusMessage}</Text> : null}
     </View>
   );
+}
+
+function compareTagOptions(left: AssetTagOptionViewModel, right: AssetTagOptionViewModel): number {
+  return left.label.localeCompare(right.label, undefined, { sensitivity: 'base' });
+}
+
+function filterSummary({
+  checkoutState,
+  lifecycleState,
+  scope,
+  sort
+}: {
+  readonly checkoutState: AssetBrowseCheckoutFilter;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly scope: BrowseScope;
+  readonly sort: AssetBrowseSort;
+}): string {
+  const scopeLabel = buildBrowseScopeOptions().find((option) => option.value === scope)?.label ?? 'All';
+  const lifecycleLabel = lifecycleState === 'active' ? 'Active' : lifecycleState === 'archived' ? 'Archived' : 'All status';
+  const checkoutLabel = checkoutState === 'checked_out' ? 'Checked out' : checkoutState === 'available' ? 'Available' : 'Any checkout';
+  const sortLabel = sort === 'id_asc' ? 'Stable' : 'Recent';
+  return `${scopeLabel} · ${lifecycleLabel} · ${checkoutLabel} · ${sortLabel}`;
 }
 
 function ScopeControl({
@@ -916,6 +965,36 @@ const styles = StyleSheet.create({
   },
   scopeTextSelected: {
     color: colors.text
+  },
+  filterSummaryRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs
+  },
+  filterToggle: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 38,
+    paddingHorizontal: spacing.sm
+  },
+  filterToggleText: {
+    color: colors.action,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  filterSummaryText: {
+    color: colors.textMuted,
+    flex: 1,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0
   },
   refinementBar: {
     alignItems: 'center',

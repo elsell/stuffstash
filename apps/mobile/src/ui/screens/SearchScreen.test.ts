@@ -227,18 +227,15 @@ describe('SearchScreen presentation helpers', () => {
       'Browse',
       'List',
       'Map',
-      'All',
-      'Places',
-      'Containers',
-      'Items',
-      'Active',
-      'Archived',
-      'Recent'
+      'Filters'
     ]));
+    expect(input?.props?.placeholder).toBe('Search things, places, tags');
+    expect(text).not.toContain('All');
+    expect(text).not.toContain('Active');
   });
 
-  it('keeps lifecycle and sort chips available for API-backed Places', () => {
-    const text = collectText(renderHeader({ scope: 'places' }));
+  it('keeps lifecycle and sort chips available for API-backed Places when filters are expanded', () => {
+    const text = collectText(renderHeader({ filtersExpanded: true, scope: 'places' }));
 
     expect(text).toContain('Places');
     expect(text).toContain('Active');
@@ -248,6 +245,7 @@ describe('SearchScreen presentation helpers', () => {
 
   it('does not render sort chips while a submitted query is in search mode', () => {
     const text = collectText(renderHeader({
+      filtersExpanded: true,
       query: 'mug',
       submittedQuery: 'mug'
     }));
@@ -258,9 +256,10 @@ describe('SearchScreen presentation helpers', () => {
     expect(text).toContain('Showing 0 active things for "mug" · relevance order');
   });
 
-  it('renders colored tag browse filters in the Browse header', () => {
+  it('renders colored tag browse filters alphabetically when filters are expanded', () => {
     const selectedTags: string[] = [];
     const header = renderHeader({
+      filtersExpanded: true,
       tagFilters: [
         { id: 'tag-tools', key: 'tools', label: 'Tools', color: '#2F80ED' },
         { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' },
@@ -276,6 +275,9 @@ describe('SearchScreen presentation helpers', () => {
     const text = collectText(header);
     expect(text).toContain('Tags');
     expect(text).toContain('Tools');
+    expect(text.indexOf('Camping')).toBeLessThan(text.indexOf('Kids'));
+    expect(text.indexOf('Kids')).toBeLessThan(text.indexOf('Office'));
+    expect(text.indexOf('Office')).toBeLessThan(text.indexOf('Tools'));
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by tag')).toBeTruthy();
     expect(findFirstByProp(header, 'accessibilityLabel', 'Tag filters')?.props?.horizontal).toBe(true);
 
@@ -288,6 +290,28 @@ describe('SearchScreen presentation helpers', () => {
     onPress();
 
     expect(selectedTags).toEqual(['Tools']);
+  });
+
+  it('uses a compact filter control to disclose browse refinements', () => {
+    const toggles: boolean[] = [];
+    const header = renderHeader({
+      filtersExpanded: false,
+      onToggleFilters: (expanded) => {
+        toggles.push(expanded);
+      }
+    });
+
+    const filters = findFirstByProp(header, 'accessibilityLabel', 'Show filters');
+    expect(filters?.props?.accessibilityState).toMatchObject({ expanded: false });
+    expect(collectText(header)).not.toContain('Places');
+
+    const onPress = filters?.props?.onPress;
+    if (typeof onPress !== 'function') {
+      throw new Error('Missing filter toggle press handler');
+    }
+    onPress();
+
+    expect(toggles).toEqual([true]);
   });
 });
 
@@ -302,6 +326,7 @@ function renderHeader(
     resultCount: 0,
     scope: 'all',
     selectedSurface: 'list',
+    filtersExpanded: false,
     searchInputFocused: false,
     searchInputRef: { current: null } as RefObject<TextInput | null>,
     sort: 'updated_desc',
@@ -313,6 +338,7 @@ function renderHeader(
     onChangeScope: vi.fn(),
     onChangeSort: vi.fn(),
     onClearQuery: vi.fn(),
+    onToggleFilters: vi.fn(),
     onSearchBlur: vi.fn(),
     onSearchFocus: vi.fn(),
     onSubmit: vi.fn(),

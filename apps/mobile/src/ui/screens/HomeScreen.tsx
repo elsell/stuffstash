@@ -19,6 +19,7 @@ import {
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { BrandMark } from '../components/BrandMark';
 import { IdentityLabel } from '../components/IdentityIcon';
+import { AssetTagChips } from '../components/AssetTagChips';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { colors } from '../theme/tokens';
 import { assetDetailHref } from './AssetDetailNavigation';
@@ -281,7 +282,7 @@ function LocationCard({ location }: { readonly location: HomeDashboardLocationVi
   );
 }
 
-function RecentAssetCard({
+export function RecentAssetCard({
   asset,
   onPress
 }: {
@@ -320,6 +321,7 @@ function RecentAssetCard({
         <Text numberOfLines={1} style={styles.assetMeta}>
           {asset.updatedAtLabel}
         </Text>
+        <AssetTagChips tags={asset.tags} compact overflowLimit={2} />
       </View>
     </Pressable>
   );

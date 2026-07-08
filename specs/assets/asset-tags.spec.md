@@ -147,6 +147,7 @@ Import job counts must include:
 ## User Experience
 
 Web and mobile clients must show assigned tags as compact chips in asset list and detail views.
+Mobile home recently changed cards must also show assigned tags as compact chips when space allows.
 When a search result matched because of a tag display name or tag key, web and mobile clients must present that match as `Tag` in result metadata instead of exposing raw transport field names such as `tag_display_name` or `tag_key`.
 
 Tag chips must:
@@ -174,6 +175,8 @@ Before creating inline tag drafts, clients must trim draft names, discard empty 
 The first inline creation behavior may create the tag immediately before saving the asset draft. If asset save then fails, the created tag may remain available in the inventory; the UI must keep that state visible by refreshing the active tag list.
 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.
+
+Mobile search must keep the first viewport focused on the search field and results. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. Scope, lifecycle, checkout, sort, and tag browse controls must be collapsible behind a compact filter control by default. Tag browse suggestions must be sorted alphabetically by display label so the row is predictable when expanded.
 
 ## Tests
 
