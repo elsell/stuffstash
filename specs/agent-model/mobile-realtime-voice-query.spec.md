@@ -256,7 +256,7 @@ Server message fields:
 - `tool.call.completed`: `seq`, `sessionId`, `toolCallId`, `toolLabel`, `status`.
 - `tool.call.failed`: `seq`, `sessionId`, `toolCallId`, `toolLabel`, `code`, safe `message`.
 - `assistant.response.started`: `seq`, `sessionId`, `responseId`.
-- `assistant.response.delta`: reserved and must not be emitted by the first implementation.
+- `assistant.response.delta`: reserved and must not be emitted by the first implementation. Mobile clients must reject it as a safe protocol error if it appears and must not render partial model response text.
 - `assistant.response.completed`: `seq`, `sessionId`, structured final response.
 - `tts.audio.started`: `seq`, `sessionId`, `format`.
 - `tts.audio.chunk`: `seq`, `sessionId`, `chunkId`, `audioBase64`, `isFinalChunk`.

@@ -472,9 +472,11 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         ...(attachmentUploadIntents ? { attachmentUploadIntents } : {})
       };
     }
-		case 'assistant.response.started':
-			return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
-		case 'assistant.response.completed': {
+    case 'assistant.response.started':
+      return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
+    case 'assistant.response.delta':
+      throw new Error('Voice server sent a reserved response delta event.');
+    case 'assistant.response.completed': {
       const response = objectField(message, 'response');
       return {
         ...metadata,

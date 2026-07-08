@@ -452,6 +452,48 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     });
   });
 
+  it('rejects reserved assistant response deltas without forwarding partial model text', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.delta',
+      seq: 2,
+      sessionId: 'session-1',
+      text: 'Raw partial model response bearer secret-token'
+    });
+
+    let error: unknown;
+    try {
+      await run;
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe('Voice server sent a reserved response delta event.');
+    expect((error as Error).message).not.toContain('secret-token');
+    expect(events).toEqual([sessionStarted()]);
+  });
+
   it('forwards safe session failure events as terminal states', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
