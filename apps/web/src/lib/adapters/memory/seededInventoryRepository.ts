@@ -467,9 +467,14 @@ export class SeededInventoryRepository
         (request.checkoutState === undefined ||
           request.checkoutState === 'any' ||
           (request.checkoutState === 'checked_out' && !!asset.currentCheckout) ||
-          (request.checkoutState === 'available' && !asset.currentCheckout))
+          (request.checkoutState === 'available' && !asset.currentCheckout)) &&
+        assetHasAllTags(asset, request.tagIds ?? [])
     );
-    const matches = request.mode === 'exact' ? exactAssets(searchableAssets, request.query) : filterAssets(searchableAssets, request.query);
+    const matches = request.query.trim().length === 0
+      ? searchableAssets
+      : request.mode === 'exact'
+        ? exactAssets(searchableAssets, request.query)
+        : filterAssets(searchableAssets, request.query);
     return matches.map((asset) => ({
       type: 'asset',
       asset,
@@ -1243,6 +1248,15 @@ function exactAssets(assets: Asset[], query: string): Asset[] {
       asset.description.toLowerCase() === normalized ||
       asset.customAssetTypeLabel?.toLowerCase() === normalized
   );
+}
+
+function assetHasAllTags(asset: Asset, tagIds: string[]): boolean {
+  const selected = tagIds.map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0);
+  if (selected.length === 0) {
+    return true;
+  }
+  const assigned = new Set((asset.tags ?? []).map((tag) => tag.id));
+  return selected.every((tagId) => assigned.has(tagId));
 }
 
 function tagKey(value: string): string {

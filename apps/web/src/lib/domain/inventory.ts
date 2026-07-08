@@ -243,6 +243,7 @@ export interface SearchRequest {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
   checkoutState?: SearchCheckoutFilter;

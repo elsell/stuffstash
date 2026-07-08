@@ -495,6 +495,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
       query: 'Passport',
+      tagIds: ['tag-workshop', 'tag-travel'],
       lifecycleState: 'archived',
       mode: 'exact',
       checkoutState: 'checked_out'
@@ -510,7 +511,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       }
     ]);
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&inventoryId=inventory-household&lifecycleState=archived&mode=exact&checkoutState=checked_out'
+      'GET http://api.local/tenants/tenant-home/search/assets?q=Passport&limit=20&inventoryId=inventory-household&tagIds=tag-workshop&tagIds=tag-travel&lifecycleState=archived&mode=exact&checkoutState=checked_out'
     ]);
   });
 

@@ -487,7 +487,13 @@ export function SearchScreen({
         }
         ListEmptyComponent={
           state.status === 'loading' ? null : (
-            <EmptyBrowseState query={state.results.query} scope={scope} onClear={clearSearch} />
+            <EmptyBrowseState
+              query={state.results.query}
+              scope={scope}
+              filtersActive={hasActiveFilters({ checkoutState, lifecycleState, scope, sort, tagCount: selectedTagIds.length })}
+              onClearFilters={clearFilters}
+              onClearSearch={clearSearch}
+            />
           )
         }
         renderItem={({ item }) => {
@@ -900,26 +906,37 @@ function PlaceRow({ location }: { readonly location: LocationBrowserItemViewMode
 function EmptyBrowseState({
   query,
   scope,
-  onClear
+  filtersActive,
+  onClearFilters,
+  onClearSearch
 }: {
   readonly query: string;
   readonly scope: BrowseScope;
-  readonly onClear: () => void;
+  readonly filtersActive: boolean;
+  readonly onClearFilters: () => void;
+  readonly onClearSearch: () => void;
 }) {
   const hasQuery = query.trim().length > 0;
   return (
     <View style={styles.emptyPanel}>
       <Text style={styles.emptyTitle}>
-        {hasQuery ? `No matches for "${query}"` : `No ${scope === 'all' ? 'things' : scope} yet`}
+        {hasQuery ? `No matches for "${query}"` : filtersActive ? 'No matches for these filters' : `No ${scope === 'all' ? 'things' : scope} yet`}
       </Text>
       <Text style={styles.emptyText}>
         {hasQuery
           ? 'Try a broader search or switch scopes.'
-          : 'New inventory activity will appear here.'}
+          : filtersActive
+            ? 'Clear filters or choose fewer tags.'
+            : 'New inventory activity will appear here.'}
       </Text>
       {hasQuery ? (
-        <Pressable accessibilityRole="button" onPress={onClear} style={styles.emptyAction}>
+        <Pressable accessibilityRole="button" onPress={onClearSearch} style={styles.emptyAction}>
           <Text style={styles.emptyActionText}>Clear search</Text>
+        </Pressable>
+      ) : null}
+      {!hasQuery && filtersActive ? (
+        <Pressable accessibilityRole="button" onPress={onClearFilters} style={styles.emptyAction}>
+          <Text style={styles.emptyActionText}>Clear filters</Text>
         </Pressable>
       ) : null}
     </View>

@@ -286,6 +286,36 @@ describe('SeededInventoryRepository tenant selection', () => {
     ]);
   });
 
+  it('filters local search by selected tag IDs without replacing query text', async () => {
+    const taggedSeed: WorkspaceSeed = {
+      ...seed,
+      assets: [
+        {
+          ...seed.assets[0],
+          tags: [
+            { id: 'tag-travel', key: 'travel', displayName: 'Travel' },
+            { id: 'tag-documents', key: 'documents', displayName: 'Documents' }
+          ]
+        },
+        {
+          ...seed.assets[2],
+          lifecycleState: 'active',
+          tags: [{ id: 'tag-travel', key: 'travel', displayName: 'Travel' }]
+        }
+      ]
+    };
+    const repository = new SeededInventoryRepository(taggedSeed);
+
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', tagIds: ['tag-travel'], lifecycleState: 'active', mode: 'fuzzy' })
+    ).resolves.toHaveLength(2);
+    await expect(
+      repository.searchAssets({ tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'Passport', tagIds: ['tag-travel', 'tag-documents'], lifecycleState: 'active', mode: 'fuzzy' })
+    ).resolves.toMatchObject([
+      { asset: { id: 'asset-home' } }
+    ]);
+  });
+
   it('refreshes collapsed local import progress history with latest safe counts', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-06T12:00:00Z'));

@@ -433,6 +433,7 @@ export class StuffStashInventoryRepository
     try {
       const page = await this.client.searchAssets(request.tenantId, request.query, {
         inventoryId: request.inventoryId,
+        tagIds: request.tagIds,
         lifecycleState: request.lifecycleState,
         mode: request.mode,
         checkoutState: request.checkoutState ?? 'any'

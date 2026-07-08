@@ -50,6 +50,12 @@ func TestStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	if err := createAsset(t, ctx, store, drill); err != nil {
 		t.Fatalf("create drill: %v", err)
 	}
+	drillBits := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FD1", tenantID.String(), toolsID.String(), asset.KindItem, "")
+	drillBitsTitle, _ := asset.NewTitle("Drill Bits")
+	drillBits.Title = drillBitsTitle
+	if err := createAsset(t, ctx, store, drillBits); err != nil {
+		t.Fatalf("create drill bits: %v", err)
+	}
 
 	aspirin := assetItem("01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantID.String(), medicineID.String(), asset.KindItem, "")
 	aspirinTitle, _ := asset.NewTitle("Aspirin")
@@ -83,8 +89,15 @@ func TestStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	if err := store.CreateAssetTag(ctx, workshopTag, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB6", tenantID, toolsID, audit.ActionAssetTagCreated)); err != nil {
 		t.Fatalf("create search tag: %v", err)
 	}
-	if err := store.SetAssetTags(ctx, tenantID, toolsID, drill.ID, []assettag.ID{workshopTag.ID}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB7", tenantID, toolsID, audit.ActionAssetUpdated)); err != nil {
+	campingTag := assetTag(t, "01ARZ3NDEKTSV4RRFFQ69G5FD2", tenantID, toolsID, "camping", "Camping")
+	if err := store.CreateAssetTag(ctx, campingTag, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FD3", tenantID, toolsID, audit.ActionAssetTagCreated)); err != nil {
+		t.Fatalf("create camping search tag: %v", err)
+	}
+	if err := store.SetAssetTags(ctx, tenantID, toolsID, drill.ID, []assettag.ID{workshopTag.ID, campingTag.ID}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB7", tenantID, toolsID, audit.ActionAssetUpdated)); err != nil {
 		t.Fatalf("assign search tag: %v", err)
+	}
+	if err := store.SetAssetTags(ctx, tenantID, toolsID, drillBits.ID, []assettag.ID{campingTag.ID}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FD4", tenantID, toolsID, audit.ActionAssetUpdated)); err != nil {
+		t.Fatalf("assign camping search tag: %v", err)
 	}
 	otherTenantTag := assetTag(t, "01ARZ3NDEKTSV4RRFFQ69G5FC3", otherTenantID, otherInventoryID, "other-secret", "Other Secret")
 	if err := store.CreateAssetTag(ctx, otherTenantTag, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FC4", otherTenantID, otherInventoryID, audit.ActionAssetTagCreated)); err != nil {
@@ -126,6 +139,31 @@ func TestStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	tagKeyResults := searchPersistedAssets(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "shop-tools", search.ModeExact, ports.AssetLifecycleFilterActive, "", "", 10)
 	if len(tagKeyResults) != 1 || tagKeyResults[0].Asset.ID != drill.ID || tagKeyResults[0].Matches[0].Field != search.MatchFieldTagKey {
 		t.Fatalf("expected exact tag key search to find drill, got %+v", tagKeyResults)
+	}
+
+	tagOnlyResults := searchPersistedAssetsWithTagIDs(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "", search.ModeFuzzy, []assettag.ID{campingTag.ID}, ports.AssetLifecycleFilterActive, ports.AssetCheckoutStateFilterAny, "", "", 10)
+	if !searchResultsContainAsset(tagOnlyResults, drill.ID) || !searchResultsContainAsset(tagOnlyResults, drillBits.ID) {
+		t.Fatalf("expected tag-only facet to browse camping assets, got %+v", tagOnlyResults)
+	}
+
+	multiTagResults := searchPersistedAssetsWithTagIDs(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "Drill", search.ModeFuzzy, []assettag.ID{workshopTag.ID, campingTag.ID}, ports.AssetLifecycleFilterActive, ports.AssetCheckoutStateFilterAny, "", "", 10)
+	if len(multiTagResults) != 1 || multiTagResults[0].Asset.ID != drill.ID {
+		t.Fatalf("expected multi-tag facet to require all selected tags, got %+v", multiTagResults)
+	}
+
+	excludedInventoryTagIDResults := searchPersistedAssetsWithTagIDs(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "", search.ModeFuzzy, []assettag.ID{storageTag.ID}, ports.AssetLifecycleFilterActive, ports.AssetCheckoutStateFilterAny, "", "", 10)
+	if len(excludedInventoryTagIDResults) != 0 {
+		t.Fatalf("expected excluded inventory tag ID facet not to leak storage asset, got %+v", excludedInventoryTagIDResults)
+	}
+
+	otherTenantTagIDResults := searchPersistedAssetsWithTagIDs(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "", search.ModeFuzzy, []assettag.ID{otherTenantTag.ID}, ports.AssetLifecycleFilterActive, ports.AssetCheckoutStateFilterAny, "", "", 10)
+	if len(otherTenantTagIDResults) != 0 {
+		t.Fatalf("expected other tenant tag ID facet not to leak other tenant asset, got %+v", otherTenantTagIDResults)
+	}
+
+	archivedTagIDResults := searchPersistedAssetsWithTagIDs(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "", search.ModeFuzzy, []assettag.ID{archivedTag.ID}, ports.AssetLifecycleFilterActive, ports.AssetCheckoutStateFilterAny, "", "", 10)
+	if len(archivedTagIDResults) != 0 {
+		t.Fatalf("expected archived tag ID facet not to satisfy assigned asset, got %+v", archivedTagIDResults)
 	}
 
 	archivedTagResults := searchPersistedAssets(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "Retired", search.ModeExact, ports.AssetLifecycleFilterActive, "", "", 10)
@@ -201,6 +239,11 @@ func searchPersistedAssets(t *testing.T, ctx context.Context, store Store, tenan
 
 func searchPersistedAssetsWithCheckoutFilter(t *testing.T, ctx context.Context, store Store, tenantID tenant.ID, inventoryIDs []inventory.InventoryID, queryValue string, mode search.Mode, lifecycle ports.AssetLifecycleFilter, checkoutFilter ports.AssetCheckoutStateFilter, customAssetTypeID string, afterResultKey string, limit int) []ports.AssetSearchResult {
 	t.Helper()
+	return searchPersistedAssetsWithTagIDs(t, ctx, store, tenantID, inventoryIDs, queryValue, mode, nil, lifecycle, checkoutFilter, customAssetTypeID, afterResultKey, limit)
+}
+
+func searchPersistedAssetsWithTagIDs(t *testing.T, ctx context.Context, store Store, tenantID tenant.ID, inventoryIDs []inventory.InventoryID, queryValue string, mode search.Mode, tagIDs []assettag.ID, lifecycle ports.AssetLifecycleFilter, checkoutFilter ports.AssetCheckoutStateFilter, customAssetTypeID string, afterResultKey string, limit int) []ports.AssetSearchResult {
+	t.Helper()
 
 	query, ok := search.NewQuery(queryValue)
 	if !ok {
@@ -209,6 +252,7 @@ func searchPersistedAssetsWithCheckoutFilter(t *testing.T, ctx context.Context, 
 	results, err := store.SearchAssets(ctx, tenantID, inventoryIDs, ports.AssetSearchPageRequest{
 		Query:             query,
 		Mode:              mode,
+		TagIDs:            tagIDs,
 		CustomAssetTypeID: asset.CustomAssetTypeID(customAssetTypeID),
 		AfterResultKey:    afterResultKey,
 		Limit:             limit,
@@ -219,6 +263,15 @@ func searchPersistedAssetsWithCheckoutFilter(t *testing.T, ctx context.Context, 
 		t.Fatalf("search persisted assets: %v", err)
 	}
 	return results
+}
+
+func searchResultsContainAsset(results []ports.AssetSearchResult, assetID asset.ID) bool {
+	for _, result := range results {
+		if result.Asset.ID == assetID {
+			return true
+		}
+	}
+	return false
 }
 
 func saveSearchAttachment(t *testing.T, ctx context.Context, store Store, id string, item asset.Asset, fileNameValue string, contentType media.ContentType) {

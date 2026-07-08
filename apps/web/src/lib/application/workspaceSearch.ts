@@ -10,6 +10,7 @@ export interface ExecuteWorkspaceSearchInput {
   tenantId: string | null;
   inventoryId: string | null;
   query: string;
+  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
   checkoutState: SearchCheckoutFilter;
@@ -182,7 +183,8 @@ export function searchMatchFieldLabel(field: string | undefined): string {
 
 export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {
   const query = input.query.trim();
-  if (!query || !input.tenantId || !input.inventoryId) {
+  const tagIds = Array.from(new Set((input.tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0)));
+  if ((!query && tagIds.length === 0) || !input.tenantId || !input.inventoryId) {
     return { query, results: [], submitted: false, error: '' };
   }
 
@@ -190,6 +192,7 @@ export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput)
     tenantId: input.tenantId,
     inventoryId: input.inventoryId,
     query,
+    ...(tagIds.length > 0 ? { tagIds } : {}),
     lifecycleState: input.lifecycleState,
     mode: input.mode,
     checkoutState: input.checkoutState

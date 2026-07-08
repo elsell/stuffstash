@@ -113,6 +113,7 @@
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
   let searchMode = $state<SearchMode>('fuzzy');
   let searchCheckoutState = $state<SearchCheckoutFilter>('any');
+  let searchTagIds = $state<string[]>([]);
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let accessInvitationAction = $state<WorkspaceRouteState['accessInvitationAction']>(null);
@@ -369,6 +370,7 @@
         tenantId: data.context.selectedTenantId,
         inventoryId: data.context.selectedInventoryId,
         query: searchQuery,
+        tagIds: searchTagIds,
         lifecycleState: searchLifecycleState,
         mode: searchMode,
         checkoutState: searchCheckoutState
@@ -390,7 +392,7 @@
           searchCheckoutState
         });
       }
-      if (!result.query) {
+      if (!result.query && searchTagIds.length === 0) {
         return;
       }
     } catch (caught) {
@@ -404,7 +406,7 @@
   }
 
   async function searchForTag(tag: AssetTag): Promise<void> {
-    searchQuery = tag.displayName;
+    searchTagIds = searchTagIds.includes(tag.id) ? searchTagIds.filter((tagId) => tagId !== tag.id) : [...searchTagIds, tag.id];
     await search();
   }
 
@@ -679,6 +681,7 @@
     searchLifecycleState = 'active';
     searchMode = 'fuzzy';
     searchCheckoutState = 'any';
+    searchTagIds = [];
   }
 
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
@@ -703,6 +706,7 @@
       attachmentId = route.attachmentId;
       attachmentAction = route.attachmentAction;
       searchQuery = route.searchQuery;
+      searchTagIds = [];
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
       searchCheckoutState = route.searchCheckoutState;
