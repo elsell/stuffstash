@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -62,6 +63,33 @@ func TestRealtimeVoiceToolCallsUseBoundedTimeout(t *testing.T) {
 	}
 	if tts.lastText == "" {
 		t.Fatalf("expected safe recovery response to be synthesized")
+	}
+}
+
+func TestRealtimeVoiceToolCallsDoNotRecoverParentDeadline(t *testing.T) {
+	t.Parallel()
+
+	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
+	application.search = &blockingAssetSearchRepository{ready: make(chan struct{})}
+	application.realtimeVoiceToolCallTimeout = time.Minute
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel()
+
+	_, _, err = application.executeRealtimeVoiceTool(ctx, session, "Where is my water bottle?", nil, ports.AgentToolCall{
+		ID:        "search-water-bottle",
+		Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+		Arguments: map[string]any{"query": "water bottle"},
+	}, map[string]struct{}{})
+
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected parent deadline to propagate, got %T %[1]v", err)
+	}
+	if recoverableRealtimeVoiceToolError(err) {
+		t.Fatalf("expected parent deadline to remain terminal, got recoverable error %T %[1]v", err)
 	}
 }
 

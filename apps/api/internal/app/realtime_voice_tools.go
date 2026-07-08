@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math"
 	"strings"
 	"time"
@@ -23,27 +24,38 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	switch call.Name {
 	case RealtimeVoiceToolSearchAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceSearchTool(toolCtx, session, call)
-		return result, nil, err
+		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolGetAssetDetail:
 		result, err := a.executeRealtimeVoiceAssetDetailTool(toolCtx, session, call, visibleAssetIDs)
-		return result, nil, err
+		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call)
-		return result, nil, err
+		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAssetAuditHistory:
 		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(toolCtx, session, call, visibleAssetIDs)
-		return result, nil, err
+		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListCheckedOutAssets:
 		result, err := a.executeRealtimeVoiceCheckedOutAssetsTool(toolCtx, session, call)
-		return result, nil, err
+		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAssetCheckoutHistory:
 		result, err := a.executeRealtimeVoiceAssetCheckoutHistoryTool(toolCtx, session, call, visibleAssetIDs)
-		return result, nil, err
+		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolProposeActionPlan:
-		return a.executeRealtimeVoiceProposeActionPlanTool(toolCtx, session, transcript, priorResults, call, visibleAssetIDs)
+		result, proposal, err := a.executeRealtimeVoiceProposeActionPlanTool(toolCtx, session, transcript, priorResults, call, visibleAssetIDs)
+		return result, proposal, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	default:
 		return ports.AgentToolResult{}, nil, ports.ErrInvalidProviderInput
 	}
+}
+
+func realtimeVoiceToolDeadlineError(parentCtx context.Context, toolCtx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, context.DeadlineExceeded) && errors.Is(toolCtx.Err(), context.DeadlineExceeded) && parentCtx.Err() == nil {
+		return errRealtimeVoiceToolCallTimedOut
+	}
+	return err
 }
 
 func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, session RealtimeVoiceSession, transcript string, priorResults []ports.AgentToolResult, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {

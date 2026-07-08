@@ -9,6 +9,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
+var errRealtimeVoiceToolCallTimedOut = errors.New("realtime voice tool call timed out")
+
 func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) error {
 	kind := response.Kind
 	if kind == "" {
