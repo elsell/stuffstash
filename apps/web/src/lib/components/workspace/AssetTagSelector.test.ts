@@ -137,6 +137,26 @@ describe('AssetTagSelector', () => {
     expect(newTags).toEqual([{ displayName: 'Workshop', color: '#2F80ED' }]);
   });
 
+  it('stages new tag colors chosen with the color picker', async () => {
+    let newTags: AssetTagDraft[] = [];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        onNewTagsChange: (tags) => {
+          newTags = tags;
+        }
+      })
+    });
+
+    input('new-tag-name', 'Workshop');
+    colorInput('new-tag-color-picker', '#2e7d32');
+    await tick();
+    button('Add').click();
+    await tick();
+
+    expect(newTags).toEqual([{ displayName: 'Workshop', color: '#2E7D32' }]);
+  });
+
   it('keeps new tag names within the backend display-name limit', async () => {
     let newTags: AssetTagDraft[] = [];
     component = mount(AssetTagSelector, {
@@ -263,6 +283,18 @@ function input(id: string, value: string): void {
   }
   element.value = value;
   element.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function colorInput(id: string, value: string): void {
+  const element = document.getElementById(id) as HTMLInputElement | null;
+  if (!element) {
+    throw new Error(`Missing input ${id}.`);
+  }
+  if (element.type !== 'color') {
+    throw new Error(`Expected ${id} to be a native color input.`);
+  }
+  element.value = value;
+  element.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function button(label: string): HTMLButtonElement {
