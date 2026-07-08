@@ -218,12 +218,12 @@ export function VoiceInteractionStateProvider({
         }
       },
       retryRealtimeActionPlanPhotos: async (planId: string) => {
-        setRealtime((current) => markPhotoRetryInProgress(current));
+        setRealtime((current) => markPhotoRetryInProgress(current, planId));
         try {
           const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
-          setRealtime((current) => markPhotoRetryResult(current, photoAttachmentStatus));
-        } catch (error) {
-          setRealtime((current) => markPhotoRetryFailure(current, error));
+          setRealtime((current) => markPhotoRetryResult(current, planId, photoAttachmentStatus));
+        } catch {
+          setRealtime((current) => markPhotoRetryFailure(current, planId));
         }
       },
       cancelRealtime: async () => {
@@ -263,23 +263,24 @@ export function markReviewDecisionPending(state: VoiceRealtimeState | null, prog
   };
 }
 
-export function markPhotoRetryInProgress(state: VoiceRealtimeState | null): VoiceRealtimeState | null {
-  return state ? { ...state, progressLabel: 'Adding photos' } : state;
+export function markPhotoRetryInProgress(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
+  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos' } : state;
 }
 
 export function markPhotoRetryResult(
   state: VoiceRealtimeState | null,
+  planId: string,
   photoAttachmentStatus: VoicePhotoAttachmentStatus
 ): VoiceRealtimeState | null {
-  return state ? {
+  return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
     progressLabel: photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
     photoAttachmentStatus
   } : state;
 }
 
-export function markPhotoRetryFailure(state: VoiceRealtimeState | null, error: unknown): VoiceRealtimeState {
-  return state ? {
+export function markPhotoRetryFailure(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
+  return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
     progressLabel: 'Photo upload failed',
     photoAttachmentStatus: {
@@ -287,7 +288,11 @@ export function markPhotoRetryFailure(state: VoiceRealtimeState | null, error: u
       message: 'Photos could not be attached. Try again.',
       canRetry: true
     }
-  } : buildFailedVoiceRealtimeState(error, realtimeStateContext(state));
+  } : state;
+}
+
+function voiceStateMatchesActionPlan(state: VoiceRealtimeState | null, planId: string): state is VoiceRealtimeState {
+  return Boolean(state?.actionPlan && state.actionPlan.planId === planId);
 }
 
 export function useVoiceInteractionState(): VoiceInteractionStateContextValue {

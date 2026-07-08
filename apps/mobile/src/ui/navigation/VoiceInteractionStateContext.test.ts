@@ -147,15 +147,17 @@ describe('buildFailedVoiceRealtimeState', () => {
   });
 
   it('marks voice photo retry progress without changing the session outcome', () => {
-    expect(markPhotoRetryInProgress(completedVoiceState())).toMatchObject({
+    expect(markPhotoRetryInProgress(completedVoiceState(), 'plan-1')).toMatchObject({
       status: 'completed',
       progressLabel: 'Adding photos'
     });
-    expect(markPhotoRetryInProgress(null)).toBeNull();
+    const newerState = completedVoiceState('plan-2');
+    expect(markPhotoRetryInProgress(newerState, 'plan-1')).toBe(newerState);
+    expect(markPhotoRetryInProgress(null, 'plan-1')).toBeNull();
   });
 
   it('maps voice photo retry results onto the existing session state', () => {
-    expect(markPhotoRetryResult(completedVoiceState(), {
+    expect(markPhotoRetryResult(completedVoiceState(), 'plan-1', {
       status: 'attached',
       message: 'Photos attached.'
     })).toMatchObject({
@@ -167,7 +169,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       }
     });
 
-    expect(markPhotoRetryResult(completedVoiceState(), {
+    expect(markPhotoRetryResult(completedVoiceState(), 'plan-1', {
       status: 'partial_failed',
       message: 'One photo failed.',
       canRetry: true
@@ -180,10 +182,16 @@ describe('buildFailedVoiceRealtimeState', () => {
         canRetry: true
       }
     });
+
+    const newerState = completedVoiceState('plan-2');
+    expect(markPhotoRetryResult(newerState, 'plan-1', {
+      status: 'attached',
+      message: 'Photos attached.'
+    })).toBe(newerState);
   });
 
   it('keeps inventory action success visible when a voice photo retry throws', () => {
-    expect(markPhotoRetryFailure(completedVoiceState(), new Error('https://uploads.example.test/raw-object failed'))).toMatchObject({
+    expect(markPhotoRetryFailure(completedVoiceState(), 'plan-1')).toMatchObject({
       status: 'completed',
       progressLabel: 'Photo upload failed',
       photoAttachmentStatus: {
@@ -193,15 +201,13 @@ describe('buildFailedVoiceRealtimeState', () => {
       }
     });
 
-    expect(markPhotoRetryFailure(null, new Error('network failed'))).toMatchObject({
-      status: 'failed',
-      progressLabel: 'Voice failed',
-      errorMessage: 'Voice failed safely.'
-    });
+    const newerState = completedVoiceState('plan-2');
+    expect(markPhotoRetryFailure(newerState, 'plan-1')).toBe(newerState);
+    expect(markPhotoRetryFailure(null, 'plan-1')).toBeNull();
   });
 });
 
-function completedVoiceState() {
+function completedVoiceState(planId = 'plan-1') {
   return {
     status: 'completed' as const,
     tenantName: 'Home tenant',
@@ -213,6 +219,13 @@ function completedVoiceState() {
       status: 'failed' as const,
       message: 'Photos could not be attached.',
       canRetry: true
+    },
+    actionPlan: {
+      planId,
+      status: 'executed' as const,
+      confirmationSummary: 'Create item water bottle?',
+      commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+      risks: []
     }
   };
 }
