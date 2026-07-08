@@ -523,6 +523,7 @@ Stuff Stash must maintain a repo-local Codex skill for evaluating conversational
 
 The evaluation workflow may produce durable artifacts for synthetic opt-in corpus fixtures only. These traces may include the fixture transcript, model/tool diagnostics, and spoken response needed to evaluate agent quality. They must not include arbitrary user transcripts, provider credentials, bearer tokens, raw audio, generated speech bytes, hidden resources, or production tenant data. The evaluation workflow must produce durable artifacts for each run, including raw `go test -json` output, extracted scenario traces, and a summary that distinguishes:
 
+- Runs where no corpus scenarios were extracted, including locally skipped live-provider runs, as non-green execution evidence.
 - Hard execution failures, such as provider errors, invalid action plans, or unexpected session completion.
 - Assertion failures from the Go regression suite.
 - Human/product quality concerns found by an agent reading the trace, such as awkward fall-forward wording, wrong mental model, unnecessary tool turns, brittle planning, or missing next steps.

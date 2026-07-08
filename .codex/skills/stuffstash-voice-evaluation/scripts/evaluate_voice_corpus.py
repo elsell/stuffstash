@@ -387,6 +387,8 @@ def build_summary(return_code: int, scenarios: dict[str, Scenario], out_dir: Pat
                 product_failures.append(scenario.name)
             if verdict == "needs_followup":
                 product_followups.append(scenario.name)
+    if not scenarios:
+        execution_failures.append("no live corpus scenarios were extracted")
     if return_code != 0 and not assertion_failures:
         execution_failures.append("go test exited nonzero without an extracted scenario assertion failure")
     return {
@@ -502,6 +504,13 @@ def run_self_test(repo: Path) -> int:
             return 1
         write_scenario_traces(out_dir, scenarios)
         summary = build_summary(0, scenarios, out_dir)
+        if summary["executionFailures"]:
+            print("self-test failed: populated scenario run reported execution failures", file=sys.stderr)
+            return 1
+        empty_summary = build_summary(0, {}, out_dir)
+        if empty_summary["executionFailures"] != ["no live corpus scenarios were extracted"]:
+            print("self-test failed: empty corpus run did not record execution evidence", file=sys.stderr)
+            return 1
         (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         (out_dir / "summary.md").write_text(render_summary_markdown(summary), encoding="utf-8")
     print("self-test passed")
