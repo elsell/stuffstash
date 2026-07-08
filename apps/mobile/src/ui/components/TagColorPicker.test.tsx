@@ -57,6 +57,22 @@ describe('TagColorPicker', () => {
     expect(clear?.props?.style).not.toContainEqual(expect.objectContaining({ borderWidth: 2 }));
     expect(collectText(picker)).toContain('Enter a #RRGGBB color');
   });
+
+  it('marks disabled color choices unavailable', () => {
+    const picker = TagColorPicker({
+      value: '#2F80ED',
+      disabled: true,
+      onChange: () => {}
+    });
+
+    const green = findFirstByProp(picker, 'accessibilityLabel', 'Choose tag color #2E7D32');
+    const clear = findFirstByProp(picker, 'accessibilityLabel', 'No tag color');
+
+    expect(green?.props?.accessibilityState).toMatchObject({ disabled: true, selected: false });
+    expect(clear?.props?.accessibilityState).toMatchObject({ disabled: true, selected: false });
+    expect(green?.props?.disabled).toBe(true);
+    expect(clear?.props?.disabled).toBe(true);
+  });
 });
 
 function press(node: ElementNode | undefined): void {
