@@ -228,6 +228,7 @@ func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGe
 
 func languagePrompt(input ports.LanguageInferenceInput) string {
 	lines := []string{}
+	transcript := safeGoogleConversationPromptText(input.Transcript, 1000)
 	if template := strings.TrimSpace(input.PromptTemplate); template != "" {
 		lines = append(lines,
 			"Tenant language-model guidance:",
@@ -246,8 +247,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 			}...)
 			lines = append(lines, languageConversationContextLines(input)...)
 			lines = append(lines, []string{
-				"Current transcript: " + input.Transcript,
-				"Transcript: " + input.Transcript,
+				"Current transcript: " + transcript,
+				"Transcript: " + transcript,
 			}...)
 			return strings.Join(lines, "\n")
 		}
@@ -262,8 +263,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		}...)
 		lines = append(lines, languageConversationContextLines(input)...)
 		lines = append(lines, []string{
-			"Current transcript: " + input.Transcript,
-			"Transcript: " + input.Transcript,
+			"Current transcript: " + transcript,
+			"Transcript: " + transcript,
 		}...)
 		return strings.Join(lines, "\n")
 	}
@@ -286,8 +287,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 		}...)
 		lines = append(lines, languageConversationContextLines(input)...)
 		lines = append(lines, []string{
-			"Current transcript: " + input.Transcript,
-			"Transcript: " + input.Transcript,
+			"Current transcript: " + transcript,
+			"Transcript: " + transcript,
 		}...)
 		return strings.Join(lines, "\n")
 	}
@@ -325,8 +326,8 @@ func languagePrompt(input ports.LanguageInferenceInput) string {
 	}...)
 	lines = append(lines, languageConversationContextLines(input)...)
 	lines = append(lines, []string{
-		"Current transcript: " + input.Transcript,
-		"Transcript: " + input.Transcript,
+		"Current transcript: " + transcript,
+		"Transcript: " + transcript,
 	}...)
 	return strings.Join(lines, "\n")
 }
@@ -360,35 +361,6 @@ func languageConversationContextLines(input ports.LanguageInferenceInput) []stri
 		return nil
 	}
 	return lines
-}
-
-func safeGoogleConversationPromptText(value string, maxLength int) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return ""
-	}
-	replacer := strings.NewReplacer(
-		"raw prompt", "[redacted]",
-		"Raw prompt", "[redacted]",
-		"bearer", "[redacted]",
-		"Bearer", "[redacted]",
-		"credential", "[redacted]",
-		"Credential", "[redacted]",
-		"password", "[redacted]",
-		"Password", "[redacted]",
-		"secret", "[redacted]",
-		"Secret", "[redacted]",
-		"token", "[redacted]",
-		"Token", "[redacted]",
-		"api key", "[redacted]",
-		"API key", "[redacted]",
-		"apikey", "[redacted]",
-	)
-	value = replacer.Replace(value)
-	if len(value) <= maxLength {
-		return value
-	}
-	return strings.TrimSpace(value[:maxLength]) + " ..."
 }
 
 func languageContents(input ports.LanguageInferenceInput) ([]geminiContent, error) {

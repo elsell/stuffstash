@@ -84,24 +84,26 @@ func TestGoogleGeminiLanguagePromptIncludesBoundedConversationContext(t *testing
 	t.Parallel()
 
 	prompt := languagePrompt(ports.LanguageInferenceInput{
-		Transcript: "Put it in the office.",
+		Transcript: "Put it in the office. bearer abc/def== providerSessionId: live-2 raw provider response:\n{\"error\":\"bad; detail: hidden\"} https://provider.example.test/current",
 		ConversationTurns: []ports.AgentConversationTurn{
-			{Role: ports.AgentConversationRoleUser, Text: "Where should I put it?"},
-			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Which item should I update?"},
+			{Role: ports.AgentConversationRoleUser, Text: "Where should I put it? raw provider response:\n{\"error\":\"provider internals\"}"},
+			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Which item should I update? providerSessionId: live-1 wss://provider.example.test/session"},
 		},
 	})
 
 	for _, required := range []string{
 		"Same-session safe conversation context:",
-		"user: Where should I put it?",
-		"assistant clarification: Which item should I update?",
-		"Current transcript: Put it in the office.",
+		"user: Where should I put it? [redacted]",
+		"assistant clarification: Which item should I update? [redacted] [redacted-url]",
+		"Current transcript: Put it in the office. [redacted] [redacted] [redacted]",
 	} {
 		if !strings.Contains(prompt, required) {
 			t.Fatalf("expected prompt to include %q, got %s", required, prompt)
 		}
 	}
-	if strings.Contains(prompt, "raw prompt") || strings.Contains(prompt, "bearer") {
-		t.Fatalf("prompt leaked unsafe context marker: %s", prompt)
+	for _, forbidden := range []string{"raw prompt", "raw provider response", "provider internals", "providerSessionId", "abc/def", "live-1", "live-2", "wss://provider.example.test", "https://provider.example.test", "detail: hidden", `{"error"`} {
+		if strings.Contains(prompt, forbidden) {
+			t.Fatalf("prompt leaked unsafe context marker %q: %s", forbidden, prompt)
+		}
 	}
 }
